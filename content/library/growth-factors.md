@@ -1,0 +1,73 @@
+# Growth Factors & Anabolic Peptides
+
+## Overview
+
+This section covers peptides and compounds that promote muscle growth, strength enhancement, and anabolic pathways. These peptides work through various mechanisms including increased protein synthesis, growth hormone secretion, and IGF-1 signaling.
+
+## Quick Reference
+
+| Product | Size | Evidence | Risk | Best For |
+|---------|------|----------|------|----------|
+| IGF-1 LR3 | 1mg | B-C | Moderate | Lean muscle gain, strength |
+| ACE-031 | 500mcg | C-D | Moderate-High | Muscle growth without fat |
+| Follistatin 344 | 100mcg | C-D | Moderate | Myostatin inhibition |
+| Sermorelin | 1mg | B | Low | GH secretion, recovery |
+| CJC-1295 | 1mg | B | Low | Long-term GH enhancement |
+| Ipamorelin | 1mg | B-C | Low-Moderate | GH pulse without cortisol |
+
+## Key Compounds
+
+### IGF-1 LR3
+**Mechanism**: Long-acting insulin-like growth factor that promotes protein synthesis and muscle hyperplasia
+
+**Protocol**: 50-100mcg daily or every other day
+**Duration**: 4-6 weeks
+**Best Stacked With**: CJC-1295, Ipamorelin
+
+### ACE-031
+**Mechanism**: Myostatin and activin inhibitor that removes "brakes" on muscle growth
+
+**Protocol**: 100-300mcg 3x weekly
+**Duration**: 6-12 weeks
+**Special Notes**: Can cause rapid strength gains; monitor joints
+
+### Follistatin 344
+**Mechanism**: Antagonist of myostatin and other negative regulators of muscle growth
+
+**Protocol**: 100mcg daily for 10 days, repeat monthly
+**Duration**: Varies (pulsed dosing)
+**Research Status**: Preclinical in humans; used in animal studies
+
+## Optimal Timing Guide
+
+| Product | Optimal Timing | Category | Notes |
+|---------|---------------|----------|-------|
+| IGF-1 LR3 | Pre-workout or training window | Pre-Workout | Muscle signaling; avoid food 2-3h before |
+| ACE-031 | Pre-workout or AM | Pre-Workout/Morning | Myostatin inhibition |
+| Follistatin 344 | Morning | Morning | Consistent daily timing during pulse cycle |
+| Sermorelin | Pre-sleep (empty stomach) | Evening/Pre-Sleep | GH pulse optimization; fasted 2-3h |
+| CJC-1295 | Pre-sleep | Evening/Pre-Sleep | Long-acting GH stimulation; fasted |
+| Ipamorelin | Pre-sleep | Evening/Pre-Sleep | GH pulse without cortisol; empty stomach |
+| CJC-1295 + Ipamorelin | Pre-sleep | Evening/Pre-Sleep | Synergistic GH pulse; fasted 2-3h |
+| PT-141 | 30-60 min before desired effect | Flexible/Situational | Sexual function; not daily use |
+| Melanotan-1/2 | Pre-sun exposure | Flexible/Situational | 30-60 min before UV exposure |
+| Testagen | Morning | Morning | Bioregulator; consistent AM timing |
+
+**Key Rule**: GH-related peptides (Sermorelin, CJC-1295, Ipamorelin) work best on an empty stomach — avoid food 2-3 hours before administration.
+
+## Safety Considerations
+
+- **Joint stress**: Rapid muscle growth can stress connective tissue
+- **Insulin sensitivity**: Monitor glucose metabolism
+- **Hormone levels**: Some compounds affect endogenous hormone production
+- **Individual variation**: Response varies significantly between individuals
+
+## Research & Evidence
+
+- IGF-1: Well-established effects on muscle growth (Grade B evidence)
+- GH Secretagogues: Strong evidence for GH elevation (Grade B)
+- Myostatin inhibitors: Promising animal data; limited human trials (Grade C-D)
+
+## Disclaimer
+
+This information is for research and educational purposes only. These compounds are not approved for human use in most jurisdictions. Always consult healthcare providers before considering any compound.
