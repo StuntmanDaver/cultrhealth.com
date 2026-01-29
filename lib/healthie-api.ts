@@ -955,6 +955,553 @@ export async function getOutstandingBalance(patientId: string): Promise<number> 
 }
 
 // ============================================================
+// HEALTHIE PAYMENTS (HIPAA-COMPLIANT)
+// ============================================================
+// These mutations use Healthie's internal Stripe Connect integration
+// which is covered under Healthie's BAA for HIPAA compliance.
+// Card data is tokenized client-side using Stripe.js with Healthie's
+// publishable keys and never touches your servers.
+
+/**
+ * Healthie Stripe publishable keys for card tokenization
+ * Use with Stripe.js on the frontend
+ */
+export const HEALTHIE_STRIPE_KEYS = {
+  staging: 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq',
+  production: 'pk_live_WzFpsrfurxhcz0HJspt9nbnn',
+} as const;
+
+export function getHealthieStripePublishableKey(): string {
+  const env = process.env.HEALTHIE_ENVIRONMENT || 'sandbox';
+  return env === 'production' 
+    ? HEALTHIE_STRIPE_KEYS.production 
+    : HEALTHIE_STRIPE_KEYS.staging;
+}
+
+export interface HealthieStripeCustomerDetail {
+  id: string;
+  last_four?: string;
+  card_type?: string;
+  is_default?: boolean;
+}
+
+export interface HealthieBillingItem {
+  id: string;
+  amount_paid?: string;
+  status?: string;
+  created_at?: string;
+  sender_id?: string;
+  recipient_id?: string;
+  offering_id?: string;
+}
+
+export interface HealthieUserPackageSelection {
+  id: string;
+  offering_id?: string;
+  user_id?: string;
+  status?: string;
+  created_at?: string;
+  next_billing_date?: string;
+  offering?: {
+    id: string;
+    name: string;
+    price: string;
+    billing_frequency?: string;
+  };
+}
+
+export interface HealthieCheckoutResult {
+  appointment?: HealthieAppointment | null;
+  billingItem?: HealthieBillingItem | null;
+  userPackageSelection?: HealthieUserPackageSelection | null;
+  patientEmail?: string;
+  reassignClientProvider?: boolean;
+}
+
+/**
+ * Store a credit/debit card on file for a patient
+ * The token is generated via Stripe.js on the frontend
+ * 
+ * @param token - Stripe token from Stripe.js (e.g., tok_1JjpBZ2eZvKYlo2CdI1Qwgf7)
+ * @param userId - Healthie patient ID
+ * @param cardTypeLabel - 'personal', 'hsa', or 'fsa'
+ * @param isDefault - Whether this should be the default payment method
+ */
+export async function storePaymentMethod(input: {
+  token: string;
+  userId: string;
+  cardTypeLabel?: 'personal' | 'hsa' | 'fsa';
+  isDefault?: boolean;
+}): Promise<HealthieStripeCustomerDetail> {
+  const mutation = `
+    mutation CreateStripeCustomerDetail($input: createStripeCustomerDetailInput!) {
+      createStripeCustomerDetail(input: $input) {
+        stripe_customer_detail {
+          id
+          last_four
+          card_type
+          is_default
+        }
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      token: input.token,
+      user_id: input.userId,
+      card_type_label: input.cardTypeLabel || 'personal',
+      is_default: input.isDefault ?? true,
+    },
+  };
+
+  const data = await healthieRequest<{
+    createStripeCustomerDetail: {
+      stripe_customer_detail: HealthieStripeCustomerDetail | null;
+      messages?: Array<{ field: string; message: string }>;
+    };
+  }>(mutation, variables);
+
+  if (!data.createStripeCustomerDetail?.stripe_customer_detail) {
+    const errorMsg = data.createStripeCustomerDetail?.messages?.[0]?.message;
+    throw new Error(errorMsg || 'Failed to store payment method');
+  }
+
+  return data.createStripeCustomerDetail.stripe_customer_detail;
+}
+
+/**
+ * Get stored payment methods for a patient
+ */
+export async function getPatientPaymentMethods(
+  patientId: string
+): Promise<HealthieStripeCustomerDetail[]> {
+  const query = `
+    query GetStripeCustomerDetails($userId: ID!) {
+      stripeCustomerDetails(user_id: $userId) {
+        id
+        last_four
+        card_type
+        is_default
+      }
+    }
+  `;
+
+  const data = await healthieRequest<{
+    stripeCustomerDetails: HealthieStripeCustomerDetail[];
+  }>(query, { userId: patientId });
+
+  return data.stripeCustomerDetails ?? [];
+}
+
+/**
+ * Charge a patient with a stored payment method (provider-initiated)
+ * 
+ * @param senderId - ID of the patient being charged
+ * @param amountPaid - Amount as string (e.g., "567.53")
+ * @param stripeCustomerDetailId - ID of the stored payment method
+ * @param requestedPaymentId - Optional invoice ID to apply payment to
+ */
+export async function chargePatient(input: {
+  senderId: string;
+  amountPaid: string;
+  stripeCustomerDetailId?: string;
+  requestedPaymentId?: string;
+  stripeIdempotencyKey?: string;
+}): Promise<HealthieBillingItem> {
+  const mutation = `
+    mutation CreateBillingItem($input: createBillingItemInput!) {
+      createBillingItem(input: $input) {
+        billingItem {
+          id
+          amount_paid
+          status
+          created_at
+        }
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      sender_id: input.senderId,
+      amount_paid: input.amountPaid,
+      should_charge: true,
+      stripe_customer_detail_id: input.stripeCustomerDetailId,
+      requested_payment_id: input.requestedPaymentId,
+      stripe_idempotency_key: input.stripeIdempotencyKey,
+    },
+  };
+
+  const data = await healthieRequest<{
+    createBillingItem: {
+      billingItem: HealthieBillingItem | null;
+      messages?: Array<{ field: string; message: string }>;
+    };
+  }>(mutation, variables);
+
+  if (!data.createBillingItem?.billingItem) {
+    const errorMsg = data.createBillingItem?.messages?.[0]?.message;
+    throw new Error(errorMsg || 'Failed to charge patient');
+  }
+
+  return data.createBillingItem.billingItem;
+}
+
+/**
+ * Complete checkout for booking or buying (patient self-checkout)
+ * This is the main mutation for e-commerce flows and subscription purchases.
+ * 
+ * @param stripeToken - Token from Stripe.js for new card
+ * @param offeringId - Healthie Offering (Package) ID for subscriptions
+ * @param email - Patient email (creates new patient if not exists)
+ * @param firstName - Patient first name
+ * @param lastName - Patient last name
+ * @param paymentIntentId - For Klarna integration
+ */
+export async function completeCheckout(input: {
+  stripeToken?: string;
+  offeringId?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  legalFirstName?: string;
+  phone?: string;
+  paymentIntentId?: string;
+  isAddingCreditCard?: boolean;
+  couponCode?: string;
+}): Promise<HealthieCheckoutResult> {
+  const mutation = `
+    mutation CompleteCheckout($input: completeCheckoutInput!) {
+      completeCheckout(input: $input) {
+        appointment {
+          id
+          date
+          start_time
+          status
+        }
+        billingItem {
+          id
+          amount_paid
+          status
+        }
+        userPackageSelection {
+          id
+          offering_id
+          user_id
+          status
+          created_at
+          next_billing_date
+          offering {
+            id
+            name
+            price
+            billing_frequency
+          }
+        }
+        patientEmail
+        reassignClientProvider
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      stripe_token: input.stripeToken,
+      offering_id: input.offeringId,
+      email: input.email,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      legal_first_name: input.legalFirstName,
+      phone_number: input.phone,
+      payment_intent_id: input.paymentIntentId,
+      is_adding_credit_card: input.isAddingCreditCard,
+      coupon_code: input.couponCode,
+    },
+  };
+
+  const data = await healthieRequest<{
+    completeCheckout: {
+      appointment?: HealthieAppointment | null;
+      billingItem?: HealthieBillingItem | null;
+      userPackageSelection?: HealthieUserPackageSelection | null;
+      patientEmail?: string;
+      reassignClientProvider?: boolean;
+      messages?: Array<{ field: string; message: string }>;
+    };
+  }>(mutation, variables);
+
+  // Check for errors
+  if (data.completeCheckout?.messages?.length) {
+    const errorMsg = data.completeCheckout.messages
+      .map((m) => m.message)
+      .join(', ');
+    throw new Error(errorMsg || 'Checkout failed');
+  }
+
+  return {
+    appointment: data.completeCheckout?.appointment,
+    billingItem: data.completeCheckout?.billingItem,
+    userPackageSelection: data.completeCheckout?.userPackageSelection,
+    patientEmail: data.completeCheckout?.patientEmail,
+    reassignClientProvider: data.completeCheckout?.reassignClientProvider,
+  };
+}
+
+/**
+ * Create an invoice for a patient
+ * 
+ * @param recipientId - Patient ID
+ * @param invoiceType - 'offering', 'other', or 'cms1500'
+ * @param price - Amount as string (required if not using offering)
+ * @param offeringId - Package ID (if invoicing for a package)
+ * @param servicesProvided - Description (required if invoiceType is 'other')
+ */
+export async function createInvoice(input: {
+  recipientId: string;
+  invoiceType: 'offering' | 'other' | 'cms1500';
+  price?: string;
+  offeringId?: string;
+  servicesProvided?: string;
+  notes?: string;
+}): Promise<HealthieInvoice> {
+  const mutation = `
+    mutation CreateRequestedPayment($input: createRequestedPaymentInput!) {
+      createRequestedPayment(input: $input) {
+        requestedPayment {
+          id
+          price
+          status
+          invoice_id
+          created_at
+        }
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      recipient_id: input.recipientId,
+      invoice_type: input.invoiceType,
+      price: input.price,
+      offering_id: input.offeringId,
+      services_provided: input.servicesProvided,
+      notes: input.notes,
+    },
+  };
+
+  const data = await healthieRequest<{
+    createRequestedPayment: {
+      requestedPayment: HealthieInvoice | null;
+      messages?: Array<{ field: string; message: string }>;
+    };
+  }>(mutation, variables);
+
+  if (!data.createRequestedPayment?.requestedPayment) {
+    const errorMsg = data.createRequestedPayment?.messages?.[0]?.message;
+    throw new Error(errorMsg || 'Failed to create invoice');
+  }
+
+  return data.createRequestedPayment.requestedPayment;
+}
+
+/**
+ * Get Healthie Offerings (Packages) for subscriptions
+ */
+export async function getOfferings(options?: {
+  onlyClientVisible?: boolean;
+  keywords?: string;
+}): Promise<Array<{
+  id: string;
+  name: string;
+  price: string;
+  billing_frequency: string;
+  currency: string;
+  visibility_status: string;
+}>> {
+  const query = `
+    query GetOfferings($onlyClientVisible: Boolean, $keywords: String) {
+      offerings(
+        only_client_visible: $onlyClientVisible
+        keywords: $keywords
+      ) {
+        id
+        name
+        price
+        billing_frequency
+        currency
+        visibility_status
+      }
+    }
+  `;
+
+  const data = await healthieRequest<{
+    offerings: Array<{
+      id: string;
+      name: string;
+      price: string;
+      billing_frequency: string;
+      currency: string;
+      visibility_status: string;
+    }>;
+  }>(query, {
+    onlyClientVisible: options?.onlyClientVisible,
+    keywords: options?.keywords,
+  });
+
+  return data.offerings ?? [];
+}
+
+/**
+ * Get a specific Offering by ID
+ */
+export async function getOfferingById(offeringId: string): Promise<{
+  id: string;
+  name: string;
+  price: string;
+  billing_frequency: string;
+  currency: string;
+  initial_payment_amount?: string;
+  charge_immediately?: boolean;
+} | null> {
+  const query = `
+    query GetOffering($id: ID!) {
+      offering(id: $id) {
+        id
+        name
+        price
+        billing_frequency
+        currency
+        initial_payment_amount
+        charge_immediately
+      }
+    }
+  `;
+
+  const data = await healthieRequest<{
+    offering: {
+      id: string;
+      name: string;
+      price: string;
+      billing_frequency: string;
+      currency: string;
+      initial_payment_amount?: string;
+      charge_immediately?: boolean;
+    } | null;
+  }>(query, { id: offeringId });
+
+  return data.offering ?? null;
+}
+
+/**
+ * Get patient's active subscriptions (UserPackageSelections)
+ */
+export async function getPatientSubscriptions(
+  patientId: string
+): Promise<HealthieUserPackageSelection[]> {
+  const query = `
+    query GetUserPackageSelections($userId: ID!) {
+      userPackageSelections(user_id: $userId) {
+        id
+        offering_id
+        user_id
+        status
+        created_at
+        next_billing_date
+        offering {
+          id
+          name
+          price
+          billing_frequency
+        }
+      }
+    }
+  `;
+
+  const data = await healthieRequest<{
+    userPackageSelections: HealthieUserPackageSelection[];
+  }>(query, { userId: patientId });
+
+  return data.userPackageSelections ?? [];
+}
+
+/**
+ * Cancel a subscription (halt recurring payment)
+ */
+export async function cancelSubscription(
+  billingItemId: string
+): Promise<void> {
+  const mutation = `
+    mutation UpdateBillingItem($input: updateBillingItemInput!) {
+      updateBillingItem(input: $input) {
+        billingItem {
+          id
+        }
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      id: billingItemId,
+      is_canceled: true,
+    },
+  };
+
+  await healthieRequest(mutation, variables);
+}
+
+/**
+ * Pause a subscription
+ */
+export async function pauseSubscription(
+  billingItemId: string
+): Promise<void> {
+  const mutation = `
+    mutation UpdateBillingItem($input: updateBillingItemInput!) {
+      updateBillingItem(input: $input) {
+        billingItem {
+          id
+        }
+        messages {
+          field
+          message
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      id: billingItemId,
+      is_paused: true,
+    },
+  };
+
+  await healthieRequest(mutation, variables);
+}
+
+// ============================================================
 // PROGRAMS & COURSES
 // ============================================================
 

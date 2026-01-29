@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { getProductBySku } from '@/lib/config/product-catalog';
+import { 
+  createInvoice, 
+  chargePatient, 
+  getPatientByEmail, 
+  createPatient,
+  storePaymentMethod,
+} from '@/lib/healthie-api';
+import { v4 as uuidv4 } from 'uuid';
 
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-12-15.clover',
-  });
-}
-
+/**
+ * HIPAA-Compliant Product Checkout via Healthie
+ * 
+ * This endpoint processes product purchases through Healthie's internal
+ * payment system (Stripe Connect), which is covered under Healthie's BAA.
+ * 
+ * Flow:
+ * 1. Frontend tokenizes card using Stripe.js with Healthie's publishable key
+ * 2. Token is sent here along with customer info and cart items
+ * 3. We find or create the patient in Healthie
+ * 4. Store the payment method and charge the patient
+ * 5. Return success with order details
+ */
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting
@@ -18,15 +32,15 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse(rateLimitResult);
     }
 
-    if (!process.env.STRIPE_SECRET_KEY) {
+    if (!process.env.HEALTHIE_API_KEY) {
       return NextResponse.json(
-        { error: 'Stripe not configured' },
+        { error: 'Payment system not configured' },
         { status: 500 }
       );
     }
 
     const body = await request.json();
-    const { items, email } = body;
+    const { items, email, stripeToken, firstName, lastName } = body;
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -35,8 +49,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate all items have prices and build Stripe line items
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    if (!stripeToken) {
+      return NextResponse.json(
+        { error: 'Payment token is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate all items and calculate total
+    let totalCents = 0;
+    const productDescriptions: string[] = [];
 
     for (const item of items) {
       const { sku, quantity } = item;
@@ -62,70 +91,79 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      lineItems.push({
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: product.name,
-            metadata: {
-              sku: product.sku,
-              category: product.category,
-            },
-          },
-          unit_amount: Math.round(product.priceUsd * 100),
-        },
-        quantity,
-      });
+      totalCents += Math.round(product.priceUsd * 100) * quantity;
+      productDescriptions.push(`${product.name} x${quantity}`);
     }
+
+    const totalDollars = (totalCents / 100).toFixed(2);
+
+    // Find or create patient in Healthie
+    let patient = await getPatientByEmail(email);
+    let isNewPatient = false;
+
+    if (!patient) {
+      patient = await createPatient({
+        email,
+        firstName,
+        lastName,
+      });
+      isNewPatient = true;
+    }
+
+    // Store the payment method
+    const paymentMethod = await storePaymentMethod({
+      token: stripeToken,
+      userId: patient.id,
+      isDefault: true,
+    });
+
+    // Create an invoice for tracking
+    const invoice = await createInvoice({
+      recipientId: patient.id,
+      invoiceType: 'other',
+      price: totalDollars,
+      servicesProvided: productDescriptions.join(', '),
+      notes: `Product order - ${items.length} item(s)`,
+    });
+
+    // Charge the patient
+    const billingItem = await chargePatient({
+      senderId: patient.id,
+      amountPaid: totalDollars,
+      stripeCustomerDetailId: paymentMethod.id,
+      requestedPaymentId: invoice.id,
+      stripeIdempotencyKey: uuidv4(),
+    });
+
+    // Log checkout completion (no PHI)
+    console.log('Healthie product checkout completed:', {
+      item_count: items.length,
+      billing_item_id: billingItem.id,
+      invoice_id: invoice.id,
+      is_new_patient: isNewPatient,
+      timestamp: new Date().toISOString(),
+    });
 
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
-    // PHI-free metadata
-    const sessionMetadata: Record<string, string> = {
-      checkout_type: 'product',
-      item_count: items.length.toString(),
-    };
-
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      line_items: lineItems,
-      customer_email: email || undefined,
-      billing_address_collection: 'required',
-      shipping_address_collection: {
-        allowed_countries: ['US'],
-      },
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&provider=stripe&type=product`,
-      cancel_url: `${baseUrl}/library/cart?cancelled=true`,
-      metadata: sessionMetadata,
-    });
-
-    console.log('Product checkout session created:', {
-      session_id: session.id,
-      item_count: lineItems.length,
-      timestamp: new Date().toISOString(),
-    });
-
     return NextResponse.json({
-      url: session.url,
-      session_id: session.id,
+      success: true,
+      orderId: billingItem.id,
+      invoiceId: invoice.id,
+      patientId: patient.id,
+      isNewPatient,
+      redirectUrl: `${baseUrl}/success?provider=healthie&type=product&order_id=${billingItem.id}`,
     });
   } catch (error) {
-    console.error('Product checkout error:', error);
+    console.error('Healthie product checkout error:', error);
 
-    if (error instanceof Stripe.errors.StripeError) {
-      return NextResponse.json(
-        { error: `Payment error: ${error.message}` },
-        { status: 400 }
-      );
-    }
+    const errorMessage = error instanceof Error ? error.message : 'Checkout failed';
 
     return NextResponse.json(
-      { error: 'Failed to create product checkout' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: 400 }
     );
   }
 }

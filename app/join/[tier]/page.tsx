@@ -2,28 +2,254 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import Button from '@/components/ui/Button';
-import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle } from 'lucide-react';
-import type { PaymentProvider } from '@/lib/payments/payment-types';
+import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
+import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types';
 import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types';
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
 import { KlarnaWidget } from '@/components/payments/KlarnaWidget';
 import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton';
+import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm';
+import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED } from '@/lib/config/payments';
+
+// Initialize Stripe with Healthie's publishable key for HIPAA-compliant tokenization
+// Card data goes directly to Stripe (via Healthie's Stripe Connect) - never touches our servers
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_HEALTHIE_STRIPE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
+);
+
+// Card Element styling
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      fontSize: '16px',
+      color: '#1a3c34',
+      fontFamily: '"Inter", system-ui, sans-serif',
+      '::placeholder': {
+        color: '#6b7280',
+      },
+    },
+    invalid: {
+      color: '#dc2626',
+      iconColor: '#dc2626',
+    },
+  },
+};
+
+// Inner form component that uses Stripe hooks
+function CheckoutForm({ plan, onSuccess, onError }: {
+  plan: NonNullable<typeof PLANS[number]>;
+  onSuccess: (redirectUrl: string) => void;
+  onError: (error: string) => void;
+}) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [isLoading, setIsLoading] = useState(false);
+  const [cardError, setCardError] = useState<string | null>(null);
+  
+  // Customer info
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) {
+      onError('Payment system not loaded. Please refresh the page.');
+      return;
+    }
+
+    const cardElement = elements.getElement(CardElement);
+    if (!cardElement) {
+      onError('Card element not found');
+      return;
+    }
+
+    // Validate email
+    if (!email || !email.includes('@')) {
+      onError('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+    setCardError(null);
+
+    try {
+      // Create a token from the card element
+      // This sends card data directly to Stripe (via Healthie's Stripe Connect)
+      // Card data never touches our servers - HIPAA compliant
+      const { token, error: tokenError } = await stripe.createToken(cardElement);
+
+      if (tokenError) {
+        setCardError(tokenError.message || 'Invalid card details');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!token) {
+        setCardError('Failed to process card');
+        setIsLoading(false);
+        return;
+      }
+
+      // Send the token to our API to complete checkout via Healthie
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planSlug: plan.slug,
+          stripeToken: token.id,
+          email,
+          firstName,
+          lastName,
+          phone: phone || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Checkout failed');
+      }
+
+      // Success - redirect to success page
+      onSuccess(data.redirectUrl || `/success?provider=healthie&plan=${plan.slug}`);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      onError(err instanceof Error ? err.message : 'An error occurred during checkout');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Customer Information */}
+      <div className="space-y-4">
+        <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase">
+          Your Information
+        </p>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block text-sm text-cultr-textMuted mb-1.5">
+              First Name
+            </label>
+            <input
+              type="text"
+              id="firstName"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+              placeholder="Jane"
+            />
+          </div>
+          <div>
+            <label htmlFor="lastName" className="block text-sm text-cultr-textMuted mb-1.5">
+              Last Name
+            </label>
+            <input
+              type="text"
+              id="lastName"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+              placeholder="Smith"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm text-cultr-textMuted mb-1.5">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+            placeholder="jane@example.com"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm text-cultr-textMuted mb-1.5">
+            Phone (optional)
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+            placeholder="(555) 123-4567"
+          />
+        </div>
+      </div>
+
+      {/* Card Element */}
+      <div>
+        <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase mb-4">
+          Payment Details
+        </p>
+        <div className="border border-cultr-sage rounded-lg p-4 bg-white">
+          <CardElement options={CARD_ELEMENT_OPTIONS} />
+        </div>
+        {cardError && (
+          <p className="mt-2 text-sm text-red-600">{cardError}</p>
+        )}
+        <div className="flex items-center gap-1.5 mt-2 text-xs text-cultr-textMuted">
+          <Lock className="w-3 h-3" />
+          <span>Your card details are encrypted and sent directly to our HIPAA-compliant payment processor</span>
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      <Button
+        type="submit"
+        disabled={isLoading || !stripe}
+        className="w-full text-lg py-6"
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          `Join ${plan.name} - $${plan.price}/${plan.interval}`
+        )}
+      </Button>
+    </form>
+  );
+}
 
 export default function JoinPage({ params }: { params: { tier: string } }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe');
+
+  // Determine primary card payment provider (Stripe Elements/Healthie vs Authorize.net)
+  const primaryProvider = getPrimaryPaymentProvider();
+  const useAuthorizeNet = primaryProvider === 'authorize_net' && AUTHORIZE_NET_ENABLED;
 
   // Klarna state
   const [klarnaClientToken, setKlarnaClientToken] = useState<string | null>(null);
   const [klarnaSessionLoading, setKlarnaSessionLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Affirm state
   const [affirmConfig, setAffirmConfig] = useState<AffirmCheckoutConfig | null>(null);
   const [affirmLoading, setAffirmLoading] = useState(false);
+
+  // Authorize.net state
+  const [authNetEmail, setAuthNetEmail] = useState('');
 
   // Find the plan based on the tier slug
   const plan = PLANS.find((p) => p.slug === params.tier);
@@ -41,32 +267,58 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
 
   const amountCents = plan.price * 100;
 
-  // Stripe checkout (existing flow)
-  const handleStripeCheckout = async () => {
+  // Handle checkout success
+  const handleCheckoutSuccess = (redirectUrl: string) => {
+    router.push(redirectUrl);
+  };
+
+  // Handle checkout error
+  const handleCheckoutError = (errorMsg: string) => {
+    setError(errorMsg);
+  };
+
+  // Authorize.net checkout handler
+  const handleAuthorizeNetCheckout = async (
+    opaqueData: AuthorizeNetOpaqueData,
+    billing: BillingInfo
+  ) => {
+    if (!authNetEmail) {
+      setError('Please enter your email address');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch('/api/checkout', {
+      const response = await fetch('/api/checkout/authorize-net', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planSlug: plan.slug }),
+        body: JSON.stringify({
+          planSlug: plan.slug,
+          email: authNetEmail,
+          opaqueData,
+          billing: billing.firstName ? billing : undefined,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session');
+        throw new Error(data.error || 'Failed to process payment');
       }
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (data.redirectUrl) {
+        router.push(data.redirectUrl);
+      } else if (data.success) {
+        router.push(`/success?provider=authorize_net&subscription_id=${data.subscriptionId}&type=subscription`);
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error('Unexpected response');
       }
     } catch (err) {
-      console.error('Checkout error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Authorize.net checkout error:', err);
+      setError(err instanceof Error ? err.message : 'Payment failed');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -164,14 +416,6 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
     setPaymentMethod('stripe');
   }, []);
 
-  // Main CTA handler
-  const handleCheckout = () => {
-    if (paymentMethod === 'stripe') {
-      handleStripeCheckout();
-    }
-    // Klarna and Affirm have their own buttons rendered below
-  };
-
   return (
     <div className="min-h-screen bg-cultr-offwhite">
       {/* Hero */}
@@ -231,6 +475,46 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               />
             </div>
 
+            {/* Card Checkout Form */}
+            {paymentMethod === 'stripe' && (
+              useAuthorizeNet ? (
+                /* Authorize.net Card Form (High-Risk Merchant Account) */
+                <div className="space-y-4">
+                  {/* Email input for subscription */}
+                  <div>
+                    <label htmlFor="authNetEmail" className="block text-sm text-cultr-textMuted mb-1.5">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      id="authNetEmail"
+                      value={authNetEmail}
+                      onChange={(e) => setAuthNetEmail(e.target.value)}
+                      placeholder="jane@example.com"
+                      className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+                      required
+                    />
+                  </div>
+                  <AuthorizeNetForm
+                    onTokenReceived={handleAuthorizeNetCheckout}
+                    onError={handleCheckoutError}
+                    loading={isLoading}
+                    submitText={`Join ${plan.name} - $${plan.price}/${plan.interval}`}
+                    collectBillingAddress={true}
+                  />
+                </div>
+              ) : (
+                /* Stripe Elements via Healthie (HIPAA-compliant) */
+                <Elements stripe={stripePromise}>
+                  <CheckoutForm 
+                    plan={plan}
+                    onSuccess={handleCheckoutSuccess}
+                    onError={handleCheckoutError}
+                  />
+                </Elements>
+              )
+            )}
+
             {/* Klarna Widget (shown when Klarna is selected) */}
             {paymentMethod === 'klarna' && klarnaClientToken && (
               <div className="mb-6">
@@ -242,6 +526,15 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               </div>
             )}
 
+            {paymentMethod === 'klarna' && !klarnaClientToken && !klarnaSessionLoading && (
+              <Button
+                onClick={handleKlarnaCheckout}
+                className="w-full text-lg py-6 mb-6"
+              >
+                Continue with Klarna
+              </Button>
+            )}
+
             {paymentMethod === 'klarna' && klarnaSessionLoading && (
               <div className="flex items-center justify-center py-6 mb-6">
                 <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
@@ -250,7 +543,16 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             )}
 
             {/* Affirm Button (shown when Affirm is selected) */}
-            {paymentMethod === 'affirm' && (
+            {paymentMethod === 'affirm' && !affirmConfig && !affirmLoading && (
+              <Button
+                onClick={handleAffirmCheckout}
+                className="w-full text-lg py-6 mb-6"
+              >
+                Continue with Affirm
+              </Button>
+            )}
+
+            {paymentMethod === 'affirm' && affirmConfig && (
               <div className="mb-6">
                 <AffirmCheckoutButton
                   checkoutConfig={affirmConfig}
@@ -260,29 +562,18 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               </div>
             )}
 
+            {paymentMethod === 'affirm' && affirmLoading && (
+              <div className="flex items-center justify-center py-6 mb-6">
+                <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
+                <span className="ml-2 text-sm text-cultr-textMuted">Loading Affirm...</span>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
-            )}
-
-            {/* CTA Button (Stripe only - Klarna/Affirm have their own buttons) */}
-            {paymentMethod === 'stripe' && (
-              <Button
-                onClick={handleCheckout}
-                disabled={isLoading}
-                className="w-full text-lg py-6"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  `Join ${plan.name}`
-                )}
-              </Button>
             )}
 
             {/* Trust Badges */}
@@ -333,8 +624,8 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             </h3>
             <ol className="space-y-4">
               {[
-                'You\'ll be redirected to a secure checkout page',
-                'After payment, you\'ll see next steps to create your portal account',
+                'Your payment is processed securely via our HIPAA-compliant system',
+                'You\'ll receive a welcome email with your Healthie portal login',
                 'Complete your intake forms (takes ~15 minutes)',
                 'Book your first consult with a provider',
               ].map((step, i) => (

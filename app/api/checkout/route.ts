@@ -1,14 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Stripe from 'stripe';
 import { PLANS } from '@/lib/config/plans';
 import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
+import { completeCheckout, getOfferingById } from '@/lib/healthie-api';
 
-function getStripe() {
-  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-12-15.clover',
-  });
-}
-
+/**
+ * HIPAA-Compliant Subscription Checkout via Healthie
+ * 
+ * This endpoint processes membership subscriptions through Healthie's internal
+ * payment system (Stripe Connect), which is covered under Healthie's BAA.
+ * 
+ * Flow:
+ * 1. Frontend tokenizes card using Stripe.js with Healthie's publishable key
+ * 2. Token is sent here along with customer info
+ * 3. We call Healthie's completeCheckout mutation
+ * 4. Healthie creates the subscription and patient record
+ * 5. We return success with the subscription details
+ */
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting check
@@ -20,21 +27,43 @@ export async function POST(request: NextRequest) {
       return rateLimitResponse(rateLimitResult);
     }
 
-    // Validate Stripe is configured
-    if (!process.env.STRIPE_SECRET_KEY) {
+    // Validate Healthie is configured
+    if (!process.env.HEALTHIE_API_KEY) {
       return NextResponse.json(
-        { error: 'Stripe not configured' },
+        { error: 'Payment system not configured' },
         { status: 500 }
       );
     }
 
     const body = await request.json();
-    const { planSlug, email, metadata } = body;
+    const { 
+      planSlug, 
+      stripeToken,
+      email, 
+      firstName,
+      lastName,
+      phone,
+      couponCode,
+    } = body;
 
-    // Validate plan slug
+    // Validate required fields
     if (!planSlug || typeof planSlug !== 'string') {
       return NextResponse.json(
         { error: 'Plan slug is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!stripeToken) {
+      return NextResponse.json(
+        { error: 'Payment token is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email is required' },
         { status: 400 }
       );
     }
@@ -48,74 +77,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine base URL
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-      'http://localhost:3000';
-
-    // Build session metadata (PHI-free)
-    const sessionMetadata: Record<string, string> = {
-      plan_tier: plan.slug,
-      plan_name: plan.name,
-    };
-
-    // Add any additional metadata (ensure PHI-free)
-    if (metadata && typeof metadata === 'object') {
-      Object.entries(metadata).forEach(([key, value]) => {
-        if (typeof value === 'string' && value.length < 500) {
-          sessionMetadata[key] = value;
-        }
-      });
-    }
-
-    // Create Stripe Checkout Session
-    const stripe = getStripe();
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: plan.stripePriceId,
-          quantity: 1,
-        },
-      ],
-      allow_promotion_codes: true,
-      customer_email: email || undefined,
-      billing_address_collection: 'required',
-      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/pricing?cancelled=true`,
-      metadata: sessionMetadata,
-      subscription_data: {
-        metadata: sessionMetadata,
-      },
-    });
-
-    // Log checkout session creation (no PHI)
-    console.log('Checkout session created:', {
-      session_id: session.id,
-      plan: plan.slug,
-      timestamp: new Date().toISOString(),
-    });
-
-    return NextResponse.json({ 
-      url: session.url,
-      session_id: session.id,
-    });
-  } catch (error) {
-    console.error('Checkout session error:', error);
-    
-    // Return appropriate error message
-    if (error instanceof Stripe.errors.StripeError) {
+    // Validate Healthie Offering ID is configured
+    if (!plan.healthieOfferingId) {
+      console.error('Healthie Offering ID not configured for plan:', plan.slug);
       return NextResponse.json(
-        { error: `Payment error: ${error.message}` },
-        { status: 400 }
+        { error: 'Subscription plan not properly configured' },
+        { status: 500 }
       );
     }
 
+    // Verify the offering exists in Healthie
+    const offering = await getOfferingById(plan.healthieOfferingId);
+    if (!offering) {
+      console.error('Healthie Offering not found:', plan.healthieOfferingId);
+      return NextResponse.json(
+        { error: 'Subscription plan not found in payment system' },
+        { status: 500 }
+      );
+    }
+
+    // Process checkout through Healthie
+    const result = await completeCheckout({
+      stripeToken,
+      offeringId: plan.healthieOfferingId,
+      email,
+      firstName,
+      lastName,
+      phone,
+      couponCode,
+    });
+
+    // Log checkout completion (no PHI)
+    console.log('Healthie checkout completed:', {
+      plan: plan.slug,
+      subscription_id: result.userPackageSelection?.id,
+      is_new_patient: result.reassignClientProvider,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Determine success URL
+    const baseUrl = 
+      process.env.NEXT_PUBLIC_SITE_URL || 
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+    return NextResponse.json({ 
+      success: true,
+      subscriptionId: result.userPackageSelection?.id,
+      patientEmail: result.patientEmail,
+      isNewPatient: result.reassignClientProvider,
+      redirectUrl: `${baseUrl}/success?provider=healthie&plan=${plan.slug}&subscription_id=${result.userPackageSelection?.id || ''}`,
+    });
+  } catch (error) {
+    console.error('Healthie checkout error:', error);
+    
+    const errorMessage = error instanceof Error ? error.message : 'Checkout failed';
+    
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: 400 }
     );
   }
 }

@@ -1,6 +1,7 @@
-// Stripe Product & Price Configuration
-// Last Updated: 2026-01-25
-// Note: These are LIVE mode IDs
+// Payment Configuration
+// Last Updated: 2026-01-29
+// Note: Healthie Offering IDs are used for HIPAA-compliant payments
+// Stripe IDs are retained for backwards compatibility
 
 export type PlanTier = 'core' | 'creator' | 'catalyst' | 'concierge' | 'club';
 
@@ -22,7 +23,11 @@ export type Plan = {
   bestFor: string;
   features: string[];
   libraryAccess: LibraryAccess;
+  /** Healthie Offering ID for HIPAA-compliant payments (primary) */
+  healthieOfferingId: string;
+  /** @deprecated Use healthieOfferingId instead - retained for backwards compatibility */
   stripeProductId: string;
+  /** @deprecated Use healthieOfferingId instead - retained for backwards compatibility */
   stripePriceId: string;
   paymentLink: string;
   isFeatured: boolean;
@@ -76,8 +81,9 @@ export const PLANS: Plan[] = [
       providerNotes: true,
       customRequests: true,
     },
+    healthieOfferingId: process.env.HEALTHIE_OFFERING_CLUB || '',
     stripeProductId: 'prod_TrIU16tOaJsSVw',
-    stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy', // TODO: Update with new $899 price ID
+    stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy',
     paymentLink: 'https://buy.stripe.com/8x2bJ0fLd8yxcUSeha6J20c',
     isFeatured: false,
     ctaLabel: 'Join Club',
@@ -105,8 +111,9 @@ export const PLANS: Plan[] = [
       providerNotes: false,
       customRequests: false,
     },
+    healthieOfferingId: process.env.HEALTHIE_OFFERING_CORE || '',
     stripeProductId: 'prod_TrIUWZzUIZYfIP',
-    stripePriceId: 'price_1StZtWC1JUIZB7aRFsP1WVxI', // TODO: Update with new $399 price ID
+    stripePriceId: 'price_1StZtWC1JUIZB7aRFsP1WVxI',
     paymentLink: 'https://buy.stripe.com/fZu9AS56zeWVbQOc926J208',
     isFeatured: false,
     ctaLabel: 'Join Core',
@@ -134,8 +141,9 @@ export const PLANS: Plan[] = [
       providerNotes: false,
       customRequests: false,
     },
+    healthieOfferingId: process.env.HEALTHIE_OFFERING_CATALYST || '',
     stripeProductId: 'prod_TrIUf4gB4l9G70',
-    stripePriceId: 'price_1StZtYC1JUIZB7aR2nEziKX8', // TODO: Update with new $599 price ID
+    stripePriceId: 'price_1StZtYC1JUIZB7aR2nEziKX8',
     paymentLink: 'https://buy.stripe.com/14A6oGfLd1658ECgpi6J20a',
     isFeatured: false,
     ctaLabel: 'Join Catalyst+',
@@ -163,8 +171,9 @@ export const PLANS: Plan[] = [
       providerNotes: false,
       customRequests: false,
     },
+    healthieOfferingId: process.env.HEALTHIE_OFFERING_CREATOR || '',
     stripeProductId: 'prod_TrIUzJ9ZKiHIS6',
-    stripePriceId: 'price_1StZtXC1JUIZB7aRGKjc2lbg', // TODO: Update with new $499 price ID
+    stripePriceId: 'price_1StZtXC1JUIZB7aRGKjc2lbg',
     paymentLink: 'https://buy.stripe.com/eVq00icz16qpf30eha6J209',
     isFeatured: true,
     ctaLabel: 'Join Creator',
@@ -192,8 +201,9 @@ export const PLANS: Plan[] = [
       providerNotes: true,
       customRequests: false,
     },
+    healthieOfferingId: process.env.HEALTHIE_OFFERING_CONCIERGE || '',
     stripeProductId: 'prod_TrIUHNyu0DIyUV',
-    stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK', // TODO: Update with new $699 price ID
+    stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK',
     paymentLink: 'https://buy.stripe.com/9B6dR8aqTaGF1ca8WQ6J20b',
     isFeatured: false,
     ctaLabel: 'Join Concierge',

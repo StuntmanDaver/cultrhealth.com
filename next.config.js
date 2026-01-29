@@ -1,7 +1,3 @@
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable React strict mode for better development experience
@@ -16,7 +12,7 @@ const nextConfig = {
   // Experimental features for better performance
   experimental: {
     // Optimize package imports to reduce bundle size
-    optimizePackageImports: ['lucide-react', '@react-pdf/renderer'],
+    optimizePackageImports: ['lucide-react'],
   },
 
   // Image optimization
@@ -39,15 +35,6 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:all*(js|css)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
         source: '/:all*(woff|woff2|ttf|otf)',
         headers: [
           {
@@ -60,4 +47,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+module.exports = nextConfig;

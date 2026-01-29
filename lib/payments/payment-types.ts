@@ -1,6 +1,6 @@
-// Shared types for BNPL payment providers (Klarna & Affirm)
+// Shared types for payment providers (Stripe, Klarna, Affirm, Authorize.net)
 
-export type PaymentProvider = 'stripe' | 'klarna' | 'affirm';
+export type PaymentProvider = 'stripe' | 'klarna' | 'affirm' | 'authorize_net';
 
 export type CheckoutType = 'subscription' | 'product';
 
@@ -158,5 +158,149 @@ export interface AffirmWebhookEvent {
     order_id: string;
     amount: number;
     status: string;
+  };
+}
+
+// ---------------------
+// Authorize.net Types
+// ---------------------
+
+export interface AuthorizeNetConfig {
+  apiLoginId: string;
+  transactionKey: string;
+  publicClientKey: string;
+  environment: 'sandbox' | 'production';
+}
+
+export interface AuthorizeNetOpaqueData {
+  dataDescriptor: string;
+  dataValue: string;
+}
+
+export interface AuthorizeNetTransactionRequest {
+  transactionType: 'authCaptureTransaction' | 'authOnlyTransaction' | 'captureOnlyTransaction';
+  amount: string;
+  payment: {
+    opaqueData: AuthorizeNetOpaqueData;
+  };
+  order?: {
+    invoiceNumber: string;
+    description: string;
+  };
+  customer?: {
+    id?: string;
+    email: string;
+  };
+  billTo?: {
+    firstName: string;
+    lastName: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    zip?: string;
+    country?: string;
+  };
+  lineItems?: {
+    lineItem: AuthorizeNetLineItem[];
+  };
+}
+
+export interface AuthorizeNetLineItem {
+  itemId: string;
+  name: string;
+  description?: string;
+  quantity: string;
+  unitPrice: string;
+}
+
+export interface AuthorizeNetTransactionResponse {
+  transactionResponse?: {
+    responseCode: '1' | '2' | '3' | '4'; // 1=Approved, 2=Declined, 3=Error, 4=Held
+    authCode?: string;
+    avsResultCode?: string;
+    cvvResultCode?: string;
+    transId: string;
+    refTransID?: string;
+    transHash?: string;
+    accountNumber?: string;
+    accountType?: string;
+    messages?: {
+      message: {
+        code: string;
+        description: string;
+      }[];
+    };
+    errors?: {
+      error: {
+        errorCode: string;
+        errorText: string;
+      }[];
+    };
+  };
+  messages: {
+    resultCode: 'Ok' | 'Error';
+    message: {
+      code: string;
+      text: string;
+    }[];
+  };
+}
+
+export interface AuthorizeNetSubscriptionRequest {
+  name: string;
+  paymentSchedule: {
+    interval: {
+      length: string;
+      unit: 'days' | 'months';
+    };
+    startDate: string; // YYYY-MM-DD
+    totalOccurrences: string; // '9999' for indefinite
+  };
+  amount: string;
+  payment: {
+    opaqueData: AuthorizeNetOpaqueData;
+  };
+  customer?: {
+    id?: string;
+    email: string;
+  };
+  billTo?: {
+    firstName: string;
+    lastName: string;
+  };
+  order?: {
+    invoiceNumber: string;
+    description: string;
+  };
+}
+
+export interface AuthorizeNetSubscriptionResponse {
+  subscriptionId?: string;
+  profile?: {
+    customerProfileId: string;
+    customerPaymentProfileId: string;
+  };
+  messages: {
+    resultCode: 'Ok' | 'Error';
+    message: {
+      code: string;
+      text: string;
+    }[];
+  };
+}
+
+export interface AuthorizeNetWebhookEvent {
+  notificationId: string;
+  eventType: string;
+  eventDate: string;
+  webhookId: string;
+  payload: {
+    entityName: string;
+    id: string;
+    responseCode?: number;
+    authCode?: string;
+    avsResponse?: string;
+    authAmount?: number;
+    merchantReferenceId?: string;
   };
 }
