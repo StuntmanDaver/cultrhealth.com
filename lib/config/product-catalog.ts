@@ -707,3 +707,32 @@ export function getCategoriesWithCounts(): { category: ProductCategory; count: n
     displayName: getCategoryDisplayName(category),
   })).filter(c => c.count > 0)
 }
+
+// ===========================================
+// HSA/FSA LMN ELIGIBILITY
+// ===========================================
+
+// Categories excluded from Letter of Medical Necessity (non-medical items)
+const LMN_EXCLUDED_CATEGORIES: ProductCategory[] = ['accessory']
+
+/**
+ * Check if a product is eligible for Letter of Medical Necessity (HSA/FSA)
+ * All peptide products are eligible, accessories are not
+ */
+export function isLmnEligible(product: ShopProduct): boolean {
+  return !LMN_EXCLUDED_CATEGORIES.includes(product.category)
+}
+
+/**
+ * Check if a category is LMN-eligible
+ */
+export function isLmnEligibleCategory(category: ProductCategory): boolean {
+  return !LMN_EXCLUDED_CATEGORIES.includes(category)
+}
+
+/**
+ * Get all LMN-eligible products
+ */
+export function getLmnEligibleProducts(): ShopProduct[] {
+  return PRODUCT_CATALOG.filter(isLmnEligible)
+}

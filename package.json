@@ -7,12 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "analyze": "ANALYZE=true next build",
     "setup:stripe": "ts-node scripts/setup-stripe.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.21",
     "@ai-sdk/react": "^3.0.61",
     "@marsidev/react-turnstile": "^1.0.2",
+    "@react-pdf/renderer": "^4.3.2",
     "@vercel/postgres": "^0.10.0",
     "ai": "^6.0.59",
     "class-variance-authority": "^0.7.1",
@@ -30,6 +32,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.1.6",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/marked": "^5.0.2",

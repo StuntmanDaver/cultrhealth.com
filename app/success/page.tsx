@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { LINKS } from '@/lib/config/links';
-import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock } from 'lucide-react';
+import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock, Download, Receipt } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Welcome to CULTR — CULTR Health',
@@ -29,9 +29,10 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   let isPending = params.pending === 'true';
   const isProductPurchase = params.type === 'product';
 
-  // Optional: Retrieve session details from Stripe if session_id is provided
+  // Retrieve session details from Stripe if session_id is provided
   let customerEmail: string | null = null;
   let planName: string | null = null;
+  let paymentIntentId: string | null = null;
 
   if (sessionId && process.env.STRIPE_SECRET_KEY) {
     try {
@@ -42,6 +43,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       customerEmail = session.customer_details?.email || null;
       planName = session.metadata?.plan_name || null;
+      paymentIntentId = typeof session.payment_intent === 'string' 
+        ? session.payment_intent 
+        : session.payment_intent?.id || null;
     } catch (error) {
       console.error('Failed to retrieve session:', error);
     }
@@ -70,6 +74,76 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       console.error('Failed to capture Affirm charge:', error);
       affirmCaptureError = true;
       isPending = true;
+    }
+  }
+
+  // Fetch LMN data for product purchases
+  let lmnNumber: string | null = null;
+  let lmnIssueDate: string | null = null;
+  let lmnEligibleTotal: number | null = null;
+  let orderNumber: string | null = null;
+
+  if (isProductPurchase && process.env.POSTGRES_URL) {
+    try {
+      const { sql } = await import('@vercel/postgres');
+
+      // Find order by payment intent ID (already retrieved above)
+      if (paymentIntentId) {
+        const orderResult = await sql`
+          SELECT order_number FROM orders 
+          WHERE stripe_payment_intent_id = ${paymentIntentId}
+          LIMIT 1
+        `;
+        if (orderResult.rows.length > 0) {
+          orderNumber = orderResult.rows[0].order_number;
+        }
+      }
+
+      // Find LMN by order number (if we found the order)
+      if (orderNumber) {
+        const lmnResult = await sql`
+          SELECT lmn_number, issue_date, eligible_total 
+          FROM lmn_records 
+          WHERE order_number = ${orderNumber}
+          LIMIT 1
+        `;
+        if (lmnResult.rows.length > 0) {
+          lmnNumber = lmnResult.rows[0].lmn_number;
+          lmnIssueDate = new Date(lmnResult.rows[0].issue_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          });
+          lmnEligibleTotal = Number(lmnResult.rows[0].eligible_total);
+        }
+      }
+
+      // Fallback: find LMN by customer email (most recent)
+      if (!lmnNumber && customerEmail) {
+        const fallbackResult = await sql`
+          SELECT lmn_number, issue_date, eligible_total 
+          FROM lmn_records 
+          WHERE lower(customer_email) = lower(${customerEmail})
+          ORDER BY created_at DESC
+          LIMIT 1
+        `;
+        if (fallbackResult.rows.length > 0) {
+          // Only use if created within last 5 minutes (likely this order)
+          const createdAt = new Date(fallbackResult.rows[0].issue_date);
+          const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+          if (createdAt > fiveMinutesAgo) {
+            lmnNumber = fallbackResult.rows[0].lmn_number;
+            lmnIssueDate = createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+            lmnEligibleTotal = Number(fallbackResult.rows[0].eligible_total);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch LMN:', error);
     }
   }
 
@@ -224,22 +298,93 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         </section>
       )}
 
-      {/* Product purchase: simple next step */}
+      {/* Product purchase: LMN and next steps */}
       {isProductPurchase && (
         <section className="py-16 px-6 bg-white">
-          <div className="max-w-2xl mx-auto text-center">
-            <h3 className="text-xl font-display font-bold text-cultr-forest mb-4">
-              What happens next?
-            </h3>
-            <p className="text-cultr-textMuted mb-6">
-              Our team will process your order. You will receive a shipping confirmation email with tracking details.
-            </p>
-            <Link
-              href="/library/shop"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-cultr-forest text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
-            >
-              Continue Shopping
-            </Link>
+          <div className="max-w-2xl mx-auto">
+            {/* HSA/FSA LMN Section */}
+            {lmnNumber && (
+              <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Receipt className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-display font-bold text-cultr-forest">
+                        HSA/FSA Documentation Ready
+                      </h3>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wide">
+                        Tax-Free
+                      </span>
+                    </div>
+                    <p className="text-sm text-cultr-textMuted mb-4">
+                      Your Letter of Medical Necessity has been generated. Use this document to get reimbursed from your HSA or FSA account.
+                    </p>
+                    <div className="bg-white rounded-lg p-4 border border-emerald-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <p className="text-xs text-cultr-textMuted uppercase tracking-wide">LMN Reference</p>
+                          <p className="font-mono text-sm text-cultr-forest font-medium">{lmnNumber}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-cultr-textMuted uppercase tracking-wide">Eligible Amount</p>
+                          <p className="text-lg font-bold text-emerald-600">
+                            {lmnEligibleTotal ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(lmnEligibleTotal) : '—'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-emerald-50 rounded-lg p-3 flex items-start gap-3">
+                        <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Check className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-emerald-800">LMN Sent to Your Email</p>
+                          <p className="text-xs text-emerald-700 mt-1">
+                            Check your inbox{customerEmail ? ` at ${customerEmail}` : ''} for the PDF attachment. 
+                            You can also download it anytime from your member portal.
+                          </p>
+                        </div>
+                      </div>
+                      {lmnIssueDate && (
+                        <p className="text-xs text-cultr-textMuted mt-2 text-right">
+                          Issued {lmnIssueDate}
+                        </p>
+                      )}
+                    </div>
+                    <p className="text-xs text-cultr-textMuted mt-3">
+                      Submit this letter to your HSA/FSA administrator for tax-free reimbursement. 
+                      The document is also available in your <Link href="/library" className="text-emerald-600 hover:underline">member portal</Link>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* What happens next */}
+            <div className="text-center">
+              <h3 className="text-xl font-display font-bold text-cultr-forest mb-4">
+                What happens next?
+              </h3>
+              <p className="text-cultr-textMuted mb-6">
+                Our team will process your order. You will receive a shipping confirmation email with tracking details.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link
+                  href="/library/shop"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-cultr-forest text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
+                >
+                  Continue Shopping
+                </Link>
+                <Link
+                  href="/library"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-cultr-offwhite text-cultr-forest font-bold rounded-lg hover:bg-cultr-sage/30 transition-colors border border-cultr-sage"
+                >
+                  <FileText className="w-4 h-4" />
+                  View All Documents
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}

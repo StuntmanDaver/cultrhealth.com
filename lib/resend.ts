@@ -789,3 +789,160 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
+
+// ===========================================
+// ORDER CONFIRMATION WITH LMN EMAIL
+// ===========================================
+
+interface OrderItem {
+  name: string
+  quantity: number
+  price: number
+}
+
+interface OrderConfirmationWithLMNData {
+  email: string
+  name?: string
+  orderNumber: string
+  items: OrderItem[]
+  totalAmount: number
+  currency: string
+  lmnNumber: string
+  lmnPdfBuffer: Buffer
+}
+
+export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLMNData): Promise<EmailResult> {
+  const {
+    email,
+    name,
+    orderNumber,
+    items,
+    totalAmount,
+    currency,
+    lmnNumber,
+    lmnPdfBuffer,
+  } = data
+
+  const firstName = name?.split(' ')[0] || 'there'
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+    }).format(amount)
+  }
+
+  // Build items rows
+  const itemRows = items.map(item => `
+    <tr>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; text-align: right;">${formatCurrency(item.price)}</td>
+    </tr>
+  `).join('')
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Order Confirmed
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, thank you for your order. Your products are being prepared for shipment.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <span style="color: #888;">Order Number</span>
+        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <thead>
+          <tr>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: right; font-weight: 500;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemRows}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding: 16px 0 0 0; color: #fff; font-weight: 600; text-align: right;">Total:</td>
+            <td style="padding: 16px 0 0 0; color: #c9a962; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+    <!-- HSA/FSA Section -->
+    <div style="background: linear-gradient(135deg, #1a3d1a 0%, #0f2a0f 100%); border-radius: 8px; padding: 24px; margin-bottom: 24px; border: 1px solid #2d5a2d;">
+      <div style="display: flex; align-items: center; margin-bottom: 16px;">
+        <span style="display: inline-block; background: #c9a962; color: #000; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+          HSA/FSA Eligible
+        </span>
+      </div>
+      
+      <h3 style="color: #fff; font-size: 16px; margin: 0 0 12px 0;">
+        Letter of Medical Necessity Included
+      </h3>
+      
+      <p style="color: #a0a0a0; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        Your order qualifies for HSA/FSA reimbursement. We've attached a Letter of Medical Necessity (LMN) 
+        to this email. Submit this document to your HSA/FSA administrator for tax-free reimbursement.
+      </p>
+      
+      <div style="background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+        <span style="color: #c9a962;">📄</span>
+        <div>
+          <p style="color: #fff; font-size: 14px; margin: 0;">CULTR-LMN-${lmnNumber}.pdf</p>
+          <p style="color: #888; font-size: 12px; margin: 4px 0 0 0;">Attached to this email</p>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
+      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+        What's Next?
+      </p>
+      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+        <li style="margin-bottom: 6px;">You'll receive a shipping confirmation with tracking details</li>
+        <li style="margin-bottom: 6px;">Products typically ship within 1-2 business days</li>
+        <li>Your LMN is also available in your member portal</li>
+      </ul>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Order Confirmed: ${orderNumber} — HSA/FSA Letter Attached`,
+      html: baseEmailTemplate(content, 'Thank you for choosing CULTR Health.'),
+      attachments: [
+        {
+          filename: `CULTR-LMN-${lmnNumber}.pdf`,
+          content: lmnPdfBuffer.toString('base64'),
+        },
+      ],
+    })
+
+    if (error) {
+      console.error('Order confirmation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Order confirmation with LMN sent:', { email, orderNumber, lmnNumber })
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send order confirmation with LMN:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}

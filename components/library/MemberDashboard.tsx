@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   CalendarDays,
@@ -38,6 +38,8 @@ import {
   Files,
   FileHeart,
   Lock,
+  Download,
+  DollarSign,
 } from 'lucide-react';
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans';
 import {
@@ -95,6 +97,16 @@ interface MemberDashboardProps {
   email: string;
 }
 
+// LMN record type for HSA/FSA documents
+interface LmnRecord {
+  lmnNumber: string;
+  orderNumber: string;
+  issueDate: string;
+  eligibleTotal: number;
+  currency: string;
+  itemCount: number;
+}
+
 export function MemberDashboard({
   tier,
   libraryAccess,
@@ -104,8 +116,28 @@ export function MemberDashboard({
   const [activeCategory, setActiveCategory] = useState<HealthieCategory | 'all'>(
     'all'
   );
+  const [lmnRecords, setLmnRecords] = useState<LmnRecord[]>([]);
+  const [lmnLoading, setLmnLoading] = useState(true);
 
   const portalUrl = getHealthiePatientPortalUrl();
+
+  // Fetch LMN records for HSA/FSA documents
+  useEffect(() => {
+    async function fetchLmnRecords() {
+      try {
+        const response = await fetch('/api/lmn/list');
+        if (response.ok) {
+          const data = await response.json();
+          setLmnRecords(data.lmns || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch LMN records:', error);
+      } finally {
+        setLmnLoading(false);
+      }
+    }
+    fetchLmnRecords();
+  }, []);
 
   // Filter features based on current tier
   const getAccessibleFeatures = (features: HealthieFeature[]): HealthieFeature[] => {
@@ -283,6 +315,102 @@ export function MemberDashboard({
         <p className="text-sm text-stone-500 mt-2">
           Opens in a new tab with full Healthie EHR access
         </p>
+      </div>
+
+      {/* HSA/FSA Documents Section */}
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-stone-900">
+                HSA/FSA Documents
+              </h3>
+              <p className="text-sm text-stone-600">
+                Letters of Medical Necessity for tax-free reimbursement
+              </p>
+            </div>
+          </div>
+          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wide">
+            Tax-Free
+          </span>
+        </div>
+
+        {lmnLoading ? (
+          <div className="text-center py-8">
+            <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-sm text-stone-500 mt-2">Loading documents...</p>
+          </div>
+        ) : lmnRecords.length > 0 ? (
+          <div className="space-y-3">
+            {lmnRecords.map((record) => (
+              <div
+                key={record.lmnNumber}
+                className="bg-white rounded-xl p-4 border border-emerald-100 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-stone-900">
+                      Letter of Medical Necessity
+                    </p>
+                    <div className="flex items-center gap-3 text-sm text-stone-500">
+                      <span className="font-mono text-xs">{record.lmnNumber}</span>
+                      <span>•</span>
+                      <span>Order {record.orderNumber}</span>
+                      <span>•</span>
+                      <span>
+                        {new Date(record.issueDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="text-xs text-stone-500 uppercase tracking-wide">Eligible</p>
+                    <p className="font-bold text-emerald-600">
+                      {new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: record.currency || 'USD',
+                      }).format(record.eligibleTotal)}
+                    </p>
+                  </div>
+                  <a
+                    href={`/api/lmn/${record.lmnNumber}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-white/50 rounded-xl border border-dashed border-emerald-200">
+            <Receipt className="w-10 h-10 text-emerald-300 mx-auto mb-3" />
+            <p className="text-stone-600 font-medium">No HSA/FSA Documents Yet</p>
+            <p className="text-sm text-stone-500 mt-1">
+              When you purchase eligible products, your Letter of Medical Necessity will appear here.
+            </p>
+          </div>
+        )}
+
+        <div className="mt-4 p-3 bg-emerald-100/50 rounded-lg">
+          <p className="text-xs text-emerald-800">
+            <strong>How it works:</strong> Submit your Letter of Medical Necessity (LMN) to your HSA/FSA administrator 
+            to receive tax-free reimbursement for your peptide therapeutics. All prescription products from CULTR Health 
+            are eligible.
+          </p>
+        </div>
       </div>
 
       {/* Category Filter Tabs */}

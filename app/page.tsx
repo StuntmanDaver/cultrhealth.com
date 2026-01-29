@@ -1,25 +1,34 @@
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-import { PricingCard } from '@/components/site/PricingCard';
 import { CTASection } from '@/components/site/CTASection';
-import { FAQAccordion } from '@/components/site/FAQAccordion';
-import { NewsletterSignup } from '@/components/site/NewsletterSignup';
 import { PLANS } from '@/lib/config/plans';
 import {
-  Check,
   ArrowRight,
   FlaskConical,
   Stethoscope,
   MessageCircle,
   TrendingUp,
-  Shield,
-  Clock,
   Users,
   Sparkles,
   BookOpen,
   Dna,
 } from 'lucide-react';
+
+// Dynamically import heavy below-the-fold components
+// This reduces initial JS bundle and speeds up Time to Interactive
+const PricingCard = dynamic(() => import('@/components/site/PricingCard').then(mod => ({ default: mod.PricingCard })), {
+  loading: () => <div className="h-96 bg-white/50 rounded-2xl animate-pulse" />,
+});
+
+const FAQAccordion = dynamic(() => import('@/components/site/FAQAccordion').then(mod => ({ default: mod.FAQAccordion })), {
+  loading: () => <div className="h-64 bg-cultr-mint rounded-lg animate-pulse" />,
+});
+
+const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignup').then(mod => ({ default: mod.NewsletterSignup })), {
+  loading: () => <div className="h-48 bg-cultr-offwhite animate-pulse" />,
+});
 
 export default function HomePage() {
   return (
