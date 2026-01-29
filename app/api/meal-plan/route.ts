@@ -95,7 +95,7 @@ Generate a practical, delicious meal plan that hits these macros as closely as p
       system: SYSTEM_PROMPT,
       prompt,
       temperature: 0.7,
-      maxTokens: 1500,
+      maxOutputTokens: 1500,
     });
 
     console.log('[Meal Plan API] Returning stream response');
