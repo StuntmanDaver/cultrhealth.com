@@ -404,7 +404,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   </h3>
                   <span className="text-xs text-cultr-textMuted">{selectedGoals.length} selected</span>
                 </div>
-                <p className="text-xs text-cultr-textMuted">Select patient goals to see synergistic peptide recommendations from the full catalog.</p>
+                <p className="text-xs text-cultr-textMuted">Select patient goals to see goal-aligned, synergy-aware peptide recommendations from the full catalog.</p>
                 <div className="grid grid-cols-2 gap-2">
                   {PEPTIDE_GOALS.map((goal) => (
                     <button
@@ -915,7 +915,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
 
                 {!template?.synergisticPeptides?.length && !goalRecommendations && (
                   <p className="text-xs text-cultr-textMuted bg-amber-50 border border-amber-100 p-3 rounded-lg">
-                    <strong>Tip:</strong> Select patient goals above to see synergistic peptide recommendations from the full catalog.
+                    <strong>Tip:</strong> Select patient goals above to see goal-aligned, synergy-aware peptide recommendations from the full catalog.
                   </p>
                 )}
 

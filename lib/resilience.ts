@@ -723,3 +723,84 @@ export function prepareAnonymizedExport(
     interventionIds,
   }
 }
+
+// ============================================================================
+// RETRY & RESILIENCE UTILITIES FOR API OPERATIONS
+// ============================================================================
+
+export interface RetryOptions {
+  maxAttempts?: number
+  delayMs?: number
+  shouldRetry?: (error: Error) => boolean
+}
+
+/**
+ * Execute a function with automatic retry on failure
+ * Uses exponential backoff (delay * attempt number)
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: RetryOptions = {}
+): Promise<T> {
+  const { 
+    maxAttempts = 3, 
+    delayMs = 1000,
+    shouldRetry = () => true 
+  } = options
+  
+  let lastError: Error
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error as Error
+      
+      // Check if we should retry this error
+      if (!shouldRetry(lastError)) {
+        throw lastError
+      }
+      
+      // Don't delay after the last attempt
+      if (attempt < maxAttempts) {
+        // Exponential backoff: delay * attempt number
+        await new Promise(resolve => setTimeout(resolve, delayMs * attempt))
+      }
+    }
+  }
+  
+  throw lastError!
+}
+
+/**
+ * Check if an error is a transient database error that should be retried
+ */
+export function isTransientDbError(error: Error): boolean {
+  const message = error.message.toLowerCase()
+  return (
+    message.includes('connection') ||
+    message.includes('timeout') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('too many connections') ||
+    message.includes('econnreset') ||
+    message.includes('econnrefused')
+  )
+}
+
+/**
+ * Structured logging for checkout events
+ */
+export function logCheckoutEvent(event: {
+  type: 'checkout_started' | 'checkout_completed' | 'checkout_failed'
+  provider: string
+  orderId?: string
+  orderNumber?: string
+  amount?: number
+  error?: string
+  metadata?: Record<string, unknown>
+}): void {
+  console.log(JSON.stringify({
+    ...event,
+    timestamp: new Date().toISOString(),
+  }))
+}

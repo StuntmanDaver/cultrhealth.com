@@ -24,6 +24,24 @@ export type Intervention = {
   notes?: string
 }
 
+// Expected outcome for N-of-1 trial tracking (Altos Labs alignment)
+export type ExpectedOutcome = {
+  biomarkerId: string // Links to BIOMARKER_DEFINITIONS in lib/resilience.ts
+  metric: string // Human-readable metric name
+  direction: 'increase' | 'decrease' | 'maintain'
+  targetChange?: number // Expected % change
+  timeframeWeeks: number // Weeks to see effect
+  measurementMethod: string // How to measure (e.g., "blood test", "daily log", "wearable")
+}
+
+// Subjective outcome tracking
+export type SubjectiveOutcome = {
+  metric: string // e.g., "Energy level", "Sleep quality"
+  scale: '1-10' | 'binary' | 'categorical'
+  direction: 'increase' | 'decrease'
+  checkInFrequency: 'daily' | 'weekly' | 'biweekly'
+}
+
 export type SymptomProtocol = {
   id: string
   symptom: string
@@ -34,6 +52,11 @@ export type SymptomProtocol = {
   monitoring: string[]
   contraindications?: string[]
   synergies?: string[] // IDs of symptoms that often co-occur
+  // N-of-1 Trial Tracking (Altos Labs alignment)
+  expectedOutcomes?: ExpectedOutcome[] // Biomarker-based outcomes
+  subjectiveOutcomes?: SubjectiveOutcome[] // Self-reported outcomes
+  typicalDurationWeeks?: number // Standard protocol length
+  checkInSchedule?: number[] // Days to prompt check-ins (e.g., [7, 14, 28])
 }
 
 // Complete symptom-to-intervention mapping
@@ -55,6 +78,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Anxiety levels (1-10 scale)', 'Sleep quality', 'Heart rate variability'],
     synergies: ['panic-attacks', 'social-anxiety', 'overthinking'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (inflammation)', direction: 'decrease', targetChange: 20, timeframeWeeks: 8, measurementMethod: 'blood test' },
+      { biomarkerId: 'homocysteine', metric: 'Homocysteine', direction: 'decrease', targetChange: 15, timeframeWeeks: 8, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Anxiety level', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Sleep quality', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'HRV', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+    ],
+    typicalDurationWeeks: 8,
+    checkInSchedule: [7, 14, 28, 56],
   },
   {
     id: 'insomnia',
@@ -70,6 +105,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Sleep onset latency', 'Sleep duration', 'Wake episodes', 'Morning energy'],
     synergies: ['restless-legs', 'stress-sensitivity'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (inflammation)', direction: 'decrease', targetChange: 15, timeframeWeeks: 4, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Sleep quality', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Sleep onset latency (minutes)', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Night wakings', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Morning energy', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+    ],
+    typicalDurationWeeks: 4,
+    checkInSchedule: [3, 7, 14, 28],
   },
   {
     id: 'brain-fog',
@@ -85,6 +132,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Mental clarity (1-10)', 'Task completion', 'Word recall'],
     synergies: ['poor-focus', 'mental-fatigue'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'homocysteine', metric: 'Homocysteine', direction: 'decrease', targetChange: 20, timeframeWeeks: 8, measurementMethod: 'blood test' },
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (neuroinflammation proxy)', direction: 'decrease', targetChange: 15, timeframeWeeks: 8, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Mental clarity', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Focus duration', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Word recall ability', scale: '1-10', direction: 'increase', checkInFrequency: 'weekly' },
+    ],
+    typicalDurationWeeks: 8,
+    checkInSchedule: [7, 14, 28, 56],
   },
   {
     id: 'depression',
@@ -3530,6 +3589,8 @@ export function getPeptidesForGoals(goalIds: PeptideGoal[]): {
   recommendations: Array<CatalogPeptide & { matchedGoals: PeptideGoal[]; matchCount: number }>
 } {
   const goals = goalIds.map(id => PEPTIDE_GOALS.find(g => g.id === id)).filter((g): g is GoalDefinition => g !== null)
+  const evidenceOrder: Record<EvidenceGrade, number> = { 'A': 0, 'B': 1, 'B-C': 2, 'C': 3, 'C-D': 4, 'D': 5, 'D-E': 6 }
+  const riskOrder: Record<RiskTier, number> = { 'low': 0, 'low-moderate': 1, 'moderate': 2, 'moderate-high': 3, 'high': 4 }
   
   // Find all peptides that match any of the goals
   const peptideMatches = new Map<string, { peptide: CatalogPeptide; matchedGoals: PeptideGoal[] }>()
@@ -3541,21 +3602,36 @@ export function getPeptidesForGoals(goalIds: PeptideGoal[]): {
     }
   }
 
-  // Convert to array and sort by match count, then evidence
-  const recommendations = Array.from(peptideMatches.values())
+  // Convert to array and compute synergy within goal-matched set
+  const recommendationEntries = Array.from(peptideMatches.values())
     .map(({ peptide, matchedGoals }) => ({
       ...peptide,
       matchedGoals,
       matchCount: matchedGoals.length,
     }))
-    .sort((a, b) => {
-      // First by match count (more is better)
-      if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount
-      
-      // Then by evidence grade
-      const evidenceOrder: Record<EvidenceGrade, number> = { 'A': 0, 'B': 1, 'B-C': 2, 'C': 3, 'C-D': 4, 'D': 5, 'D-E': 6 }
-      return evidenceOrder[a.evidenceGrade] - evidenceOrder[b.evidenceGrade]
-    })
+  const recommendationIds = new Set(recommendationEntries.map((rec) => rec.id))
+  const synergyScores = new Map<string, number>()
+
+  for (const rec of recommendationEntries) {
+    const synergyCount = getSynergyPeptides(rec.id).filter((p) => recommendationIds.has(p.id)).length
+    synergyScores.set(rec.id, synergyCount)
+  }
+
+  // Sort by match count, synergy, then evidence/risk
+  const recommendations = recommendationEntries.sort((a, b) => {
+    if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount
+
+    const synergyDiff = (synergyScores.get(b.id) ?? 0) - (synergyScores.get(a.id) ?? 0)
+    if (synergyDiff !== 0) return synergyDiff
+
+    const evidenceDiff = evidenceOrder[a.evidenceGrade] - evidenceOrder[b.evidenceGrade]
+    if (evidenceDiff !== 0) return evidenceDiff
+
+    const riskDiff = riskOrder[a.riskTier] - riskOrder[b.riskTier]
+    if (riskDiff !== 0) return riskDiff
+
+    return a.name.localeCompare(b.name)
+  })
 
   return { goals, recommendations }
 }

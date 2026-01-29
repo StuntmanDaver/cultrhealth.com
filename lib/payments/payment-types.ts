@@ -1,6 +1,6 @@
 // Shared types for payment providers (Stripe, Klarna, Affirm, Authorize.net)
 
-export type PaymentProvider = 'stripe' | 'klarna' | 'affirm' | 'authorize_net';
+export type PaymentProvider = 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'healthie';
 
 export type CheckoutType = 'subscription' | 'product';
 

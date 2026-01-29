@@ -64,7 +64,7 @@ export default function HowItWorksPage() {
     {
       step: '04',
       title: 'Get your personalized protocol',
-      description: 'Receive a customized treatment plan based on your labs and goals. Access our peptide library and protocol engine for optimization.',
+      description: 'Receive a customized treatment plan based on your labs and goals. Access our peptide library and provider-reviewed protocol engine for optimization.',
       icon: Dna,
       features: [
         'Custom peptide protocols',
@@ -220,7 +220,7 @@ export default function HowItWorksPage() {
               {
                 icon: Sparkles,
                 title: 'Protocol Engine',
-                desc: 'Our AI-powered system recommends optimal protocols based on your unique biomarkers.',
+                desc: 'Our AI-powered system surfaces goal-aligned protocols reviewed by your provider.',
               },
               {
                 icon: Stethoscope,

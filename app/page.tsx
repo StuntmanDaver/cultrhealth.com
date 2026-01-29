@@ -223,7 +223,7 @@ export default function HomePage() {
               {
                 icon: Sparkles,
                 title: 'Protocol Engine',
-                desc: 'AI-powered recommendations based on your unique biomarkers.',
+                desc: 'AI-powered, clinician-reviewed recommendations based on your biomarkers.',
               },
               {
                 icon: Stethoscope,

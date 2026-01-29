@@ -20,6 +20,8 @@ export function isProviderEnabled(provider: PaymentProvider): boolean {
   switch (provider) {
     case 'stripe':
       return true; // Always available as fallback
+    case 'healthie':
+      return true; // Healthie (via Stripe Connect) is always available for HIPAA compliance
     case 'klarna':
       return KLARNA_ENABLED;
     case 'affirm':

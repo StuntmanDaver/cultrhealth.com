@@ -5,10 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Dumbbell,
-  Heart,
   Scale,
   Brain,
-  BookOpen,
   LogOut,
   Search,
   FileText,
@@ -20,43 +18,13 @@ import {
   CreditCard,
   Flame,
 } from 'lucide-react'
+import { CategoryGrid } from '@/components/library/CategoryGrid'
 import { TierGate } from '@/components/library/TierGate'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
 import type { LibraryAccess, PlanTier } from '@/lib/config/plans'
 import { STRIPE_CONFIG } from '@/lib/config/plans'
 
 type TabId = 'dashboard' | 'library' | 'account';
-
-const CATEGORIES = [
-  {
-    slug: 'growth-factors',
-    name: 'Growth Factors & Anabolic',
-    description: 'Muscle building, strength enhancement, anabolic pathways',
-    icon: Dumbbell,
-    products: ['IGF-1 LR3', 'ACE-031', 'Follistatin 344', 'Sermorelin', 'CJC-1295', 'Ipamorelin'],
-  },
-  {
-    slug: 'repair-recovery',
-    name: 'Repair & Recovery',
-    description: 'Tissue repair, tendon/ligament healing, wound recovery',
-    icon: Heart,
-    products: ['BPC-157', 'TB-500', 'GHK-Cu', 'GLOW Blend', 'Elamipretide', 'TP508'],
-  },
-  {
-    slug: 'metabolic',
-    name: 'Metabolic & Weight Loss',
-    description: 'Fat loss, appetite control, GLP-1 agonists, metabolic health',
-    icon: Scale,
-    products: ['Cagrilintide', 'Sema + Cagri Blend', 'FRAG 176-191 + AOD 9604'],
-  },
-  {
-    slug: 'bioregulators',
-    name: 'Bioregulators & Neuropeptides',
-    description: 'Immune support, sleep, cognition, anti-aging',
-    icon: Brain,
-    products: ['Epitalon', 'DSIP', 'Thymosin-α1', 'SEMAX', 'SELANK', 'Humanin'],
-  },
-]
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -75,7 +43,6 @@ export function LibraryContent({
 }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<TabId>('dashboard')
-  const isTitlesOnly = libraryAccess.masterIndex === 'titles_only'
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -170,7 +137,7 @@ export function LibraryContent({
 
         {/* Library Tab */}
         {activeTab === 'library' && (
-          <div className="space-y-8">
+          <div className="space-y-12">
             {/* Library Header */}
             <div>
               <h1 className="text-3xl font-display font-bold text-stone-900">
@@ -181,89 +148,8 @@ export function LibraryContent({
               </p>
             </div>
 
-            {/* Quick Access */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <Link
-                href="/library/index"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-              >
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
-                  <BookOpen className="w-6 h-6 text-emerald-700" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Master Index</p>
-                  <p className="text-stone-500 text-sm">
-                    {isTitlesOnly ? 'Titles-only view on Core' : 'Quick lookup by category and use case'}
-                  </p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
-              </Link>
-              <TierGate
-                requiredTier="creator"
-                currentTier={tier}
-                upgradeMessage="Upgrade to Creator to unlock advanced protocol cards."
-              >
-                <Link
-                  href="/library/products"
-                  className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-                >
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <FileText className="w-6 h-6 text-blue-700" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-stone-900 font-medium">Full Product Catalog</p>
-                    <p className="text-stone-500 text-sm">Detailed protocol cards for all 80+ compounds</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
-                </Link>
-              </TierGate>
-            </div>
-
-            {/* Categories Grid */}
-            <div>
-              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Browse by Category</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                {CATEGORIES.map((category) => {
-                  const Icon = category.icon
-                  return (
-                    <Link
-                      key={category.slug}
-                      href={`/library/${category.slug}`}
-                      className="group bg-white border border-stone-200 rounded-2xl p-6 hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-                    >
-                      <div className="flex items-start gap-4 mb-4">
-                        <div className="w-14 h-14 bg-stone-100 rounded-xl flex items-center justify-center group-hover:bg-stone-200 transition-colors">
-                          <Icon className="w-7 h-7 text-stone-700" />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium text-stone-900 mb-1 group-hover:text-stone-700 transition-colors">
-                            {category.name}
-                          </h3>
-                          <p className="text-stone-500 text-sm">{category.description}</p>
-                        </div>
-                      </div>
-
-                      {/* Product Tags */}
-                      <div className="flex flex-wrap gap-2">
-                        {category.products.slice(0, 4).map((product) => (
-                          <span
-                            key={product}
-                            className="px-3 py-1 bg-stone-50 border border-stone-200 rounded-full text-xs text-stone-600"
-                          >
-                            {product}
-                          </span>
-                        ))}
-                        {category.products.length > 4 && (
-                          <span className="px-3 py-1 text-xs text-stone-500 font-medium">
-                            +{category.products.length - 4} more
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
+            {/* New Category Grid (Includes Master Index & Catalog) */}
+            <CategoryGrid />
 
             {/* Protocol Tools */}
             <div>

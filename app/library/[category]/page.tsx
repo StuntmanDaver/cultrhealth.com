@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getLibraryAccess, getMembershipTier, getSession } from '@/lib/auth'
 import { getLibraryContent, CATEGORY_META } from '@/lib/library-content'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
+import { MasterIndex } from '@/components/library/MasterIndex'
+import { ProductCatalog } from '@/components/library/ProductCatalog'
 
 export async function generateStaticParams() {
   return Object.keys(CATEGORY_META).map((category) => ({
@@ -41,45 +43,55 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   const tier = await getMembershipTier(session.customerId)
   const access = getLibraryAccess(tier)
 
-  if (category === 'products' && !access.advancedProtocols) {
-    return (
-      <div className="min-h-screen bg-white">
-        <section className="py-16 px-6 bg-cultr-forest text-white">
-          <div className="max-w-4xl mx-auto">
-            <Link
-              href="/library"
-              className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6 text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Library
-            </Link>
-            <h1 className="text-4xl font-display font-bold mb-3">
-              Full Product Catalog
-            </h1>
-            <p className="text-white/80 text-lg">
-              Upgrade to Creator to unlock advanced protocol cards.
-            </p>
-          </div>
-        </section>
-        <section className="py-12 px-6">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
-              <p className="text-cultr-text font-medium mb-4">
-                Advanced protocols are available starting at the Creator tier.
-              </p>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-2 text-cultr-forest hover:text-cultr-forestDark transition-colors font-medium"
-              >
-                View Plans <ArrowLeft className="w-4 h-4 rotate-180" />
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
-    )
+  // Handle Master Index
+  if (category === 'index') {
+    return <MasterIndex />
   }
 
+  // Handle Product Catalog
+  if (category === 'products') {
+    if (!access.advancedProtocols) {
+      return (
+        <div className="min-h-screen bg-white">
+          <section className="py-16 px-6 bg-cultr-forest text-white">
+            <div className="max-w-4xl mx-auto">
+              <Link
+                href="/library"
+                className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6 text-sm"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Library
+              </Link>
+              <h1 className="text-4xl font-display font-bold mb-3">
+                Full Product Catalog
+              </h1>
+              <p className="text-white/80 text-lg">
+                Upgrade to Creator to unlock advanced protocol cards.
+              </p>
+            </div>
+          </section>
+          <section className="py-12 px-6">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
+                <p className="text-cultr-text font-medium mb-4">
+                  Advanced protocols are available starting at the Creator tier.
+                </p>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 text-cultr-forest hover:text-cultr-forestDark transition-colors font-medium"
+                >
+                  View Plans <ArrowLeft className="w-4 h-4 rotate-180" />
+                </Link>
+              </div>
+            </div>
+          </section>
+        </div>
+      )
+    }
+    return <ProductCatalog />
+  }
+
+  // Default handling for other categories (Markdown content)
   const content = await getLibraryContent(category, access)
 
   if (!content) {

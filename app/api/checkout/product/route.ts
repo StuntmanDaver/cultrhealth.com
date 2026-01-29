@@ -8,6 +8,9 @@ import {
   createPatient,
   storePaymentMethod,
 } from '@/lib/healthie-api';
+import { createOrder } from '@/lib/db';
+import { sendOrderConfirmationEmail } from '@/lib/resend';
+import { withRetry, isTransientDbError, logCheckoutEvent } from '@/lib/resilience';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -144,6 +147,74 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
 
+    // Generate order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+    // Build order items with full product details
+    const orderItems = items.map((item: { sku: string; quantity: number }) => {
+      const product = getProductBySku(item.sku);
+      return {
+        sku: item.sku,
+        name: product?.name || item.sku,
+        quantity: item.quantity,
+        unit_price: product?.priceUsd || 0,
+        category: product?.category || 'unknown',
+      };
+    });
+
+    // Create local order record with retry logic
+    if (process.env.POSTGRES_URL) {
+      try {
+        const result = await withRetry(
+          () => createOrder({
+            order_number: orderNumber,
+            customer_email: email,
+            healthie_patient_id: patient.id,
+            stripe_payment_intent_id: `healthie_${billingItem.id}`, // Prefix to identify as Healthie
+            payment_provider: 'healthie',
+            status: 'paid',
+            total_amount: totalCents / 100,
+            currency: 'USD',
+            items: orderItems,
+            notes: `Healthie invoice: ${invoice.id}`,
+          }),
+          { maxAttempts: 3, delayMs: 500, shouldRetry: isTransientDbError }
+        );
+
+        logCheckoutEvent({
+          type: 'checkout_completed',
+          provider: 'healthie',
+          orderId: result.id,
+          orderNumber,
+          amount: totalCents / 100,
+        });
+
+        // Send order confirmation email
+        await sendOrderConfirmationEmail({
+          email,
+          name: firstName && lastName ? `${firstName} ${lastName}` : firstName || undefined,
+          orderNumber,
+          items: orderItems.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.unit_price * item.quantity,
+          })),
+          totalAmount: totalCents / 100,
+          currency: 'USD',
+          paymentMethod: 'Credit Card (Healthie)',
+        });
+      } catch (dbError) {
+        logCheckoutEvent({
+          type: 'checkout_failed',
+          provider: 'healthie',
+          orderNumber,
+          error: dbError instanceof Error ? dbError.message : 'DB write failed',
+          metadata: { stage: 'order_creation' },
+        });
+        // Don't fail - Healthie payment was successful
+      }
+    }
+
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
@@ -151,10 +222,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       orderId: billingItem.id,
+      orderNumber,
       invoiceId: invoice.id,
       patientId: patient.id,
       isNewPatient,
-      redirectUrl: `${baseUrl}/success?provider=healthie&type=product&order_id=${billingItem.id}`,
+      redirectUrl: `${baseUrl}/success?provider=healthie&type=product&order_id=${orderNumber}`,
     });
   } catch (error) {
     console.error('Healthie product checkout error:', error);

@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Handle successful checkout completion
+ * Handle successful checkout completion (subscription)
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('Checkout completed:', {
@@ -122,10 +122,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     metadata: session.metadata,
   });
 
-  // If database is configured, store membership record
+  // If database is configured, store membership record using helper
   if (process.env.POSTGRES_URL) {
     try {
-      const { sql } = await import('@vercel/postgres');
+      const { createMembership } = await import('@/lib/db');
       
       const planTier = session.metadata?.plan_tier || 'unknown';
       const subscriptionId = typeof session.subscription === 'string' 
@@ -135,29 +135,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         ? session.customer
         : session.customer?.id;
 
-      await sql`
-        INSERT INTO memberships (
-          stripe_customer_id,
-          stripe_subscription_id,
-          plan_tier,
-          subscription_status,
-          created_at,
-          updated_at
-        ) VALUES (
-          ${customerId},
-          ${subscriptionId},
-          ${planTier},
-          'active',
-          NOW(),
-          NOW()
-        )
-        ON CONFLICT (stripe_subscription_id) 
-        DO UPDATE SET
-          subscription_status = 'active',
-          updated_at = NOW()
-      `;
-
-      console.log('Membership record created/updated');
+      if (subscriptionId && customerId) {
+        await createMembership({
+          stripe_customer_id: customerId,
+          stripe_subscription_id: subscriptionId,
+          plan_tier: planTier,
+          subscription_status: 'active',
+        });
+        console.log('Membership record created/updated');
+      }
     } catch (dbError) {
       console.error('Failed to update membership database:', dbError);
       // Don't fail the webhook - Stripe considers it processed
@@ -207,7 +193,7 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
   const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
   // Transform line items to order items
-  interface OrderItem {
+  interface OrderItemLocal {
     sku: string;
     name: string;
     quantity: number;
@@ -215,7 +201,7 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
     category: string;
   }
   
-  const orderItems: OrderItem[] = lineItems.map(item => {
+  const orderItems: OrderItemLocal[] = lineItems.map(item => {
     const product = item.price?.product as Stripe.Product | undefined;
     return {
       sku: product?.metadata?.sku || item.price?.id || 'unknown',
@@ -228,52 +214,35 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
 
   const totalAmount = (session.amount_total || 0) / 100;
 
-  // Create order record in database
+  // Create order record using helper
   let orderId: string | undefined;
-  if (process.env.POSTGRES_URL) {
+  if (process.env.POSTGRES_URL && customerEmail) {
     try {
-      const { sql } = await import('@vercel/postgres');
+      const { createOrder } = await import('@/lib/db');
 
-      const result = await sql`
-        INSERT INTO orders (
-          order_number,
-          customer_email,
-          stripe_payment_intent_id,
-          stripe_customer_id,
-          status,
-          total_amount,
-          currency,
-          items,
-          created_at,
-          updated_at
-        ) VALUES (
-          ${orderNumber},
-          ${customerEmail},
-          ${paymentIntentId},
-          ${customerId},
-          'paid',
-          ${totalAmount},
-          ${session.currency?.toUpperCase() || 'USD'},
-          ${JSON.stringify(orderItems)},
-          NOW(),
-          NOW()
-        )
-        RETURNING id
-      `;
+      const result = await createOrder({
+        order_number: orderNumber,
+        customer_email: customerEmail,
+        stripe_payment_intent_id: paymentIntentId || undefined,
+        stripe_customer_id: customerId || undefined,
+        payment_provider: 'stripe',
+        status: 'paid',
+        total_amount: totalAmount,
+        currency: session.currency?.toUpperCase() || 'USD',
+        items: orderItems,
+      });
 
-      if (result.rows.length > 0) {
-        orderId = result.rows[0].id;
-        console.log('Order created:', { orderNumber, orderId });
-      }
+      orderId = result.id;
+      console.log('Order created:', { orderNumber, orderId, provider: 'stripe' });
     } catch (dbError) {
       console.error('Failed to create order:', dbError);
     }
   }
 
-  // Generate LMN for eligible items
+  // Generate LMN for eligible items and send confirmation email
   try {
     const { generateAndStoreLmn, hasLmnEligibleItems } = await import('@/lib/lmn');
-    const { sendOrderConfirmationWithLMN } = await import('@/lib/resend');
+    const { sendOrderConfirmationWithLMN, sendOrderConfirmationEmail } = await import('@/lib/resend');
 
     // Convert order items to LMN items format
     const lmnItems = orderItems.map(item => ({
@@ -326,10 +295,27 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
         console.log('Order confirmation with LMN sent:', { email: customerEmail });
       }
     } else {
+      // No LMN-eligible items - send regular confirmation
       console.log('No LMN-eligible items in order:', orderNumber);
+      if (customerEmail) {
+        await sendOrderConfirmationEmail({
+          email: customerEmail,
+          name: customerName || undefined,
+          orderNumber,
+          items: orderItems.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.unit_price * item.quantity,
+          })),
+          totalAmount,
+          currency: session.currency?.toUpperCase() || 'USD',
+          paymentMethod: 'Credit Card',
+        });
+        console.log('Order confirmation sent:', { email: customerEmail });
+      }
     }
   } catch (lmnError) {
-    console.error('Failed to generate LMN:', lmnError);
+    console.error('Failed to generate LMN or send confirmation:', lmnError);
     // Don't fail the webhook - order was still created
   }
 }
@@ -344,22 +330,14 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     customer: subscription.customer,
   });
 
-  // Update database if configured
+  // Update database using helper
   if (process.env.POSTGRES_URL) {
     try {
-      const { sql } = await import('@vercel/postgres');
+      const { updateMembershipBySubscriptionId } = await import('@/lib/db');
       
-      const customerId = typeof subscription.customer === 'string'
-        ? subscription.customer
-        : subscription.customer?.id;
-
-      await sql`
-        UPDATE memberships
-        SET 
-          subscription_status = ${subscription.status},
-          updated_at = NOW()
-        WHERE stripe_subscription_id = ${subscription.id}
-      `;
+      await updateMembershipBySubscriptionId(subscription.id, {
+        subscription_status: subscription.status,
+      });
 
       console.log('Membership status updated');
     } catch (dbError) {
@@ -386,19 +364,15 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     customer: subscription.customer,
   });
 
-  // Update database if configured
+  // Update database using helper
   if (process.env.POSTGRES_URL) {
     try {
-      const { sql } = await import('@vercel/postgres');
+      const { updateMembershipBySubscriptionId } = await import('@/lib/db');
 
-      await sql`
-        UPDATE memberships
-        SET 
-          subscription_status = 'cancelled',
-          cancelled_at = NOW(),
-          updated_at = NOW()
-        WHERE stripe_subscription_id = ${subscription.id}
-      `;
+      await updateMembershipBySubscriptionId(subscription.id, {
+        subscription_status: 'cancelled',
+        cancelled_at: new Date(),
+      });
 
       console.log('Membership marked as cancelled');
     } catch (dbError) {

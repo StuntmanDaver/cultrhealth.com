@@ -9,6 +9,7 @@ import {
 } from '@/lib/payments/authorize-net-api';
 import type { AuthorizeNetOpaqueData, CheckoutItem } from '@/lib/payments/payment-types';
 import { createOrder } from '@/lib/db';
+import { withRetry, isTransientDbError, logCheckoutEvent } from '@/lib/resilience';
 
 export async function POST(request: NextRequest) {
   try {
@@ -149,36 +150,46 @@ export async function POST(request: NextRequest) {
 
     const transactionId = response.transactionResponse?.transId;
 
-    // Create order record in database
+    // Create order record in database with retry logic
     try {
-      await createOrder({
-        order_number: orderId,
-        customer_email: email,
-        stripe_payment_intent_id: `authnet_${transactionId}`, // Prefix to identify as Authorize.net
-        status: 'paid',
-        total_amount: totalCents / 100,
-        currency: 'USD',
-        items: checkoutItems.map((item) => ({
-          sku: item.sku,
-          name: item.name,
-          quantity: item.quantity,
-          unit_price: item.unitPriceCents / 100,
-          category: '', // We don't have category in CheckoutItem
-        })),
+      const result = await withRetry(
+        () => createOrder({
+          order_number: orderId,
+          customer_email: email,
+          stripe_payment_intent_id: `authnet_${transactionId}`, // Prefix to identify as Authorize.net
+          payment_provider: 'authorize_net',
+          status: 'paid',
+          total_amount: totalCents / 100,
+          currency: 'USD',
+          items: checkoutItems.map((item) => ({
+            sku: item.sku,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: item.unitPriceCents / 100,
+            category: '', // We don't have category in CheckoutItem
+          })),
+        }),
+        { maxAttempts: 3, delayMs: 500, shouldRetry: isTransientDbError }
+      );
+
+      logCheckoutEvent({
+        type: 'checkout_completed',
+        provider: 'authorize_net',
+        orderId: result.id,
+        orderNumber: orderId,
+        amount: totalCents / 100,
+        metadata: { transactionId },
       });
     } catch (dbError) {
-      console.error('Failed to create order record:', dbError);
+      logCheckoutEvent({
+        type: 'checkout_failed',
+        provider: 'authorize_net',
+        orderNumber: orderId,
+        error: dbError instanceof Error ? dbError.message : 'DB write failed',
+        metadata: { stage: 'order_creation', transactionId },
+      });
       // Don't fail the request - payment is complete, log for manual review
     }
-
-    // Log success (no PHI)
-    console.log('Authorize.net product checkout completed:', {
-      orderId,
-      transactionId,
-      itemCount: checkoutItems.length,
-      totalCents,
-      timestamp: new Date().toISOString(),
-    });
 
     // Return success with transaction details
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { acknowledgeKlarnaOrder } from '@/lib/payments/klarna-api';
+import { updateOrderByOrderNumber, getOrderByOrderNumber } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +23,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Local order number format
+    const localOrderNumber = `KLARNA-${order_id}`;
+
     // Handle different event types
     switch (event_type) {
       case 'checkout_complete':
@@ -30,18 +34,73 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'order_approved':
-        // Order has been approved by Klarna
+        // Order has been approved by Klarna (fraud check passed)
         console.log('Klarna order approved:', order_id);
+        if (process.env.POSTGRES_URL) {
+          try {
+            const order = await getOrderByOrderNumber(localOrderNumber);
+            if (order && order.status === 'pending') {
+              await updateOrderByOrderNumber(localOrderNumber, {
+                status: 'paid',
+                notes: 'Approved by Klarna fraud review',
+              });
+              console.log('Order approved and marked as paid:', localOrderNumber);
+            }
+          } catch (error) {
+            console.error('Failed to update order on approval:', error);
+          }
+        }
         break;
 
       case 'order_captured':
         // Payment has been captured
         console.log('Klarna order captured:', order_id);
+        if (process.env.POSTGRES_URL) {
+          try {
+            const order = await getOrderByOrderNumber(localOrderNumber);
+            if (order && order.status !== 'paid') {
+              await updateOrderByOrderNumber(localOrderNumber, {
+                status: 'paid',
+                notes: 'Payment captured by Klarna',
+              });
+              console.log('Order marked as paid (captured):', localOrderNumber);
+            }
+          } catch (error) {
+            console.error('Failed to update order on capture:', error);
+          }
+        }
         break;
 
       case 'order_refunded':
         // Order has been refunded
         console.log('Klarna order refunded:', order_id);
+        if (process.env.POSTGRES_URL) {
+          try {
+            await updateOrderByOrderNumber(localOrderNumber, {
+              status: 'refunded',
+              notes: 'Refunded via Klarna',
+            });
+            console.log('Order marked as refunded:', localOrderNumber);
+          } catch (error) {
+            console.error('Failed to mark order as refunded:', error);
+          }
+        }
+        break;
+
+      case 'order_rejected':
+        // Order has been rejected by Klarna fraud check
+        console.log('Klarna order rejected:', order_id);
+        if (process.env.POSTGRES_URL) {
+          try {
+            await updateOrderByOrderNumber(localOrderNumber, {
+              status: 'cancelled',
+              notes: 'Rejected by Klarna fraud review',
+            });
+            console.log('Order marked as cancelled (rejected):', localOrderNumber);
+          } catch (error) {
+            console.error('Failed to mark order as cancelled:', error);
+          }
+        }
         break;
 
       default:
