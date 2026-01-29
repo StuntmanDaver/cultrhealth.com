@@ -22,6 +22,8 @@ export type ShopProduct = {
   isBlend: boolean
   blendComponents?: string[] // For blends, list component peptide IDs
   description?: string
+  /** Price in USD; products without price remain quote-only */
+  priceUsd?: number
 }
 
 // Helper to parse dose from SKU (e.g., "10MG" -> 10, "05MG" -> 5, "01MG" -> 1, ".01MG" -> 0.01)
@@ -529,6 +531,35 @@ const RAW_SKUS = [
 
 // Parse all SKUs into products
 export const PRODUCT_CATALOG: ShopProduct[] = RAW_SKUS.map(parseSku)
+
+// Add sample pricing for testing (prices in USD)
+// NOTE: These are test prices for development. Update with real pricing.
+const SAMPLE_PRICES: Record<string, number> = {
+  'BPC157-05MG-03ML': 89.00,
+  'BPC157-10MG-03ML': 149.00,
+  'TB500-5MG-03ML': 99.00,
+  'TB500-10MG-03ML': 169.00,
+  'IPAMORELIN-05MG-03ML': 79.00,
+  'IPAMORELIN-10MG-03ML': 139.00,
+  'CJC1295-05MG-03ML': 79.00,
+  'CJC1295-10MG-03ML': 139.00,
+  'GHKCU-50MG-03ML': 69.00,
+  'GHKCU-100MG-03ML': 119.00,
+  'NAD+-500MG-10ML': 199.00,
+  'NAD+-1000MG-10ML': 349.00,
+  'BLND-WOLVERINE-BPC157TB500-05X05MG-03ML': 169.00,
+  'BLND-WOLVERINE-BPC157TB500-10X10MG-03ML': 289.00,
+  'BLND-CJC1295IPAMORELIN-05X05MG-03ML': 149.00,
+  'BLND-CJC1295IPAMORELIN-10X10MG-03ML': 259.00,
+  'BACWATER-30ML': 15.00,
+}
+
+// Apply sample prices to products
+PRODUCT_CATALOG.forEach(product => {
+  if (SAMPLE_PRICES[product.sku]) {
+    product.priceUsd = SAMPLE_PRICES[product.sku]
+  }
+})
 
 // Fix specific parsing issues
 // Handle bacteriostatic water (no standard format)

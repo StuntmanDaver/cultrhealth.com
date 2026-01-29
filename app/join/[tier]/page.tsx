@@ -1,15 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { PLANS } from '@/lib/config/plans';
+import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import Button from '@/components/ui/Button';
-import { Check, Loader2, ArrowLeft, Shield, CreditCard } from 'lucide-react';
+import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle } from 'lucide-react';
+import type { PaymentProvider } from '@/lib/payments/payment-types';
+import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types';
+import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
+import { KlarnaWidget } from '@/components/payments/KlarnaWidget';
+import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton';
 
 export default function JoinPage({ params }: { params: { tier: string } }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe');
+
+  // Klarna state
+  const [klarnaClientToken, setKlarnaClientToken] = useState<string | null>(null);
+  const [klarnaSessionLoading, setKlarnaSessionLoading] = useState(false);
+
+  // Affirm state
+  const [affirmConfig, setAffirmConfig] = useState<AffirmCheckoutConfig | null>(null);
+  const [affirmLoading, setAffirmLoading] = useState(false);
 
   // Find the plan based on the tier slug
   const plan = PLANS.find((p) => p.slug === params.tier);
@@ -25,19 +39,18 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
     );
   }
 
-  const handleCheckout = async () => {
+  const amountCents = plan.price * 100;
+
+  // Stripe checkout (existing flow)
+  const handleStripeCheckout = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await fetch('/api/checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          planSlug: plan.slug,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planSlug: plan.slug }),
       });
 
       const data = await response.json();
@@ -56,6 +69,94 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsLoading(false);
     }
+  };
+
+  // Klarna: create session when Klarna is selected
+  const handleSelectPaymentMethod = async (provider: PaymentProvider) => {
+    setPaymentMethod(provider);
+    setError(null);
+
+    if (provider === 'klarna' && !klarnaClientToken) {
+      setKlarnaSessionLoading(true);
+      try {
+        const response = await fetch('/api/checkout/klarna/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planSlug: plan.slug }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session');
+        setKlarnaClientToken(data.client_token);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load Klarna');
+        setPaymentMethod('stripe');
+      } finally {
+        setKlarnaSessionLoading(false);
+      }
+    }
+
+    if (provider === 'affirm' && !affirmConfig) {
+      setAffirmLoading(true);
+      try {
+        const response = await fetch('/api/checkout/affirm/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planSlug: plan.slug }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout');
+        setAffirmConfig(data.checkout);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load Affirm');
+        setPaymentMethod('stripe');
+      } finally {
+        setAffirmLoading(false);
+      }
+    }
+  };
+
+  // Klarna: after user authorizes in widget
+  const handleKlarnaAuthorized = useCallback(async (authorizationToken: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/checkout/klarna/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          authorizationToken,
+          planSlug: plan.slug,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Klarna order failed');
+
+      if (data.fraud_status === 'ACCEPTED') {
+        router.push(`/success?provider=klarna&order_id=${data.order_id}`);
+      } else if (data.fraud_status === 'PENDING') {
+        router.push(`/success?provider=klarna&order_id=${data.order_id}&pending=true`);
+      } else {
+        setError('Klarna order was not approved. Please try another payment method.');
+        setPaymentMethod('stripe');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Klarna payment failed');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [plan.slug, router]);
+
+  const handleBnplError = useCallback((msg: string) => {
+    setError(msg);
+    setPaymentMethod('stripe');
+  }, []);
+
+  // Main CTA handler
+  const handleCheckout = () => {
+    if (paymentMethod === 'stripe') {
+      handleStripeCheckout();
+    }
+    // Klarna and Affirm have their own buttons rendered below
   };
 
   return (
@@ -106,6 +207,46 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               <p className="text-cultr-text font-medium">{plan.bestFor}</p>
             </div>
 
+            {/* Payment Method Selector */}
+            <div className="mb-6">
+              <PaymentMethodSelector
+                selected={paymentMethod}
+                onSelect={handleSelectPaymentMethod}
+                amountCents={amountCents}
+                isSubscription={true}
+                bnplEnabled={plan.bnplEnabled}
+              />
+            </div>
+
+            {/* Klarna Widget (shown when Klarna is selected) */}
+            {paymentMethod === 'klarna' && klarnaClientToken && (
+              <div className="mb-6">
+                <KlarnaWidget
+                  clientToken={klarnaClientToken}
+                  onAuthorized={handleKlarnaAuthorized}
+                  onError={handleBnplError}
+                />
+              </div>
+            )}
+
+            {paymentMethod === 'klarna' && klarnaSessionLoading && (
+              <div className="flex items-center justify-center py-6 mb-6">
+                <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
+                <span className="ml-2 text-sm text-cultr-textMuted">Loading Klarna...</span>
+              </div>
+            )}
+
+            {/* Affirm Button (shown when Affirm is selected) */}
+            {paymentMethod === 'affirm' && (
+              <div className="mb-6">
+                <AffirmCheckoutButton
+                  checkoutConfig={affirmConfig}
+                  onError={handleBnplError}
+                  loading={affirmLoading}
+                />
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
@@ -113,21 +254,23 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               </div>
             )}
 
-            {/* CTA Button */}
-            <Button
-              onClick={handleCheckout}
-              disabled={isLoading}
-              className="w-full text-lg py-6"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                `Join ${plan.name}`
-              )}
-            </Button>
+            {/* CTA Button (Stripe only - Klarna/Affirm have their own buttons) */}
+            {paymentMethod === 'stripe' && (
+              <Button
+                onClick={handleCheckout}
+                disabled={isLoading}
+                className="w-full text-lg py-6"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Join ${plan.name}`
+                )}
+              </Button>
+            )}
 
             {/* Trust Badges */}
             <div className="flex items-center justify-center gap-6 mt-6 text-sm text-cultr-textMuted">
@@ -153,6 +296,23 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             </button>
           </div>
 
+          {/* Important Disclaimers */}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-8">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-display font-bold text-amber-800 mb-2">Important Information</h4>
+                <p className="text-sm text-amber-700 leading-relaxed mb-3">
+                  {MEMBERSHIP_DISCLAIMER}
+                </p>
+                <p className="text-xs text-amber-600">
+                  CULTR Health does not guarantee specific results. All services are provided via telehealth by licensed providers. 
+                  If you have a medical emergency, call 911.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* What Happens Next */}
           <div className="bg-white border border-cultr-sage rounded-2xl p-8">
             <h3 className="text-xl font-display font-bold text-cultr-forest mb-6">
@@ -160,7 +320,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             </h3>
             <ol className="space-y-4">
               {[
-                'You\'ll be redirected to a secure Stripe checkout page',
+                'You\'ll be redirected to a secure checkout page',
                 'After payment, you\'ll see next steps to create your portal account',
                 'Complete your intake forms (takes ~15 minutes)',
                 'Book your first consult with a provider',

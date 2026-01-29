@@ -10,8 +10,11 @@
     "setup:stripe": "ts-node scripts/setup-stripe.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.21",
+    "@ai-sdk/react": "^3.0.61",
     "@marsidev/react-turnstile": "^1.0.2",
     "@vercel/postgres": "^0.10.0",
+    "ai": "^6.0.59",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",

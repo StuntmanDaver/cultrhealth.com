@@ -295,7 +295,7 @@ export default function HomePage() {
           </ScrollReveal>
 
           <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[PLANS[0], PLANS[1], PLANS[4]].map((plan) => (
+            {[PLANS[0], PLANS[3], PLANS[4]].map((plan) => (
               <PricingCard key={plan.slug} plan={plan} />
             ))}
           </div>

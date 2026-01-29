@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { PLANS } from '@/lib/config/plans';
+import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import { PricingCard } from '@/components/site/PricingCard';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
@@ -130,16 +130,16 @@ export default function PricingPage() {
                 </thead>
                 <tbody className="text-sm">
                   {[
-                    { feature: 'Monthly Price', values: ['$99', '$149', '$199', '$299', '$499'] },
-                    { feature: 'Telehealth Consults', values: ['Monthly', 'Monthly', 'Bi-weekly', 'Weekly', 'Unlimited'] },
-                    { feature: 'Provider Messaging', values: ['Basic', 'Priority', 'Priority', '24/7', 'Direct'] },
-                    { feature: 'Lab Review', values: ['Core', 'Comprehensive', 'Advanced', 'Executive', 'Concierge'] },
-                    { feature: 'Peptide Library Access', values: [false, true, true, true, true] },
-                    { feature: 'Protocol Engine', values: [false, true, true, true, true] },
-                    { feature: 'Cognitive Protocols', values: [false, false, true, true, true] },
-                    { feature: 'Executive Health Review', values: [false, false, false, true, true] },
-                    { feature: 'Exclusive Events', values: [false, false, false, false, true] },
-                    { feature: 'Partner Perks', values: [false, false, false, false, true] },
+                    { feature: 'Monthly Price', values: ['$699', '$899', '$799', '$1,199', '$499'] },
+                    { feature: 'Telehealth Consults', values: ['Monthly', 'Monthly', 'Bi-weekly', 'Weekly', 'Self-guided'] },
+                    { feature: 'Provider Messaging', values: ['Secure', 'Priority', 'Priority', 'Same-day', '—'] },
+                    { feature: 'Therapies', values: ['GLP-1 or TRT', 'GLP-1, TRT, Peptides', 'Multi-peptide stacking', 'Stem cell, Exosome, IV', 'Education only'] },
+                    { feature: 'Protocol Library', values: [false, true, true, true, true] },
+                    { feature: 'Peptide Calculator', values: [false, false, true, true, true] },
+                    { feature: 'Cycle Guides', values: [false, false, true, true, true] },
+                    { feature: 'Injection Coaching Videos', values: [true, true, true, true, true] },
+                    { feature: 'Member Shop Access', values: [false, true, true, 'VIP', true] },
+                    { feature: 'Early App Access', values: [false, false, false, true, false] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">
                       <td className="py-4 px-4 text-cultr-text">{row.feature}</td>
@@ -244,8 +244,8 @@ export default function PricingPage() {
               answer: 'You can cancel your membership at any time from your member portal. Your access continues until the end of your current billing period. No cancellation fees.',
             },
             {
-              question: 'Are labs and medications included?',
-              answer: 'Lab interpretation is included in all memberships. Lab draw fees and medication costs are billed separately through our partner labs and pharmacies at discounted rates.',
+              question: 'Are medications and products included?',
+              answer: 'Membership covers telehealth consultations, platform access, and listed features. Medications, peptides, labs, and products are billed separately at cost through our partner pharmacies and labs.',
             },
             {
               question: 'Can I use HSA/FSA funds?',
@@ -261,10 +261,21 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Medical Disclaimer */}
+      {/* Membership & Medical Disclaimer */}
       <section className="py-12 px-6 bg-white border-y border-cultr-sage">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
           <ScrollReveal>
+            <div className="flex items-start gap-4">
+              <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-display font-bold text-cultr-text mb-2">Membership Pricing</h4>
+                <p className="text-sm text-cultr-textMuted leading-relaxed">
+                  {MEMBERSHIP_DISCLAIMER}
+                </p>
+              </div>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
             <div className="flex items-start gap-4">
               <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />
               <div>

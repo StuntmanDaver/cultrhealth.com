@@ -35,6 +35,10 @@ type CartContextType = {
   getItemCount: () => number
   isInCart: (sku: string) => boolean
   getItem: (sku: string) => CartItem | undefined
+  /** Sum of priceUsd * quantity for items with a price. Returns 0 if no priced items. */
+  getCartTotal: () => number
+  /** Whether every item in the cart has a priceUsd set */
+  allItemsPriced: () => boolean
 }
 
 // Local storage key
@@ -183,7 +187,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const getItem = (sku: string) => {
     return state.items.find(item => item.sku === sku)
   }
-  
+
+  const getCartTotal = () => {
+    return state.items.reduce((sum, item) => {
+      return sum + (item.product.priceUsd || 0) * item.quantity
+    }, 0)
+  }
+
+  const allItemsPriced = () => {
+    return state.items.length > 0 && state.items.every(item => typeof item.product.priceUsd === 'number' && item.product.priceUsd > 0)
+  }
+
   const value: CartContextType = {
     items: state.items,
     isLoaded: state.isLoaded,
@@ -194,6 +208,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     getItemCount,
     isInCart,
     getItem,
+    getCartTotal,
+    allItemsPriced,
   }
   
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

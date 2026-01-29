@@ -1,4 +1,5 @@
 import SectionWrapper from '@/components/ui/SectionWrapper'
+import { ScrollReveal } from '@/components/ui/ScrollReveal'
 
 const services = [
   {
@@ -47,48 +48,55 @@ export default function Services() {
   return (
     <SectionWrapper id="services" className="bg-cultr-charcoal">
       <div className="text-center mb-16">
-        <p className="text-cultr-copper font-display text-sm tracking-widest uppercase mb-4">
-          What We Offer
-        </p>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-cultr-cream mb-6">
-          Comprehensive Health Optimization
-        </h2>
-        <p className="text-lg text-cultr-cream/60 font-body max-w-2xl mx-auto">
-          Everything you need to understand, optimize, and maintain your health — all in one place.
-        </p>
+        <ScrollReveal direction="up">
+          <p className="text-cultr-copper font-display text-sm tracking-widest uppercase mb-4">
+            What We Offer
+          </p>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={100}>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-cultr-cream mb-6">
+            Comprehensive Health Optimization
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={200}>
+          <p className="text-lg text-cultr-cream/60 font-body max-w-2xl mx-auto">
+            Everything you need to understand, optimize, and maintain your health — all in one place.
+          </p>
+        </ScrollReveal>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
         {services.map((service, index) => (
-          <div
-            key={service.title}
-            className="card group hover:border-cultr-copper/50"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-cultr-copper/10 flex items-center justify-center text-cultr-copper group-hover:bg-cultr-copper/20 transition-colors duration-300">
-                {service.icon}
+          <ScrollReveal key={service.title} direction="up" delay={index * 100}>
+            <div
+              className="card group hover:border-cultr-copper/50 hover:-translate-y-1 hover:shadow-xl hover:shadow-cultr-copper/10 transition-all duration-300"
+            >
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-cultr-copper/10 flex items-center justify-center text-cultr-copper group-hover:bg-cultr-copper/20 transition-all duration-300 group-hover:scale-110">
+                  {service.icon}
+                </div>
+                <div>
+                  <h3 className="text-xl font-display text-cultr-cream mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-cultr-cream/60 font-body leading-relaxed">
+                    {service.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-display text-cultr-cream mb-2">
-                  {service.title}
-                </h3>
-                <p className="text-cultr-cream/60 font-body leading-relaxed">
-                  {service.description}
-                </p>
+              <div className="flex flex-wrap gap-2">
+                {service.features.map((feature, featureIndex) => (
+                  <span
+                    key={feature}
+                    className="px-3 py-1 text-xs font-display text-cultr-cream/70 bg-cultr-lightgray/30 rounded-full transition-all duration-300 group-hover:bg-cultr-copper/10"
+                    style={{ transitionDelay: `${featureIndex * 50}ms` }}
+                  >
+                    {feature}
+                  </span>
+                ))}
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {service.features.map((feature) => (
-                <span
-                  key={feature}
-                  className="px-3 py-1 text-xs font-display text-cultr-cream/70 bg-cultr-lightgray/30 rounded-full"
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          </div>
+          </ScrollReveal>
         ))}
       </div>
     </SectionWrapper>

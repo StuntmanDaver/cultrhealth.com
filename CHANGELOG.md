@@ -4,6 +4,112 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-01-29] - AI Meal Plan Generator with Modal & Export Features
+
+### Added
+
+#### New Features
+- **AI Meal Plan Generator** - OpenAI-powered meal plan generation based on user's calculated macros
+  - **`app/api/meal-plan/route.ts`** - Streaming AI API endpoint for meal plan generation
+  - **`app/library/calorie-calculator/`** - Full calorie & macro calculator with AI meal planning
+    - **`CalorieCalculatorClient.tsx`** - Interactive calculator with modal UI (1,123 lines)
+    - **`page.tsx`** - Server-side wrapper page
+  - Beautiful modal popup with real-time streaming content
+  - Export to PDF with professional formatting and CULTR branding
+  - Copy to clipboard for Google Docs/Word
+  - Regenerate functionality for new meal plans
+
+#### Calorie Calculator Features
+- Multiple BMR formulas (Mifflin-St Jeor, Harris-Benedict, Katch-McArdle)
+- Activity level adjustments (Sedentary to Extra Active)
+- Goal-based calorie targets (Aggressive Cut to Bulk)
+- Customizable macro splits (Balanced, High Protein, Low Carb, Keto)
+- Visual macro breakdown with donut chart
+- Responsive design with sticky results panel
+
+#### Payment Integrations (BNPL)
+- **Affirm Integration**
+  - **`app/api/checkout/affirm/checkout/route.ts`** - Affirm checkout endpoint
+  - **`app/api/checkout/affirm/capture/route.ts`** - Affirm payment capture
+  - **`app/api/webhook/affirm/route.ts`** - Affirm webhook handler
+  - **`components/payments/AffirmCheckoutButton.tsx`** - Affirm checkout button
+  - **`lib/payments/affirm-api.ts`** - Affirm API utilities
+
+- **Klarna Integration**
+  - **`app/api/checkout/klarna/session/route.ts`** - Klarna session creation
+  - **`app/api/checkout/klarna/order/route.ts`** - Klarna order management
+  - **`app/api/webhook/klarna/route.ts`** - Klarna webhook handler
+  - **`components/payments/KlarnaWidget.tsx`** - Klarna payment widget
+  - **`lib/payments/klarna-api.ts`** - Klarna API utilities
+
+#### Payment Components
+- **`components/payments/BNPLBadge.tsx`** - Buy Now, Pay Later badge component
+- **`components/payments/PaymentMethodSelector.tsx`** - Payment method selection UI
+- **`components/payments/PaymentProviderLoader.tsx`** - Payment script loader
+- **`app/api/checkout/product/route.ts`** - Product checkout endpoint
+- **`lib/config/payments.ts`** - Payment providers configuration
+- **`lib/payments/payment-types.ts`** - Payment type definitions
+
+#### UI Components
+- **`components/ui/Aura.tsx`** - Decorative aura component for visual effects
+- **`components/ui/Input.tsx`** - Reusable input component
+- **`components/library/MemberDashboard.tsx`** - Member dashboard component
+
+#### Configuration & Utilities
+- **`lib/calorie-calculator.ts`** - Core calculation logic for BMR, TDEE, and macros
+- **`lib/config/healthie.ts`** - Healthie API configuration
+
+#### Documentation
+- **`BNPL-TESTING-GUIDE.md`** - Buy Now Pay Later testing guide
+- **`design.md`** - Design system and component documentation (453 lines)
+- **`docs/BNPL-MERCHANT-SETUP.md`** - Merchant setup guide for BNPL
+- **`docs/BNPL-MOBILE-SDK.md`** - Mobile SDK integration guide
+
+### Modified
+
+#### Design System Updates
+- Updated color palette with new cultr-mint, cultr-sage, cultr-forest colors
+- Enhanced gradient styles and animations
+- Improved typography with font-display and font-body classes
+- Added aura effects and glass morphism styles
+
+#### Component Updates
+- Enhanced all section components with new design system
+- Updated navigation and footer with improved styling
+- Improved button variants and hover states
+- Enhanced pricing cards with BNPL badge support
+- Updated cart and shop components with new design
+
+### Environment Variables Added
+```
+OPENAI_API_KEY - OpenAI API key for meal plan generation
+KLARNA_API_KEY - Klarna API key
+KLARNA_API_SECRET - Klarna API secret
+KLARNA_API_URL - Klarna API endpoint
+NEXT_PUBLIC_KLARNA_CLIENT_ID - Klarna client ID
+NEXT_PUBLIC_ENABLE_KLARNA - Enable/disable Klarna
+AFFIRM_PRIVATE_API_KEY - Affirm private API key
+NEXT_PUBLIC_AFFIRM_PUBLIC_KEY - Affirm public key
+AFFIRM_API_URL - Affirm API endpoint
+NEXT_PUBLIC_AFFIRM_SCRIPT_URL - Affirm script URL
+NEXT_PUBLIC_ENABLE_AFFIRM - Enable/disable Affirm
+```
+
+### Dependencies Added
+- `@ai-sdk/openai` - OpenAI integration for AI SDK
+- `@ai-sdk/react` - React hooks for AI streaming
+- `ai` - Vercel AI SDK for streaming text
+- `marked` - Markdown parser for meal plan rendering
+
+### Technical Improvements
+- Implemented streaming API responses for real-time content delivery
+- Added proper error handling and logging for AI endpoints
+- Enhanced modal component with escape key and backdrop close
+- Improved responsive design across all screen sizes
+- Added print-optimized PDF export functionality
+
+---
+
 ## [2026-01-27] - Initial Full Application Release
 
 ### Commit: `316c14a` - Add full Cultr Health Website application

@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown } from 'lucide-react';
 
 const navLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/products', label: 'Products', hasDropdown: true },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/faq', label: 'FAQ' },
-  { href: '/login', label: 'Login' },
+  { href: '/faq', label: 'Science' },
+];
+
+const rightNavLinks = [
+  { href: '/library', label: 'Resources', hasDropdown: true },
+  { href: '/login', label: 'Community' },
 ];
 
 export function Header() {
@@ -18,40 +21,61 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-cultr-sage">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex flex-col">
-            <span className="text-2xl font-display font-bold text-cultr-forest tracking-wide">
-              CULTR
-            </span>
-            <span className="text-[10px] text-cultr-textMuted tracking-widest uppercase">
-              Health | Wellness
-            </span>
-          </Link>
+      <header className="fixed top-0 w-full z-50 bg-brand-cream/95 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Left Logo + Nav */}
+          <div className="flex items-center gap-8">
+            <Link href="/">
+              <span className="text-3xl font-display font-semibold text-brand-primary tracking-tight">
+                CULTR
+              </span>
+            </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="group flex items-center gap-1 text-sm font-body text-brand-primary hover:text-brand-primaryLight transition-colors relative"
+                >
+                  <span className="relative">
+                    {link.label}
+                    <span className="absolute -bottom-1 left-0 w-0 h-px bg-brand-primary transition-all duration-300 ease-out group-hover:w-full" />
+                  </span>
+                  {link.hasDropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
+          {/* Right Nav */}
+          <nav className="hidden md:flex items-center gap-6">
+            {rightNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-cultr-text hover:text-cultr-forest transition-colors"
+                className="group flex items-center gap-1 text-sm font-body text-brand-primary hover:text-brand-primaryLight transition-colors relative"
               >
-                {link.label}
+                <span className="relative">
+                  {link.label}
+                  <span className="absolute -bottom-1 left-0 w-0 h-px bg-brand-primary transition-all duration-300 ease-out group-hover:w-full" />
+                </span>
+                {link.hasDropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
               </Link>
             ))}
             <Link href="/pricing">
-              <Button size="sm">Join CULTR</Button>
+              <Button size="sm">Shop now</Button>
             </Link>
           </nav>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-cultr-text hover:text-cultr-forest transition-colors"
+            className="md:hidden p-2 text-brand-primary hover:text-brand-primaryLight transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            <span className={`block transition-transform duration-300 ${mobileMenuOpen ? 'rotate-90' : 'rotate-0'}`}>
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </span>
           </button>
         </div>
       </header>
@@ -59,7 +83,7 @@ export function Header() {
       {/* Mobile Menu Overlay */}
       <div
         className={`
-          fixed inset-0 z-40 bg-cultr-forest/40 backdrop-blur-sm md:hidden
+          fixed inset-0 z-40 bg-brand-primary/20 backdrop-blur-sm md:hidden
           transition-opacity duration-300
           ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
@@ -69,16 +93,16 @@ export function Header() {
       {/* Mobile Menu Panel */}
       <div
         className={`
-          fixed top-0 right-0 z-50 h-full w-72 bg-white border-l border-cultr-sage md:hidden
+          fixed top-0 right-0 z-50 h-full w-80 bg-brand-cream md:hidden
           transform transition-transform duration-300 ease-out
           ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
         `}
       >
         {/* Close Button */}
-        <div className="flex justify-end p-6">
+        <div className="flex justify-end p-4">
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-2 text-cultr-textMuted hover:text-cultr-forest transition-colors"
+            className="p-2 text-brand-primary/60 hover:text-brand-primary transition-colors"
             aria-label="Close menu"
           >
             <X className="w-6 h-6" />
@@ -87,19 +111,19 @@ export function Header() {
 
         {/* Mobile Nav Links */}
         <nav className="flex flex-col px-6">
-          {navLinks.map((link) => (
+          {[...navLinks, ...rightNavLinks].map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="py-4 text-lg font-medium text-cultr-text hover:text-cultr-forest border-b border-cultr-sage transition-colors"
+              className="py-4 text-base font-body text-brand-primary hover:text-brand-primaryLight border-b border-brand-primary/10 transition-colors"
             >
               {link.label}
             </Link>
           ))}
           <div className="mt-8">
             <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full">Join CULTR</Button>
+              <Button className="w-full">Shop now</Button>
             </Link>
           </div>
         </nav>
