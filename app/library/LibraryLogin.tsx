@@ -37,6 +37,12 @@ export function LibraryLogin({ error }: { error?: string }) {
         return
       }
 
+      // Handle staging access - redirect immediately
+      if (data.stagingAccess && data.redirectUrl) {
+        window.location.href = data.redirectUrl
+        return
+      }
+
       setSuccess(true)
     } catch {
       setFormError('Network error. Please try again.')

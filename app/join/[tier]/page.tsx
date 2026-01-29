@@ -71,47 +71,60 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
     }
   };
 
-  // Klarna: create session when Klarna is selected
-  const handleSelectPaymentMethod = async (provider: PaymentProvider) => {
+  // Handle payment method selection (no API calls on select)
+  const handleSelectPaymentMethod = (provider: PaymentProvider) => {
     setPaymentMethod(provider);
     setError(null);
-
-    if (provider === 'klarna' && !klarnaClientToken) {
-      setKlarnaSessionLoading(true);
-      try {
-        const response = await fetch('/api/checkout/klarna/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planSlug: plan.slug }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session');
-        setKlarnaClientToken(data.client_token);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load Klarna');
-        setPaymentMethod('stripe');
-      } finally {
-        setKlarnaSessionLoading(false);
-      }
+    // Reset tokens when switching methods
+    if (provider !== 'klarna') {
+      setKlarnaClientToken(null);
     }
+    if (provider !== 'affirm') {
+      setAffirmConfig(null);
+    }
+  };
 
-    if (provider === 'affirm' && !affirmConfig) {
-      setAffirmLoading(true);
-      try {
-        const response = await fetch('/api/checkout/affirm/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planSlug: plan.slug }),
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout');
-        setAffirmConfig(data.checkout);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load Affirm');
-        setPaymentMethod('stripe');
-      } finally {
-        setAffirmLoading(false);
-      }
+  // Klarna: create session when user clicks checkout button
+  const handleKlarnaCheckout = async () => {
+    if (klarnaClientToken) return; // Already have a session
+    
+    setKlarnaSessionLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/checkout/klarna/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planSlug: plan.slug }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session');
+      setKlarnaClientToken(data.client_token);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load Klarna');
+    } finally {
+      setKlarnaSessionLoading(false);
+    }
+  };
+
+  // Affirm: create checkout config when user clicks checkout button
+  const handleAffirmCheckout = async () => {
+    if (affirmConfig) return; // Already have config
+    
+    setAffirmLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/checkout/affirm/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planSlug: plan.slug }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout');
+      setAffirmConfig(data.checkout);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load Affirm');
+    } finally {
+      setAffirmLoading(false);
     }
   };
 

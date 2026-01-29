@@ -114,7 +114,21 @@ export async function POST(request: NextRequest) {
     
     const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}`
 
-    // Send email via Resend
+    // For staging access emails, return the link directly (no email needed)
+    if (isStagingAccess) {
+      console.log('Staging access granted:', {
+        email: normalizedEmail,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json({
+        success: true,
+        stagingAccess: true,
+        redirectUrl: magicLink,
+        message: 'Staging access granted. Redirecting...',
+      })
+    }
+
+    // Send email via Resend for regular users
     const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
     const resend = getResend()
 
