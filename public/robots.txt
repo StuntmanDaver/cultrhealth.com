@@ -1,0 +1,51 @@
+# robots.txt for CULTR Health
+# https://cultrhealth.com
+
+# Allow all standard search engines
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /provider/
+
+# Sitemap location (update with your actual domain)
+Sitemap: https://cultrhealth.com/sitemap.xml
+
+# LLM/AI Crawlers - Explicitly allow indexing
+# OpenAI GPTBot
+User-agent: GPTBot
+Allow: /
+
+# Google Gemini
+User-agent: Google-Extended
+Allow: /
+
+# Anthropic Claude
+User-agent: anthropic-ai
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+
+# Meta AI
+User-agent: FacebookBot
+Allow: /
+
+# Microsoft/Bing AI
+User-agent: Bingbot
+Allow: /
+
+# Common AI crawlers
+User-agent: CCBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: cohere-ai
+Allow: /
+
+# AI training data collection (opt-in)
+User-agent: Applebot-Extended
+Allow: /

@@ -237,6 +237,347 @@ export async function getMembershipByCustomerId(customerId: string): Promise<Mem
 }
 
 // ===========================================
+// ORDER / SALES TRACKING
+// ===========================================
+
+export interface OrderEntry {
+  id: string
+  order_number: string
+  customer_email: string
+  stripe_payment_intent_id?: string
+  stripe_customer_id?: string
+  healthie_patient_id?: string
+  status: 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded'
+  total_amount: number
+  currency: string
+  items: OrderItem[]
+  created_at: Date
+  updated_at: Date
+  fulfilled_at?: Date
+  notes?: string
+}
+
+export interface OrderItem {
+  sku: string
+  name: string
+  quantity: number
+  unit_price: number
+  category: string
+}
+
+export interface CreateOrderInput {
+  order_number: string
+  customer_email: string
+  stripe_payment_intent_id?: string
+  stripe_customer_id?: string
+  healthie_patient_id?: string
+  status: 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded'
+  total_amount: number
+  currency?: string
+  items: OrderItem[]
+  notes?: string
+}
+
+export interface UpdateOrderInput {
+  status?: 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded'
+  healthie_patient_id?: string
+  fulfilled_at?: Date
+  notes?: string
+}
+
+export async function createOrder(input: CreateOrderInput): Promise<{ id: string; order_number: string }> {
+  const {
+    order_number,
+    customer_email,
+    stripe_payment_intent_id,
+    stripe_customer_id,
+    healthie_patient_id,
+    status,
+    total_amount,
+    currency = 'USD',
+    items,
+    notes,
+  } = input
+
+  try {
+    const result = await sql`
+      INSERT INTO orders (
+        order_number,
+        customer_email,
+        stripe_payment_intent_id,
+        stripe_customer_id,
+        healthie_patient_id,
+        status,
+        total_amount,
+        currency,
+        items,
+        notes,
+        created_at,
+        updated_at
+      )
+      VALUES (
+        ${order_number},
+        ${customer_email.toLowerCase()},
+        ${stripe_payment_intent_id || null},
+        ${stripe_customer_id || null},
+        ${healthie_patient_id || null},
+        ${status},
+        ${total_amount},
+        ${currency},
+        ${JSON.stringify(items)},
+        ${notes || null},
+        NOW(),
+        NOW()
+      )
+      RETURNING id, order_number
+    `
+
+    return { id: result.rows[0].id, order_number: result.rows[0].order_number }
+  } catch (error) {
+    console.error('Database error creating order:', error)
+    throw new DatabaseError('Failed to create order', error)
+  }
+}
+
+export async function updateOrderByOrderNumber(
+  orderNumber: string,
+  input: UpdateOrderInput
+): Promise<boolean> {
+  try {
+    const result = await sql`
+      UPDATE orders
+      SET 
+        status = COALESCE(${input.status || null}, status),
+        healthie_patient_id = COALESCE(${input.healthie_patient_id || null}, healthie_patient_id),
+        fulfilled_at = ${input.fulfilled_at?.toISOString() || null},
+        notes = COALESCE(${input.notes || null}, notes),
+        updated_at = NOW()
+      WHERE order_number = ${orderNumber}
+    `
+
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error updating order:', error)
+    throw new DatabaseError('Failed to update order', error)
+  }
+}
+
+export async function getOrderByOrderNumber(orderNumber: string): Promise<OrderEntry | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM orders WHERE order_number = ${orderNumber}
+    `
+
+    if (!result.rows[0]) return null
+
+    return {
+      ...result.rows[0],
+      items: typeof result.rows[0].items === 'string' 
+        ? JSON.parse(result.rows[0].items) 
+        : result.rows[0].items,
+    } as OrderEntry
+  } catch (error) {
+    console.error('Database error fetching order:', error)
+    throw new DatabaseError('Failed to fetch order', error)
+  }
+}
+
+export async function getOrdersByCustomerEmail(email: string, limit = 50): Promise<OrderEntry[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM orders 
+      WHERE customer_email = ${email.toLowerCase()}
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `
+
+    return result.rows.map(row => ({
+      ...row,
+      items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
+    })) as OrderEntry[]
+  } catch (error) {
+    console.error('Database error fetching orders by email:', error)
+    throw new DatabaseError('Failed to fetch orders', error)
+  }
+}
+
+export async function getRecentOrders(limit = 100): Promise<OrderEntry[]> {
+  try {
+    const result = await sql`
+      SELECT * FROM orders 
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `
+
+    return result.rows.map(row => ({
+      ...row,
+      items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
+    })) as OrderEntry[]
+  } catch (error) {
+    console.error('Database error fetching recent orders:', error)
+    throw new DatabaseError('Failed to fetch recent orders', error)
+  }
+}
+
+// ===========================================
+// ANALYTICS / STATS
+// ===========================================
+
+export interface SalesStats {
+  totalOrders: number
+  totalRevenue: number
+  ordersByStatus: Record<string, number>
+  topProducts: { sku: string; name: string; quantity: number; revenue: number }[]
+  recentOrders: OrderEntry[]
+}
+
+export async function getSalesStats(days = 30): Promise<SalesStats> {
+  try {
+    // Get total orders and revenue
+    const totalsResult = await sql`
+      SELECT 
+        COUNT(*) as total_orders,
+        COALESCE(SUM(total_amount), 0) as total_revenue
+      FROM orders
+      WHERE created_at >= NOW() - INTERVAL '${days} days'
+        AND status IN ('paid', 'fulfilled')
+    `
+
+    // Get orders by status
+    const statusResult = await sql`
+      SELECT status, COUNT(*) as count
+      FROM orders
+      WHERE created_at >= NOW() - INTERVAL '${days} days'
+      GROUP BY status
+    `
+
+    // Get recent orders
+    const recentResult = await sql`
+      SELECT * FROM orders 
+      ORDER BY created_at DESC
+      LIMIT 20
+    `
+
+    const ordersByStatus: Record<string, number> = {}
+    statusResult.rows.forEach(row => {
+      ordersByStatus[row.status] = parseInt(row.count, 10)
+    })
+
+    // Calculate top products from recent orders
+    const productMap = new Map<string, { sku: string; name: string; quantity: number; revenue: number }>()
+    
+    const recentOrders = recentResult.rows.map(row => {
+      const items = typeof row.items === 'string' ? JSON.parse(row.items) : row.items
+      
+      // Aggregate product stats
+      if (row.status === 'paid' || row.status === 'fulfilled') {
+        items.forEach((item: OrderItem) => {
+          const existing = productMap.get(item.sku)
+          if (existing) {
+            existing.quantity += item.quantity
+            existing.revenue += item.unit_price * item.quantity
+          } else {
+            productMap.set(item.sku, {
+              sku: item.sku,
+              name: item.name,
+              quantity: item.quantity,
+              revenue: item.unit_price * item.quantity,
+            })
+          }
+        })
+      }
+
+      return { ...row, items } as OrderEntry
+    })
+
+    const topProducts = Array.from(productMap.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10)
+
+    return {
+      totalOrders: parseInt(totalsResult.rows[0]?.total_orders || '0', 10),
+      totalRevenue: parseFloat(totalsResult.rows[0]?.total_revenue || '0'),
+      ordersByStatus,
+      topProducts,
+      recentOrders,
+    }
+  } catch (error) {
+    console.error('Database error fetching sales stats:', error)
+    throw new DatabaseError('Failed to fetch sales stats', error)
+  }
+}
+
+export async function getWaitlistStats(): Promise<{ total: number; bySource: Record<string, number>; recent: WaitlistEntry[] }> {
+  try {
+    const totalResult = await sql`SELECT COUNT(*) as count FROM waitlist`
+    
+    const sourceResult = await sql`
+      SELECT COALESCE(source, 'direct') as source, COUNT(*) as count
+      FROM waitlist
+      GROUP BY COALESCE(source, 'direct')
+    `
+
+    const recentResult = await sql`
+      SELECT * FROM waitlist
+      ORDER BY created_at DESC
+      LIMIT 20
+    `
+
+    const bySource: Record<string, number> = {}
+    sourceResult.rows.forEach(row => {
+      bySource[row.source] = parseInt(row.count, 10)
+    })
+
+    return {
+      total: parseInt(totalResult.rows[0]?.count || '0', 10),
+      bySource,
+      recent: recentResult.rows as WaitlistEntry[],
+    }
+  } catch (error) {
+    console.error('Database error fetching waitlist stats:', error)
+    throw new DatabaseError('Failed to fetch waitlist stats', error)
+  }
+}
+
+export async function getMembershipStats(): Promise<{ total: number; byTier: Record<string, number>; byStatus: Record<string, number> }> {
+  try {
+    const totalResult = await sql`SELECT COUNT(*) as count FROM memberships WHERE subscription_status = 'active'`
+    
+    const tierResult = await sql`
+      SELECT plan_tier, COUNT(*) as count
+      FROM memberships
+      WHERE subscription_status = 'active'
+      GROUP BY plan_tier
+    `
+
+    const statusResult = await sql`
+      SELECT subscription_status, COUNT(*) as count
+      FROM memberships
+      GROUP BY subscription_status
+    `
+
+    const byTier: Record<string, number> = {}
+    tierResult.rows.forEach(row => {
+      byTier[row.plan_tier] = parseInt(row.count, 10)
+    })
+
+    const byStatus: Record<string, number> = {}
+    statusResult.rows.forEach(row => {
+      byStatus[row.subscription_status] = parseInt(row.count, 10)
+    })
+
+    return {
+      total: parseInt(totalResult.rows[0]?.count || '0', 10),
+      byTier,
+      byStatus,
+    }
+  } catch (error) {
+    console.error('Database error fetching membership stats:', error)
+    throw new DatabaseError('Failed to fetch membership stats', error)
+  }
+}
+
+// ===========================================
 // DATABASE CONNECTION TEST
 // ===========================================
 

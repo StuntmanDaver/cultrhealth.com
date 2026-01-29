@@ -9,23 +9,56 @@ import {
   type ProtocolParameter,
   searchSymptoms,
   generateCombinedProtocol,
-  getAllSupplements,
-  getAllPeptides,
   type SymptomProtocol,
-  type CombinedSymptomProtocol,
-  type SynergisticPeptide,
   PEPTIDE_GOALS,
   getPeptidesForGoals,
   type PeptideGoal,
-  type CatalogPeptide,
 } from '@/lib/protocol-templates'
-import { Search, Plus, X, Activity, Pill, AlertCircle, FileText, Zap, Star, Circle, Target, ChevronDown, ChevronUp, DollarSign, Shield, FlaskConical } from 'lucide-react'
+import { Search, Plus, X, Activity, Pill, AlertCircle, FileText, Zap, Star, Circle, Target, ChevronDown, ChevronUp, DollarSign, Shield, FlaskConical, TrendingUp, Clock, Beaker } from 'lucide-react'
+import { BIOMARKER_DEFINITIONS } from '@/lib/resilience'
 
 type ProtocolBuilderClientProps = {
   providerEmail: string
 }
 
 type BuilderMode = 'template' | 'symptom'
+
+// Expected Outcome Types for N=1 Trial Tracking
+type ExpectedOutcome = {
+  biomarkerId: string
+  biomarkerName: string
+  currentValue?: number
+  targetValue: number
+  unit: string
+  timeframeWeeks: number
+  direction: 'increase' | 'decrease' | 'maintain'
+}
+
+// Protocol versioning for reproducibility
+const PROTOCOL_ENGINE_VERSION = '1.0.0'
+
+// Pre-defined outcome templates based on protocol goals
+const OUTCOME_PRESETS: Record<string, Partial<ExpectedOutcome>[]> = {
+  'metabolic-optimization': [
+    { biomarkerId: 'hba1c', direction: 'decrease', timeframeWeeks: 12 },
+    { biomarkerId: 'fasting-insulin', direction: 'decrease', timeframeWeeks: 8 },
+    { biomarkerId: 'hs-crp', direction: 'decrease', timeframeWeeks: 8 },
+  ],
+  'longevity-focus': [
+    { biomarkerId: 'biological-age', direction: 'decrease', timeframeWeeks: 24 },
+    { biomarkerId: 'igf-1', direction: 'maintain', timeframeWeeks: 12 },
+    { biomarkerId: 'vitamin-d', direction: 'increase', timeframeWeeks: 8 },
+  ],
+  'hormonal-balance': [
+    { biomarkerId: 'total-testosterone', direction: 'increase', timeframeWeeks: 12 },
+    { biomarkerId: 'free-t3', direction: 'maintain', timeframeWeeks: 8 },
+    { biomarkerId: 'dhea-s', direction: 'increase', timeframeWeeks: 12 },
+  ],
+  'inflammation-repair': [
+    { biomarkerId: 'hs-crp', direction: 'decrease', timeframeWeeks: 8 },
+    { biomarkerId: 'homocysteine', direction: 'decrease', timeframeWeeks: 12 },
+  ],
+}
 
 export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientProps) {
   const [mode, setMode] = useState<BuilderMode>('template')
@@ -47,6 +80,14 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  // Expected Outcomes State (N=1 Trial Tracking)
+  const [expectedOutcomes, setExpectedOutcomes] = useState<ExpectedOutcome[]>([])
+  const [showOutcomesPanel, setShowOutcomesPanel] = useState(true)
+  const [selectedBiomarker, setSelectedBiomarker] = useState<string>('')
+  const [outcomeTargetValue, setOutcomeTargetValue] = useState<string>('')
+  const [outcomeTimeframe, setOutcomeTimeframe] = useState<number>(12)
+  const [outcomeDirection, setOutcomeDirection] = useState<'increase' | 'decrease' | 'maintain'>('increase')
 
   // Template Logic
   const template = useMemo(() => getProtocolTemplate(templateId), [templateId])
@@ -117,6 +158,69 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
     setSelectedSymptoms(prev => prev.filter(s => s.id !== symptomId))
   }
 
+  // Expected Outcomes Management
+  const addExpectedOutcome = () => {
+    if (!selectedBiomarker || !outcomeTargetValue) return
+    
+    const biomarker = BIOMARKER_DEFINITIONS.find(b => b.id === selectedBiomarker)
+    if (!biomarker) return
+
+    const newOutcome: ExpectedOutcome = {
+      biomarkerId: selectedBiomarker,
+      biomarkerName: biomarker.name,
+      targetValue: parseFloat(outcomeTargetValue),
+      unit: biomarker.unit,
+      timeframeWeeks: outcomeTimeframe,
+      direction: outcomeDirection,
+    }
+
+    setExpectedOutcomes(prev => [...prev, newOutcome])
+    setSelectedBiomarker('')
+    setOutcomeTargetValue('')
+  }
+
+  const removeExpectedOutcome = (biomarkerId: string) => {
+    setExpectedOutcomes(prev => prev.filter(o => o.biomarkerId !== biomarkerId))
+  }
+
+  const applyOutcomePreset = (presetKey: string) => {
+    const preset = OUTCOME_PRESETS[presetKey]
+    if (!preset) return
+
+    const newOutcomes: ExpectedOutcome[] = preset
+      .map(p => {
+        const biomarker = BIOMARKER_DEFINITIONS.find(b => b.id === p.biomarkerId)
+        if (!biomarker) return null
+        return {
+          biomarkerId: p.biomarkerId!,
+          biomarkerName: biomarker.name,
+          targetValue: p.direction === 'decrease' 
+            ? biomarker.optimalRange.max 
+            : p.direction === 'increase' 
+            ? biomarker.optimalRange.min 
+            : (biomarker.optimalRange.min + biomarker.optimalRange.max) / 2,
+          unit: biomarker.unit,
+          timeframeWeeks: p.timeframeWeeks!,
+          direction: p.direction!,
+        } as ExpectedOutcome
+      })
+      .filter((o): o is ExpectedOutcome => o !== null)
+
+    setExpectedOutcomes(prev => {
+      // Merge without duplicates
+      const existingIds = new Set(prev.map(o => o.biomarkerId))
+      const uniqueNew = newOutcomes.filter(o => !existingIds.has(o.biomarkerId))
+      return [...prev, ...uniqueNew]
+    })
+  }
+
+  // Generate protocol version string
+  const generateProtocolVersion = () => {
+    const templatePart = mode === 'template' ? template?.id || 'custom' : 'symptom-stack'
+    const timestamp = Date.now().toString(36)
+    return `${PROTOCOL_ENGINE_VERSION}-${templatePart}-${timestamp}`
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setErrorMessage(null)
@@ -139,15 +243,27 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
 
     setIsSubmitting(true)
     try {
+      const protocolVersion = generateProtocolVersion()
+      
       const payload = mode === 'template' 
         ? {
             templateId: template?.id,
             patientHealthieId: patientId,
             parameters,
+            // N=1 Trial Tracking Fields
+            protocolVersion,
+            engineVersion: PROTOCOL_ENGINE_VERSION,
+            expectedOutcomes: expectedOutcomes.length > 0 ? expectedOutcomes : undefined,
+            createdAt: new Date().toISOString(),
           }
         : {
             symptomIds: selectedSymptoms.map(s => s.id),
             patientHealthieId: patientId,
+            // N=1 Trial Tracking Fields
+            protocolVersion,
+            engineVersion: PROTOCOL_ENGINE_VERSION,
+            expectedOutcomes: expectedOutcomes.length > 0 ? expectedOutcomes : undefined,
+            createdAt: new Date().toISOString(),
           }
 
       const response = await fetch('/api/protocol/generate', {
@@ -355,6 +471,163 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
               </div>
             </div>
           )}
+
+          {/* Expected Outcomes Panel - N=1 Trial Tracking */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-cultr-sage/20 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-cultr-forest flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Expected Outcomes
+                <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-normal">
+                  N=1 Trial
+                </span>
+              </h3>
+              <button 
+                onClick={() => setShowOutcomesPanel(!showOutcomesPanel)}
+                className="text-xs text-cultr-forest hover:text-cultr-forestDark flex items-center gap-1"
+              >
+                {showOutcomesPanel ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {showOutcomesPanel && (
+              <>
+                <p className="text-xs text-cultr-textMuted">
+                  Define measurable biomarker targets to track protocol effectiveness. This enables outcome correlation and predictive modeling.
+                </p>
+
+                {/* Preset Buttons */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-cultr-text">Quick Presets:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.keys(OUTCOME_PRESETS).map((presetKey) => (
+                      <button
+                        key={presetKey}
+                        onClick={() => applyOutcomePreset(presetKey)}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-cultr-sage/30 bg-cultr-offwhite hover:bg-cultr-sage/20 transition-colors"
+                      >
+                        {presetKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add Custom Outcome */}
+                <div className="space-y-3 pt-3 border-t border-cultr-sage/20">
+                  <p className="text-xs font-medium text-cultr-text">Add Custom Target:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={selectedBiomarker}
+                      onChange={(e) => setSelectedBiomarker(e.target.value)}
+                      className="col-span-2 rounded-lg border border-cultr-sage/30 bg-white px-3 py-2 text-xs"
+                    >
+                      <option value="">Select biomarker...</option>
+                      {BIOMARKER_DEFINITIONS.filter(b => !expectedOutcomes.some(o => o.biomarkerId === b.id)).map((b) => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                    
+                    <div>
+                      <label className="text-[10px] text-cultr-textMuted">Target Value</label>
+                      <input
+                        type="number"
+                        value={outcomeTargetValue}
+                        onChange={(e) => setOutcomeTargetValue(e.target.value)}
+                        placeholder="e.g. 50"
+                        className="w-full rounded-lg border border-cultr-sage/30 bg-white px-3 py-2 text-xs"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-[10px] text-cultr-textMuted">Timeframe</label>
+                      <select
+                        value={outcomeTimeframe}
+                        onChange={(e) => setOutcomeTimeframe(Number(e.target.value))}
+                        className="w-full rounded-lg border border-cultr-sage/30 bg-white px-3 py-2 text-xs"
+                      >
+                        <option value={4}>4 weeks</option>
+                        <option value={8}>8 weeks</option>
+                        <option value={12}>12 weeks</option>
+                        <option value={24}>24 weeks</option>
+                      </select>
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="text-[10px] text-cultr-textMuted">Direction</label>
+                      <div className="flex gap-2">
+                        {(['increase', 'decrease', 'maintain'] as const).map((dir) => (
+                          <button
+                            key={dir}
+                            onClick={() => setOutcomeDirection(dir)}
+                            className={`flex-1 text-xs px-3 py-2 rounded-lg border transition-colors ${
+                              outcomeDirection === dir
+                                ? 'bg-cultr-forest text-white border-cultr-forest'
+                                : 'bg-white border-cultr-sage/30 hover:border-cultr-forest/50'
+                            }`}
+                          >
+                            {dir === 'increase' ? '↑' : dir === 'decrease' ? '↓' : '='} {dir}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={addExpectedOutcome}
+                    disabled={!selectedBiomarker || !outcomeTargetValue}
+                    className="w-full text-xs px-3 py-2 rounded-lg bg-cultr-forest text-white hover:bg-cultr-forestDark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-3 w-3" /> Add Outcome Target
+                  </button>
+                </div>
+
+                {/* Current Outcomes List */}
+                {expectedOutcomes.length > 0 && (
+                  <div className="space-y-2 pt-3 border-t border-cultr-sage/20">
+                    <p className="text-xs font-medium text-cultr-text">Defined Outcomes ({expectedOutcomes.length}):</p>
+                    <div className="space-y-2">
+                      {expectedOutcomes.map((outcome) => (
+                        <div 
+                          key={outcome.biomarkerId}
+                          className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-white rounded-lg border border-purple-100"
+                        >
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-cultr-text">{outcome.biomarkerName}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[10px] px-2 py-0.5 rounded ${
+                                outcome.direction === 'increase' ? 'bg-green-100 text-green-700' :
+                                outcome.direction === 'decrease' ? 'bg-blue-100 text-blue-700' :
+                                'bg-gray-100 text-gray-600'
+                              }`}>
+                                {outcome.direction === 'increase' ? '↑' : outcome.direction === 'decrease' ? '↓' : '='} {outcome.direction}
+                              </span>
+                              <span className="text-[10px] text-cultr-textMuted">
+                                Target: {outcome.targetValue} {outcome.unit}
+                              </span>
+                              <span className="text-[10px] text-cultr-textMuted flex items-center gap-1">
+                                <Clock className="h-2.5 w-2.5" /> {outcome.timeframeWeeks}w
+                              </span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => removeExpectedOutcome(outcome.biomarkerId)}
+                            className="text-cultr-textMuted hover:text-red-500 p-1"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[10px] text-cultr-textMuted bg-purple-50 border border-purple-100 p-2 rounded-lg">
+                  <Beaker className="h-3 w-3 inline mr-1" />
+                  <strong>Data Science:</strong> Expected outcomes enable predictive modeling and intervention-outcome correlation analysis.
+                </p>
+              </>
+            )}
+          </div>
 
           {errorMessage && (
             <div className="p-4 bg-red-50 text-red-700 rounded-xl border border-red-100 flex items-start gap-3">
@@ -645,6 +918,73 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                     <strong>Tip:</strong> Select patient goals above to see synergistic peptide recommendations from the full catalog.
                   </p>
                 )}
+
+                {/* Expected Outcomes Preview */}
+                {expectedOutcomes.length > 0 && (
+                  <div className="space-y-4 border-t border-cultr-sage/20 pt-6">
+                    <h4 className="font-bold text-sm uppercase tracking-wide text-cultr-text/60 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-purple-600" />
+                      Expected Outcomes (N=1 Trial)
+                    </h4>
+                    <div className="grid gap-3">
+                      {expectedOutcomes.map((outcome) => (
+                        <div 
+                          key={outcome.biomarkerId}
+                          className="bg-gradient-to-r from-purple-50 to-white p-4 rounded-xl border border-purple-200"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-cultr-text text-sm">{outcome.biomarkerName}</p>
+                              <div className="flex items-center gap-3 mt-2">
+                                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                  outcome.direction === 'increase' ? 'bg-green-100 text-green-700' :
+                                  outcome.direction === 'decrease' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-gray-100 text-gray-600'
+                                }`}>
+                                  {outcome.direction === 'increase' ? '↑ Increase' : outcome.direction === 'decrease' ? '↓ Decrease' : '= Maintain'}
+                                </span>
+                                <span className="text-xs text-cultr-textMuted">
+                                  to {outcome.targetValue} {outcome.unit}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                {outcome.timeframeWeeks} weeks
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-cultr-textMuted italic">
+                      These outcomes will be tracked to validate protocol effectiveness and contribute to predictive models.
+                    </p>
+                  </div>
+                )}
+
+                {/* Protocol Metadata */}
+                <div className="bg-cultr-offwhite p-4 rounded-xl border border-cultr-sage/10 mt-6">
+                  <h4 className="font-bold text-xs uppercase tracking-wide text-cultr-text/60 mb-3">Protocol Metadata</h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-cultr-textMuted">Engine Version</p>
+                      <p className="font-mono text-cultr-text">{PROTOCOL_ENGINE_VERSION}</p>
+                    </div>
+                    <div>
+                      <p className="text-cultr-textMuted">Template</p>
+                      <p className="font-mono text-cultr-text">{template?.id || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-cultr-textMuted">Outcomes Defined</p>
+                      <p className="font-mono text-cultr-text">{expectedOutcomes.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-cultr-textMuted">Goals Selected</p>
+                      <p className="font-mono text-cultr-text">{selectedGoals.length}</p>
+                    </div>
+                  </div>
+                </div>
               </>
             ) : mode === 'symptom' && combinedProtocol ? (
               <>
@@ -726,6 +1066,70 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                       </ul>
                     </div>
                   )}
+
+                  {/* Expected Outcomes Preview - Symptom Mode */}
+                  {expectedOutcomes.length > 0 && (
+                    <div className="space-y-4 border-t border-cultr-sage/20 pt-6">
+                      <h4 className="font-bold text-sm uppercase tracking-wide text-cultr-text/60 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-purple-600" />
+                        Expected Outcomes (N=1 Trial)
+                      </h4>
+                      <div className="grid gap-3">
+                        {expectedOutcomes.map((outcome) => (
+                          <div 
+                            key={outcome.biomarkerId}
+                            className="bg-gradient-to-r from-purple-50 to-white p-4 rounded-xl border border-purple-200"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-cultr-text text-sm">{outcome.biomarkerName}</p>
+                                <div className="flex items-center gap-3 mt-2">
+                                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                    outcome.direction === 'increase' ? 'bg-green-100 text-green-700' :
+                                    outcome.direction === 'decrease' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {outcome.direction === 'increase' ? '↑ Increase' : outcome.direction === 'decrease' ? '↓ Decrease' : '= Maintain'}
+                                  </span>
+                                  <span className="text-xs text-cultr-textMuted">
+                                    to {outcome.targetValue} {outcome.unit}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                  {outcome.timeframeWeeks} weeks
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Protocol Metadata - Symptom Mode */}
+                  <div className="bg-cultr-offwhite p-4 rounded-xl border border-cultr-sage/10 mt-6">
+                    <h4 className="font-bold text-xs uppercase tracking-wide text-cultr-text/60 mb-3">Protocol Metadata</h4>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <p className="text-cultr-textMuted">Engine Version</p>
+                        <p className="font-mono text-cultr-text">{PROTOCOL_ENGINE_VERSION}</p>
+                      </div>
+                      <div>
+                        <p className="text-cultr-textMuted">Mode</p>
+                        <p className="font-mono text-cultr-text">Symptom Stack</p>
+                      </div>
+                      <div>
+                        <p className="text-cultr-textMuted">Symptoms</p>
+                        <p className="font-mono text-cultr-text">{selectedSymptoms.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-cultr-textMuted">Outcomes Defined</p>
+                        <p className="font-mono text-cultr-text">{expectedOutcomes.length}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
