@@ -1,7 +1,7 @@
 // Product Catalog for Members Shop
 // Contains all purchasable product SKUs with metadata
 
-export type ProductCategory = 
+export type ProductCategory =
   | 'growth_factor'
   | 'repair'
   | 'metabolic'
@@ -11,6 +11,7 @@ export type ProductCategory =
   | 'hormonal'
   | 'blend'
   | 'accessory'
+  | 'wellness_supplement'
 
 export type ShopProduct = {
   sku: string
@@ -280,8 +281,155 @@ const BLEND_DEFINITIONS: Record<string, { name: string; components: string[]; ca
   },
 }
 
+// Wellness supplement definitions
+const WELLNESS_SUPPLEMENTS: Record<string, { name: string; priceUsd: number; description?: string }> = {
+  'WELLNESS-RE-GEN-129.99': {
+    name: 'Re-Generate',
+    priceUsd: 129.99,
+    description: 'Premium recovery supplement with BPC-157, PEA, and Hyaluronic Acid for tissue repair and joint support.',
+  },
+  'WELLNESS-ULT-GI-219.99': {
+    name: 'Ultimate GI Repair',
+    priceUsd: 219.99,
+    description: 'Advanced gastrointestinal support with four bioactive peptides for digestive health and intestinal integrity.',
+  },
+  'WELLNESS-WOLVERINE-219.99': {
+    name: 'Wolverine',
+    priceUsd: 219.99,
+    description: 'Recovery supplement combining BPC-157, TB4-Fragment, and PEA for accelerated recovery.',
+  },
+  'WELLNESS-GHK-CU-139.99': {
+    name: 'GHK-Cu',
+    priceUsd: 139.99,
+    description: 'Liposomal copper peptide formulation for superior absorption and systemic recovery.',
+  },
+  'WELLNESS-TOTAL-RECOMP-199.99': {
+    name: 'Total Recomp',
+    priceUsd: 199.99,
+    description: 'Cutting-edge metabolic support for body composition and energy production.',
+  },
+  'WELLNESS-NEURO-REGEN-249.99': {
+    name: 'Neuro Regenerate',
+    priceUsd: 249.99,
+    description: 'Triple peptide formula for cognitive function, mental clarity, and neuroprotection.',
+  },
+  'WELLNESS-AC-FRAG-109.99': {
+    name: 'AC Fragments (TB4-Frags)',
+    priceUsd: 109.99,
+    description: 'Oral peptide alternative for muscle recovery and tissue repair.',
+  },
+  'WELLNESS-KPV-109.99': {
+    name: 'KPV',
+    priceUsd: 109.99,
+    description: 'Bioactive tripeptide for immune modulation and tissue regeneration.',
+  },
+  'WELLNESS-LARAZOTIDE-149.99': {
+    name: 'Larazotide',
+    priceUsd: 149.99,
+    description: 'Specialized formula for gut barrier functionality and digestive health.',
+  },
+  'WELLNESS-LONGEVITY-249.99': {
+    name: 'Longevity (5-Amino-1MQ)',
+    priceUsd: 249.99,
+    description: 'Advanced formula targeting cellular health, metabolism, and longevity.',
+  },
+  'WELLNESS-CREVOLUTION-59.99': {
+    name: 'Crevolution',
+    priceUsd: 59.99,
+    description: 'Multi-form creatine formula for muscle performance and strength.',
+  },
+  'WELLNESS-MAG-THREONATE-54.99': {
+    name: 'Magnesium L-Threonate',
+    priceUsd: 54.99,
+    description: 'Highly bioavailable magnesium form for enhanced absorption and utilization.',
+  },
+  'WELLNESS-PEA-39.99': {
+    name: 'PEA',
+    priceUsd: 39.99,
+    description: 'Palmitoylethanolamide for pain relief and inflammation reduction.',
+  },
+  'WELLNESS-GI-REPAIR-209.99': {
+    name: 'GI Repair (BPC-Free)',
+    priceUsd: 209.99,
+    description: 'Comprehensive gut health formula without BPC-157 for regional compatibility.',
+  },
+  'WELLNESS-HISTA-RESIST-89.99': {
+    name: 'Hista-Resist',
+    priceUsd: 89.99,
+    description: 'Specialized formula for histamine intolerance and mast cell support.',
+  },
+  'WELLNESS-TUDCA-500-79.99': {
+    name: 'TUDCA - 500mg',
+    priceUsd: 79.99,
+    description: 'Bile salt for liver support and cellular protection.',
+  },
+  'WELLNESS-TRIBUTYRIN-64.99': {
+    name: 'Tributyrin Plus',
+    priceUsd: 64.99,
+    description: 'Gut health formula with tributyrin and beneficial probiotics.',
+  },
+  'WELLNESS-TUDCA-OXBILE-69.99': {
+    name: 'TUDCA + Ox Bile',
+    priceUsd: 69.99,
+    description: 'Synergistic combination for liver function and digestive efficiency.',
+  },
+  'WELLNESS-ZINC-CARNOSINE-39.99': {
+    name: 'Zinc Carnosine +',
+    priceUsd: 39.99,
+    description: 'Gut integrity support with Mastic Gum and DGL.',
+  },
+  'WELLNESS-TUDCA-250-49.99': {
+    name: 'TUDCA - 250mg',
+    priceUsd: 49.99,
+    description: 'Lower-dose TUDCA option with liver-supportive Taurine.',
+  },
+  'WELLNESS-BOTANABOLIC-114.99': {
+    name: 'Botanabolic',
+    priceUsd: 114.99,
+    description: 'Advanced testosterone-supporting supplement for hormonal health.',
+  },
+  'WELLNESS-LIVER-COMPLEX-109.99': {
+    name: 'Complete Liver Complex',
+    priceUsd: 109.99,
+    description: 'Comprehensive liver support for detoxification and cellular health.',
+  },
+  'WELLNESS-TURKESTERONE-62.99': {
+    name: 'Turkesterone',
+    priceUsd: 62.99,
+    description: 'Plant-derived supplement for muscle growth and recovery.',
+  },
+  'WELLNESS-DHM-69.99': {
+    name: 'Dihydromyricetin (DHM)',
+    priceUsd: 69.99,
+    description: 'Flavonoid for liver support and antioxidant protection.',
+  },
+  'WELLNESS-BPC157-DOUBLE-169.99': {
+    name: 'BPC-157 Double Strength',
+    priceUsd: 169.99,
+    description: 'Double-strength formula for full-body healing and recovery.',
+  },
+}
+
 // Parse a single SKU into a product
 function parseSku(sku: string): ShopProduct {
+  // Check if it's a wellness supplement
+  if (sku.startsWith('WELLNESS-')) {
+    const wellnessData = WELLNESS_SUPPLEMENTS[sku]
+    if (wellnessData) {
+      return {
+        sku,
+        name: wellnessData.name,
+        peptideId: null,
+        doseMg: 0,
+        volumeMl: 0,
+        category: 'wellness_supplement',
+        isBlend: false,
+        description: wellnessData.description,
+        priceUsd: wellnessData.priceUsd,
+      }
+    }
+  }
+
   // Check if it's a blend
   const isBlend = sku.startsWith('BLND-')
   
@@ -527,6 +675,32 @@ const RAW_SKUS = [
   'GLP-1-2T-100MG-10ML',
   'VIP-05MG-03ML',
   'VIP-10MG-03ML',
+  // Wellness Supplements
+  'WELLNESS-RE-GEN-129.99',
+  'WELLNESS-ULT-GI-219.99',
+  'WELLNESS-WOLVERINE-219.99',
+  'WELLNESS-GHK-CU-139.99',
+  'WELLNESS-TOTAL-RECOMP-199.99',
+  'WELLNESS-NEURO-REGEN-249.99',
+  'WELLNESS-AC-FRAG-109.99',
+  'WELLNESS-KPV-109.99',
+  'WELLNESS-LARAZOTIDE-149.99',
+  'WELLNESS-LONGEVITY-249.99',
+  'WELLNESS-CREVOLUTION-59.99',
+  'WELLNESS-MAG-THREONATE-54.99',
+  'WELLNESS-PEA-39.99',
+  'WELLNESS-GI-REPAIR-209.99',
+  'WELLNESS-HISTA-RESIST-89.99',
+  'WELLNESS-TUDCA-500-79.99',
+  'WELLNESS-TRIBUTYRIN-64.99',
+  'WELLNESS-TUDCA-OXBILE-69.99',
+  'WELLNESS-ZINC-CARNOSINE-39.99',
+  'WELLNESS-TUDCA-250-49.99',
+  'WELLNESS-BOTANABOLIC-114.99',
+  'WELLNESS-LIVER-COMPLEX-109.99',
+  'WELLNESS-TURKESTERONE-62.99',
+  'WELLNESS-DHM-69.99',
+  'WELLNESS-BPC157-DOUBLE-169.99',
 ]
 
 // Parse all SKUs into products
@@ -692,6 +866,7 @@ export function getCategoryDisplayName(category: ProductCategory): string {
     hormonal: 'Hormonal',
     blend: 'Blends',
     accessory: 'Accessories',
+    wellness_supplement: 'Wellness Supplements',
   }
   return names[category]
 }
@@ -700,7 +875,7 @@ export function getCategoryDisplayName(category: ProductCategory): string {
  * Get all categories with product counts
  */
 export function getCategoriesWithCounts(): { category: ProductCategory; count: number; displayName: string }[] {
-  const categories: ProductCategory[] = ['metabolic', 'growth_factor', 'repair', 'bioregulator', 'neuropeptide', 'immune', 'hormonal', 'blend', 'accessory']
+  const categories: ProductCategory[] = ['wellness_supplement', 'metabolic', 'growth_factor', 'repair', 'bioregulator', 'neuropeptide', 'immune', 'hormonal', 'blend', 'accessory']
   return categories.map(category => ({
     category,
     count: getProductsByCategory(category).length,

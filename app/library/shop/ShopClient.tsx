@@ -37,6 +37,7 @@ const CATEGORY_ICONS: Record<ProductCategory, typeof Beaker> = {
   hormonal: FlaskConical,
   blend: Package,
   accessory: Package,
+  wellness_supplement: Package,
 }
 
 type ProductCardProps = {
