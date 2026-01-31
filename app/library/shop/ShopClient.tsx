@@ -58,51 +58,75 @@ function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <div className="bg-white border border-cultr-sage rounded-xl p-4 hover:border-cultr-forest/50 hover:shadow-md transition-all">
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <Link
-            href={`/library/shop/${encodeURIComponent(product.sku)}`}
-            className="font-display font-bold text-cultr-text hover:text-cultr-forest transition-colors"
-          >
-            {product.name}
-          </Link>
-          <p className="text-xs text-cultr-textMuted mt-1">
-            {product.volumeMl > 0 ? `${product.volumeMl}ml vial` : ''}
-          </p>
-        </div>
-        <span className="text-xs px-2 py-1 bg-cultr-mint rounded-full text-cultr-forest">
-          {getCategoryDisplayName(product.category)}
-        </span>
-      </div>
+    <div className="bg-white border border-cultr-sage rounded-xl overflow-hidden hover:border-cultr-forest/50 hover:shadow-md transition-all">
+      {/* Product Image */}
+      {product.imageUrl && (
+        <Link href={`/library/shop/${encodeURIComponent(product.sku)}`}>
+          <div className="w-full h-48 bg-cultr-offwhite overflow-hidden">
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </Link>
+      )}
 
-      <div className="flex items-center justify-between mt-4">
-        <p className="text-sm text-cultr-textMuted">
-          {product.isBlend ? 'Blend' : product.peptideId ? 'Single' : 'Accessory'}
-        </p>
-        
-        {inCart && cartItem ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-cultr-forest flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              In cart ({cartItem.quantity})
-            </span>
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex-1">
+            <Link
+              href={`/library/shop/${encodeURIComponent(product.sku)}`}
+              className="font-display font-bold text-cultr-text hover:text-cultr-forest transition-colors"
+            >
+              {product.name}
+            </Link>
+            <p className="text-xs text-cultr-textMuted mt-1">
+              {product.volumeMl > 0 ? `${product.volumeMl}ml vial` : ''}
+            </p>
+          </div>
+          <span className="text-xs px-2 py-1 bg-cultr-mint rounded-full text-cultr-forest">
+            {getCategoryDisplayName(product.category)}
+          </span>
+        </div>
+
+        {/* Description preview for wellness supplements */}
+        {product.description && (
+          <p className="text-xs text-cultr-textMuted mb-3 line-clamp-2">
+            {product.description}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-cultr-textMuted">
+            {product.priceUsd ? (
+              <span className="font-bold text-cultr-text">${product.priceUsd.toFixed(2)}</span>
+            ) : product.isBlend ? 'Blend' : product.peptideId ? 'Single' : 'Accessory'}
+          </p>
+
+          {inCart && cartItem ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-cultr-forest flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                In cart ({cartItem.quantity})
+              </span>
+              <button
+                onClick={handleAddToCart}
+                className="p-2 bg-cultr-forest text-white rounded-lg hover:bg-cultr-forest/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
             <button
               onClick={handleAddToCart}
-              className="p-2 bg-cultr-forest text-white rounded-lg hover:bg-cultr-forest/90 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-cultr-forest text-white text-sm rounded-lg hover:bg-cultr-forest/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
+              Add
             </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleAddToCart}
-            className="flex items-center gap-2 px-3 py-2 bg-cultr-forest text-white text-sm rounded-lg hover:bg-cultr-forest/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

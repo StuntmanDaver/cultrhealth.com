@@ -25,6 +25,8 @@ export type ShopProduct = {
   description?: string
   /** Price in USD; products without price remain quote-only */
   priceUsd?: number
+  /** Product image URL */
+  imageUrl?: string
 }
 
 // Helper to parse dose from SKU (e.g., "10MG" -> 10, "05MG" -> 5, "01MG" -> 1, ".01MG" -> 0.01)
@@ -282,131 +284,156 @@ const BLEND_DEFINITIONS: Record<string, { name: string; components: string[]; ca
 }
 
 // Wellness supplement definitions
-const WELLNESS_SUPPLEMENTS: Record<string, { name: string; priceUsd: number; description?: string }> = {
+const WELLNESS_SUPPLEMENTS: Record<string, { name: string; priceUsd: number; description?: string; imageUrl: string }> = {
   'WELLNESS-RE-GEN-129.99': {
     name: 'Re-Generate',
     priceUsd: 129.99,
     description: 'Premium recovery supplement with BPC-157, PEA, and Hyaluronic Acid for tissue repair and joint support.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/a763ee54-332e-4f98-bac2-20321ba5455f_e571919e-c670-4503-bedd-2ab1cb44cbb0.webp?v=1742015169',
   },
   'WELLNESS-ULT-GI-219.99': {
     name: 'Ultimate GI Repair',
     priceUsd: 219.99,
     description: 'Advanced gastrointestinal support with four bioactive peptides for digestive health and intestinal integrity.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/fc63232c-aa16-4568-aff6-662079545ec2_d3793b0d-b8be-4de5-9ca0-66a19e9e4f22.webp?v=1742015229',
   },
   'WELLNESS-WOLVERINE-219.99': {
     name: 'Wolverine',
     priceUsd: 219.99,
     description: 'Recovery supplement combining BPC-157, TB4-Fragment, and PEA for accelerated recovery.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/485d4af0-e7b5-46e4-bbc0-158c1ce97d86.webp?v=1762958135',
   },
   'WELLNESS-GHK-CU-139.99': {
     name: 'GHK-Cu',
     priceUsd: 139.99,
     description: 'Liposomal copper peptide formulation for superior absorption and systemic recovery.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/406ebdf1-14c4-4504-bb52-f57e8b1c2293_6fbed0fd-3b2c-45ce-a6e4-41f53b6fa119.webp?v=1742182672',
   },
   'WELLNESS-TOTAL-RECOMP-199.99': {
     name: 'Total Recomp',
     priceUsd: 199.99,
     description: 'Cutting-edge metabolic support for body composition and energy production.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/9d7da9d1-602a-40e9-acde-d4812766d24d_2d9cf99d-2b39-4bf6-9e58-427517975311.webp?v=1742880026',
   },
   'WELLNESS-NEURO-REGEN-249.99': {
     name: 'Neuro Regenerate',
     priceUsd: 249.99,
     description: 'Triple peptide formula for cognitive function, mental clarity, and neuroprotection.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/e7c1d276-6a0f-466d-9316-4a78a2d59cc0_c3aa34d6-cce7-4eb1-a107-c4874881d8f0.webp?v=1742186317',
   },
   'WELLNESS-AC-FRAG-109.99': {
     name: 'AC Fragments (TB4-Frags)',
     priceUsd: 109.99,
     description: 'Oral peptide alternative for muscle recovery and tissue repair.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/334328c7-9151-497b-890a-ded619085939_acd6d19b-bc4f-4821-8751-f4b3e5aa4b92.webp?v=1742182895',
   },
   'WELLNESS-KPV-109.99': {
     name: 'KPV',
     priceUsd: 109.99,
     description: 'Bioactive tripeptide for immune modulation and tissue regeneration.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/4d02baa0-cace-4614-8d14-e2d61ca1e250_3a244bb6-0ba9-4728-abb1-ef6529d0ede9.webp?v=1742015503',
   },
   'WELLNESS-LARAZOTIDE-149.99': {
     name: 'Larazotide',
     priceUsd: 149.99,
     description: 'Specialized formula for gut barrier functionality and digestive health.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/d376e5fe-e18d-4455-a7c3-0ed6208504ed_130fdc3d-b57b-45c1-aa47-b7cc64348652.webp?v=1742015623',
   },
   'WELLNESS-LONGEVITY-249.99': {
     name: 'Longevity (5-Amino-1MQ)',
     priceUsd: 249.99,
     description: 'Advanced formula targeting cellular health, metabolism, and longevity.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/5207c14a-664c-4ed1-bc7e-f316cf1c39e8_477fc496-fa5d-45ba-86ea-df7131f2e9d5.webp?v=1746684256',
   },
   'WELLNESS-CREVOLUTION-59.99': {
     name: 'Crevolution',
     priceUsd: 59.99,
     description: 'Multi-form creatine formula for muscle performance and strength.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/37b3b9d0-ae18-4a1a-99c2-f7120e5d4bc4-scaled.webp?v=1769817265',
   },
   'WELLNESS-MAG-THREONATE-54.99': {
     name: 'Magnesium L-Threonate',
     priceUsd: 54.99,
     description: 'Highly bioavailable magnesium form for enhanced absorption and utilization.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/MAG_MAIN_2a7dfc68-5c65-47cf-8be7-a9f6943fe55b.webp?v=1747050860',
   },
   'WELLNESS-PEA-39.99': {
     name: 'PEA',
     priceUsd: 39.99,
     description: 'Palmitoylethanolamide for pain relief and inflammation reduction.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/0233d7e1-8fcf-4be5-ae22-8c581b951319_a44df83c-91d9-492d-8eb0-c6fb9b2854a1.webp?v=1742015676',
   },
   'WELLNESS-GI-REPAIR-209.99': {
     name: 'GI Repair (BPC-Free)',
     priceUsd: 209.99,
     description: 'Comprehensive gut health formula without BPC-157 for regional compatibility.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/fc63232c-aa16-4568-aff6-662079545ec2_d3793b0d-b8be-4de5-9ca0-66a19e9e4f22.webp?v=1742015229',
   },
   'WELLNESS-HISTA-RESIST-89.99': {
     name: 'Hista-Resist',
     priceUsd: 89.99,
     description: 'Specialized formula for histamine intolerance and mast cell support.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/HIS_MAIN_a93eb6df-352f-455f-9745-7c5f3959ac3b.webp?v=1754367343',
   },
   'WELLNESS-TUDCA-500-79.99': {
     name: 'TUDCA - 500mg',
     priceUsd: 79.99,
     description: 'Bile salt for liver support and cellular protection.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/f8dbe741-51f0-44f8-832e-19d969033731_5e6a9dcb-3c61-4ef3-957c-5fe797fce79c.webp?v=1747967355',
   },
   'WELLNESS-TRIBUTYRIN-64.99': {
     name: 'Tributyrin Plus',
     priceUsd: 64.99,
     description: 'Gut health formula with tributyrin and beneficial probiotics.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/fc63232c-aa16-4568-aff6-662079545ec2_d3793b0d-b8be-4de5-9ca0-66a19e9e4f22.webp?v=1742015229',
   },
   'WELLNESS-TUDCA-OXBILE-69.99': {
     name: 'TUDCA + Ox Bile',
     priceUsd: 69.99,
     description: 'Synergistic combination for liver function and digestive efficiency.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/8dd86142-371f-4997-bb98-fae6f353fa40_f09a9e1a-d04d-4935-8b22-75030af91516.webp?v=1742186513',
   },
   'WELLNESS-ZINC-CARNOSINE-39.99': {
     name: 'Zinc Carnosine +',
     priceUsd: 39.99,
     description: 'Gut integrity support with Mastic Gum and DGL.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/385e4647-97f7-440a-8d42-56369d337410_a729cac3-2237-4f86-a7b9-8dd3ec79d4e3.webp?v=1742880384',
   },
   'WELLNESS-TUDCA-250-49.99': {
     name: 'TUDCA - 250mg',
     priceUsd: 49.99,
     description: 'Lower-dose TUDCA option with liver-supportive Taurine.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/52fff27a-2cbe-4aeb-94eb-ea4258ee8705_f8cee1db-845f-4b42-a396-df522f256389.webp?v=1742880384',
   },
   'WELLNESS-BOTANABOLIC-114.99': {
     name: 'Botanabolic',
     priceUsd: 114.99,
     description: 'Advanced testosterone-supporting supplement for hormonal health.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/3b8968d0-d98f-4089-8ec1-bf674a1f378e_bf798a79-9856-4eed-9ae8-bfaf7c2e0740.webp',
   },
   'WELLNESS-LIVER-COMPLEX-109.99': {
     name: 'Complete Liver Complex',
     priceUsd: 109.99,
     description: 'Comprehensive liver support for detoxification and cellular health.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/CLC__5950c5cc-eba2-44db-86bd-f68d19ba716c.webp?v=1757053720',
   },
   'WELLNESS-TURKESTERONE-62.99': {
     name: 'Turkesterone',
     priceUsd: 62.99,
     description: 'Plant-derived supplement for muscle growth and recovery.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/2f01092e-0832-4f5a-b242-15dc40536e29_eb842d9f-f814-426a-a4ed-49ebe6b9ca86.webp?v=1742015687',
   },
   'WELLNESS-DHM-69.99': {
     name: 'Dihydromyricetin (DHM)',
     priceUsd: 69.99,
     description: 'Flavonoid for liver support and antioxidant protection.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/97ce7663-45c0-425e-b7de-7dcd2ed5e98b_2ea6e589-db29-4c09-a2f7-aa0c67c8e3cd.webp?v=1747967637',
   },
   'WELLNESS-BPC157-DOUBLE-169.99': {
     name: 'BPC-157 Double Strength',
     priceUsd: 169.99,
     description: 'Double-strength formula for full-body healing and recovery.',
+    imageUrl: 'https://wholesale.lvluphealth.com/cdn/shop/files/3918b664-6c90-4039-98dc-03ac7f03c704_799ee5d0-253e-4953-8a4d-95f185223956.webp?v=1742186278',
   },
 }
 
@@ -426,6 +453,7 @@ function parseSku(sku: string): ShopProduct {
         isBlend: false,
         description: wellnessData.description,
         priceUsd: wellnessData.priceUsd,
+        imageUrl: wellnessData.imageUrl,
       }
     }
   }

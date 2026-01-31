@@ -102,18 +102,39 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
         {/* Product Header */}
         <div className="bg-white rounded-2xl border border-cultr-sage p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-            <div>
+            {/* Product Image */}
+            {product.imageUrl && (
+              <div className="w-full md:w-64 h-64 bg-cultr-offwhite rounded-xl overflow-hidden flex-shrink-0">
+                <img
+                  src={product.imageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            )}
+
+            <div className="flex-1">
               <span className="inline-block text-xs px-2 py-1 bg-cultr-mint rounded-full text-cultr-forest mb-2">
                 {getCategoryDisplayName(product.category)}
               </span>
               <h1 className="text-2xl md:text-3xl font-display font-bold text-cultr-text">
                 {product.name}
               </h1>
+              {product.priceUsd && (
+                <p className="text-xl font-bold text-cultr-forest mt-1">
+                  ${product.priceUsd.toFixed(2)}
+                </p>
+              )}
               <p className="text-cultr-textMuted mt-1">
                 SKU: {product.sku}
               </p>
+              {product.description && (
+                <p className="text-sm text-cultr-textMuted mt-3">
+                  {product.description}
+                </p>
+              )}
             </div>
-            
+
             <div className="flex flex-col items-end gap-2">
               {product.volumeMl > 0 && (
                 <div className="flex items-center gap-2 text-cultr-textMuted">
