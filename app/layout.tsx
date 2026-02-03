@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health. Data-driven health optimization for peak performance.',
   keywords: ['longevity', 'health optimization', 'hormone therapy', 'diagnostic labs', 'TRT', 'wellness', 'CULTR'],
   openGraph: {
-    title: 'CULTR Health — Optimize Your Longevity',
+    title: 'Change the CULTR, rebrand yourself.',
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
     url: siteUrl,
     siteName: 'CULTR Health',
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CULTR Health — Optimize Your Longevity',
+    title: 'Change the CULTR, rebrand yourself.',
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
     images: ['/og-image.png'],
   },
