@@ -72,7 +72,7 @@ export class DatabaseError extends Error {
 
 export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{ id: string; isNew: boolean }> {
   const { name, email, phone, social_handle, treatment_reason, source } = input
-  
+
   try {
     // Upsert: insert or update if email already exists
     const result = await sql`
@@ -87,7 +87,7 @@ export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{
         updated_at = NOW()
       RETURNING id, (xmax = 0) as is_new
     `
-    
+
     const row = result.rows[0]
     return {
       id: row.id,
@@ -104,7 +104,7 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
     const result = await sql`
       SELECT * FROM waitlist WHERE lower(email) = ${email.toLowerCase()}
     `
-    
+
     return result.rows[0] as WaitlistEntry | null
   } catch (error) {
     console.error('Database error fetching waitlist entry:', error)
@@ -118,7 +118,7 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
 
 export async function createMembership(input: CreateMembershipInput): Promise<{ id: string }> {
   const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, healthie_patient_id } = input
-  
+
   try {
     const result = await sql`
       INSERT INTO memberships (
@@ -146,7 +146,7 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         updated_at = NOW()
       RETURNING id
     `
-    
+
     return { id: result.rows[0].id }
   } catch (error) {
     console.error('Database error creating membership:', error)
@@ -155,13 +155,13 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
 }
 
 export async function updateMembershipBySubscriptionId(
-  subscriptionId: string, 
+  subscriptionId: string,
   input: UpdateMembershipInput
 ): Promise<boolean> {
   try {
     const updates: string[] = []
     const values: (string | Date | null)[] = []
-    
+
     // Build dynamic update query
     if (input.subscription_status !== undefined) {
       updates.push('subscription_status')
@@ -183,11 +183,11 @@ export async function updateMembershipBySubscriptionId(
       updates.push('cancellation_reason')
       values.push(input.cancellation_reason)
     }
-    
+
     if (updates.length === 0) {
       return false
     }
-    
+
     // Use a simpler approach for the update
     const result = await sql`
       UPDATE memberships
@@ -200,7 +200,7 @@ export async function updateMembershipBySubscriptionId(
         updated_at = NOW()
       WHERE stripe_subscription_id = ${subscriptionId}
     `
-    
+
     return (result.rowCount ?? 0) > 0
   } catch (error) {
     console.error('Database error updating membership:', error)
@@ -213,7 +213,7 @@ export async function getMembershipBySubscriptionId(subscriptionId: string): Pro
     const result = await sql`
       SELECT * FROM memberships WHERE stripe_subscription_id = ${subscriptionId}
     `
-    
+
     return result.rows[0] as MembershipEntry | null
   } catch (error) {
     console.error('Database error fetching membership:', error)
@@ -228,11 +228,39 @@ export async function getMembershipByCustomerId(customerId: string): Promise<Mem
       ORDER BY created_at DESC
       LIMIT 1
     `
-    
+
     return result.rows[0] as MembershipEntry | null
   } catch (error) {
     console.error('Database error fetching membership by customer:', error)
     throw new DatabaseError('Failed to fetch membership', error)
+  }
+}
+
+// ===========================================
+// STRIPE EVENT TRACKING (Idempotency)
+// ===========================================
+
+export async function isStripeEventProcessed(eventId: string): Promise<boolean> {
+  try {
+    const result = await sql`
+      SELECT 1 FROM stripe_events WHERE event_id = ${eventId}
+    `
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error checking Stripe event:', error)
+    return false // Safety fallback
+  }
+}
+
+export async function recordStripeEvent(eventId: string, type: string): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO stripe_events (event_id, event_type, processed_at)
+      VALUES (${eventId}, ${type}, NOW())
+      ON CONFLICT (event_id) DO NOTHING
+    `
+  } catch (error) {
+    console.error('Database error recording Stripe event:', error)
   }
 }
 
@@ -398,10 +426,10 @@ export async function markOrderShipped(
     `
 
     if ((result.rowCount ?? 0) > 0) {
-      console.log('Order marked as shipped:', { 
-        orderNumber, 
-        carrier: trackingInfo.carrier, 
-        trackingNumber: trackingInfo.trackingNumber 
+      console.log('Order marked as shipped:', {
+        orderNumber,
+        carrier: trackingInfo.carrier,
+        trackingNumber: trackingInfo.trackingNumber
       })
     }
 
@@ -420,7 +448,7 @@ export async function markOrderFulfilled(
   trackingInfo?: TrackingInfo
 ): Promise<boolean> {
   try {
-    const noteAddition = trackingInfo 
+    const noteAddition = trackingInfo
       ? `Fulfilled. Carrier: ${trackingInfo.carrier}, Tracking: ${trackingInfo.trackingNumber}`
       : 'Fulfilled.'
 
@@ -480,8 +508,8 @@ export async function getOrderByOrderNumber(orderNumber: string): Promise<OrderE
 
     return {
       ...result.rows[0],
-      items: typeof result.rows[0].items === 'string' 
-        ? JSON.parse(result.rows[0].items) 
+      items: typeof result.rows[0].items === 'string'
+        ? JSON.parse(result.rows[0].items)
         : result.rows[0].items,
     } as OrderEntry
   } catch (error) {
@@ -573,10 +601,10 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
 
     // Calculate top products from recent orders
     const productMap = new Map<string, { sku: string; name: string; quantity: number; revenue: number }>()
-    
+
     const recentOrders = recentResult.rows.map(row => {
       const items = typeof row.items === 'string' ? JSON.parse(row.items) : row.items
-      
+
       // Aggregate product stats
       if (row.status === 'paid' || row.status === 'fulfilled') {
         items.forEach((item: OrderItem) => {
@@ -618,7 +646,7 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
 export async function getWaitlistStats(): Promise<{ total: number; bySource: Record<string, number>; recent: WaitlistEntry[] }> {
   try {
     const totalResult = await sql`SELECT COUNT(*) as count FROM waitlist`
-    
+
     const sourceResult = await sql`
       SELECT COALESCE(source, 'direct') as source, COUNT(*) as count
       FROM waitlist
@@ -650,7 +678,7 @@ export async function getWaitlistStats(): Promise<{ total: number; bySource: Rec
 export async function getMembershipStats(): Promise<{ total: number; byTier: Record<string, number>; byStatus: Record<string, number> }> {
   try {
     const totalResult = await sql`SELECT COUNT(*) as count FROM memberships WHERE subscription_status = 'active'`
-    
+
     const tierResult = await sql`
       SELECT plan_tier, COUNT(*) as count
       FROM memberships
@@ -695,9 +723,9 @@ export async function testDatabaseConnection(): Promise<{ success: boolean; erro
     return { success: true }
   } catch (error) {
     console.error('Database connection test failed:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown database error' 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown database error'
     }
   }
 }
@@ -967,7 +995,7 @@ export async function getBiomarkersByUser(
       `
       return result.rows as BiomarkerEntry[]
     }
-    
+
     const result = await sql`
       SELECT * FROM biomarker_entries
       WHERE user_id = ${userId}
@@ -1152,7 +1180,7 @@ export async function getActiveProtocolOutcome(userId: string): Promise<Protocol
       LIMIT 1
     `
     if (!result.rows[0]) return null
-    
+
     return {
       ...result.rows[0],
       expected_outcomes: typeof result.rows[0].expected_outcomes === 'string'
@@ -1299,7 +1327,7 @@ export async function getLatestResilienceScore(userId: string): Promise<Resilien
       LIMIT 1
     `
     if (!result.rows[0]) return null
-    
+
     return {
       ...result.rows[0],
       category_scores: typeof result.rows[0].category_scores === 'string'
@@ -1331,7 +1359,7 @@ export async function getCohortAnalytics(): Promise<CohortAnalytics> {
     const usersResult = await sql`SELECT COUNT(DISTINCT user_id) as count FROM resilience_scores`
     const protocolsResult = await sql`SELECT COUNT(*) as count FROM protocol_outcomes WHERE status = 'completed'`
     const biomarkersResult = await sql`SELECT COUNT(*) as count FROM biomarker_entries`
-    
+
     const avgScoreResult = await sql`
       SELECT AVG(overall_score) as avg_score
       FROM (
@@ -1340,7 +1368,7 @@ export async function getCohortAnalytics(): Promise<CohortAnalytics> {
         ORDER BY user_id, calculated_at DESC
       ) latest_scores
     `
-    
+
     const phenotypeResult = await sql`
       SELECT primary_phenotype, COUNT(*) as count
       FROM (
@@ -1351,7 +1379,7 @@ export async function getCohortAnalytics(): Promise<CohortAnalytics> {
       ) latest_phenotypes
       GROUP BY primary_phenotype
     `
-    
+
     const successResult = await sql`
       SELECT 
         COUNT(*) FILTER (WHERE success_score >= 70) as successful,
@@ -1359,7 +1387,7 @@ export async function getCohortAnalytics(): Promise<CohortAnalytics> {
       FROM protocol_outcomes
       WHERE status = 'completed'
     `
-    
+
     const ageGapResult = await sql`
       SELECT AVG(age_gap) as avg_gap
       FROM (

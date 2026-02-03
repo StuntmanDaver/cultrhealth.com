@@ -373,6 +373,28 @@ export async function updatePatient(
   return data.updateClient.user;
 }
 
+export async function deactivatePatient(patientId: string): Promise<void> {
+  const mutation = `
+    mutation UpdateClient($input: updateClientInput!) {
+      updateClient(input: $input) {
+        user {
+          id
+          active
+        }
+      }
+    }
+  `;
+
+  const variables = {
+    input: {
+      id: patientId,
+      active: false,
+    },
+  };
+
+  await healthieRequest(mutation, variables);
+}
+
 // ============================================================
 // APPOINTMENTS
 // ============================================================
@@ -973,8 +995,8 @@ export const HEALTHIE_STRIPE_KEYS = {
 
 export function getHealthieStripePublishableKey(): string {
   const env = process.env.HEALTHIE_ENVIRONMENT || 'sandbox';
-  return env === 'production' 
-    ? HEALTHIE_STRIPE_KEYS.production 
+  return env === 'production'
+    ? HEALTHIE_STRIPE_KEYS.production
     : HEALTHIE_STRIPE_KEYS.staging;
 }
 

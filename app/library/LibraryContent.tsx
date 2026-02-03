@@ -17,6 +17,7 @@ import {
   Settings,
   CreditCard,
   Flame,
+  HelpCircle,
 } from 'lucide-react'
 import { CategoryGrid } from '@/components/library/CategoryGrid'
 import { TierGate } from '@/components/library/TierGate'
@@ -193,6 +194,19 @@ export function LibraryContent({
                     <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
                   </Link>
                 </TierGate>
+                <Link
+                  href="/library/peptide-faq"
+                  className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                >
+                  <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                    <HelpCircle className="w-6 h-6 text-teal-700" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-stone-900 font-medium">Peptide FAQ</p>
+                    <p className="text-stone-500 text-sm">50+ questions on dosing, safety, stacking & more</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+                </Link>
                 <TierGate
                   requiredTier="catalyst"
                   currentTier={tier}

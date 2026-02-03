@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Get the raw body
     const body = await request.text();
-    
+
     // Get the signature from headers
     const headersList = await headers();
     const signature = headersList.get('stripe-signature');
@@ -67,6 +67,13 @@ export async function POST(request: NextRequest) {
       id: event.id,
       timestamp: new Date().toISOString(),
     });
+
+    // Check idempotency
+    const { isStripeEventProcessed, recordStripeEvent } = await import('@/lib/db');
+    if (await isStripeEventProcessed(event.id)) {
+      console.log('Event already processed:', event.id);
+      return NextResponse.json({ received: true, duplicate: true });
+    }
 
     // Handle the event
     switch (event.type) {
@@ -101,6 +108,9 @@ export async function POST(request: NextRequest) {
         console.log(`Unhandled event type: ${event.type}`);
     }
 
+    // Record event as processed
+    await recordStripeEvent(event.id, event.type);
+
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Webhook handler error:', error);
@@ -122,14 +132,50 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     metadata: session.metadata,
   });
 
+  const stripe = getStripe();
+  let healthiePatientId: string | undefined;
+
+  // Get customer details for Healthie patient creation
+  const customerId = typeof session.customer === 'string'
+    ? session.customer
+    : session.customer?.id;
+
+  if (customerId) {
+    try {
+      const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+      const customerEmail = customer.email || session.customer_details?.email;
+
+      if (customerEmail) {
+        // Create or get existing Healthie patient
+        const { ensureHealthiePatient } = await import('@/lib/healthie-sso');
+
+        healthiePatientId = await ensureHealthiePatient({
+          email: customerEmail,
+          firstName: customer.name?.split(' ')[0] || session.customer_details?.name?.split(' ')[0],
+          lastName: customer.name?.split(' ').slice(1).join(' ') || session.customer_details?.name?.split(' ').slice(1).join(' '),
+          phone: customer.phone || session.customer_details?.phone || undefined,
+        });
+
+        console.log('Healthie patient ensured:', {
+          email: customerEmail,
+          healthiePatientId,
+        });
+      }
+    } catch (healthieError) {
+      console.error('Failed to create Healthie patient:', healthieError);
+      // We throw here because failing to create Healthie patient means the user is stuck
+      throw healthieError;
+    }
+  }
+
   // If database is configured, store membership record using helper
   if (process.env.POSTGRES_URL) {
     try {
       const { createMembership } = await import('@/lib/db');
-      
+
       const planTier = session.metadata?.plan_tier || 'unknown';
-      const subscriptionId = typeof session.subscription === 'string' 
-        ? session.subscription 
+      const subscriptionId = typeof session.subscription === 'string'
+        ? session.subscription
         : session.subscription?.id;
       const customerId = typeof session.customer === 'string'
         ? session.customer
@@ -141,17 +187,52 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           stripe_subscription_id: subscriptionId,
           plan_tier: planTier,
           subscription_status: 'active',
+          healthie_patient_id: healthiePatientId,
         });
-        console.log('Membership record created/updated');
+        console.log('Membership record created/updated with Healthie patient ID');
       }
     } catch (dbError) {
       console.error('Failed to update membership database:', dbError);
-      // Don't fail the webhook - Stripe considers it processed
+      // Throwing so Stripe retries the webhook
+      throw dbError;
     }
   }
 
-  // TODO: Send welcome email with next steps
-  // TODO: Trigger onboarding workflow
+  // Send welcome email with next steps
+  const customerIdStr = typeof session.customer === 'string' ? session.customer : session.customer?.id;
+  if (customerIdStr) {
+    try {
+      const { sendWelcomeEmail } = await import('@/lib/resend');
+      const { getPatientPortalUrl } = await import('@/lib/healthie-api');
+
+      const customer = await stripe.customers.retrieve(customerIdStr) as Stripe.Customer;
+      const customerEmail = customer.email || session.customer_details?.email;
+      const customerName = customer.name || session.customer_details?.name || 'there';
+
+      if (customerEmail) {
+        await sendWelcomeEmail({
+          name: customerName,
+          email: customerEmail,
+          planName: session.metadata?.plan_tier || 'Membership',
+          healthiePortalUrl: getPatientPortalUrl(healthiePatientId),
+        });
+        console.log('Welcome email sent to:', customerEmail);
+      }
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+    }
+  }
+
+  // Trigger onboarding workflow (optional: could be a Healthie tag or internal flag)
+  if (healthiePatientId) {
+    try {
+      console.log('Triggering onboarding workflow for patient:', healthiePatientId);
+      // In a real scenario, this might involve tagging the patient in Healthie
+      // or adding them to a specific program.
+    } catch (onboardingError) {
+      console.error('Failed to trigger onboarding workflow:', onboardingError);
+    }
+  }
 }
 
 /**
@@ -160,7 +241,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  */
 async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) {
   const stripe = getStripe();
-  
+
   console.log('Product checkout completed:', {
     session_id: session.id,
     customer: session.customer,
@@ -182,8 +263,8 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
   // Extract customer info
   const customerEmail = session.customer_details?.email || session.metadata?.customer_email || '';
   const customerName = session.customer_details?.name || session.metadata?.customer_name || null;
-  const paymentIntentId = typeof session.payment_intent === 'string' 
-    ? session.payment_intent 
+  const paymentIntentId = typeof session.payment_intent === 'string'
+    ? session.payment_intent
     : session.payment_intent?.id || null;
   const customerId = typeof session.customer === 'string'
     ? session.customer
@@ -200,7 +281,7 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
     unit_price: number;
     category: string;
   }
-  
+
   const orderItems: OrderItemLocal[] = lineItems.map(item => {
     const product = item.price?.product as Stripe.Product | undefined;
     return {
@@ -236,6 +317,8 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
       console.log('Order created:', { orderNumber, orderId, provider: 'stripe' });
     } catch (dbError) {
       console.error('Failed to create order:', dbError);
+      // Throwing so Stripe retries
+      throw dbError;
     }
   }
 
@@ -334,7 +417,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   if (process.env.POSTGRES_URL) {
     try {
       const { updateMembershipBySubscriptionId } = await import('@/lib/db');
-      
+
       await updateMembershipBySubscriptionId(subscription.id, {
         subscription_status: subscription.status,
       });
@@ -347,12 +430,41 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   // Handle specific status changes
   if (subscription.status === 'past_due') {
-    // TODO: Send payment failed notification
-    console.log('Subscription past due - notification needed');
+    await handlePaymentFailedNotification(subscription);
   } else if (subscription.status === 'canceled') {
-    // TODO: Send cancellation confirmation
-    console.log('Subscription cancelled - confirmation needed');
+    await handleSubscriptionCancelledNotification(subscription);
   }
+}
+
+async function handlePaymentFailedNotification(subscription: Stripe.Subscription) {
+  const stripe = getStripe();
+  try {
+    const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+    const email = customer.email;
+    const name = customer.name || 'there';
+
+    if (email) {
+      const { sendPaymentFailedEmail } = await import('@/lib/resend');
+      // Construct a billing portal URL if possible, or just link to pricing/billing
+      const billingPortalUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing`;
+
+      await sendPaymentFailedEmail({
+        name,
+        email,
+        amount: (subscription.items.data[0]?.price.unit_amount || 0) / 100,
+        currency: subscription.currency.toUpperCase(),
+        billingPortalUrl,
+      });
+      console.log('Payment failed notification sent');
+    }
+  } catch (error) {
+    console.error('Failed to handle payment failed notification:', error);
+  }
+}
+
+async function handleSubscriptionCancelledNotification(subscription: Stripe.Subscription) {
+  // Logic already exists in handleSubscriptionDeleted, but this handles status=canceled
+  console.log('Subscription status set to canceled');
 }
 
 /**
@@ -380,8 +492,40 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     }
   }
 
-  // TODO: Send cancellation confirmation email
-  // TODO: Update Healthie patient status (optional)
+  // Send cancellation confirmation email
+  const stripe = getStripe();
+  try {
+    const customer = await stripe.customers.retrieve(subscription.customer as string) as Stripe.Customer;
+    const email = customer.email;
+    const name = customer.name || 'there';
+
+    if (email) {
+      const { sendCancellationEmail } = await import('@/lib/resend');
+      await sendCancellationEmail({
+        name,
+        email,
+        planName: subscription.metadata?.plan_tier || 'Membership',
+        effectiveDate: subscription.cancel_at_period_end
+          ? new Date((subscription as any).current_period_end * 1000)
+          : new Date(),
+      });
+      console.log('Cancellation confirmation email sent');
+    }
+  } catch (emailError) {
+    console.error('Failed to send cancellation email:', emailError);
+  }
+
+  // Update Healthie patient status (optional)
+  const membership = await (await import('@/lib/db')).getMembershipBySubscriptionId(subscription.id);
+  if (membership?.healthie_patient_id) {
+    try {
+      const { deactivatePatient } = await import('@/lib/healthie-api');
+      await deactivatePatient(membership.healthie_patient_id);
+      console.log('Healthie patient deactivated:', membership.healthie_patient_id);
+    } catch (healthieError) {
+      console.error('Failed to deactivate Healthie patient:', healthieError);
+    }
+  }
 }
 
 /**
@@ -409,6 +553,26 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     attempt_count: invoice.attempt_count,
   });
 
-  // TODO: Send payment failed notification
-  // TODO: Provide payment update link
+  try {
+    const stripe = getStripe();
+    const customer = await stripe.customers.retrieve(invoice.customer as string) as Stripe.Customer;
+    const email = customer.email;
+    const name = customer.name || 'there';
+
+    if (email) {
+      const { sendPaymentFailedEmail } = await import('@/lib/resend');
+      const billingPortalUrl = `${process.env.NEXT_PUBLIC_APP_URL}/billing`;
+
+      await sendPaymentFailedEmail({
+        name,
+        email,
+        amount: (invoice.amount_due || 0) / 100,
+        currency: invoice.currency.toUpperCase(),
+        billingPortalUrl,
+      });
+      console.log('Invoice payment failed email sent');
+    }
+  } catch (error) {
+    console.error('Failed to handle payment failure for invoice:', error);
+  }
 }

@@ -272,16 +272,16 @@ interface BookingConfirmationData {
 export async function sendBookingConfirmation(data: BookingConfirmationData): Promise<EmailResult> {
   const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink } = data
   const firstName = name.split(' ')[0]
-  
+
   // Format date nicely
-  const dateOptions: Intl.DateTimeFormatOptions = { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   }
-  const timeOptions: Intl.DateTimeFormatOptions = { 
-    hour: 'numeric', 
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short'
   }
@@ -399,22 +399,22 @@ interface AppointmentReminderData {
 export async function sendAppointmentReminder(data: AppointmentReminderData): Promise<EmailResult> {
   const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink, hoursUntil } = data
   const firstName = name.split(' ')[0]
-  
-  const timeOptions: Intl.DateTimeFormatOptions = { 
-    hour: 'numeric', 
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short'
   }
   const formattedTime = appointmentDate.toLocaleTimeString('en-US', timeOptions)
-  const formattedDate = appointmentDate.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
+  const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
   })
-  
-  const urgencyText = hoursUntil <= 2 
+
+  const urgencyText = hoursUntil <= 2
     ? `in ${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}`
-    : hoursUntil < 24 
+    : hoursUntil < 24
       ? `in ${hoursUntil} hours`
       : 'tomorrow'
 
@@ -464,7 +464,7 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
   `
 
   const subjectPrefix = hoursUntil <= 2 ? '⏰ ' : ''
-  
+
   try {
     const client = getResendClient()
     const { error } = await client.emails.send({
@@ -505,12 +505,12 @@ interface PostVisitFollowUpData {
 }
 
 export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promise<EmailResult> {
-  const { 
-    name, 
-    email, 
-    appointmentType, 
-    appointmentDate, 
-    providerName, 
+  const {
+    name,
+    email,
+    appointmentType,
+    appointmentDate,
+    providerName,
     healthiePortalUrl,
     prescriptionsSent,
     labsOrdered,
@@ -518,10 +518,10 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     customNotes
   } = data
   const firstName = name.split(' ')[0]
-  
-  const formattedDate = appointmentDate.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric' 
+
+  const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric'
   })
 
   // Build next steps list
@@ -668,7 +668,7 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
   }
 
   const { quoteId, email, tier, items, notes, timestamp } = data
-  
+
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const uniqueProducts = items.length
@@ -824,7 +824,7 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
   } = data
 
   const firstName = name?.split(' ')[0] || 'there'
-  
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -975,7 +975,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
   } = data
 
   const firstName = name?.split(' ')[0] || 'there'
-  
+
   // Format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -1050,7 +1050,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
 
   try {
     const client = getResendClient()
-    
+
     const emailOptions: {
       from: string
       to: string
@@ -1118,14 +1118,14 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
   } = data
 
   const firstName = name?.split(' ')[0] || 'there'
-  
+
   // Format estimated delivery date
-  const formattedDelivery = estimatedDelivery 
+  const formattedDelivery = estimatedDelivery
     ? estimatedDelivery.toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      })
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    })
     : null
 
   // Build items list if provided
@@ -1222,6 +1222,145 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
     return { success: true }
   } catch (err) {
     console.error('Failed to send shipping notification:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// CANCELLATION EMAIL
+// ===========================================
+
+interface CancellationEmailData {
+  name: string
+  email: string
+  planName: string
+  effectiveDate: Date
+}
+
+export async function sendCancellationEmail(data: CancellationEmailData): Promise<EmailResult> {
+  const { name, email, planName, effectiveDate } = data
+  const firstName = name.split(' ')[0]
+  const formattedDate = effectiveDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Subscription Cancelled
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, your <strong style="color: #fff;">${planName}</strong> subscription has been cancelled and will end on ${formattedDate}.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
+        You will continue to have access to your member benefits until the end of your current billing period. 
+        Your Healthie patient portal account will remain accessible for your medical records.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="/pricing" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Reactivate Subscription
+      </a>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; text-align: center;">
+      We're sorry to see you go. If you have any feedback on how we can improve, please let us know.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Subscription Cancellation: ${planName}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Cancellation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send cancellation email:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// PAYMENT FAILED EMAIL
+// ===========================================
+
+interface PaymentFailedEmailData {
+  name: string
+  email: string
+  amount: number
+  currency: string
+  billingPortalUrl: string
+}
+
+export async function sendPaymentFailedEmail(data: PaymentFailedEmailData): Promise<EmailResult> {
+  const { name, email, amount, currency, billingPortalUrl } = data
+  const firstName = name.split(' ')[0]
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+    }).format(amount)
+  }
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Payment Failed
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, we were unable to process your recent payment of <strong style="color: #fff;">${formatCurrency(amount)}</strong>.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+        To avoid any interruption to your membership and care, please update your payment method. 
+        Stripe will automatically retry the payment in a few days.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${billingPortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Update Payment Method
+      </a>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; text-align: center;">
+      If you've already updated your payment information, please ignore this email.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Action Required: Payment Failed`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Payment failed email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send payment failed email:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

@@ -8,7 +8,7 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 const navLinks = [
   { href: '/products', label: 'Products', hasDropdown: true },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/faq', label: 'Science' },
+  { href: '/science', label: 'Science' },
 ];
 
 const rightNavLinks = [

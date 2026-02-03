@@ -32,14 +32,41 @@ const inter = Inter({
   preload: true,
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+
 export const metadata: Metadata = {
-  title: 'CULTR Health — Optimize Your Longevity',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'CULTR Health — Optimize Your Longevity',
+    template: '%s — CULTR Health',
+  },
   description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health. Data-driven health optimization for peak performance.',
   keywords: ['longevity', 'health optimization', 'hormone therapy', 'diagnostic labs', 'TRT', 'wellness', 'CULTR'],
   openGraph: {
     title: 'CULTR Health — Optimize Your Longevity',
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
+    url: siteUrl,
+    siteName: 'CULTR Health',
     type: 'website',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CULTR Health',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CULTR Health — Optimize Your Longevity',
+    description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
   // Google Search Console verification (set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in env)
   verification: {

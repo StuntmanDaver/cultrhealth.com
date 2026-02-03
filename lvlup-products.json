@@ -1,0 +1,252 @@
+[
+  {
+    "name": "Re-Generate",
+    "price": "$129.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/a763ee54-332e-4f98-bac2-20321ba5455f_e571919e-c670-4503-bedd-2ab1cb44cbb0.webp?v=1742015169",
+    "url": "https://wholesale.lvluphealth.com/products/re-generate",
+    "collections": ["Peptides", "Gut Health", "Recovery"],
+    "description": "Re-Generate is a premium supplement engineered to promote holistic recovery and regeneration. This innovative formula brings together the healing potential of BPC-157, the anti-inflammatory properties of PEA, and the skin and joint supporting effects of Hyaluronic Acid.",
+    "ingredients": ["BPC-157", "PEA (Palmitoylethanolamide)", "Hyaluronic Acid", "Sodium Bicarbonate"],
+    "benefits": "Tissue repair, inflammatory modulation, joint lubrication, skin hydration, and enhanced absorption/bioavailability."
+  },
+  {
+    "name": "Ultimate GI Repair",
+    "price": "$219.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/fc63232c-aa16-4568-aff6-662079545ec2_d3793b0d-b8be-4de5-9ca0-66a19e9e4f22.webp?v=1742015229",
+    "url": "https://wholesale.lvluphealth.com/products/ultimate-gi-repair",
+    "collections": ["Peptides", "Gut Health"],
+    "description": "Ultimate GI Repair is an advanced gastrointestinal support formula that combines four bioactive peptides with potent gut-healing compounds aimed at promoting digestive health, maintaining intestinal integrity, and enhancing systemic recovery. Particularly beneficial for individuals seeking intensive support for gut health, inflammation reduction, and digestive comfort recovery.",
+    "ingredients": ["BPC-157", "Larazotide Acetate", "KPV Tripeptide", "GHK-Cu", "Zinc L-Carnosine", "Quercetin", "Tributyrin", "Sodium Bicarbonate"],
+    "benefits": "Digestive health, intestinal integrity, healing, immune function, tissue repair, inflammation reduction, and digestive comfort."
+  },
+  {
+    "name": "Wolverine",
+    "price": "$219.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/485d4af0-e7b5-46e4-bbc0-158c1ce97d86.webp?v=1762958135",
+    "url": "https://wholesale.lvluphealth.com/products/wolverine",
+    "collections": ["Peptides", "Gut Health", "Recovery"],
+    "description": "Wolverine is a recovery and regeneration supplement combining peptides with synergistic naturals and bioavailability enhancers. Designed for individuals looking to accelerate their recovery. The formula combines BPC-157, TB4-Fragment, PEA, and absorption enhancers.",
+    "ingredients": ["BPC-157 Arginate", "TB4-Fragment 1-4 (oral)", "PEA", "Sodium Bicarbonate", "Salcaprozate Sodium (SNAC)"],
+    "benefits": "Healing, tissue repair, injury recovery, collagen synthesis, muscle recovery, anti-inflammatory and neuroprotective properties."
+  },
+  {
+    "name": "GHK-Cu",
+    "price": "$139.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/406ebdf1-14c4-4504-bb52-f57e8b1c2293_6fbed0fd-3b2c-45ce-a6e4-41f53b6fa119.webp?v=1742182672",
+    "url": "https://wholesale.lvluphealth.com/products/ghk-cu",
+    "collections": ["Peptides", "Recovery"],
+    "description": "Liposomal GHK-Cu is a groundbreaking copper peptide formulation, crafted for superior absorption and systemic delivery. Housed in acid-resistant, delayed-release enteric-coated capsules to protect the peptide from stomach acid and digestive enzymes. Ideal for individuals focused on optimizing systemic recovery and skin quality.",
+    "ingredients": ["GHK-Cu (copper peptide)", "Palmitoylethanolamide (PEA)", "Sodium Bicarbonate"],
+    "benefits": "Cellular repair, tissue regeneration, skin health, neuroprotective, anti-inflammatory, and analgesic properties."
+  },
+  {
+    "name": "Total Recomp",
+    "price": "$199.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/9d7da9d1-602a-40e9-acde-d4812766d24d_2d9cf99d-2b39-4bf6-9e58-427517975311.webp?v=1742880026",
+    "url": "https://wholesale.lvluphealth.com/products/total-recomp",
+    "collections": ["Peptides", "Hormonal Health", "Weight Management"],
+    "description": "Total Recomp is a cutting-edge supplement formulated with 16 diverse ingredients aimed at supporting body composition and metabolism. Combines metabolic support compounds with experimental research compounds (DNF10, SLU-PP-332, T2) for comprehensive metabolic support.",
+    "ingredients": ["Vitamin B1", "Alpha-lipoic acid", "Selenium", "Chromium", "Coleus Forskohlii", "GBB", "N-Acetyl L-Carnitine", "DNF10", "SLU-PP-332", "T2"],
+    "benefits": "Metabolic performance, energy production, blood glucose stabilization, fat oxidation, autophagy activation, and fat browning."
+  },
+  {
+    "name": "Neuro Regenerate",
+    "price": "$249.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/e7c1d276-6a0f-466d-9316-4a78a2d59cc0_c3aa34d6-cce7-4eb1-a107-c4874881d8f0.webp?v=1742186317",
+    "url": "https://wholesale.lvluphealth.com/products/neuro-regenerate",
+    "collections": ["Peptides", "Brain and Cognition"],
+    "description": "Support cognitive function, mental clarity, and neuroprotection with Neuro Regenerate, a cutting-edge Liposomal triple peptide formula. Combines three primary peptides with botanical support for cognitive longevity.",
+    "ingredients": ["Dihexa", "P21", "N-Acetyl-Semax", "Lion's Mane", "7,8-DHF", "Ginkgo", "Bacopa", "Gotu Kola", "NACET", "Pterostilbene"],
+    "benefits": "Neuroplasticity, memory, cognitive performance, BDNF boosting, cerebral blood flow, mitochondrial function, and cellular energy production."
+  },
+  {
+    "name": "AC Fragments (TB4-Frags)",
+    "price": "$109.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/334328c7-9151-497b-890a-ded619085939_acd6d19b-bc4f-4821-8751-f4b3e5aa4b92.webp?v=1742182895",
+    "url": "https://wholesale.lvluphealth.com/products/ac-fragments",
+    "collections": ["Peptides", "Gut Health", "Recovery"],
+    "description": "AC Fragments (TB4-Frags) is a cutting-edge supplement designed to support muscle recovery and tissue repair. An oral formulation alternative to injectable peptides, delivering the same potential benefits in a convenient capsule form.",
+    "ingredients": ["Thymosin Beta-4 Fragments (Ac-SDKP and Ac-LKKTETQ)", "Palmitoylethanolamide (PEA)", "Sodium Bicarbonate"],
+    "benefits": "Muscle recovery, tissue regeneration, anti-inflammatory effects, neuroprotective properties, and enhanced bioavailability."
+  },
+  {
+    "name": "KPV",
+    "price": "$109.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/4d02baa0-cace-4614-8d14-e2d61ca1e250_3a244bb6-0ba9-4728-abb1-ef6529d0ede9.webp?v=1742015503",
+    "url": "https://wholesale.lvluphealth.com/products/kpv",
+    "collections": ["Peptides", "Gut Health", "Recovery"],
+    "description": "KPV is a dietary supplement designed to enhance systemic recovery and cellular health. The formulation combines the bioactive tripeptide KPV (Lysine, Proline, Valine) with complementary ingredients to deliver comprehensive support for recovery and well-being.",
+    "ingredients": ["KPV Tripeptide", "Palmitoylethanolamide (PEA)", "Hyaluronic Acid (HA)", "Sodium Bicarbonate"],
+    "benefits": "Immune modulation, tissue regeneration, inflammatory balance, tissue hydration, repair processes, and optimized peptide bioavailability."
+  },
+  {
+    "name": "Larazotide",
+    "price": "$149.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/d376e5fe-e18d-4455-a7c3-0ed6208504ed_130fdc3d-b57b-45c1-aa47-b7cc64348652.webp?v=1742015623",
+    "url": "https://wholesale.lvluphealth.com/products/larazotide",
+    "collections": ["Peptides", "Brain and Cognition", "Gut Health"],
+    "description": "Larazotide is a specialized product designed to enhance digestive health by supporting gut barrier functionality. Combines Larazotide with Quercetin, fermented Aloe Vera, and Sodium Bicarbonate to strengthen digestive function and overall wellness.",
+    "ingredients": ["Larazotide (Sodium and S-Phenyl-Acetyl)", "Quercetin", "Fermented Aloe Vera", "Sodium Bicarbonate"],
+    "benefits": "Gut barrier support, digestive health, anti-inflammatory, nutrient absorption, accelerated healing, and balanced immune responses."
+  },
+  {
+    "name": "Longevity (5-Amino-1MQ)",
+    "price": "$249.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/5207c14a-664c-4ed1-bc7e-f316cf1c39e8_477fc496-fa5d-45ba-86ea-df7131f2e9d5.webp?v=1746684256",
+    "url": "https://wholesale.lvluphealth.com/products/longevity-5-amino",
+    "collections": ["Peptides"],
+    "description": "This formulation targets cellular health, metabolism, and longevity through a combination of advanced peptides and natural compounds. Works to boost NAD+ levels and inhibit the NNMT enzyme for comprehensive anti-aging support.",
+    "ingredients": ["Nicotinamide Mononucleotide (NMN)", "Nicotinamide Riboside (NR)", "5-Amino-1MQ", "JBSNF-000088", "Pterostilbene", "Apigenin", "Quercetin", "Fisetin"],
+    "benefits": "Energy metabolism, DNA repair, cellular senescence reduction, inflammation management, NAD+ boosting, and sirtuin activation."
+  },
+  {
+    "name": "Crevolution",
+    "price": "$59.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/37b3b9d0-ae18-4a1a-99c2-f7120e5d4bc4-scaled.webp?v=1769817265",
+    "url": "https://wholesale.lvluphealth.com/products/crevolution",
+    "collections": ["Brain and Cognition", "Recovery"],
+    "description": "Crevolution is a creatine-based supplement designed to enhance muscle performance, strength, and recovery through a multi-form creatine formula with enhanced absorption technology. Formulated for those aiming for elevated strength, muscle mass, and overall athletic performance enhancement.",
+    "ingredients": ["Creatine Monohydrate", "Creatine HCl", "Creatine Magnesium-Chelate", "Highly Branched Cluster Dextrin (HBCD)", "Guanidino-Acetic Acid (GAA)", "TMG (Trimethylglycine)"],
+    "benefits": "Muscle performance, strength, recovery, enhanced creatine uptake, improved exercise resistance, and cognitive function."
+  },
+  {
+    "name": "Magnesium L-Threonate",
+    "price": "$54.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/MAG_MAIN_2a7dfc68-5c65-47cf-8be7-a9f6943fe55b.webp?v=1747050860",
+    "url": "https://wholesale.lvluphealth.com/products/magnesium-l-threonate",
+    "collections": ["Brain and Cognition", "Recovery"],
+    "description": "Magnesium L-Threonate is a highly bioavailable form of magnesium that delivers this essential mineral in a unique compound formed with L-Threonate, a vitamin C metabolite. Designed for effective absorption and utilization throughout the body.",
+    "ingredients": ["Magnesium L-Threonate"],
+    "benefits": "Muscle activity, nerve conduction, energy production, maintaining normal bone structure, and enhanced magnesium bioavailability."
+  },
+  {
+    "name": "PEA",
+    "price": "$39.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/0233d7e1-8fcf-4be5-ae22-8c581b951319_a44df83c-91d9-492d-8eb0-c6fb9b2854a1.webp?v=1742015676",
+    "url": "https://wholesale.lvluphealth.com/products/pea",
+    "collections": ["Brain and Cognition", "Recovery"],
+    "description": "Palmitoylethanolamide (PEA) is a naturally occurring fatty acid known for its potential role in alleviating pain and reducing inflammation. Works by interacting with the body's endocannabinoid system, which regulates pain and inflammatory responses.",
+    "ingredients": ["Palmitoylethanolamide (PEA)"],
+    "benefits": "Anti-inflammatory, pain management, neuroprotective support, brain health, cognitive function, cardiovascular support, and endocannabinoid system interaction."
+  },
+  {
+    "name": "GI Repair (BPC-Free)",
+    "price": "$209.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/gi-repair-bpc-free.webp",
+    "url": "https://wholesale.lvluphealth.com/products/gi-repair-bpc-free",
+    "collections": ["Gut Health"],
+    "description": "Support gut health and intestinal integrity with GI Repair (BPC-Free), a comprehensive formula that combines peptides and gut-supporting compounds to promote digestive function and mucosal repair. Specifically designed without BPC-157, making it suitable for regions where that compound faces restrictions.",
+    "ingredients": ["Larazotide (AT1001)", "GHK-Cu", "KPV Tripeptide", "Zinc L-Carnosine", "Quercetin (EMIQ)", "Tributyrin", "Sodium Bicarbonate"],
+    "benefits": "Gut barrier support, anti-inflammatory action, mucosal repair, digestive function optimization, and antioxidant balance."
+  },
+  {
+    "name": "Hista-Resist",
+    "price": "$89.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/HIS_MAIN_a93eb6df-352f-455f-9745-7c5f3959ac3b.webp?v=1754367343",
+    "url": "https://wholesale.lvluphealth.com/products/hista-resist",
+    "collections": ["Gut Health", "Hormonal Health", "Recovery"],
+    "description": "Hista-Resist is a specialized supplement formulation designed to address histamine intolerance, food sensitivity reactions, and Mast Cell Activation Syndrome (MCAS). Aims to reduce excess histamine effects in the body.",
+    "ingredients": ["DAO Enzyme (20,000 HDU)", "Quercetin Anhydrous", "ECMI", "PEA", "Vitamin C", "Copper Citrate", "Vitamin B6", "Coleus Forskolii"],
+    "benefits": "Histamine degradation, mast cell stabilization, digestive support, enzyme effectiveness, and reduced histamine absorption."
+  },
+  {
+    "name": "TUDCA - 500mg",
+    "price": "$79.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/f8dbe741-51f0-44f8-832e-19d969033731_5e6a9dcb-3c61-4ef3-957c-5fe797fce79c.webp?v=1747967355",
+    "url": "https://wholesale.lvluphealth.com/products/tudca-500",
+    "collections": ["Gut Health", "Hormonal Health", "Liver Health and Detox"],
+    "description": "TUDCA 500mg is a bile salt known for its potential benefits in supporting liver function, bile flow, and cellular protection. A double-strength formula with 60 servings per bottle. Synthetic, vegan-friendly compound traditionally used in Chinese medicine.",
+    "ingredients": ["TUDCA (Tauroursodeoxycholic Acid) 500mg"],
+    "benefits": "Liver support, detoxification, neuroprotection, brain and eye health, and cellular protection."
+  },
+  {
+    "name": "Tributyrin Plus",
+    "price": "$64.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/tributyrin-plus.webp",
+    "url": "https://wholesale.lvluphealth.com/products/tributyrin-plus",
+    "collections": ["Gut Health"],
+    "description": "Tributyrin Plus is a supplement formulated to support gut health and microbiome balance by combining tributyrin with synergistic probiotics. Tributyrin serves as a key energy source for enterocyte and colonocyte cells of the digestive tract.",
+    "ingredients": ["Tributyrin (butyric acid + glycerol)", "C. butyricum", "B. subtilis"],
+    "benefits": "Healthy gut lining, mucosal barrier support, digestive function, balanced intestinal microbiome, and anti-inflammatory properties."
+  },
+  {
+    "name": "TUDCA + Ox Bile",
+    "price": "$69.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/8dd86142-371f-4997-bb98-fae6f353fa40_f09a9e1a-d04d-4935-8b22-75030af91516.webp?v=1742186513",
+    "url": "https://wholesale.lvluphealth.com/products/tudca-ox-bile",
+    "collections": ["Gut Health", "Liver Health and Detox"],
+    "description": "Support liver function and digestive health with TUDCA + Ox Bile, a synergistic combination designed to enhance bile flow, detoxification, and efficient fat digestion.",
+    "ingredients": ["TUDCA (Tauroursodeoxycholic Acid)", "Desiccated Ox Bile"],
+    "benefits": "Healthy bile flow, liver cell protection, detoxification, fat breakdown, fat-soluble vitamin absorption, and digestive comfort."
+  },
+  {
+    "name": "Zinc Carnosine +",
+    "price": "$39.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/385e4647-97f7-440a-8d42-56369d337410_a729cac3-2237-4f86-a7b9-8dd3ec79d4e3.webp?v=1742880384",
+    "url": "https://wholesale.lvluphealth.com/products/zinc-carnosine",
+    "collections": ["Gut Health", "Hormonal Health"],
+    "description": "Zinc Carnosine + is crafted to enhance gut integrity and overall digestive health through a blend of Zinc L-Carnosine, Mastic Gum, and Deglycyrrhizinated Licorice (DGL). Supports skin health, immune defense, neurotransmitter regulation, and hormone production.",
+    "ingredients": ["Zinc L-Carnosine", "Mastic Gum", "Deglycyrrhizinated Licorice (DGL)"],
+    "benefits": "Gut integrity, digestive health, mucus production, stomach acid balance, skin health, immune defense, and hormone production."
+  },
+  {
+    "name": "TUDCA - 250mg",
+    "price": "$49.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/52fff27a-2cbe-4aeb-94eb-ea4258ee8705_f8cee1db-845f-4b42-a396-df522f256389.webp?v=1742880384",
+    "url": "https://wholesale.lvluphealth.com/products/tudca-250",
+    "collections": ["Gut Health", "Hormonal Health", "Liver Health and Detox"],
+    "description": "TUDCA (Tauroursodeoxycholic Acid) is a synthetic, vegan-friendly bile salt traditionally used in Chinese medicine to support liver function, bile flow, and cellular protection. 250mg per serving with 200mg of liver-supportive Taurine. A lower-dose option for sensitive individuals.",
+    "ingredients": ["TUDCA 250mg", "Taurine 200mg"],
+    "benefits": "Liver health, detoxification, bile flow optimization, and cellular protection."
+  },
+  {
+    "name": "Botanabolic",
+    "price": "$114.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/3b8968d0-d98f-4089-8ec1-bf674a1f378e_bf798a79-9856-4eed-9ae8-bfaf7c2e0740.webp",
+    "url": "https://wholesale.lvluphealth.com/products/botanabolic",
+    "collections": ["Hormonal Health"],
+    "description": "Botanabolic is an advanced testosterone-supporting supplement designed to optimize hormone balance and enhance physical performance. Combines botanical and nutritional compounds targeting hormone support through the hypothalamic-pituitary-gonadal axis.",
+    "ingredients": ["Tongkat Ali", "Anacyclus pyrethrum", "Fadogia agrestis", "Boron", "Shilajit", "Epicatechin", "Icariin"],
+    "benefits": "Androgenic function, free testosterone levels, hormonal signaling (FSH/LH), muscle development, nitric oxide production, and myostatin inhibition."
+  },
+  {
+    "name": "Complete Liver Complex",
+    "price": "$109.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/CLC__5950c5cc-eba2-44db-86bd-f68d19ba716c.webp?v=1757053720",
+    "url": "https://wholesale.lvluphealth.com/products/complete-liver-complex",
+    "collections": ["Hormonal Health", "Liver Health and Detox", "Weight Management"],
+    "description": "Complete Liver Complex is a comprehensive supplement designed to enhance liver health and functionality by supporting the body's natural detoxification processes. Targets Phase 2 conjugation detoxification, Phase 3 bile production, and glutathione recycling.",
+    "ingredients": ["NAC", "NACET", "Selenium", "Glycine", "Taurine", "Phosphatidylcholine (PC)", "Calcium D-Glucarate (CDG)", "Dihydromyricetin (DHM)"],
+    "benefits": "Liver detoxification, glutathione conjugation, acetylation, amino acid conjugation, sulphation, methylation, glucuronidation, liver regeneration, and bile flow."
+  },
+  {
+    "name": "Turkesterone",
+    "price": "$62.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/2f01092e-0832-4f5a-b242-15dc40536e29_eb842d9f-f814-426a-a4ed-49ebe6b9ca86.webp?v=1742015687",
+    "url": "https://wholesale.lvluphealth.com/products/turkesterone",
+    "collections": ["Hormonal Health", "Recovery"],
+    "description": "Turkesterone is a plant-derived supplement extracted from Ajuga turkestanica, standardized to 20%, designed to support muscle growth, strength, and recovery. Non-hormonal (no PCT required), works through ERB2 receptor interaction. Includes hydroxypropyl-B-cyclodextrin complex for improved bioavailability.",
+    "ingredients": ["Turkesterone (20% standardized)", "Hydroxypropyl-B-cyclodextrin complex"],
+    "benefits": "Muscle growth, strength, recovery, muscle protein synthesis, stress management, and enhanced exercise capacity."
+  },
+  {
+    "name": "Dihydromyricetin (DHM)",
+    "price": "$69.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/97ce7663-45c0-425e-b7de-7dcd2ed5e98b_2ea6e589-db29-4c09-a2f7-aa0c67c8e3cd.webp?v=1747967637",
+    "url": "https://wholesale.lvluphealth.com/products/dihydromyricetin",
+    "collections": ["Liver Health and Detox"],
+    "description": "Dihydromyricetin (DHM) is a flavonoid compound derived from the Ampelopsis grossedentata plant. Researched for its role in augmenting liver detoxification processes and antioxidant properties for cellular protection.",
+    "ingredients": ["Dihydromyricetin (DHM)"],
+    "benefits": "Liver detoxification, liver regeneration, alcohol metabolism support, antioxidant/cellular protection, cognitive wellness, and GABA receptor interaction."
+  },
+  {
+    "name": "BPC-157 Double Strength",
+    "price": "$169.99",
+    "image": "https://wholesale.lvluphealth.com/cdn/shop/files/3918b664-6c90-4039-98dc-03ac7f03c704_799ee5d0-253e-4953-8a4d-95f185223956.webp?v=1742186278",
+    "url": "https://wholesale.lvluphealth.com/products/bpc-157_double-strength",
+    "collections": ["Recovery"],
+    "description": "BPC-157 Double Strength is a synergistic blend of advanced ingredients formulated to aid full-body healing and recovery. Contains 500 mcg of BPC-157 per capsule. Optimal for individuals needing targeted inflammation support and improved tissue regeneration.",
+    "ingredients": ["BPC-157 (500 mcg)", "PEA (Palmitoylethanolamide)", "Sodium Hyaluronic Acid", "Sodium Bicarbonate"],
+    "benefits": "Injury recovery, gastrointestinal health, collagen synthesis, inflammation management, and tissue regeneration."
+  }
+]

@@ -254,7 +254,7 @@ export default function PricingPage() {
           ]} />
 
           <ScrollReveal delay={300} className="text-center mt-10">
-            <Link href="/faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
+            <Link href="/how-it-works#faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
               View all FAQs →
             </Link>
           </ScrollReveal>

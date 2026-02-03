@@ -118,6 +118,7 @@ export function MemberDashboard({
   );
   const [lmnRecords, setLmnRecords] = useState<LmnRecord[]>([]);
   const [lmnLoading, setLmnLoading] = useState(true);
+  const [showLmnModal, setShowLmnModal] = useState(false);
 
   const portalUrl = getHealthiePatientPortalUrl();
 
@@ -157,58 +158,144 @@ export function MemberDashboard({
     (f) => !accessibleFeatures.includes(f)
   );
 
-  // Handle quick action clicks
-  const handleQuickAction = (action: QuickAction) => {
-    const urls: Record<string, string> = {
-      book: `${portalUrl}/book`,
-      message: `${portalUrl}/messages`,
-      labs: `${portalUrl}/labs`,
-      forms: `${portalUrl}/forms`,
-      portal: portalUrl,
-    };
+  // Handle quick action clicks with SSO authentication
+  const handleQuickAction = async (action: QuickAction) => {
+    try {
+      // Request SSO token from API
+      const response = await fetch('/api/healthie/sso-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: action.action }),
+      });
 
-    if (action.action && urls[action.action]) {
-      window.open(urls[action.action], '_blank', 'noopener,noreferrer');
+      if (!response.ok) {
+        throw new Error('Failed to generate SSO token');
+      }
+
+      const { ssoUrl } = await response.json();
+      
+      // Open authenticated portal in new tab
+      window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('SSO authentication failed:', error);
+      // Fallback to direct portal URL without SSO
+      // Note: Healthie uses /chat for messaging, not /messages
+      const urls: Record<string, string> = {
+        book: `${portalUrl}/book`,
+        message: `${portalUrl}/chat`,
+        labs: `${portalUrl}/documents`,
+        forms: `${portalUrl}/forms`,
+        portal: portalUrl,
+      };
+      
+      if (action.action && urls[action.action]) {
+        window.open(urls[action.action], '_blank', 'noopener,noreferrer');
+      }
     }
   };
 
-  // Handle feature click
-  const handleFeatureClick = (feature: HealthieFeature) => {
-    // Map feature IDs to portal URLs
-    const featureUrls: Record<string, string> = {
-      'book-appointment': `${portalUrl}/book`,
-      'upcoming-appointments': `${portalUrl}/appointments`,
-      'appointment-history': `${portalUrl}/appointments?filter=past`,
-      'telehealth': `${portalUrl}/appointments`,
-      'secure-messaging': `${portalUrl}/messages`,
-      'message-history': `${portalUrl}/messages`,
-      'care-team': `${portalUrl}/care-team`,
-      'lab-results': `${portalUrl}/labs`,
-      'health-metrics': `${portalUrl}/metrics`,
-      'care-plans': `${portalUrl}/care-plans`,
-      'medical-history': `${portalUrl}/health-history`,
-      'medications': `${portalUrl}/medications`,
-      'allergies': `${portalUrl}/health-history`,
-      'intake-forms': `${portalUrl}/forms`,
-      'consent-forms': `${portalUrl}/forms`,
-      'assessments': `${portalUrl}/forms`,
-      'documents': `${portalUrl}/documents`,
-      'upload-documents': `${portalUrl}/documents/upload`,
-      'protocol-documents': `${portalUrl}/documents`,
-      'programs': `${portalUrl}/programs`,
-      'courses': `${portalUrl}/courses`,
-      'progress-tracking': `${portalUrl}/progress`,
-      'invoices': `${portalUrl}/billing`,
-      'payment-methods': `${portalUrl}/billing/payment-methods`,
-      'insurance': `${portalUrl}/insurance`,
-      'packages': `${portalUrl}/packages`,
-      'profile': `${portalUrl}/profile`,
-      'notifications': `${portalUrl}/settings/notifications`,
-      'emergency-contacts': `${portalUrl}/profile/emergency-contacts`,
+  // Handle feature click with SSO authentication
+  const handleFeatureClick = async (feature: HealthieFeature) => {
+    // Map feature IDs to SSO actions
+    // Note: These map to HealthieSSOUrls which use verified Healthie portal paths:
+    // - book → /book
+    // - appointments → /appointments
+    // - message → /chat (NOT /messages)
+    // - labs → /documents (labs stored as documents)
+    // - forms → /forms
+    // - documents → /documents
+    // - billing → /billing
+    // - profile → /settings
+    // - programs → /programs
+    const featureActions: Record<string, string> = {
+      'book-appointment': 'book',
+      'upcoming-appointments': 'appointments',
+      'appointment-history': 'appointments',
+      'telehealth': 'appointments',
+      'secure-messaging': 'message',
+      'message-history': 'message',
+      'care-team': 'message',
+      'lab-results': 'labs',
+      'health-metrics': 'documents',
+      'care-plans': 'documents',
+      'medical-history': 'forms',
+      'medications': 'forms',
+      'allergies': 'forms',
+      'intake-forms': 'forms',
+      'consent-forms': 'forms',
+      'assessments': 'forms',
+      'documents': 'documents',
+      'upload-documents': 'documents',
+      'protocol-documents': 'documents',
+      'programs': 'programs',
+      'courses': 'programs',
+      'progress-tracking': 'programs',
+      'invoices': 'billing',
+      'payment-methods': 'billing',
+      'insurance': 'billing',
+      'packages': 'billing',
+      'profile': 'profile',
+      'notifications': 'profile',
+      'emergency-contacts': 'profile',
     };
 
-    const url = featureUrls[feature.id] || portalUrl;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    const action = featureActions[feature.id] || 'portal';
+
+    try {
+      // Request SSO token from API
+      const response = await fetch('/api/healthie/sso-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate SSO token');
+      }
+
+      const { ssoUrl } = await response.json();
+      
+      // Open authenticated portal in new tab
+      window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('SSO authentication failed:', error);
+      // Fallback to direct portal URL without SSO
+      // Note: Healthie uses /chat for messaging, /documents for labs/files
+      const featureUrls: Record<string, string> = {
+        'book-appointment': `${portalUrl}/book`,
+        'upcoming-appointments': `${portalUrl}/appointments`,
+        'appointment-history': `${portalUrl}/appointments`,
+        'telehealth': `${portalUrl}/appointments`,
+        'secure-messaging': `${portalUrl}/chat`,
+        'message-history': `${portalUrl}/chat`,
+        'care-team': `${portalUrl}/chat`,
+        'lab-results': `${portalUrl}/documents`,
+        'health-metrics': `${portalUrl}/documents`,
+        'care-plans': `${portalUrl}/documents`,
+        'medical-history': `${portalUrl}/forms`,
+        'medications': `${portalUrl}/forms`,
+        'allergies': `${portalUrl}/forms`,
+        'intake-forms': `${portalUrl}/forms`,
+        'consent-forms': `${portalUrl}/forms`,
+        'assessments': `${portalUrl}/forms`,
+        'documents': `${portalUrl}/documents`,
+        'upload-documents': `${portalUrl}/documents`,
+        'protocol-documents': `${portalUrl}/documents`,
+        'programs': `${portalUrl}/programs`,
+        'courses': `${portalUrl}/programs`,
+        'progress-tracking': `${portalUrl}/programs`,
+        'invoices': `${portalUrl}/billing`,
+        'payment-methods': `${portalUrl}/billing`,
+        'insurance': `${portalUrl}/billing`,
+        'packages': `${portalUrl}/billing`,
+        'profile': `${portalUrl}/settings`,
+        'notifications': `${portalUrl}/settings`,
+        'emergency-contacts': `${portalUrl}/settings`,
+      };
+
+      const url = featureUrls[feature.id] || portalUrl;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -272,146 +359,102 @@ export function MemberDashboard({
         </div>
       </div>
 
-      {/* SDK Integration Info */}
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100 rounded-2xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Settings className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-display font-bold text-stone-900">
-              Healthie Integration
-            </h3>
-            <p className="text-sm text-stone-600 mt-1">
-              Your CULTR membership is integrated with Healthie's HIPAA-compliant EHR platform.
-              Access telehealth, messaging, forms, lab results, and more through the patient portal.
-            </p>
-            <div className="flex flex-wrap gap-2 mt-4">
-              <span className="px-3 py-1 bg-white border border-blue-200 rounded-full text-xs text-blue-700 font-medium">
-                Chat SDK Available
-              </span>
-              <span className="px-3 py-1 bg-white border border-blue-200 rounded-full text-xs text-blue-700 font-medium">
-                Forms SDK Available
-              </span>
-              <span className="px-3 py-1 bg-white border border-blue-200 rounded-full text-xs text-blue-700 font-medium">
-                Booking SDK Available
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Direct Portal Link */}
       <div className="text-center">
-        <a
-          href={portalUrl}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={async () => {
+            try {
+              const response = await fetch('/api/healthie/sso-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'portal' }),
+              });
+              
+              if (response.ok) {
+                const { ssoUrl } = await response.json();
+                window.open(ssoUrl, '_blank', 'noopener,noreferrer');
+              } else {
+                // Fallback to direct URL
+                window.open(portalUrl, '_blank', 'noopener,noreferrer');
+              }
+            } catch (error) {
+              console.error('SSO failed:', error);
+              window.open(portalUrl, '_blank', 'noopener,noreferrer');
+            }
+          }}
           className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-full font-medium hover:bg-stone-800 transition-colors"
         >
           Open Full Patient Portal
           <ExternalLink className="w-4 h-4" />
-        </a>
+        </button>
         <p className="text-sm text-stone-500 mt-2">
           Opens in a new tab with full Healthie EHR access
         </p>
       </div>
 
-      {/* HSA/FSA Documents Section */}
-      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-emerald-600" />
+      {/* LMN Viewer Modal */}
+      {showLmnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLmnModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h3 className="font-display font-bold text-stone-900">
+                  Letters of Medical Necessity
+                </h3>
+              </div>
+              <button onClick={() => setShowLmnModal(false)} className="text-stone-400 hover:text-stone-600 text-xl leading-none">&times;</button>
             </div>
-            <div>
-              <h3 className="font-display font-bold text-stone-900">
-                HSA/FSA Documents
-              </h3>
-              <p className="text-sm text-stone-600">
-                Letters of Medical Necessity for tax-free reimbursement
-              </p>
-            </div>
-          </div>
-          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wide">
-            Tax-Free
-          </span>
-        </div>
 
-        {lmnLoading ? (
-          <div className="text-center py-8">
-            <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm text-stone-500 mt-2">Loading documents...</p>
-          </div>
-        ) : lmnRecords.length > 0 ? (
-          <div className="space-y-3">
-            {lmnRecords.map((record) => (
-              <div
-                key={record.lmnNumber}
-                className="bg-white rounded-xl p-4 border border-emerald-100 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-stone-900">
-                      Letter of Medical Necessity
-                    </p>
-                    <div className="flex items-center gap-3 text-sm text-stone-500">
-                      <span className="font-mono text-xs">{record.lmnNumber}</span>
-                      <span>•</span>
-                      <span>Order {record.orderNumber}</span>
-                      <span>•</span>
-                      <span>
+            {lmnLoading ? (
+              <div className="text-center py-8">
+                <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-sm text-stone-500 mt-2">Loading documents...</p>
+              </div>
+            ) : lmnRecords.length > 0 ? (
+              <div className="space-y-3 max-h-80 overflow-y-auto">
+                {lmnRecords.map((record) => (
+                  <div
+                    key={record.lmnNumber}
+                    className="bg-stone-50 rounded-xl p-4 border border-stone-200 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="font-medium text-stone-900 text-sm">
+                        {record.lmnNumber}
+                      </p>
+                      <p className="text-xs text-stone-500 mt-0.5">
+                        Order {record.orderNumber} &middot;{' '}
                         {new Date(record.issueDate).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
                         })}
-                      </span>
+                      </p>
                     </div>
+                    <a
+                      href={`/api/lmn/${record.lmnNumber}`}
+                      className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      View
+                    </a>
                   </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className="text-xs text-stone-500 uppercase tracking-wide">Eligible</p>
-                    <p className="font-bold text-emerald-600">
-                      {new Intl.NumberFormat('en-US', {
-                        style: 'currency',
-                        currency: record.currency || 'USD',
-                      }).format(record.eligibleTotal)}
-                    </p>
-                  </div>
-                  <a
-                    href={`/api/lmn/${record.lmnNumber}`}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors text-sm"
-                  >
-                    <Download className="w-4 h-4" />
-                    Download
-                  </a>
-                </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="text-center py-8">
+                <Receipt className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+                <p className="text-stone-600 font-medium">No Documents Yet</p>
+                <p className="text-sm text-stone-500 mt-1">
+                  When you purchase eligible products, your LMN will appear here.
+                </p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-8 bg-white/50 rounded-xl border border-dashed border-emerald-200">
-            <Receipt className="w-10 h-10 text-emerald-300 mx-auto mb-3" />
-            <p className="text-stone-600 font-medium">No HSA/FSA Documents Yet</p>
-            <p className="text-sm text-stone-500 mt-1">
-              When you purchase eligible products, your Letter of Medical Necessity will appear here.
-            </p>
-          </div>
-        )}
-
-        <div className="mt-4 p-3 bg-emerald-100/50 rounded-lg">
-          <p className="text-xs text-emerald-800">
-            <strong>How it works:</strong> Submit your Letter of Medical Necessity (LMN) to your HSA/FSA administrator 
-            to receive tax-free reimbursement for your peptide therapeutics. All prescription products from CULTR Health 
-            are eligible.
-          </p>
         </div>
-      </div>
+      )}
 
       {/* Category Filter Tabs */}
       <div className="flex flex-wrap gap-2">
@@ -451,6 +494,30 @@ export function MemberDashboard({
             Available Features
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Letters of Medical Necessity Button */}
+            <button
+              onClick={() => setShowLmnModal(true)}
+              className="group relative flex items-start gap-4 p-5 bg-white border border-stone-200 rounded-2xl hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100/50 transition-all text-left"
+            >
+              <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                <DollarSign className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-stone-900 group-hover:text-stone-700 transition-colors">
+                  Letters of Medical Necessity
+                </p>
+                <p className="text-sm text-stone-500 mt-1 line-clamp-2">
+                  View HSA/FSA documents for tax-free reimbursement
+                </p>
+              </div>
+              {lmnRecords.length > 0 && (
+                <span className="absolute top-3 right-3 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                  {lmnRecords.length}
+                </span>
+              )}
+              <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
+            </button>
+
             {accessibleFeatures.map((feature) => {
               const Icon = ICONS[feature.icon] || FileText;
               const category = HEALTHIE_CATEGORIES.find(
@@ -471,16 +538,9 @@ export function MemberDashboard({
                     <Icon className="w-6 h-6 text-stone-700" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-stone-900 group-hover:text-stone-700 transition-colors">
-                        {feature.name}
-                      </p>
-                      {feature.sdkAvailable && (
-                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full">
-                          SDK
-                        </span>
-                      )}
-                    </div>
+                    <p className="font-medium text-stone-900 group-hover:text-stone-700 transition-colors">
+                      {feature.name}
+                    </p>
                     <p className="text-sm text-stone-500 mt-1 line-clamp-2">
                       {feature.description}
                     </p>

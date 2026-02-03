@@ -45,8 +45,9 @@ export default function HomePage() {
                   <span className="text-sm">HSA/FSA Eligible</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-                  It&apos;s time to own{' '}
-                  <span className="italic">your health</span>
+                  Change the{' '}
+                  <span className="tracking-tight uppercase">CULTR</span>
+                  , <span className="italic">rebrand</span> yourself.
                 </h1>
               </ScrollReveal>
 
@@ -378,7 +379,7 @@ export default function HomePage() {
           ]} />
 
           <div className="text-center mt-10">
-            <Link href="/faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
+            <Link href="/how-it-works#faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
               View all FAQs →
             </Link>
           </div>

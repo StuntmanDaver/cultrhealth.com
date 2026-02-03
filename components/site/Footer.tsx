@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Linkedin, Instagram } from 'lucide-react';
+import { Linkedin, Instagram, Facebook } from 'lucide-react';
 
 const productLinks = [
   { href: '/products', label: 'All Products' },
@@ -8,10 +8,10 @@ const productLinks = [
 ];
 
 const learnLinks = [
-  { href: '/faq#science', label: 'Science' },
+  { href: '/science', label: 'Science' },
   { href: '/how-it-works', label: 'How It Works' },
   { href: '/library', label: 'Resources' },
-  { href: '/faq#help', label: 'Help' },
+  { href: '/how-it-works#faq', label: 'FAQ' },
 ];
 
 const contactLinks = [
@@ -23,35 +23,6 @@ const contactLinks = [
 export function Footer() {
   return (
     <footer>
-      {/* Green Brand Section */}
-      <div className="bg-brand-primary py-16">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          {/* Newsletter */}
-          <div>
-            <h3 className="text-2xl font-display text-brand-cream mb-4">
-              Stay in the <span className="italic">loop.</span>
-            </h3>
-            <form className="flex gap-2 max-w-md group">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 border border-brand-cream/30 bg-transparent rounded-lg text-sm text-brand-cream placeholder:text-brand-cream/50 focus:outline-none focus:border-brand-cream focus:ring-2 focus:ring-brand-cream/20 transition-all duration-200"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 bg-brand-cream text-brand-primary text-sm font-medium rounded-full hover:bg-white hover:scale-[1.03] active:scale-[0.97] transition-all duration-200"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-          {/* Big CULTR Logo - Right Justified */}
-          <span className="text-6xl md:text-8xl font-display font-bold text-brand-cream tracking-tight">
-            CULTR
-          </span>
-        </div>
-      </div>
-
       {/* Links Section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-6">
@@ -120,22 +91,31 @@ export function Footer() {
             {/* Social */}
             <div className="flex gap-4 md:justify-end items-start">
               <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-brand-primary/60 hover:text-brand-primary transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
-                aria-label="LinkedIn"
-              >
-                <Linkedin className="w-5 h-5" />
-              </a>
-              <a
-                href="https://instagram.com"
+                href="https://www.instagram.com/cultrhealth"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 text-brand-primary/60 hover:text-brand-primary transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
                 aria-label="Instagram"
               >
                 <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.facebook.com/cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-brand-primary/60 hover:text-brand-primary transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="https://linkedin.com/company/cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-brand-primary/60 hover:text-brand-primary transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
               </a>
             </div>
           </div>
