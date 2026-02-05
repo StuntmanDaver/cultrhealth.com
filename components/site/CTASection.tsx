@@ -1,20 +1,95 @@
+'use client';
+
+import { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
-export function CTASection({ 
-  title = "Ready to start your journey?", 
+export function CTASection({
+  title = "Ready to start your journey?",
   subtitle = "Join CULTR today and unlock your full potential.",
   ctaText = "View Packages",
   ctaLink = "/pricing"
 }) {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setStatus('loading');
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'newsletter' }),
+      });
+
+      if (response.ok) {
+        setStatus('success');
+        setEmail('');
+      } else {
+        setStatus('error');
+      }
+    } catch (err) {
+      console.error('Newsletter submission fails:', err);
+      setStatus('error');
+    }
+  };
+
   return (
-    <section className="py-24 px-6 bg-cultr-forest">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6">{title}</h2>
-        <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">{subtitle}</p>
-        <Link href={ctaLink}>
-          <Button variant="secondary" size="lg">{ctaText}</Button>
-        </Link>
+    <section className="py-12 px-6 bg-cultr-forest overflow-hidden">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+          {/* Left - CTA Content */}
+          <div className="flex items-center gap-6 shrink-0">
+            <div className="text-left">
+              <h2 className="text-lg md:text-xl font-display font-bold text-white leading-tight">{title}</h2>
+              <p className="text-xs text-white/60 mt-0.5 max-w-[280px]">{subtitle}</p>
+            </div>
+          </div>
+
+          {/* Center - Newsletter */}
+          <div className="flex items-center gap-4 flex-1 justify-center">
+            <span className="text-white font-display text-sm whitespace-nowrap hidden lg:block">
+              Stay in the <span className="italic">loop.</span>
+            </span>
+            {status === 'success' ? (
+              <div className="text-white text-sm font-medium bg-white/10 px-6 py-2.5 rounded-full border border-white/20">
+                Thanks for joining the CULTR.
+              </div>
+            ) : (
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+                <label htmlFor="cta-newsletter-email" className="sr-only">Email address</label>
+                <input
+                  id="cta-newsletter-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  required
+                  disabled={status === 'loading'}
+                  className="w-56 md:w-64 px-4 py-2.5 border border-white/30 bg-white/10 rounded-lg text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/20 focus:bg-white/15 transition-all disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
+                  className="px-5 py-2.5 bg-white text-cultr-forest text-sm font-medium rounded-full hover:bg-white/90 transition-all whitespace-nowrap disabled:opacity-50"
+                >
+                  {status === 'loading' ? 'Joining...' : 'Subscribe'}
+                </button>
+              </form>
+            )}
+            {status === 'error' && (
+              <p className="text-[10px] text-red-300 mt-1">Something went wrong. Try again.</p>
+            )}
+          </div>
+
+          {/* Right - CULTR Logo */}
+          <span className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight shrink-0">
+            CULTR
+          </span>
+        </div>
       </div>
     </section>
   );

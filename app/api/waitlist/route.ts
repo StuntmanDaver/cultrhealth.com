@@ -7,14 +7,14 @@ export async function POST(request: NextRequest) {
     // 0. Rate limiting check
     const clientIp = await getClientIp()
     const rateLimitResult = await formLimiter.check(clientIp)
-    
+
     if (!rateLimitResult.success) {
       console.log('Rate limit exceeded:', { ip: clientIp, reset: rateLimitResult.reset })
       return rateLimitResponse(rateLimitResult)
     }
 
     const body = await request.json()
-    
+
     // Extract turnstile token
     const { turnstileToken, ...formData } = body
 
@@ -31,8 +31,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Validate input
-    const result = waitlistSchema.safeParse(formData)
-    
+    // If source is newsletter, we only require email
+    const isNewsletter = body.source === 'newsletter' || (!body.name && !body.phone)
+    const { waitlistSchema, newsletterSchema } = await import('@/lib/validation')
+
+    const result = isNewsletter
+      ? newsletterSchema.safeParse(formData)
+      : waitlistSchema.safeParse(formData)
+
     if (!result.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: result.error.errors },
@@ -40,7 +46,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { name, email, phone, social_handle, treatment_reason } = result.data
+    const {
+      name = 'Newsletter Subscriber',
+      email,
+      phone = 'Not Provided',
+      social_handle = '',
+      treatment_reason = ''
+    } = result.data as any
 
     // 3. Try to save to database (if configured)
     let waitlistId = crypto.randomUUID()
@@ -57,18 +69,18 @@ export async function POST(request: NextRequest) {
         })
         waitlistId = dbResult.id
       } catch (dbError) {
-        console.error('Database error (continuing without DB):', dbError)
-        // Continue without database - just log the submission
+        console.error('Database error saving waitlist entry:', dbError)
+        throw dbError // Fail explicitly so we don't lose the signup
       }
     }
 
     // Log the submission
-    console.log('Waitlist signup:', { 
+    console.log('Waitlist signup:', {
       waitlist_id: waitlistId,
-      name, 
-      email, 
-      phone, 
-      social_handle, 
+      name,
+      email,
+      phone,
+      social_handle,
       treatment_reason,
       timestamp: new Date().toISOString()
     })

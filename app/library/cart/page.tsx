@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSession, getMembershipTier, hasFeatureAccess } from '@/lib/auth'
 import { CartClient } from './CartClient'
+import { PaymentProviderLoader } from '@/components/payments/PaymentProviderLoader'
 
 export const metadata = {
   title: 'Cart | CULTR Health',
@@ -22,5 +23,10 @@ export default async function CartPage() {
     redirect('/pricing?upgrade=catalyst')
   }
 
-  return <CartClient email={session.email} tier={tier} />
+  // PaymentProviderLoader only loads Klarna/Affirm SDKs on checkout pages
+  return (
+    <PaymentProviderLoader>
+      <CartClient email={session.email} tier={tier} />
+    </PaymentProviderLoader>
+  )
 }

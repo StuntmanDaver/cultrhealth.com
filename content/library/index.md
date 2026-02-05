@@ -7,7 +7,7 @@
 - **ACE-031** - Myostatin inhibitor; strength without fat
 - **Follistatin 344** - Myostatin antagonist; lean growth
 - **Sermorelin** - GH secretion; natural approach
-- **CJC-1295** - Long-acting GH stimulation
+- **CJC-1295 (No DAC)** - GH pulse optimization
 
 ### Recovery & Healing
 - **BPC-157** - Tendon/ligament recovery; versatile
@@ -40,19 +40,19 @@
 ## Quick Start Recommendations
 
 **Beginner** (First Peptide)
-- Start with BPC-157 or GHK-Cu for recovery
-- Conservative dosing; observe effects
-- 4-6 week trial period
+- Start with one goal-aligned protocol (e.g., BPC-157 for tissue repair or GHK-Cu for collagen/skin)
+- Conservative dosing; observe response and tolerance
+- 4-8 week trial period with provider review
 
 **Intermediate** (Some Experience)
-- Stack complementary peptides
-- IGF-1 + Recovery compound, or GH + Fat Loss
-- 8-12 week protocols
+- Stack complementary mechanisms (avoid overlapping pathways)
+- Example synergies: CJC-1295 (No DAC) + Ipamorelin (GH support) or BPC-157 + TB-500 (repair)
+- 8-12 week protocols with basic labs/metrics
 
 **Advanced** (Experienced User)
-- Custom stacking based on goals
-- Longer cycles (12+ weeks)
-- Combination of 3+ compounds
+- Provider-guided, multi-goal stacks with defined monitoring
+- 2-3 complementary compounds per cycle (avoid unnecessary overlap)
+- Longer cycles (12+ weeks) with off-cycles as needed
 
 ## Administration Routes
 
@@ -82,15 +82,14 @@
 |---------|--------|-------|
 | AOD-9604 | Morning or pre-cardio | Fat loss pathway |
 | FRAG 176-191 | Morning (fasted) | Lipolytic; avoid food 2-3h before/after |
-| Epitalon | Morning | Circadian support |
 | SEMAX | Morning/early afternoon | Cognitive; avoid late PM |
 | SELANK | Morning or as needed | Anxiolytic; avoid evening |
 | Thymosin-α1 | Morning | Immune rhythm support |
 | Elamipretide | Morning (fasted) | Mitochondrial energy |
 | NAD+ | Morning | Cellular energy metabolism |
 | MOTS-c | Morning or pre-workout | Metabolic/exercise support |
-| Cagrilintide | Morning or early day | GLP-1 consistency |
-| Semaglutide | Morning or same weekly time | GLP-1 weekly |
+| Cagrilintide | Same day weekly | GLP-1 consistency |
+| Semaglutide | Same day weekly | GLP-1 weekly |
 | Retatrutide | Morning or consistent daytime | Metabolic consistency |
 
 ### EVENING / PRE-SLEEP
@@ -100,9 +99,10 @@
 |---------|--------|-------|
 | BPC-157 | Evening or split dosing | Repair signaling |
 | TB-500 | Evening | Tissue remodeling |
-| CJC-1295 + Ipamorelin | Pre-sleep | GH pulse optimization |
+| CJC-1295 (No DAC) + Ipamorelin | Pre-sleep | GH pulse optimization |
 | Sermorelin | Pre-sleep | GH secretion; empty stomach 2-3h |
 | Tesamorelin | Pre-sleep | GH-releasing |
+| Epitalon | Before bed | Pineal/circadian support |
 | GHK-Cu | Evening | Repair, skin regeneration |
 | DSIP | 30-60 min before bed | Delta sleep induction |
 
@@ -184,7 +184,7 @@
 | Exercise intolerance | CoQ10, Ribose, Magnesium | MOTS-c |
 | Slow healing | Vitamin C, Zinc, Protein | BPC-157 |
 | Frequent injuries | Collagen, Vitamin C, Copper | TB-500 |
-| Low strength | Creatine, Zinc, Vitamin D | CJC-1295 |
+| Low strength | Creatine, Zinc, Vitamin D | CJC-1295 (No DAC) |
 | Low endurance | Iron, B12, CoQ10 | MOTS-c |
 | Low VO2 fitness | Iron, CoQ10, Magnesium | MOTS-c |
 | Exercise crashes | Sodium, Potassium, Magnesium | MOTS-c |
@@ -263,7 +263,7 @@
 | Weight gain | Vitamin D, Magnesium, Chromium | Retatrutide |
 | Weight loss resistance | Zinc, Selenium, Iodine | Retatrutide |
 | Belly fat | Chromium, Omega-3, Magnesium | AOD-9604 |
-| Water retention | Potassium, Vitamin B6, Magnesium | CJC-1295 |
+| Water retention | Potassium, Vitamin B6, Magnesium | CJC-1295 (No DAC) |
 | Slow metabolism | Iodine, Selenium, Zinc | MOTS-c |
 | Insulin resistance | Chromium, Magnesium, Alpha lipoic acid | Retatrutide |
 | High triglycerides | Omega-3, Niacin B3, Magnesium | Retatrutide |

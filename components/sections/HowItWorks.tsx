@@ -1,4 +1,5 @@
 import SectionWrapper from '@/components/ui/SectionWrapper'
+import { ScrollReveal } from '@/components/ui/ScrollReveal'
 
 const steps = [
   {
@@ -37,44 +38,52 @@ export default function HowItWorks() {
   return (
     <SectionWrapper id="how-it-works">
       <div className="text-center mb-16">
-        <p className="text-cultr-copper font-display text-sm tracking-widest uppercase mb-4">
-          Simple Process
-        </p>
-        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-cultr-cream mb-6">
-          How It Works
-        </h2>
-        <p className="text-lg text-cultr-cream/60 font-body max-w-2xl mx-auto">
-          Three simple steps to understanding and optimizing your health.
-        </p>
+        <ScrollReveal direction="up">
+          <p className="text-cultr-copper font-display text-sm tracking-widest uppercase mb-4">
+            Simple Process
+          </p>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={100}>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display text-cultr-cream mb-6">
+            How It Works
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal direction="up" delay={200}>
+          <p className="text-lg text-cultr-cream/60 font-body max-w-2xl mx-auto">
+            Three simple steps to understanding and optimizing your health.
+          </p>
+        </ScrollReveal>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
         {steps.map((step, index) => (
-          <div key={step.number} className="relative">
-            {/* Connector line */}
-            {index < steps.length - 1 && (
-              <div className="hidden md:block absolute top-12 left-[60%] w-full h-px bg-gradient-to-r from-cultr-copper/50 to-transparent" />
-            )}
+          <ScrollReveal key={step.number} direction="up" delay={index * 150}>
+            <div className="relative group">
+              {/* Connector line */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-12 left-[60%] w-full h-px bg-gradient-to-r from-cultr-copper/50 to-transparent" />
+              )}
 
-            <div className="text-center">
-              {/* Step number with icon */}
-              <div className="relative inline-flex items-center justify-center mb-6">
-                <div className="w-24 h-24 rounded-full bg-cultr-charcoal border border-cultr-copper/30 flex items-center justify-center">
-                  <span className="text-3xl font-display text-cultr-copper">{step.number}</span>
+              <div className="text-center">
+                {/* Step number with icon */}
+                <div className="relative inline-flex items-center justify-center mb-6">
+                  <div className="w-24 h-24 rounded-full bg-cultr-charcoal border border-cultr-copper/30 flex items-center justify-center transition-all duration-300 group-hover:border-cultr-copper/60 group-hover:shadow-lg group-hover:shadow-cultr-copper/10">
+                    <span className="text-3xl font-display text-cultr-copper">{step.number}</span>
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-cultr-copper flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
+                    {step.icon}
+                  </div>
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-cultr-copper flex items-center justify-center text-white">
-                  {step.icon}
-                </div>
+
+                <h3 className="text-xl font-display text-cultr-cream mb-4">
+                  {step.title}
+                </h3>
+                <p className="text-cultr-cream/60 font-body leading-relaxed">
+                  {step.description}
+                </p>
               </div>
-
-              <h3 className="text-xl font-display text-cultr-cream mb-4">
-                {step.title}
-              </h3>
-              <p className="text-cultr-cream/60 font-body leading-relaxed">
-                {step.description}
-              </p>
             </div>
-          </div>
+          </ScrollReveal>
         ))}
       </div>
     </SectionWrapper>

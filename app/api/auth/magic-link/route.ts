@@ -18,6 +18,14 @@ function getResend() {
   return new Resend(apiKey)
 }
 
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+  return allowedEmails.includes(email.toLowerCase())
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -49,48 +57,53 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find customer in Stripe by email
-    const stripe = getStripe()
-    const customers = await stripe.customers.list({
-      email: normalizedEmail,
-      limit: 1,
-    })
-
-    if (customers.data.length === 0) {
-      // Don't reveal if email exists - always show same message
-      return NextResponse.json({
-        success: true,
-        message: 'If you have an active membership, you will receive an email shortly.',
-      })
-    }
-
-    const customer = customers.data[0]
-
-    // Check for active subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'active',
-      limit: 1,
-    })
-
-    if (subscriptions.data.length === 0) {
-      // Also check for trialing subscriptions
-      const trialingSubscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: 'trialing',
+    // Staging bypass: skip Stripe check for allowed emails
+    const isStagingAccess = isStagingBypassEmail(normalizedEmail)
+    
+    if (!isStagingAccess) {
+      // Find customer in Stripe by email
+      const stripe = getStripe()
+      const customers = await stripe.customers.list({
+        email: normalizedEmail,
         limit: 1,
       })
 
-      if (trialingSubscriptions.data.length === 0) {
-        // Don't reveal subscription status - always show same message
+      if (customers.data.length === 0) {
+        // Don't reveal if email exists - always show same message
         return NextResponse.json({
           success: true,
           message: 'If you have an active membership, you will receive an email shortly.',
         })
       }
+
+      const customer = customers.data[0]
+
+      // Check for active subscriptions
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'active',
+        limit: 1,
+      })
+
+      if (subscriptions.data.length === 0) {
+        // Also check for trialing subscriptions
+        const trialingSubscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'trialing',
+          limit: 1,
+        })
+
+        if (trialingSubscriptions.data.length === 0) {
+          // Don't reveal subscription status - always show same message
+          return NextResponse.json({
+            success: true,
+            message: 'If you have an active membership, you will receive an email shortly.',
+          })
+        }
+      }
     }
 
-    // Customer has active subscription - generate magic link
+    // Customer has active subscription (or staging bypass) - generate magic link
     const token = await createMagicLinkToken(normalizedEmail)
     
     // Build magic link URL
@@ -101,7 +114,21 @@ export async function POST(request: NextRequest) {
     
     const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}`
 
-    // Send email via Resend
+    // For staging access emails, return the link directly (no email needed)
+    if (isStagingAccess) {
+      console.log('Staging access granted:', {
+        email: normalizedEmail,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json({
+        success: true,
+        stagingAccess: true,
+        redirectUrl: magicLink,
+        message: 'Staging access granted. Redirecting...',
+      })
+    }
+
+    // Send email via Resend for regular users
     const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
     const resend = getResend()
 

@@ -134,9 +134,9 @@ function normalizePlanTier(tier: string | null | undefined): PlanTier | null {
 export async function getMembershipTier(customerId: string): Promise<PlanTier | null> {
   if (!customerId) return null
 
-  // Development mode: return full access tier
-  if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer') {
-    return 'concierge' // Full access in dev mode
+  // Development/staging mode: return full access tier
+  if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer' || customerId === 'staging_customer') {
+    return 'concierge' // Full access in dev/staging mode
   }
 
   if (process.env.POSTGRES_URL) {
@@ -208,4 +208,64 @@ export function isProviderEmail(email: string): boolean {
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean)
   return normalized.includes(email.toLowerCase())
+}
+
+// ===========================================
+// API ROUTE AUTHENTICATION
+// ===========================================
+
+import type { NextRequest } from 'next/server'
+
+interface AuthResult {
+  authenticated: boolean
+  email: string | null
+  customerId: string | null
+}
+
+/**
+ * Verify authentication for API routes
+ * Reads session from cookie or Authorization header
+ */
+export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
+  // Development mode: auto-grant access for testing
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      authenticated: true,
+      email: 'member@cultrhealth.com',
+      customerId: 'dev_customer',
+    }
+  }
+
+  // Try to get session from cookie
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
+  if (sessionCookie) {
+    const session = await verifySessionToken(sessionCookie)
+    if (session) {
+      return {
+        authenticated: true,
+        email: session.email,
+        customerId: session.customerId,
+      }
+    }
+  }
+
+  // Try Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization')
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7)
+    const session = await verifySessionToken(token)
+    if (session) {
+      return {
+        authenticated: true,
+        email: session.email,
+        customerId: session.customerId,
+      }
+    }
+  }
+
+  return {
+    authenticated: false,
+    email: null,
+    customerId: null,
+  }
 }

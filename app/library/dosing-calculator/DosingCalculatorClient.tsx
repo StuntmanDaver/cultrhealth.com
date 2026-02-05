@@ -478,8 +478,8 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               </div>
             </div>
 
-            {/* Results Panel */}
-            <div className="lg:sticky lg:top-6 h-fit space-y-6">
+            {/* Results Panel (top-24 accounts for header height) */}
+            <div className="lg:sticky lg:top-24 h-fit space-y-6">
               {/* Main Result with Syringe Visual */}
               <div className="bg-cultr-forest text-white rounded-2xl p-8">
                 <h3 className="font-display font-bold text-lg mb-6 text-white/80">Draw Amount</h3>

@@ -8,43 +8,43 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 
 | Product | Size | Evidence | Risk | Best For |
 |---------|------|----------|------|----------|
-| Epitalon | 10mg | C | Low | Telomerase activation |
-| DSIP | 10mg | C | Low | Sleep quality |
-| Thymosin-α1 | 1mg | C | Low | Immune support |
-| SEMAX | 1mg | C | Low | Cognitive enhancement |
-| SELANK | 1mg | C | Low | Anxiety reduction |
-| Humanin | 1mg | D | Low-Moderate | Neuroprotection |
+| Epitalon | 10mg | C-D | Low-Moderate | Telomerase activation |
+| DSIP | 5mg | C-D | Low | Sleep quality |
+| Thymosin-α1 | 4.5mg | B-C | Low | Immune support |
+| SEMAX | 10mg | C-D | Low | Cognitive enhancement |
+| SELANK | 10mg | C-D | Low | Anxiety reduction |
+| Humanin | 5mg | D | Low | Neuroprotection |
 
 ## Key Compounds
 
 ### Epitalon (Epithalon)
 **Mechanism**: Stimulates telomerase and improves pineal gland function; anti-aging peptide
 
-**Dosage**: 3-10mg daily or 10mg every 3 days
+**Dosage**: 5-10mg before bed (10-day cycles)
 **Route**: Subcutaneous or Intranasal
-**Duration**: 6-12 weeks minimum for best results
+**Duration**: 10-20 days on, 20 days off
 **Expected Effects**: Improved sleep, reduced inflammation, potential lifespan effects
 
 ### DSIP (Delta Sleep-Inducing Peptide)
 **Mechanism**: Promotes slow-wave sleep and sleep quality without sedation
 
-**Dosage**: 100-500mcg at bedtime or 1mg once daily
+**Dosage**: 100-500mcg at bedtime
 **Route**: Intranasal, Intravenous, or Subcutaneous
-**Duration**: 4-8 weeks
+**Duration**: 4-12 weeks
 **Best For**: Sleep optimization, recovery enhancement
 
 ### Thymosin Alpha-1
 **Mechanism**: Immune peptide that upregulates T-cell production and immune surveillance
 
-**Dosage**: 1-1.6mg twice weekly
+**Dosage**: 1.6-4.5mg 2-3x weekly
 **Route**: Subcutaneous or Intramuscular
-**Duration**: 4-12 weeks (can be ongoing)
+**Duration**: 4-16 weeks (can be ongoing)
 **Uses**: Immune support, general health maintenance
 
 ### SEMAX & SELANK
 **Mechanism**: Nootropic peptides that enhance cognitive function and reduce anxiety through ACTH derivatives
 
-**SEMAX Dosage**: 250-600mcg daily (intranasal)
+**SEMAX Dosage**: 200-600mcg daily (intranasal)
 **SELANK Dosage**: 250-500mcg daily (intranasal)
 **Duration**: 4-8 weeks per cycle
 **Best For**: Cognitive performance, mood support
@@ -53,7 +53,7 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 
 | Product | Optimal Timing | Category | Notes |
 |---------|---------------|----------|-------|
-| Epitalon | Morning | Morning | Circadian/pineal support; AM dosing aligns with natural rhythms |
+| Epitalon | Before bed | Evening/Pre-Sleep | Pineal/circadian support; 10-day cycles |
 | DSIP | 30-60 min before bed | Evening/Pre-Sleep | Delta sleep induction; must be dosed before sleep |
 | Thymosin-α1 | Morning | Morning | Immune support; consistent AM dosing optimal |
 | SEMAX | Morning or early afternoon | Morning | Cognitive enhancement; avoid late PM (may affect sleep) |
@@ -71,19 +71,19 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 
 ## Comprehensive Protocols
 
-### Anti-Aging Stack (12+ weeks)
-- Epitalon: 10mg every 3 days
-- DSIP: 1mg at bedtime
-- Humanin: 100-200mcg daily
+### Anti-Aging Stack (12+ weeks, cycled)
+- Epitalon: 5-10mg before bed (10-day cycles)
+- DSIP: 100-200mcg at bedtime
+- Humanin: 0.5-5mg daily or 3x weekly
 - Supporting: Quality sleep, antioxidants, stress management
 
 ### Cognitive Enhancement (8 weeks)
-- SEMAX: 600mcg daily (intranasal)
-- SELANK: 500mcg daily (intranasal)
+- SEMAX: 200-600mcg daily (intranasal)
+- SELANK: 250-500mcg daily (intranasal)
 - Supporting: Exercise, meditation, sleep optimization
 
 ### Immune Support (12 weeks)
-- Thymosin Alpha-1: 1.6mg twice weekly
+- Thymosin Alpha-1: 1.6-4.5mg 2x weekly
 - Supporting: Vitamin D, zinc, quality sleep
 
 ## Safety & Considerations
@@ -96,15 +96,15 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 
 ## Research Status
 
-- Epitalon: Grade C evidence; Russian research strong
-- DSIP: Grade C evidence; multiple clinical studies
-- Thymosin α1: Grade C evidence; established safety profile
-- SEMAX/SELANK: Grade C evidence; extensive use in Russia
+- Epitalon: Grade C-D evidence; Russian research strong
+- DSIP: Grade C-D evidence; multiple clinical studies
+- Thymosin α1: Grade B-C evidence; established safety profile
+- SEMAX/SELANK: Grade C-D evidence; extensive use in Russia
 - Humanin: Grade D evidence; emerging research
 
 ## Best Practices
 
-1. **Cycle duration**: 6-12 weeks on, 4-8 weeks off
+1. **Cycle duration**: 4-12 weeks on, or compound-specific cycles (e.g., Epitalon 10-day cycles)
 2. **Combination**: Can stack multiple compounds
 3. **Consistency**: Daily dosing more important than high doses
 4. **Monitoring**: Track sleep quality, cognitive function, general health

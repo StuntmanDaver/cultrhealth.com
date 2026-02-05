@@ -272,16 +272,16 @@ interface BookingConfirmationData {
 export async function sendBookingConfirmation(data: BookingConfirmationData): Promise<EmailResult> {
   const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink } = data
   const firstName = name.split(' ')[0]
-  
+
   // Format date nicely
-  const dateOptions: Intl.DateTimeFormatOptions = { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   }
-  const timeOptions: Intl.DateTimeFormatOptions = { 
-    hour: 'numeric', 
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short'
   }
@@ -399,22 +399,22 @@ interface AppointmentReminderData {
 export async function sendAppointmentReminder(data: AppointmentReminderData): Promise<EmailResult> {
   const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink, hoursUntil } = data
   const firstName = name.split(' ')[0]
-  
-  const timeOptions: Intl.DateTimeFormatOptions = { 
-    hour: 'numeric', 
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
     minute: '2-digit',
     timeZoneName: 'short'
   }
   const formattedTime = appointmentDate.toLocaleTimeString('en-US', timeOptions)
-  const formattedDate = appointmentDate.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
+  const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
   })
-  
-  const urgencyText = hoursUntil <= 2 
+
+  const urgencyText = hoursUntil <= 2
     ? `in ${hoursUntil} hour${hoursUntil > 1 ? 's' : ''}`
-    : hoursUntil < 24 
+    : hoursUntil < 24
       ? `in ${hoursUntil} hours`
       : 'tomorrow'
 
@@ -464,7 +464,7 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
   `
 
   const subjectPrefix = hoursUntil <= 2 ? '⏰ ' : ''
-  
+
   try {
     const client = getResendClient()
     const { error } = await client.emails.send({
@@ -505,12 +505,12 @@ interface PostVisitFollowUpData {
 }
 
 export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promise<EmailResult> {
-  const { 
-    name, 
-    email, 
-    appointmentType, 
-    appointmentDate, 
-    providerName, 
+  const {
+    name,
+    email,
+    appointmentType,
+    appointmentDate,
+    providerName,
     healthiePortalUrl,
     prescriptionsSent,
     labsOrdered,
@@ -518,10 +518,10 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     customNotes
   } = data
   const firstName = name.split(' ')[0]
-  
-  const formattedDate = appointmentDate.toLocaleDateString('en-US', { 
-    month: 'long', 
-    day: 'numeric' 
+
+  const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric'
   })
 
   // Build next steps list
@@ -668,7 +668,7 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
   }
 
   const { quoteId, email, tier, items, notes, timestamp } = data
-  
+
   // Calculate totals
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
   const uniqueProducts = items.length
@@ -786,6 +786,581 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
     return { success: true }
   } catch (err) {
     console.error('Failed to send quote notification:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// ORDER CONFIRMATION WITH LMN EMAIL
+// ===========================================
+
+interface OrderItem {
+  name: string
+  quantity: number
+  price: number
+}
+
+interface OrderConfirmationWithLMNData {
+  email: string
+  name?: string
+  orderNumber: string
+  items: OrderItem[]
+  totalAmount: number
+  currency: string
+  lmnNumber: string
+  lmnPdfBuffer: Buffer
+}
+
+export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLMNData): Promise<EmailResult> {
+  const {
+    email,
+    name,
+    orderNumber,
+    items,
+    totalAmount,
+    currency,
+    lmnNumber,
+    lmnPdfBuffer,
+  } = data
+
+  const firstName = name?.split(' ')[0] || 'there'
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+    }).format(amount)
+  }
+
+  // Build items rows
+  const itemRows = items.map(item => `
+    <tr>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; text-align: right;">${formatCurrency(item.price)}</td>
+    </tr>
+  `).join('')
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Order Confirmed
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, thank you for your order. Your products are being prepared for shipment.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+        <span style="color: #888;">Order Number</span>
+        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <thead>
+          <tr>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: right; font-weight: 500;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemRows}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding: 16px 0 0 0; color: #fff; font-weight: 600; text-align: right;">Total:</td>
+            <td style="padding: 16px 0 0 0; color: #c9a962; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+    <!-- HSA/FSA Section -->
+    <div style="background: linear-gradient(135deg, #1a3d1a 0%, #0f2a0f 100%); border-radius: 8px; padding: 24px; margin-bottom: 24px; border: 1px solid #2d5a2d;">
+      <div style="display: flex; align-items: center; margin-bottom: 16px;">
+        <span style="display: inline-block; background: #c9a962; color: #000; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+          HSA/FSA Eligible
+        </span>
+      </div>
+      
+      <h3 style="color: #fff; font-size: 16px; margin: 0 0 12px 0;">
+        Letter of Medical Necessity Included
+      </h3>
+      
+      <p style="color: #a0a0a0; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        Your order qualifies for HSA/FSA reimbursement. We've attached a Letter of Medical Necessity (LMN) 
+        to this email. Submit this document to your HSA/FSA administrator for tax-free reimbursement.
+      </p>
+      
+      <div style="background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; display: flex; align-items: center; gap: 12px;">
+        <span style="color: #c9a962;">📄</span>
+        <div>
+          <p style="color: #fff; font-size: 14px; margin: 0;">CULTR-LMN-${lmnNumber}.pdf</p>
+          <p style="color: #888; font-size: 12px; margin: 4px 0 0 0;">Attached to this email</p>
+        </div>
+      </div>
+    </div>
+    
+    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
+      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+        What's Next?
+      </p>
+      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+        <li style="margin-bottom: 6px;">You'll receive a shipping confirmation with tracking details</li>
+        <li style="margin-bottom: 6px;">Products typically ship within 1-2 business days</li>
+        <li>Your LMN is also available in your member portal</li>
+      </ul>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Order Confirmed: ${orderNumber} — HSA/FSA Letter Attached`,
+      html: baseEmailTemplate(content, 'Thank you for choosing CULTR Health.'),
+      attachments: [
+        {
+          filename: `CULTR-LMN-${lmnNumber}.pdf`,
+          content: lmnPdfBuffer.toString('base64'),
+        },
+      ],
+    })
+
+    if (error) {
+      console.error('Order confirmation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Order confirmation with LMN sent:', { email, orderNumber, lmnNumber })
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send order confirmation with LMN:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// ORDER CONFIRMATION EMAIL (Without LMN)
+// ===========================================
+
+interface OrderConfirmationEmailData {
+  email: string
+  name?: string
+  orderNumber: string
+  items: OrderItem[]
+  totalAmount: number
+  currency?: string
+  paymentMethod?: string
+  invoicePdf?: Buffer
+}
+
+export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailData): Promise<EmailResult> {
+  const {
+    email,
+    name,
+    orderNumber,
+    items,
+    totalAmount,
+    currency = 'USD',
+    paymentMethod = 'Credit Card',
+    invoicePdf,
+  } = data
+
+  const firstName = name?.split(' ')[0] || 'there'
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+    }).format(amount)
+  }
+
+  // Build items rows
+  const itemRows = items.map(item => `
+    <tr>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; text-align: right;">${formatCurrency(item.price)}</td>
+    </tr>
+  `).join('')
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Order Confirmed
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, thank you for your order. Your products are being prepared for shipment.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <div style="margin-bottom: 16px;">
+        <span style="color: #888; display: inline-block; width: 120px;">Order Number</span>
+        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <span style="color: #888; display: inline-block; width: 120px;">Payment</span>
+        <span style="color: #fff;">${paymentMethod}</span>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+        <thead>
+          <tr>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: right; font-weight: 500;">Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${itemRows}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="padding: 16px 0 0 0; color: #fff; font-weight: 600; text-align: right;">Total:</td>
+            <td style="padding: 16px 0 0 0; color: #c9a962; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
+      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+        What's Next?
+      </p>
+      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+        <li style="margin-bottom: 6px;">You'll receive a shipping confirmation with tracking details</li>
+        <li style="margin-bottom: 6px;">Products typically ship within 1-2 business days</li>
+        <li>Track your order status in your member portal</li>
+      </ul>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+
+    const emailOptions: {
+      from: string
+      to: string
+      subject: string
+      html: string
+      attachments?: { filename: string; content: string }[]
+    } = {
+      from: getFromEmail(),
+      to: email,
+      subject: `Order Confirmed: ${orderNumber}`,
+      html: baseEmailTemplate(content, 'Thank you for choosing CULTR Health.'),
+    }
+
+    // Attach invoice PDF if provided
+    if (invoicePdf) {
+      emailOptions.attachments = [
+        {
+          filename: `CULTR-Invoice-${orderNumber}.pdf`,
+          content: invoicePdf.toString('base64'),
+        },
+      ]
+      emailOptions.subject = `Order Confirmed: ${orderNumber} — Invoice Attached`
+    }
+
+    const { error } = await client.emails.send(emailOptions)
+
+    if (error) {
+      console.error('Order confirmation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Order confirmation sent:', { email, orderNumber })
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send order confirmation:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// SHIPPING NOTIFICATION EMAIL
+// ===========================================
+
+interface ShippingNotificationData {
+  email: string
+  name?: string
+  orderNumber: string
+  carrier: string
+  trackingNumber: string
+  trackingUrl?: string
+  estimatedDelivery?: Date
+  items?: { name: string; quantity: number }[]
+}
+
+export async function sendShippingNotificationEmail(data: ShippingNotificationData): Promise<EmailResult> {
+  const {
+    email,
+    name,
+    orderNumber,
+    carrier,
+    trackingNumber,
+    trackingUrl,
+    estimatedDelivery,
+    items,
+  } = data
+
+  const firstName = name?.split(' ')[0] || 'there'
+
+  // Format estimated delivery date
+  const formattedDelivery = estimatedDelivery
+    ? estimatedDelivery.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    })
+    : null
+
+  // Build items list if provided
+  const itemsList = items && items.length > 0
+    ? items.map(item => `
+        <li style="color: #fff; margin-bottom: 6px;">
+          ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ''}
+        </li>
+      `).join('')
+    : ''
+
+  const content = `
+    <div style="background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
+      <p style="color: #000; font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">
+        📦 Your Order Has Shipped
+      </p>
+    </div>
+    
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      On its way, ${firstName}!
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Great news — your order has shipped and is headed your way.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <div style="margin-bottom: 16px;">
+        <span style="color: #888; display: inline-block; width: 140px;">Order Number</span>
+        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <span style="color: #888; display: inline-block; width: 140px;">Carrier</span>
+        <span style="color: #fff;">${carrier}</span>
+      </div>
+      <div style="margin-bottom: ${formattedDelivery ? '16px' : '0'};">
+        <span style="color: #888; display: inline-block; width: 140px;">Tracking Number</span>
+        <span style="color: #c9a962; font-family: monospace;">${trackingNumber}</span>
+      </div>
+      ${formattedDelivery ? `
+      <div>
+        <span style="color: #888; display: inline-block; width: 140px;">Est. Delivery</span>
+        <span style="color: #fff; font-weight: 500;">${formattedDelivery}</span>
+      </div>
+      ` : ''}
+    </div>
+    
+    ${trackingUrl ? `
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${trackingUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Track Your Package
+      </a>
+    </div>
+    ` : ''}
+    
+    ${itemsList ? `
+    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222; margin-bottom: 24px;">
+      <p style="color: #888; font-size: 12px; text-transform: uppercase; margin: 0 0 12px 0;">
+        Items in this shipment
+      </p>
+      <ul style="margin: 0; padding-left: 20px;">
+        ${itemsList}
+      </ul>
+    </div>
+    ` : ''}
+    
+    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
+      <p style="color: #888; font-size: 13px; margin: 0; line-height: 1.6;">
+        <strong style="color: #fff;">Delivery Tips:</strong> Ensure someone is available to receive temperature-sensitive products. 
+        Contact us immediately if there are any issues with your delivery.
+      </p>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your shipment? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Your Order Has Shipped: ${orderNumber}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Shipping notification email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Shipping notification sent:', { email, orderNumber, carrier, trackingNumber })
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send shipping notification:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// CANCELLATION EMAIL
+// ===========================================
+
+interface CancellationEmailData {
+  name: string
+  email: string
+  planName: string
+  effectiveDate: Date
+}
+
+export async function sendCancellationEmail(data: CancellationEmailData): Promise<EmailResult> {
+  const { name, email, planName, effectiveDate } = data
+  const firstName = name.split(' ')[0]
+  const formattedDate = effectiveDate.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Subscription Cancelled
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, your <strong style="color: #fff;">${planName}</strong> subscription has been cancelled and will end on ${formattedDate}.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
+        You will continue to have access to your member benefits until the end of your current billing period. 
+        Your Healthie patient portal account will remain accessible for your medical records.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="/pricing" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Reactivate Subscription
+      </a>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; text-align: center;">
+      We're sorry to see you go. If you have any feedback on how we can improve, please let us know.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Subscription Cancellation: ${planName}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Cancellation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send cancellation email:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// PAYMENT FAILED EMAIL
+// ===========================================
+
+interface PaymentFailedEmailData {
+  name: string
+  email: string
+  amount: number
+  currency: string
+  billingPortalUrl: string
+}
+
+export async function sendPaymentFailedEmail(data: PaymentFailedEmailData): Promise<EmailResult> {
+  const { name, email, amount, currency, billingPortalUrl } = data
+  const firstName = name.split(' ')[0]
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency || 'USD',
+    }).format(amount)
+  }
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Payment Failed
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, we were unable to process your recent payment of <strong style="color: #fff;">${formatCurrency(amount)}</strong>.
+    </p>
+    
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+        To avoid any interruption to your membership and care, please update your payment method. 
+        Stripe will automatically retry the payment in a few days.
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${billingPortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Update Payment Method
+      </a>
+    </div>
+    
+    <p style="color: #666; font-size: 13px; text-align: center;">
+      If you've already updated your payment information, please ignore this email.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Action Required: Payment Failed`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Payment failed email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send payment failed email:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

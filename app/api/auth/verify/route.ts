@@ -8,6 +8,14 @@ function getStripe() {
   })
 }
 
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+  return allowedEmails.includes(email.toLowerCase())
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -31,46 +39,58 @@ export async function GET(request: NextRequest) {
     }
 
     const { email } = verified
+    
+    // Check for staging bypass
+    const isStagingAccess = isStagingBypassEmail(email)
+    let customerId: string
 
-    // Double-check customer still has active subscription
-    const stripe = getStripe()
-    const customers = await stripe.customers.list({
-      email: email,
-      limit: 1,
-    })
+    if (isStagingAccess) {
+      // Use a staging customer ID for bypass emails
+      customerId = 'staging_customer'
+      console.log('Staging access granted:', { email, timestamp: new Date().toISOString() })
+    } else {
+      // Double-check customer still has active subscription
+      const stripe = getStripe()
+      const customers = await stripe.customers.list({
+        email: email,
+        limit: 1,
+      })
 
-    if (customers.data.length === 0) {
-      return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
-    }
+      if (customers.data.length === 0) {
+        return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+      }
 
-    const customer = customers.data[0]
+      const customer = customers.data[0]
 
-    // Check for active or trialing subscription
-    const activeSubscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'active',
-      limit: 1,
-    })
+      // Check for active or trialing subscription
+      const activeSubscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'active',
+        limit: 1,
+      })
 
-    const trialingSubscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'trialing',
-      limit: 1,
-    })
+      const trialingSubscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'trialing',
+        limit: 1,
+      })
 
-    if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
-      return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+      if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
+        return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+      }
+      
+      customerId = customer.id
     }
 
     // Create session token
-    const sessionToken = await createSessionToken(email, customer.id)
+    const sessionToken = await createSessionToken(email, customerId)
     
     // Set session cookie
     await setSessionCookie(sessionToken)
 
     console.log('Session created:', {
       email,
-      customerId: customer.id,
+      customerId,
       timestamp: new Date().toISOString(),
     })
 

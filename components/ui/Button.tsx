@@ -11,18 +11,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-display font-medium tracking-wide transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white'
+    const baseStyles = 'inline-flex items-center justify-center font-body font-medium transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream'
 
     const variants = {
-      primary: 'bg-cultr-forest text-white hover:bg-cultr-forestDark focus:ring-cultr-forest rounded-full',
-      secondary: 'bg-cultr-sage text-cultr-forest border border-cultr-sage hover:bg-cultr-mint hover:border-cultr-forest/20 focus:ring-cultr-forest/50 rounded-full',
-      ghost: 'bg-transparent text-cultr-forest hover:text-cultr-forestDark focus:ring-cultr-forest/50',
+      primary: 'bg-brand-primary text-brand-cream hover:bg-brand-primaryHover focus:ring-brand-primary rounded-full',
+      secondary: 'bg-transparent text-brand-primary border border-brand-primary/30 hover:bg-brand-primary/5 hover:border-brand-primary/50 focus:ring-brand-primary/50 rounded-full',
+      ghost: 'bg-transparent text-brand-primary hover:text-brand-primaryLight focus:ring-transparent',
     }
 
     const sizes = {
-      sm: 'py-2 px-4 text-xs',
+      sm: 'py-2 px-5 text-xs',
       md: 'py-3 px-6 text-sm',
-      lg: 'py-4 px-8 text-sm',
+      lg: 'py-3.5 px-7 text-sm',
     }
 
     return (
@@ -32,7 +32,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           baseStyles,
           variants[variant],
           sizes[size],
-          !disabled && 'hover:scale-[1.02]',
+          !disabled && variant !== 'ghost' && 'hover:scale-[1.03] active:scale-[0.97]',
+          variant === 'ghost' && !disabled && 'active:scale-[0.98]',
           className
         )}
         disabled={disabled || isLoading}

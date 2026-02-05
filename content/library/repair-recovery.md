@@ -8,37 +8,37 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 
 | Product | Size | Evidence | Risk | Best For |
 |---------|------|----------|------|----------|
-| BPC-157 | 5mg | B-C | Low | Tendon/ligament healing |
-| TB-500 | 5mg | C | Low-Moderate | Tissue regeneration |
-| GHK-Cu | 1mg | B | Low | Collagen synthesis |
-| GLOW Blend | 3mg | C | Low | Comprehensive recovery |
-| Elamipretide | 5mg | C | Moderate | Mitochondrial function |
-| TP508 | 5mg | C | Low | Wound healing |
+| BPC-157 | 10mg | C | Low-Moderate | Tendon/ligament healing |
+| TB-500 | 10mg | C-D | Low-Moderate | Tissue regeneration |
+| GHK-Cu | 50mg | C | Low | Collagen synthesis |
+| GLOW Blend | Mixed | C-D | Low-Moderate | Comprehensive recovery |
+| Elamipretide | 50mg | B-C | Moderate | Mitochondrial function |
+| TP508 | 5mg | C-D | Low-Moderate | Wound healing |
 
 ## Key Compounds
 
 ### BPC-157 (Body Protection Compound)
 **Mechanism**: Peptide derived from gastric juice; promotes angiogenesis and nerve growth
 
-**Dosage**: 250mcg once or twice daily
+**Dosage**: 250-500mcg once or twice daily
 **Route**: Intramuscular, Intranasal, or Oral
-**Duration**: 4-6 weeks
+**Duration**: 4-12 weeks
 **Common Uses**: Joint recovery, tendon healing, GI health
 
 ### TB-500 (Thymosin Beta-4)
 **Mechanism**: Actin-binding peptide that upregulates growth factors and immune function
 
-**Dosage**: 2mg weekly for 4 weeks, then 1mg weekly
+**Dosage**: 2.5-5mg 2x weekly
 **Route**: Subcutaneous
-**Duration**: 8-12 weeks
+**Duration**: 4-12 weeks
 **Best For**: General tissue repair, athletic recovery
 
 ### GHK-Cu (Copper Peptide)
 **Mechanism**: Promotes collagen synthesis and angiogenesis; anti-inflammatory
 
-**Dosage**: 200-400mcg daily
+**Dosage**: 1-2mg daily
 **Route**: Topical or subcutaneous
-**Duration**: Ongoing
+**Duration**: 8-16 weeks
 **Best For**: Skin health, collagen remodeling, wound healing
 
 ## Optimal Timing Guide
@@ -57,20 +57,20 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 ## Recovery Protocols
 
 ### Acute Injury Recovery (4-6 weeks)
-- BPC-157: 250mcg twice daily
-- GHK-Cu: 200mcg daily
+- BPC-157: 250-500mcg twice daily
+- GHK-Cu: 1mg daily
 - Vitamin C: High dose for collagen synthesis
 
 ### Long-term Athletic Recovery
-- TB-500: 1-2mg weekly
-- GHK-Cu: 200mcg daily
+- TB-500: 2.5-5mg 2x weekly
+- GHK-Cu: 1mg daily
 - Adequate protein and minerals
 
 ## Research Status
 
-- BPC-157: Strong evidence for tendon healing (Grade B-C)
-- TB-500: Promising animal studies (Grade C)
-- GHK-Cu: Well-documented collagen effects (Grade B)
+- BPC-157: Strong preclinical support for tendon healing (Grade C)
+- TB-500: Promising animal studies (Grade C-D)
+- GHK-Cu: Well-documented collagen effects (Grade C)
 
 ## Safety & Timing
 

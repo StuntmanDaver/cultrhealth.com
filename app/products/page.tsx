@@ -216,7 +216,7 @@ export default function ProductsPage() {
                       <span className="text-sm font-medium text-cultr-forest">Recommendation</span>
                     </div>
                     <p className="text-sm text-cultr-textMuted">
-                      Based on your A1C and metabolic markers, we recommend starting with 2.5mg weekly.
+                      Based on your A1C and metabolic markers, we recommend starting at 2.5mg weekly, then titrating per provider guidance.
                     </p>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ export default function ProductsPage() {
                   The <span className="italic">Protocol Engine</span>
                 </h2>
                 <p className="text-cultr-textMuted mb-8 leading-relaxed">
-                  Our intelligent protocol engine analyzes your biomarkers and generates personalized recommendations. No more guesswork—just data-driven protocols tailored to your unique biology.
+                  Our intelligent protocol engine analyzes your biomarkers and generates goal-aligned, clinician-reviewed recommendations. No more guesswork—just data-driven protocols tailored to your unique biology.
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
