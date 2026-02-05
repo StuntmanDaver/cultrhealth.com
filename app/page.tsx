@@ -55,7 +55,7 @@ export default function WaitlistPage() {
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
           <div className="inline-block mb-12">
-            <div className="mb-2">
+            <div className="mb-0">
               <Image
                 src="/cultr-logotype-cream.png"
                 alt="CULTR"
@@ -65,7 +65,7 @@ export default function WaitlistPage() {
                 className="w-auto h-14"
               />
             </div>
-            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 -mt-0.5">
               Health
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function WaitlistPage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="inline-block">
-            <div className="mb-2">
+            <div className="mb-0">
               <Image
                 src="/cultr-logotype-cream.png"
                 alt="CULTR"
@@ -96,7 +96,7 @@ export default function WaitlistPage() {
                 className="w-auto h-14"
               />
             </div>
-            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 -mt-0.5">
               Health
             </div>
           </div>
