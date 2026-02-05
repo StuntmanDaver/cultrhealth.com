@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function WaitlistPage() {
@@ -54,10 +55,17 @@ export default function WaitlistPage() {
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
           <div className="inline-block mb-12">
-            <div className="text-[#FDFBF7] text-5xl font-playfair font-light tracking-[0.2em] mb-1">
-              CULTR
+            <div className="mb-2">
+              <Image
+                src="/cultr-logotype-cream.png"
+                alt="CULTR"
+                width={180}
+                height={50}
+                priority
+                className="w-auto h-14"
+              />
             </div>
-            <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1">
               Health
             </div>
           </div>
