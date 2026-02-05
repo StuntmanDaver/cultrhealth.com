@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function WaitlistPage() {
@@ -54,14 +53,14 @@ export default function WaitlistPage() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
-          <Image
-            src="/cultr-logo-cream.svg"
-            alt="CULTR Health"
-            width={180}
-            height={49}
-            priority
-            className="mx-auto h-12 w-auto mb-12"
-          />
+          <div className="inline-block mb-12">
+            <div className="text-[#FDFBF7] text-5xl font-light tracking-[0.2em] mb-1">
+              CULTR
+            </div>
+            <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
+              Health
+            </div>
+          </div>
           <h1 className="text-2xl font-light tracking-wide text-[#FDFBF7] mb-4">
             You&apos;re on the list
           </h1>
@@ -78,14 +77,14 @@ export default function WaitlistPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-12">
-          <Image
-            src="/cultr-logo-cream.svg"
-            alt="CULTR Health"
-            width={180}
-            height={49}
-            priority
-            className="mx-auto h-12 w-auto"
-          />
+          <div className="inline-block">
+            <div className="text-[#FDFBF7] text-5xl font-light tracking-[0.2em] mb-1">
+              CULTR
+            </div>
+            <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
+              Health
+            </div>
+          </div>
         </div>
 
         {/* Form */}
