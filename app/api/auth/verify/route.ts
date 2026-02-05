@@ -4,7 +4,7 @@ import { verifyMagicLinkToken, createSessionToken, setSessionCookie } from '@/li
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2025-12-15.clover',
+    apiVersion: '2026-01-28.clover',
   })
 }
 
