@@ -86,10 +86,17 @@ export default function WaitlistPage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="inline-block">
-            <div className="text-[#FDFBF7] text-5xl font-playfair font-light tracking-[0.2em] mb-1">
-              CULTR
+            <div className="mb-2">
+              <Image
+                src="/cultr-logotype-cream.png"
+                alt="CULTR"
+                width={180}
+                height={50}
+                priority
+                className="w-auto h-14"
+              />
             </div>
-            <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1">
               Health
             </div>
           </div>
