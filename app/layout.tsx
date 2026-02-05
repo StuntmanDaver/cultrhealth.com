@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Raleway } from 'next/font/google'
+import { Inter, Raleway, Playfair_Display } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
@@ -11,6 +11,12 @@ const inter = Inter({
 const raleway = Raleway({
   subsets: ['latin'],
   variable: '--font-raleway',
+  display: 'swap',
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
   display: 'swap',
 })
 
@@ -31,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${raleway.variable}`}>
+    <html lang="en" className={`${inter.variable} ${raleway.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-[#2B4542] text-white antialiased">
         {children}
       </body>

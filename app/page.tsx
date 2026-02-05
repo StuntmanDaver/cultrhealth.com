@@ -54,7 +54,7 @@ export default function WaitlistPage() {
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
           <div className="inline-block mb-12">
-            <div className="text-[#FDFBF7] text-5xl font-light tracking-[0.2em] mb-1">
+            <div className="text-[#FDFBF7] text-5xl font-playfair font-light tracking-[0.2em] mb-1">
               CULTR
             </div>
             <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
@@ -78,7 +78,7 @@ export default function WaitlistPage() {
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="inline-block">
-            <div className="text-[#FDFBF7] text-5xl font-light tracking-[0.2em] mb-1">
+            <div className="text-[#FDFBF7] text-5xl font-playfair font-light tracking-[0.2em] mb-1">
               CULTR
             </div>
             <div className="text-[#FDFBF7] text-sm font-raleway tracking-wide text-right">
