@@ -120,20 +120,20 @@ export async function GET(request: NextRequest) {
           const { getPatientById } = await import('@/lib/asher-med-api');
           const asherPatient = await getPatientById(asherPatientId);
 
-          if (asherPatient.data) {
+          if (asherPatient) {
             // Merge with Asher Med data (prefer Asher Med as source of truth)
             patient = {
               ...patient,
-              firstName: asherPatient.data.firstName || patient.firstName,
-              lastName: asherPatient.data.lastName || patient.lastName,
-              email: asherPatient.data.email || patient.email,
-              phone: asherPatient.data.phoneNumber || patient.phone,
-              shippingAddress: asherPatient.data.address1 ? {
-                address1: asherPatient.data.address1,
-                address2: asherPatient.data.address2 || '',
-                city: asherPatient.data.city || '',
-                state: asherPatient.data.stateAbbreviation || '',
-                zipCode: asherPatient.data.zipcode || '',
+              firstName: asherPatient.firstName || patient.firstName,
+              lastName: asherPatient.lastName || patient.lastName,
+              email: asherPatient.email || patient.email,
+              phone: asherPatient.phoneNumber || patient.phone,
+              shippingAddress: asherPatient.address1 ? {
+                address1: asherPatient.address1,
+                address2: asherPatient.address2 || '',
+                city: asherPatient.city || '',
+                state: asherPatient.stateAbbreviation || '',
+                zipCode: asherPatient.zipcode || '',
               } : patient.shippingAddress,
             };
           }
