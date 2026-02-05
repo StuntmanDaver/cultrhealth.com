@@ -332,6 +332,7 @@ export async function getOrders(params?: {
   limit?: number;
   search?: string;
   status?: string;
+  patientId?: number;
 }): Promise<AsherPaginatedResponse<AsherOrder>> {
   const response = await asherRequest<{
     orders?: AsherOrder[];
@@ -343,6 +344,7 @@ export async function getOrders(params?: {
       limit: params?.limit,
       search: params?.search,
       status: params?.status,
+      patientId: params?.patientId,
     },
   });
 
