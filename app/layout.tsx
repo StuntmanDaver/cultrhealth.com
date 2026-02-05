@@ -24,6 +24,7 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.cultrhealth.com'),
   title: 'CULTR — Join the Waitlist',
   description: 'Join the CULTR Health waitlist. Comprehensive lab testing, personalized protocols, and cutting-edge peptide therapies.',
   keywords: ['longevity', 'health optimization', 'hormone therapy', 'peptides', 'wellness', 'CULTR'],
@@ -31,6 +32,21 @@ export const metadata: Metadata = {
     title: 'CULTR — Join the Waitlist',
     description: 'Join the CULTR Health waitlist for early access.',
     type: 'website',
+    siteName: 'CULTR Health',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'CULTR Health',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CULTR — Join the Waitlist',
+    description: 'Join the CULTR Health waitlist for early access.',
+    images: ['/og-image.png'],
   },
 }
 
