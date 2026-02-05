@@ -74,11 +74,11 @@ export async function GET(request: NextRequest) {
 
         if (patientId) {
           const asherResponse = await getOrders({ patientId: parseInt(patientId, 10) });
-          if (asherResponse.data?.orders) {
+          if (asherResponse.data && asherResponse.data.length > 0) {
             // Map Asher Med orders by ID for quick lookup
-            asherResponse.data.orders.forEach((order: { id: number; orderStatus: string; updatedAt: string }) => {
+            asherResponse.data.forEach((order) => {
               asherOrders[order.id] = {
-                status: order.orderStatus,
+                status: order.status,
                 updatedAt: order.updatedAt,
               };
             });
