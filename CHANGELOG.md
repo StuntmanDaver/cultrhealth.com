@@ -4,6 +4,35 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-08b] - Floating Pill Navbar, Button Fixes & Deployment Setup
+
+### Added
+- **"Creators" nav link** in site header navigation for Creator program discoverability
+- **Scroll-to-pill navbar animation** — full-width bar morphs into a centered floating pill (1080px max, 60px border-radius) on scroll with backdrop blur and elevated shadow
+- **Scroll-reactive sizing** — logo, nav links, CTA button, and navbar height all shrink smoothly on scroll using 0.5s cubic-bezier transitions
+- **Animated mobile hamburger** — three-bar icon animates to X with rotation transforms (replaces icon swap)
+- **Mobile drawer** — full-screen overlay below navbar with grouped sections, uppercase labels, and Sign In + Get Started CTAs
+- **Brand-cream navbar backgrounds** — `brand-cream/[0.97]` (unscrolled) and `brand-cream/[0.88]` (scrolled pill) with backdrop blur for readability over dark hero sections
+
+### Fixed
+- **Catalyst+ "Join" button invisible** — added white text/border overrides for the featured pricing card's secondary button on dark background
+- **Creator "Apply Now" button invisible** — same fix on /creators page bottom CTA section
+- **Navbar invisible over dark sections** — fixed invalid Tailwind opacity syntax (`bg-white/97` → `bg-white/[0.97]`) that caused transparent backgrounds
+
+### Changed
+- **Site header redesign** — replaced underline hover animation with rounded bg-fill hover, replaced Button component CTA with inline styled pill button
+- **Nav link hover style** — bg-fill on hover (`bg-brand-primary/[0.07]`) instead of expanding underline
+- **Creator login/apply/pending pages** now show site-wide navbar and footer (removed from `HIDE_CHROME_PREFIXES`)
+- **Homepage hero images** updated from athletic man to women lifestyle photo across hero, mobile, and results sections
+- **Logo** simplified to "CULTR" only (removed "Health" suffix from navbar)
+- **Waitlist site** (production) — moved "HEALTH" text slightly down below CULTR logo (`-mt-2` → `mt-1`)
+
+### Deployment
+- **staging.cultrhealth.com** — configured as Vercel alias for staging branch deployments
+- **cultrhealth.com** — remains on waitlist (production branch), rolled back after accidental prod deploy
+
+---
+
 ## [2026-02-08] - Creator Affiliate Portal & Homepage Updates
 
 ### Added
