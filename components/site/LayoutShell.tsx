@@ -10,9 +10,6 @@ import { Footer } from './Footer'
  */
 const HIDE_CHROME_PREFIXES = [
   '/creators/portal',
-  '/creators/login',
-  '/creators/apply',
-  '/creators/pending',
   '/admin',
 ]
 

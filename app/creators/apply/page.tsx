@@ -56,7 +56,7 @@ export default function CreatorApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-cultr-offwhite flex items-center justify-center px-6">
+      <div className="min-h-[80vh] bg-cultr-offwhite flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
@@ -82,7 +82,7 @@ export default function CreatorApplyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite py-20 px-6">
+    <div className="bg-cultr-offwhite py-16 px-6">
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-cultr-mint px-4 py-2 rounded-full mb-4">

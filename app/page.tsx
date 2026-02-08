@@ -46,10 +46,10 @@ export default function HomePage() {
       <section className="relative py-32 md:py-44 px-6 bg-cultr-forest overflow-hidden">
         {/* Mobile background image */}
         <Image
-          src="/images/hero-man-athletic.png"
+          src="/images/hero-women-lifestyle.png"
           alt=""
           fill
-          className="object-cover object-top opacity-20 lg:hidden"
+          className="object-cover object-center opacity-20 lg:hidden"
           priority
         />
         <div className="max-w-7xl mx-auto relative z-10">
@@ -83,10 +83,10 @@ export default function HomePage() {
 
             <div className="hidden lg:block relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
-                src="/images/hero-man-athletic.png"
-                alt="Athletic man smiling confidently"
+                src="/images/hero-women-lifestyle.png"
+                alt="Women enjoying an active lifestyle outdoors"
                 fill
-                className="object-cover object-top"
+                className="object-cover object-center"
                 priority
                 sizes="(max-width: 1200px) 50vw, 600px"
               />
@@ -180,10 +180,10 @@ export default function HomePage() {
             <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1 lg:mt-6">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/hero-man-athletic.png"
-                  alt="Athletic man smiling confidently"
+                  src="/images/hero-women-lifestyle.png"
+                  alt="Women enjoying an active lifestyle outdoors"
                   fill
-                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />

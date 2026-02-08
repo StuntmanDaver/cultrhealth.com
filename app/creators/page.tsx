@@ -218,7 +218,7 @@ export default function CreatorsPage() {
               Apply to the CULTR Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.
             </p>
             <Link href="/creators/apply">
-              <Button variant="secondary" size="lg">
+              <Button variant="secondary" size="lg" className="text-white border-white/50 hover:bg-white/10 hover:border-white/70">
                 Apply Now <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>

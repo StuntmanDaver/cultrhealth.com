@@ -16,7 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function CreatorLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-cultr-forest flex items-center justify-center">
+      <div className="min-h-[80vh] bg-cultr-forest flex items-center justify-center">
         <div className="animate-pulse h-6 w-32 bg-white/20 rounded" />
       </div>
     }>
@@ -68,13 +68,8 @@ function CreatorLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-cultr-forest flex items-center justify-center px-6">
+    <div className="min-h-[80vh] bg-cultr-forest flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <Link href="/" className="text-2xl font-display font-bold text-white">
-            CULTR <span className="text-sm font-body font-normal text-white/50">Creator</span>
-          </Link>
-        </div>
 
         <div className="bg-white rounded-2xl p-8 shadow-xl">
           <h1 className="text-2xl font-display font-bold text-cultr-forest mb-2">Creator Login</h1>

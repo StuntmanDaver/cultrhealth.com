@@ -62,7 +62,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
       <Link href={`/join/${plan.slug}`} className="w-full">
         <Button
           variant={plan.isFeatured ? 'secondary' : 'primary'}
-          className="w-full"
+          className={`w-full ${plan.isFeatured ? 'text-white border-white/50 hover:bg-white/10 hover:border-white/70' : ''}`}
         >
           {plan.ctaLabel}
         </Button>

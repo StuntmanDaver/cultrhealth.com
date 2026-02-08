@@ -3,7 +3,7 @@ import { Clock, Mail } from 'lucide-react'
 
 export default function CreatorPendingPage() {
   return (
-    <div className="min-h-screen bg-cultr-offwhite flex items-center justify-center px-6">
+    <div className="min-h-[80vh] bg-cultr-offwhite flex items-center justify-center px-6">
       <div className="max-w-md w-full text-center">
         <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <Clock className="w-8 h-8 text-amber-600" />
