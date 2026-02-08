@@ -53,9 +53,10 @@ function CreatorLoginForm() {
       if (res.ok) {
         setStatus('success')
         setMessage(data.message)
-        // Dev mode: auto-redirect if URL is returned
+        // Staging/dev mode: auto-redirect if URL is returned
         if (data.redirectUrl) {
-          setRedirectUrl(data.redirectUrl)
+          window.location.href = data.redirectUrl
+          return
         }
       } else {
         setStatus('error')

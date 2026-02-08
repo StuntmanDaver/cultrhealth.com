@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
 
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+  return allowedEmails.includes(email.toLowerCase())
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -29,6 +37,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const isStagingAccess = isStagingBypassEmail(normalizedEmail)
+
     // Look up creator by email — they must exist and be active
     let creatorExists = false
     try {
@@ -38,7 +48,15 @@ export async function POST(request: NextRequest) {
         creatorExists = true
       }
     } catch {
-      // DB lookup failed — proceed without revealing
+      // DB lookup failed — allow staging bypass emails through
+      if (isStagingAccess) {
+        creatorExists = true
+      }
+    }
+
+    // Staging bypass emails are always allowed through
+    if (!creatorExists && isStagingAccess) {
+      creatorExists = true
     }
 
     // Always return same message to prevent email enumeration
@@ -60,14 +78,23 @@ export async function POST(request: NextRequest) {
 
     const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
+    // Staging access: return link directly (no email needed)
+    if (isStagingAccess) {
+      console.log('Staging creator access granted:', { email: normalizedEmail, timestamp: new Date().toISOString() })
+      return NextResponse.json({
+        success: true,
+        message: 'Staging access granted. Redirecting...',
+        redirectUrl: magicLink,
+      })
+    }
+
     // In development, log the link
     if (process.env.NODE_ENV === 'development') {
       console.log('Creator magic link:', magicLink)
       return NextResponse.json({
         success: true,
         message: 'If you have an active creator account, you will receive an email shortly.',
-        // Dev only: return link for easy testing
-        ...(process.env.NODE_ENV === 'development' && { redirectUrl: magicLink }),
+        redirectUrl: magicLink,
       })
     }
 

@@ -330,7 +330,14 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
       return { authenticated: true, email: auth.email, creatorId: creator.id }
     }
   } catch {
-    // DB lookup failed
+    // DB lookup failed — check staging bypass
+    const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+    if (stagingEmails) {
+      const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+      if (allowedEmails.includes(auth.email.toLowerCase())) {
+        return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
+      }
+    }
   }
 
   return { authenticated: false, email: auth.email, creatorId: null }

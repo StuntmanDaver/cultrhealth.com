@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicLinkToken, createSessionToken, setSessionCookie } from '@/lib/auth'
 
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+  return allowedEmails.includes(email.toLowerCase())
+}
+
 export async function GET(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -22,6 +30,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { email } = verified
+    const isStagingAccess = isStagingBypassEmail(email)
 
     // Look up creator
     let creatorId: string | undefined
@@ -37,13 +46,19 @@ export async function GET(request: NextRequest) {
       // DB lookup failed
     }
 
+    // Staging bypass: grant access even without DB record
+    if (!creatorId && isStagingAccess) {
+      creatorId = 'staging_creator'
+      creatorStatus = 'active'
+      console.log('Staging creator access granted:', { email, timestamp: new Date().toISOString() })
+    }
+
     if (!creatorId) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
     }
 
     // Pending creators go to pending page
     if (creatorStatus === 'pending') {
-      // Still create session so they can check status
       const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
       await setSessionCookie(sessionToken)
       return NextResponse.redirect(`${baseUrl}/creators/pending`)
