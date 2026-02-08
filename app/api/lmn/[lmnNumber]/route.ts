@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getLmnByNumber, regenerateLmnPdf } from '@/lib/lmn'
 import { verifyAuth } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 interface RouteParams {
   params: Promise<{ lmnNumber: string }>
 }

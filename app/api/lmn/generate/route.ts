@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { generateAndStoreLmn, hasLmnEligibleItems, type LmnItem } from '@/lib/lmn'
 
+export const dynamic = 'force-dynamic'
+
 /**
  * POST /api/lmn/generate
  * Generate LMN for an order (internal use)
