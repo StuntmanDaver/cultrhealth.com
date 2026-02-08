@@ -57,7 +57,7 @@ export default function HomePage() {
             <div className="text-white">
               <ScrollReveal direction="none" duration={800}>
                 <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-[1.1]">
-                  Change the CULTR,<br /><span className="italic">rebrand yourself</span>.
+                  Change the CULTR,<br /><span className="italic">rebrand</span> yourself.
                 </h1>
               </ScrollReveal>
 
