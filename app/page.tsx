@@ -65,7 +65,7 @@ export default function WaitlistPage() {
                 className="w-auto h-14"
               />
             </div>
-            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 -mt-2">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 mt-1">
               Health
             </div>
           </div>
@@ -96,7 +96,7 @@ export default function WaitlistPage() {
                 className="w-auto h-14"
               />
             </div>
-            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 -mt-2">
+            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 mt-1">
               Health
             </div>
           </div>
