@@ -46,7 +46,7 @@ export default function HomePage() {
       <section className="relative py-32 md:py-44 px-6 bg-cultr-forest overflow-hidden">
         {/* Mobile background image */}
         <Image
-          src="/images/hero-women-lifestyle.png"
+          src="/images/hero-woman-running.jpg"
           alt=""
           fill
           className="object-cover object-center opacity-20 lg:hidden"
@@ -83,7 +83,7 @@ export default function HomePage() {
 
             <div className="hidden lg:block relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
               <Image
-                src="/images/hero-women-lifestyle.png"
+                src="/images/hero-woman-running.jpg"
                 alt="Women enjoying an active lifestyle outdoors"
                 fill
                 className="object-cover object-center"
