@@ -48,20 +48,11 @@ export const metadata: Metadata = {
     siteName: 'CULTR Health',
     type: 'website',
     locale: 'en_US',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'CULTR Health',
-      },
-    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Change the CULTR, rebrand yourself.',
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
-    images: ['/og-image.png'],
   },
   robots: {
     index: true,
