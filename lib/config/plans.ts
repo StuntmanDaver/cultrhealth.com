@@ -1,9 +1,9 @@
 // Payment Configuration
-// Last Updated: 2026-01-29
-// Note: Healthie Offering IDs are used for HIPAA-compliant payments
-// Stripe IDs are retained for backwards compatibility
+// Last Updated: 2026-02-07
+// Stripe IDs are used for subscription payments
+// Asher Med handles order fulfillment (see lib/asher-med-api.ts)
 
-export type PlanTier = 'core' | 'creator' | 'catalyst' | 'concierge' | 'club';
+export type PlanTier = 'core' | 'catalyst' | 'concierge' | 'club';
 
 export type LibraryAccess = {
   masterIndex: 'full' | 'titles_only';
@@ -23,11 +23,7 @@ export type Plan = {
   bestFor: string;
   features: string[];
   libraryAccess: LibraryAccess;
-  /** Healthie Offering ID for HIPAA-compliant payments (primary) */
-  healthieOfferingId: string;
-  /** @deprecated Use healthieOfferingId instead - retained for backwards compatibility */
   stripeProductId: string;
-  /** @deprecated Use healthieOfferingId instead - retained for backwards compatibility */
   stripePriceId: string;
   paymentLink: string;
   isFeatured: boolean;
@@ -62,10 +58,10 @@ export const PLANS: Plan[] = [
   {
     slug: 'club',
     name: 'CULTR Club',
-    price: 499,
+    price: 0,
     interval: 'month',
-    tagline: 'Community access',
-    bestFor: 'Education & self-guided',
+    tagline: 'Free community access',
+    bestFor: 'Education & discovery',
     features: [
       'Full protocol & peptide library',
       'Peptide calculator access',
@@ -81,18 +77,17 @@ export const PLANS: Plan[] = [
       providerNotes: true,
       customRequests: true,
     },
-    healthieOfferingId: process.env.HEALTHIE_OFFERING_CLUB || '',
     stripeProductId: 'prod_TrIU16tOaJsSVw',
     stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy',
-    paymentLink: 'https://buy.stripe.com/8x2bJ0fLd8yxcUSeha6J20c',
+    paymentLink: '',
     isFeatured: false,
-    ctaLabel: 'Join Club',
-    bnplEnabled: true,
+    ctaLabel: 'Join Free',
+    bnplEnabled: false,
   },
   {
     slug: 'core',
     name: 'CULTR Core',
-    price: 699,
+    price: 199,
     interval: 'month',
     tagline: 'Single therapy',
     bestFor: 'GLP-1 or TRT focused',
@@ -111,7 +106,6 @@ export const PLANS: Plan[] = [
       providerNotes: false,
       customRequests: false,
     },
-    healthieOfferingId: process.env.HEALTHIE_OFFERING_CORE || '',
     stripeProductId: 'prod_TrIUWZzUIZYfIP',
     stripePriceId: 'price_1StZtWC1JUIZB7aRFsP1WVxI',
     paymentLink: 'https://buy.stripe.com/fZu9AS56zeWVbQOc926J208',
@@ -122,7 +116,7 @@ export const PLANS: Plan[] = [
   {
     slug: 'catalyst',
     name: 'CULTR Catalyst+',
-    price: 799,
+    price: 499,
     interval: 'month',
     tagline: 'Multi-therapy',
     bestFor: 'Peptide stacking & optimization',
@@ -141,57 +135,26 @@ export const PLANS: Plan[] = [
       providerNotes: false,
       customRequests: false,
     },
-    healthieOfferingId: process.env.HEALTHIE_OFFERING_CATALYST || '',
     stripeProductId: 'prod_TrIUf4gB4l9G70',
     stripePriceId: 'price_1StZtYC1JUIZB7aR2nEziKX8',
     paymentLink: 'https://buy.stripe.com/14A6oGfLd1658ECgpi6J20a',
-    isFeatured: false,
-    ctaLabel: 'Join Catalyst+',
-    bnplEnabled: true,
-  },
-  {
-    slug: 'creator',
-    name: 'CULTR Creator',
-    price: 899,
-    interval: 'month',
-    tagline: 'Most popular',
-    bestFor: 'Full longevity protocol',
-    features: [
-      'Monthly telehealth consults',
-      'GLP-1s, TRT & peptides',
-      'Protocol library & shop access',
-      'Injection coaching videos',
-      'Quarterly lab panels'
-    ],
-    libraryAccess: {
-      masterIndex: 'full',
-      advancedProtocols: true,
-      dosingCalculators: false,
-      stackingGuides: false,
-      providerNotes: false,
-      customRequests: false,
-    },
-    healthieOfferingId: process.env.HEALTHIE_OFFERING_CREATOR || '',
-    stripeProductId: 'prod_TrIUzJ9ZKiHIS6',
-    stripePriceId: 'price_1StZtXC1JUIZB7aRGKjc2lbg',
-    paymentLink: 'https://buy.stripe.com/eVq00icz16qpf30eha6J209',
     isFeatured: true,
-    ctaLabel: 'Join Creator',
+    ctaLabel: 'Join Catalyst+',
     bnplEnabled: true,
   },
   {
     slug: 'concierge',
     name: 'CULTR Concierge',
-    price: 1199,
+    price: 1099,
     interval: 'month',
     tagline: 'White-glove',
     bestFor: 'Regenerative & executive care',
     features: [
-      'Weekly physician consults',
+      'Dedicated health coach & AI counselor',
+      'Monthly provider consultation (minimum)',
       'Stem cell, exosome & IV access',
       'All tools: calculator, guides, library',
-      'Same-day response & VIP shop',
-      'Early CULTR app access'
+      'Same-day response & VIP shop'
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -201,7 +164,6 @@ export const PLANS: Plan[] = [
       providerNotes: true,
       customRequests: false,
     },
-    healthieOfferingId: process.env.HEALTHIE_OFFERING_CONCIERGE || '',
     stripeProductId: 'prod_TrIUHNyu0DIyUV',
     stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK',
     paymentLink: 'https://buy.stripe.com/9B6dR8aqTaGF1ca8WQ6J20b',

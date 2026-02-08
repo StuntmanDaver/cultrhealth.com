@@ -2,7 +2,7 @@
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { useState, useRef, useEffect } from 'react';
-import { CheckCircle2, AlertCircle, Loader2, FileText } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Loader2, FileText, Info } from 'lucide-react';
 
 export function ConsentForms() {
   const { formData, updateFormData } = useIntakeForm();
@@ -157,6 +157,11 @@ export function ConsentForms() {
 
   return (
     <div className="space-y-8">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Standard telehealth consent. You can withdraw anytime.</p>
+      </div>
+
       {/* Telehealth Consent */}
       <div className="border border-stone-200 rounded-xl overflow-hidden">
         <button

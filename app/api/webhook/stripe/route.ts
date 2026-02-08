@@ -104,6 +104,12 @@ export async function POST(request: NextRequest) {
         await handlePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(charge);
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
@@ -319,6 +325,64 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
       console.error('Failed to create order:', dbError);
       // Throwing so Stripe retries
       throw dbError;
+    }
+  }
+
+  // Process creator attribution and commission
+  if (process.env.POSTGRES_URL && customerEmail && orderId) {
+    try {
+      const { resolveAttribution, parseAttributionCookie } = await import('@/lib/creators/attribution');
+      const { processOrderAttribution } = await import('@/lib/creators/commission');
+
+      // Check for attribution: client_reference_id from checkout, or coupon code
+      let attributionCookieValue: string | undefined;
+      const clientRefId = session.client_reference_id;
+      if (clientRefId?.startsWith('attr_')) {
+        attributionCookieValue = clientRefId.slice(5);
+      }
+
+      // Check for coupon code from Stripe discount
+      let couponCode: string | undefined;
+      if (session.total_details?.breakdown?.discounts) {
+        for (const discount of session.total_details.breakdown.discounts) {
+          const discountObj = discount.discount as unknown as Record<string, unknown>;
+          const coupon = discountObj?.coupon as Record<string, unknown> | undefined;
+          if (coupon?.name && typeof coupon.name === 'string') {
+            couponCode = coupon.name;
+          }
+        }
+      }
+
+      const attribution = await resolveAttribution({
+        customerEmail,
+        attributionCookie: attributionCookieValue,
+        couponCode,
+      });
+
+      if (attribution) {
+        // Calculate net revenue (amount after discounts, before tax/shipping)
+        const netRevenue = totalAmount;
+
+        const result = await processOrderAttribution({
+          orderId: orderNumber,
+          netRevenue,
+          customerEmail,
+          attribution,
+        });
+
+        if (result) {
+          console.log('Attribution processed:', {
+            orderNumber,
+            creatorId: result.creatorId,
+            directCommission: result.directCommission,
+            overrideCommission: result.overrideCommission,
+            isSelfReferral: result.isSelfReferral,
+          });
+        }
+      }
+    } catch (attrError) {
+      console.error('Failed to process attribution:', attrError);
+      // Don't fail the webhook - order was still created
     }
   }
 
@@ -574,5 +638,46 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     }
   } catch (error) {
     console.error('Failed to handle payment failure for invoice:', error);
+  }
+}
+
+/**
+ * Handle charge refund - reverse creator commissions
+ */
+async function handleChargeRefunded(charge: Stripe.Charge) {
+  console.log('Charge refunded:', {
+    charge_id: charge.id,
+    amount_refunded: charge.amount_refunded,
+    payment_intent: charge.payment_intent,
+  });
+
+  if (!process.env.POSTGRES_URL) return;
+
+  try {
+    const { handleRefundReversal } = await import('@/lib/creators/commission');
+
+    // Try to find the order by payment intent
+    const paymentIntentId = typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id;
+
+    if (paymentIntentId) {
+      // Look up order by payment intent to get the order number
+      const { getOrderByOrderNumber } = await import('@/lib/db');
+      // We need to find the order - the order_id in attributions is the order_number
+      // We'll need to search by payment intent
+      const { sql } = await import('@vercel/postgres');
+      const result = await sql`
+        SELECT order_number FROM orders WHERE stripe_payment_intent_id = ${paymentIntentId} LIMIT 1
+      `;
+
+      if (result.rows[0]) {
+        const reversedCount = await handleRefundReversal(result.rows[0].order_number);
+        console.log(`Reversed ${reversedCount} commissions for refunded charge ${charge.id}`);
+      }
+    }
+  } catch (error) {
+    console.error('Failed to reverse commissions on refund:', error);
+    // Don't fail the webhook
   }
 }

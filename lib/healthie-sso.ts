@@ -1,5 +1,5 @@
-// Healthie SSO (Single Sign-On) Integration
-// Generates secure SSO tokens for automatic authentication into Healthie patient portal
+// @deprecated — Healthie SSO is deprecated. The members area now uses Asher Med for order tracking.
+// SSO route has been removed. Kept for historical reference only.
 // Reference: https://docs.gethealthie.com/docs/single-sign-on-sso
 
 import { SignJWT } from 'jose'

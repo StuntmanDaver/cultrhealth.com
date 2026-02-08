@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-32 md:py-44 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
@@ -93,8 +93,8 @@ export default function HowItWorksPage() {
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/pricing">
-                <Button size="lg">Get Started</Button>
+              <Link href="/quiz">
+                <Button size="lg">Take the Quiz</Button>
               </Link>
               <Link href="/products">
                 <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
@@ -131,7 +131,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Safety & Compliance - MOVED ABOVE Four Steps */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-32 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="p-8 md:p-12 rounded-2xl bg-cultr-mint border border-cultr-sage">
@@ -167,9 +167,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Steps - Detailed (Four Steps to Transformation) */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
+      <section className="py-32 px-6 bg-cultr-offwhite">
         <div className="max-w-5xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
+          <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Four steps to <span className="italic">transformation</span>
             </h2>
@@ -231,9 +231,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-32 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
+          <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               What&apos;s included in your <span className="italic">membership</span>
             </h2>
@@ -290,9 +290,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* FAQ Sections - MOVED FROM /faq page */}
-      <section id="faq" className="py-24 px-6 bg-cultr-offwhite scroll-mt-20">
+      <section id="faq" className="py-32 px-6 bg-cultr-offwhite scroll-mt-20">
         <div className="max-w-3xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
+          <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Frequently asked <span className="italic">questions</span>
             </h2>
@@ -350,7 +350,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'How do telehealth visits work?',
-                    answer: 'Visits are conducted via secure, HIPAA-compliant video calls within our Healthie portal. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
+                    answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
                   },
                   {
                     question: 'What states do you operate in?',
@@ -441,9 +441,10 @@ export default function HowItWorksPage() {
 
       {/* CTA */}
       <CTASection
-        title="Ready to start your journey?"
-        subtitle="Join thousands optimizing their health with CULTR's personalized protocols."
-        ctaText="Choose Your Plan"
+        title="Stop guessing. Start optimizing."
+        subtitle="Take the 2-minute quiz to find your protocol."
+        ctaText="Take the Quiz"
+        ctaLink="/quiz"
       />
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { useEffect, useState } from 'react';
+import { Info } from 'lucide-react';
 
 export function PhysicalMeasurementsForm() {
   const { formData, updateFormData } = useIntakeForm();
@@ -29,6 +30,11 @@ export function PhysicalMeasurementsForm() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">BMI helps your provider determine safe dosing. No judgment — just data.</p>
+      </div>
+
       {/* Height */}
       <div>
         <label className="block text-sm font-medium text-forest mb-1">

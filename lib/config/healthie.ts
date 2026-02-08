@@ -1,5 +1,6 @@
-// Healthie EHR Platform Configuration
-// Comprehensive integration settings for CULTR Health Longevity Clinic
+// @deprecated — Healthie EHR integration is deprecated. Use Asher Med instead.
+// See lib/config/asher-med.ts for the active configuration.
+// Kept because other files may still import constants (e.g., webhook handler).
 // Reference: https://help.gethealthie.com/article/943-healthies-api
 
 export type HealthieEnvironment = 'production' | 'sandbox';
@@ -42,7 +43,7 @@ export interface HealthieFeature {
   apiEndpoint?: string; // GraphQL query/mutation
   sdkAvailable: boolean;
   requiresAuth: boolean;
-  memberTiers: ('core' | 'creator' | 'catalyst' | 'concierge' | 'club')[];
+  memberTiers: ('core' | 'catalyst' | 'concierge' | 'club')[];
 }
 
 export type HealthieCategory = 
@@ -66,7 +67,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'scheduling',
     sdkAvailable: true, // Booking & Buying SDK
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'upcoming-appointments',
@@ -76,7 +77,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'scheduling',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'appointment-history',
@@ -86,7 +87,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'scheduling',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'telehealth',
@@ -96,7 +97,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'scheduling',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -110,7 +111,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'communication',
     sdkAvailable: true, // Chat SDK
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'message-history',
@@ -120,7 +121,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'communication',
     sdkAvailable: true,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'care-team',
@@ -130,7 +131,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'communication',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -144,7 +145,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'health-metrics',
@@ -154,7 +155,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['catalyst', 'concierge', 'club'],
   },
   {
     id: 'care-plans',
@@ -164,7 +165,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'medical-history',
@@ -174,7 +175,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'medications',
@@ -184,7 +185,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'allergies',
@@ -194,7 +195,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'records',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -208,7 +209,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: true, // Forms SDK
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'consent-forms',
@@ -218,7 +219,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: true,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'assessments',
@@ -228,7 +229,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: true,
     requiresAuth: true,
-    memberTiers: ['creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -242,7 +243,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'upload-documents',
@@ -252,7 +253,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'protocol-documents',
@@ -262,7 +263,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'documents',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -276,7 +277,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'programs',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['catalyst', 'concierge', 'club'],
   },
   {
     id: 'courses',
@@ -286,7 +287,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'programs',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['catalyst', 'concierge', 'club'],
   },
   {
     id: 'progress-tracking',
@@ -310,7 +311,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'billing',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'payment-methods',
@@ -320,7 +321,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'billing',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'insurance',
@@ -330,7 +331,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'billing',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'packages',
@@ -340,7 +341,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'billing',
     sdkAvailable: true, // Booking & Buying SDK
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 
   // ============================================================
@@ -354,7 +355,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'settings',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'notifications',
@@ -364,7 +365,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'settings',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'emergency-contacts',
@@ -374,7 +375,7 @@ export const HEALTHIE_FEATURES: HealthieFeature[] = [
     category: 'settings',
     sdkAvailable: false,
     requiresAuth: true,
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 ];
 
@@ -555,7 +556,7 @@ export interface QuickAction {
   href?: string;
   action?: 'book' | 'message' | 'forms' | 'labs' | 'portal';
   variant: 'primary' | 'secondary' | 'outline';
-  memberTiers: ('core' | 'creator' | 'catalyst' | 'concierge' | 'club')[];
+  memberTiers: ('core' | 'catalyst' | 'concierge' | 'club')[];
 }
 
 export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
@@ -566,7 +567,7 @@ export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
     icon: 'Calendar',
     action: 'book',
     variant: 'primary',
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'message-provider',
@@ -575,7 +576,7 @@ export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
     icon: 'MessageSquare',
     action: 'message',
     variant: 'secondary',
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'view-labs',
@@ -584,7 +585,7 @@ export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
     icon: 'TestTube2',
     action: 'labs',
     variant: 'outline',
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'complete-forms',
@@ -593,7 +594,7 @@ export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
     icon: 'ClipboardCheck',
     action: 'forms',
     variant: 'outline',
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
   {
     id: 'patient-portal',
@@ -602,6 +603,6 @@ export const DASHBOARD_QUICK_ACTIONS: QuickAction[] = [
     icon: 'ExternalLink',
     action: 'portal',
     variant: 'outline',
-    memberTiers: ['core', 'creator', 'catalyst', 'concierge', 'club'],
+    memberTiers: ['core', 'catalyst', 'concierge', 'club'],
   },
 ];

@@ -94,7 +94,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'How do telehealth visits work?',
-                  answer: 'Visits are conducted via secure, HIPAA-compliant video calls within our Healthie portal. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
+                  answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
                 },
                 {
                   question: 'What states do you operate in?',

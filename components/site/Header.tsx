@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
 const navLinks = [
+  { href: '/quiz', label: 'Take the Quiz' },
   { href: '/products', label: 'Products', hasDropdown: true },
   { href: '/how-it-works', label: 'How It Works' },
   { href: '/science', label: 'Science' },
@@ -62,8 +63,8 @@ export function Header() {
                 {link.hasDropdown && <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />}
               </Link>
             ))}
-            <Link href="/pricing">
-              <Button size="sm">Shop now</Button>
+            <Link href="/quiz">
+              <Button size="sm">Get Started</Button>
             </Link>
           </nav>
 
@@ -122,8 +123,8 @@ export function Header() {
             </Link>
           ))}
           <div className="mt-8">
-            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full">Shop now</Button>
+            <Link href="/quiz" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full">Get Started</Button>
             </Link>
           </div>
         </nav>

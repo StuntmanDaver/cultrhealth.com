@@ -18,16 +18,6 @@ describe('Library Access', () => {
       expect(access.customRequests).toBe(false)
     })
 
-    it('returns full access for Creator tier', () => {
-      const access = getLibraryAccess('creator')
-      expect(access.masterIndex).toBe('full')
-      expect(access.advancedProtocols).toBe(true)
-      expect(access.dosingCalculators).toBe(false)
-      expect(access.stackingGuides).toBe(false)
-      expect(access.providerNotes).toBe(false)
-      expect(access.customRequests).toBe(false)
-    })
-
     it('returns dosing calculators and stacking guides for Catalyst+ tier', () => {
       const access = getLibraryAccess('catalyst')
       expect(access.masterIndex).toBe('full')
@@ -93,20 +83,16 @@ describe('Library Access', () => {
       expect(hasFeatureAccess('core', 'masterIndex')).toBe(false)
     })
 
-    it('returns true for masterIndex on Creator (full)', () => {
-      expect(hasFeatureAccess('creator', 'masterIndex')).toBe(true)
+    it('returns true for masterIndex on Catalyst+ (full)', () => {
+      expect(hasFeatureAccess('catalyst', 'masterIndex')).toBe(true)
     })
 
     it('returns false for advancedProtocols on Core', () => {
       expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(false)
     })
 
-    it('returns true for advancedProtocols on Creator', () => {
-      expect(hasFeatureAccess('creator', 'advancedProtocols')).toBe(true)
-    })
-
-    it('returns false for dosingCalculators on Creator', () => {
-      expect(hasFeatureAccess('creator', 'dosingCalculators')).toBe(false)
+    it('returns true for advancedProtocols on Catalyst+', () => {
+      expect(hasFeatureAccess('catalyst', 'advancedProtocols')).toBe(true)
     })
 
     it('returns true for dosingCalculators on Catalyst+', () => {

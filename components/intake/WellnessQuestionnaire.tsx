@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
+import { Info } from 'lucide-react';
 
 const QUESTIONNAIRE_ITEMS = [
   {
@@ -91,6 +92,11 @@ export function WellnessQuestionnaire() {
 
   return (
     <div className="space-y-8">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">These questions are clinically required. They help screen for contraindications.</p>
+      </div>
+
       {QUESTIONNAIRE_ITEMS.map((item) => (
         <div key={item.id}>
           <label className="block text-base font-medium text-forest mb-3">

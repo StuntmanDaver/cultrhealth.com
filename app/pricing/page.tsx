@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import { PricingCard } from '@/components/site/PricingCard';
+import { ClubBanner } from '@/components/site/ClubBanner';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
@@ -15,18 +16,21 @@ import {
   MessageCircle,
   FlaskConical,
   Dna,
+  Users,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Pricing — CULTR Health',
-  description: 'Choose your CULTR Health membership. Plans from $99-$499/month with comprehensive labs, provider access, and peptide protocols.',
+  description: 'Choose your CULTR Health membership. Plans from $199-$1,099/month with comprehensive labs, provider access, and peptide protocols.',
 };
 
 export default function PricingPage() {
+  const paidPlans = PLANS.filter((p) => p.slug !== 'club');
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-32 md:py-44 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -82,19 +86,28 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section id="plans" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="plans" className="py-32 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Choose your <span className="italic">membership</span>
             </h2>
-            <p className="text-cultr-textMuted max-w-2xl mx-auto">
+            <p className="text-cultr-textMuted max-w-2xl mx-auto mb-4">
               All plans include access to our platform, provider consultations, and core features. Upgrade or downgrade anytime.
             </p>
+            <Link href="/quiz" className="text-sm text-cultr-forest font-medium hover:underline">
+              Not sure which plan? Take the quiz →
+            </Link>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {PLANS.map((plan, i) => (
+          {/* CULTR Club — Free Banner */}
+          <ScrollReveal className="mb-10">
+            <ClubBanner />
+          </ScrollReveal>
+
+          {/* Paid Plans — 3-column grid */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {paidPlans.map((plan, i) => (
               <ScrollReveal key={plan.slug} delay={i * 100} direction="up">
                 <PricingCard plan={plan} />
               </ScrollReveal>
@@ -103,9 +116,35 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* CULTR Creator CTA */}
+      <section className="py-20 px-6 bg-cultr-forest">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <Users className="w-8 h-8 text-cultr-sage" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  CULTR Creator
+                </h3>
+                <p className="text-white/70 max-w-lg">
+                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                </p>
+              </div>
+              <Link href="/creators" className="shrink-0">
+                <Button variant="secondary" size="lg">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Comparison Table */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-32 px-6 bg-cultr-offwhite">
+        <div className="max-w-4xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Compare <span className="italic">memberships</span>
@@ -122,24 +161,23 @@ export default function PricingPage() {
                   <tr className="border-b border-cultr-sage">
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text">Feature</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm bg-cultr-mint rounded-t-xl">Creator</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Catalyst+</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm bg-cultr-mint rounded-t-xl">Catalyst+</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Club</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {[
-                    { feature: 'Monthly Price', values: ['$699', '$899', '$799', '$1,199', '$499'] },
-                    { feature: 'Telehealth Consults', values: ['Monthly', 'Monthly', 'Bi-weekly', 'Weekly', 'Self-guided'] },
-                    { feature: 'Provider Messaging', values: ['Secure', 'Priority', 'Priority', 'Same-day', '—'] },
-                    { feature: 'Therapies', values: ['GLP-1 or TRT', 'GLP-1, TRT, Peptides', 'Multi-peptide stacking', 'Stem cell, Exosome, IV', 'Education only'] },
-                    { feature: 'Protocol Library', values: [false, true, true, true, true] },
-                    { feature: 'Peptide Calculator', values: [false, false, true, true, true] },
-                    { feature: 'Cycle Guides', values: [false, false, true, true, true] },
-                    { feature: 'Injection Coaching Videos', values: [true, true, true, true, true] },
-                    { feature: 'Member Shop Access', values: [false, true, true, 'VIP', true] },
-                    { feature: 'Early App Access', values: [false, false, false, true, false] },
+                    { feature: 'Monthly Price', values: ['$199', '$499', '$1,099'] },
+                    { feature: 'Telehealth Consults', values: ['Monthly', 'Bi-weekly', 'Monthly (minimum)'] },
+                    { feature: 'Provider Messaging', values: ['Secure', 'Priority', 'Same-day'] },
+                    { feature: 'Therapies', values: ['GLP-1 or TRT', 'GLP-1/2/3 + peptide stacking', 'Stem cell, Exosome, IV'] },
+                    { feature: 'Dedicated Health Coach', values: [false, false, true] },
+                    { feature: 'AI Counselor', values: [false, false, true] },
+                    { feature: 'Protocol Library', values: [false, true, true] },
+                    { feature: 'Peptide Calculator', values: [false, true, true] },
+                    { feature: 'Cycle Guides', values: [false, true, true] },
+                    { feature: 'Injection Coaching Videos', values: [true, true, true] },
+                    { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">
                       <td className="py-4 px-4 text-cultr-text">{row.feature}</td>
@@ -166,7 +204,7 @@ export default function PricingPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-32 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -218,7 +256,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
+      <section className="py-32 px-6 bg-cultr-offwhite">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -293,9 +331,10 @@ export default function PricingPage() {
 
       {/* CTA */}
       <CTASection
-        title="Ready to invest in yourself?"
-        subtitle="Join thousands optimizing their health with CULTR."
-        ctaText="Choose Your Plan"
+        title="Stop guessing. Start optimizing."
+        subtitle="Take the 2-minute quiz to find your plan."
+        ctaText="Take the Quiz"
+        ctaLink="/quiz"
       />
     </div>
   );

@@ -40,9 +40,9 @@ describe('Plans Configuration', () => {
       }
     })
 
-    it('Creator is marked as featured', () => {
-      const creator = PLANS.find((p) => p.slug === 'creator')
-      expect(creator?.isFeatured).toBe(true)
+    it('Catalyst+ is marked as featured', () => {
+      const catalyst = PLANS.find((p) => p.slug === 'catalyst')
+      expect(catalyst?.isFeatured).toBe(true)
     })
   })
 

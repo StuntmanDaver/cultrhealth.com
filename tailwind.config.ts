@@ -17,6 +17,19 @@ const config: Config = {
           cream: '#FDFBF7',
           creamDark: '#F5F0E8',
         },
+        // Primary brand color shortcuts (for easier use)
+        forest: {
+          DEFAULT: '#2A4542',
+          light: '#3A5956',
+          dark: '#1F3533',
+          muted: '#6B7280',
+        },
+        cream: {
+          DEFAULT: '#FDFBF7',
+          dark: '#F5F0E8',
+        },
+        sage: '#B7E4C7',
+        mint: '#D8F3DC',
         // Aura gradient colors (decorative)
         aura: {
           purple: '#9333EA',

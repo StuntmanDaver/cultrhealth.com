@@ -223,29 +223,29 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         <section className="py-16 px-6 bg-white">
           <div className="max-w-2xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6 mb-12">
-              <a href={LINKS.healthiePortal} target="_blank" rel="noopener noreferrer" className="block group">
+              <Link href="/intake" className="block group">
                 <div className="h-full p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl bg-cultr-forest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileText className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 1</span>
-                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Create Portal Account</h3>
-                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">Set up your secure access and complete your intake forms.</p>
-                  <Button className="w-full">Create Account <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Complete Intake</h3>
+                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">Fill out your health information and complete your intake forms.</p>
+                  <Button className="w-full">Start Intake <ArrowRight className="w-4 h-4 ml-2" /></Button>
                 </div>
-              </a>
+              </Link>
 
-              <a href={LINKS.healthiePortal} target="_blank" rel="noopener noreferrer" className="block group">
+              <Link href="/dashboard" className="block group">
                 <div className="h-full p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl bg-cultr-forest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Calendar className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 2</span>
-                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Book Your Consult</h3>
-                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">Schedule your first telehealth visit with a licensed provider.</p>
-                  <Button variant="secondary" className="w-full">Book Now <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Track Your Order</h3>
+                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">View your order status and track your protocol in your dashboard.</p>
+                  <Button variant="secondary" className="w-full">Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" /></Button>
                 </div>
-              </a>
+              </Link>
             </div>
 
             {/* Timeline */}
@@ -269,7 +269,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
                     active: false,
                   },
                   {
-                    title: 'Start Your Journey',
+                    title: 'Start Optimizing',
                     desc: 'Begin your optimized health protocol.',
                     active: false,
                   },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
+import { Info } from 'lucide-react';
 
 export function TreatmentPreferencesForm() {
   const { formData, updateFormData } = useIntakeForm();
@@ -16,9 +17,14 @@ export function TreatmentPreferencesForm() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Tell us how you want to be reached. We respect your preferences.</p>
+      </div>
+
       {/* Preferred Contact Method */}
       <div>
-        <label className="block text-sm font-medium text-stone-900 mb-3">
+        <label className="block text-sm font-medium text-forest mb-3">
           How would you prefer to be contacted? <span className="text-red-500">*</span>
         </label>
         <div className="space-y-2">
@@ -32,8 +38,8 @@ export function TreatmentPreferencesForm() {
               className={`
                 flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all
                 ${formData.treatmentPreferences?.preferredContactMethod === option.value
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-stone-200 hover:border-stone-300'
+                  ? 'border-forest bg-mint'
+                  : 'border-forest-light/20 hover:border-forest-light/30'
                 }
               `}
             >
@@ -43,9 +49,9 @@ export function TreatmentPreferencesForm() {
                 value={option.value}
                 checked={formData.treatmentPreferences?.preferredContactMethod === option.value}
                 onChange={() => updatePreferences('preferredContactMethod', option.value)}
-                className="w-4 h-4 text-emerald-600 border-stone-300 focus:ring-emerald-500"
+                className="w-4 h-4 text-forest border-forest-light/30 focus:ring-mint"
               />
-              <span className="text-sm text-stone-700">{option.label}</span>
+              <span className="text-sm text-forest">{option.label}</span>
             </label>
           ))}
         </div>
@@ -53,7 +59,7 @@ export function TreatmentPreferencesForm() {
 
       {/* Best Time to Contact */}
       <div>
-        <label className="block text-sm font-medium text-stone-900 mb-3">
+        <label className="block text-sm font-medium text-forest mb-3">
           Best time to contact you?
         </label>
         <div className="space-y-2">
@@ -68,8 +74,8 @@ export function TreatmentPreferencesForm() {
               className={`
                 flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all
                 ${formData.treatmentPreferences?.bestTimeToContact === option.value
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : 'border-stone-200 hover:border-stone-300'
+                  ? 'border-forest bg-mint'
+                  : 'border-forest-light/20 hover:border-forest-light/30'
                 }
               `}
             >
@@ -79,9 +85,9 @@ export function TreatmentPreferencesForm() {
                 value={option.value}
                 checked={formData.treatmentPreferences?.bestTimeToContact === option.value}
                 onChange={() => updatePreferences('bestTimeToContact', option.value)}
-                className="w-4 h-4 text-emerald-600 border-stone-300 focus:ring-emerald-500"
+                className="w-4 h-4 text-forest border-forest-light/30 focus:ring-mint"
               />
-              <span className="text-sm text-stone-700">{option.label}</span>
+              <span className="text-sm text-forest">{option.label}</span>
             </label>
           ))}
         </div>
@@ -89,7 +95,7 @@ export function TreatmentPreferencesForm() {
 
       {/* Pharmacy Preference */}
       <div>
-        <label htmlFor="pharmacyPreference" className="block text-sm font-medium text-stone-700 mb-1">
+        <label htmlFor="pharmacyPreference" className="block text-sm font-medium text-forest mb-1">
           Do you have a preferred pharmacy? (Optional)
         </label>
         <input
@@ -97,17 +103,17 @@ export function TreatmentPreferencesForm() {
           type="text"
           value={formData.treatmentPreferences?.pharmacyPreference || ''}
           onChange={(e) => updatePreferences('pharmacyPreference', e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:ring-2 focus:ring-stone-100 outline-none transition-all"
+          className="w-full px-4 py-3 rounded-xl border border-forest-light/20 focus:border-forest focus:ring-2 focus:ring-mint outline-none transition-all"
           placeholder="e.g., CVS on Main Street, Walgreens #1234"
         />
-        <p className="text-xs text-stone-500 mt-1">
+        <p className="text-xs text-forest-muted mt-1">
           Note: Compounded medications ship directly from our partner pharmacy.
         </p>
       </div>
 
       {/* Additional Notes */}
       <div>
-        <label htmlFor="additionalNotes" className="block text-sm font-medium text-stone-700 mb-1">
+        <label htmlFor="additionalNotes" className="block text-sm font-medium text-forest mb-1">
           Anything else you'd like us to know?
         </label>
         <textarea
@@ -115,7 +121,7 @@ export function TreatmentPreferencesForm() {
           value={formData.treatmentPreferences?.additionalNotes || ''}
           onChange={(e) => updatePreferences('additionalNotes', e.target.value)}
           rows={4}
-          className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:ring-2 focus:ring-stone-100 outline-none transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-forest-light/20 focus:border-forest focus:ring-2 focus:ring-mint outline-none transition-all resize-none"
           placeholder="Share any additional information that might be helpful for your provider..."
         />
       </div>

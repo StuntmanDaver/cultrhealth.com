@@ -5,10 +5,10 @@ import Button from '@/components/ui/Button';
 import Link from 'next/link';
 
 export function CTASection({
-  title = "Ready to start your journey?",
-  subtitle = "Join CULTR today and unlock your full potential.",
-  ctaText = "View Packages",
-  ctaLink = "/pricing"
+  title = "Stop guessing. Start optimizing.",
+  subtitle = "Take the 2-minute quiz to find your protocol.",
+  ctaText = "Take the Quiz",
+  ctaLink = "/quiz"
 }) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');

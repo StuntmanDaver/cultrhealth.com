@@ -20,7 +20,7 @@ export interface InvoiceData {
   total: number
   currency: string
   paymentMethod: string
-  paymentProvider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'healthie'
+  paymentProvider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
   billingAddress?: {
     line1?: string
     city?: string

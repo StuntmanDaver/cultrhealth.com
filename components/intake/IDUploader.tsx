@@ -2,7 +2,7 @@
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { useState, useRef } from 'react';
-import { Upload, Camera, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, Camera, X, CheckCircle2, AlertCircle, Loader2, Info } from 'lucide-react';
 
 export function IDUploader() {
   const { formData, updateFormData } = useIntakeForm();
@@ -102,6 +102,11 @@ export function IDUploader() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Federal law requires ID verification for prescription medications.</p>
+      </div>
+
       <div className="bg-mint/30 border border-forest-light/20 rounded-xl p-4">
         <h4 className="font-medium text-forest mb-2">Why we need your ID</h4>
         <p className="text-sm text-forest-muted">

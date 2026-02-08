@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { Fraunces, Inter, Playfair_Display } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
-import { Header } from '@/components/site/Header'
-import { Footer } from '@/components/site/Footer'
+import { LayoutShell } from '@/components/site/LayoutShell'
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -104,11 +103,9 @@ export default function RootLayout({
         )}
       </head>
       <body className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
-        <Header />
-        <main className="pt-20 min-h-[calc(100vh-80px)]">
+        <LayoutShell>
           {children}
-        </main>
-        <Footer />
+        </LayoutShell>
       </body>
     </html>
   )

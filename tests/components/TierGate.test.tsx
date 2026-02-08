@@ -14,8 +14,8 @@ describe('TierGate Component', () => {
     it('renders children when user tier meets required tier', () => {
       render(
         <TierGate
-          requiredTier="creator"
-          currentTier="creator"
+          requiredTier="catalyst"
+          currentTier="catalyst"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -29,7 +29,7 @@ describe('TierGate Component', () => {
     it('renders children when user tier exceeds required tier', () => {
       render(
         <TierGate
-          requiredTier="creator"
+          requiredTier="catalyst"
           currentTier="club"
           upgradeMessage="Upgrade to access"
         >
@@ -39,20 +39,6 @@ describe('TierGate Component', () => {
 
       expect(screen.getByTestId('protected-content')).toBeInTheDocument()
       expect(screen.queryByText('Upgrade to access')).not.toBeInTheDocument()
-    })
-
-    it('grants access to Catalyst+ for Creator-required content', () => {
-      render(
-        <TierGate
-          requiredTier="creator"
-          currentTier="catalyst"
-          upgradeMessage="Upgrade to access"
-        >
-          <div data-testid="protected-content">Protected Content</div>
-        </TierGate>
-      )
-
-      expect(screen.getByTestId('protected-content')).toBeInTheDocument()
     })
 
     it('grants access to Concierge for Catalyst+-required content', () => {
@@ -68,28 +54,42 @@ describe('TierGate Component', () => {
 
       expect(screen.getByTestId('protected-content')).toBeInTheDocument()
     })
+
+    it('grants access to Club for Concierge-required content', () => {
+      render(
+        <TierGate
+          requiredTier="concierge"
+          currentTier="club"
+          upgradeMessage="Upgrade to access"
+        >
+          <div data-testid="protected-content">Protected Content</div>
+        </TierGate>
+      )
+
+      expect(screen.getByTestId('protected-content')).toBeInTheDocument()
+    })
   })
 
   describe('Access denied', () => {
     it('shows upgrade message when user tier is below required tier', () => {
       render(
         <TierGate
-          requiredTier="creator"
+          requiredTier="catalyst"
           currentTier="core"
-          upgradeMessage="Upgrade to Creator to unlock"
+          upgradeMessage="Upgrade to Catalyst+ to unlock"
         >
           <div data-testid="protected-content">Protected Content</div>
         </TierGate>
       )
 
-      expect(screen.getByText('Upgrade to Creator to unlock')).toBeInTheDocument()
+      expect(screen.getByText('Upgrade to Catalyst+ to unlock')).toBeInTheDocument()
     })
 
     it('shows upgrade button linking to pricing', () => {
       render(
         <TierGate
-          requiredTier="catalyst"
-          currentTier="creator"
+          requiredTier="concierge"
+          currentTier="catalyst"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -101,25 +101,11 @@ describe('TierGate Component', () => {
       expect(upgradeButton).toHaveAttribute('href', '/pricing')
     })
 
-    it('denies Core users access to Creator content', () => {
-      render(
-        <TierGate
-          requiredTier="creator"
-          currentTier="core"
-          upgradeMessage="Upgrade to access"
-        >
-          <div data-testid="protected-content">Protected Content</div>
-        </TierGate>
-      )
-
-      expect(screen.getByText('Upgrade to access')).toBeInTheDocument()
-    })
-
-    it('denies Creator users access to Catalyst+ content', () => {
+    it('denies Core users access to Catalyst+ content', () => {
       render(
         <TierGate
           requiredTier="catalyst"
-          currentTier="creator"
+          currentTier="core"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -162,7 +148,7 @@ describe('TierGate Component', () => {
     it('handles null currentTier as Core', () => {
       render(
         <TierGate
-          requiredTier="creator"
+          requiredTier="catalyst"
           currentTier={null}
           upgradeMessage="Upgrade to access"
         >
@@ -176,7 +162,7 @@ describe('TierGate Component', () => {
     it('handles undefined currentTier as Core', () => {
       render(
         <TierGate
-          requiredTier="creator"
+          requiredTier="catalyst"
           currentTier={undefined}
           upgradeMessage="Upgrade to access"
         >
@@ -203,7 +189,7 @@ describe('TierGate Component', () => {
   })
 
   describe('Tier hierarchy', () => {
-    const tiers = ['core', 'creator', 'catalyst', 'concierge', 'club'] as const
+    const tiers = ['core', 'catalyst', 'concierge', 'club'] as const
 
     it('respects tier ordering for access control', () => {
       // Each tier should have access to its own level and below

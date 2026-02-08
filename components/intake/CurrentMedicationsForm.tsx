@@ -1,7 +1,7 @@
 'use client';
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Info } from 'lucide-react';
 import { useState } from 'react';
 
 interface Medication {
@@ -44,6 +44,11 @@ export function CurrentMedicationsForm() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Drug interactions matter. This keeps you safe.</p>
+      </div>
+
       <p className="text-sm text-stone-600">
         Please list all medications you are currently taking, including prescription medications, over-the-counter drugs, and supplements.
       </p>

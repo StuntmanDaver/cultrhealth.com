@@ -1,6 +1,7 @@
 'use client';
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
+import { Info } from 'lucide-react';
 
 export function GLP1HistoryForm() {
   const { formData, updateFormData } = useIntakeForm();
@@ -16,6 +17,11 @@ export function GLP1HistoryForm() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Previous GLP-1 use affects your starting dose. Accurate history means better results.</p>
+      </div>
+
       <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mb-6">
         <p className="text-sm text-purple-800">
           Since you selected a GLP-1 medication, we need some additional information about your history with these medications.

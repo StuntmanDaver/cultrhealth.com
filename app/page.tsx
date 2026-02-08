@@ -1,23 +1,24 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { PLANS } from '@/lib/config/plans';
+import { TESTIMONIALS, PROVIDERS, TRUST_METRICS, TRUST_BADGES } from '@/lib/config/social-proof';
 import {
   ArrowRight,
   FlaskConical,
   Stethoscope,
-  MessageCircle,
+  Shield,
+  Building,
+  CreditCard,
+  Star,
+  Dna,
   TrendingUp,
   Users,
-  Sparkles,
-  BookOpen,
-  Dna,
 } from 'lucide-react';
 
-// Dynamically import heavy below-the-fold components
-// This reduces initial JS bundle and speeds up Time to Interactive
 const PricingCard = dynamic(() => import('@/components/site/PricingCard').then(mod => ({ default: mod.PricingCard })), {
   loading: () => <div className="h-96 bg-white/50 rounded-2xl animate-pulse" />,
 });
@@ -26,150 +27,216 @@ const FAQAccordion = dynamic(() => import('@/components/site/FAQAccordion').then
   loading: () => <div className="h-64 bg-cultr-mint rounded-lg animate-pulse" />,
 });
 
+const ClubBanner = dynamic(() => import('@/components/site/ClubBanner').then(mod => ({ default: mod.ClubBanner })), {
+  loading: () => <div className="h-32 bg-cultr-mint rounded-2xl animate-pulse" />,
+});
+
 const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignup').then(mod => ({ default: mod.NewsletterSignup })), {
   loading: () => <div className="h-48 bg-cultr-offwhite animate-pulse" />,
 });
 
+const BADGE_ICONS: Record<string, React.ElementType> = {
+  Shield, Stethoscope, Building, CreditCard,
+};
+
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      {/* Hero Section */}
-      <section className="relative py-24 md:py-32 px-6 bg-cultr-forest overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
+      {/* ─── Hero ─── */}
+      <section className="relative py-32 md:py-44 px-6 bg-cultr-forest overflow-hidden">
+        {/* Mobile background image */}
+        <Image
+          src="/images/hero-man-athletic.png"
+          alt=""
+          fill
+          className="object-cover object-top opacity-20 lg:hidden"
+          priority
+        />
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="text-white">
               <ScrollReveal direction="none" duration={800}>
-                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-                  <Sparkles className="w-4 h-4 text-cultr-sage" />
-                  <span className="text-sm">HSA/FSA Eligible</span>
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-                  Change the{' '}
-                  <span className="tracking-tight uppercase">CULTR</span>
-                  , <span className="italic">rebrand</span> yourself.
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-[1.1]">
+                  Change the CULTR,<br /><span className="italic">rebrand yourself</span>.
                 </h1>
               </ScrollReveal>
 
               <ScrollReveal delay={200} direction="none" duration={800}>
-                <p className="text-xl text-white/80 mb-8 max-w-lg">
-                  Comprehensive lab testing, personalized protocols, and access to cutting-edge peptide therapies. All from the comfort of your home.
+                <p className="text-lg text-white/70 mb-10 max-w-md">
+                  Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
                 </p>
               </ScrollReveal>
 
-              <ScrollReveal delay={300} direction="none" duration={800}>
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <FlaskConical className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm">50+ Lab Tests</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Stethoscope className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm">Licensed Providers</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <Dna className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm">Peptide Protocols</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <MessageCircle className="w-5 h-5" />
-                    </div>
-                    <span className="text-sm">24/7 Support</span>
-                  </div>
-                </div>
-              </ScrollReveal>
-
-              <ScrollReveal delay={400} direction="up" duration={600}>
+              <ScrollReveal delay={300} direction="up" duration={600}>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/pricing">
-                    <Button size="lg">Start Your Journey</Button>
+                  <Link href="/quiz">
+                    <Button size="lg">Take the Quiz</Button>
                   </Link>
-                  <Link href="/how-it-works">
+                  <Link href="/pricing">
                     <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                      See How It Works <ArrowRight className="w-4 h-4 ml-2" />
+                      See Plans <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 </div>
               </ScrollReveal>
             </div>
 
-            {/* Right Visual */}
-            <div className="hidden lg:block relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-cultr-sage/20 to-transparent rounded-3xl" />
-              <div className="relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-green-400" />
-                      <span className="text-white/90">Testosterone</span>
-                    </div>
-                    <span className="text-cultr-sage font-bold">Optimal</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-green-400" />
-                      <span className="text-white/90">Thyroid Panel</span>
-                    </div>
-                    <span className="text-cultr-sage font-bold">Normal</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                      <span className="text-white/90">Vitamin D</span>
-                    </div>
-                    <span className="text-yellow-400 font-bold">Low</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 bg-white/10 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 rounded-full bg-green-400" />
-                      <span className="text-white/90">Metabolic Panel</span>
-                    </div>
-                    <span className="text-cultr-sage font-bold">Optimal</span>
-                  </div>
-                </div>
-              </div>
+            <div className="hidden lg:block relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+              <Image
+                src="/images/hero-man-athletic.png"
+                alt="Athletic man smiling confidently"
+                fill
+                className="object-cover object-top"
+                priority
+                sizes="(max-width: 1200px) 50vw, 600px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/40 to-transparent" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works Preview */}
-      <section className="py-24 px-6 bg-white">
+      {/* ─── Trust Badge Bar ─── */}
+      <section className="py-5 px-6 bg-cultr-mint border-y border-cultr-sage">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 md:gap-10 flex-wrap text-sm text-cultr-forest">
+          {TRUST_BADGES.map((badge) => {
+            const Icon = BADGE_ICONS[badge.icon];
+            return (
+              <div key={badge.label} className="flex items-center gap-2">
+                {Icon && <Icon className="w-4 h-4" />}
+                <span className="font-medium">{badge.label}</span>
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-1.5">
+            <div className="flex">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-3.5 h-3.5 fill-cultr-forest text-cultr-forest" />
+              ))}
+            </div>
+            <span className="font-bold">{TRUST_METRICS.avgRating}</span>
+            <span className="text-cultr-textMuted">({TRUST_METRICS.reviewCount} reviews)</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Results / Lifestyle ─── */}
+      <section className="relative py-32 md:py-40 px-6 bg-gradient-to-br from-cultr-offwhite via-white to-cultr-mint/20 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              How it <span className="italic">works</span>
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest">
+              Real results. No <span className="italic">fluff</span>.
             </h2>
-            <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              Get started in minutes. Our streamlined process makes optimizing your health simple.
-            </p>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {/* Image 1 - Smiling Man */}
+            <ScrollReveal delay={100} direction="up" className="group">
+              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/images/lifestyle-man-smiling.png"
+                  alt="Confident member after optimization"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-cultr-sage" />
+                    <span className="text-xs font-bold text-white tracking-widest">CONFIDENCE</span>
+                  </div>
+                  <p className="text-white text-sm md:text-base leading-relaxed">
+                    Look in the mirror and like what you see.
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Image 2 - Woman Running */}
+            <ScrollReveal delay={200} direction="up" className="group md:mt-12">
+              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/images/lifestyle-woman-running-new.jpg"
+                  alt="Athletic woman running"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forestDark/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-cultr-sage" />
+                    <span className="text-xs font-bold text-white tracking-widest">ENDURANCE</span>
+                  </div>
+                  <p className="text-white text-sm md:text-base leading-relaxed">
+                    Outrun the version of you from six months ago.
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Image 3 - Sunset Freedom */}
+            <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1 lg:mt-6">
+              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+                <Image
+                  src="/images/hero-man-athletic.png"
+                  alt="Athletic man smiling confidently"
+                  fill
+                  className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-cultr-sage" />
+                    <span className="text-xs font-bold text-white tracking-widest">FREEDOM</span>
+                  </div>
+                  <p className="text-white text-sm md:text-base leading-relaxed">
+                    Stop managing symptoms. Start living.
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+
+          <ScrollReveal delay={400} className="text-center mt-16">
+            <Link href="/quiz">
+              <Button size="lg">
+                Find Your Protocol <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* ─── How It Works ─── */}
+      <section className="py-32 md:py-40 px-6 bg-white">
+        <div className="max-w-7xl mx-auto">
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              Three steps. <span className="italic">That&apos;s it</span>.
+            </h2>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-3 gap-10">
             {[
               {
                 step: '01',
-                title: 'Choose your plan',
-                desc: 'Select a membership tier that fits your goals. All plans include telehealth consults and ongoing support.',
+                title: 'Take the quiz',
+                desc: '2 minutes. We match you to a plan and protocol.',
                 icon: Users,
               },
               {
                 step: '02',
-                title: 'Complete intake',
-                desc: 'Fill out your health history and schedule your first consultation with a licensed provider.',
+                title: 'Talk to a provider',
+                desc: 'Licensed clinician reviews your labs, not an algorithm.',
                 icon: Stethoscope,
               },
               {
                 step: '03',
-                title: 'Get your protocol',
-                desc: 'Receive your personalized treatment plan with access to our peptide library and protocol engine.',
+                title: 'Get treated',
+                desc: 'Peptides ship to your door. Track results in your dashboard.',
                 icon: TrendingUp,
               },
             ].map((item, i) => (
@@ -191,64 +258,46 @@ export default function HomePage() {
 
           <ScrollReveal delay={450} className="text-center mt-12">
             <Link href="/how-it-works" className="inline-flex items-center text-cultr-forest hover:text-cultr-forestDark font-medium transition-colors">
-              Learn more about the process <ArrowRight className="w-4 h-4 ml-2" />
+              Learn more <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
+      {/* ─── Features Grid (3 large cards) ─── */}
+      <section className="py-32 px-6 bg-cultr-offwhite">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Everything you need to <span className="italic">optimize</span>
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              What&apos;s <span className="italic">included</span>.
             </h2>
-            <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              From comprehensive testing to personalized protocols, we provide the tools for peak performance.
-            </p>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: FlaskConical,
-                title: 'Comprehensive Labs',
-                desc: 'Full metabolic panels, hormone testing, and biomarker analysis.',
+                title: '50+ Lab Markers',
+                desc: 'We test what your doctor skips.',
               },
               {
                 icon: Dna,
-                title: 'Peptide Library',
-                desc: 'Access our curated library of research-backed peptide protocols.',
-              },
-              {
-                icon: Sparkles,
-                title: 'Protocol Engine',
-                desc: 'AI-powered, clinician-reviewed recommendations based on your biomarkers.',
+                title: 'Peptide Protocols',
+                desc: 'Clinician-built, not cookie-cutter.',
               },
               {
                 icon: Stethoscope,
-                title: 'Provider Access',
-                desc: 'Direct messaging with licensed healthcare providers.',
-              },
-              {
-                icon: TrendingUp,
-                title: 'Progress Tracking',
-                desc: 'Monitor your biomarkers and see improvements over time.',
-              },
-              {
-                icon: BookOpen,
-                title: 'Education Hub',
-                desc: 'Evidence-based articles and protocols in our knowledge library.',
+                title: 'Licensed Providers',
+                desc: 'Board-certified. Always available.',
               },
             ].map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-6 rounded-xl bg-white border border-cultr-sage hover:border-cultr-forest/40 transition-colors h-full">
-                  <div className="w-12 h-12 rounded-xl bg-cultr-mint flex items-center justify-center mb-4">
-                    <feature.icon className="w-6 h-6 text-cultr-forest" />
+                <div className="p-10 rounded-2xl bg-white border border-cultr-sage hover:border-cultr-forest/40 transition-colors h-full">
+                  <div className="w-14 h-14 rounded-xl bg-cultr-mint flex items-center justify-center mb-6">
+                    <feature.icon className="w-7 h-7 text-cultr-forest" />
                   </div>
-                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">{feature.title}</h3>
-                  <p className="text-cultr-textMuted text-sm">{feature.desc}</p>
+                  <h3 className="text-xl font-display font-bold text-cultr-text mb-3">{feature.title}</h3>
+                  <p className="text-cultr-textMuted">{feature.desc}</p>
                 </div>
               </ScrollReveal>
             ))}
@@ -256,14 +305,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Comparison Section */}
-      <section className="py-24 px-6 bg-white">
+      {/* ─── Comparison Table ─── */}
+      <section className="py-32 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              CULTR vs <span className="italic">standard care</span>
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              CULTR vs. the <span className="italic">status quo</span>
             </h2>
-            <p className="text-cultr-textMuted">See why members choose CULTR for their health optimization.</p>
           </ScrollReveal>
 
           <ScrollReveal>
@@ -279,7 +327,7 @@ export default function HomePage() {
                 ['Provider messaging', 'Limited', 'Unlimited'],
                 ['Peptide protocols', 'Not available', 'Full access'],
                 ['Protocol customization', 'Generic', 'Personalized'],
-                ['Cost per year', '$3,000+', 'From $1,188'],
+                ['Cost per year', '$3,000+', 'From $2,388'],
               ].map(([feature, standard, cultr], i) => (
                 <div key={i} className="grid grid-cols-3 border-t border-cultr-sage">
                   <div className="p-4 text-cultr-text text-sm">{feature}</div>
@@ -292,65 +340,73 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Pricing Preview */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
+      {/* ─── Pricing Preview ─── */}
+      <section className="py-32 px-6 bg-cultr-offwhite">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Simple, <span className="italic">transparent</span> pricing
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              Transparent <span className="italic">pricing</span>.
             </h2>
-            <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              Choose a membership that fits your goals. All plans include provider access and our core platform.
-            </p>
           </ScrollReveal>
 
+          <div className="max-w-5xl mx-auto mb-10">
+            <ClubBanner />
+          </div>
+
           <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[PLANS[0], PLANS[3], PLANS[4]].map((plan) => (
+            {PLANS.filter((p) => p.slug !== 'club').map((plan) => (
               <PricingCard key={plan.slug} plan={plan} />
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 space-y-4">
             <Link href="/pricing">
               <Button variant="secondary">View All Plans</Button>
             </Link>
+            <p className="text-sm text-cultr-textMuted">
+              Not sure which plan?{' '}
+              <Link href="/quiz" className="text-cultr-forest font-medium hover:underline">
+                Take the quiz
+              </Link>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Trust Section */}
-      <section className="py-24 px-6 bg-cultr-forest text-white">
+      {/* ─── Testimonials (expanded) ─── */}
+      <section className="py-32 px-6 bg-cultr-forest text-white">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-16">
+          <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              Trusted by <span className="italic">thousands</span>
+              What members <span className="italic">say</span>.
             </h2>
-            <p className="text-white/70 max-w-2xl mx-auto">
-              Join the community of health-conscious individuals optimizing their biology.
-            </p>
+            <div className="flex items-center justify-center gap-2 text-white/70">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-cultr-sage text-cultr-sage" />
+                ))}
+              </div>
+              <span>{TRUST_METRICS.avgRating} out of 5 from {TRUST_METRICS.reviewCount} reviews</span>
+            </div>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "Finally, a telehealth service that takes optimization seriously. The peptide protocols have been transformative.",
-                name: "Michael R.",
-                title: "Member since 2024",
-              },
-              {
-                quote: "The comprehensive lab work and personalized protocols are exactly what I was looking for. Worth every penny.",
-                name: "Sarah K.",
-                title: "Member since 2024",
-              },
-              {
-                quote: "Having direct access to providers who understand longevity medicine has been a game changer.",
-                name: "David L.",
-                title: "Member since 2024",
-              },
-            ].map((testimonial, i) => (
-              <ScrollReveal key={i} delay={i * 150} direction="up">
-                <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 h-full">
-                  <p className="text-white/90 mb-6 italic">&ldquo;{testimonial.quote}&rdquo;</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {TESTIMONIALS.slice(0, 6).map((testimonial, i) => (
+              <ScrollReveal key={i} delay={i * 100} direction="up">
+                <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex">
+                      {[...Array(testimonial.rating)].map((_, j) => (
+                        <Star key={j} className="w-3.5 h-3.5 fill-cultr-sage text-cultr-sage" />
+                      ))}
+                    </div>
+                    {testimonial.highlight && (
+                      <span className="text-xs font-bold bg-cultr-sage/20 text-cultr-sage px-3 py-1 rounded-full">
+                        {testimonial.highlight}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-white/90 mb-6 flex-1">&ldquo;{testimonial.quote}&rdquo;</p>
                   <div>
                     <p className="font-medium text-white">{testimonial.name}</p>
                     <p className="text-sm text-white/60">{testimonial.title}</p>
@@ -362,12 +418,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-24 px-6 bg-white">
+      {/* ─── Provider Credentials ─── */}
+      <section className="py-32 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <ScrollReveal className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              Your care <span className="italic">team</span>.
+            </h2>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {PROVIDERS.map((provider, i) => (
+              <ScrollReveal key={i} delay={i * 100} direction="up">
+                <div className="text-center p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-cultr-mint flex items-center justify-center mb-4">
+                    <Stethoscope className="w-8 h-8 text-cultr-forest" />
+                  </div>
+                  <h3 className="font-display font-bold text-cultr-forest">{provider.name}</h3>
+                  <p className="text-sm text-cultr-textMuted mt-1">{provider.specialty}</p>
+                  <p className="text-xs text-cultr-textMuted mt-1">{provider.credentials}</p>
+                  <p className="text-xs text-cultr-textMuted">{provider.yearsExperience}+ years experience</p>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+
+          <div className="mt-16 flex items-center justify-center gap-8 md:gap-12 flex-wrap">
+            <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
+              <Shield className="w-4 h-4" /> HIPAA Compliant
+            </div>
+            <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
+              <Building className="w-4 h-4" /> Licensed 503A Pharmacy
+            </div>
+            <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
+              <Shield className="w-4 h-4" /> DEA Licensed
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ─── */}
+      <section className="py-32 px-6 bg-cultr-offwhite">
         <div className="max-w-3xl mx-auto">
-          <ScrollReveal className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Frequently asked <span className="italic">questions</span>
+          <ScrollReveal className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
+              <span className="italic">Questions</span>.
             </h2>
           </ScrollReveal>
 
@@ -386,14 +481,41 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── CULTR Creator CTA ─── */}
+      <section className="py-20 px-6 bg-cultr-forest">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <Users className="w-8 h-8 text-cultr-sage" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  CULTR Creator
+                </h3>
+                <p className="text-white/70 max-w-lg">
+                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                </p>
+              </div>
+              <Link href="/creators" className="shrink-0">
+                <Button variant="secondary" size="lg">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Newsletter */}
       <NewsletterSignup />
 
       {/* Final CTA */}
       <CTASection
-        title="Ready to optimize your biology?"
-        subtitle="Join thousands who are taking control of their health with CULTR."
-        ctaText="Get Started Today"
+        title="Stop guessing. Start optimizing."
+        subtitle="Take the 2-minute quiz and get matched to your protocol."
+        ctaText="Take the Quiz"
+        ctaLink="/quiz"
       />
     </div>
   );

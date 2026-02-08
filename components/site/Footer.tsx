@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Linkedin, Instagram, Facebook } from 'lucide-react';
+import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
 
 const productLinks = [
   { href: '/products', label: 'All Products' },
@@ -16,13 +16,35 @@ const learnLinks = [
 
 const contactLinks = [
   { href: '/pricing', label: 'Partner' },
+  { href: '/creators', label: 'Creator Program' },
   { href: 'mailto:support@cultrhealth.com', label: 'Contact Us' },
   { href: '/login', label: 'Manage Account' },
+];
+
+const trustBadges = [
+  { icon: Shield, label: 'HIPAA Compliant' },
+  { icon: Lock, label: '256-bit Encryption' },
+  { icon: Stethoscope, label: 'Licensed Providers' },
+  { icon: FlaskConical, label: 'Licensed Pharmacy' },
 ];
 
 export function Footer() {
   return (
     <footer>
+      {/* Trust Badges */}
+      <div className="bg-cultr-mint border-b border-cultr-sage py-6">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            {trustBadges.map((badge) => (
+              <div key={badge.label} className="flex items-center gap-2 text-cultr-forest">
+                <badge.icon className="w-4 h-4" />
+                <span className="text-xs font-medium tracking-wide">{badge.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Links Section */}
       <div className="bg-white py-16">
         <div className="max-w-7xl mx-auto px-6">

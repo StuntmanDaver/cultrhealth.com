@@ -4,6 +4,102 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-08] - Creator Affiliate Portal & Homepage Updates
+
+### Added
+
+#### Creator Affiliate Portal (Full V1)
+- **Database Schema** - 8 new tables: creators, affiliate_codes, tracking_links, click_events, order_attributions, commission_ledger, payouts, admin_actions
+  - **`migrations/009_creator_affiliate_portal.sql`** - Complete migration with indexes and constraints
+- **Backend Libraries**
+  - **`lib/creators/db.ts`** - Creator CRUD, tracking links, affiliate codes, commission queries, payout management
+  - **`lib/creators/attribution.ts`** - Click tracking, cookie management, attribution logic, email redaction
+  - **`lib/creators/commission.ts`** - Commission calculation engine with 20% cap, override system, refund reversal
+  - **`lib/config/affiliate.ts`** - Affiliate configuration (rates, tiers, thresholds, type definitions)
+  - **`lib/contexts/CreatorContext.tsx`** - React context for portal state management
+- **Creator API Routes (13 endpoints)**
+  - **`app/api/creators/apply/route.ts`** - Application submission with rate limiting
+  - **`app/api/creators/verify-email/route.ts`** - Email verification with magic link
+  - **`app/api/creators/magic-link/route.ts`** - Creator-specific passwordless login
+  - **`app/api/creators/verify-login/route.ts`** - Login verification and session creation
+  - **`app/api/creators/profile/route.ts`** - Creator profile CRUD
+  - **`app/api/creators/dashboard/route.ts`** - Dashboard metrics with tier progression
+  - **`app/api/creators/links/route.ts`** - Tracking link management
+  - **`app/api/creators/codes/route.ts`** - Affiliate coupon codes
+  - **`app/api/creators/earnings/overview/route.ts`** - Earnings summary
+  - **`app/api/creators/earnings/orders/route.ts`** - Attributed orders with email redaction
+  - **`app/api/creators/earnings/ledger/route.ts`** - Commission ledger entries
+  - **`app/api/creators/network/route.ts`** - Network metrics and recruit list
+  - **`app/api/creators/payouts/route.ts`** - Payout history and configuration
+  - **`app/api/creators/support/tickets/route.ts`** - Support ticket submission
+- **Tracking & Attribution**
+  - **`app/api/track/click/route.ts`** - Server-side click tracking with 30-day cookie
+  - **`app/r/[slug]/route.ts`** - Referral redirect route
+- **Admin API Routes**
+  - **`app/api/admin/creators/pending/route.ts`** - Approval queue
+  - **`app/api/admin/creators/[id]/approve/route.ts`** - Creator approval with auto-provisioning
+  - **`app/api/admin/creators/[id]/reject/route.ts`** - Creator rejection with audit logging
+  - **`app/api/admin/creators/codes/route.ts`** - Code management
+  - **`app/api/admin/creators/payouts/batch/route.ts`** - Batch payout processing
+- **Cron Jobs**
+  - **`app/api/cron/approve-commissions/route.ts`** - Daily commission approval (30-day hold)
+  - **`app/api/cron/update-tiers/route.ts`** - Daily tier recalculation
+- **Creator Portal Frontend (8 sections)**
+  - **`app/creators/portal/layout.tsx`** - Portal layout with sidebar, header, auth protection
+  - **`app/creators/portal/dashboard/page.tsx`** - Dashboard with metrics, tier progress, quick actions
+  - **`app/creators/portal/share/page.tsx`** - Share & Earn with link generator and coupon codes
+  - **`app/creators/portal/earnings/page.tsx`** - Earnings overview, orders, commission ledger
+  - **`app/creators/portal/network/page.tsx`** - Network recruiting with tier milestones
+  - **`app/creators/portal/payouts/page.tsx`** - Payout history and method configuration
+  - **`app/creators/portal/resources/page.tsx`** - FTC compliance, brand kit, content support
+  - **`app/creators/portal/support/page.tsx`** - Support ticket submission
+  - **`app/creators/portal/settings/page.tsx`** - Profile and payout settings
+  - **`components/creators/CreatorSidebar.tsx`** - Portal sidebar navigation
+  - **`components/creators/CreatorHeader.tsx`** - Portal header with real-time metrics
+- **Creator Onboarding Pages**
+  - **`app/creators/page.tsx`** - Creator program landing page
+  - **`app/creators/apply/page.tsx`** - Application form
+  - **`app/creators/login/page.tsx`** - Magic link login with error handling
+  - **`app/creators/pending/page.tsx`** - Pending approval status page
+- **Admin Creator Pages**
+  - **`app/admin/creators/page.tsx`** - Creator management dashboard
+  - **`app/admin/creators/approvals/page.tsx`** - Approval queue interface
+  - **`app/admin/creators/payouts/page.tsx`** - Payout run builder
+
+#### Homepage & Site-Wide Updates
+- **`components/site/ClubBanner.tsx`** - CULTR Club free tier signup banner
+- **`components/site/LayoutShell.tsx`** - Conditional header/footer rendering per route
+- **CULTR Creator CTA** - Added to homepage between FAQ and newsletter sections
+- **ClubBanner** - Added above pricing cards on homepage (matching pricing page pattern)
+- **Hero image** - Replaced sunset silhouette with athletic man photo
+- **Footer** - Added "Creator Program" link under Contact column
+
+#### Other New Files
+- **`lib/config/quiz.ts`** - Health quiz configuration
+- **`lib/config/social-proof.ts`** - Testimonials, providers, trust metrics
+- **`app/quiz/page.tsx`** - Health quiz page
+- **`public/images/hero-man-athletic.png`** - New hero image
+
+### Modified
+
+#### Authentication
+- **`lib/auth.ts`** - Added `creatorId` and `role` to session tokens, added `verifyCreatorAuth()` middleware
+
+#### Layout & Navigation
+- **`app/layout.tsx`** - Replaced direct Header/Footer with `LayoutShell` for route-conditional rendering
+- **`app/creators/page.tsx`** - Added "Already a creator? Log in" links
+- **`components/site/Footer.tsx`** - Added Creator Program link
+- **`app/page.tsx`** - Added ClubBanner, Creator CTA section, replaced hero image with `object-top` positioning
+
+#### Stripe Integration
+- **`app/api/webhook/stripe/route.ts`** - Extended for creator order attribution and commission calculation
+
+### Dev Mode
+- All creator API endpoints return mock data in development mode for testing without database
+- Portal is browsable at `/creators/portal/dashboard` with sample metrics, links, orders, and recruits
+
+---
+
 ## [2026-01-29] - AI Meal Plan Generator with Modal & Export Features
 
 ### Added

@@ -1,5 +1,6 @@
-// Healthie EHR API Integration
-// Comprehensive GraphQL API client for CULTR Health Longevity Clinic
+// @deprecated — Healthie EHR integration is deprecated. Use Asher Med API instead.
+// See lib/asher-med-api.ts for the active API client.
+// Kept for historical reference and any remaining webhook processing.
 // Reference: https://docs.gethealthie.com
 
 import { getHealthieApiUrl } from './config/healthie';

@@ -2,9 +2,9 @@
 
 ## 0) Non-Negotiables and PHI Boundaries
 - [ ] Keep public website PHI-free and cacheable
-- [ ] Store all patient-specific clinical data, messaging, and telehealth in Healthie
+- [ ] Store all patient-specific clinical data, orders, and medical records in Asher Med platform
 - [ ] Keep Stripe, affiliate tools, analytics, and marketing CRMs PHI-free
-- [ ] Treat Protocol Engine as first-class object with phased approach (v1 Healthie, v2 PHI-free builder, v3 API publish)
+- [ ] Treat Protocol Engine as first-class object with phased approach (v1 Asher Med platform, v2 PHI-free builder, v3 API publish)
 
 ## 1) North Star: Best EMR for Longevity + Weightloss
 - [ ] Optimize for recurring care
@@ -49,14 +49,14 @@
 - [ ] Support response expectations and SLAs
 
 ### 1.5 Premium Portal UX Phases
-- [ ] v1: Healthie portal experience
-- [ ] v2: Thin custom member dashboard (PHI-free) with Healthie deep-links
-- [ ] v3: Custom portal UX powered by Healthie API
+- [ ] v1: Asher Med platform integration
+- [ ] v2: Thin custom member dashboard (PHI-free) with Asher Med deep-links
+- [ ] v3: Custom portal UX powered by Asher Med API
 
 ## 2) Phase 0 Decisions (Prevent Complexity)
-- [ ] Choose MVP model: Healthie portal only vs thin member dashboard
-- [ ] Decide Healthie API add-on timing (now vs later)
-- [ ] Decide to start Protocol Engine v1 with Care Plan Templates
+- [ ] Choose MVP model: Asher Med platform integration vs thin member dashboard
+- [ ] Decide Asher Med API integration timing (now vs later)
+- [ ] Decide to start Protocol Engine v1 with order templates and protocols
 
 ## 3) Architecture and Stack
 ### 3.1 PHI-Free Public Website
@@ -65,19 +65,19 @@
 - [ ] Stripe Checkout integration
 - [ ] Affiliate tracking integration
 - [ ] Non-PHI content library previews
-- [ ] Login redirect to Healthie portal
+- [ ] Member dashboard with Asher Med integration
 
-### 3.2 Clinical + Portal System (PHI)
-- [ ] Healthie as system of record (EHR, scheduling, telehealth, messaging, care plans, documents, programs)
-- [ ] Optional Healthie API add-on (Group/Enterprise)
-- [ ] Optional Healthie FHIR API add-on (Enterprise)
+### 3.2 Clinical + Order Management System (PHI)
+- [ ] Asher Med platform as system of record (patient registration, order management, prescription fulfillment, medical records)
+- [ ] Asher Med API integration for patient onboarding and order creation
+- [ ] HIPAA-compliant file storage and retrieval via Asher Med
 
-### 3.3 Headless EMR in Practice
-- [ ] Confirm Healthie API-first model for future integrations
-- [ ] Set up sandbox and production API key workflows (when add-on enabled)
+### 3.3 API-First Integration in Practice
+- [ ] Confirm Asher Med API-first model for patient and order management
+- [ ] Set up sandbox and production API key workflows
 - [ ] Plan membership status sync (PHI-free)
-- [ ] Plan create/read care plans and templates via API
-- [ ] Plan portal embed/redirect experiences
+- [ ] Plan create/read orders and patient records via API
+- [ ] Plan custom member dashboard experiences
 - [ ] Plan future mobile app integration
 
 ### 3.4 Best Stack Decisions
@@ -92,8 +92,8 @@
 - [ ] Coupon and promo rules
 - [ ] Affiliate platform selection (Rewardful or Tolt or FirstPromoter)
 - [ ] E-commerce decision (Stripe only vs Shopify headless later)
-- [ ] Healthie platform for clinical engine
-- [ ] Optional add-ons: Healthie API, DoseSpot eRx, Healthie FHIR API
+- [ ] Asher Med platform for clinical operations and fulfillment
+- [ ] Asher Med API integration for patient onboarding and order management
 
 ## 4) End-to-End User Journey (Exact Flow)
 ### 4.1 Visitor to Member (Website)
@@ -101,21 +101,20 @@
 - [ ] Visitor selects a package
 - [ ] Visitor completes Stripe Checkout subscription
 - [ ] Success page shows:
-  - [ ] Button A: Create portal login (Healthie)
-  - [ ] Button B: Book consult (Healthie scheduling link)
-  - [ ] 3-step timeline: Portal -> Intake -> Consult
+  - [ ] Button: Complete medical intake and order
+  - [ ] 3-step timeline: Account -> Intake -> Order Submission
 
-### 4.2 Member to Patient (Healthie)
-- [ ] Patient creates Healthie portal account
-- [ ] Patient completes intake and consents
-- [ ] Patient schedules appointment type
-- [ ] Telehealth visit occurs
-- [ ] Provider charts using templates
-- [ ] Provider applies protocol (Care Plan from Template)
-- [ ] Patient receives care plan and education resources
-- [ ] Patient receives drip program content
-- [ ] Patient uses secure messaging for follow-ups
-- [ ] Retention loop: check-ins, labs reminders, follow-up scheduling
+### 4.2 Member to Patient (Asher Med Platform)
+- [ ] Patient creates account in member dashboard
+- [ ] Patient completes intake questionnaire and consents
+- [ ] Patient uploads required documents (ID, signatures)
+- [ ] Patient selects medication packages and duration
+- [ ] Order submitted to Asher Med platform for provider review
+- [ ] Provider reviews order and approves prescription
+- [ ] Patient receives order confirmation and tracking
+- [ ] Medication shipped to patient address
+- [ ] Patient receives protocol education and resources
+- [ ] Retention loop: renewal reminders, check-ins, refill management
 
 ## 5) Website Workflows (MVP)
 ### 5.0 Existing Website Alignment (Current Codebase)
@@ -136,17 +135,17 @@
 - [ ] Join (optional route wrapper) (`app/join/[tier]/page.tsx`)
 - [ ] Checkout (Stripe hosted) (`app/api/checkout/route.ts`)
 - [ ] Success (next steps) (`app/success/page.tsx`)
-- [ ] Login (Healthie portal redirect) (`app/login/page.tsx`)
+- [ ] Login (member dashboard) (`app/login/page.tsx`)
 - [ ] Legal: Terms (`app/legal/terms/page.tsx`)
 - [ ] Legal: Privacy (`app/legal/privacy/page.tsx`)
 - [ ] Legal: Medical disclaimer (`app/legal/medical-disclaimer/page.tsx`)
 
 ### 5.2 Success Page Handoff Logic
-- [ ] Display Step 1: Create portal login
-- [ ] Display Step 2: Complete intake
-- [ ] Display Step 3: Book consult
-- [ ] Provide portal link
-- [ ] Provide scheduling link
+- [ ] Display Step 1: Access member dashboard
+- [ ] Display Step 2: Complete medical intake
+- [ ] Display Step 3: Submit order
+- [ ] Provide member dashboard link
+- [ ] Provide intake form link
 - [ ] Provide support contact
 - [ ] Optional: show membership active based on Stripe redirect params (PHI-free)
 
@@ -217,37 +216,38 @@
   - [ ] Booking clicks
 - [ ] Verify no PHI is tracked
 
-## 10) Healthie Core Setup (PHI)
-- [ ] Configure clinic branding
-- [ ] Create appointment types
-- [ ] Build intake forms and consents
-- [ ] Create visit note templates
-- [ ] Create message templates
-- [ ] Create care plans and care plan templates
-- [ ] Create programs (onboarding drip and protocol education)
-- [ ] Configure scheduling, telehealth, and secure messaging
+## 10) Asher Med Platform Setup (PHI)
+- [ ] Configure partner account and branding
+- [ ] Set up API keys (sandbox and production)
+- [ ] Build intake questionnaire flow
+- [ ] Create consent form templates
+- [ ] Configure medication packages and protocols
+- [ ] Set up file upload workflows (ID, signatures)
+- [ ] Configure order review and approval workflows
+- [ ] Set up patient communication templates
 
-## 11) Protocol Engine v1 (Inside Healthie)
-### 11.1 Healthie Primitives
-- [ ] Care Plans for patient-specific protocol plans
-- [ ] Care Plan Templates for reusable protocols
-- [ ] Documents for instruction packets and education
-- [ ] Programs for drip education cadence
-- [ ] Charting templates aligned to protocols
+## 11) Protocol Engine v1 (Asher Med Integration)
+### 11.1 Asher Med Order Components
+- [ ] Medication packages for treatment protocols
+- [ ] Wellness questionnaires for patient assessment
+- [ ] Treatment preferences for protocol customization
+- [ ] Order metadata for protocol tracking
+- [ ] Patient education resources aligned to protocols
 
 ### 11.2 Provider Workflow (v1)
-- [ ] Open patient
-- [ ] Apply Care Plan Template (protocol)
-- [ ] Customize patient-specific fields (dose schedule, monitoring cadence)
-- [ ] Use visit note template to document assessment and decision
-- [ ] Assign a Program (drip) for education and check-ins
-- [ ] Send standardized post-visit summary message template
+- [ ] Review patient order in Asher Med dashboard
+- [ ] Review intake questionnaire and medical history
+- [ ] Review physical measurements and treatment preferences
+- [ ] Approve medication package and dosing protocol
+- [ ] Customize patient-specific instructions
+- [ ] Approve order for fulfillment
+- [ ] Patient receives order confirmation and education resources
 
 ### 11.3 Patient Workflow (v1)
-- [ ] Patient sees care plan
-- [ ] Patient receives resources
-- [ ] Patient receives drip education
-- [ ] Patient uses messaging for questions and check-ins
+- [ ] Patient receives order confirmation
+- [ ] Patient receives tracking information
+- [ ] Patient receives protocol education resources
+- [ ] Patient accesses renewal and refill management
 
 ## 12) Protocol Template Library (Initial Set)
 - [ ] Clinic onboarding and expectations
@@ -313,7 +313,7 @@
 ### 14.2 ProtocolInstance Fields
 - [ ] protocol_instance_id
 - [ ] protocol_template_id
-- [ ] patient_external_ref (Healthie patient id, PHI-approved only if permitted)
+- [ ] patient_external_ref (Asher Med patient id, PHI-approved only if permitted)
 - [ ] start_date
 - [ ] end_date (optional)
 - [ ] status (active | paused | completed)
@@ -354,11 +354,11 @@
 - [ ] messaging_guidelines_block (when to message clinic)
 - [ ] emergency_disclaimer_block
 
-### 14.5 Care Plan Output Mapping (Healthie)
-- [ ] Protocol -> Care Plan
-- [ ] Protocol template -> Care Plan Template
-- [ ] Instruction packet -> Document attached to Care Plan
-- [ ] Drip education -> Program
+### 14.5 Order Output Mapping (Asher Med)
+- [ ] Protocol -> Medication Package
+- [ ] Protocol template -> Order Template
+- [ ] Instruction packet -> Education Resources
+- [ ] Drip education -> Email Automation
 
 ## 15) Provider Workflows (Exhaustive)
 ### 15.1 New Patient Workflow
@@ -436,30 +436,31 @@
 - [ ] Protocol Catalog: safety and escalation
 
 ### 16.2 Library Location by Phase
-- [ ] MVP: Healthie Documents and Programs
+- [ ] MVP: Member dashboard education resources
 - [ ] Growth: Website member library gated by Stripe status
 - [ ] Later: Personalized library recommendations in custom portal (PHI-safe)
 
 ## 17) Integrations (Exhaustive)
-### 17.1 Healthie API (Future)
-- [ ] Confirm Healthie API add-on plan (Group/Enterprise)
-- [ ] Use cases: custom portal UI (selective)
-- [ ] Use cases: Protocol Engine publish to Care Plans and Templates
+### 17.1 Asher Med API Integration
+- [ ] Configure Asher Med API keys (sandbox and production)
+- [ ] Use cases: patient onboarding and registration
+- [ ] Use cases: order creation and tracking
 - [ ] Use cases: operational dashboards (non-clinical counts)
 
-### 17.2 eRx (Future)
-- [ ] Confirm DoseSpot eRx add-on availability (Plus/Group/Enterprise)
-- [ ] Provider credentialing workflows
-- [ ] Prescribing policies and documentation templates
-- [ ] Refill SOPs for eRx workflows
+### 17.2 Prescription Management
+- [ ] Asher Med handles prescription generation and fulfillment
+- [ ] Provider credentialing managed by Asher Med
+- [ ] Order approval workflows for prescription authorization
+- [ ] Refill and renewal workflows via Asher Med platform
 
-### 17.3 Healthie FHIR API (Future)
-- [ ] Confirm FHIR API add-on (Enterprise)
-- [ ] Define interoperability use cases
+### 17.3 File Management
+- [ ] Implement S3 presigned URL workflow for file uploads
+- [ ] Upload patient ID photos and consent signatures
+- [ ] Retrieve uploaded files for verification
 
 ## 18) Compliance and Security Guardrails
 ### 18.1 PHI Boundaries
-- [ ] PHI allowed: Healthie (EHR, portal, messaging, care plans, programs)
+- [ ] PHI allowed: Asher Med platform (patient records, orders, medical files)
 - [ ] PHI not allowed: Stripe
 - [ ] PHI not allowed: affiliate platforms
 - [ ] PHI not allowed: analytics
@@ -489,36 +490,36 @@
 - [ ] Coupon behavior validated
 - [ ] Cancel URL returns to pricing
 
-### 19.2 Healthie Patient Flow Tests
-- [ ] Portal account creation works
-- [ ] Intake forms complete
-- [ ] Appointment scheduling works
-- [ ] Telehealth visit works
-- [ ] Secure messaging works
-- [ ] Provider note templates apply
-- [ ] Care plan template applies and visible to patient
-- [ ] Program assignment drips content
+### 19.2 Asher Med Patient Flow Tests
+- [ ] Member dashboard access works
+- [ ] Intake forms complete and validate
+- [ ] File uploads work (ID photos, signatures)
+- [ ] Order submission to Asher Med successful
+- [ ] Order appears in Asher Med partner portal
+- [ ] Provider can review and approve orders
+- [ ] Patient receives order confirmation
+- [ ] Renewal orders work for existing patients
 
 ### 19.3 Edge Cases
-- [ ] Paid user never creates portal
-- [ ] Paid user creates portal but never books
-- [ ] Patient no-shows
-- [ ] Subscription past_due
+- [ ] Paid user never accesses member dashboard
+- [ ] Paid user starts intake but never completes order
+- [ ] Order submitted but never approved by provider
+- [ ] Subscription past_due before order fulfillment
 - [ ] Upgrade and downgrade behavior
 
 ## 20) Admin and Ops SOPs (Exhaustive)
 ### 20.1 Daily Coordinator SOP
 - [ ] Check Stripe new customers
-- [ ] Confirm new member created portal
+- [ ] Confirm new member accessed dashboard
 - [ ] Confirm new member completed intake
-- [ ] Confirm new member booked consult
-- [ ] Send reminder templates: 24h no-book
-- [ ] Send reminder templates: 72h no-book
+- [ ] Confirm new member submitted order
+- [ ] Send reminder templates: 24h no-order
+- [ ] Send reminder templates: 72h no-order
 - [ ] Send reminder templates: intake incomplete
-- [ ] Confirm tomorrow schedule
-- [ ] Triage inbox: non-urgent
-- [ ] Triage inbox: needs provider
-- [ ] Triage inbox: urgent escalation
+- [ ] Review pending orders in Asher Med portal
+- [ ] Triage patient questions: non-urgent
+- [ ] Triage patient questions: needs provider
+- [ ] Triage patient questions: urgent escalation
 
 ### 20.2 Weekly SOP
 - [ ] Protocol usage review
@@ -541,59 +542,59 @@
 - [ ] Login redirect
 - [ ] Basic email deliverability configured
 
-### 21.2 Healthie
-- [ ] Clinic branding
-- [ ] Appointment types
-- [ ] Intake forms and consents
-- [ ] Note templates
-- [ ] Care Plans and Care Plan Templates (initial protocol set)
-- [ ] Programs (onboarding drip and protocol education)
-- [ ] Message templates
-- [ ] SOPs: onboarding, follow-ups, triage
+### 21.2 Asher Med Platform
+- [ ] Partner account setup and branding
+- [ ] API integration (sandbox and production)
+- [ ] Intake questionnaire implementation
+- [ ] Consent form templates
+- [ ] Medication packages and protocols
+- [ ] File upload workflows
+- [ ] Order review and approval workflows
+- [ ] SOPs: order processing, renewals, patient communication
 
 ### 21.3 Protocol Engine v1 Deliverable
-- [ ] 10-20 Care Plan Templates covering core offers
+- [ ] 10-20 medication packages and treatment protocols covering core offers
 
 ## 22) Phase 2 (Week 3-6) Operational Acceleration
-- [ ] Expand protocol template library
-- [ ] Add check-in Programs per protocol
+- [ ] Expand medication packages and protocols
+- [ ] Add automated renewal and refill workflows
 - [ ] Define protocol naming and versioning rules
-- [ ] Implement refill cadence SOP
-- [ ] Add lab review templates
-- [ ] Optional: integrate eRx add-on after workflows stabilize
+- [ ] Implement renewal cadence SOP
+- [ ] Add patient check-in questionnaires
+- [ ] Optimize order review and approval workflows
 
 ## 23) Phase 3 (Week 6-12) Moat Layers (PHI-Free)
 ### 23.1 Protocol Builder v2 (Provider-Only, PHI-Free)
 - [ ] Protocol template editor
 - [ ] Versioning and approvals
 - [ ] Instruction generator
-- [ ] Export blocks for Healthie
+- [ ] Export order templates for Asher Med
 - [ ] Template tagging and search
 - [ ] Protocol usage analytics (PHI-free)
 
 ### 23.2 Thin Member Dashboard v1 (PHI-Free)
 - [ ] Show membership status
 - [ ] Provide library access
-- [ ] Provide deep-links to Healthie portal
+- [ ] Provide access to intake and order submission
 
 ## 24) Phase 4 (12+ Weeks) Deep Integration
-### 24.1 Protocol Builder v3 Publish to Healthie
-- [ ] Publish to Care Plan (patient)
-- [ ] Publish to Care Plan Template (org library, if approved)
-- [ ] Publish Document (instruction packet)
-- [ ] Publish Program assignment (drip schedule)
-- [ ] Maintain audit log of publishes
+### 24.1 Protocol Builder v3 Publish to Asher Med
+- [ ] Publish to order templates
+- [ ] Generate medication packages from protocols
+- [ ] Create patient-specific order instructions
+- [ ] Automate renewal scheduling
+- [ ] Maintain audit log of protocol usage
 
 ### 24.2 Custom Portal Experiences (Selective)
 - [ ] Build custom member dashboard (PHI-free)
 - [ ] Build provider protocol builder (PHI-free)
-- [ ] Later: patient-specific portal features via Healthie API
+- [ ] Later: patient-specific portal features via Asher Med API
 
 ### 24.3 Ops Dashboards (Non-Clinical)
 - [ ] Counts and cohorts dashboards (no PHI)
 
-### 24.4 Optional Healthie FHIR API Layer
-- [ ] Evaluate and enable FHIR API (Enterprise)
+### 24.4 Advanced API Integration
+- [ ] Evaluate additional Asher Med API endpoints for custom workflows
 
 ## 25) Deliverables (Exhaustive Build Artifacts)
 ### 25.1 Website Deliverables
@@ -612,33 +613,34 @@
 - [ ] Customer portal settings
 - [ ] Webhook plan (optional)
 
-### 25.3 Healthie Deliverables
-- [ ] Appointment types
-- [ ] Intake forms and consents
-- [ ] Note templates
-- [ ] Message templates
-- [ ] Care plan templates (protocol library)
-- [ ] Programs (drip education)
+### 25.3 Asher Med Platform Deliverables
+- [ ] Partner account configuration
+- [ ] API integration implementation
+- [ ] Intake questionnaire flow
+- [ ] Consent form templates
+- [ ] Medication packages and protocols
+- [ ] File upload workflows
 - [ ] Go-live QA checklist
 
 ### 25.4 Protocol Engine Deliverables
-- [ ] v1: Care plan template set
-- [ ] v1: Matching note templates
-- [ ] v1: Program drip bundles
+- [ ] v1: Medication package templates
+- [ ] v1: Treatment protocol documentation
+- [ ] v1: Patient education resources
 - [ ] v2: Protocol template editor
-- [ ] v2: Protocol generator outputs (copy/paste blocks)
+- [ ] v2: Protocol generator outputs (order templates)
 - [ ] v2: Versioning and approvals
 - [ ] v2: Template tagging and search
-- [ ] v2: Export formats (note block, care plan block, instruction packet, drip outline)
-- [ ] v3: Healthie API integration module
-- [ ] v3: Publish to care plan actions
-- [ ] v3: Publish as template approval gates
-- [ ] v3: Audit log of publishes
+- [ ] v2: Export formats (order template, instruction packet, education outline)
+- [ ] v3: Asher Med API integration module
+- [ ] v3: Publish to order templates
+- [ ] v3: Protocol approval workflows
+- [ ] v3: Audit log of protocol usage
 
-## 26) Healthie Feature Alignment (Explicit Mapping)
-- [ ] Care Plans enable applying protocols with patient customization
-- [ ] Care Plan Templates enable saving protocols for reuse
-- [ ] Programs drip content over weeks or months
-- [ ] API add-on (Group/Enterprise) for key generation and sandbox workflow
-- [ ] eRx via DoseSpot add-on available on Plus/Group/Enterprise
-- [ ] Healthie FHIR API add-on available on Enterprise
+## 26) Asher Med Platform Feature Alignment (Explicit Mapping)
+- [ ] Medication packages enable protocol-based treatment plans
+- [ ] Order templates enable reusable protocol workflows
+- [ ] Patient education resources provide ongoing support
+- [ ] Asher Med API enables patient onboarding and order management
+- [ ] Prescription management handled by Asher Med licensed providers
+- [ ] HIPAA-compliant file storage via S3 presigned URLs
+- [ ] Order tracking and fulfillment managed by Asher Med

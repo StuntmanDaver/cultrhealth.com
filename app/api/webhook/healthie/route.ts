@@ -1,3 +1,5 @@
+// @deprecated — Healthie integration is deprecated. Kept to receive historical webhooks.
+// New orders and patient data flow through Asher Med (see /api/intake, /api/member/orders).
 import { NextRequest, NextResponse } from 'next/server'
 import { 
   processHealthieLabResults, 

@@ -2,6 +2,7 @@
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { US_STATES } from '@/lib/config/asher-med';
+import { Info } from 'lucide-react';
 
 export function ShippingAddressForm() {
   const { formData, updateFormData } = useIntakeForm();
@@ -17,6 +18,11 @@ export function ShippingAddressForm() {
 
   return (
     <div className="space-y-6">
+      <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+        <p className="text-sm text-forest-muted">Medications ship from our licensed pharmacy. We verify coverage in your state.</p>
+      </div>
+
       <div>
         <label htmlFor="address1" className="block text-sm font-medium text-stone-700 mb-1">
           Street Address <span className="text-red-500">*</span>

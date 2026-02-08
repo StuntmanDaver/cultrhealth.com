@@ -33,15 +33,33 @@ export async function verifyMagicLinkToken(token: string): Promise<{ email: stri
 }
 
 // Session token (long-lived, 7 days)
-export async function createSessionToken(email: string, customerId: string): Promise<string> {
-  return new SignJWT({ email, customerId, type: 'session' })
+export async function createSessionToken(
+  email: string,
+  customerId: string,
+  creatorId?: string,
+  role?: 'member' | 'creator' | 'admin'
+): Promise<string> {
+  return new SignJWT({
+    email,
+    customerId,
+    creatorId: creatorId || undefined,
+    role: role || 'member',
+    type: 'session',
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
     .sign(SESSION_SECRET)
 }
 
-export async function verifySessionToken(token: string): Promise<{ email: string; customerId: string } | null> {
+export interface SessionPayload {
+  email: string
+  customerId: string
+  creatorId?: string
+  role?: 'member' | 'creator' | 'admin'
+}
+
+export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, SESSION_SECRET)
     if (
@@ -51,7 +69,12 @@ export async function verifySessionToken(token: string): Promise<{ email: string
     ) {
       return null
     }
-    return { email: payload.email, customerId: payload.customerId }
+    return {
+      email: payload.email,
+      customerId: payload.customerId,
+      creatorId: typeof payload.creatorId === 'string' ? payload.creatorId : undefined,
+      role: (payload.role as SessionPayload['role']) || 'member',
+    }
   } catch {
     return null
   }
@@ -69,10 +92,10 @@ export async function setSessionCookie(token: string): Promise<void> {
   })
 }
 
-export async function getSession(): Promise<{ email: string; customerId: string } | null> {
+export async function getSession(): Promise<SessionPayload | null> {
   // Development mode: auto-grant access for testing
   if (process.env.NODE_ENV === 'development') {
-    return { email: 'member@cultrhealth.com', customerId: 'dev_customer' }
+    return { email: 'member@cultrhealth.com', customerId: 'dev_customer', role: 'admin' }
   }
 
   const cookieStore = await cookies()
@@ -117,7 +140,7 @@ export function checkRateLimit(email: string): boolean {
 const PLAN_ALIASES: Record<string, PlanTier> = {
   starter: 'core',
   core: 'core',
-  creator: 'creator',
+  creator: 'catalyst',
   cognition: 'catalyst',
   catalyst: 'catalyst',
   confidante: 'concierge',
@@ -220,6 +243,8 @@ interface AuthResult {
   authenticated: boolean
   email: string | null
   customerId: string | null
+  creatorId?: string | null
+  role?: string | null
 }
 
 /**
@@ -233,6 +258,8 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
       authenticated: true,
       email: 'member@cultrhealth.com',
       customerId: 'dev_customer',
+      creatorId: 'dev_creator',
+      role: 'admin',
     }
   }
 
@@ -245,6 +272,8 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
         authenticated: true,
         email: session.email,
         customerId: session.customerId,
+        creatorId: session.creatorId || null,
+        role: session.role || 'member',
       }
     }
   }
@@ -259,6 +288,8 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
         authenticated: true,
         email: session.email,
         customerId: session.customerId,
+        creatorId: session.creatorId || null,
+        role: session.role || 'member',
       }
     }
   }
@@ -267,5 +298,60 @@ export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
     authenticated: false,
     email: null,
     customerId: null,
+    creatorId: null,
+    role: null,
   }
+}
+
+/**
+ * Verify creator authentication for creator portal API routes.
+ * Returns creator ID from session or from DB lookup by email.
+ */
+export async function verifyCreatorAuth(request: NextRequest): Promise<{
+  authenticated: boolean
+  email: string | null
+  creatorId: string | null
+}> {
+  const auth = await verifyAuth(request)
+  if (!auth.authenticated || !auth.email) {
+    return { authenticated: false, email: null, creatorId: null }
+  }
+
+  // If creatorId is in the token, use it
+  if (auth.creatorId) {
+    return { authenticated: true, email: auth.email, creatorId: auth.creatorId }
+  }
+
+  // Otherwise look up creator by email
+  try {
+    const { getCreatorByEmail } = await import('@/lib/creators/db')
+    const creator = await getCreatorByEmail(auth.email)
+    if (creator && creator.status === 'active') {
+      return { authenticated: true, email: auth.email, creatorId: creator.id }
+    }
+  } catch {
+    // DB lookup failed
+  }
+
+  return { authenticated: false, email: auth.email, creatorId: null }
+}
+
+/**
+ * Verify admin authentication for admin API routes.
+ * Checks that the user's email is in the provider allowlist.
+ */
+export async function verifyAdminAuth(request: NextRequest): Promise<{
+  authenticated: boolean
+  email: string | null
+}> {
+  const auth = await verifyAuth(request)
+  if (!auth.authenticated || !auth.email) {
+    return { authenticated: false, email: null }
+  }
+
+  if (!isProviderEmail(auth.email)) {
+    return { authenticated: false, email: auth.email }
+  }
+
+  return { authenticated: true, email: auth.email }
 }

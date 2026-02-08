@@ -230,6 +230,11 @@ export function MedicationSelector() {
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Left: Product Selection Accordion */}
       <div className="flex-1 space-y-3">
+        <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
+          <p className="text-sm text-forest-muted">Pick what interests you. Your provider finalizes your protocol after reviewing labs.</p>
+        </div>
+
         <div className="mb-4">
           <p className="text-sm text-forest-muted">
             Select one or more products for your treatment protocol. Click on products to add them to your selection.

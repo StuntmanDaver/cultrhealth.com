@@ -9,7 +9,7 @@ import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
  */
 describe('Protocol Engine Integration', () => {
   describe('Tier → Library Access Flow', () => {
-    const tiers: PlanTier[] = ['core', 'creator', 'catalyst', 'concierge', 'club']
+    const tiers: PlanTier[] = ['core', 'catalyst', 'concierge', 'club']
 
     it('each tier has progressively more access', () => {
       let previousFeatureCount = 0
@@ -162,12 +162,8 @@ describe('Protocol Engine Integration', () => {
       expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(false)
     })
 
-    it('Creator can access advanced protocols', () => {
-      expect(hasFeatureAccess('creator', 'advancedProtocols')).toBe(true)
-    })
-
-    it('Creator cannot access dosing calculators', () => {
-      expect(hasFeatureAccess('creator', 'dosingCalculators')).toBe(false)
+    it('Catalyst+ can access advanced protocols', () => {
+      expect(hasFeatureAccess('catalyst', 'advancedProtocols')).toBe(true)
     })
 
     it('Catalyst+ can access dosing calculators', () => {

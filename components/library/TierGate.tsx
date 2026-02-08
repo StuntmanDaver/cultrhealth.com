@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button'
 import type { PlanTier } from '@/lib/config/plans'
 import type { ReactNode } from 'react'
 
-const TIER_ORDER: PlanTier[] = ['core', 'creator', 'catalyst', 'concierge', 'club']
+const TIER_ORDER: PlanTier[] = ['core', 'catalyst', 'concierge', 'club']
 
 function getTierRank(tier: PlanTier | null | undefined): number {
   const normalized = tier ?? 'core'
