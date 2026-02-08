@@ -127,7 +127,7 @@ export default async function SciencePage({
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Evidence-based <span className="italic">health education</span>
+              Evidence-based health education
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>

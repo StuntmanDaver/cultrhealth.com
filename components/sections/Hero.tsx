@@ -16,8 +16,7 @@ export default function Hero() {
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
         {/* Headline */}
         <h1 className="text-display-xl text-brand-primary mb-6 animate-fade-in">
-          <span className="italic">What if you could optimize </span>
-          your health at any time, just like checking your heart rate?
+          What if you could optimize your health at any time, just like checking your heart rate?
         </h1>
 
         {/* Subheadline */}

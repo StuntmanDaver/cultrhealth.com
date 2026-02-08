@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
 
 const productLinks = [
-  { href: '/products', label: 'All Products' },
-  { href: '/products#peptides', label: 'Peptides' },
-  { href: '/products#bioregulators', label: 'Bioregulators' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/pricing#plans', label: 'Membership Plans' },
+  { href: '/pricing#faq', label: 'Pricing FAQ' },
 ];
 
 const learnLinks = [

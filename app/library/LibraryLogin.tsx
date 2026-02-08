@@ -62,7 +62,7 @@ export function LibraryLogin({ error }: { error?: string }) {
             <Lock className="w-8 h-8 text-cultr-sage" />
           </div>
           <h1 className="text-4xl font-display font-bold mb-4">
-            Member <span className="italic">Library</span>
+            Member Library
           </h1>
           <p className="text-white/80">
             Access your peptide reference library with detailed protocols, mechanisms, and safety information.

@@ -6,7 +6,7 @@ import { ChevronDown } from 'lucide-react';
 
 const navLinks = [
   { href: '/quiz', label: 'Take the Quiz' },
-  { href: '/products', label: 'Products', hasDropdown: true },
+  { href: '/pricing', label: 'Pricing', hasDropdown: false },
   { href: '/how-it-works', label: 'How It Works' },
   { href: '/science', label: 'Science' },
 ];

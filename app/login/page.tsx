@@ -67,7 +67,7 @@ export default function LoginPage() {
               <Lock className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
-              Member <span className="italic">Login</span>
+              Member Login
             </h1>
           </ScrollReveal>
 

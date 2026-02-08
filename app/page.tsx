@@ -125,7 +125,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest">
-              Real results. No <span className="italic">fluff</span>.
+              Real results. No fluff.
             </h2>
           </ScrollReveal>
 
@@ -180,8 +180,8 @@ export default function HomePage() {
             <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1 lg:mt-6">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/hero-women-lifestyle.png"
-                  alt="Women enjoying an active lifestyle outdoors"
+                  src="/images/hero-man-sunset.jpg"
+                  alt="Man at sunset representing freedom and achievement"
                   fill
                   className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
@@ -215,7 +215,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              Three steps. <span className="italic">That&apos;s it</span>.
+              Three steps. That's it.
             </h2>
           </ScrollReveal>
 
@@ -269,7 +269,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              What&apos;s <span className="italic">included</span>.
+              What's included.
             </h2>
           </ScrollReveal>
 
@@ -310,7 +310,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              CULTR vs. the <span className="italic">status quo</span>
+              CULTR vs. the status quo
             </h2>
           </ScrollReveal>
 
@@ -345,7 +345,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              Transparent <span className="italic">pricing</span>.
+              Transparent pricing.
             </h2>
           </ScrollReveal>
 
@@ -378,7 +378,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-              What members <span className="italic">say</span>.
+              What members say.
             </h2>
             <div className="flex items-center justify-center gap-2 text-white/70">
               <div className="flex">
@@ -423,7 +423,7 @@ export default function HomePage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              Your care <span className="italic">team</span>.
+              Your care team.
             </h2>
           </ScrollReveal>
 
@@ -462,7 +462,7 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              <span className="italic">Questions</span>.
+              Questions.
             </h2>
           </ScrollReveal>
 

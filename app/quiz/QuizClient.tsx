@@ -67,7 +67,7 @@ export function QuizClient() {
               <span className="text-sm font-medium text-cultr-forest">Your personalized match</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest mb-4">
-              We recommend <span className="italic">{result.tierName}</span>.
+              We recommend {result.tierName}.
             </h1>
             <p className="text-cultr-textMuted max-w-md mx-auto">
               Based on your goal to <span className="lowercase">{result.primaryGoal}</span>, here&apos;s your matched plan and protocols.

@@ -111,7 +111,7 @@ export function MemberDashboard({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-display font-bold">
-              Member <span className="italic">Dashboard</span>
+              Member Dashboard
             </h2>
             <p className="text-white/60 text-sm mt-1">
               Track your orders and manage your protocols

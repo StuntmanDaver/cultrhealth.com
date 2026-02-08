@@ -30,7 +30,7 @@ export default function CreatorsPage() {
               <span className="text-sm">Affiliate Program</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Earn with <span className="italic">CULTR</span>
+              Earn with CULTR
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
@@ -61,7 +61,7 @@ export default function CreatorsPage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              How it <span className="italic">works</span>
+              How it works
             </h2>
           </ScrollReveal>
 
@@ -109,7 +109,7 @@ export default function CreatorsPage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Creator <span className="italic">benefits</span>
+              Creator benefits
             </h2>
           </ScrollReveal>
 
@@ -167,7 +167,7 @@ export default function CreatorsPage() {
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Recruiting <span className="italic">tiers</span>
+              Recruiting tiers
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               Grow your network and unlock higher override commissions on your recruits&apos; sales.
@@ -212,7 +212,7 @@ export default function CreatorsPage() {
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-              Ready to <span className="italic">earn</span>?
+              Ready to earn?
             </h2>
             <p className="text-white/70 mb-10 max-w-xl mx-auto">
               Apply to the CULTR Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.

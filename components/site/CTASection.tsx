@@ -52,7 +52,7 @@ export function CTASection({
           {/* Center - Newsletter */}
           <div className="flex items-center gap-4 flex-1 justify-center">
             <span className="text-white font-display text-sm whitespace-nowrap hidden lg:block">
-              Stay in the <span className="italic">loop.</span>
+              Stay in the loop.
             </span>
             {status === 'success' ? (
               <div className="text-white text-sm font-medium bg-white/10 px-6 py-2.5 rounded-full border border-white/20">

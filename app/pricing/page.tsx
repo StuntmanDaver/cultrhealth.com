@@ -38,7 +38,7 @@ export default function PricingPage() {
               <span className="text-sm">HSA/FSA Eligible</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Invest in your <span className="italic">future self</span>
+              Invest in your future self
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
@@ -90,7 +90,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Choose your <span className="italic">membership</span>
+              Choose your membership
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto mb-4">
               All plans include access to our platform, provider consultations, and core features. Upgrade or downgrade anytime.
@@ -147,7 +147,7 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Compare <span className="italic">memberships</span>
+              Compare memberships
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               See what&apos;s included in each tier to find the right fit for your goals.
@@ -208,7 +208,7 @@ export default function PricingPage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Every membership <span className="italic">includes</span>
+              Every membership includes
             </h2>
           </ScrollReveal>
 
@@ -260,7 +260,7 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Pricing <span className="italic">FAQ</span>
+              Pricing FAQ
             </h2>
           </ScrollReveal>
 

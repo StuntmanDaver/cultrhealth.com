@@ -454,7 +454,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
           <div className="max-w-md mx-auto text-center py-16">
             <Package className="w-16 h-16 text-brand-primary/30 mx-auto mb-6" />
             <h2 className="text-2xl font-display text-brand-primary mb-3">
-              Your cart is <span className="italic">empty</span>
+              Your cart is empty
             </h2>
             <p className="text-brand-primary/60 mb-8">
               Browse our catalog and add products to your cart.
@@ -475,7 +475,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
                   {canDirectCheckout ? (
                     <>Checkout</>
                   ) : (
-                    <>Request a <span className="italic">Quote</span></>
+                    <>Request a Quote</>
                   )}
                 </h1>
                 <p className="text-brand-primary/60">

@@ -45,6 +45,22 @@ const nextConfig = {
       },
     ];
   },
+
+  // Redirects for removed pages
+  async redirects() {
+    return [
+      {
+        source: '/products',
+        destination: '/pricing',
+        permanent: true, // 301 redirect
+      },
+      {
+        source: '/products/:path*',
+        destination: '/pricing',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

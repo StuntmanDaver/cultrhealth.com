@@ -83,7 +83,7 @@ export default function HowItWorksPage() {
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Your path to <span className="italic">optimal health</span>
+              Your path to optimal health
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
@@ -96,9 +96,9 @@ export default function HowItWorksPage() {
               <Link href="/quiz">
                 <Button size="lg">Take the Quiz</Button>
               </Link>
-              <Link href="/products">
+              <Link href="/pricing">
                 <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                  View Products <ArrowRight className="w-4 h-4 ml-2" />
+                  View Pricing <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
@@ -141,7 +141,7 @@ export default function HowItWorksPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-display font-bold text-cultr-forest mb-4">
-                    Safety is our <span className="italic">priority</span>
+                    Safety is our priority
                   </h3>
                   <p className="text-cultr-textMuted mb-6 leading-relaxed">
                     CULTR is a licensed medical practice. We screen all patients for contraindications and safety risks. Our providers follow evidence-based protocols and monitor your progress closely.
@@ -171,7 +171,7 @@ export default function HowItWorksPage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Four steps to <span className="italic">transformation</span>
+              Four steps to transformation
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               We&apos;ve simplified the process so you can focus on what matters—your health.
@@ -235,7 +235,7 @@ export default function HowItWorksPage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              What&apos;s included in your <span className="italic">membership</span>
+              What's included in your membership
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               Every plan includes access to our core platform and features. Higher tiers unlock more frequent consultations and advanced protocols.
@@ -294,7 +294,7 @@ export default function HowItWorksPage() {
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-20">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Frequently asked <span className="italic">questions</span>
+              Frequently asked questions
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               Everything you need to know about CULTR Health, our memberships, and how we can help you optimize your health.

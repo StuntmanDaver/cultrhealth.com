@@ -142,7 +142,7 @@ export function LibraryContent({
             {/* Library Header */}
             <div>
               <h1 className="text-3xl font-display font-bold text-stone-900">
-                Peptide <span className="italic">Library</span>
+                Peptide Library
               </h1>
               <p className="text-stone-600 mt-2">
                 Comprehensive reference guides for 80+ compounds
@@ -323,7 +323,7 @@ export function LibraryContent({
           <div className="space-y-8">
             <div>
               <h1 className="text-3xl font-display font-bold text-stone-900">
-                Account <span className="italic">Settings</span>
+                Account Settings
               </h1>
               <p className="text-stone-600 mt-2">
                 Manage your membership and billing

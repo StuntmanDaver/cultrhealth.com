@@ -19,7 +19,7 @@ export default function FAQPage() {
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Frequently asked <span className="italic">questions</span>
+              Frequently asked questions
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
