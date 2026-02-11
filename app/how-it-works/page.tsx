@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-32 md:py-44 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
@@ -131,7 +131,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Safety & Compliance - MOVED ABOVE Four Steps */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="p-8 md:p-12 rounded-2xl bg-cultr-mint border border-cultr-sage">
@@ -167,9 +167,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Steps - Detailed (Four Steps to Transformation) */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-5xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Four steps to transformation
             </h2>
@@ -185,7 +185,7 @@ export default function HowItWorksPage() {
                   {/* Content */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-xs font-bold text-cultr-forest tracking-widest bg-cultr-mint px-3 py-1 rounded-full">
+                      <span className="text-xs font-display font-bold text-cultr-forest tracking-widest bg-cultr-mint px-3 py-1 rounded-full">
                         STEP {step.step}
                       </span>
                     </div>
@@ -231,9 +231,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               What's included in your membership
             </h2>
@@ -290,9 +290,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* FAQ Sections - MOVED FROM /faq page */}
-      <section id="faq" className="py-32 px-6 bg-cultr-offwhite scroll-mt-20">
+      <section id="faq" className="py-16 md:py-20 px-6 bg-cultr-offwhite scroll-mt-20">
         <div className="max-w-3xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Frequently asked questions
             </h2>

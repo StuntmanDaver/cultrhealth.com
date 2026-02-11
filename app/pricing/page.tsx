@@ -30,7 +30,7 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-32 md:py-44 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -86,7 +86,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section id="plans" className="py-32 px-6 bg-white">
+      <section id="plans" className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -117,7 +117,7 @@ export default function PricingPage() {
       </section>
 
       {/* CULTR Creator CTA */}
-      <section className="py-20 px-6 bg-cultr-forest">
+      <section className="py-12 px-6 bg-cultr-forest">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -143,7 +143,7 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -204,7 +204,7 @@ export default function PricingPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -256,7 +256,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">

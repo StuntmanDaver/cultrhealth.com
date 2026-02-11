@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   BookOpen,
   FileText,
@@ -16,47 +17,50 @@ const RESOURCE_SECTIONS = [
     title: 'Content Templates',
     icon: MessageSquare,
     items: [
-      { title: 'Short-Form Hooks', desc: '15-second hook scripts for Reels/TikTok', type: 'doc' },
-      { title: 'Long-Form Scripts', desc: 'YouTube/podcast talking points', type: 'doc' },
-      { title: 'Email Templates', desc: 'Newsletter copy for your audience', type: 'doc' },
-      { title: 'Caption Templates', desc: 'Ready-to-post social captions', type: 'doc' },
+      { title: 'Short-Form Hooks', desc: '15-second hook scripts for Reels/TikTok', type: 'doc', slug: 'short-form-hooks' },
+      { title: 'Long-Form Scripts', desc: 'YouTube/podcast talking points', type: 'doc', slug: 'long-form-scripts' },
+      { title: 'Email Templates', desc: 'Newsletter copy for your audience', type: 'doc', slug: 'email-templates' },
+      { title: 'Caption Templates', desc: 'Ready-to-post social captions', type: 'doc', slug: 'caption-templates' },
     ],
   },
   {
     title: 'Brand Kit',
     icon: Palette,
     items: [
-      { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download' },
-      { title: 'Brand Colors', desc: 'Forest #2A4542, Sage #B7E4C7, Mint #D8F3DC', type: 'info' },
-      { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download' },
-      { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc' },
+      { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
+      { title: 'Brand Colors', desc: 'Forest #2A4542, Sage #B7E4C7, Mint #D8F3DC', type: 'info', slug: 'brand-colors' },
+      { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
+      { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
     ],
   },
   {
     title: 'Compliance',
     icon: Shield,
     items: [
-      { title: 'FTC Disclosure Guide', desc: 'Required disclosures for affiliate content', type: 'doc' },
-      { title: 'Approved Claims', desc: 'What you can and cannot say about CULTR products', type: 'doc' },
-      { title: 'Health Claims Policy', desc: 'FDA-compliant language for health/wellness', type: 'doc' },
-      { title: 'Terms of Service', desc: 'Creator affiliate program terms', type: 'doc' },
+      { title: 'FTC Disclosure Guide', desc: 'Required disclosures for affiliate content', type: 'doc', slug: 'ftc-disclosure-guide' },
+      { title: 'Approved Claims', desc: 'What you can and cannot say about CULTR products', type: 'doc', slug: 'approved-claims' },
+      { title: 'Health Claims Policy', desc: 'FDA-compliant language for health/wellness', type: 'doc', slug: 'health-claims-policy' },
+      { title: 'Terms of Service', desc: 'Creator affiliate program terms', type: 'doc', slug: 'terms-of-service' },
     ],
   },
   {
     title: 'Product Education',
     icon: BookOpen,
     items: [
-      { title: 'GLP-1 Overview', desc: 'How GLP-1 medications work, benefits, and eligibility', type: 'doc' },
-      { title: 'Peptide Protocols', desc: 'Introduction to peptide therapy and stacking', type: 'doc' },
-      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Concierge explained', type: 'doc' },
-      { title: 'FAQ Cheat Sheet', desc: 'Common questions your audience will ask', type: 'doc' },
+      { title: 'GLP-1 Overview', desc: 'How GLP-1 medications work, benefits, and eligibility', type: 'doc', slug: 'glp-1-overview' },
+      { title: 'Peptide Protocols', desc: 'Introduction to peptide therapy and stacking', type: 'doc', slug: 'peptide-protocols' },
+      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Concierge explained', type: 'doc', slug: 'membership-tiers' },
+      { title: 'FAQ Cheat Sheet', desc: 'Common questions your audience will ask', type: 'doc', slug: 'faq-cheat-sheet' },
     ],
   },
 ]
 
-function ResourceCard({ title, desc, type }: { title: string; desc: string; type: string }) {
+function ResourceCard({ title, desc, type, slug }: { title: string; desc: string; type: string; slug: string }) {
   return (
-    <div className="flex items-start gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:border-cultr-forest transition-colors cursor-pointer">
+    <Link
+      href={`/creators/portal/resources/${slug}`}
+      className="flex items-start gap-3 p-4 bg-white border border-stone-200 rounded-xl hover:border-cultr-forest transition-colors"
+    >
       <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
         {type === 'download' ? (
           <Download className="w-4 h-4 text-cultr-forest" />
@@ -71,7 +75,7 @@ function ResourceCard({ title, desc, type }: { title: string; desc: string; type
         <p className="text-xs text-cultr-textMuted mt-0.5">{desc}</p>
       </div>
       <ExternalLink className="w-4 h-4 text-stone-300 flex-shrink-0 mt-1" />
-    </div>
+    </Link>
   )
 }
 

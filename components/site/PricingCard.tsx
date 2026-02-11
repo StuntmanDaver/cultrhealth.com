@@ -29,7 +29,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
       }
     `}>
       {plan.isFeatured && (
-        <span className="text-cultr-sage text-xs font-bold tracking-widest uppercase mb-4 block animate-pulse-slow">Most Popular</span>
+        <span className="text-cultr-sage text-xs font-display font-bold tracking-widest uppercase mb-4 block animate-pulse-slow">Most Popular</span>
       )}
       <h3 className={`text-2xl font-display font-bold mb-2 transition-transform duration-300 group-hover:translate-x-0.5 ${plan.isFeatured ? 'text-white' : 'text-cultr-text'}`}>{plan.name}</h3>
       <div className="flex items-baseline gap-1 mb-2">

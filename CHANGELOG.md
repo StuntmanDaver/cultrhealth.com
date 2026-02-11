@@ -4,6 +4,62 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-10] - Brand Typography, Homepage Redesign, Creator Resources & Navbar Update
+
+### Fixed
+- **Brand typography site-wide** — Playfair Display (`font-display`) was not applying to heading-like text in non-semantic elements (`div`, `span`, `td`, `th`). Added `th` to the CSS base layer heading rule in `globals.css` and added `font-display` to 20+ individual elements across 11 files: trust badges, lifestyle image badges, step labels, pricing badges, mobile menu section headers, footer trust badges, quiz labels, and comparison table headers.
+
+### Changed
+
+#### Homepage
+- **Hero image** — replaced with group lifestyle activewear photo
+- **Hero heading** — now reads "Real results. No nonsense."
+- **"How It Works" heading** — changed to "Three steps to *rebrand* yourself." with italicized "rebrand"
+- **Removed "What's included" features grid section** entirely
+- **"How It Works" background** — changed from `bg-white` to `bg-cultr-offwhite` for better visual separation from adjacent Comparison Table section
+- **Removed star ratings/reviews** from trust badge bar
+
+#### Navbar
+- **Logo** — now displays stacked "CULTR" with "Health" subtitle underneath, right-aligned
+- **Scroll animation** — "Health" subtitle fades out and collapses (opacity + max-height transition) when navbar enters compact pill mode on scroll
+
+#### Spacing (site-wide)
+- **Hero sections**: `py-32 md:py-44` → `py-20 md:py-28` (homepage, pricing, how-it-works, creators)
+- **Content sections**: `py-32` → `py-16 md:py-20`
+- **Section headings**: `mb-20` → `mb-12`
+- **CTA sections**: `py-20` → `py-12`
+
+### Added
+
+#### Creator Portal Resources
+- **Dynamic resource pages** — all 16 resource cards in the creator portal are now clickable with full content at `/creators/portal/resources/[slug]`
+  - **Content Kit**: Short-Form Hooks, Long-Form Scripts, Email Templates, Caption Templates
+  - **Brand Assets**: Logo Pack, Brand Colors, Photography, Brand Guidelines
+  - **Compliance**: FTC Disclosure Guide, Approved Claims, Health Claims Policy, Terms of Service
+  - **Education**: GLP-1 Overview, Peptide Protocols, Membership Tiers, FAQ Cheat Sheet
+- **`app/creators/portal/resources/[slug]/page.tsx`** — dynamic route with copy-to-clipboard functionality for templates and color swatches, 404 handling for unknown slugs
+
+### Files Modified
+- `app/globals.css` — added `th` to base heading font rule
+- `app/page.tsx` — hero image, heading, removed sections, font-display fixes, spacing
+- `app/how-it-works/page.tsx` — font-display fix, spacing
+- `app/pricing/page.tsx` — spacing
+- `app/creators/page.tsx` — font-display fix, spacing
+- `app/science/page.tsx` — font-display fixes
+- `app/quiz/QuizClient.tsx` — font-display fixes
+- `app/creators/portal/resources/page.tsx` — made cards clickable with Links
+- `components/site/Header.tsx` — logo redesign, font-display fixes
+- `components/site/Footer.tsx` — font-display fix
+- `components/site/ComparisonTable.tsx` — font-display fix
+- `components/site/PricingCard.tsx` — font-display fix
+- `components/site/ClubBanner.tsx` — font-display fix
+- `public/images/hero-lifestyle-group.png` — replaced image file
+
+### Files Added
+- `app/creators/portal/resources/[slug]/page.tsx` — creator resource detail pages
+
+---
+
 ## [2026-02-08b] - Floating Pill Navbar, Button Fixes & Deployment Setup
 
 ### Added

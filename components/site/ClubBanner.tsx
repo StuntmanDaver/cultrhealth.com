@@ -43,7 +43,7 @@ export function ClubBanner() {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-cultr-forest" />
-            <span className="text-xs font-bold tracking-widest text-cultr-forest uppercase">Free</span>
+            <span className="text-xs font-display font-bold tracking-widest text-cultr-forest uppercase">Free</span>
           </div>
           <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
             CULTR Club

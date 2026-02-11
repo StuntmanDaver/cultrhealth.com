@@ -22,7 +22,7 @@ export default function CreatorsPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-32 md:py-44 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -57,9 +57,9 @@ export default function CreatorsPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               How it works
             </h2>
@@ -89,7 +89,7 @@ export default function CreatorsPage() {
               <ScrollReveal key={i} delay={i * 150} direction="up">
                 <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="text-xs font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
+                    <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-cultr-sage flex items-center justify-center mb-4">
@@ -105,7 +105,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Benefits */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -163,7 +163,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Commission Tiers */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -208,7 +208,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Apply CTA */}
-      <section id="apply" className="py-32 px-6 bg-cultr-forest text-white">
+      <section id="apply" className="py-16 md:py-20 px-6 bg-cultr-forest text-white">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">

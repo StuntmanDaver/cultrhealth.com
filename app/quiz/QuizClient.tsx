@@ -64,7 +64,7 @@ export function QuizClient() {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-cultr-mint px-4 py-2 rounded-full mb-6">
               <Sparkles className="w-4 h-4 text-cultr-forest" />
-              <span className="text-sm font-medium text-cultr-forest">Your personalized match</span>
+              <span className="text-sm font-display font-medium text-cultr-forest">Your personalized match</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest mb-4">
               We recommend {result.tierName}.
@@ -79,7 +79,7 @@ export function QuizClient() {
             <div className="bg-white rounded-2xl border-2 border-cultr-forest p-8 mb-8">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-xs font-bold text-cultr-sage tracking-widest mb-1">RECOMMENDED PLAN</p>
+                  <p className="text-xs font-display font-bold text-cultr-sage tracking-widest mb-1">RECOMMENDED PLAN</p>
                   <h2 className="text-2xl font-display font-bold text-cultr-forest">{plan.name}</h2>
                   <p className="text-cultr-textMuted text-sm">{plan.bestFor}</p>
                 </div>

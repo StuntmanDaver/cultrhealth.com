@@ -17,7 +17,7 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2, h3, h4, h5, h6, th {
     @apply font-display;
   }
 
@@ -447,6 +447,7 @@
 .blog-content th {
   padding: 0.875rem 1rem;
   text-align: left;
+  font-family: var(--font-display), 'Playfair Display', Georgia, serif;
   font-weight: 600;
   color: white;
   font-size: 0.875rem;

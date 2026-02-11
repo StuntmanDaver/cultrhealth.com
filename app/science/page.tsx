@@ -46,14 +46,14 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
             </div>
             {/* Category badge */}
             <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-cultr-forest text-white text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-cultr-forest text-white text-xs font-display font-medium rounded-full">
                 {post.category}
               </span>
             </div>
             {/* Featured badge */}
             {post.featured && (
               <div className="absolute top-4 right-4">
-                <span className="px-3 py-1 bg-cultr-copper text-white text-xs font-medium rounded-full">
+                <span className="px-3 py-1 bg-cultr-copper text-white text-xs font-display font-medium rounded-full">
                   Featured
                 </span>
               </div>

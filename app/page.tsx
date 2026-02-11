@@ -43,7 +43,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative py-32 md:py-44 px-6 bg-cultr-forest overflow-hidden">
+      <section className="relative py-20 md:py-28 px-6 bg-cultr-forest overflow-hidden">
         {/* Mobile background image */}
         <Image
           src="/images/hero-lifestyle-group.png"
@@ -104,28 +104,19 @@ export default function HomePage() {
             return (
               <div key={badge.label} className="flex items-center gap-2">
                 {Icon && <Icon className="w-4 h-4" />}
-                <span className="font-medium">{badge.label}</span>
+                <span className="font-display font-medium">{badge.label}</span>
               </div>
             );
           })}
-          <div className="flex items-center gap-1.5">
-            <div className="flex">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-3.5 h-3.5 fill-cultr-forest text-cultr-forest" />
-              ))}
-            </div>
-            <span className="font-bold">{TRUST_METRICS.avgRating}</span>
-            <span className="text-cultr-textMuted">({TRUST_METRICS.reviewCount} reviews)</span>
-          </div>
         </div>
       </section>
 
       {/* ─── Results / Lifestyle ─── */}
-      <section className="relative py-32 md:py-40 px-6 bg-gradient-to-br from-cultr-offwhite via-white to-cultr-mint/20 overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 bg-gradient-to-br from-cultr-offwhite via-white to-cultr-mint/20 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest">
-              Real results. No fluff.
+              Real results. No nonsense.
             </h2>
           </ScrollReveal>
 
@@ -144,7 +135,7 @@ export default function HomePage() {
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
-                    <span className="text-xs font-bold text-white tracking-widest">CONFIDENCE</span>
+                    <span className="text-xs font-display font-bold text-white tracking-widest">CONFIDENCE</span>
                   </div>
                   <p className="text-white text-sm md:text-base leading-relaxed">
                     Look in the mirror and like what you see.
@@ -167,7 +158,7 @@ export default function HomePage() {
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
-                    <span className="text-xs font-bold text-white tracking-widest">ENDURANCE</span>
+                    <span className="text-xs font-display font-bold text-white tracking-widest">ENDURANCE</span>
                   </div>
                   <p className="text-white text-sm md:text-base leading-relaxed">
                     Outrun the version of you from six months ago.
@@ -190,7 +181,7 @@ export default function HomePage() {
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
-                    <span className="text-xs font-bold text-white tracking-widest">FREEDOM</span>
+                    <span className="text-xs font-display font-bold text-white tracking-widest">FREEDOM</span>
                   </div>
                   <p className="text-white text-sm md:text-base leading-relaxed">
                     Stop managing symptoms. Start living.
@@ -211,11 +202,11 @@ export default function HomePage() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section className="py-32 md:py-40 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              Three steps. That's it.
+              Three steps to <span className="italic">rebrand</span> yourself.
             </h2>
           </ScrollReveal>
 
@@ -243,7 +234,7 @@ export default function HomePage() {
               <ScrollReveal key={i} delay={i * 150} direction="up">
                 <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full">
                   <div className="flex items-center gap-3 mb-6">
-                    <span className="text-xs font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
+                    <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-cultr-sage flex items-center justify-center mb-4">
@@ -264,51 +255,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Features Grid (3 large cards) ─── */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
-        <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
-              What's included.
-            </h2>
-          </ScrollReveal>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: FlaskConical,
-                title: '50+ Lab Markers',
-                desc: 'We test what your doctor skips.',
-              },
-              {
-                icon: Dna,
-                title: 'Peptide Protocols',
-                desc: 'Clinician-built, not cookie-cutter.',
-              },
-              {
-                icon: Stethoscope,
-                title: 'Licensed Providers',
-                desc: 'Board-certified. Always available.',
-              },
-            ].map((feature, i) => (
-              <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-10 rounded-2xl bg-white border border-cultr-sage hover:border-cultr-forest/40 transition-colors h-full">
-                  <div className="w-14 h-14 rounded-xl bg-cultr-mint flex items-center justify-center mb-6">
-                    <feature.icon className="w-7 h-7 text-cultr-forest" />
-                  </div>
-                  <h3 className="text-xl font-display font-bold text-cultr-text mb-3">{feature.title}</h3>
-                  <p className="text-cultr-textMuted">{feature.desc}</p>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ─── Comparison Table ─── */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               CULTR vs. the status quo
             </h2>
@@ -316,7 +267,7 @@ export default function HomePage() {
 
           <ScrollReveal>
             <div className="rounded-2xl border border-cultr-sage overflow-hidden">
-              <div className="grid grid-cols-3 bg-cultr-forest text-white">
+              <div className="grid grid-cols-3 bg-cultr-forest text-white font-display">
                 <div className="p-4 font-medium">Feature</div>
                 <div className="p-4 font-medium text-center">Standard Care</div>
                 <div className="p-4 font-medium text-center bg-cultr-forestDark">CULTR</div>
@@ -341,9 +292,9 @@ export default function HomePage() {
       </section>
 
       {/* ─── Pricing Preview ─── */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Transparent pricing.
             </h2>
@@ -374,9 +325,9 @@ export default function HomePage() {
       </section>
 
       {/* ─── Testimonials (expanded) ─── */}
-      <section className="py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-16 md:py-20 px-6 bg-cultr-forest text-white">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
               What members say.
             </h2>
@@ -419,9 +370,9 @@ export default function HomePage() {
       </section>
 
       {/* ─── Provider Credentials ─── */}
-      <section className="py-32 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 bg-white">
         <div className="max-w-5xl mx-auto">
-          <ScrollReveal className="text-center mb-20">
+          <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Your care team.
             </h2>
@@ -458,7 +409,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section className="py-32 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
@@ -482,7 +433,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── CULTR Creator CTA ─── */}
-      <section className="py-20 px-6 bg-cultr-forest">
+      <section className="py-12 px-6 bg-cultr-forest">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">

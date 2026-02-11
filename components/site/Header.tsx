@@ -73,15 +73,27 @@ export function Header() {
             {/* Logo + Left Nav */}
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center shrink-0">
-                <span
-                  className={`
-                    font-display font-bold tracking-[0.08em] uppercase text-brand-primary
-                    transition-[font-size] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-                    ${scrolled ? 'text-lg' : 'text-[22px]'}
-                  `}
-                >
-                  CULTR
-                </span>
+                <div className="flex flex-col items-end leading-none">
+                  <span
+                    className={`
+                      font-display font-bold tracking-[0.08em] uppercase text-brand-primary
+                      transition-[font-size] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+                      ${scrolled ? 'text-lg' : 'text-[22px]'}
+                    `}
+                  >
+                    CULTR
+                  </span>
+                  <span
+                    className={`
+                      font-display font-medium tracking-[0.12em] uppercase text-brand-primary
+                      transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+                      text-[8px]
+                      ${scrolled ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100 max-h-4'}
+                    `}
+                  >
+                    Health
+                  </span>
+                </div>
               </Link>
 
               <nav className="hidden lg:flex items-center gap-0.5">
@@ -175,7 +187,7 @@ export function Header() {
       >
         {/* Main Nav Group */}
         <div className="mb-7">
-          <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
+          <div className="text-[11px] font-display font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
             Navigate
           </div>
           {navLinks.map((link) => (
@@ -192,7 +204,7 @@ export function Header() {
 
         {/* Right Nav Group */}
         <div className="mb-7">
-          <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
+          <div className="text-[11px] font-display font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
             More
           </div>
           {rightNavLinks.map((link) => (

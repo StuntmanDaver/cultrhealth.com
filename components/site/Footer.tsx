@@ -38,7 +38,7 @@ export function Footer() {
             {trustBadges.map((badge) => (
               <div key={badge.label} className="flex items-center gap-2 text-cultr-forest">
                 <badge.icon className="w-4 h-4" />
-                <span className="text-xs font-medium tracking-wide">{badge.label}</span>
+                <span className="text-xs font-display font-medium tracking-wide">{badge.label}</span>
               </div>
             ))}
           </div>
