@@ -152,6 +152,42 @@ export function LibraryContent({
             {/* New Category Grid (Includes Master Index & Catalog) */}
             <CategoryGrid />
 
+            {/* Members Shop */}
+            <div>
+              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Members Shop</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <TierGate
+                  requiredTier="catalyst"
+                  currentTier={tier}
+                  upgradeMessage="Upgrade to Catalyst+ to access the product shop."
+                >
+                  <Link
+                    href="/library/shop"
+                    className="group flex items-center gap-4 px-6 py-5 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all"
+                  >
+                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                      <ShoppingCart className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">Product Shop</p>
+                      <p className="text-white/70 text-sm">Browse 130+ peptides and request quotes</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                  </Link>
+                </TierGate>
+                <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
+                  <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-stone-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-stone-900 font-medium">Quote History</p>
+                    <p className="text-stone-500 text-sm">View past quote requests</p>
+                    <span className="text-xs text-stone-400 italic">Coming soon</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Protocol Tools */}
             <div>
               <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Protocol Tools</h2>
@@ -222,42 +258,6 @@ export function LibraryContent({
                     </div>
                   </div>
                 </TierGate>
-              </div>
-            </div>
-
-            {/* Members Shop */}
-            <div>
-              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Members Shop</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <TierGate
-                  requiredTier="catalyst"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Catalyst+ to access the product shop."
-                >
-                  <Link
-                    href="/library/shop"
-                    className="group flex items-center gap-4 px-6 py-5 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all"
-                  >
-                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                      <ShoppingCart className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">Product Shop</p>
-                      <p className="text-white/70 text-sm">Browse 130+ peptides and request quotes</p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
-                </TierGate>
-                <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                  <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-stone-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-stone-900 font-medium">Quote History</p>
-                    <p className="text-stone-500 text-sm">View past quote requests</p>
-                    <span className="text-xs text-stone-400 italic">Coming soon</span>
-                  </div>
-                </div>
               </div>
             </div>
 
