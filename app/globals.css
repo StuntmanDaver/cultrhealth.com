@@ -236,6 +236,48 @@
     box-shadow: 0 0 30px rgba(42, 69, 66, 0.12);
   }
 
+  /* FrontRow-style glowing card — radial glow pool beneath card */
+  .glow-card {
+    position: relative;
+  }
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 1.25rem;
+    background: radial-gradient(80% 120% at 50% 100%, rgba(215,243,220,0.35) 0%, rgba(215,243,220,0) 100%);
+    filter: blur(8px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+  .glow-card:hover::before {
+    opacity: 1;
+  }
+  .glow-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    background: radial-gradient(85% 120% at 50% 120%, rgba(215,243,220,0.5) 0%, rgba(215,243,220,0) 100%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+  }
+  .glow-card:hover::after {
+    opacity: 1;
+  }
+
+  /* Dark variant — for cards on dark backgrounds */
+  .glow-card-dark::before {
+    background: radial-gradient(80% 120% at 50% 100%, rgba(215,243,220,0.15) 0%, rgba(215,243,220,0) 100%);
+  }
+  .glow-card-dark::after {
+    background: radial-gradient(85% 120% at 50% 120%, rgba(215,243,220,0.25) 0%, rgba(215,243,220,0) 100%);
+  }
+
   /* Icon hover animation */
   .icon-hover {
     @apply transition-transform duration-300 ease-out;

@@ -54,19 +54,21 @@ export default function HomePage() {
           quality={90}
           sizes="100vw"
         />
-        {/* Dark gradient overlay for text legibility */}
-        <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest via-cultr-forest/60 to-transparent" />
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.45) 0%, rgba(43,69,66,0.22) 50%, transparent 75%)' }} />
+        {/* Dark green edge at bottom to match brand */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.6) 40%, transparent 100%)' }} />
 
         <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20">
           <div className="max-w-xl">
             <ScrollReveal direction="none" duration={800}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
                 Change the CULTR, <span className="italic">rebrand</span> yourself.
               </h1>
             </ScrollReveal>
 
             <ScrollReveal delay={200} direction="none" duration={800}>
-              <p className="text-base md:text-lg text-white/85 mb-8 max-w-md">
+              <p className="text-base md:text-lg text-white mb-8 max-w-md">
                 Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
               </p>
             </ScrollReveal>
@@ -77,7 +79,7 @@ export default function HomePage() {
                   <Button size="lg">Take the Quiz</Button>
                 </Link>
                 <Link href="/pricing">
-                  <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
+                  <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage">
                     See Plans <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
@@ -87,24 +89,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Trust Badge Bar ─── */}
-      <section className="py-5 px-6 bg-cultr-mint border-y border-cultr-sage">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 md:gap-10 flex-wrap text-sm text-cultr-forest">
-          {TRUST_BADGES.map((badge) => {
-            const Icon = BADGE_ICONS[badge.icon];
-            return (
-              <div key={badge.label} className="flex items-center gap-2">
-                {Icon && <Icon className="w-4 h-4" />}
-                <span className="font-display font-medium">{badge.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* ─── Results / Lifestyle ─── */}
       <section className="relative py-16 md:py-20 px-6 bg-gradient-to-br from-cultr-offwhite via-white to-cultr-mint/20 overflow-hidden">
-        <div className="max-w-7xl mx-auto">
+        {/* Radial glow — top center bloom */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 40% at 50% 0%, rgba(215,243,220,0.35) 0%, transparent 100%)' }} />
+        {/* Radial glow — bottom right accent */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 85% 90%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest">
               Real results. No nonsense.
@@ -136,7 +127,7 @@ export default function HomePage() {
             </ScrollReveal>
 
             {/* Image 2 - Woman Running */}
-            <ScrollReveal delay={200} direction="up" className="group md:mt-12">
+            <ScrollReveal delay={200} direction="up" className="group">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
                   src="/images/lifestyle-woman-running-new.jpg"
@@ -159,11 +150,11 @@ export default function HomePage() {
             </ScrollReveal>
 
             {/* Image 3 - Sunset Freedom */}
-            <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1 lg:mt-6">
+            <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/hero-man-sunset.jpg"
-                  alt="Man at sunset representing freedom and achievement"
+                  src="/images/lifestyle-girl-running.png"
+                  alt="Woman running outdoors representing freedom and vitality"
                   fill
                   className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
@@ -193,8 +184,10 @@ export default function HomePage() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+        {/* Radial glow — center mint */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 50% at 50% 50%, rgba(215,243,220,0.3) 0%, transparent 100%)' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Three steps to <span className="italic">rebrand</span> yourself.
@@ -223,7 +216,7 @@ export default function HomePage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 150} direction="up">
-                <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full">
+                <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full glow-card">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
@@ -248,8 +241,10 @@ export default function HomePage() {
 
 
       {/* ─── Comparison Table ─── */}
-      <section className="py-16 md:py-20 px-6 bg-white">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-white overflow-hidden">
+        {/* Radial glow — bottom center */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 40% at 50% 100%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
+        <div className="max-w-4xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               CULTR vs. the status quo
@@ -283,8 +278,12 @@ export default function HomePage() {
       </section>
 
       {/* ─── Pricing Preview ─── */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+        {/* Radial glow — top left accent */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 15% 10%, rgba(215,243,220,0.3) 0%, transparent 100%)' }} />
+        {/* Radial glow — bottom right accent */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(35% 35% at 90% 85%, rgba(43,69,66,0.05) 0%, transparent 100%)' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Transparent pricing.
@@ -315,9 +314,44 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── CULTR Creator CTA ─── */}
+      <section className="relative py-12 px-6 bg-cultr-forest overflow-hidden">
+        {/* Radial glow — left accent */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 70% at 20% 50%, rgba(215,243,220,0.08) 0%, transparent 100%)' }} />
+        <div className="max-w-4xl mx-auto relative z-10">
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <Users className="w-8 h-8 text-cultr-sage" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  CULTR Creator
+                </h3>
+                <p className="text-white/70 max-w-lg">
+                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                </p>
+              </div>
+              <Link href="/creators" className="shrink-0">
+                <Button variant="secondary" size="lg">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <NewsletterSignup />
+
       {/* ─── Testimonials (expanded) ─── */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-forest text-white">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-cultr-forest text-white overflow-hidden">
+        {/* Radial glow — top center mint */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.1) 0%, transparent 100%)' }} />
+        {/* Radial glow — bottom center */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(70% 40% at 50% 100%, rgba(215,243,220,0.07) 0%, transparent 100%)' }} />
+        <div className="max-w-7xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
               What members say.
@@ -335,7 +369,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {TESTIMONIALS.slice(0, 6).map((testimonial, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 h-full flex flex-col">
+                <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 h-full flex flex-col glow-card glow-card-dark">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex">
                       {[...Array(testimonial.rating)].map((_, j) => (
@@ -361,8 +395,10 @@ export default function HomePage() {
       </section>
 
       {/* ─── Provider Credentials ─── */}
-      <section className="py-16 md:py-20 px-6 bg-white">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-white overflow-hidden">
+        {/* Radial glow — center bloom */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 50% at 50% 40%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
+        <div className="max-w-5xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Your care team.
@@ -372,7 +408,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {PROVIDERS.map((provider, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="text-center p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage">
+                <div className="text-center p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage glow-card">
                   <div className="w-20 h-20 mx-auto rounded-full bg-cultr-mint flex items-center justify-center mb-4">
                     <Stethoscope className="w-8 h-8 text-cultr-forest" />
                   </div>
@@ -400,8 +436,10 @@ export default function HomePage() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
-        <div className="max-w-3xl mx-auto">
+      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+        {/* Radial glow — top right */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 80% 10%, rgba(215,243,220,0.25) 0%, transparent 100%)' }} />
+        <div className="max-w-3xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
               Questions.
@@ -422,35 +460,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* ─── CULTR Creator CTA ─── */}
-      <section className="py-12 px-6 bg-cultr-forest">
-        <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-                <Users className="w-8 h-8 text-cultr-sage" />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  CULTR Creator
-                </h3>
-                <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
-                </p>
-              </div>
-              <Link href="/creators" className="shrink-0">
-                <Button variant="secondary" size="lg">
-                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
-
-      {/* Newsletter */}
-      <NewsletterSignup />
 
       {/* Final CTA */}
       <CTASection

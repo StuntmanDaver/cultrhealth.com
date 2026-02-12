@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation'
 import { getSession, getMembershipTier, hasFeatureAccess } from '@/lib/auth'
-import { ShopClient } from './ShopClient'
+import { QuickOrderClient } from './QuickOrderClient'
 
 export const metadata = {
-  title: 'Shop | CULTR Health',
-  description: 'Browse our complete catalog of peptides and compounds.',
+  title: 'Quick Order | CULTR Health',
+  description: 'Quick order peptides and compounds from our catalog.',
 }
 
 export default async function ShopPage() {
@@ -22,5 +22,5 @@ export default async function ShopPage() {
     redirect('/pricing?upgrade=catalyst')
   }
 
-  return <ShopClient email={session.email} tier={tier} />
+  return <QuickOrderClient email={session.email} tier={tier} />
 }

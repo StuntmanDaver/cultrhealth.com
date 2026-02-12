@@ -4,6 +4,72 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-12] - Shop Product Descriptions, Homepage Polish & Brand Consistency
+
+### Added
+
+#### Quick Order Shop (`/library/shop`)
+- **Product benefit descriptions** — added concise 1-2 sentence benefit descriptions to all 58 peptide products in the catalog covering mechanism of action and target use case
+- **Desktop hover tooltips** — hovering over a product thumbnail reveals a tooltip with the benefit description (dark green bg, white text, fade-in animation)
+- **Mobile inline descriptions** — descriptions display inline below the product name on mobile (capped at 2 lines via `line-clamp-2`)
+- **Brand color consistency** — updated Quick Order component to use consistent brand color classes throughout
+
+### Changed
+
+#### Homepage
+- **Hero section** — updated gradient overlay opacity and CTA button visibility
+- **Section ordering** — repositioned creator CTA, pricing, and testimonials sections
+- **Removed** — hero feature badges and foam green section for cleaner layout
+- **Image alignment** — fixed vertical alignment issues in hero banner
+
+#### Footer
+- **Brand consistency** — updated footer to match homepage design system
+
+### Files Modified
+- `lib/config/product-catalog.ts` — added `description` field to all 58 products with benefit summaries
+- `app/library/shop/QuickOrderClient.tsx` — added hover tooltip (desktop) and inline description (mobile) UI
+- `app/page.tsx` — homepage section reordering and hero polish
+- `app/globals.css` — brand style updates
+- `components/site/Footer.tsx` — footer brand alignment
+- `app/library/shop/page.tsx` — shop page updates
+
+---
+
+## [2026-02-11] - Hero Image Update & OG Social Sharing Improvements
+
+### Changed
+
+#### Homepage Hero
+- **Hero image** — replaced lifestyle group photo with "girls warming up" athletic lifestyle photo featuring diverse women in activewear with large "CULTR" text backdrop
+- **Hero layout** — changed from 2-column grid (text left, image right on desktop) to full-width background image approach for better visual impact
+- **Image positioning** — uses `object-cover` with `object-[center_20%]` on mobile to keep subjects visible on smaller screens
+- **Gradient overlay** — added left-to-right gradient overlay (`from-cultr-forest/80` via `cultr-forest/40` to `transparent`) for text legibility while showcasing the full image
+- **Hero height** — responsive height: `min-h-[600px]` (mobile), `min-h-[700px]` (tablet), `min-h-[85vh]` (desktop)
+
+#### Social Sharing (iMessage/Twitter/LinkedIn)
+- **OG images** — replaced dynamic text-only generator (`opengraph-image.tsx`) with static 1200x630 hero photo
+- **Twitter card** — replaced dynamic text-only generator (`twitter-image.tsx`) with static 1200x630 hero photo
+- **Share thumbnails** — links shared in iMessage, Slack, Twitter, LinkedIn now display the girls warming up photo instead of plain "CULTR" text
+
+### Fixed
+
+#### Cache Control
+- **HTML page caching** — added `Cache-Control: public, max-age=0, s-maxage=60, stale-while-revalidate=0` header to prevent users from seeing stale cached content
+- **CDN behavior** — CDN revalidates every 60 seconds and never serves stale content to end users (fixes "old site still showing" issue)
+
+### Files Modified
+- `app/page.tsx` — hero section layout redesign
+- `next.config.js` — added HTML page cache-control headers
+- `public/images/hero-girls-warming-up.png` — new hero image
+- `app/opengraph-image.png` — static OG image (was `opengraph-image.tsx` - dynamic)
+- `app/twitter-image.png` — static Twitter card image (was `twitter-image.tsx` - dynamic)
+
+### Files Deleted
+- `app/opengraph-image.tsx` — removed dynamic OG image generator
+- `app/twitter-image.tsx` — removed dynamic Twitter card generator
+
+---
+
 ## [2026-02-10] - Brand Typography, Homepage Redesign, Creator Resources & Navbar Update
 
 ### Fixed
