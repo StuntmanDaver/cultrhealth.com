@@ -18,13 +18,24 @@ const nextConfig = {
   // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2560, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
 
-  // Headers for caching static assets
+  // Headers for caching
   async headers() {
     return [
+      // HTML pages: always revalidate so users never see stale content
+      {
+        source: '/((?!_next|api).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=60, stale-while-revalidate=0',
+          },
+        ],
+      },
+      // Static assets (images, fonts) — long cache with immutable
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
         headers: [

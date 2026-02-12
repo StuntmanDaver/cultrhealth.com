@@ -43,55 +43,46 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative py-20 md:py-28 px-6 bg-cultr-forest overflow-hidden">
-        {/* Mobile background image */}
+      <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-center">
+        {/* Full-bleed background image - same image for mobile and desktop with smart cropping */}
         <Image
-          src="/images/hero-lifestyle-group.png"
-          alt=""
+          src="/images/hero-banner-desktop.png"
+          alt="CULTR — Five women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-center opacity-20 lg:hidden"
+          className="object-cover object-center"
           priority
+          quality={90}
+          sizes="100vw"
         />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="text-white">
-              <ScrollReveal direction="none" duration={800}>
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6 leading-[1.1]">
-                  Change the CULTR,<br /><span className="italic">rebrand</span> yourself.
-                </h1>
-              </ScrollReveal>
+        {/* Dark gradient overlay for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest via-cultr-forest/60 to-transparent" />
 
-              <ScrollReveal delay={200} direction="none" duration={800}>
-                <p className="text-lg text-white/70 mb-10 max-w-md">
-                  Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
-                </p>
-              </ScrollReveal>
+        <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20">
+          <div className="max-w-xl">
+            <ScrollReveal direction="none" duration={800}>
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white">
+                Change the CULTR, <span className="italic">rebrand</span> yourself.
+              </h1>
+            </ScrollReveal>
 
-              <ScrollReveal delay={300} direction="up" duration={600}>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/quiz">
-                    <Button size="lg">Take the Quiz</Button>
-                  </Link>
-                  <Link href="/pricing">
-                    <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                      See Plans <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </ScrollReveal>
-            </div>
+            <ScrollReveal delay={200} direction="none" duration={800}>
+              <p className="text-base md:text-lg text-white/85 mb-8 max-w-md">
+                Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
+              </p>
+            </ScrollReveal>
 
-            <div className="hidden lg:block relative h-[500px] rounded-3xl overflow-hidden shadow-2xl">
-              <Image
-                src="/images/hero-lifestyle-group.png"
-                alt="Group of women enjoying a sunny day outdoors"
-                fill
-                className="object-cover object-center"
-                priority
-                sizes="(max-width: 1200px) 50vw, 600px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/40 to-transparent" />
-            </div>
+            <ScrollReveal delay={300} direction="up" duration={600}>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href="/quiz">
+                  <Button size="lg">Take the Quiz</Button>
+                </Link>
+                <Link href="/pricing">
+                  <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
+                    See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
