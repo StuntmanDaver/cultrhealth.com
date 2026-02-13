@@ -45,7 +45,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-center">
+      <section className="relative min-h-[400px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-center">
         {/* Mobile hero image — taller crop with faces visible */}
         <Image
           src="/images/hero-banner-mobile.webp"
