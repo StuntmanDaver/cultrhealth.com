@@ -35,6 +35,8 @@ const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignu
   loading: () => <div className="h-48 bg-cultr-offwhite animate-pulse" />,
 });
 
+export const revalidate = 3600;
+
 const BADGE_ICONS: Record<string, React.ElementType> = {
   Shield, Stethoscope, Building, CreditCard,
 };
@@ -44,14 +46,24 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
       <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-center">
-        {/* Full-bleed background image - same image for mobile and desktop with smart cropping */}
+        {/* Mobile hero image — taller crop with faces visible */}
         <Image
-          src="/images/hero-banner-desktop.png"
+          src="/images/hero-banner-mobile.webp"
           alt="CULTR — Five women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-center"
+          className="object-cover object-top md:hidden"
           priority
           quality={90}
+          sizes="100vw"
+        />
+        {/* Desktop hero image — ultrawide landscape */}
+        <Image
+          src="/images/hero-banner-desktop.webp"
+          alt="CULTR — Five women in athletic wear posing with CULTR branding"
+          fill
+          className="object-cover object-center hidden md:block"
+          priority
+          quality={75}
           sizes="100vw"
         />
         {/* Dark overlay for text readability */}
@@ -107,10 +119,10 @@ export default function HomePage() {
             <ScrollReveal delay={100} direction="up" className="group">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/lifestyle-man-smiling.png"
+                  src="/images/lifestyle-man-smiling.webp"
                   alt="Confident member after optimization"
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
@@ -130,10 +142,10 @@ export default function HomePage() {
             <ScrollReveal delay={200} direction="up" className="group">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/lifestyle-woman-running-new.jpg"
+                  src="/images/lifestyle-woman-running-new.webp"
                   alt="Athletic woman running"
                   fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-cultr-forestDark/80 via-cultr-forest/20 to-transparent" />
@@ -153,10 +165,10 @@ export default function HomePage() {
             <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1">
               <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
                 <Image
-                  src="/images/lifestyle-girl-running.png"
+                  src="/images/lifestyle-girl-running.webp"
                   alt="Woman running outdoors representing freedom and vitality"
                   fill
-                  className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
