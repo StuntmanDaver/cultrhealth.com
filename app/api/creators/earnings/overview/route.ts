@@ -8,6 +8,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const isStagingCreator = auth.creatorId === 'staging_creator' || auth.creatorId === 'dev_creator'
+  const mockEarnings = () => NextResponse.json({
+    earnings: {
+      lifetimeEarnings: 1482,
+      pendingEarnings: 396,
+      paidEarnings: 1086,
+      thisMonthEarnings: 429,
+      lastMonthEarnings: 387,
+      avgOrderValue: 390,
+    },
+  })
+
+  if (isStagingCreator) return mockEarnings()
+
   try {
     const commissionSummary = await getCommissionSummaryByCreator(auth.creatorId)
 
@@ -35,18 +49,6 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      return NextResponse.json({
-        earnings: {
-          lifetimeEarnings: 1482,
-          pendingEarnings: 396,
-          paidEarnings: 1086,
-          thisMonthEarnings: 429,
-          lastMonthEarnings: 387,
-          avgOrderValue: 390,
-        },
-      })
-    }
     console.error('Earnings overview error:', error)
     return NextResponse.json({ error: 'Failed to fetch earnings' }, { status: 500 })
   }
