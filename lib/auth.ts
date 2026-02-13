@@ -173,32 +173,36 @@ export async function getMembershipTier(customerId: string): Promise<PlanTier | 
   }
 
   if (process.env.STRIPE_SECRET_KEY) {
-    const { default: Stripe } = await import('stripe')
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2026-01-28.clover',
-    })
+    try {
+      const { default: Stripe } = await import('stripe')
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        apiVersion: '2026-01-28.clover',
+      })
 
-    const activeSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active',
-      limit: 1,
-    })
+      const activeSubscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'active',
+        limit: 1,
+      })
 
-    const trialingSubscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'trialing',
-      limit: 1,
-    })
+      const trialingSubscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: 'trialing',
+        limit: 1,
+      })
 
-    const subscription = activeSubscriptions.data[0] || trialingSubscriptions.data[0]
-    if (!subscription) return null
+      const subscription = activeSubscriptions.data[0] || trialingSubscriptions.data[0]
+      if (!subscription) return null
 
-    const metadataTier = normalizePlanTier(subscription.metadata?.plan_tier)
-    if (metadataTier) return metadataTier
+      const metadataTier = normalizePlanTier(subscription.metadata?.plan_tier)
+      if (metadataTier) return metadataTier
 
-    const priceId = subscription.items.data[0]?.price?.id
-    const plan = PLANS.find((candidate) => candidate.stripePriceId === priceId)
-    return normalizePlanTier(plan?.slug)
+      const priceId = subscription.items.data[0]?.price?.id
+      const plan = PLANS.find((candidate) => candidate.stripePriceId === priceId)
+      return normalizePlanTier(plan?.slug)
+    } catch {
+      // Stripe unavailable or invalid customer — fall through to return null
+    }
   }
 
   return null
