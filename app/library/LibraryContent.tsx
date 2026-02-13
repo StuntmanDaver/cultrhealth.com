@@ -4,23 +4,15 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Dumbbell,
-  Scale,
-  Brain,
   LogOut,
   Search,
-  FileText,
   ArrowRight,
-  ShoppingCart,
   LayoutDashboard,
   Library,
   Settings,
   CreditCard,
-  Flame,
-  HelpCircle,
 } from 'lucide-react'
 import { CategoryGrid } from '@/components/library/CategoryGrid'
-import { TierGate } from '@/components/library/TierGate'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
 import type { LibraryAccess, PlanTier } from '@/lib/config/plans'
 import { STRIPE_CONFIG } from '@/lib/config/plans'
@@ -151,152 +143,6 @@ export function LibraryContent({
 
             {/* New Category Grid (Includes Master Index & Catalog) */}
             <CategoryGrid />
-
-            {/* Members Shop */}
-            <div>
-              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Members Shop</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <TierGate
-                  requiredTier="catalyst"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Catalyst+ to access the product shop."
-                >
-                  <Link
-                    href="/library/shop"
-                    className="group flex items-center gap-4 px-6 py-5 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all"
-                  >
-                    <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                      <ShoppingCart className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-white font-medium">Product Shop</p>
-                      <p className="text-white/70 text-sm">Browse 130+ peptides and request quotes</p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </Link>
-                </TierGate>
-                <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                  <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-stone-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-stone-900 font-medium">Quote History</p>
-                    <p className="text-stone-500 text-sm">View past quote requests</p>
-                    <span className="text-xs text-stone-400 italic">Coming soon</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Protocol Tools */}
-            <div>
-              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Protocol Tools</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <TierGate
-                  requiredTier="catalyst"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Catalyst+ to unlock dosing calculators."
-                >
-                  <Link
-                    href="/library/dosing-calculator"
-                    className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-                  >
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                      <Scale className="w-6 h-6 text-purple-700" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-stone-900 font-medium">Dosing Calculators</p>
-                      <p className="text-stone-500 text-sm">Peptide reconstitution & syringe dosing</p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                </TierGate>
-                <TierGate
-                  requiredTier="catalyst"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Catalyst+ to unlock the calorie calculator."
-                >
-                  <Link
-                    href="/library/calorie-calculator"
-                    className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-                  >
-                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                      <Flame className="w-6 h-6 text-orange-700" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-stone-900 font-medium">Calorie & Macro Calculator</p>
-                      <p className="text-stone-500 text-sm">BMR, TDEE & macro planning</p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                </TierGate>
-                <Link
-                  href="/library/peptide-faq"
-                  className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
-                >
-                  <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-                    <HelpCircle className="w-6 h-6 text-teal-700" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-stone-900 font-medium">Peptide FAQ</p>
-                    <p className="text-stone-500 text-sm">50+ questions on dosing, safety, stacking & more</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
-                </Link>
-                <TierGate
-                  requiredTier="catalyst"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Catalyst+ to unlock stacking guides."
-                >
-                  <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                      <Dumbbell className="w-6 h-6 text-orange-700" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-stone-900 font-medium">Stacking Guides</p>
-                      <p className="text-stone-500 text-sm">Protocol combinations and sequencing</p>
-                    </div>
-                  </div>
-                </TierGate>
-              </div>
-            </div>
-
-            {/* Provider Resources */}
-            <div>
-              <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Provider Resources</h2>
-              <div className="grid md:grid-cols-2 gap-4">
-                <TierGate
-                  requiredTier="concierge"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Concierge to unlock provider note templates."
-                >
-                  <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                    <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-stone-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-stone-900 font-medium">Provider Note Templates</p>
-                      <p className="text-stone-500 text-sm">High-touch documentation workflows</p>
-                    </div>
-                  </div>
-                </TierGate>
-                <TierGate
-                  requiredTier="club"
-                  currentTier={tier}
-                  upgradeMessage="Upgrade to Club to unlock custom protocol requests."
-                >
-                  <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                    <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                      <Brain className="w-6 h-6 text-stone-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-stone-900 font-medium">Custom Protocol Requests</p>
-                      <p className="text-stone-500 text-sm">White-glove protocol design with your provider</p>
-                    </div>
-                  </div>
-                </TierGate>
-              </div>
-            </div>
 
             {/* Search Hint */}
             <div className="text-center">
