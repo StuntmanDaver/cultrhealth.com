@@ -73,30 +73,24 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20">
           <div className="max-w-xl">
-            <ScrollReveal direction="none" duration={800}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
-                Change the CULTR, <span className="italic">rebrand</span> yourself.
-              </h1>
-            </ScrollReveal>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
+              Change the CULTR, <span className="italic">rebrand</span> yourself.
+            </h1>
 
-            <ScrollReveal delay={200} direction="none" duration={800}>
-              <p className="text-base md:text-lg text-white mb-8 max-w-md">
-                Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
-              </p>
-            </ScrollReveal>
+            <p className="text-base md:text-lg text-white mb-8 max-w-md">
+              Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
+            </p>
 
-            <ScrollReveal delay={300} direction="up" duration={600}>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <Link href="/quiz">
-                  <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
-                </Link>
-                <Link href="/pricing">
-                  <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage rounded-full">
-                    See Plans <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-              </div>
-            </ScrollReveal>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Link href="/quiz">
+                <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage rounded-full">
+                  See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>

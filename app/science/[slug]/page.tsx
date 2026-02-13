@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
+import '../blog-content.css';
 import {
   getBlogPostBySlug,
   getRelatedPosts,
@@ -11,6 +12,8 @@ import {
 import { ArrowLeft, ArrowRight, Clock, Calendar, User, Tag, AlertCircle, BookOpen } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
+
+export const revalidate = 3600;
 
 // Configure DOMPurify for server-side use
 const { window } = new JSDOM('');

@@ -13,6 +13,8 @@ import {
   Megaphone,
 } from 'lucide-react';
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Creator Program — CULTR Health',
   description: 'Join the CULTR Creator program. Earn commissions, get tracking links and coupon codes, and grow your network with our affiliate platform.',

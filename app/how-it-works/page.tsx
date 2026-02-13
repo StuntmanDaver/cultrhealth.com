@@ -19,6 +19,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'How It Works — CULTR Health',
   description: 'Learn how CULTR Health works: from signup to personalized protocols. Get comprehensive labs, provider consults, and access to our peptide library.',

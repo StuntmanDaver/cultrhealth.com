@@ -4,6 +4,8 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { CommunityFeed } from '@/components/site/CommunityFeed';
 
+export const revalidate = 3600;
+
 export const metadata: Metadata = {
   title: 'Community',
   description: 'Follow CULTR Health on Instagram, TikTok, and YouTube. See the latest content from our community of health optimizers.',

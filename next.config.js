@@ -1,3 +1,7 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Enable React strict mode for better development experience
@@ -12,7 +16,7 @@ const nextConfig = {
   // Experimental features for better performance
   experimental: {
     // Optimize package imports to reduce bundle size
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ['lucide-react', 'recharts', 'zod'],
   },
 
   // Image optimization
@@ -25,13 +29,33 @@ const nextConfig = {
   // Headers for caching
   async headers() {
     return [
-      // HTML pages: always revalidate so users never see stale content
+      // Marketing pages: 1hr edge cache + 24hr stale-while-revalidate
       {
-        source: '/((?!_next|api).*)',
+        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=0, must-revalidate',
+            value: 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      // Homepage: 5min edge cache (changes more often)
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600',
+          },
+        ],
+      },
+      // Authenticated/dynamic pages: never cache (HIPAA compliance)
+      {
+        source: '/(dashboard|library|intake|renewal|admin|creators/portal)/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate',
           },
         ],
       },
@@ -74,4 +98,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

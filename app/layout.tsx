@@ -72,6 +72,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${playfair.variable} ${inter.variable}`}>
       <head>
+        {/* DNS prefetch for third-party services */}
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+        <link rel="dns-prefetch" href="https://cdn.curator.io" />
         {/* Google Analytics */}
         {GA_MEASUREMENT_ID && (
           <>

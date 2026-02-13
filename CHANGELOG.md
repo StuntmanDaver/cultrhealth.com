@@ -4,6 +4,87 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-12] - Gold-Standard Performance Optimization
+
+### Summary
+Comprehensive performance overhaul targeting load times, bundle size, caching, and architecture. Images reduced from ~30MB to ~1.8MB total deploy weight. Added edge caching for marketing pages. Refactored LayoutShell to reduce client-side hydration. Extracted blog CSS from global bundle. Removed dead dependency.
+
+### Changed
+
+#### Phase 1: Image Optimization
+- **Hero banner desktop** — converted from PNG (7.4MB) to WebP (327KB), quality lowered from 90 to 75 (gradient overlay makes difference invisible)
+- **Hero banner mobile** — converted from PNG (112KB) to WebP (48KB)
+- **Lifestyle images** — converted all 3 lifestyle images from PNG/JPG to WebP:
+  - `lifestyle-girl-running`: 2.1MB → 152KB
+  - `lifestyle-woman-running-new`: 1.1MB → 255KB
+  - `lifestyle-man-smiling`: 565KB → 33KB
+- **OG image** — resized from 4.7MB to 774KB (1200x630)
+- **Logo** — optimized `cultr-logo-black.png` from 1.9MB to 214KB (resized to 800px width)
+- **Archived 9 unused images** (~14MB) to `/archive/images/` — grep confirmed zero source code references: `hero-girls-warming-up.png`, `hero-lifestyle-group.png`, `hero-woman-running.jpg`, `hero-man-sunset.jpg`, `lifestyle-woman-running.jpg`, `hero-women-lifestyle.png`, `hero-man-athletic.png`, `lifestyle-achievement.png`, `lifestyle-man-workout.jpg`
+
+#### Phase 2: Edge Caching & ISR
+- **Tiered cache headers** — replaced blanket `s-maxage=0` with intelligent caching:
+  - Marketing pages (`/pricing`, `/how-it-works`, `/faq`, `/community`, `/science`, `/legal/*`, `/creators`, `/quiz`): 1hr edge cache + 24hr stale-while-revalidate
+  - Homepage (`/`): 5min edge cache + 1hr stale-while-revalidate
+  - Authenticated pages (`/dashboard`, `/library`, `/intake`, `/renewal`, `/admin`, `/creators/portal`): `private, no-cache, no-store` (HIPAA compliance)
+- **ISR (Incremental Static Regeneration)** — added `export const revalidate = 3600` to 8 pages: homepage, pricing, how-it-works, faq, community, science index, science/[slug], creators
+
+#### Phase 3: LayoutShell Architecture Refactor
+- **Server/client split** — `LayoutShell.tsx` converted from `'use client'` to server component
+- **New `LayoutShellClient.tsx`** — thin client wrapper (~28 lines) handles only pathname-based chrome visibility
+- **Footer now renders as server component** — zero client JS for footer on every page
+- **Reduced hydration scope** — previously all children were forced into client boundary
+
+#### Phase 4: Dependency & Bundle Cleanup
+- **Removed `class-variance-authority`** — confirmed unused (zero imports in codebase)
+- **Expanded `optimizePackageImports`** — added `recharts` and `zod` alongside existing `lucide-react`
+- **Wired up `@next/bundle-analyzer`** — `npm run analyze` now produces visual bundle breakdown
+
+#### Phase 5: CSS Optimization
+- **Extracted blog CSS** — moved ~250 lines of `.blog-content` styles from `globals.css` to `app/science/blog-content.css`, imported only in `app/science/[slug]/page.tsx`
+- **Added `prefers-reduced-motion`** — `.glow-card` pseudo-element effects hidden for users with reduced motion preference
+
+#### Phase 6: Additional Wins
+- **Removed ScrollReveal from hero** — above-fold content no longer wrapped in unnecessary IntersectionObserver
+- **Added `loading.tsx` skeletons** — instant loading UI for `/library` and `/creators/portal` routes
+- **Added DNS prefetch** — `js.stripe.com` and `cdn.curator.io` hints in root layout
+
+### Added
+- `components/site/LayoutShellClient.tsx` — thin client wrapper for pathname-based layout chrome
+- `app/science/blog-content.css` — extracted blog content styles (route-scoped)
+- `app/library/loading.tsx` — loading skeleton for library routes
+- `app/creators/portal/loading.tsx` — loading skeleton for creator portal routes
+- `public/images/hero-banner-desktop.webp` — compressed hero image (327KB)
+- `public/images/hero-banner-mobile.webp` — compressed mobile hero (48KB)
+- `public/images/lifestyle-girl-running.webp` — compressed lifestyle image (152KB)
+- `public/images/lifestyle-man-smiling.webp` — compressed lifestyle image (33KB)
+- `public/images/lifestyle-woman-running-new.webp` — compressed lifestyle image (255KB)
+- `archive/images/` — archived original unoptimized images (not deployed)
+
+### Removed
+- `class-variance-authority` from `package.json` (unused dependency)
+- 14 unoptimized PNG/JPG images from `public/images/` (archived, not deleted)
+- ~250 lines of `.blog-content` CSS from `globals.css` (moved to route-scoped file)
+
+### Files Modified
+- `app/page.tsx` — WebP image paths, quality=75, ISR export, ScrollReveal removed from hero
+- `app/globals.css` — blog CSS extracted, reduced-motion glow-card rule added
+- `app/layout.tsx` — DNS prefetch hints for Stripe and Curator.io
+- `app/community/page.tsx` — ISR export
+- `app/creators/page.tsx` — ISR export
+- `app/faq/page.tsx` — ISR export
+- `app/how-it-works/page.tsx` — ISR export
+- `app/pricing/page.tsx` — ISR export
+- `app/science/page.tsx` — ISR export
+- `app/science/[slug]/page.tsx` — ISR export, blog CSS import
+- `components/site/LayoutShell.tsx` — converted to server component
+- `next.config.js` — tiered cache headers, bundle analyzer, optimizePackageImports
+- `package.json` — removed class-variance-authority
+- `public/cultr-logo-black.png` — optimized (1.9MB → 214KB)
+- `public/og-image.png` — optimized (4.7MB → 774KB)
+
+---
+
 ## [2026-02-12] - Shop Product Descriptions, Homepage Polish & Brand Consistency
 
 ### Added
