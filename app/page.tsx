@@ -74,9 +74,9 @@ export default function HomePage() {
             </ScrollReveal>
 
             <ScrollReveal delay={300} direction="up" duration={600}>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <Link href="/quiz">
-                  <Button size="lg">Take the Quiz</Button>
+                  <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
                 </Link>
                 <Link href="/pricing">
                   <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage rounded-full">

@@ -11,6 +11,8 @@ export const LINKS = {
   // Social Media
   instagram: 'https://instagram.com/cultrhealth',
   twitter: 'https://twitter.com/cultrhealth',
+  tiktok: 'https://tiktok.com/@cultrhealth',
+  youtube: 'https://youtube.com/@cultrhealth',
   
   // Internal Routes
   login: '/login',
