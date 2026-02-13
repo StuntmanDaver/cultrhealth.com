@@ -45,9 +45,12 @@ export async function GET(request: NextRequest) {
     let customerId: string
 
     if (isStagingAccess) {
-      // Use a staging customer ID for bypass emails
+      // Use staging IDs with full admin access for bypass emails
       customerId = 'staging_customer'
-      console.log('Staging access granted:', { email, timestamp: new Date().toISOString() })
+      const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
+      await setSessionCookie(sessionToken)
+      console.log('Staging admin access granted:', { email, timestamp: new Date().toISOString() })
+      return NextResponse.redirect(`${baseUrl}/library`)
     } else {
       // Double-check customer still has active subscription
       const stripe = getStripe()

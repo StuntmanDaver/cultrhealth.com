@@ -159,7 +159,7 @@ export async function getMembershipTier(customerId: string): Promise<PlanTier | 
 
   // Development/staging mode: return full access tier
   if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer' || customerId === 'staging_customer') {
-    return 'concierge' // Full access in dev/staging mode
+    return 'club' // Full access in dev/staging mode
   }
 
   if (process.env.POSTGRES_URL) {
@@ -229,12 +229,14 @@ export function hasFeatureAccess(tier: PlanTier | null | undefined, feature: key
 }
 
 export function isProviderEmail(email: string): boolean {
+  const lower = email.toLowerCase()
   const allowlist = process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
-  const normalized = allowlist
-    .split(',')
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean)
-  return normalized.includes(email.toLowerCase())
+  const normalized = allowlist.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
+  if (normalized.includes(lower)) return true
+  // Staging access emails also get provider/admin access
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS || ''
+  const stagingNormalized = stagingEmails.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
+  return stagingNormalized.includes(lower)
 }
 
 // ===========================================
