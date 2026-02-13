@@ -61,7 +61,7 @@ export function LibraryContent({
             {/* Logo & Tier Badge */}
             <div className="flex items-center gap-4">
               <Link href="/" className="text-xl font-display font-bold text-stone-900">
-                cultr<span className="text-stone-400">.</span>
+                CULTR
               </Link>
               <span className="hidden sm:inline-flex px-3 py-1 bg-stone-900 text-white text-xs font-medium rounded-full">
                 {tierDisplay}
