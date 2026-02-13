@@ -163,9 +163,13 @@ export async function getMembershipTier(customerId: string): Promise<PlanTier | 
   }
 
   if (process.env.POSTGRES_URL) {
-    const membership = await getMembershipByCustomerId(customerId)
-    const fromDb = normalizePlanTier(membership?.plan_tier)
-    if (fromDb) return fromDb
+    try {
+      const membership = await getMembershipByCustomerId(customerId)
+      const fromDb = normalizePlanTier(membership?.plan_tier)
+      if (fromDb) return fromDb
+    } catch {
+      // DB unavailable — fall through to Stripe or return null
+    }
   }
 
   if (process.env.STRIPE_SECRET_KEY) {
@@ -330,13 +334,15 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
       return { authenticated: true, email: auth.email, creatorId: creator.id }
     }
   } catch {
-    // DB lookup failed — check staging bypass
-    const stagingEmails = process.env.STAGING_ACCESS_EMAILS
-    if (stagingEmails) {
-      const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
-      if (allowedEmails.includes(auth.email.toLowerCase())) {
-        return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
-      }
+    // DB unavailable — continue to staging fallback
+  }
+
+  // Staging bypass: check if email is in the staging access list
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (stagingEmails) {
+    const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
+    if (allowedEmails.includes(auth.email.toLowerCase())) {
+      return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
     }
   }
 

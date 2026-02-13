@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { verifySessionToken } from '@/lib/auth';
 
 /**
  * GET /api/member/orders
@@ -9,9 +9,8 @@ import { cookies } from 'next/headers';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get email from session/cookie (simplified - real auth would use proper session)
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('cultr_session');
+    // Verify session from cookie
+    const sessionCookie = request.cookies.get('cultr_session');
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -20,18 +19,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse session to get email
-    let email: string;
-    try {
-      const session = JSON.parse(sessionCookie.value);
-      email = session.email?.toLowerCase();
-    } catch {
+    const session = await verifySessionToken(sessionCookie.value);
+    if (!session) {
       return NextResponse.json(
         { success: false, error: 'Invalid session' },
         { status: 401 }
       );
     }
 
+    const email = session.email?.toLowerCase();
     if (!email) {
       return NextResponse.json(
         { success: false, error: 'No email in session' },
