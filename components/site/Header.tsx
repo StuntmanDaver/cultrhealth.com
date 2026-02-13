@@ -12,7 +12,7 @@ const navLinks = [
 ];
 
 const rightNavLinks = [
-  { href: '/library', label: 'Resources', hasDropdown: true },
+  { href: '/library', label: 'Members', hasDropdown: true },
   { href: '/creators', label: 'Creators' },
   { href: '/login', label: 'Community' },
 ];
