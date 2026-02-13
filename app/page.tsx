@@ -51,7 +51,7 @@ export default function HomePage() {
           src="/images/hero-banner-mobile.webp"
           alt="CULTR — Five women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-top md:hidden"
+          className="object-contain object-bottom md:hidden"
           priority
           quality={90}
           sizes="100vw"
