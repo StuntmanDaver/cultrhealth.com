@@ -12,11 +12,13 @@ import {
   LifeBuoy,
   Settings,
   X,
+  Megaphone,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/creators/portal/dashboard', icon: LayoutDashboard },
   { label: 'Share & Earn', href: '/creators/portal/share', icon: Share2 },
+  { label: 'Campaigns', href: '/creators/portal/campaigns', icon: Megaphone },
   { label: 'Earnings', href: '/creators/portal/earnings', icon: DollarSign },
   { label: 'My Network', href: '/creators/portal/network', icon: Users },
   { label: 'Payouts', href: '/creators/portal/payouts', icon: Wallet },

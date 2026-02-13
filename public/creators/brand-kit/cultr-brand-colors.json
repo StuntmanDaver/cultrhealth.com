@@ -1,0 +1,28 @@
+{
+  "brand": "CULTR Health",
+  "colors": {
+    "primary": {
+      "forest": "#2A4542",
+      "forestDark": "#1E3330",
+      "forestLight": "#3A5956"
+    },
+    "accent": {
+      "sage": "#B7E4C7",
+      "mint": "#D8F3DC",
+      "copper": "#C87941"
+    },
+    "background": {
+      "cream": "#FDFBF7",
+      "offWhite": "#F5F3EF",
+      "white": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#1a1a1a",
+      "muted": "#6b7280"
+    }
+  },
+  "typography": {
+    "display": "Playfair Display",
+    "body": "Inter"
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Check } from 'lucide-react'
+import { ArrowLeft, Copy, Check, Download } from 'lucide-react'
 import { useState } from 'react'
 
 /* ─── Copyable block used inside resource content ─── */
@@ -67,6 +67,24 @@ function ColorSwatch({ name, hex, textColor = 'text-white' }: { name: string; he
         <p className="text-sm font-medium text-cultr-forest">{name}</p>
       </div>
     </button>
+  )
+}
+
+function DownloadButton({ href, label, format }: { href: string; label: string; format: string }) {
+  return (
+    <a
+      href={href}
+      download
+      className="flex items-center gap-3 p-3 bg-white border border-stone-200 rounded-xl hover:border-cultr-forest hover:shadow-sm transition-all group"
+    >
+      <div className="w-9 h-9 rounded-lg bg-cultr-mint flex items-center justify-center">
+        <Download className="w-4 h-4 text-cultr-forest" />
+      </div>
+      <div className="flex-1">
+        <p className="text-sm font-medium text-cultr-forest">{label}</p>
+        <p className="text-[11px] text-cultr-textMuted">{format}</p>
+      </div>
+    </a>
   )
 }
 
@@ -415,7 +433,11 @@ This is what CULTR does. [YOUR LINK] #ad`}</CopyBlock>
         ]} />
 
         <SectionHeading>Download</SectionHeading>
-        <Paragraph>Contact your creator manager at creators@cultrhealth.com to receive the full logo package with all variants and formats.</Paragraph>
+        <div className="grid sm:grid-cols-2 gap-3 my-4">
+          <DownloadButton href="/creators/brand-kit/cultr-logo-dark.svg" label="Logo — Dark (Forest)" format="SVG" />
+          <DownloadButton href="/creators/brand-kit/cultr-logo-white.svg" label="Logo — White (Reversed)" format="SVG" />
+        </div>
+        <Paragraph>Need additional formats (PNG @2x/@3x) or custom variants? Contact creators@cultrhealth.com.</Paragraph>
       </>
     ),
   },
@@ -456,6 +478,11 @@ This is what CULTR does. [YOUR LINK] #ad`}</CopyBlock>
           'Cream/Off-White are background colors — maintain the warm, premium feel',
           'Always ensure sufficient contrast for text readability (WCAG AA minimum)',
         ]} />
+
+        <SectionHeading>Download</SectionHeading>
+        <div className="grid sm:grid-cols-2 gap-3 my-4">
+          <DownloadButton href="/creators/brand-kit/cultr-brand-colors.json" label="Brand Color Palette" format="JSON (for design tools)" />
+        </div>
       </>
     ),
   },
@@ -490,7 +517,7 @@ This is what CULTR does. [YOUR LINK] #ad`}</CopyBlock>
         <Paragraph>Nature textures (leaves, water, stone), lab equipment close-ups, and geometric patterns in brand colors for backgrounds and thumbnails.</Paragraph>
 
         <SectionHeading>Download Approved Photos</SectionHeading>
-        <Paragraph>Contact your creator manager at creators@cultrhealth.com to receive access to the approved photo library via shared drive.</Paragraph>
+        <Paragraph>Contact your creator manager at creators@cultrhealth.com to receive access to the full approved photo library. Core product shots and lifestyle images are available for download below as they are added.</Paragraph>
 
         <SectionHeading>Do Not Use</SectionHeading>
         <BulletList items={[

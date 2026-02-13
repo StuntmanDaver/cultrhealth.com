@@ -11,6 +11,9 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
+import { MilestoneBadges } from '@/components/creators/Milestones'
+import { AnalyticsCharts } from '@/components/creators/AnalyticsCharts'
+import { Leaderboard } from '@/components/creators/Leaderboard'
 
 function MetricCard({
   label,
@@ -150,6 +153,36 @@ export default function CreatorDashboardPage() {
           subtitle={`${fmt(metrics?.pendingCommission ?? 0)} pending`}
         />
       </div>
+
+      {/* Milestones */}
+      {metrics && creator && (
+        <MilestoneBadges metrics={metrics} creator={creator} />
+      )}
+
+      {/* Analytics Charts + Leaderboard */}
+      {metrics && (
+        <div className="grid lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-3">
+            <AnalyticsCharts
+              totalClicks={metrics.totalClicks}
+              totalOrders={metrics.totalOrders}
+              totalRevenue={metrics.totalRevenue}
+              thisMonthClicks={metrics.thisMonthClicks}
+              thisMonthOrders={metrics.thisMonthOrders}
+              thisMonthRevenue={metrics.thisMonthRevenue}
+              conversionRate={metrics.conversionRate}
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <Leaderboard
+              myClicks={metrics.thisMonthClicks}
+              myOrders={metrics.thisMonthOrders}
+              myRevenue={metrics.thisMonthRevenue}
+              myName={creator?.full_name ?? ''}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Tier Progress */}
       <TierProgressBar
