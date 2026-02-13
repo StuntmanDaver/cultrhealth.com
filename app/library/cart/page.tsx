@@ -16,7 +16,7 @@ export default async function CartPage() {
     redirect('/library?error=login_required')
   }
 
-  const tier = await getMembershipTier(session.customerId)
+  const tier = await getMembershipTier(session.customerId, session.email)
 
   // Check if user has access (catalyst+ tier)
   if (!hasFeatureAccess(tier, 'dosingCalculators')) {

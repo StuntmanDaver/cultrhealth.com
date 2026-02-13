@@ -40,7 +40,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     notFound()
   }
 
-  const tier = await getMembershipTier(session.customerId)
+  const tier = await getMembershipTier(session.customerId, session.email)
   const access = getLibraryAccess(tier)
 
   // Handle Master Index

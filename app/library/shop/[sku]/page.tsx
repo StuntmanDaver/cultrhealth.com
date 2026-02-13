@@ -33,7 +33,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     redirect('/library?error=login_required')
   }
 
-  const tier = await getMembershipTier(session.customerId)
+  const tier = await getMembershipTier(session.customerId, session.email)
 
   // Check if user has access to shop (catalyst+ tier)
   if (!hasFeatureAccess(tier, 'dosingCalculators')) {

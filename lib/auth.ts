@@ -154,12 +154,20 @@ function normalizePlanTier(tier: string | null | undefined): PlanTier | null {
   return PLAN_ALIASES[normalized] || null
 }
 
-export async function getMembershipTier(customerId: string): Promise<PlanTier | null> {
+export async function getMembershipTier(customerId: string, email?: string): Promise<PlanTier | null> {
   if (!customerId) return null
 
   // Development/staging mode: return full access tier
   if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer' || customerId === 'staging_customer') {
     return 'club' // Full access in dev/staging mode
+  }
+
+  // Staging access emails get full access regardless of customerId in JWT
+  if (email && process.env.STAGING_ACCESS_EMAILS) {
+    const stagingEmails = process.env.STAGING_ACCESS_EMAILS.split(',').map(e => e.trim().toLowerCase())
+    if (stagingEmails.includes(email.toLowerCase())) {
+      return 'club'
+    }
   }
 
   if (process.env.POSTGRES_URL) {

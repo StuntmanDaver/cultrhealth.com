@@ -16,7 +16,7 @@ export default async function LibraryPage({
       return <LibraryLogin error={error} />
     }
 
-    const tier = await getMembershipTier(session.customerId)
+    const tier = await getMembershipTier(session.customerId, session.email)
     const libraryAccess = getLibraryAccess(tier)
 
     return <LibraryContent email={session.email} tier={tier} libraryAccess={libraryAccess} />

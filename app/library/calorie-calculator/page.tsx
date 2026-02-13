@@ -14,7 +14,7 @@ export default async function CalorieCalculatorPage() {
     redirect('/library?error=login_required')
   }
 
-  const tier = await getMembershipTier(session.customerId)
+  const tier = await getMembershipTier(session.customerId, session.email)
 
   // Require catalyst+ tier (same as dosing calculators)
   if (!hasFeatureAccess(tier, 'dosingCalculators')) {

@@ -14,7 +14,7 @@ export default async function PeptideFAQPage() {
     redirect('/library?error=login_required')
   }
 
-  const tier = await getMembershipTier(session.customerId)
+  const tier = await getMembershipTier(session.customerId, session.email)
 
   return <PeptideFAQContent tier={tier} />
 }
