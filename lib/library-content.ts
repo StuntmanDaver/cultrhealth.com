@@ -35,6 +35,11 @@ export const CATEGORY_META: Record<string, { name: string; description: string; 
     description: 'Comprehensive peptide library with detailed protocol cards and deep-dive information',
     file: 'products.md',
   },
+  'stack-guides': {
+    name: 'Stack Guides',
+    description: 'Goal-based protocol stacks by persona — athlete, weight loss, focus, skin, biohacker & more',
+    file: 'stack-guides.md',
+  },
 }
 
 // Configure marked for better rendering
@@ -86,6 +91,10 @@ function applyLibraryAccess(
     return null
   }
 
+  if (category === 'stack-guides' && !access.stackingGuides) {
+    return null
+  }
+
   if (category === 'index') {
     if (access.masterIndex === 'titles_only') {
       return markdown
@@ -110,7 +119,7 @@ function removeSection(markdown: string, heading: string): string {
 
 // Get all available categories (excludes special pages like index and products)
 export function getCategories(): Array<{ slug: string; name: string; description: string }> {
-  const specialPages = ['index', 'products']
+  const specialPages = ['index', 'products', 'stack-guides']
   return Object.entries(CATEGORY_META)
     .filter(([slug]) => !specialPages.includes(slug))
     .map(([slug, meta]) => ({

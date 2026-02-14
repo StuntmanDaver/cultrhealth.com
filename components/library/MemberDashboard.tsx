@@ -423,15 +423,19 @@ export function MemberDashboard({
               currentTier={tier}
               upgradeMessage="Upgrade to Catalyst+ to unlock stacking guides."
             >
-              <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+              <Link
+                href="/library/stack-guides"
+                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+              >
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                   <Dumbbell className="w-6 h-6 text-orange-700" />
                 </div>
                 <div className="flex-1">
                   <p className="text-stone-900 font-medium">Stacking Guides</p>
                   <p className="text-stone-500 text-sm">Protocol combinations and sequencing</p>
                 </div>
-              </div>
+                <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+              </Link>
             </TierGate>
           </div>
         </div>

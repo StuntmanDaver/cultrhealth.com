@@ -48,6 +48,46 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
     return <MasterIndex />
   }
 
+  // Handle Stack Guides
+  if (category === 'stack-guides' && !access.stackingGuides) {
+    return (
+      <div className="min-h-screen bg-white">
+        <section className="py-16 px-6 bg-cultr-forest text-white">
+          <div className="max-w-4xl mx-auto">
+            <Link
+              href="/library"
+              className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-6 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Library
+            </Link>
+            <h1 className="text-4xl font-display font-bold mb-3">
+              Stack Guides
+            </h1>
+            <p className="text-white/80 text-lg">
+              Upgrade to Catalyst+ to unlock goal-based stacking guides.
+            </p>
+          </div>
+        </section>
+        <section className="py-12 px-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
+              <p className="text-cultr-text font-medium mb-4">
+                Stack guides with persona-based protocols are available starting at the Catalyst+ tier.
+              </p>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-2 text-cultr-forest hover:text-cultr-forestDark transition-colors font-medium"
+              >
+                View Plans <ArrowLeft className="w-4 h-4 rotate-180" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
   // Handle Product Catalog
   if (category === 'products') {
     if (!access.advancedProtocols) {

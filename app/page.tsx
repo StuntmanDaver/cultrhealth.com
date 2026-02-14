@@ -45,18 +45,20 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-center">
-        {/* Mobile hero image — taller crop with faces visible */}
-        <Image
-          src="/images/hero-banner-mobile.webp"
-          alt="CULTR — Five women in athletic wear posing with CULTR branding"
-          fill
-          className="object-cover object-top md:hidden"
-          priority
-          quality={90}
-          sizes="100vw"
-        />
-        {/* Desktop hero image — ultrawide landscape */}
+      <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-start md:items-center">
+        {/* Mobile hero image — confined to bottom 65% so green shows at top */}
+        <div className="absolute bottom-0 left-0 right-0 h-[65%] md:hidden">
+          <Image
+            src="/images/hero-banner-mobile.webp"
+            alt="CULTR — Five women in athletic wear posing with CULTR branding"
+            fill
+            className="object-cover object-top"
+            priority
+            quality={90}
+            sizes="100vw"
+          />
+        </div>
+        {/* Desktop hero image — ultrawide landscape, full bleed */}
         <Image
           src="/images/hero-banner-desktop.webp"
           alt="CULTR — Five women in athletic wear posing with CULTR branding"
@@ -66,12 +68,12 @@ export default function HomePage() {
           quality={75}
           sizes="100vw"
         />
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.45) 0%, rgba(43,69,66,0.22) 50%, transparent 75%)' }} />
+        {/* Desktop: dark overlay for text readability */}
+        <div className="absolute inset-0 pointer-events-none hidden md:block" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.45) 0%, rgba(43,69,66,0.22) 50%, transparent 75%)' }} />
         {/* Dark green edge at bottom to match brand */}
         <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.6) 40%, transparent 100%)' }} />
 
-        <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20">
+        <div className="max-w-7xl mx-auto relative z-10 w-full pt-8 pb-16 md:py-20">
           <div className="max-w-xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
