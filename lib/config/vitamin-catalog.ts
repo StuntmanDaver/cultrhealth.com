@@ -3,6 +3,7 @@
 // ============================================================
 
 import type { LucideIcon } from 'lucide-react'
+import type { ShopProduct } from '@/lib/config/product-catalog'
 import {
   Sun,
   Gem,
@@ -403,4 +404,30 @@ export function searchVitamins(query: string): VitaminProduct[] {
 
 export function getVitaminCategoryDisplayName(category: VitaminCategory): string {
   return VITAMIN_CATEGORY_STYLES[category].displayName
+}
+
+// ============================================================
+// Supplement SKU helpers
+// ============================================================
+
+export const SUPPLEMENT_SKU_PREFIX = 'SUPP-'
+
+export function isSupplementSku(sku: string): boolean {
+  return sku.startsWith(SUPPLEMENT_SKU_PREFIX)
+}
+
+export function vitaminToShopProduct(vitamin: VitaminProduct): ShopProduct {
+  return {
+    sku: `${SUPPLEMENT_SKU_PREFIX}${vitamin.id}`,
+    name: vitamin.name,
+    peptideId: null,
+    doseMg: 0,
+    volumeMl: 0,
+    category: 'wellness_supplement',
+    isBlend: false,
+    description: vitamin.benefits,
+    stockStatus: 'in_stock',
+    variants: [{ label: 'Standard', value: 'standard' }],
+    defaultVariant: 'standard',
+  }
 }

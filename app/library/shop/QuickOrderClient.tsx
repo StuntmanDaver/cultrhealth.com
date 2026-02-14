@@ -30,6 +30,8 @@ import {
   VITAMIN_CATEGORY_STYLES,
   getVitaminCategoriesWithCounts,
   getVitaminCategoryDisplayName,
+  vitaminToShopProduct,
+  isSupplementSku,
   type VitaminCategory,
   type VitaminProduct,
 } from '@/lib/config/vitamin-catalog'
@@ -193,7 +195,9 @@ function CartSummaryPanel({ mobileExpanded, onToggleMobile }: { mobileExpanded: 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-brand-primary truncate">{item.product.name}</p>
                       <p className="text-xs text-cultr-textMuted mt-0.5">
-                        ${item.product.priceUsd?.toFixed(2)} each
+                        {item.product.priceUsd
+                          ? `$${item.product.priceUsd.toFixed(2)} each`
+                          : 'Staff review'}
                       </p>
                     </div>
                     <button
@@ -222,7 +226,9 @@ function CartSummaryPanel({ mobileExpanded, onToggleMobile }: { mobileExpanded: 
                       </button>
                     </div>
                     <span className="text-sm font-bold text-brand-primary">
-                      ${((item.product.priceUsd || 0) * item.quantity).toFixed(2)}
+                      {item.product.priceUsd
+                        ? `$${((item.product.priceUsd) * item.quantity).toFixed(2)}`
+                        : '—'}
                     </span>
                   </div>
                 </div>
@@ -272,10 +278,16 @@ function CartSummaryPanel({ mobileExpanded, onToggleMobile }: { mobileExpanded: 
                 <div key={item.sku} className="py-2 border-b border-brand-primary/5 last:border-b-0 flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-brand-primary truncate">{item.product.name}</p>
-                    <p className="text-xs text-cultr-textMuted">{item.quantity} x ${item.product.priceUsd?.toFixed(2)}</p>
+                    <p className="text-xs text-cultr-textMuted">
+                      {item.product.priceUsd
+                        ? `${item.quantity} x $${item.product.priceUsd.toFixed(2)}`
+                        : `${item.quantity} × Staff review`}
+                    </p>
                   </div>
                   <span className="text-sm font-bold text-brand-primary flex-shrink-0">
-                    ${((item.product.priceUsd || 0) * item.quantity).toFixed(2)}
+                    {item.product.priceUsd
+                      ? `$${((item.product.priceUsd) * item.quantity).toFixed(2)}`
+                      : '—'}
                   </span>
                   <button
                     onClick={() => removeItem(item.sku)}
@@ -504,6 +516,21 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
 function VitaminRow({ product }: { product: VitaminProduct }) {
   const style = VITAMIN_CATEGORY_STYLES[product.category]
   const IconComponent = style.Icon
+  const { addItem, isInCart, getItem, updateQuantity } = useCart()
+  const [localQty, setLocalQty] = useState(1)
+
+  const shopProduct = vitaminToShopProduct(product)
+  const inCart = isInCart(shopProduct.sku)
+  const cartItem = getItem(shopProduct.sku)
+
+  const handleAddToCart = () => {
+    if (inCart && cartItem) {
+      updateQuantity(shopProduct.sku, cartItem.quantity + localQty)
+    } else {
+      addItem(shopProduct, localQty)
+    }
+    setLocalQty(1)
+  }
 
   return (
     <div className="bg-white border border-brand-primary/10 rounded-xl px-4 py-3 hover:border-brand-primary/25 hover:shadow-sm transition-all">
@@ -539,17 +566,28 @@ function VitaminRow({ product }: { product: VitaminProduct }) {
           </div>
         </div>
 
-        {/* Pricing coming soon — right-aligned like the cart button */}
+        {/* Quantity */}
         <div className="flex-shrink-0">
-          <span className="px-4 py-2 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary/50 whitespace-nowrap">
-            COMING SOON
-          </span>
+          <QuantitySelector
+            quantity={localQty}
+            onChange={setLocalQty}
+          />
+        </div>
+
+        {/* Add to cart button */}
+        <div className="flex-shrink-0">
+          <button
+            onClick={handleAddToCart}
+            className="px-4 py-2 rounded-full text-xs font-semibold bg-brand-primary text-brand-cream hover:bg-brand-primaryHover transition-colors whitespace-nowrap"
+          >
+            {inCart && cartItem ? `ADD (${cartItem.quantity} in cart)` : `ADD TO CART`}
+          </button>
         </div>
       </div>
 
       {/* Mobile: Stacked layout */}
       <div className="md:hidden">
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 mb-3">
           {/* Thumbnail */}
           <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${style.gradient} border border-brand-primary/5 flex items-center justify-center flex-shrink-0`}>
             <IconComponent className="w-5 h-5 text-brand-primary/40" />
@@ -575,6 +613,28 @@ function VitaminRow({ product }: { product: VitaminProduct }) {
             </div>
           </div>
         </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Quantity */}
+          <QuantitySelector
+            quantity={localQty}
+            onChange={setLocalQty}
+          />
+
+          {/* Add to cart */}
+          <button
+            onClick={handleAddToCart}
+            className="px-4 py-1.5 rounded-full text-xs font-semibold bg-brand-primary text-brand-cream hover:bg-brand-primaryHover transition-colors flex-shrink-0"
+          >
+            {inCart ? `ADD MORE` : `ADD TO CART`}
+          </button>
+        </div>
+
+        {inCart && cartItem && (
+          <p className="text-xs text-cultr-forest font-medium mt-2">
+            {cartItem.quantity} in cart
+          </p>
+        )}
       </div>
     </div>
   )
@@ -1012,7 +1072,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
             <p className="text-xs text-cultr-textMuted">
               <strong className="text-brand-primary">Note:</strong> These statements have not been evaluated by the Food and Drug Administration.
               These products are not intended to diagnose, treat, cure, or prevent any disease.
-              Pricing and availability coming soon.
+              Supplement orders are reviewed by our staff and fulfilled separately from peptide orders.
             </p>
           )}
         </div>

@@ -16,9 +16,12 @@ import {
   Shield,
   CreditCard,
   Lock,
+  Leaf,
+  CheckCircle,
 } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import { getCategoryDisplayName } from '@/lib/config/product-catalog'
+import { isSupplementSku } from '@/lib/config/vitamin-catalog'
 import type { PlanTier } from '@/lib/config/plans'
 import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types'
 import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types'
@@ -207,9 +210,12 @@ function ProductCheckoutForm({
 
 export function CartClient({ email, tier }: { email: string; tier: PlanTier | null }) {
   const router = useRouter()
-  const { items, updateQuantity, removeItem, clearCart, getCartTotal, allItemsPriced } = useCart()
+  const { items, updateQuantity, removeItem, clearCart } = useCart()
   const [notes, setNotes] = useState('')
+  const [supplementNotes, setSupplementNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmittingSupplements, setIsSubmittingSupplements] = useState(false)
+  const [supplementSubmitted, setSupplementSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Determine primary card payment provider (Stripe Elements/Healthie vs Authorize.net)
@@ -223,9 +229,13 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
   const [affirmConfig, setAffirmConfig] = useState<AffirmCheckoutConfig | null>(null)
   const [affirmLoading, setAffirmLoading] = useState(false)
 
-  const cartTotal = getCartTotal()
-  const cartTotalCents = Math.round(cartTotal * 100)
-  const canDirectCheckout = allItemsPriced()
+  // Split items into peptides and supplements
+  const peptideItems = items.filter(i => !isSupplementSku(i.sku))
+  const supplementItems = items.filter(i => isSupplementSku(i.sku))
+
+  const peptideTotal = peptideItems.reduce((sum, i) => sum + (i.product.priceUsd || 0) * i.quantity, 0)
+  const peptideTotalCents = Math.round(peptideTotal * 100)
+  const canDirectCheckout = peptideItems.length > 0 && peptideItems.every(i => typeof i.product.priceUsd === 'number' && i.product.priceUsd > 0)
 
   const handleQuantityChange = (sku: string, delta: number) => {
     const item = items.find(i => i.sku === sku)
@@ -239,10 +249,10 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     }
   }
 
-  // Quote flow (existing)
+  // Quote flow for peptides (existing)
   const handleSubmitQuote = async () => {
-    if (items.length === 0) {
-      setError('Your cart is empty. Please add products before submitting a quote.')
+    if (peptideItems.length === 0) {
+      setError('No peptide items to submit a quote for.')
       return
     }
 
@@ -256,7 +266,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         body: JSON.stringify({
           email,
           tier,
-          items: items.map(item => ({
+          items: peptideItems.map(item => ({
             sku: item.sku,
             name: item.product.name,
             quantity: item.quantity,
@@ -273,12 +283,54 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         throw new Error(data.error || 'Failed to submit quote request')
       }
 
-      clearCart()
-      router.push('/library/quote-success')
+      // Only remove peptide items from cart
+      peptideItems.forEach(item => removeItem(item.sku))
+      if (supplementItems.length === 0) {
+        router.push('/library/quote-success')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Supplement order submission
+  const handleSubmitSupplementOrder = async () => {
+    if (supplementItems.length === 0) return
+
+    setIsSubmittingSupplements(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/supplement-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          tier,
+          items: supplementItems.map(item => ({
+            sku: item.sku,
+            name: item.product.name,
+            quantity: item.quantity,
+            category: item.product.category,
+          })),
+          notes: supplementNotes,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to submit supplement order')
+      }
+
+      // Remove only supplement items from cart
+      supplementItems.forEach(item => removeItem(item.sku))
+      setSupplementSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmittingSupplements(false)
     }
   }
 
@@ -306,7 +358,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          items: items.map(item => ({
+          items: peptideItems.map(item => ({
             sku: item.sku,
             quantity: item.quantity,
           })),
@@ -318,7 +370,8 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Failed to process payment')
 
-      clearCart()
+      // Only remove peptide items
+      peptideItems.forEach(item => removeItem(item.sku))
       if (data.redirectUrl) {
         router.push(data.redirectUrl)
       } else if (data.success) {
@@ -339,7 +392,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     if (provider === 'klarna' && !klarnaClientToken) {
       setKlarnaSessionLoading(true)
       try {
-        const checkoutItems = items.map(item => ({
+        const checkoutItems = peptideItems.map(item => ({
           sku: item.sku,
           name: item.product.name,
           quantity: item.quantity,
@@ -349,7 +402,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         const response = await fetch('/api/checkout/klarna/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountCents: cartTotalCents, items: checkoutItems }),
+          body: JSON.stringify({ amountCents: peptideTotalCents, items: checkoutItems }),
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session')
@@ -365,7 +418,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     if (provider === 'affirm' && !affirmConfig) {
       setAffirmLoading(true)
       try {
-        const checkoutItems = items.map(item => ({
+        const checkoutItems = peptideItems.map(item => ({
           sku: item.sku,
           name: item.product.name,
           quantity: item.quantity,
@@ -375,7 +428,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         const response = await fetch('/api/checkout/affirm/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountCents: cartTotalCents, items: checkoutItems }),
+          body: JSON.stringify({ amountCents: peptideTotalCents, items: checkoutItems }),
         })
         const data = await response.json()
         if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout')
@@ -394,7 +447,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     setIsSubmitting(true)
     setError(null)
     try {
-      const checkoutItems = items.map(item => ({
+      const checkoutItems = peptideItems.map(item => ({
         sku: item.sku,
         name: item.product.name,
         quantity: item.quantity,
@@ -406,14 +459,15 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           authorizationToken,
-          amountCents: cartTotalCents,
+          amountCents: peptideTotalCents,
           items: checkoutItems,
         }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Klarna order failed')
 
-      clearCart()
+      // Only remove peptide items
+      peptideItems.forEach(item => removeItem(item.sku))
       if (data.fraud_status === 'ACCEPTED') {
         router.push(`/success?provider=klarna&order_id=${data.order_id}&type=product`)
       } else {
@@ -424,14 +478,103 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     } finally {
       setIsSubmitting(false)
     }
-  }, [items, cartTotalCents, clearCart, router])
+  }, [peptideItems, peptideTotalCents, removeItem, router])
 
   const handleBnplError = useCallback((msg: string) => {
     setError(msg)
     setPaymentMethod('stripe')
   }, [])
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
+  // Helper to render a cart item row
+  const renderCartItem = (item: typeof items[0]) => {
+    const isSupplement = isSupplementSku(item.sku)
+    return (
+      <div key={item.sku} className="py-4 first:pt-0 last:pb-0">
+        <div className="flex gap-4">
+          {/* Product Image Placeholder */}
+          <div className={`w-20 h-20 rounded-xl flex items-center justify-center shrink-0 ${
+            isSupplement ? 'bg-gradient-to-br from-emerald-100 to-green-100' : 'bg-brand-cream'
+          }`}>
+            {isSupplement
+              ? <Leaf className="w-8 h-8 text-emerald-500/40" />
+              : <Package className="w-8 h-8 text-brand-primary/30" />
+            }
+          </div>
+
+          {/* Product Details */}
+          <div className="flex-1 min-w-0">
+            {isSupplement ? (
+              <p className="font-display text-brand-primary block truncate">
+                {item.product.name}
+              </p>
+            ) : (
+              <Link
+                href={`/library/shop/${encodeURIComponent(item.sku)}`}
+                className="font-display text-brand-primary hover:text-brand-primaryLight transition-colors block truncate"
+              >
+                {item.product.name}
+              </Link>
+            )}
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-brand-primary/50">
+                {isSupplement ? 'Vitamin & Supplement' : getCategoryDisplayName(item.product.category)}
+              </span>
+              {!isSupplement && item.product.volumeMl > 0 && (
+                <>
+                  <span className="text-brand-primary/30">&#8226;</span>
+                  <span className="text-xs text-brand-primary/50">
+                    {item.product.volumeMl}ml
+                  </span>
+                </>
+              )}
+              {item.product.priceUsd ? (
+                <>
+                  <span className="text-brand-primary/30">&#8226;</span>
+                  <span className="text-xs font-medium text-brand-primary/70">
+                    ${item.product.priceUsd.toFixed(2)}
+                  </span>
+                </>
+              ) : isSupplement ? (
+                <>
+                  <span className="text-brand-primary/30">&#8226;</span>
+                  <span className="text-xs font-medium text-emerald-600">
+                    Staff review
+                  </span>
+                </>
+              ) : null}
+            </div>
+
+            {/* Quantity Controls */}
+            <div className="flex items-center gap-3 mt-3">
+              <div className="inline-flex items-center border border-brand-primary/20 rounded-lg">
+                <button
+                  onClick={() => handleQuantityChange(item.sku, -1)}
+                  className="w-8 h-8 flex items-center justify-center text-brand-primary/60 hover:text-brand-primary hover:bg-brand-cream transition-colors rounded-l-lg"
+                >
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <span className="w-10 text-center text-sm font-medium text-brand-primary">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() => handleQuantityChange(item.sku, 1)}
+                  className="w-8 h-8 flex items-center justify-center text-brand-primary/60 hover:text-brand-primary hover:bg-brand-cream transition-colors rounded-r-lg"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <button
+                onClick={() => removeItem(item.sku)}
+                className="text-xs text-brand-primary/50 hover:text-red-600 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-brand-cream">
@@ -450,7 +593,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {items.length === 0 ? (
+        {items.length === 0 && !supplementSubmitted ? (
           <div className="max-w-md mx-auto text-center py-16">
             <Package className="w-16 h-16 text-brand-primary/30 mx-auto mb-6" />
             <h2 className="text-2xl font-display text-brand-primary mb-3">
@@ -466,22 +609,32 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
               Browse Products
             </Link>
           </div>
+        ) : items.length === 0 && supplementSubmitted ? (
+          <div className="max-w-md mx-auto text-center py-16">
+            <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-display text-brand-primary mb-3">
+              Supplement Order Submitted
+            </h2>
+            <p className="text-brand-primary/60 mb-8">
+              Our staff will review your supplement order and reach out with next steps.
+            </p>
+            <Link
+              href="/library/shop"
+              className="inline-flex items-center justify-center px-8 py-3.5 bg-brand-primary text-brand-cream font-medium rounded-full hover:bg-brand-primaryHover hover:scale-[1.03] transition-all"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         ) : (
           <div className="grid lg:grid-cols-5 gap-12">
-            {/* Left Column - Form */}
+            {/* Left Column - Cart Items */}
             <div className="lg:col-span-3 space-y-8">
               <div>
                 <h1 className="text-3xl font-display text-brand-primary mb-2">
-                  {canDirectCheckout ? (
-                    <>Checkout</>
-                  ) : (
-                    <>Request a Quote</>
-                  )}
+                  Your Cart
                 </h1>
                 <p className="text-brand-primary/60">
-                  {canDirectCheckout
-                    ? 'Review your items and complete your purchase.'
-                    : 'Review your items and submit your request.'}
+                  Review your items and proceed to checkout.
                 </p>
               </div>
 
@@ -510,285 +663,275 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
                 </div>
               </section>
 
-              {/* Cart Items Section */}
-              <section className="bg-white rounded-2xl p-6 border border-brand-primary/10">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-medium text-brand-primary uppercase tracking-wide">
-                    Items ({totalItems})
-                  </h2>
-                  <button
-                    onClick={clearCart}
-                    className="text-xs text-brand-primary/50 hover:text-red-600 transition-colors"
-                  >
-                    Clear all
-                  </button>
-                </div>
+              {/* Peptides & Compounds Section */}
+              {peptideItems.length > 0 && (
+                <section className="bg-white rounded-2xl p-6 border border-brand-primary/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-medium text-brand-primary uppercase tracking-wide">
+                      Peptides &amp; Compounds ({peptideItems.reduce((s, i) => s + i.quantity, 0)})
+                    </h2>
+                  </div>
+                  <div className="divide-y divide-brand-primary/10">
+                    {peptideItems.map(renderCartItem)}
+                  </div>
+                </section>
+              )}
 
-                <div className="divide-y divide-brand-primary/10">
-                  {items.map((item) => (
-                    <div key={item.sku} className="py-4 first:pt-0 last:pb-0">
-                      <div className="flex gap-4">
-                        {/* Product Image Placeholder */}
-                        <div className="w-20 h-20 bg-brand-cream rounded-xl flex items-center justify-center shrink-0">
-                          <Package className="w-8 h-8 text-brand-primary/30" />
-                        </div>
-
-                        {/* Product Details */}
-                        <div className="flex-1 min-w-0">
-                          <Link
-                            href={`/library/shop/${encodeURIComponent(item.sku)}`}
-                            className="font-display text-brand-primary hover:text-brand-primaryLight transition-colors block truncate"
-                          >
-                            {item.product.name}
-                          </Link>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-brand-primary/50">
-                              {getCategoryDisplayName(item.product.category)}
-                            </span>
-                            {item.product.volumeMl > 0 && (
-                              <>
-                                <span className="text-brand-primary/30">&#8226;</span>
-                                <span className="text-xs text-brand-primary/50">
-                                  {item.product.volumeMl}ml
-                                </span>
-                              </>
-                            )}
-                            {item.product.priceUsd && (
-                              <>
-                                <span className="text-brand-primary/30">&#8226;</span>
-                                <span className="text-xs font-medium text-brand-primary/70">
-                                  ${item.product.priceUsd.toFixed(2)}
-                                </span>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Quantity Controls */}
-                          <div className="flex items-center gap-3 mt-3">
-                            <div className="inline-flex items-center border border-brand-primary/20 rounded-lg">
-                              <button
-                                onClick={() => handleQuantityChange(item.sku, -1)}
-                                className="w-8 h-8 flex items-center justify-center text-brand-primary/60 hover:text-brand-primary hover:bg-brand-cream transition-colors rounded-l-lg"
-                              >
-                                <Minus className="w-3.5 h-3.5" />
-                              </button>
-                              <span className="w-10 text-center text-sm font-medium text-brand-primary">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => handleQuantityChange(item.sku, 1)}
-                                className="w-8 h-8 flex items-center justify-center text-brand-primary/60 hover:text-brand-primary hover:bg-brand-cream transition-colors rounded-r-lg"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                            <button
-                              onClick={() => removeItem(item.sku)}
-                              className="text-xs text-brand-primary/50 hover:text-red-600 transition-colors"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              {/* Notes Section (quote flow only) */}
-              {!canDirectCheckout && (
+              {/* Peptide Notes (quote flow only) */}
+              {peptideItems.length > 0 && !canDirectCheckout && (
                 <section className="bg-white rounded-2xl p-6 border border-brand-primary/10">
                   <h2 className="text-sm font-medium text-brand-primary uppercase tracking-wide mb-4">
-                    Additional Notes
+                    Peptide Order Notes
                   </h2>
                   <textarea
-                    id="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any special requests or questions..."
+                    placeholder="Any special requests or questions about your peptide order..."
                     className="w-full px-4 py-3 border border-brand-primary/20 rounded-lg focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none text-sm text-brand-primary placeholder:text-brand-primary/40"
-                    rows={4}
+                    rows={3}
                   />
                 </section>
               )}
+
+              {/* Vitamins & Supplements Section */}
+              {supplementItems.length > 0 && (
+                <section className="bg-white rounded-2xl p-6 border border-emerald-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-emerald-500" />
+                      <h2 className="text-sm font-medium text-brand-primary uppercase tracking-wide">
+                        Vitamins &amp; Supplements ({supplementItems.reduce((s, i) => s + i.quantity, 0)})
+                      </h2>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-brand-primary/10">
+                    {supplementItems.map(renderCartItem)}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-brand-primary/10">
+                    <textarea
+                      value={supplementNotes}
+                      onChange={(e) => setSupplementNotes(e.target.value)}
+                      placeholder="Any notes for your supplement order (optional)..."
+                      className="w-full px-4 py-3 border border-brand-primary/20 rounded-lg focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none text-sm text-brand-primary placeholder:text-brand-primary/40"
+                      rows={2}
+                    />
+                  </div>
+                </section>
+              )}
+
+              {/* Clear all button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={clearCart}
+                  className="text-xs text-brand-primary/50 hover:text-red-600 transition-colors"
+                >
+                  Clear entire cart
+                </button>
+              </div>
             </div>
 
             {/* Right Column - Order Summary (Sticky) */}
             <div className="lg:col-span-2">
-              <div className="sticky top-8">
-                <div className="bg-brand-creamDark rounded-2xl p-6">
-                  <h2 className="text-lg font-display text-brand-primary mb-6">Order Summary</h2>
+              <div className="sticky top-8 space-y-6">
+                {/* Peptide Order Summary */}
+                {peptideItems.length > 0 && (
+                  <div className="bg-brand-creamDark rounded-2xl p-6">
+                    <h2 className="text-lg font-display text-brand-primary mb-6">
+                      {canDirectCheckout ? 'Peptide Checkout' : 'Peptide Quote'}
+                    </h2>
 
-                  {/* Summary Items */}
-                  <div className="space-y-3 pb-4 border-b border-brand-primary/10">
-                    {items.map((item) => (
-                      <div key={item.sku} className="flex justify-between text-sm">
-                        <span className="text-brand-primary/60 truncate pr-4">
-                          {item.product.name} &#215; {item.quantity}
-                        </span>
-                        <span className="text-brand-primary font-medium shrink-0">
-                          {item.product.priceUsd
-                            ? `$${(item.product.priceUsd * item.quantity).toFixed(2)}`
-                            : 'Quote'}
+                    {/* Summary Items */}
+                    <div className="space-y-3 pb-4 border-b border-brand-primary/10">
+                      {peptideItems.map((item) => (
+                        <div key={item.sku} className="flex justify-between text-sm">
+                          <span className="text-brand-primary/60 truncate pr-4">
+                            {item.product.name} &#215; {item.quantity}
+                          </span>
+                          <span className="text-brand-primary font-medium shrink-0">
+                            {item.product.priceUsd
+                              ? `$${(item.product.priceUsd * item.quantity).toFixed(2)}`
+                              : 'Quote'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Total */}
+                    <div className="pt-4 pb-6">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-brand-primary font-medium">Total</span>
+                        <span className="text-2xl font-display text-brand-primary">
+                          {canDirectCheckout ? `$${peptideTotal.toFixed(2)}` : 'Quote Request'}
                         </span>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Totals */}
-                  <div className="py-4 border-b border-brand-primary/10 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-brand-primary/60">Total Items</span>
-                      <span className="text-brand-primary">{totalItems}</span>
+                      {!canDirectCheckout && (
+                        <p className="text-xs text-brand-primary/50 mt-1">
+                          Pricing will be provided within 24-48 hours
+                        </p>
+                      )}
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-brand-primary/60">Unique Products</span>
-                      <span className="text-brand-primary">{items.length}</span>
-                    </div>
-                  </div>
 
-                  {/* Total */}
-                  <div className="pt-4 pb-6">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-brand-primary font-medium">Total</span>
-                      <span className="text-2xl font-display text-brand-primary">
-                        {canDirectCheckout ? `$${cartTotal.toFixed(2)}` : 'Quote Request'}
+                    {/* Payment Method Selector (only for direct checkout) */}
+                    {canDirectCheckout && (
+                      <div className="mb-4">
+                        <PaymentMethodSelector
+                          selected={paymentMethod}
+                          onSelect={handleSelectPaymentMethod}
+                          amountCents={peptideTotalCents}
+                          isSubscription={false}
+                        />
+                      </div>
+                    )}
+
+                    {/* Card Checkout Form */}
+                    {canDirectCheckout && paymentMethod === 'stripe' && (
+                      useAuthorizeNet ? (
+                        <div className="space-y-4">
+                          <AuthorizeNetForm
+                            onTokenReceived={handleAuthorizeNetCheckout}
+                            onError={handleCheckoutError}
+                            loading={isSubmitting}
+                            submitText={`Pay $${peptideTotal.toFixed(2)}`}
+                            collectBillingAddress={true}
+                          />
+                        </div>
+                      ) : (
+                        <Elements stripe={stripePromise}>
+                          <ProductCheckoutForm
+                            email={email}
+                            items={peptideItems.map(item => ({ sku: item.sku, quantity: item.quantity }))}
+                            cartTotal={peptideTotal}
+                            onSuccess={handleCheckoutSuccess}
+                            onError={handleCheckoutError}
+                            clearCart={() => peptideItems.forEach(item => removeItem(item.sku))}
+                          />
+                        </Elements>
+                      )
+                    )}
+
+                    {/* Klarna Widget */}
+                    {canDirectCheckout && paymentMethod === 'klarna' && klarnaClientToken && (
+                      <div className="mb-4">
+                        <KlarnaWidget
+                          clientToken={klarnaClientToken}
+                          onAuthorized={handleKlarnaAuthorized}
+                          onError={handleBnplError}
+                        />
+                      </div>
+                    )}
+
+                    {canDirectCheckout && paymentMethod === 'klarna' && klarnaSessionLoading && (
+                      <div className="flex items-center justify-center py-4 mb-4">
+                        <Loader2 className="w-5 h-5 animate-spin text-brand-primary/60" />
+                        <span className="ml-2 text-sm text-brand-primary/50">Loading Klarna...</span>
+                      </div>
+                    )}
+
+                    {/* Affirm Button */}
+                    {canDirectCheckout && paymentMethod === 'affirm' && (
+                      <div className="mb-4">
+                        <AffirmCheckoutButton
+                          checkoutConfig={affirmConfig}
+                          onError={handleBnplError}
+                          loading={affirmLoading}
+                        />
+                      </div>
+                    )}
+
+                    {/* Quote Submit Button (non-priced peptide items) */}
+                    {!canDirectCheckout && (
+                      <button
+                        onClick={handleSubmitQuote}
+                        disabled={isSubmitting || peptideItems.length === 0}
+                        className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-primary text-brand-cream font-medium rounded-full hover:bg-brand-primaryHover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          'Submit Peptide Quote'
+                        )}
+                      </button>
+                    )}
+
+                    {/* Trust Signal */}
+                    <div className="flex items-center justify-center gap-2 mt-4 text-xs text-brand-primary/50">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>
+                        {canDirectCheckout ? 'HIPAA-compliant checkout' : 'Secure request \u2022 No payment required'}
                       </span>
                     </div>
-                    {!canDirectCheckout && (
-                      <p className="text-xs text-brand-primary/50 mt-1">
-                        Pricing will be provided within 24-48 hours
-                      </p>
-                    )}
                   </div>
+                )}
 
-                  {/* Payment Method Selector (only for direct checkout) */}
-                  {canDirectCheckout && (
-                    <div className="mb-4">
-                      <PaymentMethodSelector
-                        selected={paymentMethod}
-                        onSelect={handleSelectPaymentMethod}
-                        amountCents={cartTotalCents}
-                        isSubscription={false}
-                      />
+                {/* Supplement Order Summary */}
+                {supplementItems.length > 0 && (
+                  <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-200">
+                    <div className="flex items-center gap-2 mb-6">
+                      <Leaf className="w-5 h-5 text-emerald-600" />
+                      <h2 className="text-lg font-display text-brand-primary">Supplement Order</h2>
                     </div>
-                  )}
 
-                  {/* Card Checkout Form */}
-                  {canDirectCheckout && paymentMethod === 'stripe' && (
-                    useAuthorizeNet ? (
-                      /* Authorize.net Card Form (High-Risk Merchant Account) */
-                      <div className="space-y-4">
-                        <AuthorizeNetForm
-                          onTokenReceived={handleAuthorizeNetCheckout}
-                          onError={handleCheckoutError}
-                          loading={isSubmitting}
-                          submitText={`Pay $${cartTotal.toFixed(2)}`}
-                          collectBillingAddress={true}
-                        />
-                      </div>
-                    ) : (
-                      /* Stripe Elements via Healthie (HIPAA-compliant) */
-                      <Elements stripe={stripePromise}>
-                        <ProductCheckoutForm
-                          email={email}
-                          items={items.map(item => ({ sku: item.sku, quantity: item.quantity }))}
-                          cartTotal={cartTotal}
-                          onSuccess={handleCheckoutSuccess}
-                          onError={handleCheckoutError}
-                          clearCart={clearCart}
-                        />
-                      </Elements>
-                    )
-                  )}
-
-                  {/* Klarna Widget */}
-                  {canDirectCheckout && paymentMethod === 'klarna' && klarnaClientToken && (
-                    <div className="mb-4">
-                      <KlarnaWidget
-                        clientToken={klarnaClientToken}
-                        onAuthorized={handleKlarnaAuthorized}
-                        onError={handleBnplError}
-                      />
+                    {/* Summary Items */}
+                    <div className="space-y-3 pb-4 border-b border-emerald-200">
+                      {supplementItems.map((item) => (
+                        <div key={item.sku} className="flex justify-between text-sm">
+                          <span className="text-brand-primary/60 truncate pr-4">
+                            {item.product.name} &#215; {item.quantity}
+                          </span>
+                          <span className="text-emerald-600 font-medium shrink-0 text-xs">
+                            Staff review
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  )}
 
-                  {canDirectCheckout && paymentMethod === 'klarna' && klarnaSessionLoading && (
-                    <div className="flex items-center justify-center py-4 mb-4">
-                      <Loader2 className="w-5 h-5 animate-spin text-brand-primary/60" />
-                      <span className="ml-2 text-sm text-brand-primary/50">Loading Klarna...</span>
+                    <div className="pt-4 pb-4">
+                      <p className="text-xs text-brand-primary/60">
+                        Supplements are ordered by our staff on your behalf. You&apos;ll receive a confirmation email with pricing and fulfillment details.
+                      </p>
                     </div>
-                  )}
 
-                  {/* Affirm Button */}
-                  {canDirectCheckout && paymentMethod === 'affirm' && (
-                    <div className="mb-4">
-                      <AffirmCheckoutButton
-                        checkoutConfig={affirmConfig}
-                        onError={handleBnplError}
-                        loading={affirmLoading}
-                      />
-                    </div>
-                  )}
-
-                  {/* Error */}
-                  {error && (
-                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  )}
-
-                  {/* Quote Submit Button (non-priced items) */}
-                  {!canDirectCheckout && (
                     <button
-                      onClick={handleSubmitQuote}
-                      disabled={isSubmitting || items.length === 0}
-                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-primary text-brand-cream font-medium rounded-full hover:bg-brand-primaryHover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      onClick={handleSubmitSupplementOrder}
+                      disabled={isSubmittingSupplements || supplementItems.length === 0}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-emerald-600 text-white font-medium rounded-full hover:bg-emerald-700 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                      {isSubmitting ? (
+                      {isSubmittingSupplements ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Submitting...
                         </>
                       ) : (
-                        'Submit Quote Request'
+                        <>
+                          <Leaf className="w-4 h-4" />
+                          Submit for Staff Review
+                        </>
                       )}
                     </button>
-                  )}
 
-                  {/* Trust Signal */}
-                  <div className="flex items-center justify-center gap-2 mt-4 text-xs text-brand-primary/50">
-                    <Shield className="w-3.5 h-3.5" />
-                    <span>
-                      {canDirectCheckout ? 'HIPAA-compliant checkout' : 'Secure request \u2022 No payment required'}
-                    </span>
+                    <div className="flex items-center justify-center gap-2 mt-4 text-xs text-brand-primary/50">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>Secure request &#8226; No payment required</span>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* How It Works (quote flow only) */}
-                {!canDirectCheckout && (
-                  <div className="mt-6 p-5 bg-white rounded-2xl border border-brand-primary/10">
-                    <h3 className="font-display text-sm text-brand-primary mb-3">How it works</h3>
-                    <ol className="text-xs text-brand-primary/60 space-y-2">
-                      <li className="flex gap-2">
-                        <span className="font-medium text-brand-primary">1.</span>
-                        Submit your quote request
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="font-medium text-brand-primary">2.</span>
-                        Our team reviews and prepares pricing
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="font-medium text-brand-primary">3.</span>
-                        Receive your personalized quote via email
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="font-medium text-brand-primary">4.</span>
-                        Confirm to proceed with purchase
-                      </li>
-                    </ol>
+                {/* Error */}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                )}
+
+                {/* Supplement submitted success banner */}
+                {supplementSubmitted && items.length > 0 && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-start gap-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <p className="text-sm text-emerald-700">Supplement order submitted! Staff will reach out with details.</p>
                   </div>
                 )}
               </div>
