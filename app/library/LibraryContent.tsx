@@ -11,6 +11,7 @@ import {
   Library,
   Settings,
   CreditCard,
+  HeadphonesIcon,
 } from 'lucide-react'
 import { CategoryGrid } from '@/components/library/CategoryGrid'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
@@ -245,6 +246,19 @@ export function LibraryContent({
           </div>
         )}
       </main>
+
+      {/* Need Help Banner */}
+      <div className="border-t border-stone-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-center">
+          <a
+            href="mailto:support@cultrhealth.com"
+            className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors"
+          >
+            <HeadphonesIcon className="w-4 h-4" />
+            <span>Need Help? <span className="underline underline-offset-2">Contact a Care Coordinator</span></span>
+          </a>
+        </div>
+      </div>
     </div>
   )
 }
