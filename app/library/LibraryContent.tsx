@@ -12,16 +12,21 @@ import {
   Settings,
   CreditCard,
   HeadphonesIcon,
+  Heart,
 } from 'lucide-react'
 import { CategoryGrid } from '@/components/library/CategoryGrid'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
+import { MyCareSection } from '@/components/library/MyCareSection'
+import { MemberFiles } from '@/components/library/MemberFiles'
+import { TransactionHistory } from '@/components/library/TransactionHistory'
 import type { LibraryAccess, PlanTier } from '@/lib/config/plans'
 import { STRIPE_CONFIG } from '@/lib/config/plans'
 
-type TabId = 'dashboard' | 'library' | 'account';
+type TabId = 'dashboard' | 'care' | 'library' | 'account';
 
 const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'care', label: 'My Care', icon: Heart },
   { id: 'library', label: 'Peptide Library', icon: Library },
   { id: 'account', label: 'Account', icon: Settings },
 ]
@@ -129,6 +134,15 @@ export function LibraryContent({
           />
         )}
 
+        {/* My Care Tab */}
+        {activeTab === 'care' && (
+          <MyCareSection
+            tier={tier}
+            libraryAccess={libraryAccess}
+            email={email}
+          />
+        )}
+
         {/* Library Tab */}
         {activeTab === 'library' && (
           <div className="space-y-12">
@@ -226,6 +240,12 @@ export function LibraryContent({
                 <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
               </a>
             </div>
+
+            {/* Documents */}
+            <MemberFiles />
+
+            {/* Transactions */}
+            <TransactionHistory />
 
             {/* Upgrade CTA */}
             {tier && tier !== 'club' && (
