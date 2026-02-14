@@ -104,7 +104,7 @@ export default function HomePage() {
             <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
           </Link>
           <Link href="/pricing">
-            <Button variant="ghost" size="lg" className="border-2 rounded-full" style={{ color: '#D7F3DC', borderColor: 'rgba(215,243,220,0.7)', backgroundColor: 'rgba(215,243,220,0.1)' }}>
+            <Button variant="ghost" size="lg" className="border-2 rounded-full" style={{ color: '#D7F3DC', borderColor: '#D7F3DC', backgroundColor: 'rgba(215,243,220,0.25)' }}>
               See Plans <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
