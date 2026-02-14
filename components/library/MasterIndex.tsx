@@ -113,7 +113,6 @@ export function MasterIndex() {
                         <th className="p-4 font-semibold text-stone-700 w-1/3">Product Name</th>
                         <th className="p-4 font-semibold text-stone-700">Dose/Volume</th>
                         <th className="p-4 font-semibold text-stone-700">SKU</th>
-                        <th className="p-4 font-semibold text-stone-700 text-right">Price</th>
                         <th className="p-4 font-semibold text-stone-700 w-12"></th>
                       </tr>
                     </thead>
@@ -127,9 +126,6 @@ export function MasterIndex() {
                             {product.volumeMl > 0 && `${product.volumeMl}ml`}
                           </td>
                           <td className="p-4 text-stone-400 font-mono text-xs">{product.sku}</td>
-                          <td className="p-4 text-right font-medium text-stone-900">
-                            {product.priceUsd ? `$${product.priceUsd.toFixed(2)}` : '—'}
-                          </td>
                           <td className="p-4 text-right">
                             <Link href={`/library/shop/${product.sku}`} className="opacity-0 group-hover:opacity-100 text-cultr-forest hover:text-cultr-forestDark transition-all">
                               <ExternalLink className="w-4 h-4" />

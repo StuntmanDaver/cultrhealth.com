@@ -115,11 +115,6 @@ export function ProductCatalog() {
                     <span className="px-3 py-1 bg-stone-100 text-stone-600 text-xs font-semibold rounded-full uppercase tracking-wider">
                       {getCategoryDisplayName(product.category)}
                     </span>
-                    {product.priceUsd && (
-                      <span className="font-medium text-cultr-forest">
-                        ${product.priceUsd.toFixed(2)}
-                      </span>
-                    )}
                   </div>
                   
                   <h3 className="text-lg font-bold text-stone-900 mb-2 group-hover:text-cultr-forest transition-colors">
