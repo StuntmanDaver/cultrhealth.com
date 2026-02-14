@@ -236,6 +236,7 @@ function MealPlanModal({
   isGenerating,
   onRegenerate,
   macros,
+  error,
 }: {
   isOpen: boolean
   onClose: () => void
@@ -243,6 +244,7 @@ function MealPlanModal({
   isGenerating: boolean
   onRegenerate: () => void
   macros: { calories: number; protein: number; carbs: number; fat: number } | null
+  error: Error | null
 }) {
   const contentRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
@@ -455,7 +457,7 @@ function MealPlanModal({
             </div>
             <div className="min-w-0">
               <h2 className="font-display font-bold text-lg sm:text-xl truncate">Your Personalized Meal Plan</h2>
-              <p className="text-white/70 text-sm">AI-generated based on your macro targets</p>
+              <p className="text-white/70 text-sm">Personalized to your macro targets</p>
             </div>
           </div>
           <button
@@ -493,7 +495,20 @@ function MealPlanModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6" ref={contentRef}>
-          {isGenerating && !mealPlan ? (
+          {error && !isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
+              <p className="text-cultr-text font-medium text-lg">Failed to generate meal plan</p>
+              <p className="text-red-600 text-sm mt-2 text-center max-w-md">{error.message}</p>
+              <button
+                onClick={onRegenerate}
+                className="mt-6 flex items-center gap-2 px-5 py-2.5 bg-cultr-forest text-white rounded-xl text-sm font-medium hover:bg-cultr-forestLight transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Try Again
+              </button>
+            </div>
+          ) : isGenerating && !mealPlan ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 className="w-12 h-12 text-cultr-forest animate-spin mb-4" />
               <p className="text-cultr-text font-medium text-lg">Crafting your personalized meal plan...</p>
@@ -1078,7 +1093,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Generate AI Meal Plan
+                      Generate Meal Plan
                       <ChefHat className="w-5 h-5" />
                     </>
                   )}
@@ -1116,6 +1131,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
         isGenerating={isGeneratingMealPlan}
         onRegenerate={handleRegenerateMealPlan}
         macros={currentMacros}
+        error={mealPlanError}
       />
     </div>
   )

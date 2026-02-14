@@ -53,8 +53,6 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log('[Meal Plan API] Request body:', JSON.stringify(body, null, 2));
     
-    // useCompletion sends data with a 'prompt' field at the top level
-    // and additional body data merged in
     const { calories, protein, carbs, fat, goal, bmr, tdee } = body;
 
     // Validate inputs
@@ -101,11 +99,16 @@ Generate a practical, delicious meal plan that hits these macros as closely as p
     console.log('[Meal Plan API] Returning plain text stream response');
     const stream = new ReadableStream({
       async start(controller) {
-        const encoder = new TextEncoder();
-        for await (const chunk of result.textStream) {
-          controller.enqueue(encoder.encode(chunk));
+        try {
+          const encoder = new TextEncoder();
+          for await (const chunk of result.textStream) {
+            controller.enqueue(encoder.encode(chunk));
+          }
+          controller.close();
+        } catch (err) {
+          console.error('[Meal Plan API] Stream error:', err);
+          controller.error(err);
         }
-        controller.close();
       },
     });
 
