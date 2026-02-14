@@ -98,8 +98,20 @@ Generate a practical, delicious meal plan that hits these macros as closely as p
       maxOutputTokens: 1500,
     });
 
-    console.log('[Meal Plan API] Returning stream response');
-    return result.toTextStreamResponse();
+    console.log('[Meal Plan API] Returning plain text stream response');
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        for await (const chunk of result.textStream) {
+          controller.enqueue(encoder.encode(chunk));
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   } catch (error) {
     console.error('[Meal Plan API] Error:', error);
     return new Response(

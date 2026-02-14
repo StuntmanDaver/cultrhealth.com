@@ -448,13 +448,13 @@ function MealPlanModal({
       {/* Modal */}
       <div className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="bg-gradient-to-r from-cultr-forest to-cultr-forestLight px-6 py-5 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3 text-white">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+        <div className="bg-gradient-to-r from-cultr-forest to-cultr-forestLight px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3 text-white min-w-0">
+            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <ChefHat className="w-5 h-5" />
             </div>
-            <div>
-              <h2 className="font-display font-bold text-xl">Your Personalized Meal Plan</h2>
+            <div className="min-w-0">
+              <h2 className="font-display font-bold text-lg sm:text-xl truncate">Your Personalized Meal Plan</h2>
               <p className="text-white/70 text-sm">AI-generated based on your macro targets</p>
             </div>
           </div>
@@ -468,31 +468,31 @@ function MealPlanModal({
 
         {/* Macro Summary Bar */}
         {macros && (
-          <div className="bg-cultr-mint/50 border-b border-cultr-sage px-6 py-4 flex items-center justify-around shrink-0">
+          <div className="bg-cultr-mint/50 border-b border-cultr-sage px-4 sm:px-6 py-3 sm:py-4 grid grid-cols-2 sm:flex sm:items-center sm:justify-around gap-3 sm:gap-0 shrink-0">
             <div className="text-center">
-              <div className="text-2xl font-bold text-cultr-forest">{macros.calories.toLocaleString()}</div>
+              <div className="text-xl sm:text-2xl font-bold text-cultr-forest">{macros.calories.toLocaleString()}</div>
               <div className="text-xs text-cultr-textMuted uppercase tracking-wide">Calories</div>
             </div>
-            <div className="w-px h-10 bg-cultr-sage" />
+            <div className="w-px h-10 bg-cultr-sage hidden sm:block" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-cultr-forest">{macros.protein}g</div>
+              <div className="text-xl sm:text-2xl font-bold text-cultr-forest">{macros.protein}g</div>
               <div className="text-xs text-cultr-textMuted uppercase tracking-wide">Protein</div>
             </div>
-            <div className="w-px h-10 bg-cultr-sage" />
+            <div className="w-px h-10 bg-cultr-sage hidden sm:block" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-cultr-forest">{macros.carbs}g</div>
+              <div className="text-xl sm:text-2xl font-bold text-cultr-forest">{macros.carbs}g</div>
               <div className="text-xs text-cultr-textMuted uppercase tracking-wide">Carbs</div>
             </div>
-            <div className="w-px h-10 bg-cultr-sage" />
+            <div className="w-px h-10 bg-cultr-sage hidden sm:block" />
             <div className="text-center">
-              <div className="text-2xl font-bold text-cultr-forest">{macros.fat}g</div>
+              <div className="text-xl sm:text-2xl font-bold text-cultr-forest">{macros.fat}g</div>
               <div className="text-xs text-cultr-textMuted uppercase tracking-wide">Fat</div>
             </div>
           </div>
         )}
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6" ref={contentRef}>
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6" ref={contentRef}>
           {isGenerating && !mealPlan ? (
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 className="w-12 h-12 text-cultr-forest animate-spin mb-4" />
@@ -501,7 +501,7 @@ function MealPlanModal({
             </div>
           ) : (
             <div
-              className="prose prose-stone max-w-none
+              className="prose prose-sm sm:prose-base prose-stone max-w-none
                 prose-h2:text-xl prose-h2:font-display prose-h2:font-bold prose-h2:text-cultr-forest prose-h2:mt-8 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-cultr-sage/50
                 prose-h3:text-lg prose-h3:font-display prose-h3:font-semibold prose-h3:text-cultr-forestLight prose-h3:mt-6 prose-h3:mb-3
                 prose-p:text-cultr-text prose-p:leading-relaxed
@@ -521,7 +521,7 @@ function MealPlanModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-cultr-sage bg-cultr-offwhite px-6 py-4 flex flex-wrap items-center gap-3 shrink-0">
+        <div className="border-t border-cultr-sage bg-cultr-offwhite px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onRegenerate}
             disabled={isGenerating}
@@ -541,12 +541,12 @@ function MealPlanModal({
             {copied ? (
               <>
                 <Check className="w-4 h-4 text-green-600" />
-                Copied!
+                <span className="hidden sm:inline">Copied!</span>
               </>
             ) : (
               <>
                 <Copy className="w-4 h-4" />
-                Copy for Google Docs
+                <span className="hidden sm:inline">Copy for Google Docs</span>
               </>
             )}
           </button>
@@ -685,7 +685,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <section className="py-12 px-6 bg-cultr-forest text-white">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 bg-cultr-forest text-white">
         <div className="max-w-5xl mx-auto">
           <Link
             href="/library"
@@ -709,11 +709,11 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
       {/* Calculator */}
       <section className="py-10 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-5 gap-8">
+          <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
             {/* Inputs — 3 columns */}
             <div className="lg:col-span-3 space-y-6">
               {/* Sex + Units */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <User className="w-4 h-4 text-cultr-forest" />
@@ -750,7 +750,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
                   <Scale className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Body Measurements</h3>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <InputField
                     label="Age"
                     value={age}
