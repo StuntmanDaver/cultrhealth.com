@@ -499,56 +499,82 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
 }
 
 // ============================================================
-// Vitamin Card component (grid card with gradient placeholder)
+// Vitamin Row component (matches QuickOrderRow layout)
 // ============================================================
-function VitaminCard({ product }: { product: VitaminProduct }) {
+function VitaminRow({ product }: { product: VitaminProduct }) {
   const style = VITAMIN_CATEGORY_STYLES[product.category]
   const IconComponent = style.Icon
 
   return (
-    <div className="group bg-white border border-brand-primary/10 rounded-xl overflow-hidden hover:border-brand-primary/25 hover:shadow-md transition-all">
-      {/* Gradient placeholder with icon */}
-      <div className={`relative h-36 bg-gradient-to-br ${style.gradient} flex items-center justify-center overflow-hidden`}>
-        <div className={`w-14 h-14 rounded-full ${style.iconBg} flex items-center justify-center`}>
-          <IconComponent className="w-7 h-7 text-brand-primary/50" />
+    <div className="bg-white border border-brand-primary/10 rounded-xl px-4 py-3 hover:border-brand-primary/25 hover:shadow-sm transition-all">
+      {/* Desktop: Horizontal layout */}
+      <div className="hidden md:flex items-center gap-3">
+        {/* Thumbnail — gradient icon matching the category */}
+        <div className="group/tip relative flex-shrink-0">
+          <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${style.gradient} border border-brand-primary/5 flex items-center justify-center`}>
+            <IconComponent className="w-5 h-5 text-brand-primary/40" />
+          </div>
+          {/* Hover tooltip with benefits */}
+          <div className="pointer-events-none invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1 z-20 w-64 bg-cultr-forest text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+            {product.benefits}
+          </div>
         </div>
 
-        {/* Hover overlay with benefits (desktop) */}
-        <div className="absolute inset-0 bg-brand-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 pointer-events-none hidden md:flex">
-          <p className="text-white text-xs leading-relaxed text-center">{product.benefits}</p>
+        {/* Name + category info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display font-semibold text-sm text-brand-primary leading-tight truncate">{product.name}</h3>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="inline-flex px-2 py-0.5 bg-mint text-brand-primary text-[10px] font-medium rounded-full">
+              {style.displayName}
+            </span>
+            {product.isNew && (
+              <span className="text-xs font-medium text-green-600">New</span>
+            )}
+            {product.grownInUSA && (
+              <span className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600">
+                <Flag className="w-3 h-3" />
+                Grown in USA
+              </span>
+            )}
+          </div>
         </div>
 
-        {/* Badges */}
-        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
-          {product.isNew && (
-            <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
-              New
-            </span>
-          )}
-          {product.grownInUSA && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
-              <Flag className="w-2.5 h-2.5" />
-              USA
-            </span>
-          )}
+        {/* Pricing coming soon — right-aligned like the cart button */}
+        <div className="flex-shrink-0">
+          <span className="px-4 py-2 rounded-full text-xs font-semibold bg-brand-primary/10 text-brand-primary/50 whitespace-nowrap">
+            COMING SOON
+          </span>
         </div>
       </div>
 
-      {/* Card body */}
-      <div className="px-3 py-3">
-        <h3 className="font-display font-semibold text-sm text-brand-primary leading-tight line-clamp-2 min-h-[2.5rem]">
-          {product.name}
-        </h3>
-        <span className="inline-block mt-1.5 px-2 py-0.5 bg-mint text-brand-primary text-[10px] font-medium rounded-full">
-          {style.displayName}
-        </span>
+      {/* Mobile: Stacked layout */}
+      <div className="md:hidden">
+        <div className="flex items-start gap-3">
+          {/* Thumbnail */}
+          <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${style.gradient} border border-brand-primary/5 flex items-center justify-center flex-shrink-0`}>
+            <IconComponent className="w-5 h-5 text-brand-primary/40" />
+          </div>
 
-        {/* Benefits text visible on mobile (no hover on touch) */}
-        <p className="md:hidden mt-2 text-xs text-cultr-textMuted leading-relaxed">
-          {product.benefits}
-        </p>
-
-        <p className="mt-2 text-xs text-cultr-textMuted italic">Pricing coming soon</p>
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-display font-semibold text-sm text-brand-primary leading-tight">{product.name}</h3>
+            <p className="text-xs text-cultr-textMuted mt-1 line-clamp-2">{product.benefits}</p>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <span className="inline-flex px-2 py-0.5 bg-mint text-brand-primary text-[10px] font-medium rounded-full">
+                {style.displayName}
+              </span>
+              {product.isNew && (
+                <span className="text-xs font-medium text-green-600">New</span>
+              )}
+              {product.grownInUSA && (
+                <span className="inline-flex items-center gap-0.5 text-xs font-medium text-emerald-600">
+                  <Flag className="w-3 h-3" />
+                  USA
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -934,7 +960,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
                   )}
                 </div>
 
-                {/* Vitamin grid */}
+                {/* Product list */}
                 {filteredVitamins.length === 0 ? (
                   <div className="text-center py-20">
                     <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
@@ -952,9 +978,9 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
                     )}
                   </div>
                 ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="flex flex-col gap-2">
                     {filteredVitamins.map(product => (
-                      <VitaminCard key={product.id} product={product} />
+                      <VitaminRow key={product.id} product={product} />
                     ))}
                   </div>
                 )}
