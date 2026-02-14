@@ -13,6 +13,7 @@ import {
   Package,
   Trash2,
   X,
+  Flag,
 } from 'lucide-react'
 import { useCart } from '@/lib/cart-context'
 import {
@@ -24,7 +25,20 @@ import {
   type ShopProduct,
   type StockStatus,
 } from '@/lib/config/product-catalog'
+import {
+  VITAMIN_CATALOG,
+  VITAMIN_CATEGORY_STYLES,
+  getVitaminCategoriesWithCounts,
+  getVitaminCategoryDisplayName,
+  type VitaminCategory,
+  type VitaminProduct,
+} from '@/lib/config/vitamin-catalog'
 import type { PlanTier } from '@/lib/config/plans'
+
+// ============================================================
+// Shop tab type
+// ============================================================
+type ShopTab = 'peptides' | 'vitamins'
 
 // ============================================================
 // Sort options
@@ -485,14 +499,73 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
 }
 
 // ============================================================
+// Vitamin Card component (grid card with gradient placeholder)
+// ============================================================
+function VitaminCard({ product }: { product: VitaminProduct }) {
+  const style = VITAMIN_CATEGORY_STYLES[product.category]
+  const IconComponent = style.Icon
+
+  return (
+    <div className="group bg-white border border-brand-primary/10 rounded-xl overflow-hidden hover:border-brand-primary/25 hover:shadow-md transition-all">
+      {/* Gradient placeholder with icon */}
+      <div className={`relative h-36 bg-gradient-to-br ${style.gradient} flex items-center justify-center overflow-hidden`}>
+        <div className={`w-14 h-14 rounded-full ${style.iconBg} flex items-center justify-center`}>
+          <IconComponent className="w-7 h-7 text-brand-primary/50" />
+        </div>
+
+        {/* Hover overlay with benefits (desktop) */}
+        <div className="absolute inset-0 bg-brand-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 pointer-events-none hidden md:flex">
+          <p className="text-white text-xs leading-relaxed text-center">{product.benefits}</p>
+        </div>
+
+        {/* Badges */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+          {product.isNew && (
+            <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
+              New
+            </span>
+          )}
+          {product.grownInUSA && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wide">
+              <Flag className="w-2.5 h-2.5" />
+              USA
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div className="px-3 py-3">
+        <h3 className="font-display font-semibold text-sm text-brand-primary leading-tight line-clamp-2 min-h-[2.5rem]">
+          {product.name}
+        </h3>
+        <span className="inline-block mt-1.5 px-2 py-0.5 bg-mint text-brand-primary text-[10px] font-medium rounded-full">
+          {style.displayName}
+        </span>
+
+        {/* Benefits text visible on mobile (no hover on touch) */}
+        <p className="md:hidden mt-2 text-xs text-cultr-textMuted leading-relaxed">
+          {product.benefits}
+        </p>
+
+        <p className="mt-2 text-xs text-cultr-textMuted italic">Pricing coming soon</p>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
 // Main component
 // ============================================================
 export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTier | null }) {
+  const [activeShopTab, setActiveShopTab] = useState<ShopTab>('peptides')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all')
   const [selectedStock, setSelectedStock] = useState<StockStatus | 'all'>('all')
   const [selectedVial, setSelectedVial] = useState<string>('all')
   const [sortBy, setSortBy] = useState<SortOption>('az')
+  const [vitaminSearchQuery, setVitaminSearchQuery] = useState('')
+  const [selectedVitaminCategory, setSelectedVitaminCategory] = useState<VitaminCategory | 'all'>('all')
   const [mobileCartExpanded, setMobileCartExpanded] = useState(false)
   const { getItemCount } = useCart()
 
@@ -557,7 +630,34 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
     return products
   }, [searchQuery, selectedCategory, selectedStock, selectedVial, sortBy])
 
+  // Filter vitamin products
+  const vitaminCategories = getVitaminCategoriesWithCounts()
+  const vitaminCategoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...vitaminCategories.map(c => ({ value: c.category, label: `${c.displayName} (${c.count})` })),
+  ]
+
+  const filteredVitamins = useMemo(() => {
+    let products = [...VITAMIN_CATALOG]
+
+    if (selectedVitaminCategory !== 'all') {
+      products = products.filter(p => p.category === selectedVitaminCategory)
+    }
+    if (vitaminSearchQuery.trim()) {
+      const q = vitaminSearchQuery.toLowerCase()
+      products = products.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.benefits.toLowerCase().includes(q) ||
+        VITAMIN_CATEGORY_STYLES[p.category].displayName.toLowerCase().includes(q)
+      )
+    }
+
+    products.sort((a, b) => a.name.localeCompare(b.name))
+    return products
+  }, [vitaminSearchQuery, selectedVitaminCategory])
+
   const hasActiveFilters = selectedCategory !== 'all' || selectedStock !== 'all' || selectedVial !== 'all' || searchQuery.trim() !== ''
+  const hasActiveVitaminFilters = selectedVitaminCategory !== 'all' || vitaminSearchQuery.trim() !== ''
 
   const clearFilters = () => {
     setSelectedCategory('all')
@@ -565,6 +665,11 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
     setSelectedVial('all')
     setSearchQuery('')
     setSortBy('az')
+  }
+
+  const clearVitaminFilters = () => {
+    setSelectedVitaminCategory('all')
+    setVitaminSearchQuery('')
   }
 
   return (
@@ -603,135 +708,257 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
           {/* Left: Products */}
           <div className="flex-1 min-w-0">
             {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-brand-primary mb-8">
-              Quick Order
+            <h1 className="text-4xl md:text-5xl font-display font-bold text-brand-primary mb-6">
+              {activeShopTab === 'peptides' ? 'Quick Order' : 'Vitamins & Supplements'}
             </h1>
 
-            {/* Filter bar */}
-            <div className="flex flex-col gap-4 mb-6">
-              {/* Row 1: Filters */}
-              <div className="flex flex-wrap items-center gap-3">
-                <Dropdown
-                  label="Category"
-                  value={selectedCategory}
-                  options={categoryOptions}
-                  onChange={(v) => setSelectedCategory(v as ProductCategory | 'all')}
-                />
-                <Dropdown
-                  label="Stock"
-                  value={selectedStock}
-                  options={stockOptions}
-                  onChange={(v) => setSelectedStock(v as StockStatus | 'all')}
-                />
-                <Dropdown
-                  label="Vial Type"
-                  value={selectedVial}
-                  options={vialOptions}
-                  onChange={(v) => setSelectedVial(v)}
-                />
-
-                <div className="hidden md:block w-px h-8 bg-brand-primary/10" />
-
-                <Dropdown
-                  label="Sort"
-                  value={sortBy}
-                  options={SORT_OPTIONS}
-                  onChange={(v) => setSortBy(v as SortOption)}
-                />
-
-                <span className="text-sm text-cultr-textMuted ml-auto">
-                  {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-                </span>
-              </div>
-
-              {/* Row 2: Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-primary/30" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg bg-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-cultr-textMuted hover:text-brand-primary transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {/* Active filter badges */}
-              {hasActiveFilters && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {selectedCategory !== 'all' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
-                      {getCategoryDisplayName(selectedCategory)}
-                      <button onClick={() => setSelectedCategory('all')}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {selectedStock !== 'all' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
-                      {stockOptions.find(o => o.value === selectedStock)?.label}
-                      <button onClick={() => setSelectedStock('all')}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {selectedVial !== 'all' && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
-                      {selectedVial}
-                      <button onClick={() => setSelectedVial('all')}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  {searchQuery && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
-                      &quot;{searchQuery}&quot;
-                      <button onClick={() => setSearchQuery('')}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
-                  <button
-                    onClick={clearFilters}
-                    className="text-xs text-cultr-textMuted hover:text-brand-primary underline ml-1 transition-colors"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              )}
+            {/* Tab toggle */}
+            <div className="flex items-center gap-1 p-1 bg-brand-primary/5 rounded-full w-fit mb-8">
+              <button
+                onClick={() => setActiveShopTab('peptides')}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  activeShopTab === 'peptides'
+                    ? 'bg-brand-primary text-brand-cream shadow-sm'
+                    : 'text-brand-primary/60 hover:text-brand-primary'
+                }`}
+              >
+                Peptides &amp; Compounds
+              </button>
+              <button
+                onClick={() => setActiveShopTab('vitamins')}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  activeShopTab === 'vitamins'
+                    ? 'bg-brand-primary text-brand-cream shadow-sm'
+                    : 'text-brand-primary/60 hover:text-brand-primary'
+                }`}
+              >
+                Vitamins &amp; Supplements
+              </button>
             </div>
 
-            {/* Product list */}
-            {filteredProducts.length === 0 ? (
-              <div className="text-center py-20">
-                <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
-                <h3 className="text-lg font-display font-bold text-brand-primary mb-2">No products found</h3>
-                <p className="text-cultr-textMuted text-sm">
-                  Try adjusting your search or filter criteria.
-                </p>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 text-sm text-brand-primary hover:underline"
-                  >
-                    Clear all filters
-                  </button>
+            {/* ── Peptides Tab ─────────────────────────────── */}
+            {activeShopTab === 'peptides' && (
+              <>
+                {/* Filter bar */}
+                <div className="flex flex-col gap-4 mb-6">
+                  {/* Row 1: Filters */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Dropdown
+                      label="Category"
+                      value={selectedCategory}
+                      options={categoryOptions}
+                      onChange={(v) => setSelectedCategory(v as ProductCategory | 'all')}
+                    />
+                    <Dropdown
+                      label="Stock"
+                      value={selectedStock}
+                      options={stockOptions}
+                      onChange={(v) => setSelectedStock(v as StockStatus | 'all')}
+                    />
+                    <Dropdown
+                      label="Vial Type"
+                      value={selectedVial}
+                      options={vialOptions}
+                      onChange={(v) => setSelectedVial(v)}
+                    />
+
+                    <div className="hidden md:block w-px h-8 bg-brand-primary/10" />
+
+                    <Dropdown
+                      label="Sort"
+                      value={sortBy}
+                      options={SORT_OPTIONS}
+                      onChange={(v) => setSortBy(v as SortOption)}
+                    />
+
+                    <span className="text-sm text-cultr-textMuted ml-auto">
+                      {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* Row 2: Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-primary/30" />
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg bg-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cultr-textMuted hover:text-brand-primary transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Active filter badges */}
+                  {hasActiveFilters && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {selectedCategory !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          {getCategoryDisplayName(selectedCategory)}
+                          <button onClick={() => setSelectedCategory('all')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedStock !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          {stockOptions.find(o => o.value === selectedStock)?.label}
+                          <button onClick={() => setSelectedStock('all')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {selectedVial !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          {selectedVial}
+                          <button onClick={() => setSelectedVial('all')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {searchQuery && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          &quot;{searchQuery}&quot;
+                          <button onClick={() => setSearchQuery('')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      <button
+                        onClick={clearFilters}
+                        className="text-xs text-cultr-textMuted hover:text-brand-primary underline ml-1 transition-colors"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product list */}
+                {filteredProducts.length === 0 ? (
+                  <div className="text-center py-20">
+                    <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-display font-bold text-brand-primary mb-2">No products found</h3>
+                    <p className="text-cultr-textMuted text-sm">
+                      Try adjusting your search or filter criteria.
+                    </p>
+                    {hasActiveFilters && (
+                      <button
+                        onClick={clearFilters}
+                        className="mt-4 text-sm text-brand-primary hover:underline"
+                      >
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {filteredProducts.map(product => (
+                      <QuickOrderRow key={product.sku} product={product} />
+                    ))}
+                  </div>
                 )}
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {filteredProducts.map(product => (
-                  <QuickOrderRow key={product.sku} product={product} />
-                ))}
-              </div>
+              </>
+            )}
+
+            {/* ── Vitamins Tab ─────────────────────────────── */}
+            {activeShopTab === 'vitamins' && (
+              <>
+                {/* Filter bar */}
+                <div className="flex flex-col gap-4 mb-6">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Dropdown
+                      label="Category"
+                      value={selectedVitaminCategory}
+                      options={vitaminCategoryOptions}
+                      onChange={(v) => setSelectedVitaminCategory(v as VitaminCategory | 'all')}
+                    />
+                    <span className="text-sm text-cultr-textMuted ml-auto">
+                      {filteredVitamins.length} product{filteredVitamins.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-primary/30" />
+                    <input
+                      type="text"
+                      placeholder="Search vitamins & supplements..."
+                      value={vitaminSearchQuery}
+                      onChange={(e) => setVitaminSearchQuery(e.target.value)}
+                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg bg-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
+                    />
+                    {vitaminSearchQuery && (
+                      <button
+                        onClick={() => setVitaminSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cultr-textMuted hover:text-brand-primary transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Active filter badges */}
+                  {hasActiveVitaminFilters && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {selectedVitaminCategory !== 'all' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          {getVitaminCategoryDisplayName(selectedVitaminCategory)}
+                          <button onClick={() => setSelectedVitaminCategory('all')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      {vitaminSearchQuery && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-mint text-brand-primary text-xs rounded-full font-medium">
+                          &quot;{vitaminSearchQuery}&quot;
+                          <button onClick={() => setVitaminSearchQuery('')}>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      )}
+                      <button
+                        onClick={clearVitaminFilters}
+                        className="text-xs text-cultr-textMuted hover:text-brand-primary underline ml-1 transition-colors"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Vitamin grid */}
+                {filteredVitamins.length === 0 ? (
+                  <div className="text-center py-20">
+                    <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-display font-bold text-brand-primary mb-2">No supplements found</h3>
+                    <p className="text-cultr-textMuted text-sm">
+                      Try adjusting your search or filter criteria.
+                    </p>
+                    {hasActiveVitaminFilters && (
+                      <button
+                        onClick={clearVitaminFilters}
+                        className="mt-4 text-sm text-brand-primary hover:underline"
+                      >
+                        Clear all filters
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {filteredVitamins.map(product => (
+                      <VitaminCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -749,11 +976,19 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
       {/* Disclaimer */}
       <div className="max-w-[1400px] mx-auto px-6 pb-8">
         <div className="p-4 bg-mint border border-sage rounded-xl">
-          <p className="text-xs text-cultr-textMuted">
-            <strong className="text-brand-primary">Note:</strong> All products require a valid prescription.
-            CULTR Health does not guarantee product availability.
-            Contact our team for current inventory and pricing.
-          </p>
+          {activeShopTab === 'peptides' ? (
+            <p className="text-xs text-cultr-textMuted">
+              <strong className="text-brand-primary">Note:</strong> All products require a valid prescription.
+              CULTR Health does not guarantee product availability.
+              Contact our team for current inventory and pricing.
+            </p>
+          ) : (
+            <p className="text-xs text-cultr-textMuted">
+              <strong className="text-brand-primary">Note:</strong> These statements have not been evaluated by the Food and Drug Administration.
+              These products are not intended to diagnose, treat, cure, or prevent any disease.
+              Pricing and availability coming soon.
+            </p>
+          )}
         </div>
       </div>
     </div>
