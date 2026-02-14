@@ -76,11 +76,11 @@ export default function HomePage() {
 
         <div className="max-w-7xl mx-auto relative z-10 w-full pt-4 pb-4 md:py-20">
           <div className="max-w-xl">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-3 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-2 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
             </h1>
 
-            <p className="text-base md:text-lg text-white mb-2 md:mb-8 max-w-md">
+            <p className="text-base md:text-lg text-white mb-0 md:mb-8 max-w-md">
               Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
             </p>
 
@@ -104,7 +104,7 @@ export default function HomePage() {
             <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
           </Link>
           <Link href="/pricing">
-            <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage rounded-full">
+            <Button variant="ghost" size="lg" className="border-2 rounded-full" style={{ color: '#D7F3DC', borderColor: 'rgba(215,243,220,0.7)', backgroundColor: 'rgba(215,243,220,0.1)' }}>
               See Plans <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
