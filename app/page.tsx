@@ -45,14 +45,15 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[500px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-hidden flex items-start md:items-center">
-        {/* Mobile hero image — confined to bottom 65% so green shows at top */}
-        <div className="absolute bottom-0 left-0 right-0 h-[65%] md:hidden">
+      <section className="relative min-h-[400px] md:min-h-[600px] lg:min-h-[700px] px-6 bg-cultr-forest overflow-visible md:overflow-hidden flex items-start md:items-center">
+        {/* Mobile hero image — natural size so full CULTR branding is visible */}
+        <div className="absolute bottom-0 left-0 right-0 md:hidden">
           <Image
             src="/images/hero-banner-mobile.webp"
             alt="CULTR — Five women in athletic wear posing with CULTR branding"
-            fill
-            className="object-cover object-top"
+            width={1024}
+            height={590}
+            className="w-full h-auto"
             priority
             quality={90}
             sizes="100vw"
@@ -71,9 +72,9 @@ export default function HomePage() {
         {/* Desktop: dark overlay for text readability */}
         <div className="absolute inset-0 pointer-events-none hidden md:block" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.45) 0%, rgba(43,69,66,0.22) 50%, transparent 75%)' }} />
         {/* Dark green edge at bottom to match brand */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.6) 40%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.6) 40%, transparent 100%)' }} />
 
-        <div className="max-w-7xl mx-auto relative z-10 w-full pt-8 pb-16 md:py-20">
+        <div className="max-w-7xl mx-auto relative z-10 w-full pt-4 pb-4 md:py-20">
           <div className="max-w-xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
@@ -83,7 +84,8 @@ export default function HomePage() {
               Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
             </p>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {/* Desktop buttons — keep in current left-aligned position */}
+            <div className="hidden sm:flex sm:flex-row sm:items-center gap-3">
               <Link href="/quiz">
                 <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
               </Link>
@@ -94,6 +96,18 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Mobile buttons — horizontal at the bottom border of the hero */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-1/2 z-20 flex justify-center gap-3 px-6 sm:hidden">
+          <Link href="/quiz">
+            <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
+          </Link>
+          <Link href="/pricing">
+            <Button variant="ghost" size="lg" className="text-white border-2 border-white/70 bg-white/10 hover:bg-white/20 hover:text-cultr-sage rounded-full">
+              See Plans <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
         </div>
       </section>
 
