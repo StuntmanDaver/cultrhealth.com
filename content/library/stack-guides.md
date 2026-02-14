@@ -119,8 +119,8 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 - **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with semaglutide
 - **AOD-9604** (300mcg AM fasted) -- targeted fat mobilization
-- **FRAG 176-191** (250-500mcg AM fasted) -- lipolytic without systemic GH effects
 - **Tesamorelin** (1-2mg daily) -- visceral fat reduction specifically
+- **MOTS-C** (5-10mg 3-5x weekly) -- metabolic activation and exercise capacity
 
 ### What to Track
 
@@ -135,7 +135,7 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 - Stacking semaglutide + cagrilintide without slow independent titration of each
 - Excessive caloric restriction -- GLP-1s reduce appetite naturally, severe deficits cause muscle loss
 - Skipping protein tracking -- muscle preservation requires adequate protein even with reduced appetite
-- Running fat-loss peptides (FRAG, AOD) with a fed-state dose -- fasting required for efficacy
+- Running fat-loss peptides (AOD-9604) with a fed-state dose -- fasting required for efficacy
 
 ---
 
@@ -228,8 +228,8 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 - **DSIP** (100mcg nightly) -- sleep architecture support (poor sleep is the top focus killer)
 - **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- GH-mediated cognitive recovery during sleep
-- **Dihexa** (discuss with provider) -- advanced cognitive compound for specific cases
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- neuroinflammation modulation
+- **NAD+** (100-250mg weekly) -- cellular energy and brain metabolism support
 
 ### What to Track
 

@@ -13,15 +13,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Stacks Well With**: CJC-1295, Ipamorelin, BPC-157
 - **Cycle**: 4-6 weeks on, 4 weeks off
 
-### ACE-031
-- **Mechanism**: Myostatin inhibition; muscle growth deregulation
-- **Standard Dose**: 1-5mg weekly
-- **Half-life**: Variable
-- **Evidence**: Grade B-C (limited human data)
-- **Common Uses**: Muscle hypertrophy without fat gain
-- **Special Notes**: Rapid strength; joint stress possible
-- **Cycle**: 8-12 weeks
-
 ### Follistatin 344
 - **Mechanism**: Myostatin antagonist; muscle deregulation
 - **Standard Dose**: 100-300mcg daily for 10-30 days
@@ -107,15 +98,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Best For**: Mitochondrial dysfunction, aging
 - **Cycle**: 4-12 weeks
 
-### TP508 (Chrysalin)
-- **Mechanism**: Wound healing; angiogenesis
-- **Standard Dose**: 100-500mcg daily or every other day
-- **Half-life**: Hours
-- **Evidence**: Grade C-D
-- **Routes**: Subcutaneous, Topical
-- **Common Uses**: Acute wound healing, tissue damage
-- **Best For**: Injury recovery, regeneration
-
 ## Metabolic Category
 
 ### Cagrilintide
@@ -138,14 +120,14 @@ Complete reference guide for all compounds in the CULTR library.
 - **Best For**: Metabolic optimization, fat loss
 - **Cycle**: Ongoing
 
-### FRAG 176-191 + AOD 9604
-- **Mechanism**: HGH fragment; direct fat mobilization
-- **Standard Dose**: 250-500mcg daily (split doses)
+### AOD-9604
+- **Mechanism**: GH fragment; stimulates lipolysis and inhibits lipogenesis
+- **Standard Dose**: 250-500mcg daily
 - **Half-life**: 1-2 hours
 - **Evidence**: Grade C-D
-- **Routes**: Subcutaneous, Intramuscular
+- **Routes**: Subcutaneous
 - **Common Uses**: Fat loss without muscle loss
-- **Best For**: Body recomposition
+- **Best For**: Body recomposition, targeted fat reduction
 - **Cycle**: 8-12 weeks
 
 ## Bioregulator Category
@@ -200,16 +182,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Best For**: Mental health support
 - **Cycle**: 4-8 weeks
 
-### Humanin
-- **Mechanism**: Neuroprotection; mitochondrial support
-- **Standard Dose**: 0.5-5mg daily or 3x weekly
-- **Half-life**: Hours
-- **Evidence**: Grade D (emerging)
-- **Routes**: Subcutaneous, Intranasal
-- **Common Uses**: Neuroprotection, cognitive aging
-- **Best For**: Neurological health, aging prevention
-- **Cycle**: Variable; research ongoing
-
 ---
 
 ## Optimal Timing Guide — All Products
@@ -218,7 +190,7 @@ Complete reference guide for all compounds in the CULTR library.
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
-| AOD-9604 / FRAG 176-191 | Morning or pre-cardio | Fat loss; empty stomach |
+| AOD-9604 | Morning or pre-cardio | Fat loss; empty stomach |
 | SEMAX | Morning/early afternoon | Cognitive; avoid late PM |
 | SELANK | Morning or as needed | Anxiolytic; avoid evening |
 | Thymosin Alpha-1 | Morning | Immune rhythm support |
@@ -240,7 +212,7 @@ Complete reference guide for all compounds in the CULTR library.
 | Peptide | Timing | Notes |
 |---------|--------|-------|
 | IGF-1 LR3 | Pre-workout | Muscle signaling; avoid food 2-3h |
-| ACE-031 | Pre-workout or AM | Myostatin inhibition |
+| Follistatin | Pre-workout or AM | Myostatin inhibition |
 | BPC-157 | Near training (optional) | Can dose near injury site |
 | TB-500 | Flexible | Recovery support |
 

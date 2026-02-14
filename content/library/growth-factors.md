@@ -9,7 +9,6 @@ This section covers peptides and compounds that promote muscle growth, strength 
 | Product | Size | Evidence | Risk | Best For |
 |---------|------|----------|------|----------|
 | IGF-1 LR3 | 1mg | B | Moderate-High | Lean muscle gain, strength |
-| ACE-031 | 1mg | B-C | Moderate | Muscle growth without fat |
 | Follistatin 344 | 1mg | C | Moderate | Myostatin inhibition |
 | Sermorelin | 5mg | B-C | Low-Moderate | GH secretion, recovery |
 | CJC-1295 (No DAC) | 5mg | B-C | Low-Moderate | GH pulse optimization |
@@ -24,13 +23,6 @@ This section covers peptides and compounds that promote muscle growth, strength 
 **Duration**: 4-6 weeks
 **Best Stacked With**: CJC-1295, Ipamorelin, BPC-157
 
-### ACE-031
-**Mechanism**: Myostatin and activin inhibitor that removes "brakes" on muscle growth
-
-**Protocol**: 1-5mg weekly
-**Duration**: 6-12 weeks
-**Special Notes**: Can cause rapid strength gains; monitor joints
-
 ### Follistatin 344
 **Mechanism**: Antagonist of myostatin and other negative regulators of muscle growth
 
@@ -43,7 +35,6 @@ This section covers peptides and compounds that promote muscle growth, strength 
 | Product | Optimal Timing | Category | Notes |
 |---------|---------------|----------|-------|
 | IGF-1 LR3 | Pre-workout or training window | Pre-Workout | Muscle signaling; avoid food 2-3h before |
-| ACE-031 | Pre-workout or AM | Pre-Workout/Morning | Myostatin inhibition |
 | Follistatin 344 | Morning | Morning | Consistent daily timing during pulse cycle |
 | Sermorelin | Pre-sleep (empty stomach) | Evening/Pre-Sleep | GH pulse optimization; fasted 2-3h |
 | CJC-1295 (No DAC) | Pre-sleep | Evening/Pre-Sleep | GH stimulation; fasted |
@@ -51,7 +42,7 @@ This section covers peptides and compounds that promote muscle growth, strength 
 | CJC-1295 (No DAC) + Ipamorelin | Pre-sleep | Evening/Pre-Sleep | Synergistic GH pulse; fasted 2-3h |
 | PT-141 | 30-60 min before desired effect | Flexible/Situational | Sexual function; not daily use |
 | Melanotan-1/2 | Pre-sun exposure | Flexible/Situational | 30-60 min before UV exposure |
-| Testagen | Morning | Morning | Bioregulator; consistent AM timing |
+| Hexarelin | Morning or pre-workout | Morning/Pre-Workout | GH secretagogue with cardioprotective benefits |
 
 **Key Rule**: GH-related peptides (Sermorelin, CJC-1295, Ipamorelin) work best on an empty stomach — avoid food 2-3 hours before administration.
 

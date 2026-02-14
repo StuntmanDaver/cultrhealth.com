@@ -225,11 +225,6 @@ Different tissues have vastly different energy needs:
 - May enhance exercise capacity
 - Research stage
 
-**Humanin**
-- Neuroprotective mitochondrial peptide
-- Anti-apoptotic effects
-- Research ongoing
-
 **SS-31 (Elamipretide)**
 - Targets inner mitochondrial membrane
 - In clinical trials for heart failure and mitochondrial disease

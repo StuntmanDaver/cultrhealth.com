@@ -54,7 +54,7 @@ const PRODUCT_DESCRIPTIONS: Record<string, { short: string; details: string }> =
   },
   'glp1-retatrutide': {
     short: 'Triple hormone receptor agonist',
-    details: 'Retatrutide targets GIP, GLP-1, and glucagon receptors simultaneously. This triple-agonist approach shows promising results for metabolic health and weight management in clinical trials.',
+    details: 'RTA targets GIP, GLP-1, and glucagon receptors simultaneously. This triple-agonist approach shows promising results for metabolic health and weight management in clinical trials.',
   },
   '5-amino-1mq': {
     short: 'Metabolic optimization compound',

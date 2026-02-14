@@ -13,7 +13,6 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 | Thymosin-α1 | 4.5mg | B-C | Low | Immune support |
 | SEMAX | 10mg | C-D | Low | Cognitive enhancement |
 | SELANK | 10mg | C-D | Low | Anxiety reduction |
-| Humanin | 5mg | D | Low | Neuroprotection |
 
 ## Key Compounds
 
@@ -58,7 +57,6 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 | Thymosin-α1 | Morning | Morning | Immune support; consistent AM dosing optimal |
 | SEMAX | Morning or early afternoon | Morning | Cognitive enhancement; avoid late PM (may affect sleep) |
 | SELANK | Morning or as needed | Morning/Flexible | Anxiolytic; avoid late evening if sleep-sensitive |
-| Humanin | Morning or flexible | Morning/Flexible | Mitochondrial support; morning preferred for energy |
 | NAD+ | Morning | Morning | Cellular energy; supports daytime metabolism |
 | MOTS-c | Morning or pre-workout | Morning/Pre-Workout | Metabolic/exercise support |
 | PT-141 | 30-60 min before desired effect | Flexible/Situational | Sexual function; situational dosing |
@@ -74,7 +72,6 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 ### Anti-Aging Stack (12+ weeks, cycled)
 - Epitalon: 5-10mg before bed (10-day cycles)
 - DSIP: 100-200mcg at bedtime
-- Humanin: 0.5-5mg daily or 3x weekly
 - Supporting: Quality sleep, antioxidants, stress management
 
 ### Cognitive Enhancement (8 weeks)
@@ -92,15 +89,12 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 - **DSIP**: May cause mild drowsiness; use at bedtime
 - **Thymosin α1**: Well-tolerated; generally safe
 - **SEMAX/SELANK**: Intranasal administration easy; minimal side effects
-- **Humanin**: Emerging compound; more limited data
-
 ## Research Status
 
 - Epitalon: Grade C-D evidence; Russian research strong
 - DSIP: Grade C-D evidence; multiple clinical studies
 - Thymosin α1: Grade B-C evidence; established safety profile
 - SEMAX/SELANK: Grade C-D evidence; extensive use in Russia
-- Humanin: Grade D evidence; emerging research
 
 ## Best Practices
 

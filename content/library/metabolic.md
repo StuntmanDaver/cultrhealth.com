@@ -10,7 +10,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 |---------|------|----------|------|----------|
 | Cagrilintide | 5mg | B-C | Moderate | GLP-1 + Amylin pathway |
 | Sema + Cagri Blend | 5mg + 5mg | B | Moderate | Combined metabolic support |
-| FRAG 176-191 + AOD 9604 | 5mg each | C-D | Low-Moderate | Direct fat mobilization |
+| AOD-9604 | 5mg | C-D | Low-Moderate | Direct fat mobilization |
 
 ## Key Compounds
 
@@ -30,13 +30,13 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 **Duration**: Ongoing
 **Best For**: Significant weight loss goals
 
-### FRAG 176-191
-**Mechanism**: Fragment of human growth hormone that promotes lipolysis without growth effects
+### AOD-9604
+**Mechanism**: Growth hormone fragment that stimulates lipolysis and inhibits lipogenesis without affecting blood sugar
 
 **Typical Use**: 250-500mcg daily
-**Route**: Subcutaneous or Intramuscular
+**Route**: Subcutaneous
 **Duration**: 8-12 weeks
-**Unique**: Fat-loss specific without systemic HGH effects
+**Unique**: Targeted fat reduction without systemic HGH effects
 
 ## Optimal Timing Guide
 
@@ -44,13 +44,12 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 |---------|---------------|----------|-------|
 | Cagrilintide | Same day each week | Flexible/Situational | Weekly injection; pick consistent day/time |
 | Semaglutide | Same day each week | Flexible/Situational | Weekly injection; consistency critical |
-| FRAG 176-191 | Morning (fasted) or pre-cardio | Morning | Fasted state enhances lipolytic effect |
-| AOD 9604 | Morning (fasted) or pre-cardio | Morning | Empty stomach 2-3 hours before/after |
-| Retatrutide | Morning or consistent daytime | Morning | Metabolic consistency |
+| AOD-9604 | Morning (fasted) or pre-cardio | Morning | Empty stomach 2-3 hours before/after |
+| RTA | Morning or consistent daytime | Morning | Metabolic consistency |
 
 **Key Rules**:
 - **GLP-1 weekly injections**: Same day and time every week; set a recurring reminder
-- **Fat-loss peptides (FRAG, AOD)**: Fasted morning or 2-3 hours after last meal
+- **Fat-loss peptides (AOD-9604)**: Fasted morning or 2-3 hours after last meal
 - **Hydration**: GI side effects from GLP-1 require adequate hydration throughout day
 
 ## Metabolic Optimization Protocols
@@ -77,7 +76,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 
 - Cagrilintide: Emerging; Grade B-C evidence
 - GLP-1 compounds: Strong clinical evidence for weight loss
-- FRAG 176-191: Preclinical; Grade C-D evidence in humans
+- AOD-9604: Preclinical; Grade C-D evidence in humans
 
 ## Disclaimer
 

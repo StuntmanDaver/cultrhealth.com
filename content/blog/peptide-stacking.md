@@ -58,7 +58,6 @@ Some peptides work best at specific times (morning, evening, around workouts).
 
 **Optional Additions**
 - GHK-Cu: For collagen and skin healing
-- Pentadeca Arginate (PA): Oral alternative to BPC-157
 
 **Protocol Timeline**
 | Week | BPC-157 | TB-500 |
@@ -108,9 +107,6 @@ Some peptides work best at specific times (morning, evening, around workouts).
 - Morning administration for both
 - Avoid late afternoon/evening (may affect sleep)
 - Can be taken together or sequentially
-
-**Optional Addition**
-- Dihexa: For memory and neuroplasticity (research-stage compound)
 
 ### Anti-Aging and Longevity Stack
 

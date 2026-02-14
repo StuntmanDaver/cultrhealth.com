@@ -4,7 +4,6 @@
 
 ### Muscle Growth & Strength
 - **IGF-1 LR3** - Direct growth factor; fastest muscle gains
-- **ACE-031** - Myostatin inhibitor; strength without fat
 - **Follistatin 344** - Myostatin antagonist; lean growth
 - **Sermorelin** - GH secretion; natural approach
 - **CJC-1295 (No DAC)** - GH pulse optimization
@@ -13,12 +12,11 @@
 - **BPC-157** - Tendon/ligament recovery; versatile
 - **TB-500** - Systemic tissue repair; athletic recovery
 - **GHK-Cu** - Collagen synthesis; skin and joints
-- **TP508** - Wound healing peptide
 
 ### Fat Loss & Metabolism
 - **Cagrilintide** - Appetite suppression; emerging
 - **Semaglutide** - GLP-1 agonist; strong fat loss
-- **FRAG 176-191** - Direct lipolysis; no growth effects
+- **AOD-9604** - GH fragment; targeted fat reduction
 
 ### Sleep & Cognitive Function
 - **DSIP** - Sleep quality enhancement
@@ -28,7 +26,7 @@
 ### Immune & Anti-Aging
 - **Epitalon** - Longevity peptide; telomerase
 - **Thymosin α1** - Immune support
-- **Humanin** - Neuroprotection; anti-aging
+- **NAD+** - Cellular energy; DNA repair
 
 ## Evidence Grades
 
@@ -80,8 +78,7 @@
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
-| AOD-9604 | Morning or pre-cardio | Fat loss pathway |
-| FRAG 176-191 | Morning (fasted) | Lipolytic; avoid food 2-3h before/after |
+| AOD-9604 | Morning (fasted) or pre-cardio | Fat loss pathway; avoid food 2-3h before/after |
 | SEMAX | Morning/early afternoon | Cognitive; avoid late PM |
 | SELANK | Morning or as needed | Anxiolytic; avoid evening |
 | Thymosin-α1 | Morning | Immune rhythm support |
@@ -90,7 +87,7 @@
 | MOTS-c | Morning or pre-workout | Metabolic/exercise support |
 | Cagrilintide | Same day weekly | GLP-1 consistency |
 | Semaglutide | Same day weekly | GLP-1 weekly |
-| Retatrutide | Morning or consistent daytime | Metabolic consistency |
+| RTA | Morning or consistent daytime | Metabolic consistency |
 
 ### EVENING / PRE-SLEEP
 *Best for growth hormone, repair, immune modulation, CNS calming*
@@ -112,7 +109,7 @@
 | Peptide | Timing | Notes |
 |---------|--------|-------|
 | IGF-1 LR3 | Pre-workout or training window | Muscle signaling; avoid food 2-3h |
-| ACE-031 | Pre-workout or AM | Myostatin inhibition |
+| Follistatin | Pre-workout or AM | Myostatin inhibition |
 | PT-141 | 30-60 min before desired effect | Sexual function |
 | MOTS-c | Pre-workout | Exercise mimetic |
 
@@ -256,17 +253,17 @@
 
 | Symptom | Foundation Supplements | Peptide |
 |---------|----------------------|---------|
-| Sugar cravings | Chromium, Inositol, Magnesium | Retatrutide |
-| High appetite | Protein, Chromium, Inositol | Retatrutide |
-| Binge eating | Magnesium, Chromium, Omega-3 | Retatrutide |
-| Night cravings | Magnesium, Glycine, Chromium | Retatrutide |
-| Weight gain | Vitamin D, Magnesium, Chromium | Retatrutide |
-| Weight loss resistance | Zinc, Selenium, Iodine | Retatrutide |
+| Sugar cravings | Chromium, Inositol, Magnesium | RTA |
+| High appetite | Protein, Chromium, Inositol | RTA |
+| Binge eating | Magnesium, Chromium, Omega-3 | RTA |
+| Night cravings | Magnesium, Glycine, Chromium | RTA |
+| Weight gain | Vitamin D, Magnesium, Chromium | RTA |
+| Weight loss resistance | Zinc, Selenium, Iodine | RTA |
 | Belly fat | Chromium, Omega-3, Magnesium | AOD-9604 |
 | Water retention | Potassium, Vitamin B6, Magnesium | CJC-1295 (No DAC) |
 | Slow metabolism | Iodine, Selenium, Zinc | MOTS-c |
-| Insulin resistance | Chromium, Magnesium, Alpha lipoic acid | Retatrutide |
-| High triglycerides | Omega-3, Niacin B3, Magnesium | Retatrutide |
+| Insulin resistance | Chromium, Magnesium, Alpha lipoic acid | RTA |
+| High triglycerides | Omega-3, Niacin B3, Magnesium | RTA |
 
 ### CARDIOVASCULAR & CIRCULATION
 

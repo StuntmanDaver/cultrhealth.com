@@ -13,7 +13,6 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 | GHK-Cu | 50mg | C | Low | Collagen synthesis |
 | GLOW Blend | Mixed | C-D | Low-Moderate | Comprehensive recovery |
 | Elamipretide | 50mg | B-C | Moderate | Mitochondrial function |
-| TP508 | 5mg | C-D | Low-Moderate | Wound healing |
 
 ## Key Compounds
 
@@ -50,7 +49,6 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 | GHK-Cu | AM or PM | Flexible/Situational | Injectable: flexible timing; topical: apply to clean skin AM/PM |
 | GLOW Blend | Flexible | Flexible/Situational | Follow component timing; consistency over exact timing |
 | Elamipretide | Morning (fasted) | Morning | Mitochondrial peptide; morning dosing supports energy throughout day |
-| TP508 | Near wound/injury | Flexible/Situational | Timing based on wound care schedule; consistency important |
 
 **Key Rule**: Repair peptides have timing flexibility — consistency matters more than exact hour. Separate GH-related peptides from repair peptides by 30+ min if stacking.
 

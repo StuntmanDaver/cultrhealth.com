@@ -11,7 +11,7 @@ const CATEGORIES = [
     description: 'Muscle building, strength enhancement, anabolic pathways',
     icon: Activity,
     color: 'emerald',
-    tags: ['IGF-1 LR3', 'ACE-031', 'Follistatin', 'Sermorelin']
+    tags: ['IGF-1 LR3', 'Follistatin', 'Sermorelin', 'Hexarelin']
   },
   {
     id: 'repair-recovery',
