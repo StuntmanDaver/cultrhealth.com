@@ -93,6 +93,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
 // Medication category → specific medication recommendations
 const MEDICATION_MAP: Record<string, { id: string; name: string; description: string }[]> = {
   metabolic: [
+    { id: 'retatrutide', name: 'Retatrutide (RTA)', description: 'Triple GLP-1/GIP/Glucagon agonist for maximum metabolic optimization' },
     { id: 'tirzepatide', name: 'Tirzepatide', description: 'Dual GIP/GLP-1 for significant weight loss' },
     { id: 'semaglutide', name: 'Semaglutide', description: 'GLP-1 receptor agonist for weight management' },
   ],

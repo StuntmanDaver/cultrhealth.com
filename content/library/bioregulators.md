@@ -6,13 +6,13 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 
 ## Quick Reference
 
-| Product | Size | Evidence | Risk | Best For |
-|---------|------|----------|------|----------|
-| Epitalon | 10mg | C-D | Low-Moderate | Telomerase activation |
-| DSIP | 5mg | C-D | Low | Sleep quality |
-| Thymosin-α1 | 4.5mg | B-C | Low | Immune support |
-| SEMAX | 10mg | C-D | Low | Cognitive enhancement |
-| SELANK | 10mg | C-D | Low | Anxiety reduction |
+| Product | Size | Risk | Best For |
+|---------|------|------|----------|
+| Epitalon | 10mg | Low-Moderate | Telomerase activation |
+| DSIP | 5mg | Low | Sleep quality |
+| Thymosin-α1 | 4.5mg | Low | Immune support |
+| SEMAX | 10mg | Low | Cognitive enhancement |
+| SELANK | 10mg | Low | Anxiety reduction |
 
 ## Key Compounds
 
@@ -89,12 +89,6 @@ Bioregulators are peptides that influence systemic regulatory functions: immune 
 - **DSIP**: May cause mild drowsiness; use at bedtime
 - **Thymosin α1**: Well-tolerated; generally safe
 - **SEMAX/SELANK**: Intranasal administration easy; minimal side effects
-## Research Status
-
-- Epitalon: Grade C-D evidence; Russian research strong
-- DSIP: Grade C-D evidence; multiple clinical studies
-- Thymosin α1: Grade B-C evidence; established safety profile
-- SEMAX/SELANK: Grade C-D evidence; extensive use in Russia
 
 ## Best Practices
 

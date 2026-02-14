@@ -6,13 +6,13 @@ This section covers peptides and compounds that promote muscle growth, strength 
 
 ## Quick Reference
 
-| Product | Size | Evidence | Risk | Best For |
-|---------|------|----------|------|----------|
-| IGF-1 LR3 | 1mg | B | Moderate-High | Lean muscle gain, strength |
-| Follistatin 344 | 1mg | C | Moderate | Myostatin inhibition |
-| Sermorelin | 5mg | B-C | Low-Moderate | GH secretion, recovery |
-| CJC-1295 (No DAC) | 5mg | B-C | Low-Moderate | GH pulse optimization |
-| Ipamorelin | 5mg | B-C | Low | GH pulse without cortisol |
+| Product | Size | Risk | Best For |
+|---------|------|------|----------|
+| IGF-1 LR3 | 1mg | Moderate-High | Lean muscle gain, strength |
+| Follistatin 344 | 1mg | Moderate | Myostatin inhibition |
+| Sermorelin | 5mg | Low-Moderate | GH secretion, recovery |
+| CJC-1295 (No DAC) | 5mg | Low-Moderate | GH pulse optimization |
+| Ipamorelin | 5mg | Low | GH pulse without cortisol |
 
 ## Key Compounds
 
@@ -28,7 +28,6 @@ This section covers peptides and compounds that promote muscle growth, strength 
 
 **Protocol**: 100-300mcg daily for 10-30 days, repeat monthly
 **Duration**: Varies (pulsed dosing)
-**Research Status**: Preclinical in humans; used in animal studies
 
 ## Optimal Timing Guide
 
@@ -52,12 +51,6 @@ This section covers peptides and compounds that promote muscle growth, strength 
 - **Insulin sensitivity**: Monitor glucose metabolism
 - **Hormone levels**: Some compounds affect endogenous hormone production
 - **Individual variation**: Response varies significantly between individuals
-
-## Research & Evidence
-
-- IGF-1: Well-established effects on muscle growth (Grade B evidence)
-- GH Secretagogues: Strong evidence for GH elevation (Grade B-C)
-- Myostatin inhibitors: Promising animal data; limited human trials (Grade B-C to C)
 
 ## Disclaimer
 

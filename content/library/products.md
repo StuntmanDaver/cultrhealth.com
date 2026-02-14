@@ -8,7 +8,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Growth factor signaling; protein synthesis
 - **Standard Dose**: 20-50mcg daily
 - **Half-life**: 20-30 hours
-- **Evidence**: Grade B (strong growth effects)
 - **Common Uses**: Lean muscle gain, strength, recovery
 - **Stacks Well With**: CJC-1295, Ipamorelin, BPC-157
 - **Cycle**: 4-6 weeks on, 4 weeks off
@@ -17,7 +16,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Myostatin antagonist; muscle deregulation
 - **Standard Dose**: 100-300mcg daily for 10-30 days
 - **Half-life**: Hours
-- **Evidence**: Grade C (mostly animal data)
 - **Common Uses**: Significant muscle growth
 - **Administration**: Typically pulsed (on/off cycles)
 - **Cycle**: Monthly pulses; ongoing protocol
@@ -26,7 +24,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: GHRH agonist; stimulates GH secretion
 - **Standard Dose**: 200-300mcg daily or before bed
 - **Half-life**: 7 minutes
-- **Evidence**: Grade B-C (clinical use established)
 - **Common Uses**: Natural GH elevation, sleep
 - **Side Effects**: Minimal; generally well-tolerated
 - **Cycle**: 3-6 months
@@ -35,7 +32,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: GHRH analog; short-acting GH stimulation
 - **Standard Dose**: 100mcg nightly
 - **Half-life**: Short (No DAC)
-- **Evidence**: Grade B-C
 - **Common Uses**: GH pulse optimization
 - **Best Stacked With**: Ipamorelin (synergistic effect)
 - **Cycle**: 8-12 weeks
@@ -44,7 +40,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Selective GH secretagogue; minimal cortisol
 - **Standard Dose**: 200-300mcg 1-3x daily
 - **Half-life**: 2 hours
-- **Evidence**: Grade B-C
 - **Common Uses**: GH secretion without metabolic stress
 - **Best For**: Athletes, endurance, natural GH enhancement
 - **Cycle**: 8-12 weeks
@@ -55,7 +50,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Angiogenesis; nerve growth; anti-inflammatory
 - **Standard Dose**: 250-500mcg 1-2x daily
 - **Half-life**: Hours
-- **Evidence**: Grade C (strong preclinical data)
 - **Routes**: IM, SQ, Intranasal, Oral
 - **Common Uses**: Tendon healing, joint recovery, GI health
 - **Cycle**: 4-12 weeks
@@ -64,7 +58,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Actin-binding; growth factor upregulation
 - **Standard Dose**: 2.5-5mg 2x weekly
 - **Half-life**: Hours
-- **Evidence**: Grade C-D (animal data strong)
 - **Routes**: Subcutaneous, Intramuscular
 - **Common Uses**: Athletic recovery, tissue repair
 - **Best For**: General health maintenance post-injury
@@ -74,7 +67,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Collagen synthesis; tissue remodeling
 - **Standard Dose**: 1-2mg daily
 - **Half-life**: Hours
-- **Evidence**: Grade C (clinical use established)
 - **Routes**: Topical, Subcutaneous, Intranasal
 - **Common Uses**: Skin health, collagen, joint support
 - **Best For**: Long-term collagen enhancement
@@ -83,7 +75,6 @@ Complete reference guide for all compounds in the CULTR library.
 ### GLOW Blend
 - **Mechanism**: Multiple peptides; comprehensive recovery
 - **Standard Dose**: Per component guidelines
-- **Evidence**: Grade C-D
 - **Common Uses**: Athletic recovery, general wellness
 - **Composition**: BPC-157 + TB-500 + GHK-Cu
 - **Cycle**: 8-12 weeks
@@ -92,7 +83,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Mitochondrial targeting; energy optimization
 - **Standard Dose**: 10-40mg daily
 - **Half-life**: Hours
-- **Evidence**: Grade B-C (emerging)
 - **Routes**: Intravenous, Subcutaneous
 - **Common Uses**: Cellular energy, fatigue reduction
 - **Best For**: Mitochondrial dysfunction, aging
@@ -100,11 +90,20 @@ Complete reference guide for all compounds in the CULTR library.
 
 ## Metabolic Category
 
+### Retatrutide (RTA)
+- **Mechanism**: Triple agonist targeting GLP-1, GIP, and Glucagon receptors
+- **Standard Dose**: 1-12mg weekly (slow titration)
+- **Half-life**: Days
+- **Routes**: Subcutaneous
+- **Common Uses**: Weight loss, metabolic optimization, appetite control
+- **Best For**: Maximum metabolic enhancement; CULTR's primary GLP recommendation
+- **Evidence Grade**: B (Phase 3 trials; up to 24% body weight reduction)
+- **Cycle**: Ongoing
+
 ### Cagrilintide
 - **Mechanism**: Amylin receptor agonist; dual GI/CNS effects
 - **Standard Dose**: 0.25-2.4mg weekly (slow titration)
 - **Half-life**: Days
-- **Evidence**: Grade B-C (emerging)
 - **Routes**: Subcutaneous
 - **Common Uses**: Weight loss, appetite suppression
 - **Best For**: Significant fat loss goals
@@ -114,7 +113,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: GLP-1 receptor agonist; satiety, metabolic
 - **Standard Dose**: 0.25-2.4mg weekly (slow titration)
 - **Half-life**: 7 days
-- **Evidence**: Grade A (strong clinical data)
 - **Routes**: Subcutaneous
 - **Common Uses**: Weight loss, glucose control
 - **Best For**: Metabolic optimization, fat loss
@@ -124,7 +122,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: GH fragment; stimulates lipolysis and inhibits lipogenesis
 - **Standard Dose**: 250-500mcg daily
 - **Half-life**: 1-2 hours
-- **Evidence**: Grade C-D
 - **Routes**: Subcutaneous
 - **Common Uses**: Fat loss without muscle loss
 - **Best For**: Body recomposition, targeted fat reduction
@@ -136,7 +133,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Telomerase activation; pineal function
 - **Standard Dose**: 5-10mg before bed (10-day cycles)
 - **Half-life**: Hours
-- **Evidence**: Grade C-D (Russian clinical data)
 - **Routes**: Subcutaneous, Intranasal
 - **Common Uses**: Anti-aging, longevity, sleep
 - **Best For**: Long-term health optimization
@@ -146,7 +142,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Sleep-promoting peptide; delta-wave enhancement
 - **Standard Dose**: 100-500mcg at bedtime
 - **Half-life**: Hours
-- **Evidence**: Grade C-D
 - **Routes**: Intranasal, Subcutaneous, Intravenous
 - **Common Uses**: Sleep quality, recovery enhancement
 - **Best For**: Sleep optimization
@@ -156,7 +151,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: T-cell stimulation; immune upregulation
 - **Standard Dose**: 1.6-4.5mg 2-3x weekly
 - **Half-life**: Hours
-- **Evidence**: Grade B-C (established safety)
 - **Routes**: Subcutaneous, Intramuscular
 - **Common Uses**: Immune support, general health
 - **Best For**: Immune system optimization
@@ -166,7 +160,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: ACTH analog; nootropic, neuroprotective
 - **Standard Dose**: 200-600mcg daily (intranasal)
 - **Half-life**: Hours
-- **Evidence**: Grade C-D (Russian/international use)
 - **Routes**: Intranasal (primarily)
 - **Common Uses**: Cognitive enhancement, memory
 - **Best For**: Mental clarity, learning
@@ -176,7 +169,6 @@ Complete reference guide for all compounds in the CULTR library.
 - **Mechanism**: Enkephalin analog; anxiolytic, mood support
 - **Standard Dose**: 250-500mcg daily (intranasal)
 - **Half-life**: Hours
-- **Evidence**: Grade C-D
 - **Routes**: Intranasal (primarily)
 - **Common Uses**: Anxiety reduction, mood balance
 - **Best For**: Mental health support
@@ -195,7 +187,7 @@ Complete reference guide for all compounds in the CULTR library.
 | SELANK | Morning or as needed | Anxiolytic; avoid evening |
 | Thymosin Alpha-1 | Morning | Immune rhythm support |
 | Elamipretide | Morning (fasted) | Mitochondrial energy |
-| Cagrilintide / Semaglutide | Same day weekly | Consistent timing |
+| RTA / Cagrilintide / Semaglutide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 

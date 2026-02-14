@@ -92,7 +92,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'Do you prescribe medications?',
-                  answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 agonists (semaglutide, tirzepatide), hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
+                  answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 receptor agonists, hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
                 },
                 {
                   question: 'How do telehealth visits work?',

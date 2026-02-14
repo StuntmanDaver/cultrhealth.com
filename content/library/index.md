@@ -14,6 +14,7 @@
 - **GHK-Cu** - Collagen synthesis; skin and joints
 
 ### Fat Loss & Metabolism
+- **RTA** - Triple GLP-1/GIP/Glucagon agonist; most potent metabolic compound
 - **Cagrilintide** - Appetite suppression; emerging
 - **Semaglutide** - GLP-1 agonist; strong fat loss
 - **AOD-9604** - GH fragment; targeted fat reduction
@@ -27,13 +28,6 @@
 - **Epitalon** - Longevity peptide; telomerase
 - **Thymosin α1** - Immune support
 - **NAD+** - Cellular energy; DNA repair
-
-## Evidence Grades
-
-- **Grade A**: Strong clinical human evidence
-- **Grade B**: Good clinical or substantial animal evidence
-- **Grade C**: Limited clinical evidence; established use
-- **Grade D**: Preclinical data; emerging compounds
 
 ## Quick Start Recommendations
 
@@ -303,4 +297,4 @@
 
 ## Further Reading
 
-Browse by category for detailed protocols, research summaries, and safety information for each compound.
+Browse by category for detailed protocols and safety information for each compound.

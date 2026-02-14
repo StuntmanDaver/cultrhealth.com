@@ -17,9 +17,25 @@ export interface Product {
 
 export const PRODUCTS: Product[] = [
   {
+    slug: 'retatrutide',
+    name: 'Compounded Retatrutide (RTA)',
+    description: 'The most potent metabolic compound available. Triple-action formula targeting GLP-1, GIP, and Glucagon receptors for maximum results.',
+    priceTeaser: 'As low as $199/mo*',
+    features: [
+      'Triple GLP-1/GIP/Glucagon receptor targeting',
+      'Up to 24% body weight reduction in trials',
+      'Compounded for affordability',
+      'Provider-supervised protocol',
+    ],
+    isBestseller: true,
+    href: '/pricing',
+    icon: 'syringe',
+    gradient: 'from-cultr-copper/30 via-cultr-copper/10 to-transparent',
+  },
+  {
     slug: 'tirzepatide',
     name: 'Compounded Tirzepatide',
-    description: 'The most effective GLP-1 for sustainable weight loss. Dual-action formula targeting both GLP-1 and GIP receptors.',
+    description: 'The most effective dual-agonist GLP-1 for sustainable weight loss. Dual-action formula targeting both GLP-1 and GIP receptors.',
     priceTeaser: 'As low as $199/mo*',
     features: [
       'Dual GLP-1/GIP receptor targeting',
@@ -27,7 +43,7 @@ export const PRODUCTS: Product[] = [
       'Compounded for affordability',
       'Provider-supervised protocol',
     ],
-    isBestseller: true,
+    isBestseller: false,
     href: '/pricing',
     icon: 'syringe',
     gradient: 'from-cultr-copper/30 via-cultr-copper/10 to-transparent',
@@ -43,7 +59,7 @@ export const PRODUCTS: Product[] = [
       'Compounded formulation',
       'Flexible dosing options',
     ],
-    isBestseller: true,
+    isBestseller: false,
     href: '/pricing',
     icon: 'pill',
     gradient: 'from-amber-500/30 via-amber-500/10 to-transparent',

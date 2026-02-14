@@ -39,7 +39,7 @@ export const TESTIMONIALS: Testimonial[] = [
     highlight: "3 weeks",
   },
   {
-    quote: "Went from 215 to 183. Semaglutide + the protocol engine made it almost too easy.",
+    quote: "Went from 215 to 183. GLP-1 therapy + the protocol engine made it almost too easy.",
     name: "James T.",
     title: "Core member, 5 months",
     rating: 5,

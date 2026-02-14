@@ -10,11 +10,28 @@ import {
   Shield,
   Palette,
   MessageSquare,
+  Target,
+  Layers,
+  CalendarDays,
+  Filter,
+  Package,
 } from 'lucide-react'
 
 const RESOURCE_SECTIONS = [
   {
+    title: 'Messaging Playbook',
+    subtitle: 'What do I say?',
+    icon: Target,
+    items: [
+      { title: 'Outcomes-First Claims', desc: '10 compliance-safe marketing claims ready to use', type: 'doc', slug: 'compliance-safe-claims' },
+      { title: 'Messaging Matrix', desc: 'Map outcomes to audiences and proof mechanisms', type: 'doc', slug: 'messaging-matrix' },
+      { title: 'Audience Segments', desc: '7 target profiles with pains, channels, and offers', type: 'doc', slug: 'audience-segments' },
+      { title: 'Objection Handling', desc: 'Skeptic triggers and how to address them by persona', type: 'doc', slug: 'objection-handling' },
+    ],
+  },
+  {
     title: 'Content Templates',
+    subtitle: 'Ready-to-use copy',
     icon: MessageSquare,
     items: [
       { title: 'Short-Form Hooks', desc: '15-second hook scripts for Reels/TikTok', type: 'doc', slug: 'short-form-hooks' },
@@ -24,33 +41,78 @@ const RESOURCE_SECTIONS = [
     ],
   },
   {
-    title: 'Brand Kit',
-    icon: Palette,
+    title: 'Content Pillars',
+    subtitle: 'What topics do I cover?',
+    icon: Layers,
     items: [
-      { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
-      { title: 'Brand Colors', desc: 'Forest #2A4542, Sage #B7E4C7, Mint #D8F3DC', type: 'info', slug: 'brand-colors' },
-      { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
-      { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
+      { title: 'Metabolic & Weight Loss', desc: 'Topics, hooks, and myth-busts for weight/GLP-1 content', type: 'doc', slug: 'pillar-metabolic-weight' },
+      { title: 'Recovery & Peptides', desc: 'Topics, hooks, and myth-busts for recovery content', type: 'doc', slug: 'pillar-recovery-peptides' },
+      { title: 'Longevity & Biomarkers', desc: 'Topics and hooks for healthspan + data-driven content', type: 'doc', slug: 'pillar-longevity-biomarkers' },
+      { title: 'Oral Health & Cognitive', desc: 'Topics and hooks for oral care + focus/energy content', type: 'doc', slug: 'pillar-microbiome-cognitive' },
     ],
   },
   {
-    title: 'Compliance',
-    icon: Shield,
+    title: 'Content Calendar',
+    subtitle: 'When do I post?',
+    icon: CalendarDays,
     items: [
-      { title: 'FTC Disclosure Guide', desc: 'Required disclosures for affiliate content', type: 'doc', slug: 'ftc-disclosure-guide' },
-      { title: 'Approved Claims', desc: 'What you can and cannot say about CULTR products', type: 'doc', slug: 'approved-claims' },
-      { title: 'Health Claims Policy', desc: 'FDA-compliant language for health/wellness', type: 'doc', slug: 'health-claims-policy' },
-      { title: 'Terms of Service', desc: 'Creator affiliate program terms', type: 'doc', slug: 'terms-of-service' },
+      { title: '30-Day Content Calendar', desc: 'Daily short-form prompts with topic and pillar reference', type: 'doc', slug: '30-day-calendar' },
+      { title: 'Weekly Long-Form Plan', desc: '8 long-form topics across 4 weeks', type: 'doc', slug: 'weekly-longform-plan' },
+      { title: 'Repurposing Workflow', desc: 'Turn one piece of content into 5+ formats', type: 'doc', slug: 'repurposing-workflow' },
+    ],
+  },
+  {
+    title: 'Sales Funnel',
+    subtitle: 'How do I convert?',
+    icon: Filter,
+    items: [
+      { title: 'Lead Magnet Ideas', desc: '5 lead magnets to capture audience interest', type: 'doc', slug: 'lead-magnets' },
+      { title: 'Landing Page Blueprint', desc: 'Section-by-section outline for a high-converting page', type: 'doc', slug: 'landing-page-blueprint' },
+      { title: '14-Day Nurture Sequence', desc: 'Day-by-day email/SMS follow-up with copy', type: 'doc', slug: 'nurture-sequence' },
+      { title: 'DM & Booking Scripts', desc: 'Comment replies, DM flows, and conversion scripts', type: 'doc', slug: 'dm-conversion-scripts' },
+    ],
+  },
+  {
+    title: 'Offer Programs',
+    subtitle: 'What am I selling?',
+    icon: Package,
+    items: [
+      { title: 'Core Programs', desc: 'Metabolic Reset, Recovery & Resilience, Longevity Lab Loop', type: 'doc', slug: 'core-programs' },
+      { title: 'Program Add-Ons', desc: 'Oral Microbiome, Biological Age Challenge, Stack Audit', type: 'doc', slug: 'program-add-ons' },
+      { title: 'Offer Matching Guide', desc: 'Which offer to pitch based on audience segment', type: 'doc', slug: 'offer-matching-guide' },
     ],
   },
   {
     title: 'Product Education',
+    subtitle: 'Know the product',
     icon: BookOpen,
     items: [
       { title: 'GLP-1 Overview', desc: 'How GLP-1 medications work, benefits, and eligibility', type: 'doc', slug: 'glp-1-overview' },
       { title: 'Peptide Protocols', desc: 'Introduction to peptide therapy and stacking', type: 'doc', slug: 'peptide-protocols' },
       { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Concierge explained', type: 'doc', slug: 'membership-tiers' },
       { title: 'FAQ Cheat Sheet', desc: 'Common questions your audience will ask', type: 'doc', slug: 'faq-cheat-sheet' },
+    ],
+  },
+  {
+    title: 'Compliance',
+    subtitle: 'Stay safe',
+    icon: Shield,
+    items: [
+      { title: 'FTC Disclosure Guide', desc: 'Required disclosures for affiliate content', type: 'doc', slug: 'ftc-disclosure-guide' },
+      { title: 'Approved Claims', desc: 'What you can and cannot say — with traffic light system', type: 'doc', slug: 'approved-claims' },
+      { title: 'Health Claims Policy', desc: 'FDA-compliant language + trending compound templates', type: 'doc', slug: 'health-claims-policy' },
+      { title: 'Terms of Service', desc: 'Creator affiliate program terms', type: 'doc', slug: 'terms-of-service' },
+    ],
+  },
+  {
+    title: 'Brand Kit',
+    subtitle: 'Look the part',
+    icon: Palette,
+    items: [
+      { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
+      { title: 'Brand Colors', desc: 'Forest #2A4542, Sage #B7E4C7, Mint #D8F3DC', type: 'info', slug: 'brand-colors' },
+      { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
+      { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
     ],
   },
 ]
@@ -85,18 +147,21 @@ export default function ResourcesPage() {
       <div>
         <h1 className="text-2xl font-display font-bold text-cultr-forest">Resources</h1>
         <p className="text-sm text-cultr-textMuted mt-1">
-          Everything you need to create content and promote CULTR Health.
+          Your complete creator toolkit &mdash; messaging, content, sales funnels, compliance, and brand assets.
         </p>
       </div>
 
       {RESOURCE_SECTIONS.map((section) => (
         <section key={section.title}>
-          <h2 className="text-lg font-display font-bold text-cultr-forest flex items-center gap-2 mb-4">
+          <h2 className="text-lg font-display font-bold text-cultr-forest flex items-center gap-2 mb-1">
             <section.icon className="w-5 h-5" /> {section.title}
           </h2>
+          {section.subtitle && (
+            <p className="text-xs text-cultr-textMuted mb-4 ml-7">{section.subtitle}</p>
+          )}
           <div className="grid md:grid-cols-2 gap-3">
             {section.items.map((item) => (
-              <ResourceCard key={item.title} {...item} />
+              <ResourceCard key={item.slug} {...item} />
             ))}
           </div>
         </section>

@@ -6,13 +6,22 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 
 ## Quick Reference
 
-| Product | Size | Evidence | Risk | Best For |
-|---------|------|----------|------|----------|
-| Cagrilintide | 5mg | B-C | Moderate | GLP-1 + Amylin pathway |
-| Sema + Cagri Blend | 5mg + 5mg | B | Moderate | Combined metabolic support |
-| AOD-9604 | 5mg | C-D | Low-Moderate | Direct fat mobilization |
+| Product | Size | Risk | Best For |
+|---------|------|------|----------|
+| RTA | 5mg | Moderate | Triple GLP-1/GIP/Glucagon metabolic optimization |
+| Cagrilintide | 5mg | Moderate | GLP-1 + Amylin pathway |
+| Sema + Cagri Blend | 5mg + 5mg | Moderate | Combined metabolic support |
+| AOD-9604 | 5mg | Low-Moderate | Direct fat mobilization |
 
 ## Key Compounds
+
+### Retatrutide (RTA)
+**Mechanism**: Triple agonist targeting GLP-1, GIP, and Glucagon receptors for maximum metabolic optimization
+
+**Typical Use**: 1-12mg weekly (slow titration)
+**Route**: Subcutaneous
+**Duration**: Ongoing (titrate based on tolerance and goals)
+**Notes**: Most potent metabolic compound available; up to 24% body weight reduction in clinical trials. CULTR's primary GLP recommendation.
 
 ### Cagrilintide
 **Mechanism**: Amylin receptor agonist that slows gastric emptying and enhances satiety
@@ -29,6 +38,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 **Route**: Subcutaneous
 **Duration**: Ongoing
 **Best For**: Significant weight loss goals
+**Note**: RTA is the preferred primary GLP compound; this combination is an alternative approach
 
 ### AOD-9604
 **Mechanism**: Growth hormone fragment that stimulates lipolysis and inhibits lipogenesis without affecting blood sugar
@@ -48,9 +58,9 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 | RTA | Morning or consistent daytime | Morning | Metabolic consistency |
 
 **Key Rules**:
-- **GLP-1 weekly injections**: Same day and time every week; set a recurring reminder
+- **GLP-1 weekly injections (RTA, semaglutide)**: Same day and time every week; set a recurring reminder
 - **Fat-loss peptides (AOD-9604)**: Fasted morning or 2-3 hours after last meal
-- **Hydration**: GI side effects from GLP-1 require adequate hydration throughout day
+- **Hydration**: GI side effects from GLP-1 agonists require adequate hydration throughout day
 
 ## Metabolic Optimization Protocols
 
@@ -60,8 +70,8 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 - Duration: 8-12 weeks
 
 ### Aggressive Fat Loss (Deficit-Based)
-- Semaglutide: 0.5-2.4mg weekly (titrate as tolerated)
-- Cagrilintide: 0.25-0.5mg weekly
+- RTA: 1-12mg weekly (titrate as tolerated) — primary GLP compound
+- Cagrilintide: 0.25-0.5mg weekly (optional add-on)
 - Caloric deficit: 300-500 kcal/day
 - Protein: 1g per lb body weight
 
@@ -71,12 +81,6 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation. M
 - **Dehydration**: Maintain excellent hydration
 - **Blood Sugar**: Monitor glucose, especially if diabetic
 - **Thyroid**: Watch for thyroid C-cell effects (from preclinical data)
-
-## Research Status
-
-- Cagrilintide: Emerging; Grade B-C evidence
-- GLP-1 compounds: Strong clinical evidence for weight loss
-- AOD-9604: Preclinical; Grade C-D evidence in humans
 
 ## Disclaimer
 

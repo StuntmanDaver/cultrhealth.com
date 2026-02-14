@@ -52,7 +52,7 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 ### Add-ons
 
 - **DSIP** (100mcg before bed) -- deep sleep support for irregular schedules
-- **Semaglutide** (0.25-1mg weekly, titrated) -- appetite regulation and body composition if needed
+- **RTA** (1-12mg weekly, titrated) -- appetite regulation and body composition if needed
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- immune support during high-stress social periods
 
 ### What to Track
@@ -111,13 +111,13 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
-| Semaglutide | 0.25-2.4mg weekly | Same day each week | GLP-1 appetite regulation |
+| RTA | 1-12mg weekly | Same day each week | Triple-agonist appetite regulation + metabolic optimization |
 | BPC-157 | 250mcg/day | AM | GI support during GLP-1 adjustment |
 | CJC-1295 / Ipamorelin | 100-200mcg nightly | Before bed | Preserve lean mass during deficit |
 
 ### Add-ons
 
-- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with semaglutide
+- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (RTA, semaglutide)
 - **AOD-9604** (300mcg AM fasted) -- targeted fat mobilization
 - **Tesamorelin** (1-2mg daily) -- visceral fat reduction specifically
 - **MOTS-C** (5-10mg 3-5x weekly) -- metabolic activation and exercise capacity
@@ -132,7 +132,7 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 ### Avoid for This Persona
 
-- Stacking semaglutide + cagrilintide without slow independent titration of each
+- Stacking RTA or other GLP-1 agonists with cagrilintide without slow independent titration of each
 - Excessive caloric restriction -- GLP-1s reduce appetite naturally, severe deficits cause muscle loss
 - Skipping protein tracking -- muscle preservation requires adequate protein even with reduced appetite
 - Running fat-loss peptides (AOD-9604) with a fed-state dose -- fasting required for efficacy

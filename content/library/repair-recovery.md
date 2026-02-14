@@ -6,13 +6,13 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 
 ## Quick Reference
 
-| Product | Size | Evidence | Risk | Best For |
-|---------|------|----------|------|----------|
-| BPC-157 | 10mg | C | Low-Moderate | Tendon/ligament healing |
-| TB-500 | 10mg | C-D | Low-Moderate | Tissue regeneration |
-| GHK-Cu | 50mg | C | Low | Collagen synthesis |
-| GLOW Blend | Mixed | C-D | Low-Moderate | Comprehensive recovery |
-| Elamipretide | 50mg | B-C | Moderate | Mitochondrial function |
+| Product | Size | Risk | Best For |
+|---------|------|------|----------|
+| BPC-157 | 10mg | Low-Moderate | Tendon/ligament healing |
+| TB-500 | 10mg | Low-Moderate | Tissue regeneration |
+| GHK-Cu | 50mg | Low | Collagen synthesis |
+| GLOW Blend | Mixed | Low-Moderate | Comprehensive recovery |
+| Elamipretide | 50mg | Moderate | Mitochondrial function |
 
 ## Key Compounds
 
@@ -63,12 +63,6 @@ Tissue repair and recovery peptides accelerate healing of injuries, tendon/ligam
 - TB-500: 2.5-5mg 2x weekly
 - GHK-Cu: 1mg daily
 - Adequate protein and minerals
-
-## Research Status
-
-- BPC-157: Strong preclinical support for tendon healing (Grade C)
-- TB-500: Promising animal studies (Grade C-D)
-- GHK-Cu: Well-documented collagen effects (Grade C)
 
 ## Safety & Timing
 
