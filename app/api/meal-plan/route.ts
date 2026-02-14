@@ -1,7 +1,6 @@
 import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { generateText } from 'ai';
 
-// Switch to Node.js runtime for better compatibility and debugging
 export const runtime = 'nodejs';
 
 const SYSTEM_PROMPT = `You are a certified nutritionist and meal planning expert for CULTR Health, a longevity-focused telehealth clinic. Generate practical, delicious daily meal plans that precisely match the user's macro targets.
@@ -38,24 +37,41 @@ Format your response as:
 
 Keep descriptions concise but specific. Include cooking methods where relevant.`;
 
+function getFriendlyError(err: unknown): { message: string; status: number } {
+  const raw = err instanceof Error ? err.message : String(err);
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('insufficient_quota') || lower.includes('exceeded your current quota') || lower.includes('billing')) {
+    return { message: 'OpenAI API quota exceeded. Please add credits to your OpenAI account and try again.', status: 502 };
+  }
+  if (lower.includes('rate_limit') || lower.includes('rate limit')) {
+    return { message: 'Too many requests. Please wait a moment and try again.', status: 429 };
+  }
+  if (lower.includes('invalid_api_key') || lower.includes('incorrect api key') || lower.includes('authentication')) {
+    return { message: 'OpenAI API key is invalid. Please check your API key configuration.', status: 502 };
+  }
+  if (lower.includes('model_not_found') || lower.includes('does not exist')) {
+    return { message: 'AI model temporarily unavailable. Please try again later.', status: 502 };
+  }
+  if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('econnrefused') || lower.includes('fetch failed')) {
+    return { message: 'Could not reach the AI service. Please check your connection and try again.', status: 504 };
+  }
+
+  return { message: 'Something went wrong generating your meal plan. Please try again.', status: 500 };
+}
+
 export async function POST(req: Request) {
-  console.log('[Meal Plan API] Request received');
-  
   try {
     if (!process.env.OPENAI_API_KEY) {
-      console.error('[Meal Plan API] OPENAI_API_KEY is missing in environment variables');
       return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Meal plan service is not configured. Please contact support.' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
     const body = await req.json();
-    console.log('[Meal Plan API] Request body:', JSON.stringify(body, null, 2));
-    
     const { calories, protein, carbs, fat, goal, bmr, tdee } = body;
 
-    // Validate inputs
     if (!calories || !protein || !carbs || !fat) {
       return new Response(
         JSON.stringify({ error: 'Missing required macro targets' }),
@@ -63,14 +79,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Build the goal context
-    const goalContext = {
+    const goalContext: Record<string, string> = {
       'aggressive-cut': 'aggressive weight loss (high protein, low carb)',
       'cut': 'moderate fat loss (caloric deficit)',
       'maintain': 'weight maintenance',
       'lean-bulk': 'lean muscle gain (slight surplus)',
       'bulk': 'muscle building (caloric surplus)',
-    }[goal] || 'general health';
+    };
 
     const prompt = `Create a daily meal plan for someone with these targets:
 
@@ -80,15 +95,13 @@ export async function POST(req: Request) {
 - Carbohydrates: ${carbs}g
 - Fat: ${fat}g
 
-**Goal:** ${goalContext}
+**Goal:** ${goalContext[goal] || 'general health'}
 ${bmr ? `**BMR:** ${bmr} kcal` : ''}
 ${tdee ? `**TDEE:** ${tdee} kcal` : ''}
 
 Generate a practical, delicious meal plan that hits these macros as closely as possible. Focus on whole foods that support metabolic health and longevity.`;
 
-    console.log('[Meal Plan API] Creating stream with prompt:', prompt.substring(0, 100) + '...');
-    
-    const result = streamText({
+    const result = await generateText({
       model: openai('gpt-4o-mini'),
       system: SYSTEM_PROMPT,
       prompt,
@@ -96,30 +109,15 @@ Generate a practical, delicious meal plan that hits these macros as closely as p
       maxOutputTokens: 1500,
     });
 
-    console.log('[Meal Plan API] Returning plain text stream response');
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const encoder = new TextEncoder();
-          for await (const chunk of result.textStream) {
-            controller.enqueue(encoder.encode(chunk));
-          }
-          controller.close();
-        } catch (err) {
-          console.error('[Meal Plan API] Stream error:', err);
-          controller.error(err);
-        }
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(result.text, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error) {
     console.error('[Meal Plan API] Error:', error);
+    const { message, status } = getFriendlyError(error);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate meal plan', details: error instanceof Error ? error.message : String(error) }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: message }),
+      { status, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }

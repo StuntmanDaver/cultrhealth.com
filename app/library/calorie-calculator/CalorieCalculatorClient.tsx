@@ -527,12 +527,6 @@ function MealPlanModal({
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />
           )}
-          {isGenerating && mealPlan && (
-            <div className="flex items-center gap-2 mt-6 text-cultr-textMuted border-t border-cultr-sage/30 pt-4">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span className="text-sm">Still generating...</span>
-            </div>
-          )}
         </div>
 
         {/* Footer Actions */}
@@ -640,9 +634,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
     try {
       const response = await fetch('/api/meal-plan', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           calories: result.targetCalories,
           protein: result.protein.grams,
@@ -653,29 +645,17 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
           tdee: result.tdee,
         }),
       })
-      
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        const errorData = await response.json().catch(() => ({ error: 'Something went wrong. Please try again.' }))
         throw new Error(errorData.error || `HTTP ${response.status}`)
       }
-      
-      // Read the streaming response
-      const reader = response.body?.getReader()
-      if (!reader) {
-        throw new Error('No response body')
+
+      const text = await response.text()
+      if (!text.trim()) {
+        throw new Error('Received an empty response. Please try again.')
       }
-      
-      const decoder = new TextDecoder()
-      let fullText = ''
-      
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        const chunk = decoder.decode(value, { stream: true })
-        fullText += chunk
-        setMealPlan(fullText)
-      }
+      setMealPlan(text)
     } catch (err) {
       console.error('Meal plan generation error:', err)
       setMealPlanError(err instanceof Error ? err : new Error(String(err)))
