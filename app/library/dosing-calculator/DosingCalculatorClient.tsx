@@ -9,6 +9,7 @@ const VIAL_OPTIONS = [5, 10, 15, 50, 100] as const
 const WATER_OPTIONS = [1, 2, 3, 5] as const
 const SYRINGE_OPTIONS = [0.3, 0.5, 1.0] as const
 const DOSE_PRESETS_MCG = [100, 250, 500, 1000] as const
+const DOSE_PRESETS_MG = [0.25, 0.5, 1.0, 2.5] as const
 
 type PillButtonProps = {
   options: readonly number[]
@@ -394,8 +395,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                     type="button"
                     onClick={() => {
                       setDoseUnit('mg')
-                      setDoseSelection('custom')
-                      setCustomDose('0.25')
+                      setDoseSelection(0.25)
                     }}
                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                       doseUnit === 'mg'
@@ -428,16 +428,26 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                     )}
                   </>
                 ) : (
-                  <div>
-                    <input
-                      type="number"
-                      placeholder="Enter mg"
-                      value={customDose}
-                      onChange={(e) => setCustomDose(e.target.value)}
-                      step="0.01"
-                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                  <>
+                    <PillButtonGroup
+                      options={DOSE_PRESETS_MG}
+                      value={doseSelection}
+                      onChange={setDoseSelection}
+                      unit=" mg"
                     />
-                  </div>
+                    {doseSelection === 'custom' && (
+                      <div className="mt-3">
+                        <input
+                          type="number"
+                          placeholder="Enter mg"
+                          value={customDose}
+                          onChange={(e) => setCustomDose(e.target.value)}
+                          step="0.01"
+                          className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Dose conversion display */}

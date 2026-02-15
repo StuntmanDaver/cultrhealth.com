@@ -50,6 +50,16 @@ export function Footer() {
         {/* Radial glow — top center mint */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.06) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
+          {/* CULTR Wordmark */}
+          <div className="mb-12">
+            <Link href="/" className="inline-block">
+              <span className="font-display font-bold text-2xl tracking-[0.08em] text-white">
+                CULTR
+              </span>
+            </Link>
+            <p className="text-sm text-white/50 mt-2">Change the CULTR, rebrand yourself.</p>
+          </div>
+
           {/* Footer Links Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
             {/* Products */}

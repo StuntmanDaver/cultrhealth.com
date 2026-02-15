@@ -7,8 +7,20 @@ import {
   Text,
   View,
   StyleSheet,
+  Font,
 } from '@react-pdf/renderer'
 import type { LmnData } from './lmn-types'
+
+// Register Playfair Display for the CULTR logo
+Font.register({
+  family: 'Playfair Display',
+  fonts: [
+    {
+      src: 'https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtM.ttf',
+      fontWeight: 700,
+    },
+  ],
+})
 
 // Create styles for the PDF
 const styles = StyleSheet.create({
@@ -26,6 +38,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     fontSize: 24,
+    fontFamily: 'Playfair Display',
     fontWeight: 'bold',
     letterSpacing: 4,
     color: '#1a1a1a',
