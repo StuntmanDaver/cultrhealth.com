@@ -337,6 +337,9 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                 <p className="mt-3 text-xs text-cultr-textMuted">
                   Total peptide content in your vial
                 </p>
+                <p className="mt-1 text-xs text-cultr-textMuted italic">
+                  If it&apos;s a blend (for example, 12 mg + 6 mg), add the amounts together—so the total is 18 mg.
+                </p>
               </div>
 
               {/* Diluent (Water) */}
