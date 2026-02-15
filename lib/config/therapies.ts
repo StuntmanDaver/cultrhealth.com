@@ -90,14 +90,6 @@ export const THERAPY_SECTIONS: TherapySection[] = [
         description:
           'Master antioxidant for detoxification, immune support, and protection against oxidative stress.',
       },
-    ],
-  },
-  {
-    title: 'Addon',
-    subtitle: 'Targeted support therapies',
-    description:
-      'Specialized peptides and compounds to complement your core protocol and address specific optimization goals.',
-    therapies: [
       {
         name: 'AOD9604',
         badge: 'Physician use only',
