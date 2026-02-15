@@ -108,7 +108,6 @@ export const PLANS: Plan[] = [
       'Complimentary physician follow up every 6 months',
       'One CORE Therapy included'
     ],
-    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -137,7 +136,6 @@ export const PLANS: Plan[] = [
       'Complimentary physician follow up every 6 months',
       'One Core Therapy included + Two Enhancements'
     ],
-    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -166,7 +164,6 @@ export const PLANS: Plan[] = [
       'Complimentary physician follow up every 6 months',
       'Two CORE Therapy included + up to 4 enhancements'
     ],
-    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
