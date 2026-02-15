@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, CheckCircle, Sparkles } from 'lucide-react';
 
 export function ClubBanner() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -24,8 +26,9 @@ export function ClubBanner() {
 
       if (response.ok) {
         setStatus('success');
-        setMessage("You're in! Check your inbox for next steps.");
+        setMessage("You're in! Taking you to our therapies...");
         setEmail('');
+        setTimeout(() => router.push('/therapies'), 800);
       } else {
         const data = await response.json();
         setStatus('error');

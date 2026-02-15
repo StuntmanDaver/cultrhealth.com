@@ -31,7 +31,7 @@ const nextConfig = {
     return [
       // Marketing pages: 1hr edge cache + 24hr stale-while-revalidate
       {
-        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz)',
+        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz|therapies)',
         headers: [
           {
             key: 'Cache-Control',
