@@ -74,6 +74,9 @@ export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{
   const { name, email, phone, social_handle, treatment_reason, source } = input
 
   try {
+    // Ensure table and index exist
+    await ensureWaitlistTable()
+
     // Upsert: insert or update if email already exists
     const result = await sql`
       INSERT INTO waitlist (name, email, phone, social_handle, treatment_reason, source, status, created_at, updated_at)
@@ -96,6 +99,34 @@ export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{
   } catch (error) {
     console.error('Database error creating waitlist entry:', error)
     throw new DatabaseError('Failed to create waitlist entry', error)
+  }
+}
+
+let waitlistTableReady = false
+
+async function ensureWaitlistTable() {
+  if (waitlistTableReady) return
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS waitlist (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT,
+        social_handle TEXT,
+        treatment_reason TEXT,
+        source TEXT,
+        status TEXT NOT NULL DEFAULT 'new',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `
+    await sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS waitlist_email_lower_idx ON waitlist (lower(email))
+    `
+    waitlistTableReady = true
+  } catch (error) {
+    console.error('Error ensuring waitlist table:', error)
   }
 }
 
