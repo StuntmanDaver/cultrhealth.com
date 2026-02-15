@@ -26,62 +26,48 @@ const SECTION_ICONS = [Flame, Zap] as const;
 export default function TherapiesPage() {
   return (
     <div className="flex flex-col">
-      {/* Hero */}
-      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
+      {/* Hero — compact */}
+      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
               <Stethoscope className="w-4 h-4 text-cultr-sage" />
               <span className="text-sm">Physician-Supervised</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 leading-tight">
               Core Therapies
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+            <p className="text-lg text-white/80 max-w-2xl mx-auto">
               Browse our full catalog of physician-supervised therapies. Every
               protocol is personalized to your labs, goals, and medical history.
             </p>
           </ScrollReveal>
-          <ScrollReveal delay={400} direction="up" duration={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/pricing">
-                <Button size="lg">See Plans</Button>
-              </Link>
-              <Link href="/quiz">
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="text-white hover:text-cultr-sage"
-                >
-                  Find Your Protocol <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
         </div>
       </section>
 
-      {/* 100+ Therapies Membership CTA */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-forest">
-        <div className="max-w-3xl mx-auto text-center">
-          <ScrollReveal>
-            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
-              <Lock className="w-7 h-7 text-cultr-sage" />
+      {/* 100+ Therapies — inline banner */}
+      <section className="py-5 px-6 bg-cultr-mint border-b border-cultr-sage">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-cultr-forest/10 flex items-center justify-center shrink-0">
+              <Lock className="w-4 h-4 text-cultr-forest" />
             </div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              Over 100 therapies available
-            </h2>
-            <p className="text-white/70 mb-8 max-w-xl mx-auto">
-              To access our full catalog of over 100 physician-supervised therapies, peptide blends, and optimization protocols, you need to become a member.
-            </p>
-            <Link href="/pricing">
-              <Button size="lg">
-                Become a Member <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </ScrollReveal>
+            <div>
+              <p className="font-display font-bold text-cultr-forest text-sm">
+                Over 100 therapies available
+              </p>
+              <p className="text-xs text-cultr-textMuted">
+                Become a member to access our full catalog of peptide blends and optimization protocols.
+              </p>
+            </div>
+          </div>
+          <Link href="/pricing" className="shrink-0">
+            <Button size="sm">
+              Become a Member <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -93,50 +79,45 @@ export default function TherapiesPage() {
         return (
           <section
             key={section.title}
-            className={`py-16 md:py-20 px-6 ${isAlt ? 'bg-cultr-offwhite' : 'bg-white'}`}
+            className={`py-10 md:py-14 px-6 ${isAlt ? 'bg-cultr-offwhite' : 'bg-white'}`}
           >
             <div className="max-w-6xl mx-auto">
               {/* Section Header */}
-              <ScrollReveal className="mb-12">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-cultr-mint flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-cultr-forest" />
+              <ScrollReveal className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-full bg-cultr-mint flex items-center justify-center">
+                    <Icon className="w-4 h-4 text-cultr-forest" />
                   </div>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest">
-                      {section.title}
-                    </h2>
-                    <p className="text-sm text-cultr-textMuted">
-                      {section.subtitle}
-                    </p>
-                  </div>
+                  <h2 className="text-xl md:text-2xl font-display font-bold text-cultr-forest">
+                    {section.title}
+                  </h2>
                 </div>
-                <p className="text-cultr-textMuted max-w-2xl">
+                <p className="text-sm text-cultr-textMuted max-w-2xl ml-11">
                   {section.description}
                 </p>
               </ScrollReveal>
 
               {/* Therapy Cards Grid */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {section.therapies.map((therapy, i) => (
-                  <ScrollReveal key={therapy.name} delay={i * 80} direction="up">
-                    <div className="h-full p-6 rounded-2xl bg-brand-cream border border-cultr-sage/50 hover:border-cultr-sage transition-colors">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <h3 className="text-lg font-display font-bold text-cultr-forest">
+                  <ScrollReveal key={therapy.name} delay={i * 60} direction="up">
+                    <div className="h-full p-5 rounded-xl bg-brand-cream border border-cultr-sage/40 hover:border-cultr-sage transition-colors">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="text-base font-display font-bold text-cultr-forest">
                           {therapy.name}
                         </h3>
-                        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-cultr-forest bg-cultr-mint px-2.5 py-1 rounded-full">
+                        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-cultr-forest bg-cultr-mint px-2 py-0.5 rounded-full">
                           {therapy.badge}
                         </span>
                       </div>
 
                       {therapy.note && (
-                        <div className="inline-block text-xs text-cultr-forest/70 bg-cultr-sage/30 px-2.5 py-1 rounded-full mb-3">
+                        <div className="inline-block text-[11px] text-cultr-forest/70 bg-cultr-sage/30 px-2 py-0.5 rounded-full mb-2">
                           {therapy.note}
                         </div>
                       )}
 
-                      <p className="text-sm text-cultr-textMuted leading-relaxed">
+                      <p className="text-xs text-cultr-textMuted leading-relaxed">
                         {therapy.description}
                       </p>
                     </div>
@@ -148,14 +129,14 @@ export default function TherapiesPage() {
         );
       })}
 
-      {/* Ready to Get Started CTA */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-mint">
+      {/* Ready to Get Started */}
+      <section className="py-10 md:py-14 px-6 bg-cultr-forest">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
               Ready to get started?
             </h2>
-            <p className="text-cultr-textMuted mb-8 max-w-xl mx-auto">
+            <p className="text-white/60 text-sm mb-6 max-w-xl mx-auto">
               Choose a membership plan and get matched with a physician who will
               build your personalized protocol.
             </p>
@@ -169,25 +150,17 @@ export default function TherapiesPage() {
       </section>
 
       {/* Medical Disclaimer */}
-      <section className="py-12 px-6 bg-white border-y border-cultr-sage">
+      <section className="py-8 px-6 bg-white border-b border-cultr-sage">
         <div className="max-w-4xl mx-auto">
-          <ScrollReveal>
-            <div className="flex items-start gap-4">
-              <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-display font-bold text-cultr-text mb-2">
-                  Medical Disclaimer
-                </h4>
-                <p className="text-sm text-cultr-textMuted leading-relaxed">
-                  All therapies listed require physician evaluation and
-                  prescription. CULTR Health does not guarantee specific results.
-                  Outcomes vary by individual based on medical history, labs, and
-                  adherence to protocol. If you have a medical emergency, please
-                  call 911 or proceed to your nearest emergency room.
-                </p>
-              </div>
-            </div>
-          </ScrollReveal>
+          <div className="flex items-start gap-3">
+            <Shield className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+            <p className="text-xs text-cultr-textMuted leading-relaxed">
+              <span className="font-semibold text-cultr-text">Medical Disclaimer:</span>{' '}
+              All therapies listed require physician evaluation and prescription.
+              CULTR Health does not guarantee specific results. Outcomes vary by
+              individual. If you have a medical emergency, call 911.
+            </p>
+          </div>
         </div>
       </section>
 
