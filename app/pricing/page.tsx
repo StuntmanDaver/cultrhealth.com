@@ -175,8 +175,8 @@ export default function PricingPage() {
                     { feature: 'Physician Follow-up', values: ['Once every 6 months', 'Every 3 months', 'Every 3 months'] },
                     { feature: 'CORE Therapies', values: ['1', '1', '2'] },
                     { feature: 'Enhancement Therapies', values: ['—', '2', 'Up to 4'] },
-                    { feature: 'Protocol Library', values: [false, true, true] },
-                    { feature: 'Peptide Calculator', values: [false, true, true] },
+                    { feature: 'Protocol Library', values: [true, true, true] },
+                    { feature: 'Peptide Calculator', values: [true, true, true] },
                     { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">
