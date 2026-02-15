@@ -12,12 +12,13 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
+| Tesamorelin | 1-2mg daily | Before bed | GH release for recovery, lean mass, visceral fat reduction |
 | BPC-157 | 250-500mcg/day | AM + PM split | Tendon/joint repair, gut health |
 | TB-500 | 2-5mg 2x/week | Post-training days | Systemic tissue repair |
-| CJC-1295 / Ipamorelin | 100-300mcg nightly | Before bed | GH pulse for recovery + lean mass |
 
 ### Add-ons
 
+- **CJC-1295 / Ipamorelin** (100-300mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **IGF-1 LR3** (20-40mcg post-workout) -- localized muscle growth and repair
 - **GHK-Cu** (1-2mg/day) -- collagen support and skin/tendon healing
 - **AOD-9604** (300mcg AM fasted) -- fat mobilization without GH side effects
@@ -45,12 +46,13 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
+| Tesamorelin | 1-2mg daily | Before bed | GH release for body composition, skin quality, sleep |
 | GHK-Cu | 1-2mg/day | AM or PM | Skin quality, collagen, hair support |
 | BPC-157 | 250mcg/day | AM | Gut repair (especially post-social weekends) |
-| CJC-1295 / Ipamorelin | 100-200mcg nightly | Before bed | Sleep quality, skin, body composition |
 
 ### Add-ons
 
+- **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **DSIP** (100mcg before bed) -- deep sleep support for irregular schedules
 - **RTA** (1-12mg weekly, titrated) -- appetite regulation and body composition if needed
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- immune support during high-stress social periods
@@ -111,15 +113,15 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
+| Tesamorelin | 1-2mg daily | Before bed | Visceral fat reduction, GH-mediated metabolic optimization |
 | RTA | 1-12mg weekly | Same day each week | Triple-agonist appetite regulation + metabolic optimization |
 | BPC-157 | 250mcg/day | AM | GI support during GLP-1 adjustment |
-| CJC-1295 / Ipamorelin | 100-200mcg nightly | Before bed | Preserve lean mass during deficit |
 
 ### Add-ons
 
+- **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (RTA, semaglutide)
 - **AOD-9604** (300mcg AM fasted) -- targeted fat mobilization
-- **Tesamorelin** (1-2mg daily) -- visceral fat reduction specifically
 - **MOTS-C** (5-10mg 3-5x weekly) -- metabolic activation and exercise capacity
 
 ### What to Track
@@ -147,13 +149,14 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
+| Tesamorelin | 1-2mg daily | Before bed | GH release, visceral fat reduction, longevity marker optimization |
 | Epitalon | 5-10mg/day (10-20 day cycles, 2-3x/year) | AM or PM | Telomere lengthening, pineal function |
 | BPC-157 | 250-500mcg/day | AM + PM split | Systemic anti-inflammatory, gut optimization |
 | SEMAX | 200-600mcg/day | AM intranasal | Cognitive optimization, BDNF upregulation |
-| CJC-1295 / Ipamorelin | 200-300mcg nightly | Before bed | GH optimization for recovery and longevity markers |
 
 ### Add-ons
 
+- **CJC-1295 / Ipamorelin** (200-300mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **GHK-Cu** (1-2mg/day) -- gene expression modulation, wound healing, anti-aging
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- immune system calibration
 - **NAD+ precursors** (discuss with provider) -- mitochondrial support alongside peptide protocols
@@ -185,12 +188,13 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
+| Tesamorelin | 1-2mg daily | Before bed | GH release for skin turnover, collagen synthesis, body composition |
 | GHK-Cu | 1-3mg/day | AM or split AM/PM | Collagen synthesis, skin elasticity, hair follicle support |
 | BPC-157 | 250mcg/day | AM | Gut-skin axis, systemic healing |
-| CJC-1295 / Ipamorelin | 100-200mcg nightly | Before bed | GH pulse supports skin turnover and collagen |
 
 ### Add-ons
 
+- **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **Epithalon** (5-10mg/day, 10-day cycles) -- cellular renewal and anti-aging at the telomere level
 - **TB-500** (2mg 2x/week) -- wound healing, reduces scarring, supports hair growth
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- immune balance (helpful for inflammatory skin conditions)
