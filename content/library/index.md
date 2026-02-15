@@ -2,66 +2,100 @@
 
 ## Quick Lookup by Purpose
 
+### Fat Loss & Metabolism
+- **RTA** — Triple GLP-1/GIP/Glucagon agonist; most potent metabolic compound
+- **Semaglutide** — GLP-1 receptor agonist (GLP1R; Gs-coupled GPCR); satiety + glucose control
+- **Tirzepatide** — Dual GLP1R + GIPR agonist; enhanced metabolic flexibility
+- **Mazdutide** — Dual GLP1R + Glucagon receptor agonist; energy expenditure
+- **Cagrilintide** — Amylin receptor agonist; appetite suppression
+- **AOD-9604** — GH fragment (176–191); lipolysis via HSL activation
+- **5-Amino-1MQ** — NNMT inhibitor; ↑ NAD+ salvage, ↑ AMPK activation
+- **Tesamorelin** — GHRHR agonist; ↓ visceral adipose tissue
+
 ### Muscle Growth & Strength
-- **IGF-1 LR3** - Direct growth factor; fastest muscle gains
-- **Follistatin 344** - Myostatin antagonist; lean growth
-- **Sermorelin** - GH secretion; natural approach
-- **CJC-1295 (No DAC)** - GH pulse optimization
+- **IGF-1 LR3** — IGF1R (RTK); PI3K → AKT → mTOR + MAPK/ERK signaling
+- **MGF / PEG-MGF** — IGF-1 receptor (local autocrine); satellite cell activation
+- **Follistatin 344** — Myostatin antagonist; lean mass accretion
+- **CJC-1295 (No DAC)** — GHRHR agonist; GH pulse optimization
+- **CJC-1295 (With DAC)** — GHRHR agonist; prolonged GH pulsatility
+- **Sermorelin** — GHRHR agonist; natural GH secretion
+- **Ipamorelin** — GHSR-1a (Gq-coupled); clean GH release, minimal cortisol
+- **GHRP-2 / GHRP-6** — GHSR-1a; potent GH secretion
+- **Hexarelin** — GHSR-1a; potent GH + cardiac support
 
 ### Recovery & Healing
-- **BPC-157** - Tendon/ligament recovery; versatile
-- **TB-500** - Systemic tissue repair; athletic recovery
-- **GHK-Cu** - Collagen synthesis; skin and joints
+- **BPC-157** — VEGFR2 / NO / FAK signaling; angiogenesis + collagen deposition
+- **TB-500** — Actin-binding modulation; cell migration + tissue remodeling
+- **GHK-Cu** — Copper-binding peptide; ↑ Collagen I & III, tissue remodeling genes
+- **KPV** — MC1R; ↓ NF-κB, ↓ TNF-α, anti-inflammatory
+- **LL-37** — FPR2 receptor; antimicrobial + immunomodulation
 
-### Fat Loss & Metabolism
-- **RTA** - Triple GLP-1/GIP/Glucagon agonist; most potent metabolic compound
-- **Cagrilintide** - Appetite suppression; emerging
-- **Semaglutide** - GLP-1 agonist; strong fat loss
-- **AOD-9604** - GH fragment; targeted fat reduction
+### Mitochondrial & Cellular Energy
+- **SS-31 / Elamipretide** — Cardiolipin binding; stabilizes ETC, ↓ ROS, ↑ ATP
+- **MOTS-c** — AMPK activation; ↑ glucose uptake, ↑ fat oxidation
+- **NAD+** — Sirtuins (SIRT1–7) / PARPs; DNA repair, mitochondrial biogenesis
+- **5-Amino-1MQ** — NNMT inhibition; ↑ NAD+ salvage pathway flux
 
 ### Sleep & Cognitive Function
-- **DSIP** - Sleep quality enhancement
-- **SEMAX** - Cognitive performance
-- **SELANK** - Anxiety reduction; mood support
+- **DSIP** — Delta sleep modulation; sleep architecture regulation
+- **Pinealon** — Pineal gene expression; circadian rhythm regulation
+- **Semax** — MC4R partial agonist; ↑ BDNF, ↑ dopaminergic signaling
+- **Selank** — GABAergic modulation; ↑ BDNF, anxiolytic signaling
 
-### Immune & Anti-Aging
-- **Epitalon** - Longevity peptide; telomerase
-- **Thymosin α1** - Immune support
-- **NAD+** - Cellular energy; DNA repair
+### Immune Support
+- **Thymosin Alpha-1** — TLR modulation; ↑ T-cell differentiation, ↑ NK cell activity
+- **Thymulin** — T-cell maturation; immune regulation + cytokine balance
+- **Thymalin** — Thymic peptide fraction; immune + hematopoietic support
+- **VIP** — VPAC1/VPAC2 (Gs GPCR); ↑ cAMP, vasodilation, anti-inflammatory
+
+### Hormonal & Reproductive
+- **PT-141** — MC4R; ↑ sexual arousal (CNS), ↑ dopaminergic tone
+- **Kisspeptin** — KISS1R (GPR54); ↑ GnRH → LH/FSH → Testosterone/Estrogen
+- **Gonadorelin** — GnRH receptor; direct LH/FSH stimulation
+
+### Aesthetic & Longevity
+- **Melanotan I** — MC1R; ↑ melanin synthesis
+- **Melanotan II** — MC1R / MC4R; pigmentation + libido signaling
+- **Epitalon** — Telomerase activation; pineal function, anti-aging
+
+### Other
+- **SNAP-8** — SNARE complex inhibition; cosmetic wrinkle modulation
+- **SLU-PP-332** — ERR (Estrogen-related receptors); ↑ oxidative metabolism, exercise mimetic
 
 ## Quick Start Recommendations
 
 **Beginner** (First Peptide)
 - Start with one goal-aligned protocol (e.g., BPC-157 for tissue repair or GHK-Cu for collagen/skin)
 - Conservative dosing; observe response and tolerance
-- 4-8 week trial period with provider review
+- 4–8 week trial period with provider review
 
 **Intermediate** (Some Experience)
 - Stack complementary mechanisms (avoid overlapping pathways)
 - Example synergies: CJC-1295 (No DAC) + Ipamorelin (GH support) or BPC-157 + TB-500 (repair)
-- 8-12 week protocols with basic labs/metrics
+- 8–12 week protocols with basic labs/metrics
 
 **Advanced** (Experienced User)
 - Provider-guided, multi-goal stacks with defined monitoring
-- 2-3 complementary compounds per cycle (avoid unnecessary overlap)
+- 2–3 complementary compounds per cycle (avoid unnecessary overlap)
 - Longer cycles (12+ weeks) with off-cycles as needed
 
 ## Administration Routes
 
 | Route | Speed | Duration | Best For |
 |-------|-------|----------|----------|
-| Subcutaneous (SQ) | Moderate | 4-24 hours | Most peptides |
-| Intramuscular (IM) | Fast | 6-48 hours | Oils, larger molecules |
-| Intranasal | Fast | 2-6 hours | Nootropics, travel |
-| Oral | Slow | 4-8 hours | Supplements, convenience |
+| Subcutaneous (SQ) | Moderate | 4–24 hours | Most peptides |
+| Intramuscular (IM) | Fast | 6–48 hours | Oils, larger molecules |
+| Intranasal | Fast | 2–6 hours | Nootropics (Semax, Selank), travel |
+| Oral | Slow | 4–8 hours | Supplements, BPC-157 (GI), convenience |
+| Topical | Variable | Local | GHK-Cu, SNAP-8 |
 
 ## Important Notes
 
-- **Storage**: Most peptides require refrigeration
-- **Reconstitution**: Use bacteriostatic water
+- **Storage**: Most peptides require refrigeration (2–8°C)
+- **Reconstitution**: Use bacteriostatic water (0.9% benzyl alcohol)
 - **Sterility**: Maintain aseptic technique
-- **Timing**: Dosing timing affects effectiveness
-- **Stacking**: Combine compounds strategically
+- **Timing**: Dosing timing affects effectiveness (see timing guide below)
+- **Stacking**: Combine compounds strategically — avoid overlapping receptor targets
 
 ---
 
@@ -72,65 +106,70 @@
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
-| AOD-9604 | Morning (fasted) or pre-cardio | Fat loss pathway; avoid food 2-3h before/after |
-| SEMAX | Morning/early afternoon | Cognitive; avoid late PM |
-| SELANK | Morning or as needed | Anxiolytic; avoid evening |
-| Thymosin-α1 | Morning | Immune rhythm support |
-| Elamipretide | Morning (fasted) | Mitochondrial energy |
+| AOD-9604 | Morning (fasted) or pre-cardio | Fat loss pathway; avoid food 2–3h before/after |
+| 5-Amino-1MQ | Morning | Metabolic activation |
+| Semax | Morning/early afternoon | Cognitive; avoid late PM |
+| Selank | Morning or as needed | Anxiolytic; avoid evening |
+| Thymosin Alpha-1 | Morning | Immune rhythm support |
+| Thymulin / Thymalin | Morning | Immune rhythm alignment |
+| Elamipretide (SS-31) | Morning (fasted) | Mitochondrial energy |
 | NAD+ | Morning | Cellular energy metabolism |
 | MOTS-c | Morning or pre-workout | Metabolic/exercise support |
-| Cagrilintide | Same day weekly | GLP-1 consistency |
-| Semaglutide | Same day weekly | GLP-1 weekly |
-| RTA | Morning or consistent daytime | Metabolic consistency |
+| RTA / Semaglutide / Tirzepatide / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 *Best for growth hormone, repair, immune modulation, CNS calming*
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
+| CJC-1295 (No DAC) + Ipamorelin | Pre-sleep | GH pulse optimization |
+| Sermorelin | Pre-sleep | GH secretion; empty stomach 2–3h |
+| Tesamorelin | Evening | GH optimization; visceral fat |
+| Epitalon | Before bed | Pineal/circadian support |
+| Pinealon | Before bed | Circadian rhythm regulation |
+| GHK-Cu | Evening | Repair, skin regeneration |
+| DSIP | 30–60 min before bed | Delta sleep induction |
 | BPC-157 | Evening or split dosing | Repair signaling |
 | TB-500 | Evening | Tissue remodeling |
-| CJC-1295 (No DAC) + Ipamorelin | Pre-sleep | GH pulse optimization |
-| Sermorelin | Pre-sleep | GH secretion; empty stomach 2-3h |
-| Tesamorelin | Pre-sleep | GH-releasing |
-| Epitalon | Before bed | Pineal/circadian support |
-| GHK-Cu | Evening | Repair, skin regeneration |
-| DSIP | 30-60 min before bed | Delta sleep induction |
 
 ### PRE-WORKOUT / DAYTIME ACTIVITY
 *Best when muscle signaling, blood flow, libido, or performance is desired*
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
-| IGF-1 LR3 | Pre-workout or training window | Muscle signaling; avoid food 2-3h |
+| IGF-1 LR3 | Pre-workout or training window | Muscle signaling; avoid food 2–3h |
+| MGF / PEG-MGF | Post-workout | Satellite cell activation |
 | Follistatin | Pre-workout or AM | Myostatin inhibition |
-| PT-141 | 30-60 min before desired effect | Sexual function |
+| GHRP-2 / GHRP-6 | Pre-workout or pre-sleep | GH secretion; empty stomach |
+| Hexarelin | Morning or pre-workout | GH + cardiac support |
 | MOTS-c | Pre-workout | Exercise mimetic |
+| SLU-PP-332 | Morning or pre-exercise | Exercise mimetic |
 
 ### FLEXIBLE / SITUATIONAL
 *Timing depends on goal rather than clock*
 
 | Peptide | Timing | Notes |
 |---------|--------|-------|
-| Kisspeptin-10 | Goal-dependent | Fertility / HPG axis |
-| Oxytocin | Situational | Context-dependent |
-| PT-141 | 30-60 min before desired effect | Sexual function |
-| Melanotan-1/2 | Pre-sun exposure | 30-60 min before UV |
-| BPC-157 | Flexible | Consistency > exact timing |
-| TB-500 | Flexible | 2-3x weekly; time flexible |
-| GHK-Cu | AM or PM | Topical/injectable; consistent |
+| PT-141 | 30–60 min before desired effect | Sexual function |
+| Kisspeptin | 30–60 min before desired effect | GnRH trigger |
+| Gonadorelin | As directed | Hormonal support |
+| Melanotan I/II | Pre-sun exposure | 30–60 min before UV |
+| KPV | As directed | Anti-inflammatory support |
+| LL-37 | As directed | Antimicrobial support |
+| VIP | As directed | Anti-inflammatory / vasodilation |
+| BPC-157 / TB-500 | Flexible | Consistency > exact timing |
 
 ### CRITICAL TIMING RULES
 
 | Rule | Guideline |
 |------|-----------|
-| **GH-related peptides** | Avoid food 2-3 hours before administration; insulin blunts GH release |
+| **GH-related peptides** | Avoid food 2–3 hours before administration; insulin blunts GH release |
 | **Metabolic/fat loss peptides** | Fasted morning or pre-cardio; consistency > exact hour |
-| **CNS peptides (SEMAX, SELANK)** | Avoid late night to prevent sleep disruption |
-| **Sleep peptides (DSIP)** | 30-60 min before bed; do not combine with sedatives |
+| **CNS peptides (Semax, Selank)** | Avoid late night to prevent sleep disruption |
+| **Sleep peptides (DSIP, Pinealon)** | 30–60 min before bed; do not combine with sedatives |
 | **GLP-1 weekly injections** | Same day and time every week |
 | **Repair peptides (BPC, TB-500)** | Timing flexible; some prefer near injury site |
-| **Quality** | Only use high-quality, verified peptides from reputable sources |
+| **Immune peptides** | Morning dosing aligns with circadian immune rhythm |
 
 ---
 
@@ -209,7 +248,7 @@
 | Nausea | Vitamin B6, Ginger, Magnesium | BPC-157 |
 | Poor appetite | Zinc, Thiamine B1, Vitamin B12 | Ipamorelin |
 | Slow digestion | Betaine HCL, Zinc, Ginger | BPC-157 |
-| Gut inflammation | Omega-3, Curcumin, Zinc | BPC-157 |
+| Gut inflammation | Omega-3, Curcumin, Zinc | KPV |
 | Constipation | Magnesium citrate, Vitamin C, PHGG fiber | BPC-157 |
 
 ### IMMUNE & INFLAMMATION
@@ -223,7 +262,7 @@
 | Asthma tendency | Magnesium, Vitamin D, Omega-3 | Thymosin Alpha-1 |
 | Autoimmune flares | Vitamin D, Omega-3, Selenium | Thymosin Alpha-1 |
 | Slow immune recovery | Zinc, Vitamin C, Protein | Thymosin Alpha-1 |
-| Chronic inflammation | Omega-3, Curcumin, Magnesium | BPC-157 |
+| Chronic inflammation | Omega-3, Curcumin, Magnesium | KPV |
 | Frequent infections | Vitamin D, Zinc, Selenium | Thymosin Alpha-1 |
 | Long haul symptoms | Vitamin D, Zinc, Omega-3 | Thymosin Alpha-1 |
 
@@ -275,26 +314,26 @@
 
 | Symptom | Foundation Supplements | Peptide |
 |---------|----------------------|---------|
-| Low testosterone symptoms | Zinc, Magnesium, Vitamin D | Kisspeptin-10 |
+| Low testosterone symptoms | Zinc, Magnesium, Vitamin D | Kisspeptin |
 | Erectile dysfunction | Zinc, Vitamin D, Niacin B3 | PT-141 |
-| Low morning drive | Zinc, Boron, Magnesium | Kisspeptin-10 |
-| Low sperm quality | Zinc, Selenium, CoQ10 | Kisspeptin-10 |
+| Low morning drive | Zinc, Boron, Magnesium | Kisspeptin |
+| Low sperm quality | Zinc, Selenium, CoQ10 | Kisspeptin |
 | Low libido | Zinc, Boron, Vitamin D | PT-141 |
 
 ### HORMONAL — FEMALE
 
 | Symptom | Foundation Supplements | Peptide |
 |---------|----------------------|---------|
-| PMS | Vitamin B6, Magnesium, Calcium | Oxytocin |
-| Irregular cycles | Vitamin B6, Magnesium, Iron | Kisspeptin-10 |
-| Heavy periods | Iron, Vitamin C, Magnesium | Oxytocin |
+| PMS | Vitamin B6, Magnesium, Calcium | Selank |
+| Irregular cycles | Vitamin B6, Magnesium, Iron | Kisspeptin |
+| Heavy periods | Iron, Vitamin C, Magnesium | BPC-157 |
 | Hot flashes | Vitamin E, Omega-3, Magnesium | Epitalon |
-| Low progesterone symptoms | Vitamin B6, Magnesium, Zinc | Kisspeptin-10 |
-| Low estrogen symptoms | Omega-3, Vitamin E, Vitamin D | Oxytocin |
-| Menopause fatigue | Magnesium, Vitamin D, Creatine | — |
+| Low progesterone symptoms | Vitamin B6, Magnesium, Zinc | Kisspeptin |
+| Low estrogen symptoms | Omega-3, Vitamin E, Vitamin D | Kisspeptin |
+| Menopause fatigue | Magnesium, Vitamin D, Creatine | MOTS-c |
 
 ---
 
 ## Further Reading
 
-Browse by category for detailed protocols and safety information for each compound.
+Browse by category for detailed protocols, signaling pathways, and safety information for each compound.
