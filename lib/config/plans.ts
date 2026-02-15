@@ -134,8 +134,8 @@ export const PLANS: Plan[] = [
     features: [
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 3 months',
-      'One CORE Therapy included plus an additional 2 enhancement therapies'
+      'Complimentary physician follow up every 6 months',
+      'One CORE Therapy included + Two Enhancements'
     ],
     coreProducts: CORE_PRODUCTS,
     libraryAccess: {
@@ -161,10 +161,10 @@ export const PLANS: Plan[] = [
     tagline: 'Complete care',
     bestFor: 'Regenerative & executive care',
     features: [
-      'Initial Physician Consult complimentary',
-      'Blood work prior to start complimentary, recommended testing every 3 months (additional fee)',
-      'Complimentary physician follow up every month',
-      'Two CORE Therapies included plus an additional 4 enhancement therapies'
+      'Initial Physician Consult $79',
+      'Blood work prior to start $99, recommended every 3 months (additional fee)',
+      'Complimentary physician follow up every 6 months',
+      'Two CORE Therapies included + up to 4 Enhancements'
     ],
     coreProducts: CORE_PRODUCTS,
     libraryAccess: {
