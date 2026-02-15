@@ -63,6 +63,28 @@ export default function TherapiesPage() {
         </div>
       </section>
 
+      {/* 100+ Therapies Membership CTA */}
+      <section className="py-16 md:py-20 px-6 bg-cultr-forest">
+        <div className="max-w-3xl mx-auto text-center">
+          <ScrollReveal>
+            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-7 h-7 text-cultr-sage" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
+              Over 100 therapies available
+            </h2>
+            <p className="text-white/70 mb-8 max-w-xl mx-auto">
+              To access our full catalog of over 100 physician-supervised therapies, peptide blends, and optimization protocols, you need to become a member.
+            </p>
+            <Link href="/pricing">
+              <Button size="lg">
+                Become a Member <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Therapy Sections */}
       {THERAPY_SECTIONS.map((section, sectionIdx) => {
         const Icon = SECTION_ICONS[sectionIdx];
@@ -125,28 +147,6 @@ export default function TherapiesPage() {
           </section>
         );
       })}
-
-      {/* 100+ Therapies Membership CTA */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-forest">
-        <div className="max-w-3xl mx-auto text-center">
-          <ScrollReveal>
-            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
-              <Lock className="w-7 h-7 text-cultr-sage" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              Over 100 therapies available
-            </h2>
-            <p className="text-white/70 mb-8 max-w-xl mx-auto">
-              To access our full catalog of over 100 physician-supervised therapies, peptide blends, and optimization protocols, you need to become a member.
-            </p>
-            <Link href="/pricing">
-              <Button size="lg">
-                Become a Member <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
-          </ScrollReveal>
-        </div>
-      </section>
 
       {/* Ready to Get Started CTA */}
       <section className="py-16 md:py-20 px-6 bg-cultr-mint">
