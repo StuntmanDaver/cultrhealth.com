@@ -96,7 +96,7 @@ export const PLANS: Plan[] = [
     features: [
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months',
+      'Complimentary physician follow up once every 6 months',
       'One CORE Therapy included'
     ],
     libraryAccess: {
@@ -124,7 +124,7 @@ export const PLANS: Plan[] = [
     features: [
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months',
+      'Complimentary physician follow up every 3 months',
       'One Core Therapy included + Two Enhancements'
     ],
     libraryAccess: {
@@ -152,7 +152,7 @@ export const PLANS: Plan[] = [
     features: [
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months',
+      'Complimentary physician follow up every 3 months',
       'Two CORE Therapy included + up to 4 enhancements'
     ],
     libraryAccess: {

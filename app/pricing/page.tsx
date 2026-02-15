@@ -172,7 +172,7 @@ export default function PricingPage() {
                     { feature: 'Monthly Price', values: ['$199', '$499', '$1,099'] },
                     { feature: 'Initial Physician Consult', values: ['$79', '$79', '$79'] },
                     { feature: 'Blood Work (prior to start)', values: ['$99', '$99', '$99'] },
-                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 6 months', 'Every 6 months'] },
+                    { feature: 'Physician Follow-up', values: ['Once every 6 months', 'Every 3 months', 'Every 3 months'] },
                     { feature: 'CORE Therapies', values: ['1', '1', '2'] },
                     { feature: 'Enhancement Therapies', values: ['—', '2', 'Up to 4'] },
                     { feature: 'Protocol Library', values: [false, true, true] },
