@@ -94,10 +94,10 @@ export const PLANS: Plan[] = [
     tagline: 'Foundation therapy',
     bestFor: 'GLP-1 or TRT focused',
     features: [
+      'One CORE Therapy included',
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up once every 6 months',
-      'One CORE Therapy included'
+      'Complimentary physician follow up every 6 months'
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -122,10 +122,10 @@ export const PLANS: Plan[] = [
     tagline: 'Multi-therapy optimization',
     bestFor: 'Peptide stacking & optimization',
     features: [
+      'One Core Therapy included + Two Enhancements',
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 3 months',
-      'One Core Therapy included + Two Enhancements'
+      'Complimentary physician follow up every 6 months'
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -150,10 +150,10 @@ export const PLANS: Plan[] = [
     tagline: 'Complete care',
     bestFor: 'Regenerative & executive care',
     features: [
+      'Two CORE Therapy included + up to 4 enhancements',
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 3 months',
-      'Two CORE Therapy included + up to 4 enhancements'
+      'Complimentary physician follow up every 6 months'
     ],
     libraryAccess: {
       masterIndex: 'full',
