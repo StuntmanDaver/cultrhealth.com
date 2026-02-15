@@ -17,9 +17,9 @@ export default async function ShopPage() {
 
   const tier = await getMembershipTier(session.customerId, session.email)
 
-  // Check if user has access to shop (catalyst+ tier - same as dosing calculators)
-  if (!hasFeatureAccess(tier, 'dosingCalculators')) {
-    redirect('/pricing?upgrade=catalyst')
+  // Check if user has access to shop (Core+ tier — requires advancedProtocols)
+  if (!hasFeatureAccess(tier, 'advancedProtocols')) {
+    redirect('/pricing?upgrade=core')
   }
 
   return <QuickOrderClient email={session.email} tier={tier} />

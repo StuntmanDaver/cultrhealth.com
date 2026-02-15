@@ -248,7 +248,7 @@ export function LibraryContent({
             <TransactionHistory />
 
             {/* Upgrade CTA */}
-            {tier && tier !== 'club' && (
+            {tier && tier !== 'concierge' && (
               <div className="bg-gradient-to-br from-stone-900 to-stone-800 rounded-2xl p-6 text-white">
                 <h3 className="text-lg font-display font-bold mb-2">Upgrade Your Plan</h3>
                 <p className="text-white/70 text-sm mb-4">

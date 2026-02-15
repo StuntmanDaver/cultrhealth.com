@@ -65,7 +65,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
               Stack Guides
             </h1>
             <p className="text-white/80 text-lg">
-              Upgrade to Catalyst+ to unlock goal-based stacking guides.
+              Upgrade to unlock goal-based stacking guides.
             </p>
           </div>
         </section>
@@ -73,7 +73,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="max-w-3xl mx-auto text-center">
             <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
               <p className="text-cultr-text font-medium mb-4">
-                Stack guides with persona-based protocols are available starting at the Catalyst+ tier.
+                Stack guides with persona-based protocols require a membership. Join CULTR Club (free) to get started.
               </p>
               <Link
                 href="/pricing"
@@ -106,7 +106,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 Full Product Catalog
               </h1>
               <p className="text-white/80 text-lg">
-                Upgrade to Creator to unlock advanced protocol cards.
+                Upgrade to Core to unlock the full product catalog.
               </p>
             </div>
           </section>
@@ -114,7 +114,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
             <div className="max-w-3xl mx-auto text-center">
               <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
                 <p className="text-cultr-text font-medium mb-4">
-                  Advanced protocols are available starting at the Creator tier.
+                  The product catalog is available starting at the Core tier ($199/mo).
                 </p>
                 <Link
                   href="/pricing"

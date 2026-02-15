@@ -332,9 +332,9 @@ export function MemberDashboard({
           <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Members Shop</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <TierGate
-              requiredTier="catalyst"
+              requiredTier="core"
               currentTier={tier}
-              upgradeMessage="Upgrade to Catalyst+ to access the product shop."
+              upgradeMessage="Upgrade to Core to access the product shop."
             >
               <Link
                 href="/library/shop"
@@ -368,9 +368,9 @@ export function MemberDashboard({
           <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Protocol Tools</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <TierGate
-              requiredTier="catalyst"
+              requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Upgrade to Catalyst+ to unlock dosing calculators."
+              upgradeMessage="Join CULTR Club to unlock dosing calculators."
             >
               <Link
                 href="/library/dosing-calculator"
@@ -387,9 +387,9 @@ export function MemberDashboard({
               </Link>
             </TierGate>
             <TierGate
-              requiredTier="catalyst"
+              requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Upgrade to Catalyst+ to unlock the calorie calculator."
+              upgradeMessage="Join CULTR Club to unlock the calorie calculator."
             >
               <Link
                 href="/library/calorie-calculator"
@@ -419,9 +419,9 @@ export function MemberDashboard({
               <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
             </Link>
             <TierGate
-              requiredTier="catalyst"
+              requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Upgrade to Catalyst+ to unlock stacking guides."
+              upgradeMessage="Join CULTR Club to unlock stacking guides."
             >
               <Link
                 href="/library/stack-guides"
@@ -460,9 +460,9 @@ export function MemberDashboard({
               </div>
             </TierGate>
             <TierGate
-              requiredTier="club"
+              requiredTier="concierge"
               currentTier={tier}
-              upgradeMessage="Upgrade to Club to unlock custom protocol requests."
+              upgradeMessage="Upgrade to Concierge to unlock custom protocol requests."
             >
               <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
                 <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">

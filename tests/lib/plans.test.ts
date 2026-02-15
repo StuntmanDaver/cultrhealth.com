@@ -4,28 +4,34 @@ import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
 
 describe('Plans Configuration', () => {
   describe('PLANS array', () => {
-    it('contains 5 tiers', () => {
-      expect(PLANS).toHaveLength(5)
+    it('contains 4 tiers', () => {
+      expect(PLANS).toHaveLength(4)
     })
 
     it('has expected tier slugs', () => {
       const slugs = PLANS.map((p) => p.slug)
+      expect(slugs).toContain('club')
       expect(slugs).toContain('core')
-      expect(slugs).toContain('creator')
       expect(slugs).toContain('catalyst')
       expect(slugs).toContain('concierge')
-      expect(slugs).toContain('club')
     })
 
-    it('has ascending prices', () => {
-      const prices = PLANS.map((p) => p.price)
+    it('has ascending prices for paid plans', () => {
+      const paidPlans = PLANS.filter((p) => p.price > 0)
+      const prices = paidPlans.map((p) => p.price)
       for (let i = 1; i < prices.length; i++) {
         expect(prices[i]).toBeGreaterThan(prices[i - 1])
       }
     })
 
-    it('each plan has required fields', () => {
-      for (const plan of PLANS) {
+    it('Club tier is free', () => {
+      const club = PLANS.find((p) => p.slug === 'club')
+      expect(club?.price).toBe(0)
+    })
+
+    it('each paid plan has required fields', () => {
+      const paidPlans = PLANS.filter((p) => p.price > 0)
+      for (const plan of paidPlans) {
         expect(plan.slug).toBeTruthy()
         expect(plan.name).toBeTruthy()
         expect(plan.price).toBeGreaterThan(0)
@@ -51,25 +57,57 @@ describe('Plans Configuration', () => {
       return PLANS.find((p) => p.slug === slug)?.libraryAccess
     }
 
-    describe('Core tier ($99)', () => {
-      it('has titles-only master index', () => {
-        const access = getPlanAccess('core')
-        expect(access?.masterIndex).toBe('titles_only')
+    describe('Club tier ($0)', () => {
+      it('has full master index', () => {
+        const access = getPlanAccess('club')
+        expect(access?.masterIndex).toBe('full')
       })
 
-      it('does not have advanced protocols', () => {
-        const access = getPlanAccess('core')
+      it('does not have advanced protocols (no shop access)', () => {
+        const access = getPlanAccess('club')
         expect(access?.advancedProtocols).toBe(false)
       })
 
-      it('does not have dosing calculators', () => {
-        const access = getPlanAccess('core')
-        expect(access?.dosingCalculators).toBe(false)
+      it('has dosing calculators', () => {
+        const access = getPlanAccess('club')
+        expect(access?.dosingCalculators).toBe(true)
       })
 
-      it('does not have stacking guides', () => {
+      it('has stacking guides', () => {
+        const access = getPlanAccess('club')
+        expect(access?.stackingGuides).toBe(true)
+      })
+
+      it('does not have provider notes', () => {
+        const access = getPlanAccess('club')
+        expect(access?.providerNotes).toBe(false)
+      })
+
+      it('does not have custom requests', () => {
+        const access = getPlanAccess('club')
+        expect(access?.customRequests).toBe(false)
+      })
+    })
+
+    describe('Core tier ($199)', () => {
+      it('has full master index', () => {
         const access = getPlanAccess('core')
-        expect(access?.stackingGuides).toBe(false)
+        expect(access?.masterIndex).toBe('full')
+      })
+
+      it('has advanced protocols (shop access)', () => {
+        const access = getPlanAccess('core')
+        expect(access?.advancedProtocols).toBe(true)
+      })
+
+      it('has dosing calculators', () => {
+        const access = getPlanAccess('core')
+        expect(access?.dosingCalculators).toBe(true)
+      })
+
+      it('has stacking guides', () => {
+        const access = getPlanAccess('core')
+        expect(access?.stackingGuides).toBe(true)
       })
 
       it('does not have provider notes', () => {
@@ -83,29 +121,7 @@ describe('Plans Configuration', () => {
       })
     })
 
-    describe('Creator tier ($149)', () => {
-      it('has full master index', () => {
-        const access = getPlanAccess('creator')
-        expect(access?.masterIndex).toBe('full')
-      })
-
-      it('has advanced protocols', () => {
-        const access = getPlanAccess('creator')
-        expect(access?.advancedProtocols).toBe(true)
-      })
-
-      it('does not have dosing calculators', () => {
-        const access = getPlanAccess('creator')
-        expect(access?.dosingCalculators).toBe(false)
-      })
-
-      it('does not have stacking guides', () => {
-        const access = getPlanAccess('creator')
-        expect(access?.stackingGuides).toBe(false)
-      })
-    })
-
-    describe('Catalyst+ tier ($199)', () => {
+    describe('Catalyst+ tier ($499)', () => {
       it('has full master index', () => {
         const access = getPlanAccess('catalyst')
         expect(access?.masterIndex).toBe('full')
@@ -132,7 +148,7 @@ describe('Plans Configuration', () => {
       })
     })
 
-    describe('Concierge tier ($299)', () => {
+    describe('Concierge tier ($1099)', () => {
       it('has all Catalyst+ features', () => {
         const access = getPlanAccess('concierge')
         expect(access?.masterIndex).toBe('full')
@@ -151,22 +167,9 @@ describe('Plans Configuration', () => {
         expect(access?.customRequests).toBe(false)
       })
     })
-
-    describe('Club tier ($499)', () => {
-      it('has all features', () => {
-        const access = getPlanAccess('club')
-        expect(access?.masterIndex).toBe('full')
-        expect(access?.advancedProtocols).toBe(true)
-        expect(access?.dosingCalculators).toBe(true)
-        expect(access?.stackingGuides).toBe(true)
-        expect(access?.providerNotes).toBe(true)
-        expect(access?.customRequests).toBe(true)
-      })
-    })
   })
 
   describe('Tier Access Matrix', () => {
-    // Test the complete access matrix from the test plan
     const accessMatrix: Array<{
       tier: string
       masterIndex: 'full' | 'titles_only'
@@ -176,11 +179,10 @@ describe('Plans Configuration', () => {
       providerNotes: boolean
       customRequests: boolean
     }> = [
-      { tier: 'core', masterIndex: 'titles_only', advancedProtocols: false, dosingCalculators: false, stackingGuides: false, providerNotes: false, customRequests: false },
-      { tier: 'creator', masterIndex: 'full', advancedProtocols: true, dosingCalculators: false, stackingGuides: false, providerNotes: false, customRequests: false },
+      { tier: 'club', masterIndex: 'full', advancedProtocols: false, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
+      { tier: 'core', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
       { tier: 'catalyst', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
       { tier: 'concierge', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: true, customRequests: false },
-      { tier: 'club', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: true, customRequests: true },
     ]
 
     for (const expected of accessMatrix) {

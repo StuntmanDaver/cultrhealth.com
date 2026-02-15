@@ -18,9 +18,9 @@ export default async function CartPage() {
 
   const tier = await getMembershipTier(session.customerId, session.email)
 
-  // Check if user has access (catalyst+ tier)
-  if (!hasFeatureAccess(tier, 'dosingCalculators')) {
-    redirect('/pricing?upgrade=catalyst')
+  // Check if user has access (Core+ tier — requires advancedProtocols)
+  if (!hasFeatureAccess(tier, 'advancedProtocols')) {
+    redirect('/pricing?upgrade=core')
   }
 
   // PaymentProviderLoader only loads Klarna/Affirm SDKs on checkout pages

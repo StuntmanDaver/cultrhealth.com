@@ -30,7 +30,7 @@ describe('TierGate Component', () => {
       render(
         <TierGate
           requiredTier="catalyst"
-          currentTier="club"
+          currentTier="concierge"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -55,11 +55,11 @@ describe('TierGate Component', () => {
       expect(screen.getByTestId('protected-content')).toBeInTheDocument()
     })
 
-    it('grants access to Club for Concierge-required content', () => {
+    it('grants access to Concierge for Club-required content', () => {
       render(
         <TierGate
-          requiredTier="concierge"
-          currentTier="club"
+          requiredTier="club"
+          currentTier="concierge"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -129,11 +129,11 @@ describe('TierGate Component', () => {
       expect(screen.getByText('Upgrade to access')).toBeInTheDocument()
     })
 
-    it('denies Concierge users access to Club content', () => {
+    it('denies Club users access to Core content', () => {
       render(
         <TierGate
-          requiredTier="club"
-          currentTier="concierge"
+          requiredTier="core"
+          currentTier="club"
           upgradeMessage="Upgrade to access"
         >
           <div data-testid="protected-content">Protected Content</div>
@@ -145,10 +145,10 @@ describe('TierGate Component', () => {
   })
 
   describe('Edge cases', () => {
-    it('handles null currentTier as Core', () => {
+    it('handles null currentTier as Club (most restrictive)', () => {
       render(
         <TierGate
-          requiredTier="catalyst"
+          requiredTier="core"
           currentTier={null}
           upgradeMessage="Upgrade to access"
         >
@@ -159,10 +159,10 @@ describe('TierGate Component', () => {
       expect(screen.getByText('Upgrade to access')).toBeInTheDocument()
     })
 
-    it('handles undefined currentTier as Core', () => {
+    it('handles undefined currentTier as Club (most restrictive)', () => {
       render(
         <TierGate
-          requiredTier="catalyst"
+          requiredTier="core"
           currentTier={undefined}
           upgradeMessage="Upgrade to access"
         >
@@ -173,10 +173,10 @@ describe('TierGate Component', () => {
       expect(screen.getByText('Upgrade to access')).toBeInTheDocument()
     })
 
-    it('grants access when null tier meets Core requirement', () => {
+    it('grants access when null tier meets Club requirement', () => {
       render(
         <TierGate
-          requiredTier="core"
+          requiredTier="club"
           currentTier={null}
           upgradeMessage="Upgrade to access"
         >
@@ -189,7 +189,7 @@ describe('TierGate Component', () => {
   })
 
   describe('Tier hierarchy', () => {
-    const tiers = ['core', 'catalyst', 'concierge', 'club'] as const
+    const tiers = ['club', 'core', 'catalyst', 'concierge'] as const
 
     it('respects tier ordering for access control', () => {
       // Each tier should have access to its own level and below
@@ -204,12 +204,12 @@ describe('TierGate Component', () => {
               <div data-testid="content">Content</div>
             </TierGate>
           )
-          
+
           expect(
             screen.getByTestId('content'),
             `${tiers[i]} should have access to ${tiers[j]} content`
           ).toBeInTheDocument()
-          
+
           unmount()
         }
       }

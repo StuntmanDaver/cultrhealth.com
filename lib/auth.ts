@@ -159,14 +159,14 @@ export async function getMembershipTier(customerId: string, email?: string): Pro
 
   // Development/staging mode: return full access tier
   if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer' || customerId === 'staging_customer') {
-    return 'club' // Full access in dev/staging mode
+    return 'concierge' // Full access in dev/staging mode
   }
 
   // Staging access emails get full access regardless of customerId in JWT
   if (email && process.env.STAGING_ACCESS_EMAILS) {
     const stagingEmails = process.env.STAGING_ACCESS_EMAILS.split(',').map(e => e.trim().toLowerCase())
     if (stagingEmails.includes(email.toLowerCase())) {
-      return 'club'
+      return 'concierge'
     }
   }
 
@@ -217,7 +217,7 @@ export async function getMembershipTier(customerId: string, email?: string): Pro
 }
 
 export function getLibraryAccess(tier: PlanTier | null | undefined): LibraryAccess {
-  const normalizedTier = normalizePlanTier(tier ?? undefined) || 'core'
+  const normalizedTier = normalizePlanTier(tier ?? undefined) || 'club'
   const plan = PLANS.find((candidate) => candidate.slug === normalizedTier)
   if (plan?.libraryAccess) {
     return plan.libraryAccess as LibraryAccess

@@ -9,7 +9,7 @@ import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
  */
 describe('Protocol Engine Integration', () => {
   describe('Tier → Library Access Flow', () => {
-    const tiers: PlanTier[] = ['core', 'catalyst', 'concierge', 'club']
+    const tiers: PlanTier[] = ['club', 'core', 'catalyst', 'concierge']
 
     it('each tier has progressively more access', () => {
       let previousFeatureCount = 0
@@ -30,22 +30,31 @@ describe('Protocol Engine Integration', () => {
       }
     })
 
-    it('Club tier has all features enabled', () => {
-      const access = getLibraryAccess('club')
+    it('Concierge tier has the most features', () => {
+      const access = getLibraryAccess('concierge')
       expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(true)
       expect(access.dosingCalculators).toBe(true)
       expect(access.stackingGuides).toBe(true)
       expect(access.providerNotes).toBe(true)
-      expect(access.customRequests).toBe(true)
     })
 
-    it('Core tier has minimal features', () => {
-      const access = getLibraryAccess('core')
-      expect(access.masterIndex).toBe('titles_only')
+    it('Club tier is free with limited access (no shop, no provider features)', () => {
+      const access = getLibraryAccess('club')
+      expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(false)
-      expect(access.dosingCalculators).toBe(false)
-      expect(access.stackingGuides).toBe(false)
+      expect(access.dosingCalculators).toBe(true)
+      expect(access.stackingGuides).toBe(true)
+      expect(access.providerNotes).toBe(false)
+      expect(access.customRequests).toBe(false)
+    })
+
+    it('Core tier has shop access but not provider features', () => {
+      const access = getLibraryAccess('core')
+      expect(access.masterIndex).toBe('full')
+      expect(access.advancedProtocols).toBe(true)
+      expect(access.dosingCalculators).toBe(true)
+      expect(access.stackingGuides).toBe(true)
       expect(access.providerNotes).toBe(false)
       expect(access.customRequests).toBe(false)
     })
@@ -158,16 +167,16 @@ describe('Protocol Engine Integration', () => {
   })
 
   describe('Feature Access → Content Gating', () => {
-    it('Core cannot access advanced protocols', () => {
-      expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(false)
+    it('Club cannot access advanced protocols (shop)', () => {
+      expect(hasFeatureAccess('club', 'advancedProtocols')).toBe(false)
     })
 
-    it('Catalyst+ can access advanced protocols', () => {
-      expect(hasFeatureAccess('catalyst', 'advancedProtocols')).toBe(true)
+    it('Core can access advanced protocols (shop)', () => {
+      expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(true)
     })
 
-    it('Catalyst+ can access dosing calculators', () => {
-      expect(hasFeatureAccess('catalyst', 'dosingCalculators')).toBe(true)
+    it('Club can access dosing calculators', () => {
+      expect(hasFeatureAccess('club', 'dosingCalculators')).toBe(true)
     })
 
     it('Catalyst+ cannot access provider notes', () => {
@@ -182,8 +191,8 @@ describe('Protocol Engine Integration', () => {
       expect(hasFeatureAccess('concierge', 'customRequests')).toBe(false)
     })
 
-    it('Club can access custom requests', () => {
-      expect(hasFeatureAccess('club', 'customRequests')).toBe(true)
+    it('Club cannot access custom requests', () => {
+      expect(hasFeatureAccess('club', 'customRequests')).toBe(false)
     })
   })
 

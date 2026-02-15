@@ -35,9 +35,9 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   const tier = await getMembershipTier(session.customerId, session.email)
 
-  // Check if user has access to shop (catalyst+ tier)
-  if (!hasFeatureAccess(tier, 'dosingCalculators')) {
-    redirect('/pricing?upgrade=catalyst')
+  // Check if user has access to shop (Core+ tier — requires advancedProtocols)
+  if (!hasFeatureAccess(tier, 'advancedProtocols')) {
+    redirect('/pricing?upgrade=core')
   }
 
   const { sku } = await params
