@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ArrowRight, Loader2, CheckCircle, Sparkles } from 'lucide-react';
 
 export function ClubBanner() {
@@ -48,11 +49,14 @@ export function ClubBanner() {
             <Sparkles className="w-5 h-5 text-cultr-forest" />
             <span className="text-xs font-display font-bold tracking-widest text-cultr-forest uppercase">Free</span>
           </div>
-          <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
-            CULTR Club
-          </h3>
+          <Link href="/therapies" className="hover:underline">
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
+              CULTR Club
+            </h3>
+          </Link>
           <p className="text-cultr-textMuted text-sm md:text-base max-w-lg">
             Get access to our protocol library, peptide calculators, cycle guides, and education content. No credit card required.
+            {' '}<Link href="/therapies" className="text-cultr-forest font-medium hover:underline">See therapies &rarr;</Link>
           </p>
         </div>
 
