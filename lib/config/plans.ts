@@ -43,15 +43,6 @@ export const MEMBERSHIP_DISCLAIMER =
   'All prescriptions and treatments are subject to medical eligibility and provider approval. ' +
   'Membership does not guarantee any specific treatment or prescription.';
 
-const CORE_PRODUCTS = [
-  'All FDA approved GLP1\'s',
-  'RTA (Physician use only)',
-  'Tesamorelin (Physician use only)',
-  'Sermorelin (Physician use only)',
-  'NAD+ (Physician use only)',
-  'GHK-CU (Physician use only)',
-];
-
 export const STRIPE_CONFIG = {
   // Customer Portal
   customerPortalId: 'bpc_1StZxKC1JUIZB7aRXhaSarRI',
