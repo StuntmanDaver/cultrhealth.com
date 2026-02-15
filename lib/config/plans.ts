@@ -22,6 +22,7 @@ export type Plan = {
   tagline: string;
   bestFor: string;
   features: string[];
+  coreProducts?: string[];
   libraryAccess: LibraryAccess;
   stripeProductId: string;
   stripePriceId: string;
@@ -41,6 +42,15 @@ export const MEMBERSHIP_DISCLAIMER =
   'Medications, peptides, labs, and products are billed separately at cost. ' +
   'All prescriptions and treatments are subject to medical eligibility and provider approval. ' +
   'Membership does not guarantee any specific treatment or prescription.';
+
+const CORE_PRODUCTS = [
+  'All FDA approved GLP1\'s',
+  'RTA (Physician use only)',
+  'Tesamorelin (Physician use only)',
+  'Sermorelin (Physician use only)',
+  'NAD+ (Physician use only)',
+  'GHK-CU (Physician use only)',
+];
 
 export const STRIPE_CONFIG = {
   // Customer Portal
@@ -89,15 +99,15 @@ export const PLANS: Plan[] = [
     name: 'CULTR Core',
     price: 199,
     interval: 'month',
-    tagline: 'Single therapy',
+    tagline: 'Foundation therapy',
     bestFor: 'GLP-1 or TRT focused',
     features: [
-      'Monthly telehealth consult',
-      'One therapy (GLP-1 or TRT)',
-      'Onboarding videos & safety info',
-      'At-home delivery',
-      'Secure messaging'
+      'Initial Physician Consult $79',
+      'Blood work prior to start $99, recommended every 3 months (additional fee)',
+      'Complimentary physician follow up every 6 months',
+      'One CORE Therapy included'
     ],
+    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'titles_only',
       advancedProtocols: false,
@@ -118,15 +128,15 @@ export const PLANS: Plan[] = [
     name: 'CULTR Catalyst+',
     price: 499,
     interval: 'month',
-    tagline: 'Multi-therapy',
+    tagline: 'Multi-therapy optimization',
     bestFor: 'Peptide stacking & optimization',
     features: [
-      'Bi-weekly telehealth consults',
-      'GLP-1/2/3 + peptide stacking',
-      'Peptide calculator & cycle guides',
-      'Full protocol library access',
-      'Priority response (<24hr)'
+      'Initial Physician Consult $79',
+      'Blood work prior to start $99, recommended every 3 months (additional fee)',
+      'Complimentary physician follow up every 3 months',
+      'One CORE Therapy included plus an additional 2 enhancement therapies'
     ],
+    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -147,15 +157,15 @@ export const PLANS: Plan[] = [
     name: 'CULTR Concierge',
     price: 1099,
     interval: 'month',
-    tagline: 'White-glove',
+    tagline: 'Complete care',
     bestFor: 'Regenerative & executive care',
     features: [
-      'Dedicated health coach & AI counselor',
-      'Monthly provider consultation (minimum)',
-      'Stem cell, exosome & IV access',
-      'All tools: calculator, guides, library',
-      'Same-day response & VIP shop'
+      'Initial Physician Consult complimentary',
+      'Blood work prior to start complimentary, recommended testing every 3 months (additional fee)',
+      'Complimentary physician follow up every month',
+      'Two CORE Therapies included plus an additional 4 enhancement therapies'
     ],
+    coreProducts: CORE_PRODUCTS,
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,

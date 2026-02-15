@@ -170,15 +170,13 @@ export default function PricingPage() {
                 <tbody className="text-sm">
                   {[
                     { feature: 'Monthly Price', values: ['$199', '$499', '$1,099'] },
-                    { feature: 'Telehealth Consults', values: ['Monthly', 'Bi-weekly', 'Monthly (minimum)'] },
-                    { feature: 'Provider Messaging', values: ['Secure', 'Priority', 'Same-day'] },
-                    { feature: 'Therapies', values: ['GLP-1 or TRT', 'GLP-1/2/3 + peptide stacking', 'Stem cell, Exosome, IV'] },
-                    { feature: 'Dedicated Health Coach', values: [false, false, true] },
-                    { feature: 'AI Counselor', values: [false, false, true] },
+                    { feature: 'Initial Physician Consult', values: ['$79', '$79', 'Complimentary'] },
+                    { feature: 'Blood Work (prior to start)', values: ['$99', '$99', 'Complimentary'] },
+                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 3 months', 'Every month'] },
+                    { feature: 'CORE Therapies', values: ['1', '1', '2'] },
+                    { feature: 'Enhancement Therapies', values: ['—', '2', '4'] },
                     { feature: 'Protocol Library', values: [false, true, true] },
                     { feature: 'Peptide Calculator', values: [false, true, true] },
-                    { feature: 'Cycle Guides', values: [false, true, true] },
-                    { feature: 'Injection Coaching Videos', values: [true, true, true] },
                     { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">

@@ -12,6 +12,7 @@ interface PlanProps {
   interval: string;
   tagline: string;
   features: string[];
+  coreProducts?: string[];
   stripePriceId: string;
   paymentLink: string;
   isFeatured?: boolean;
@@ -45,6 +46,26 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
       )}
 
       <div className="flex-grow mb-8">
+        {plan.coreProducts && plan.coreProducts.length > 0 && (
+          <div className="mb-5">
+            <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${plan.isFeatured ? 'text-cultr-sage' : 'text-cultr-forest'}`}>
+              CORE Therapies
+            </p>
+            <ul className="space-y-1.5 mb-0">
+              {plan.coreProducts.map((product, i) => (
+                <li
+                  key={i}
+                  className={`flex items-start gap-2 text-xs ${plan.isFeatured ? 'text-white/70' : 'text-cultr-textMuted'}`}
+                >
+                  <span className={`mt-1.5 w-1 h-1 rounded-full shrink-0 ${plan.isFeatured ? 'bg-cultr-sage/60' : 'bg-cultr-forest/40'}`} />
+                  <span>{product}</span>
+                </li>
+              ))}
+            </ul>
+            <div className={`mt-4 border-t ${plan.isFeatured ? 'border-white/20' : 'border-cultr-sage/50'}`} />
+          </div>
+        )}
+
         <ul className="space-y-4">
           {plan.features.map((feature, i) => (
             <li 
