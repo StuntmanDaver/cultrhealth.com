@@ -10,6 +10,7 @@ export default function WaitlistPage() {
     email: '',
     phone: '',
     social_handle: '',
+    treatment_reason: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -154,6 +155,17 @@ export default function WaitlistPage() {
             />
           </div>
 
+          <div>
+            <textarea
+              name="treatment_reason"
+              value={formData.treatment_reason}
+              onChange={handleChange}
+              placeholder="Why do you want treatment?"
+              rows={3}
+              disabled={isSubmitting}
+              className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors resize-none"
+            />
+          </div>
 
           {error && (
             <p className="text-red-300 text-sm text-center">{error}</p>
