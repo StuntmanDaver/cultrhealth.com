@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+
+const MC_ACTION = 'https://cultrhealth.us1.list-manage.com/subscribe/post?u=feb3e322fcd1b7817968380f6&id=986a43eebd&f_id=00a9c2e1f0';
 
 export default function WaitlistPage() {
   const [formData, setFormData] = useState({
@@ -15,78 +17,44 @@ export default function WaitlistPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  // Listen for iframe load after form submission
+  useEffect(() => {
+    const iframe = iframeRef.current;
+    if (!iframe) return;
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    const handleLoad = () => {
+      if (isSubmitting) {
+        setIsSubmitting(false);
+        setShowSuccess(true);
+      }
+    };
+
+    iframe.addEventListener('load', handleLoad);
+    return () => iframe.removeEventListener('load', handleLoad);
+  }, [isSubmitting]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
 
     if (!smsConsent) {
       setError('Please agree to receive SMS messages to continue.');
-      setIsSubmitting(false);
       return;
     }
 
-    const params = new URLSearchParams({
-      u: 'feb3e322fcd1b7817968380f6',
-      id: '986a43eebd',
-      f_id: '00a9c2e1f0',
-      EMAIL: formData.email,
-      FNAME: formData.firstName,
-      LNAME: formData.lastName,
-      SMSPHONE: formData.phone.startsWith('+') ? formData.phone : '+1' + formData.phone.replace(/\D/g, ''),
-      'SMSPHONE[country]': 'US',
-      'mc-SMSPHONE-ack': 'true',
-    });
-
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const callbackName = 'mc_cb_' + Date.now();
-
-        const timeout = setTimeout(() => {
-          cleanup();
-          reject(new Error('Request timed out. Please try again.'));
-        }, 10000);
-
-        function cleanup() {
-          clearTimeout(timeout);
-          delete (window as unknown as Record<string, unknown>)[callbackName];
-          const el = document.getElementById(callbackName);
-          if (el) el.remove();
-        }
-
-        (window as unknown as Record<string, unknown>)[callbackName] = (response: { result: string; msg: string }) => {
-          cleanup();
-          if (response.result === 'success') {
-            resolve();
-          } else {
-            const msg = response.msg || 'Something went wrong';
-            if (msg.includes('already subscribed')) {
-              resolve();
-            } else {
-              reject(new Error(msg.replace(/<[^>]*>/g, '')));
-            }
-          }
-        };
-
-        const script = document.createElement('script');
-        script.id = callbackName;
-        script.src = `https://cultrhealth.us1.list-manage.com/subscribe/post-json?${params.toString()}&c=${callbackName}`;
-        document.head.appendChild(script);
-      });
-
-      setShowSuccess(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
-    } finally {
-      setIsSubmitting(false);
+    if (!formData.email || !formData.phone) {
+      setError('Please fill in all required fields.');
+      return;
     }
-  }, [formData, smsConsent]);
+
+    setError(null);
+    setIsSubmitting(true);
+
+    // Submit the native form to the hidden iframe
+    formRef.current?.submit();
+  };
 
   if (showSuccess) {
     return (
@@ -118,9 +86,21 @@ export default function WaitlistPage() {
     );
   }
 
+  const phoneFormatted = formData.phone.startsWith('+')
+    ? formData.phone
+    : '+1' + formData.phone.replace(/\D/g, '');
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
+        {/* Hidden iframe for Mailchimp form submission */}
+        <iframe
+          ref={iframeRef}
+          name="mc-iframe"
+          style={{ display: 'none' }}
+          title="signup"
+        />
+
         {/* Logo */}
         <div className="text-center mb-12">
           <div className="inline-block">
@@ -140,14 +120,21 @@ export default function WaitlistPage() {
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Form — standard POST to Mailchimp via hidden iframe */}
+        <form
+          ref={formRef}
+          action={MC_ACTION}
+          method="POST"
+          target="mc-iframe"
+          onSubmit={handleSubmit}
+          className="space-y-6"
+        >
           <div>
             <input
               type="email"
-              name="email"
+              name="EMAIL"
               value={formData.email}
-              onChange={handleChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               placeholder="Email Address"
               required
               disabled={isSubmitting}
@@ -158,22 +145,25 @@ export default function WaitlistPage() {
           <div>
             <input
               type="tel"
-              name="phone"
+              name="_phone_display"
               value={formData.phone}
-              onChange={handleChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="Phone Number"
               required
               disabled={isSubmitting}
               className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
             />
+            {/* Hidden fields send formatted phone to Mailchimp */}
+            <input type="hidden" name="SMSPHONE" value={phoneFormatted} />
+            <input type="hidden" name="SMSPHONE[country]" value="US" />
           </div>
 
           <div>
             <input
               type="text"
-              name="firstName"
+              name="FNAME"
               value={formData.firstName}
-              onChange={handleChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
               placeholder="First Name"
               disabled={isSubmitting}
               className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
@@ -183,20 +173,22 @@ export default function WaitlistPage() {
           <div>
             <input
               type="text"
-              name="lastName"
+              name="LNAME"
               value={formData.lastName}
-              onChange={handleChange}
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
               placeholder="Last Name"
               disabled={isSubmitting}
               className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
             />
           </div>
 
-          {/* SMS Consent */}
+          {/* SMS Consent — name must match Mailchimp's expected field */}
           <div className="flex items-start gap-3 pt-2">
             <input
               type="checkbox"
               id="sms-consent"
+              name="mc-SMSPHONE-ack"
+              value="true"
               checked={smsConsent}
               onChange={(e) => setSmsConsent(e.target.checked)}
               disabled={isSubmitting}
@@ -210,7 +202,7 @@ export default function WaitlistPage() {
             </label>
           </div>
 
-          {/* Honeypot */}
+          {/* Honeypot for bot protection */}
           <div aria-hidden="true" style={{ position: 'absolute', left: '-5000px' }}>
             <input type="text" name="b_feb3e322fcd1b7817968380f6_986a43eebd" tabIndex={-1} defaultValue="" />
           </div>
