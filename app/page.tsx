@@ -1,46 +1,84 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 export default function WaitlistPage() {
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     phone: '',
-    social_handle: '',
-    treatment_reason: '',
+    firstName: '',
+    lastName: '',
   });
+  const [smsConsent, setSmsConsent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
+    if (!smsConsent) {
+      setError('Please agree to receive SMS messages to continue.');
+      setIsSubmitting(false);
+      return;
+    }
+
+    const params = new URLSearchParams({
+      u: 'feb3e322fcd1b7817968380f6',
+      id: '986a43eebd',
+      f_id: '00a9c2e1f0',
+      EMAIL: formData.email,
+      FNAME: formData.firstName,
+      LNAME: formData.lastName,
+      SMSPHONE: formData.phone,
+      'SMSPHONE[country]': 'US',
+      'mc-SMSPHONE-ack': 'true',
+    });
+
     try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          turnstileToken: 'pending-setup',
-        }),
+      await new Promise<void>((resolve, reject) => {
+        const callbackName = 'mc_cb_' + Date.now();
+
+        const timeout = setTimeout(() => {
+          cleanup();
+          reject(new Error('Request timed out. Please try again.'));
+        }, 10000);
+
+        function cleanup() {
+          clearTimeout(timeout);
+          delete (window as Record<string, unknown>)[callbackName];
+          const el = document.getElementById(callbackName);
+          if (el) el.remove();
+        }
+
+        (window as Record<string, unknown>)[callbackName] = (response: { result: string; msg: string }) => {
+          cleanup();
+          if (response.result === 'success') {
+            resolve();
+          } else {
+            const msg = response.msg || 'Something went wrong';
+            if (msg.includes('already subscribed')) {
+              resolve();
+            } else {
+              reject(new Error(msg.replace(/<[^>]*>/g, '')));
+            }
+          }
+        };
+
+        const script = document.createElement('script');
+        script.id = callbackName;
+        script.src = `https://cultrhealth.us1.list-manage.com/subscribe/post-json?${params.toString()}&c=${callbackName}`;
+        document.head.appendChild(script);
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
-      }
 
       setShowSuccess(true);
     } catch (err) {
@@ -48,7 +86,7 @@ export default function WaitlistPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [formData, smsConsent]);
 
   if (showSuccess) {
     return (
@@ -106,19 +144,6 @@ export default function WaitlistPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Full Name"
-              required
-              disabled={isSubmitting}
-              className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
-            />
-          </div>
-
-          <div>
-            <input
               type="email"
               name="email"
               value={formData.email}
@@ -146,25 +171,48 @@ export default function WaitlistPage() {
           <div>
             <input
               type="text"
-              name="social_handle"
-              value={formData.social_handle}
+              name="firstName"
+              value={formData.firstName}
               onChange={handleChange}
-              placeholder="Social Handle"
+              placeholder="First Name"
               disabled={isSubmitting}
               className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
             />
           </div>
 
           <div>
-            <textarea
-              name="treatment_reason"
-              value={formData.treatment_reason}
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
               onChange={handleChange}
-              placeholder="Why do you want treatment?"
-              rows={3}
+              placeholder="Last Name"
               disabled={isSubmitting}
-              className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors resize-none"
+              className="w-full bg-transparent border-b border-[#FDFBF7]/30 py-3 text-[#FDFBF7] placeholder:text-[#FDFBF7]/50 focus:outline-none focus:border-[#FDFBF7] transition-colors"
             />
+          </div>
+
+          {/* SMS Consent */}
+          <div className="flex items-start gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="sms-consent"
+              checked={smsConsent}
+              onChange={(e) => setSmsConsent(e.target.checked)}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 rounded border-[#FDFBF7]/30 accent-[#FDFBF7] flex-shrink-0"
+            />
+            <label htmlFor="sms-consent" className="text-[#FDFBF7]/50 text-xs leading-relaxed">
+              CULTR - By providing your phone number and checking the box, you agree to receive promotional and marketing messages, notifications, and customer service communications from CULTR. Message and data rates may apply. Consent is not a condition of purchase. Message frequency varies. Text HELP for help. Text STOP to cancel. See{' '}
+              <a href="http://eepurl.com/jzxj0E" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#FDFBF7] transition-colors">Terms</a>
+              {' '}and{' '}
+              <a href="http://eepurl.com/jzxjZs" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#FDFBF7] transition-colors">Privacy Policy</a>
+            </label>
+          </div>
+
+          {/* Honeypot */}
+          <div aria-hidden="true" style={{ position: 'absolute', left: '-5000px' }}>
+            <input type="text" name="b_feb3e322fcd1b7817968380f6_986a43eebd" tabIndex={-1} defaultValue="" />
           </div>
 
           {error && (
@@ -187,7 +235,7 @@ export default function WaitlistPage() {
           <Link href="/legal/privacy" className="hover:text-[#FDFBF7] transition-colors">
             Privacy
           </Link>
-          <span className="mx-2">·</span>
+          <span className="mx-2">&middot;</span>
           <Link href="/legal/terms" className="hover:text-[#FDFBF7] transition-colors">
             Terms
           </Link>
@@ -195,7 +243,7 @@ export default function WaitlistPage() {
 
         {/* Copyright */}
         <p className="mt-8 text-center text-xs text-[#FDFBF7]/40">
-          © {new Date().getFullYear()} CULTR. All rights reserved.
+          &copy; {new Date().getFullYear()} CULTR. All rights reserved.
         </p>
       </div>
     </main>
