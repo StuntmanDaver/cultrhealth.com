@@ -39,7 +39,7 @@ export default function WaitlistPage() {
       EMAIL: formData.email,
       FNAME: formData.firstName,
       LNAME: formData.lastName,
-      SMSPHONE: formData.phone,
+      SMSPHONE: formData.phone.startsWith('+') ? formData.phone : '+1' + formData.phone.replace(/\D/g, ''),
       'SMSPHONE[country]': 'US',
       'mc-SMSPHONE-ack': 'true',
     });
