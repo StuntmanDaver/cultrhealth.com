@@ -55,12 +55,12 @@ export default function WaitlistPage() {
 
         function cleanup() {
           clearTimeout(timeout);
-          delete (window as Record<string, unknown>)[callbackName];
+          delete (window as unknown as Record<string, unknown>)[callbackName];
           const el = document.getElementById(callbackName);
           if (el) el.remove();
         }
 
-        (window as Record<string, unknown>)[callbackName] = (response: { result: string; msg: string }) => {
+        (window as unknown as Record<string, unknown>)[callbackName] = (response: { result: string; msg: string }) => {
           cleanup();
           if (response.result === 'success') {
             resolve();
