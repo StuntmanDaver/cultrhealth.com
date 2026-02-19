@@ -46,13 +46,13 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative h-[75vh] min-h-[500px] max-h-[820px] md:h-[80vh] md:min-h-[550px] md:max-h-[900px] px-6 bg-cultr-forest overflow-hidden flex items-center">
-        {/* Hero image — full bleed, centered to show full group */}
+      <section className="relative h-[55vh] min-h-[380px] max-h-[500px] md:h-[80vh] md:min-h-[550px] md:max-h-[900px] px-6 bg-cultr-forest overflow-hidden flex items-center">
+        {/* Hero image — full bleed, focused on the women */}
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-center"
+          className="object-cover object-[center_60%] md:object-center"
           priority
           quality={85}
           sizes="100vw"
@@ -60,9 +60,9 @@ export default function HomePage() {
         {/* Left overlay for text readability */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
         {/* Bottom fade to forest */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
 
-        <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20 -mt-12 md:-mt-16">
+        <div className="max-w-7xl mx-auto relative z-10 w-full py-10 md:py-20 -mt-4 md:-mt-16">
           <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-3 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
               Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
