@@ -68,10 +68,6 @@ export default function HomePage() {
               Change the CULTR, <span className="italic">rebrand</span> yourself.
             </h1>
 
-            <p className="text-base md:text-lg text-white/90 mb-5 md:mb-8 max-w-md">
-              Lab-tested protocols. Licensed providers. Peptides that work. From $199/mo.
-            </p>
-
             {/* CTA buttons */}
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
