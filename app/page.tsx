@@ -58,14 +58,6 @@ export default function HomePage() {
           quality={85}
           sizes="100vw"
         />
-        {/* Bottom gradient for text readability */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(43,69,66,0.85) 0%, rgba(43,69,66,0.4) 60%, transparent 100%)' }} />
-        {/* Text at bottom of hero */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-6">
-          <h1 className="text-4xl font-display font-bold leading-[1.1] text-white drop-shadow-lg">
-            Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
-          </h1>
-        </div>
       </section>
 
       {/* Desktop hero — cinematic wideshot */}
@@ -108,16 +100,21 @@ export default function HomePage() {
         {/* Radial glow — bottom right accent */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 85% 90%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Mobile CTA buttons — moved from hero */}
-          <div className="flex justify-center gap-3 mb-10 md:hidden">
-            <Link href="/quiz">
-              <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
-            </Link>
-            <Link href="/pricing">
-              <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
-                See Plans <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+          {/* Mobile slogan + CTA buttons — moved from hero */}
+          <div className="md:hidden mb-10">
+            <h1 className="text-4xl font-display font-bold leading-[1.1] text-[#2B4542] mb-4">
+              Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
+            </h1>
+            <div className="flex flex-row items-center gap-3">
+              <Link href="/quiz">
+                <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
+                  See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </div>
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest">
