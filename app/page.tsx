@@ -63,9 +63,9 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 h-24 md:h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
 
         <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20 -mt-12 md:-mt-16">
-          <div className="max-w-xl">
+          <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-3 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
-              Change the CULTR, <span className="italic">rebrand</span> yourself.
+              Change the CULTR,<br /><span className="whitespace-nowrap"><span className="italic">rebrand</span> yourself.</span>
             </h1>
 
             {/* CTA buttons */}
