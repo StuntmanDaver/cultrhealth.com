@@ -102,7 +102,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Mobile slogan + CTA buttons — moved from hero */}
           <div className="md:hidden mb-12 -mt-10 text-center">
-            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-5 whitespace-nowrap">
+            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-8 whitespace-nowrap">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center justify-center gap-2">
