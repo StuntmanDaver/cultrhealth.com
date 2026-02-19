@@ -103,7 +103,7 @@ export default function HomePage() {
           {/* Mobile slogan + CTA buttons — moved from hero */}
           <div className="md:hidden mb-8 -mt-4 text-center">
             <h1 className="text-3xl font-display font-bold leading-[1.15] text-[#2B4542] mb-3">
-              Change the CULTR, <span className="italic">rebrand</span> yourself.
+              Change the CULTR,<br /><span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center justify-center gap-2">
               <Link href="/quiz">
