@@ -101,7 +101,7 @@ export default function HomePage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 85% 90%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Mobile slogan + CTA buttons — moved from hero */}
-          <div className="md:hidden mb-8 -mt-4 text-center">
+          <div className="md:hidden mb-8 -mt-10 text-center">
             <h1 className="text-3xl font-display font-bold leading-[1.15] text-[#2B4542] mb-3">
               Change the CULTR,<br /><span className="italic">rebrand</span> yourself.
             </h1>
