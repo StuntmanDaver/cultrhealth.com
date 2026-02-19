@@ -46,29 +46,58 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative h-[55vh] min-h-[380px] max-h-[500px] md:h-[80vh] md:min-h-[550px] md:max-h-[900px] px-6 bg-cultr-forest overflow-hidden flex items-center">
-        {/* Hero image — full bleed, focused on the women */}
+      {/* Mobile hero — natural aspect ratio so full CULTR branding is visible */}
+      <section className="relative md:hidden bg-cultr-forest overflow-hidden">
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
-          fill
-          className="object-cover object-[center_60%] md:object-center"
+          width={1536}
+          height={1024}
+          className="w-full h-auto"
           priority
           quality={85}
           sizes="100vw"
         />
-        {/* Left overlay for text readability */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
-        {/* Bottom fade to forest */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
-
-        <div className="max-w-7xl mx-auto relative z-10 w-full py-10 md:py-20 -mt-4 md:-mt-16">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-3 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
+        {/* Text overlay */}
+        <div className="absolute inset-0 flex items-center">
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.6) 0%, rgba(43,69,66,0.25) 50%, transparent 75%)' }} />
+          <div className="relative z-10 px-5 -mt-6">
+            <h1 className="text-4xl font-display font-bold mb-3 leading-[1.1] text-white drop-shadow-lg">
               Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
             </h1>
+            <div className="flex flex-row items-center gap-3">
+              <Link href="/quiz">
+                <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
+              </Link>
+              <Link href="/pricing">
+                <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
+                  See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            {/* CTA buttons */}
+      {/* Desktop hero — cinematic wideshot */}
+      <section className="relative hidden md:flex h-[80vh] min-h-[550px] max-h-[900px] px-6 bg-cultr-forest overflow-hidden items-center">
+        <Image
+          src="/images/hero-cultr-diverse-women.png"
+          alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
+          fill
+          className="object-cover object-center"
+          priority
+          quality={85}
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
+
+        <div className="max-w-7xl mx-auto relative z-10 w-full py-20 -mt-16">
+          <div className="max-w-3xl">
+            <h1 className="text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
+              Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
+            </h1>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
                 <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
