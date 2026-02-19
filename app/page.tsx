@@ -101,8 +101,8 @@ export default function HomePage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 85% 90%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Mobile slogan + CTA buttons — moved from hero */}
-          <div className="md:hidden mb-8 -mt-10 text-center">
-            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-3 whitespace-nowrap">
+          <div className="md:hidden mb-12 -mt-10 text-center">
+            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-5 whitespace-nowrap">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center justify-center gap-2">
@@ -116,7 +116,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <ScrollReveal className="text-center mb-12 mt-4">
+          <ScrollReveal className="text-center mb-12 mt-2 md:mt-0">
             <h2 className="text-2xl md:text-5xl font-display font-bold text-cultr-forest">
               Real results. No nonsense.
             </h2>
