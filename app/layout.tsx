@@ -48,11 +48,13 @@ export const metadata: Metadata = {
     siteName: 'CULTR Health',
     type: 'website',
     locale: 'en_US',
+    images: [{ url: `${siteUrl}/images/hero-cultr-diverse-women.png`, width: 1536, height: 1024, alt: 'CULTR Health — Five diverse women in athletic wear' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Change the CULTR, rebrand yourself.',
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
+    images: [`${siteUrl}/images/hero-cultr-diverse-women.png`],
   },
   robots: {
     index: true,
