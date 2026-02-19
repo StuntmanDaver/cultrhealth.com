@@ -65,7 +65,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10 w-full py-16 md:py-20 -mt-12 md:-mt-16">
           <div className="max-w-3xl">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-3 md:mb-5 leading-[1.1] text-white drop-shadow-lg">
-              Change the CULTR,<br /><span className="whitespace-nowrap"><span className="italic">rebrand</span> yourself.</span>
+              <span className="whitespace-nowrap">Change the CULTR,</span><br /><span className="whitespace-nowrap"><span className="italic">rebrand</span> yourself.</span>
             </h1>
 
             {/* CTA buttons */}
