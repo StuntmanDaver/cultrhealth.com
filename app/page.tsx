@@ -101,17 +101,17 @@ export default function HomePage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 85% 90%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Mobile slogan + CTA buttons — moved from hero */}
-          <div className="md:hidden mb-10 text-center">
-            <h1 className="text-[1.35rem] font-display font-bold leading-[1.15] text-[#2B4542] mb-4 whitespace-nowrap">
+          <div className="md:hidden mb-8 -mt-4 text-center">
+            <h1 className="text-3xl font-display font-bold leading-[1.15] text-[#2B4542] mb-3">
               Change the CULTR, <span className="italic">rebrand</span> yourself.
             </h1>
-            <div className="flex flex-row items-center justify-center gap-3">
+            <div className="flex flex-row items-center justify-center gap-2">
               <Link href="/quiz">
-                <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
+                <Button size="sm" className="border-2 border-transparent text-sm px-5 py-2">Take the Quiz</Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
-                  See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                <Button variant="ghost" size="sm" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full text-sm px-5 py-2">
+                  See Plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Button>
               </Link>
             </div>
