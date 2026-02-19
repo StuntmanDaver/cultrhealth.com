@@ -6,6 +6,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { PLANS } from '@/lib/config/plans';
 import { TESTIMONIALS, PROVIDERS, TRUST_METRICS, TRUST_BADGES } from '@/lib/config/social-proof';
+import { brandify } from '@/lib/utils';
 import {
   ArrowRight,
   FlaskConical,
@@ -49,24 +50,24 @@ export default function HomePage() {
         {/* Mobile hero image — natural size so full CULTR branding is visible */}
         <div className="absolute bottom-0 left-0 right-0 md:hidden">
           <Image
-            src="/images/hero-banner-mobile.webp"
-            alt="CULTR — Five women in athletic wear posing with CULTR branding"
-            width={1024}
-            height={590}
+            src="/images/hero-cultr-diverse-women.png"
+            alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
+            width={1500}
+            height={1000}
             className="w-full h-auto"
             priority
             quality={90}
             sizes="100vw"
           />
         </div>
-        {/* Desktop hero image — ultrawide landscape, full bleed */}
+        {/* Desktop hero image — wideshot, full bleed */}
         <Image
-          src="/images/hero-banner-desktop.webp"
-          alt="CULTR — Five women in athletic wear posing with CULTR branding"
+          src="/images/hero-cultr-diverse-women.png"
+          alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-center hidden md:block"
+          className="object-cover object-[center_70%] hidden md:block"
           priority
-          quality={75}
+          quality={85}
           sizes="100vw"
         />
         {/* Desktop: dark overlay for text readability */}
@@ -351,7 +352,7 @@ export default function HomePage() {
                   CULTR Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
                 </p>
               </div>
               <Link href="/creators" className="shrink-0">
@@ -404,7 +405,7 @@ export default function HomePage() {
                       </span>
                     )}
                   </div>
-                  <p className="text-white/90 mb-6 flex-1">&ldquo;{testimonial.quote}&rdquo;</p>
+                  <p className="text-white/90 mb-6 flex-1">&ldquo;{brandify(testimonial.quote)}&rdquo;</p>
                   <div>
                     <p className="font-medium text-white">{testimonial.name}</p>
                     <p className="text-sm text-white/60">{testimonial.title}</p>
@@ -471,8 +472,8 @@ export default function HomePage() {
           <FAQAccordion items={[
             { question: 'What is included in the membership?', answer: 'All memberships include telehealth consultations with licensed providers, access to our platform, messaging support, and our core lab panel review. Higher tiers include more frequent consults, peptide protocol access, and priority support.' },
             { question: 'How do the peptide protocols work?', answer: 'Our peptide library contains research-backed protocols for various health goals. After your consultation, your provider can recommend specific peptides based on your labs and objectives. All peptides are compounded at licensed pharmacies.' },
-            { question: 'Is CULTR available in my state?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.' },
-            { question: 'Can I use HSA/FSA funds?', answer: 'Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.' },
+            { question: 'Is CULTR available in my state?', answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.') },
+            { question: 'Can I use HSA/FSA funds?', answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.') },
           ]} />
 
           <div className="text-center mt-10">
