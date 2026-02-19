@@ -472,8 +472,8 @@ export default function HomePage() {
           <FAQAccordion items={[
             { question: 'What is included in the membership?', answer: 'All memberships include telehealth consultations with licensed providers, access to our platform, messaging support, and our core lab panel review. Higher tiers include more frequent consults, peptide protocol access, and priority support.' },
             { question: 'How do the peptide protocols work?', answer: 'Our peptide library contains research-backed protocols for various health goals. After your consultation, your provider can recommend specific peptides based on your labs and objectives. All peptides are compounded at licensed pharmacies.' },
-            { question: 'Is CULTR available in my state?', answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.') },
-            { question: 'Can I use HSA/FSA funds?', answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.') },
+            { question: 'Is CULTR available in my state?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.' },
+            { question: 'Can I use HSA/FSA funds?', answer: 'Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.' },
           ]} />
 
           <div className="text-center mt-10">
