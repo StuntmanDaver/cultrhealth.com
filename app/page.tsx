@@ -74,7 +74,7 @@ export default function HomePage() {
                 <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
               </Link>
               <Link href="/pricing">
-                <Button variant="ghost" size="lg" className="text-[#D7F3DC] border-2 border-[#D7F3DC]/70 bg-[#D7F3DC]/10 hover:bg-[#D7F3DC]/20 hover:text-white rounded-full">
+                <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
                   See Plans <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
