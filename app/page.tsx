@@ -46,13 +46,13 @@ export default function HomePage() {
   return (
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
-      <section className="relative h-[85vh] max-h-[700px] min-h-[480px] md:h-[60vh] md:max-h-[600px] md:min-h-[450px] lg:h-[70vh] lg:max-h-[680px] px-6 bg-cultr-forest overflow-hidden flex items-end md:items-center">
-        {/* Hero image — full bleed, cropped to banner proportions */}
+      <section className="relative h-[75vh] min-h-[500px] max-h-[820px] md:h-[80vh] md:min-h-[550px] md:max-h-[900px] px-6 bg-cultr-forest overflow-hidden flex items-end md:items-center">
+        {/* Hero image — full bleed, centered to show full group */}
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
           fill
-          className="object-cover object-[center_85%] md:object-[center_75%] lg:object-[center_65%]"
+          className="object-cover object-center"
           priority
           quality={85}
           sizes="100vw"
