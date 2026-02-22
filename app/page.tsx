@@ -224,7 +224,7 @@ export default function WaitlistPage() {
 
         <div className="mt-10 text-center space-y-2">
           <p className="text-[#FDFBF7]/60 text-xs tracking-[0.15em] uppercase font-raleway">
-            Building the Next Neuralink API
+            Building the Next Neuralink™ API
           </p>
           <p className="text-[#FDFBF7]/50 text-xs tracking-[0.08em]">
             Official Partner of{' '}
