@@ -77,7 +77,7 @@ export default function WaitlistPage() {
               </div>
             </div>
             <div 
-              className="text-[#FDFBF7] mt-5 text-sm md:text-base tracking-wide font-light" 
+              className="text-[#FDFBF7]/90 mt-4 text-xs md:text-sm tracking-widest font-light" 
               style={{ fontFamily: 'var(--font-playfair)' }}
             >
               Change the CULTR, <span className="italic font-medium">rebrand</span> yourself.
@@ -127,7 +127,7 @@ export default function WaitlistPage() {
             </div>
           </div>
           <div 
-            className="text-[#FDFBF7] mt-5 text-sm md:text-base tracking-wide font-light" 
+            className="text-[#FDFBF7]/90 mt-4 text-xs md:text-sm tracking-widest font-light" 
             style={{ fontFamily: 'var(--font-playfair)' }}
           >
             Change the CULTR, <span className="italic font-medium">rebrand</span> yourself.
