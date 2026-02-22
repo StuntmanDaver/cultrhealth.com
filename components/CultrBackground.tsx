@@ -272,22 +272,19 @@ void main() {
   float ambient = 0.30;
   float diffuse = NdotL * 0.55 + NdotL2 * 0.15;
 
-  // Hyper-realistic glass-like specular (very low roughness on peaks)
-  float roughness = mix(0.08, 0.45, 1.0 - h);
+  float roughness = mix(0.3, 0.65, 1.0 - h);
   float spec = D_GGX(NdotH, roughness);
-  vec3 specColor = white * spec * 0.6 * smoothstep(0.1, 0.8, h);
+  vec3 specColor = mix(mint, white, 0.7) * spec * 0.28 * smoothstep(0.2, 0.7, h);
 
-  // Subsurface scattering / glass refraction illusion
-  float sss = pow(max(dot(viewDir, -lightDir + norm * 0.6), 0.0), 4.0) * 0.15;
+  float sss = pow(max(dot(viewDir, -lightDir + norm * 0.6), 0.0), 3.0) * 0.12;
   vec3 sssColor = mint * sss;
 
-  // Intense glass-like fresnel edge reflection
-  float fresnel = pow(1.0 - NdotV, 3.0);
-  vec3 iriColor = iridescence(NdotV, 1.5 + h * 0.5);
-  vec3 fresnelColor = mix(white, iriColor * mint, 0.4) * fresnel * 0.5;
+  float fresnel = pow(1.0 - NdotV, 4.0);
+  vec3 iriColor = iridescence(NdotV, 1.2 + h * 0.8);
+  vec3 fresnelColor = mix(mint, iriColor * mint, 0.5) * fresnel * 0.2;
 
   float causticsVal = caustics(vWorldPos.xz, uTime * 0.15);
-  vec3 causticsColor = mint * causticsVal * 0.1 * smoothstep(0.3, 0.7, h);
+  vec3 causticsColor = mint * causticsVal * 0.08 * smoothstep(0.3, 0.7, h);
 
   vec3 color = baseColor * (ambient + diffuse) + specColor + sssColor + fresnelColor + causticsColor;
   gl_FragColor = vec4(color, 1.0);
