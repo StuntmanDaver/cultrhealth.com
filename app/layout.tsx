@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Raleway, Playfair_Display } from 'next/font/google'
 import './globals.css'
+import { CultrBackground } from '@/components/CultrBackground'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -58,7 +59,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${raleway.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-[#2B4542] text-white antialiased">
-        {children}
+        <CultrBackground />
+        <div className="relative z-[1]">
+          {children}
+        </div>
       </body>
     </html>
   )
