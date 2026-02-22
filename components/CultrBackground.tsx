@@ -424,8 +424,8 @@ export function CultrBackground() {
         if (pointerTween) pointerTween.kill()
         pointerTween = gsap.to(pointer, {
           x: nx, y: ny, strength: 1,
-          duration: 1.2,
-          ease: 'power3.out',
+          duration: 3.5,
+          ease: 'power2.out',
         })
       }
 
