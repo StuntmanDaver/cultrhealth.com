@@ -219,10 +219,10 @@ varying vec3 vNormal;
 varying vec3 vWorldPos;
 varying vec2 vUv;
 
-const vec3 forest   = vec3(0.10, 0.18, 0.17);
-const vec3 deepTeal = vec3(0.09, 0.24, 0.22);
-const vec3 mint     = vec3(0.35, 0.50, 0.42);
-const vec3 white    = vec3(0.65, 0.75, 0.68);
+const vec3 forest     = vec3(0.051, 0.157, 0.094);  // #0D2818 forestDark
+const vec3 deepTeal   = vec3(0.106, 0.263, 0.196);  // #1B4332 forest
+const vec3 mint       = vec3(0.176, 0.416, 0.310);  // #2D6A4F forestLight
+const vec3 sage       = vec3(0.45, 0.58, 0.50);     // muted #B7E4C7 sage
 const vec3 lightDir  = normalize(vec3(0.35, 1.0, 0.25));
 const vec3 lightDir2 = normalize(vec3(-0.6, 0.4, -0.3));
 
@@ -258,7 +258,7 @@ void main() {
 
   vec3 baseColor = mix(forest, deepTeal, smoothstep(0.0, 0.3, h));
   baseColor = mix(baseColor, mint, smoothstep(0.25, 0.65, h));
-  baseColor = mix(baseColor, white, smoothstep(0.7, 1.0, h));
+  baseColor = mix(baseColor, sage, smoothstep(0.75, 1.0, h));
 
   vec3 norm = normalize(vNormal);
   vec3 viewDir = normalize(cameraPosition - vWorldPos);
@@ -269,22 +269,22 @@ void main() {
   float NdotH  = max(dot(norm, halfDir), 0.0);
   float NdotV  = max(dot(norm, viewDir), 0.0);
 
-  float ambient = 0.30;
-  float diffuse = NdotL * 0.55 + NdotL2 * 0.15;
+  float ambient = 0.28;
+  float diffuse = NdotL * 0.50 + NdotL2 * 0.12;
 
   float roughness = mix(0.3, 0.65, 1.0 - h);
   float spec = D_GGX(NdotH, roughness);
-  vec3 specColor = mix(mint, white, 0.7) * spec * 0.28 * smoothstep(0.2, 0.7, h);
+  vec3 specColor = mix(mint, sage, 0.5) * spec * 0.22 * smoothstep(0.2, 0.7, h);
 
-  float sss = pow(max(dot(viewDir, -lightDir + norm * 0.6), 0.0), 3.0) * 0.12;
+  float sss = pow(max(dot(viewDir, -lightDir + norm * 0.6), 0.0), 3.0) * 0.10;
   vec3 sssColor = mint * sss;
 
   float fresnel = pow(1.0 - NdotV, 4.0);
   vec3 iriColor = iridescence(NdotV, 1.2 + h * 0.8);
-  vec3 fresnelColor = mix(mint, iriColor * mint, 0.5) * fresnel * 0.2;
+  vec3 fresnelColor = mix(mint, iriColor * mint, 0.5) * fresnel * 0.15;
 
   float causticsVal = caustics(vWorldPos.xz, uTime * 0.15);
-  vec3 causticsColor = mint * causticsVal * 0.08 * smoothstep(0.3, 0.7, h);
+  vec3 causticsColor = mint * causticsVal * 0.06 * smoothstep(0.3, 0.7, h);
 
   vec3 color = baseColor * (ambient + diffuse) + specColor + sssColor + fresnelColor + causticsColor;
   gl_FragColor = vec4(color, 1.0);
@@ -325,7 +325,7 @@ export function CultrBackground() {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
       const scene = new THREE.Scene()
-      scene.background = new THREE.Color(0x1A2E2B)
+      scene.background = new THREE.Color(0x0D2818)
 
       const aspect = window.innerWidth / window.innerHeight
       const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100)
