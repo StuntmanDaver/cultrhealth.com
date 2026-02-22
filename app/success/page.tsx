@@ -5,8 +5,12 @@ import { LINKS } from '@/lib/config/links';
 import { CheckCircle, Calendar, FileText, ArrowRight, Check } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Welcome to CULTR — CULTR Health',
+  title: 'Welcome to CULTR',
   description: 'Your CULTR Health membership is active. Complete your intake and book your first consultation.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 interface SuccessPageProps {
@@ -36,7 +40,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col">
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white text-center">
         <div className="max-w-2xl mx-auto">
@@ -142,6 +146,6 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           </p>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — CULTR Health',
-  description: 'CULTR Health terms of service. Please read these terms carefully before using our services.',
+  title: 'Terms of Service',
+  description: 'CULTR Health terms of service. Please read these terms carefully before using our telehealth and longevity medicine services.',
+  alternates: {
+    canonical: '/legal/terms',
+  },
 };
 
 export default function TermsPage() {

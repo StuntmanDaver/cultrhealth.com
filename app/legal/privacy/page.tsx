@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — CULTR Health',
-  description: 'CULTR Health privacy policy. Learn how we collect, use, and protect your information.',
+  title: 'Privacy Policy',
+  description: 'CULTR Health privacy policy. Learn how we collect, use, and protect your personal health information under HIPAA compliance.',
+  alternates: {
+    canonical: '/legal/privacy',
+  },
 };
 
 export default function PrivacyPage() {

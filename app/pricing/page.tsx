@@ -18,13 +18,21 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Pricing — CULTR Health',
-  description: 'Choose your CULTR Health membership. Plans from $99-$499/month with comprehensive labs, provider access, and peptide protocols.',
+  title: 'Membership Pricing & Plans',
+  description: 'CULTR Health membership plans from $99–$499/month. Includes telehealth consultations, 50+ biomarker lab panels, peptide protocols, and provider messaging. HSA/FSA eligible.',
+  alternates: {
+    canonical: '/pricing',
+  },
+  openGraph: {
+    title: 'Membership Pricing & Plans — CULTR Health',
+    description: 'Choose your CULTR Health membership. Plans from $99–$499/month with comprehensive labs, provider access, and peptide protocols.',
+    url: 'https://www.cultrhealth.com/pricing',
+  },
 };
 
 export default function PricingPage() {
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -286,6 +294,6 @@ export default function PricingPage() {
         subtitle="Join thousands optimizing their health with CULTR."
         ctaText="Choose Your Plan"
       />
-    </div>
+    </main>
   );
 }

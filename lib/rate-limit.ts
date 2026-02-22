@@ -183,15 +183,13 @@ async function createRedisRateLimiter(config: RateLimitConfig): Promise<RateLimi
 // FACTORY FUNCTION
 // ===========================================
 
-let cachedRedisLimiter: RateLimiter | null = null
-let redisChecked = false
-
 export function rateLimit(config: RateLimitConfig): RateLimiter {
   const memoryLimiter = createMemoryRateLimiter(config)
+  let cachedRedisLimiter: RateLimiter | null = null
+  let redisChecked = false
 
   return {
     async check(identifier: string): Promise<RateLimitResult> {
-      // Try to use Redis if available
       if (!redisChecked) {
         redisChecked = true
         cachedRedisLimiter = await createRedisRateLimiter(config)
@@ -201,7 +199,6 @@ export function rateLimit(config: RateLimitConfig): RateLimiter {
         return cachedRedisLimiter.check(identifier)
       }
 
-      // Fallback to memory store
       return memoryLimiter.check(identifier)
     },
 

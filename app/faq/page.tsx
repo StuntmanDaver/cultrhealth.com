@@ -7,13 +7,56 @@ import Button from '@/components/ui/Button';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'FAQ — CULTR Health',
-  description: 'Find answers to frequently asked questions about CULTR Health memberships, telehealth services, and protocols.',
+  title: 'Frequently Asked Questions',
+  description: 'Answers to common questions about CULTR Health memberships, telehealth consultations, peptide protocols, lab testing, and safety. Get the facts before joining.',
+  alternates: {
+    canonical: '/faq',
+  },
+  openGraph: {
+    title: 'FAQ — CULTR Health',
+    description: 'Everything you need to know about CULTR Health memberships, telehealth services, peptide protocols, and how we optimize your health.',
+    url: 'https://www.cultrhealth.com/faq',
+  },
 };
 
+const faqItems = [
+  { question: 'What is included in my membership?', answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like the Peptide Library and Protocol Engine.' },
+  { question: 'Can I cancel my membership?', answer: 'Yes, memberships are month-to-month with no long-term contracts. You can cancel at any time before your next renewal date through your member portal. There are no cancellation fees, and your access continues until the end of your current billing period.' },
+  { question: 'Can I switch plans?', answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.' },
+  { question: 'Do you accept HSA/FSA?', answer: 'Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.' },
+  { question: 'Who is CULTR Health for?', answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions.' },
+  { question: 'What if I am not eligible for treatment?', answer: 'Our providers adhere to strict medical guidelines and only prescribe when clinically appropriate. If you are not a candidate for a specific treatment due to safety reasons or contraindications, we will discuss alternative options. If no services can be rendered, we offer a full refund of your initial consultation fee.' },
+  { question: 'Do you prescribe medications?', answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 agonists (semaglutide, tirzepatide), hormone therapy, peptides, and other longevity-focused treatments.' },
+  { question: 'How do telehealth visits work?', answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking.' },
+  { question: 'What states do you operate in?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements.' },
+  { question: 'What is the Peptide Library?', answer: 'The Peptide Library is our comprehensive database of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, potential side effects, and real-world outcomes data.' },
+  { question: 'How does the Protocol Engine work?', answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology.' },
+  { question: 'What labs are included?', answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles, inflammation markers, vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships.' },
+  { question: 'Where do medications come from?', answer: 'All medications are sourced from licensed US pharmacies, including 503A and 503B compounding pharmacies for specialized formulations.' },
+  { question: 'Is my data secure?', answer: 'Absolutely. Our platform is fully HIPAA-compliant with end-to-end encryption. We never sell your data to third parties.' },
+  { question: 'How do I contact support?', answer: 'You can reach our team through the messaging feature in your member portal, or email us at support@cultrhealth.com.' },
+]
+
 export default function FAQPage() {
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  }
+
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -188,6 +231,6 @@ export default function FAQPage() {
         subtitle="Join thousands taking control of their biology with CULTR."
         ctaText="Get Started"
       />
-    </div>
+    </main>
   );
 }

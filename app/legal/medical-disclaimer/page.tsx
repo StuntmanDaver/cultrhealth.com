@@ -3,8 +3,11 @@ import Link from 'next/link';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Medical Disclaimer — CULTR Health',
-  description: 'Important medical disclaimer and safety information for CULTR Health services.',
+  title: 'Medical Disclaimer',
+  description: 'Important medical disclaimer and safety information for CULTR Health telehealth and peptide therapy services.',
+  alternates: {
+    canonical: '/legal/medical-disclaimer',
+  },
 };
 
 export default function MedicalDisclaimerPage() {

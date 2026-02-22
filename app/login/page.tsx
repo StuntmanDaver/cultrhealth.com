@@ -6,13 +6,20 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ArrowRight, Shield, Lock } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Login — CULTR Health',
-  description: 'Access your CULTR Health member portal to view messages, labs, and appointments.',
+  title: 'Member Login',
+  description: 'Access your CULTR Health member portal to view messages, labs, appointments, and manage your protocols.',
+  alternates: {
+    canonical: '/login',
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
 };
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col">
       {/* Hero */}
       <section className="flex-1 flex items-center justify-center py-24 px-6 bg-cultr-forest">
         <div className="max-w-md w-full text-center">
@@ -67,6 +74,6 @@ export default function LoginPage() {
           </a>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

@@ -1,6 +1,19 @@
 import { Resend } from 'resend'
 
 // ===========================================
+// HTML SANITIZATION
+// ===========================================
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+// ===========================================
 // RESEND EMAIL CLIENT
 // ===========================================
 
@@ -86,6 +99,12 @@ export async function sendFounderNotification(data: FounderNotificationData): Pr
 
   const { waitlist_id, name, email, phone, social_handle, treatment_reason, timestamp } = data
 
+  const safeName = escapeHtml(name)
+  const safeEmail = escapeHtml(email)
+  const safePhone = escapeHtml(phone)
+  const safeSocial = social_handle ? escapeHtml(social_handle) : '—'
+  const safeReason = treatment_reason ? escapeHtml(treatment_reason) : '—'
+
   const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -103,27 +122,27 @@ export async function sendFounderNotification(data: FounderNotificationData): Pr
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Name</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${name}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeName}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Email</td>
           <td style="padding: 12px 0; border-bottom: 1px solid #222;">
-            <a href="mailto:${email}" style="color: #c9a962; text-decoration: none;">${email}</a>
+            <a href="mailto:${safeEmail}" style="color: #c9a962; text-decoration: none;">${safeEmail}</a>
           </td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Phone</td>
           <td style="padding: 12px 0; border-bottom: 1px solid #222;">
-            <a href="tel:${phone}" style="color: #c9a962; text-decoration: none;">${phone}</a>
+            <a href="tel:${safePhone}" style="color: #c9a962; text-decoration: none;">${safePhone}</a>
           </td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Social Handle</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${social_handle || '—'}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeSocial}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; vertical-align: top;">Treatment Reason</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${treatment_reason || '—'}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeReason}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Timestamp</td>
@@ -131,7 +150,7 @@ export async function sendFounderNotification(data: FounderNotificationData): Pr
         </tr>
         <tr>
           <td style="padding: 12px 0; color: #888;">Waitlist ID</td>
-          <td style="padding: 12px 0; color: #666; font-family: monospace; font-size: 12px;">${waitlist_id}</td>
+          <td style="padding: 12px 0; color: #666; font-family: monospace; font-size: 12px;">${escapeHtml(waitlist_id)}</td>
         </tr>
       </table>
     </div>
@@ -149,7 +168,7 @@ export async function sendFounderNotification(data: FounderNotificationData): Pr
     const { error } = await client.emails.send({
       from: fromEmail,
       to: founderEmail,
-      subject: `New CULTR Waitlist Signup: ${name}`,
+      subject: `New CULTR Waitlist Signup: ${safeName}`,
       html: htmlContent,
     })
 

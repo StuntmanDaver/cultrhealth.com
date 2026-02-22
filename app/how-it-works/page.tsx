@@ -19,8 +19,16 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'How It Works — CULTR Health',
-  description: 'Learn how CULTR Health works: from signup to personalized protocols. Get comprehensive labs, provider consults, and access to our peptide library.',
+  title: 'How It Works — From Signup to Protocol',
+  description: 'Learn how CULTR Health works: choose a membership, complete intake, meet your provider, and receive a personalized peptide or hormone protocol in days.',
+  alternates: {
+    canonical: '/how-it-works',
+  },
+  openGraph: {
+    title: 'How It Works — CULTR Health',
+    description: 'From signup to your personalized protocol in days. Comprehensive labs, provider consults, and access to our peptide library.',
+    url: 'https://www.cultrhealth.com/how-it-works',
+  },
 };
 
 export default function HowItWorksPage() {
@@ -76,7 +84,7 @@ export default function HowItWorksPage() {
   ];
 
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -294,6 +302,6 @@ export default function HowItWorksPage() {
         subtitle="Join thousands optimizing their health with CULTR's personalized protocols."
         ctaText="Choose Your Plan"
       />
-    </div>
+    </main>
   );
 }

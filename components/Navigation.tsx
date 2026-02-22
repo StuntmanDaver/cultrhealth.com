@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import Button from '@/components/ui/Button'
 
@@ -46,10 +47,13 @@ export default function Navigation() {
           <div className="flex items-center justify-between h-32">
             {/* Logo */}
             <Link href="/" className="flex-shrink-0">
-              <img 
-                src="/cultr-logo-black.png" 
-                alt="CULTR Health" 
+              <Image
+                src="/cultr-logo-black.png"
+                alt="CULTR Health"
+                width={192}
+                height={192}
                 className="h-48 w-auto object-contain -ml-8"
+                priority
               />
             </Link>
 
