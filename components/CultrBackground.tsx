@@ -219,10 +219,10 @@ varying vec3 vNormal;
 varying vec3 vWorldPos;
 varying vec2 vUv;
 
-const vec3 forest   = vec3(0.169, 0.271, 0.259);
-const vec3 deepTeal = vec3(0.133, 0.333, 0.318);
-const vec3 mint     = vec3(0.843, 0.953, 0.863);
-const vec3 white    = vec3(1.0);
+const vec3 forest   = vec3(0.10, 0.18, 0.17);
+const vec3 deepTeal = vec3(0.09, 0.24, 0.22);
+const vec3 mint     = vec3(0.35, 0.50, 0.42);
+const vec3 white    = vec3(0.65, 0.75, 0.68);
 const vec3 lightDir  = normalize(vec3(0.35, 1.0, 0.25));
 const vec3 lightDir2 = normalize(vec3(-0.6, 0.4, -0.3));
 
@@ -325,7 +325,7 @@ export function CultrBackground() {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
       const scene = new THREE.Scene()
-      scene.background = new THREE.Color(0x2B4542)
+      scene.background = new THREE.Color(0x1A2E2B)
 
       const aspect = window.innerWidth / window.innerHeight
       const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100)
@@ -384,9 +384,9 @@ export function CultrBackground() {
 
       const bloomPass = new UnrealBloomPass(
         new THREE.Vector2(window.innerWidth, window.innerHeight),
-        isMobile ? 0.35 : 0.45,
-        0.85,
-        0.55
+        isMobile ? 0.2 : 0.25,
+        0.6,
+        0.82
       )
       composer.addPass(bloomPass)
 
