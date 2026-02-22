@@ -227,7 +227,15 @@ export default function WaitlistPage() {
             Building the Next Neuralink API
           </p>
           <p className="text-[#FDFBF7]/50 text-xs tracking-[0.08em]">
-            Official Partner of <span className="font-medium text-[#FDFBF7]/70">Prenuvo</span>
+            Official Partner of{' '}
+            <a
+              href="https://prenuvo.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[#FDFBF7]/70 hover:text-[#FDFBF7] transition-colors underline underline-offset-2"
+            >
+              Prenuvo
+            </a>
           </p>
         </div>
 
