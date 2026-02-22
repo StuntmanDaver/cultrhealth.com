@@ -60,19 +60,27 @@ export default function WaitlistPage() {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-md text-center">
-          <div className="inline-block mb-12">
-            <div className="mb-0">
-              <Image
-                src="/cultr-logotype-cream.png"
-                alt="CULTR"
-                width={180}
-                height={50}
-                priority
-                className="w-auto h-14"
-              />
+          <div className="inline-block flex flex-col items-center">
+            <div className="inline-block">
+              <div className="mb-0">
+                <Image
+                  src="/cultr-logotype-cream.png"
+                  alt="CULTR"
+                  width={180}
+                  height={50}
+                  priority
+                  className="w-auto h-14"
+                />
+              </div>
+              <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 mt-1">
+                Health
+              </div>
             </div>
-            <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 mt-1">
-              Health
+            <div 
+              className="text-[#FDFBF7] mt-5 text-sm md:text-base tracking-wide font-light" 
+              style={{ fontFamily: 'var(--font-playfair)' }}
+            >
+              Change the CULTR, <span className="italic font-medium">rebrand</span> yourself.
             </div>
           </div>
           <h1 className="text-2xl font-light tracking-wide text-[#FDFBF7] mb-4">
@@ -102,7 +110,7 @@ export default function WaitlistPage() {
         />
 
         {/* Logo */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 flex flex-col items-center">
           <div className="inline-block">
             <div className="mb-0">
               <Image
@@ -117,6 +125,12 @@ export default function WaitlistPage() {
             <div className="text-[#FDFBF7] text-xs font-raleway tracking-[0.3em] uppercase text-right pr-1 mt-1">
               Health
             </div>
+          </div>
+          <div 
+            className="text-[#FDFBF7] mt-5 text-sm md:text-base tracking-wide font-light" 
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            Change the CULTR, <span className="italic font-medium">rebrand</span> yourself.
           </div>
         </div>
 
