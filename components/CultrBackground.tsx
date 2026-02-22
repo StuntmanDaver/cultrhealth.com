@@ -420,7 +420,7 @@ export function CultrBackground() {
           return
         }
         const nx = (cx / window.innerWidth) * 2 - 1
-        const ny = -(cy / window.innerHeight) * 2 + 1
+        const ny = (cy / window.innerHeight) * 2 - 1
         if (pointerTween) pointerTween.kill()
         pointerTween = gsap.to(pointer, {
           x: nx, y: ny, strength: 1,
