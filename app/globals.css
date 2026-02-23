@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 253 251 247;
+    --background: 247 246 232;
     --foreground: 42 69 66;
   }
 
@@ -15,7 +15,7 @@
   body {
     @apply antialiased font-body text-brand-primary;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 50%, #FCFBF7 100%);
+    background: linear-gradient(180deg, #F7F6E8 0%, #FFFFFF 50%, #F7F6E8 100%);
   }
 
   h1, h2, h3, h4, h5, h6, th {
@@ -169,25 +169,25 @@
       linear-gradient(160deg, #1A2E2B 0%, #2B4542 35%, #34524F 65%, #243C39 100%);
   }
 
-  /* Light content sections — warm cream to white with soft orb */
+  /* Light content sections — ivory with subtle lighter center, edges match ivory */
   .grad-light {
     background:
-      radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.15) 0%, transparent 70%),
-      linear-gradient(180deg, #FCFBF7 0%, #FEFEFE 40%, #FFFFFF 100%);
+      radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%),
+      linear-gradient(180deg, #F7F6E8 0%, #FAFAF4 40%, #F7F6E8 100%);
   }
 
-  /* White content sections — cream with layered soft glow */
+  /* White content sections — ivory family, slightly lighter center */
   .grad-white {
     background:
-      radial-gradient(ellipse 60% 60% at 20% 80%, rgba(215,243,220,0.1) 0%, transparent 70%),
-      linear-gradient(180deg, #FFFFFF 0%, #FDFCF9 50%, #FCFBF7 100%);
+      radial-gradient(ellipse 60% 60% at 20% 80%, rgba(215,243,220,0.08) 0%, transparent 70%),
+      linear-gradient(180deg, #F7F6E8 0%, #FBFAF4 40%, #F7F6E8 100%);
   }
 
   /* Mint accent sections — multi-stop with warm bloom */
   .grad-mint {
     background:
       radial-gradient(ellipse 50% 50% at 80% 30%, rgba(255,255,255,0.6) 0%, transparent 70%),
-      linear-gradient(150deg, #D7F3DC 0%, #E8F7EB 30%, #FCFBF7 70%, #FFFFFF 100%);
+      linear-gradient(150deg, #D7F3DC 0%, #E8F7EB 30%, #F7F6E8 70%, #FFFFFF 100%);
   }
 
   /* Page-level background — warm cream with ultra-subtle depth */
@@ -195,7 +195,7 @@
     background:
       radial-gradient(ellipse 100% 60% at 50% 0%, rgba(215,243,220,0.08) 0%, transparent 60%),
       radial-gradient(ellipse 100% 60% at 50% 100%, rgba(215,243,220,0.06) 0%, transparent 60%),
-      linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 50%, #FCFBF7 100%);
+      linear-gradient(180deg, #F7F6E8 0%, #FFFFFF 50%, #F7F6E8 100%);
   }
 
   /* Dark hero with luminous glow — for primary hero sections */
@@ -210,9 +210,30 @@
   /* Light section with soft mint glow — for featured content */
   .grad-light-glow {
     background:
-      radial-gradient(ellipse 60% 50% at 30% 0%, rgba(215,243,220,0.25) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 50% at 80% 100%, rgba(215,243,220,0.15) 0%, transparent 60%),
-      linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 100%);
+      radial-gradient(ellipse 60% 50% at 30% 0%, rgba(215,243,220,0.2) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 100%, rgba(215,243,220,0.12) 0%, transparent 60%),
+      linear-gradient(180deg, #F7F6E8 0%, #FAFAF4 50%, #F7F6E8 100%);
+  }
+
+  /* ─── Section Bridges — seamless dark↔light transitions ─── */
+  .bridge-dark-to-light {
+    background: linear-gradient(180deg,
+      #243C39 0%,
+      rgba(43,69,66,0.7) 30%,
+      rgba(43,69,66,0.2) 60%,
+      rgba(43,69,66,0.04) 80%,
+      #F7F6E8 100%
+    );
+  }
+
+  .bridge-light-to-dark {
+    background: linear-gradient(180deg,
+      #F7F6E8 0%,
+      rgba(43,69,66,0.04) 20%,
+      rgba(43,69,66,0.2) 40%,
+      rgba(43,69,66,0.7) 70%,
+      #243C39 100%
+    );
   }
 
   /* ─── Section Divider Gradients ─── */
@@ -226,7 +247,7 @@
     left: 0;
     right: 0;
     height: 120px;
-    background: linear-gradient(to bottom, transparent 0%, #FCFBF7 100%);
+    background: linear-gradient(to bottom, transparent 0%, #F7F6E8 100%);
     pointer-events: none;
     z-index: 1;
   }
@@ -241,7 +262,7 @@
     left: 0;
     right: 0;
     height: 120px;
-    background: linear-gradient(to top, transparent 0%, #FCFBF7 100%);
+    background: linear-gradient(to top, transparent 0%, #F7F6E8 100%);
     pointer-events: none;
     z-index: 1;
   }
@@ -371,7 +392,7 @@
 
   /* Glass effect */
   .glass {
-    background: rgba(252, 251, 247, 0.7);
+    background: rgba(247, 246, 232, 0.7);
     backdrop-filter: blur(24px) saturate(1.5);
     -webkit-backdrop-filter: blur(24px) saturate(1.5);
     box-shadow: 0 4px 24px rgba(43, 69, 66, 0.06);

@@ -58,6 +58,7 @@ export default function HomePage() {
           quality={85}
           sizes="100vw"
         />
+        <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.15) 50%, transparent 100%)' }} />
       </section>
 
       {/* Desktop hero — cinematic wideshot */}
@@ -72,7 +73,7 @@ export default function HomePage() {
           sizes="100vw"
         />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #2B4542 0%, rgba(43,69,66,0.5) 50%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.5) 65%, transparent 100%)' }} />
 
         <div className="max-w-7xl mx-auto relative z-10 w-full py-20 -mt-16">
           <div className="max-w-3xl">
@@ -94,7 +95,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Results / Lifestyle ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-gradient-to-br from-cultr-offwhite via-white to-cultr-mint/20 overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
         {/* Radial glow — top center bloom */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 40% at 50% 0%, rgba(215,243,220,0.35) 0%, transparent 100%)' }} />
         {/* Radial glow — bottom right accent */}
@@ -334,6 +335,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Bridge: light → dark */}
+      <div className="h-20 md:h-28 bridge-light-to-dark" />
+
       {/* ─── CULTR Creator CTA ─── */}
       <section className="relative py-12 px-6 grad-dark overflow-hidden">
         {/* Radial glow — left accent */}
@@ -362,8 +366,14 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Bridge: dark → light */}
+      <div className="h-20 md:h-28 bridge-dark-to-light" />
+
       {/* Newsletter */}
       <NewsletterSignup />
+
+      {/* Bridge: light → dark */}
+      <div className="h-20 md:h-28 bridge-light-to-dark" />
 
       {/* ─── Testimonials (expanded) ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-dark text-white overflow-hidden">
@@ -413,6 +423,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Bridge: dark → light */}
+      <div className="h-20 md:h-28 bridge-dark-to-light" />
 
       {/* ─── Provider Credentials ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-white overflow-hidden">
@@ -480,6 +493,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Bridge: light → dark */}
+      <div className="h-20 md:h-28 bridge-light-to-dark" />
 
       {/* Final CTA */}
       <CTASection

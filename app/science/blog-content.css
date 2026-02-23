@@ -65,7 +65,7 @@
   list-style: none;
   padding: 0;
   margin: 1.5rem 0;
-  background: #FDFBF7;
+  background: #F7F6E8;
   border-radius: 0.75rem;
   padding: 1.25rem 1.5rem;
   border: 1px solid #B7E4C7;
@@ -118,7 +118,7 @@
   counter-reset: blog-counter;
   padding: 0;
   margin: 1.5rem 0;
-  background: #FDFBF7;
+  background: #F7F6E8;
   border-radius: 0.75rem;
   padding: 1.25rem 1.5rem;
   border: 1px solid #B7E4C7;

@@ -111,7 +111,7 @@ const RESOURCE_SECTIONS = [
     icon: Palette,
     items: [
       { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
-      { title: 'Brand Colors', desc: 'Forest #2B4542, Mint #D7F3DC, Offwhite #FCFBF7', type: 'info', slug: 'brand-colors' },
+      { title: 'Brand Colors', desc: 'Forest #2B4542, Mint #D7F3DC, Ivory #F7F6E8', type: 'info', slug: 'brand-colors' },
       { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
       { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
     ],
