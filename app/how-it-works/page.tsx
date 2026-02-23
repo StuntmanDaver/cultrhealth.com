@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
@@ -82,15 +83,27 @@ export default function HowItWorksPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-28 px-6 grad-dark-glow text-white">
-        <div className="max-w-4xl mx-auto text-center">
+      <section className="relative min-h-[60vh] md:min-h-[70vh] flex items-center px-6 grad-dark-glow text-white overflow-hidden">
+        <Image
+          src="/images/hero-cultr-office.png"
+          alt="CULTR Health clinic — providers consulting with patients in a modern wellness lounge"
+          fill
+          className="object-cover object-center"
+          priority
+          quality={85}
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1A2E2B]/80 via-[#2B4542]/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.2) 50%, transparent 100%)' }} />
+
+        <div className="max-w-4xl mx-auto text-center relative z-10 py-20 md:py-28">
           <ScrollReveal direction="none" duration={800}>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight drop-shadow-lg">
               Your path to optimal health
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow">
               From signup to your personalized protocol in days, not weeks. Our streamlined process makes health optimization accessible and effective.
             </p>
           </ScrollReveal>
