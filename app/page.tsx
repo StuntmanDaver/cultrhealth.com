@@ -336,7 +336,7 @@ export default function HomePage() {
       </section>
 
       {/* Bridge: light → dark */}
-      <div className="h-20 md:h-28 bridge-light-to-dark" />
+      <div className="hidden md:block h-28 bridge-light-to-dark" />
 
       {/* ─── CULTR Creator CTA ─── */}
       <section className="relative py-12 px-6 grad-dark overflow-hidden">
@@ -419,7 +419,7 @@ export default function HomePage() {
       </section>
 
       {/* Bridge: dark → light */}
-      <div className="h-20 md:h-28 bridge-dark-to-light" />
+      <div className="hidden md:block h-28 bridge-dark-to-light" />
 
       {/* ─── Provider Credentials ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-white overflow-hidden">
@@ -489,7 +489,7 @@ export default function HomePage() {
       </section>
 
       {/* Bridge: light → dark */}
-      <div className="h-20 md:h-28 bridge-light-to-dark" />
+      <div className="hidden md:block h-28 bridge-light-to-dark" />
 
       {/* Final CTA */}
       <CTASection

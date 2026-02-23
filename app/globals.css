@@ -534,6 +534,15 @@
   .float-delay-3 { animation-delay: 3s; }
 }
 
+/* Mobile: transparent light sections for continuous flow */
+@media (max-width: 767px) {
+  .grad-light,
+  .grad-white,
+  .grad-light-glow {
+    background: transparent;
+  }
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
