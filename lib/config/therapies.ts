@@ -91,6 +91,13 @@ export const THERAPY_SECTIONS: TherapySection[] = [
           'Master antioxidant for detoxification, immune support, and protection against oxidative stress.',
       },
       {
+        name: 'NAD+ / GHK-Cu / Glutathione Blend',
+        badge: 'Physician use only',
+        note: 'Reconstituted - ready to inject',
+        description:
+          'Synergistic triple-compound blend combining cellular energy restoration (NAD+), copper peptide tissue remodeling (GHK-Cu), and master antioxidant detoxification (Glutathione) for comprehensive rejuvenation.',
+      },
+      {
         name: 'AOD9604',
         badge: 'Physician use only',
         description:
