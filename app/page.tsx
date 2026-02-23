@@ -366,14 +366,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Bridge: dark → light */}
-      <div className="h-20 md:h-28 bridge-dark-to-light" />
-
       {/* Newsletter */}
       <NewsletterSignup />
-
-      {/* Bridge: light → dark */}
-      <div className="h-20 md:h-28 bridge-light-to-dark" />
 
       {/* ─── Testimonials (expanded) ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-dark text-white overflow-hidden">
