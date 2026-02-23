@@ -378,7 +378,7 @@ export function RenewalFormClient() {
 
               <div className="bg-stone-50 rounded-xl p-4 text-sm text-stone-600 max-h-48 overflow-y-auto">
                 <p className="mb-2">
-                  I consent to receiving telehealth services from CULTR Health for the purpose
+                  I consent to receiving telehealth services from <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health for the purpose
                   of renewing my medication. I understand that my health information will be
                   reviewed by a licensed healthcare provider.
                 </p>

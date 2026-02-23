@@ -54,7 +54,7 @@ function SegmentToggle<T extends string>({
   onChange: (v: T) => void
 }) {
   return (
-    <div className="flex gap-1 bg-cultr-mint rounded-full p-1">
+    <div className="flex gap-1 grad-mint rounded-full p-1">
       {options.map((opt) => (
         <button
           key={opt.value}
@@ -136,7 +136,7 @@ function InputField({
           min={min}
           max={max}
           step={step}
-          className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all pr-12"
+          className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all pr-12"
         />
         {suffix && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-cultr-textMuted">
@@ -317,6 +317,7 @@ function MealPlanModal({
               margin-bottom: 32px;
             }
             .logo {
+              font-family: 'Playfair Display', Georgia, serif;
               font-size: 28px;
               font-weight: bold;
               color: #2A4542;
@@ -427,8 +428,8 @@ function MealPlanModal({
           </div>
           <div class="footer">
             <p>This meal plan is AI-generated based on your nutritional targets.</p>
-            <p>Always consult your CULTR Health provider for personalized nutrition advice.</p>
-            <p style="margin-top: 12px;">© ${new Date().getFullYear()} CULTR Health — cultrhealth.com</p>
+            <p>Always consult your <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0.08em;">CULTR</span> Health provider for personalized nutrition advice.</p>
+            <p style="margin-top: 12px;">© ${new Date().getFullYear()} <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0.08em;">CULTR</span> Health — cultrhealth.com</p>
           </div>
         </body>
       </html>
@@ -502,7 +503,7 @@ function MealPlanModal({
               <p className="text-red-600 text-sm mt-2 text-center max-w-md">{error.message}</p>
               <button
                 onClick={onRegenerate}
-                className="mt-6 flex items-center gap-2 px-5 py-2.5 bg-cultr-forest text-white rounded-xl text-sm font-medium hover:bg-cultr-forestLight transition-colors"
+                className="mt-6 flex items-center gap-2 px-5 py-2.5 grad-dark text-white rounded-xl text-sm font-medium hover:bg-cultr-forestLight transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again
@@ -530,11 +531,11 @@ function MealPlanModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-cultr-sage bg-cultr-offwhite px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
+        <div className="border-t border-cultr-sage grad-light px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onRegenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cultr-sage rounded-xl text-cultr-text text-sm font-medium hover:border-cultr-forest/50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 grad-white border border-cultr-sage rounded-xl text-cultr-text text-sm font-medium hover:border-cultr-forest/50 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} />
             Regenerate
@@ -545,7 +546,7 @@ function MealPlanModal({
           <button
             onClick={handleCopy}
             disabled={!mealPlan || isGenerating}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-cultr-sage rounded-xl text-cultr-text text-sm font-medium hover:border-cultr-forest/50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 grad-white border border-cultr-sage rounded-xl text-cultr-text text-sm font-medium hover:border-cultr-forest/50 transition-colors disabled:opacity-50"
           >
             {copied ? (
               <>
@@ -563,7 +564,7 @@ function MealPlanModal({
           <button
             onClick={handleExportPDF}
             disabled={!mealPlan || isGenerating}
-            className="flex items-center gap-2 px-4 py-2.5 bg-cultr-forest text-white rounded-xl text-sm font-medium hover:bg-cultr-forestLight transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 grad-dark text-white rounded-xl text-sm font-medium hover:bg-cultr-forestLight transition-colors disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             Export PDF
@@ -678,9 +679,9 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
   } : null
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen grad-white">
       {/* Header */}
-      <section className="py-8 sm:py-12 px-4 sm:px-6 bg-cultr-forest text-white">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 grad-dark text-white">
         <div className="max-w-5xl mx-auto">
           <Link
             href="/library"
@@ -709,7 +710,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
             <div className="lg:col-span-3 space-y-6">
               {/* Sex + Units */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-5">
+                <div className="grad-light border border-cultr-sage rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <User className="w-4 h-4 text-cultr-forest" />
                     <h3 className="font-display font-bold text-cultr-text text-sm">Sex</h3>
@@ -723,7 +724,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
                     onChange={setSex}
                   />
                 </div>
-                <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-5">
+                <div className="grad-light border border-cultr-sage rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Ruler className="w-4 h-4 text-cultr-forest" />
                     <h3 className="font-display font-bold text-cultr-text text-sm">Units</h3>
@@ -740,7 +741,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Body Measurements */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Scale className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Body Measurements</h3>
@@ -825,7 +826,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Activity Level */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Activity className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Activity Level</h3>
@@ -842,7 +843,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Goal */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Target className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Goal</h3>
@@ -859,7 +860,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* BMR Formula */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Calculator className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">BMR Formula</h3>
@@ -876,7 +877,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Macro Split */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Beef className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Macro Split</h3>
@@ -896,7 +897,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
             {/* Results — 2 columns, sticky (top-24 accounts for header height) */}
             <div className="lg:col-span-2 lg:sticky lg:top-24 h-fit space-y-6">
               {/* Calorie Summary */}
-              <div className="bg-cultr-forest text-white rounded-2xl p-8">
+              <div className="grad-dark text-white rounded-2xl p-8">
                 <h3 className="font-display font-bold text-lg mb-6 text-white/80">Daily Target</h3>
                 {result ? (
                   <div className="space-y-6">
@@ -934,7 +935,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
 
               {/* Macro Breakdown */}
               {result && (
-                <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6 space-y-5">
+                <div className="grad-light border border-cultr-sage rounded-2xl p-6 space-y-5">
                   <h4 className="font-display font-bold text-cultr-text">Macro Breakdown</h4>
 
                   <MacroDonut
@@ -956,7 +957,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
                       </div>
                       <div className="w-full bg-cultr-sage/40 rounded-full h-2">
                         <div
-                          className="bg-cultr-forest h-2 rounded-full transition-all duration-500"
+                          className="grad-dark h-2 rounded-full transition-all duration-500"
                           style={{ width: `${result.protein.pct}%` }}
                         />
                       </div>
@@ -1029,7 +1030,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
 
               {/* Formula Breakdown */}
               {result && (
-                <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-5">
+                <div className="grad-light border border-cultr-sage rounded-2xl p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <Info className="w-4 h-4 text-cultr-forestLight" />
                     <h4 className="font-display font-bold text-cultr-text text-sm">How it works</h4>
@@ -1043,11 +1044,11 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
               )}
 
               {/* Disclaimer */}
-              <div className="bg-cultr-mint border border-cultr-sage rounded-2xl p-5">
+              <div className="grad-mint border border-cultr-sage rounded-2xl p-5">
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   <strong className="text-cultr-text">Disclaimer:</strong> This calculator provides estimates
                   based on established formulas. Individual needs vary based on genetics, body composition,
-                  medical conditions, and medications. Always consult your CULTR Health provider before making
+                  medical conditions, and medications. Always consult your <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health provider before making
                   significant dietary changes.
                 </p>
               </div>

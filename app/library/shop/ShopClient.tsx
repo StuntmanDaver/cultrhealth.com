@@ -62,7 +62,7 @@ function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       {product.imageUrl && (
         <Link href={`/library/shop/${encodeURIComponent(product.sku)}`}>
-          <div className="w-full h-48 bg-cultr-offwhite overflow-hidden">
+          <div className="w-full h-48 grad-light overflow-hidden">
             <img
               src={product.imageUrl}
               alt={product.name}
@@ -85,7 +85,7 @@ function ProductCard({ product }: ProductCardProps) {
               {product.volumeMl > 0 ? `${product.volumeMl}ml vial` : ''}
             </p>
           </div>
-          <span className="text-xs px-2 py-1 bg-cultr-mint rounded-full text-cultr-forest">
+          <span className="text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest">
             {getCategoryDisplayName(product.category)}
           </span>
         </div>
@@ -112,7 +112,7 @@ function ProductCard({ product }: ProductCardProps) {
               </span>
               <button
                 onClick={handleAddToCart}
-                className="p-2 bg-cultr-forest text-white rounded-lg hover:bg-cultr-forest/90 transition-colors"
+                className="p-2 grad-dark text-white rounded-lg hover:bg-cultr-forest/90 transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -120,7 +120,7 @@ function ProductCard({ product }: ProductCardProps) {
           ) : (
             <button
               onClick={handleAddToCart}
-              className="flex items-center gap-2 px-3 py-2 bg-cultr-forest text-white text-sm rounded-lg hover:bg-cultr-forest/90 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 grad-dark text-white text-sm rounded-lg hover:bg-cultr-forest/90 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add
@@ -161,9 +161,9 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
   }, [searchQuery, selectedCategory])
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
+    <div className="min-h-screen grad-light">
       {/* Header */}
-      <header className="bg-cultr-forest text-white py-6 px-6">
+      <header className="grad-dark text-white py-6 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -291,7 +291,7 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
         <div className="fixed bottom-6 right-6 md:hidden">
           <Link
             href="/library/cart"
-            className="flex items-center gap-2 px-4 py-3 bg-cultr-forest text-white rounded-full shadow-lg hover:bg-cultr-forest/90 transition-colors"
+            className="flex items-center gap-2 px-4 py-3 grad-dark text-white rounded-full shadow-lg hover:bg-cultr-forest/90 transition-colors"
           >
             <ShoppingCart className="w-5 h-5" />
             <span className="font-bold">{cartCount}</span>
@@ -301,10 +301,10 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
 
       {/* Disclaimer */}
       <div className="max-w-6xl mx-auto px-6 pb-8">
-        <div className="p-4 bg-cultr-mint border border-cultr-sage rounded-xl">
+        <div className="p-4 grad-mint border border-cultr-sage rounded-xl">
           <p className="text-xs text-cultr-textMuted">
             <strong className="text-cultr-text">Note:</strong> All products require a valid prescription.
-            Pricing is provided upon quote request. CULTR Health does not guarantee product availability.
+            Pricing is provided upon quote request. <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee product availability.
             Contact our team for current inventory and pricing.
           </p>
         </div>

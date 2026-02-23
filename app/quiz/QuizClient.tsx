@@ -59,10 +59,10 @@ export function QuizClient() {
     const plan = PLANS.find(p => p.slug === result.recommendedTier);
 
     return (
-      <div className="min-h-screen bg-cultr-offwhite">
+      <div className="min-h-screen grad-light">
         <div className="max-w-3xl mx-auto px-6 py-20">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-cultr-mint px-4 py-2 rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 grad-mint px-4 py-2 rounded-full mb-6">
               <Sparkles className="w-4 h-4 text-cultr-forest" />
               <span className="text-sm font-display font-medium text-cultr-forest">Your personalized match</span>
             </div>
@@ -136,7 +136,7 @@ export function QuizClient() {
 
   // ─── Quiz View ───
   return (
-    <div className="min-h-screen bg-cultr-offwhite flex flex-col">
+    <div className="min-h-screen grad-light flex flex-col">
       {/* Progress Bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-cultr-sage">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -157,28 +157,28 @@ export function QuizClient() {
             Exit
           </Link>
         </div>
-        <div className="h-1 bg-cultr-mint">
+        <div className="h-1 grad-mint">
           <div
-            className="h-full bg-cultr-forest transition-all duration-500 ease-out"
+            className="h-full grad-dark transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       {/* Question */}
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-xl text-center">
-          <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest mb-2">
+      <div className="flex-1 flex items-center justify-center px-6 py-20">
+        <div className="w-full max-w-3xl text-center">
+          <h2 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest mb-3">
             {question.question}
           </h2>
           {question.subtitle && (
-            <p className="text-cultr-textMuted mb-10">{question.subtitle}</p>
+            <p className="text-lg text-cultr-textMuted mb-12">{question.subtitle}</p>
           )}
-          {!question.subtitle && <div className="mb-10" />}
+          {!question.subtitle && <div className="mb-12" />}
 
           {/* Options */}
           {question.type === 'visual' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 max-w-2xl mx-auto">
               {question.options.map((option) => {
                 const isSelected = answers[question.id] === option.id;
                 return (
@@ -186,21 +186,21 @@ export function QuizClient() {
                     key={option.id}
                     onClick={() => handleSelect(option.id)}
                     className={`
-                      flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all duration-200
+                      flex flex-col items-center gap-4 p-8 rounded-2xl border-2 transition-all duration-200
                       ${isSelected
                         ? 'border-cultr-forest bg-cultr-mint scale-[1.02] shadow-lg'
                         : 'border-cultr-sage bg-white hover:border-cultr-forest/40 hover:shadow-md'
                       }
                     `}
                   >
-                    <span className="text-3xl">{option.emoji}</span>
-                    <span className="text-sm font-medium text-cultr-forest">{option.label}</span>
+                    <span className="text-4xl">{option.emoji}</span>
+                    <span className="text-base font-medium text-cultr-forest">{option.label}</span>
                   </button>
                 );
               })}
             </div>
           ) : question.type === 'multi' ? (
-            <div className="space-y-3">
+            <div className="space-y-4 max-w-2xl mx-auto">
               {question.options.map((option) => {
                 const selected = ((answers[question.id] as string[]) || []).includes(option.id);
                 return (
@@ -208,15 +208,15 @@ export function QuizClient() {
                     key={option.id}
                     onClick={() => handleSelect(option.id)}
                     className={`
-                      w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all duration-200
+                      w-full flex items-center gap-5 p-5 rounded-xl border-2 text-left transition-all duration-200
                       ${selected
                         ? 'border-cultr-forest bg-cultr-mint'
                         : 'border-cultr-sage bg-white hover:border-cultr-forest/40'
                       }
                     `}
                   >
-                    <span className="text-xl">{option.emoji}</span>
-                    <span className="font-medium text-cultr-forest">{option.label}</span>
+                    <span className="text-2xl">{option.emoji}</span>
+                    <span className="text-lg font-medium text-cultr-forest">{option.label}</span>
                     {selected && <Check className="w-5 h-5 text-cultr-forest ml-auto" />}
                   </button>
                 );
@@ -225,18 +225,18 @@ export function QuizClient() {
                 onClick={handleMultiContinue}
                 disabled={!answers[question.id] || (answers[question.id] as string[]).length === 0}
                 className={`
-                  mt-6 w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold transition-all
+                  mt-8 w-full flex items-center justify-center gap-2 py-5 rounded-xl text-lg font-semibold transition-all
                   ${answers[question.id] && (answers[question.id] as string[]).length > 0
                     ? 'bg-cultr-forest text-white hover:bg-cultr-forestDark shadow-lg'
                     : 'bg-cultr-sage/30 text-cultr-textMuted cursor-not-allowed'
                   }
                 `}
               >
-                Continue <ArrowRight className="w-4 h-4" />
+                Continue <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4 max-w-2xl mx-auto">
               {question.options.map((option) => {
                 const isSelected = answers[question.id] === option.id;
                 return (
@@ -244,7 +244,7 @@ export function QuizClient() {
                     key={option.id}
                     onClick={() => handleSelect(option.id)}
                     className={`
-                      w-full p-4 rounded-xl border-2 text-left font-medium transition-all duration-200
+                      w-full p-5 rounded-xl border-2 text-left font-medium text-lg transition-all duration-200
                       ${isSelected
                         ? 'border-cultr-forest bg-cultr-mint'
                         : 'border-cultr-sage bg-white hover:border-cultr-forest/40'

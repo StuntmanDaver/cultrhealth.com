@@ -32,7 +32,7 @@ export function Footer() {
   return (
     <footer>
       {/* Trust Badges */}
-      <div className="bg-cultr-mint border-b border-cultr-sage py-6">
+      <div className="grad-mint border-b border-cultr-sage py-6">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
             {trustBadges.map((badge) => (
@@ -46,7 +46,7 @@ export function Footer() {
       </div>
 
       {/* Links Section */}
-      <div className="relative bg-cultr-forest py-16 overflow-hidden">
+      <div className="relative grad-dark-glow py-16 overflow-hidden">
         {/* Radial glow — top center mint */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.06) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
@@ -57,7 +57,7 @@ export function Footer() {
                 CULTR
               </span>
             </Link>
-            <p className="text-sm text-white/50 mt-2">Change the CULTR, rebrand yourself.</p>
+            <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold tracking-[0.08em]">CULTR</span>, rebrand yourself.</p>
           </div>
 
           {/* Footer Links Grid */}
@@ -179,11 +179,11 @@ export function Footer() {
           {/* Bottom Section */}
           <div className="pt-8 border-t border-white/10">
             <p className="text-xs text-white/40 mb-4">
-              <strong className="text-white/60">Important Information:</strong> The Cultr website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice.
+              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold tracking-[0.08em]">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice.
             </p>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <p className="text-xs text-white/40">
-                © {new Date().getFullYear()} CULTR Health
+                © {new Date().getFullYear()} <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
               </p>
               <div className="flex gap-4 text-xs text-white/40">
                 <Link href="/legal/privacy" className="hover:text-cultr-sage transition-all duration-200">

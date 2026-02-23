@@ -602,7 +602,7 @@ const FAQ_SECTIONS: FAQSection[] = [
                 { title: 'Store', desc: 'Refrigerate immediately. Keep away from light. Use within 4-6 weeks.' },
               ].map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span className="w-6 h-6 rounded-full bg-cultr-forest text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-6 h-6 rounded-full grad-dark text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {i + 1}
                   </span>
                   <div>
@@ -663,7 +663,7 @@ const FAQ_SECTIONS: FAQSection[] = [
         question: 'How do I calculate my dose after reconstitution?',
         answer: (
           <>
-            <div className="my-3 p-4 bg-cultr-offwhite rounded-lg font-mono text-sm text-cultr-forest">
+            <div className="my-3 p-4 grad-light rounded-lg font-mono text-sm text-cultr-forest">
               Dose (units) = (Desired mcg &divide; Total mg in vial) &times; Total ml BAC water &times; 100
             </div>
             <Heading>Example</Heading>
@@ -1326,9 +1326,9 @@ export function PeptideFAQContent({ tier }: { tier: PlanTier | null }) {
   const totalQuestions = FAQ_SECTIONS.reduce((sum, s) => sum + s.items.length, 0)
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
+    <div className="min-h-screen grad-light">
       {/* ── Hero Header ──────────────────────────────────────────────── */}
-      <section className="bg-cultr-forest text-white py-12 md:py-16 px-6">
+      <section className="grad-dark text-white py-12 md:py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <Link
             href="/library"

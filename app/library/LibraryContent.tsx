@@ -58,7 +58,7 @@ export function LibraryContent({
           <div className="flex items-center justify-between h-16">
             {/* Logo & Tier Badge */}
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-xl font-display font-bold text-stone-900">
+              <Link href="/" className="text-xl font-display font-bold tracking-[0.08em] text-stone-900">
                 CULTR
               </Link>
               <span className="hidden sm:inline-flex px-3 py-1 bg-stone-900 text-white text-xs font-medium rounded-full">
@@ -173,7 +173,7 @@ export function LibraryContent({
                 <strong className="text-stone-700">Disclaimer:</strong> All peptides listed are for research purposes only.
                 This information is educational and should not be considered medical advice.
                 Always consult with a qualified healthcare provider before using any compound.
-                CULTR Health does not sell or distribute peptides directly.
+                <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not sell or distribute peptides directly.
               </p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export function LibraryContent({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-display font-bold text-stone-900">
-                    CULTR {tierDisplay}
+                    <span className="tracking-[0.08em]">CULTR</span> {tierDisplay}
                   </p>
                   <p className="text-stone-500 text-sm mt-1">{email}</p>
                 </div>
@@ -213,7 +213,7 @@ export function LibraryContent({
                 href={STRIPE_CONFIG.customerPortalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
               >
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                   <CreditCard className="w-6 h-6 text-blue-700" />
@@ -228,7 +228,7 @@ export function LibraryContent({
                 href={STRIPE_CONFIG.customerPortalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
               >
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                   <Settings className="w-6 h-6 text-purple-700" />
@@ -256,7 +256,7 @@ export function LibraryContent({
                 </p>
                 <Link
                   href="/pricing"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-stone-900 rounded-full text-sm font-medium hover:bg-stone-100 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 grad-white text-stone-900 rounded-full text-sm font-medium hover:bg-stone-100 transition-colors"
                 >
                   View All Plans
                   <ArrowRight className="w-4 h-4" />

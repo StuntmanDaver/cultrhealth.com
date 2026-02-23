@@ -3,7 +3,7 @@ import { getSession, getMembershipTier, hasFeatureAccess } from '@/lib/auth'
 import { DosingCalculatorClient } from './DosingCalculatorClient'
 
 export const metadata = {
-  title: 'Cultr Calculator | Peptide Dosing Calculator',
+  title: 'CULTR Calculator | Peptide Dosing Calculator',
   description: 'Calculate peptide reconstitution and dosing with our precision calculator.',
 }
 

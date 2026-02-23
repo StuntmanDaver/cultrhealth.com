@@ -38,7 +38,7 @@ function MetricCard({
             <p className="text-xs text-cultr-textMuted mt-1">{subtitle}</p>
           )}
         </div>
-        <div className="w-10 h-10 rounded-xl bg-cultr-mint flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl grad-mint flex items-center justify-center">
           <Icon className="w-5 h-5 text-cultr-forest" />
         </div>
       </div>
@@ -71,7 +71,7 @@ function TierProgressBar({ tier, recruitCount }: { tier: number; recruitCount: n
 
       <div className="w-full bg-stone-100 rounded-full h-3">
         <div
-          className="bg-cultr-forest rounded-full h-3 transition-all duration-500"
+          className="grad-dark rounded-full h-3 transition-all duration-500"
           style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
         />
       </div>
@@ -194,7 +194,7 @@ export default function CreatorDashboardPage() {
       <div className="grid md:grid-cols-3 gap-4">
         <Link
           href="/creators/portal/share"
-          className="bg-cultr-forest text-white rounded-2xl p-5 hover:bg-cultr-forestDark transition-colors group"
+          className="grad-dark text-white rounded-2xl p-5 hover:bg-cultr-forestDark transition-colors group"
         >
           <div className="flex items-center justify-between">
             <div>

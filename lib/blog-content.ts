@@ -80,7 +80,9 @@ async function parseBlogPost(filePath: string): Promise<BlogPost | null> {
       return null
     }
 
-    const htmlContent = await marked(content)
+    let htmlContent = await marked(content)
+    // Brand-style CULTR in rendered HTML (skip if already inside a tag attribute)
+    htmlContent = htmlContent.replace(/(?<![<\w"])CULTR(?!["\w>])/g, '<span class="font-display font-bold">CULTR</span>')
 
     return {
       title: data.title,

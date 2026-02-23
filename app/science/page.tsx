@@ -48,7 +48,7 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
             </div>
             {/* Category badge */}
             <div className="absolute top-4 left-4">
-              <span className="px-3 py-1 bg-cultr-forest text-white text-xs font-display font-medium rounded-full">
+              <span className="px-3 py-1 grad-dark-glow text-white text-xs font-display font-medium rounded-full">
                 {post.category}
               </span>
             </div>
@@ -125,7 +125,7 @@ export default async function SciencePage({
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-24 md:py-32 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
@@ -142,7 +142,7 @@ export default async function SciencePage({
       </section>
 
       {/* Category Filter */}
-      <section className="py-8 px-6 bg-white border-b border-cultr-sage sticky top-16 z-40">
+      <section className="py-8 px-6 grad-white border-b border-cultr-sage sticky top-16 z-40">
         <div className="max-w-5xl mx-auto">
           <CategoryFilter activeCategory={activeCategory} />
         </div>
@@ -150,7 +150,7 @@ export default async function SciencePage({
 
       {/* Featured Articles (only show on 'all' category) */}
       {activeCategory === 'all' && featuredPosts.length > 0 && (
-        <section className="py-16 px-6 bg-cultr-offwhite">
+        <section className="py-16 px-6 grad-light">
           <div className="max-w-7xl mx-auto">
             <ScrollReveal>
               <h2 className="text-2xl font-display font-bold text-cultr-forest mb-8">
@@ -167,7 +167,7 @@ export default async function SciencePage({
       )}
 
       {/* All Articles */}
-      <section className="py-16 px-6 bg-white">
+      <section className="py-16 px-6 grad-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
             <div className="flex items-center justify-between mb-8">
@@ -209,7 +209,7 @@ export default async function SciencePage({
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-16 px-6 bg-cultr-mint">
+      <section className="py-16 px-6 grad-mint">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-2xl font-display font-bold text-cultr-forest mb-4">
@@ -220,9 +220,9 @@ export default async function SciencePage({
             </p>
             <Link
               href="/pricing"
-              className="inline-flex items-center px-6 py-3 bg-cultr-forest text-white rounded-lg font-medium hover:bg-cultr-forest/90 transition-colors"
+              className="inline-flex items-center px-6 py-3 grad-dark text-white rounded-lg font-medium hover:bg-cultr-forest/90 transition-colors"
             >
-              Join CULTR Health
+              Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </ScrollReveal>
@@ -232,7 +232,7 @@ export default async function SciencePage({
       {/* CTA */}
       <CTASection
         title="Ready to optimize your health?"
-        subtitle="Join thousands taking control of their biology with CULTR's personalized protocols."
+        subtitle="Join thousands taking control of their biology with personalized protocols."
         ctaText="Get Started"
       />
     </div>

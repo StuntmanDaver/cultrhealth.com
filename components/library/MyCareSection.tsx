@@ -40,7 +40,7 @@ export function MyCareSection({ tier }: MyCareSectionProps) {
       {/* Lab Instructions Link */}
       <Link
         href="/library/lab-instructions"
-        className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+        className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
       >
         <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:bg-amber-200 transition-colors">
           <BookOpen className="w-6 h-6 text-amber-700" />

@@ -74,7 +74,7 @@ export function ShippingAddressForm() {
             id="state"
             value={formData.shippingAddress?.state || ''}
             onChange={(e) => updateAddress('state', e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:ring-2 focus:ring-stone-100 outline-none transition-all bg-white"
+            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-400 focus:ring-2 focus:ring-stone-100 outline-none transition-all grad-white"
           >
             <option value="">Select...</option>
             {US_STATES.map((state) => (

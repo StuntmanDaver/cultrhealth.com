@@ -15,7 +15,7 @@ export default function CommunityPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative py-24 md:py-32 px-6 bg-cultr-forest overflow-hidden">
+      <section className="relative py-24 md:py-32 px-6 grad-dark-glow overflow-hidden">
         {/* Radial glow — top center mint */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -79,7 +79,7 @@ export default function CommunityPage() {
       </section>
 
       {/* Feed Section */}
-      <section className="relative py-12 md:py-16 px-6 bg-cultr-offwhite overflow-hidden">
+      <section className="relative py-12 md:py-16 px-6 grad-light overflow-hidden">
         {/* Radial glow — center */}
         <div
           className="absolute inset-0 pointer-events-none"

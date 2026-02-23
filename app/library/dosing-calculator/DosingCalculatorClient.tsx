@@ -9,7 +9,7 @@ const VIAL_OPTIONS = [5, 10, 15, 50, 100] as const
 const WATER_OPTIONS = [1, 2, 3, 5] as const
 const SYRINGE_OPTIONS = [0.3, 0.5, 1.0] as const
 const DOSE_PRESETS_MCG = [100, 250, 500, 1000] as const
-const DOSE_PRESETS_MG = [0.25, 0.5, 1.0, 2.5] as const
+const DOSE_PRESETS_MG = [0.25, 0.5, 1.0, 2.5, 5, 10] as const
 
 type PillButtonProps = {
   options: readonly number[]
@@ -282,9 +282,9 @@ export function DosingCalculatorClient({ email }: { email: string }) {
   const hasValidResult = !isNaN(result.drawUnitsU100) && result.warnings.filter(w => !w.includes('Syringe')).length === 0
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen grad-white">
       {/* Header */}
-      <section className="py-12 px-6 bg-cultr-forest text-white">
+      <section className="py-12 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto">
           <Link
             href="/library"
@@ -298,7 +298,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               <Calculator className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-display font-bold">Cultr Calculator</h1>
+              <h1 className="text-3xl font-display font-bold"><span className="tracking-[0.08em]">CULTR</span> Calculator</h1>
               <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
             </div>
           </div>
@@ -312,7 +312,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
             {/* Inputs Panel */}
             <div className="space-y-8">
               {/* Vial Amount */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <FlaskConical className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Vial Amount</h3>
@@ -330,20 +330,25 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                       placeholder="Enter mg"
                       value={customVial}
                       onChange={(e) => setCustomVial(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
                     />
                   </div>
                 )}
                 <p className="mt-3 text-xs text-cultr-textMuted">
                   Total peptide content in your vial
                 </p>
-                <p className="mt-1 text-xs text-cultr-textMuted italic">
-                  If it&apos;s a blend (for example, 12 mg + 6 mg), add the amounts together—so the total is 18 mg.
-                </p>
+                {/* Blend tip callout */}
+                <div className="mt-3 flex items-start gap-2 bg-cultr-mint/60 border border-cultr-sage rounded-xl px-4 py-3">
+                  <span className="text-sm leading-none mt-0.5">💡</span>
+                  <div className="text-xs text-cultr-text">
+                    <span className="font-semibold">Tip — Blends:</span> Add the mg values together.{' '}
+                    <span className="text-cultr-textMuted">e.g. 12 mg + 6 mg = <strong>18 mg</strong> total</span>
+                  </div>
+                </div>
               </div>
 
               {/* Diluent (Water) */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Droplets className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Bacteriostatic Water</h3>
@@ -362,7 +367,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                       value={customWater}
                       onChange={(e) => setCustomWater(e.target.value)}
                       step="0.1"
-                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
                     />
                   </div>
                 )}
@@ -372,7 +377,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Desired Dose */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Syringe className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Desired Dose</h3>
@@ -425,7 +430,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                           placeholder="Enter mcg"
                           value={customDose}
                           onChange={(e) => setCustomDose(e.target.value)}
-                          className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                          className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
                         />
                       </div>
                     )}
@@ -446,7 +451,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                           value={customDose}
                           onChange={(e) => setCustomDose(e.target.value)}
                           step="0.01"
-                          className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                          className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
                         />
                       </div>
                     )}
@@ -462,7 +467,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               </div>
 
               {/* Syringe Size */}
-              <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6">
+              <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <Syringe className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Syringe Size (Optional)</h3>
@@ -481,7 +486,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
                       value={customSyringe}
                       onChange={(e) => setCustomSyringe(e.target.value)}
                       step="0.1"
-                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage bg-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
+                      className="w-full px-4 py-3 rounded-lg border border-cultr-sage grad-white text-cultr-text focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 outline-none transition-all"
                     />
                   </div>
                 )}
@@ -494,7 +499,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
             {/* Results Panel (top-24 accounts for header height) */}
             <div className="lg:sticky lg:top-24 h-fit space-y-6">
               {/* Main Result with Syringe Visual */}
-              <div className="bg-cultr-forest text-white rounded-2xl p-8">
+              <div className="grad-dark text-white rounded-2xl p-8">
                 <h3 className="font-display font-bold text-lg mb-6 text-white/80">Draw Amount</h3>
                 
                 {hasValidResult ? (
@@ -555,7 +560,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
 
               {/* Additional Stats */}
               {hasValidResult && (
-                <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-6 space-y-4">
+                <div className="grad-light border border-cultr-sage rounded-2xl p-6 space-y-4">
                   <h4 className="font-display font-bold text-cultr-text">Reconstitution Details</h4>
                   
                   <div className="grid grid-cols-2 gap-4">
@@ -584,7 +589,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               )}
 
               {/* Info Card */}
-              <div className="bg-cultr-mint border border-cultr-sage rounded-2xl p-5">
+              <div className="grad-mint border border-cultr-sage rounded-2xl p-5">
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   <strong className="text-cultr-text">Note:</strong> This calculator uses the U-100 insulin syringe scale 
                   where 100 units = 1 mL. Always verify calculations with your healthcare provider before administration.

@@ -5,6 +5,7 @@ import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import { ArrowRight, MessageCircle } from 'lucide-react';
+import { brandify } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -17,7 +18,7 @@ export default function FAQPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-24 md:py-32 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
@@ -26,7 +27,7 @@ export default function FAQPage() {
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Everything you need to know about CULTR Health, our memberships, and how we can help you optimize your health.
+              Everything you need to know about <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health, our memberships, and how we can help you optimize your health.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>
@@ -45,7 +46,7 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Sections */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-24 px-6 grad-white">
         <div className="max-w-3xl mx-auto space-y-16">
 
           {/* Membership */}
@@ -69,7 +70,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'Do you accept HSA/FSA?',
-                  answer: 'Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.',
+                  answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.'),
                 },
               ]} />
             </div>
@@ -84,7 +85,7 @@ export default function FAQPage() {
               <FAQAccordion items={[
                 {
                   question: 'Who is CULTR Health for?',
-                  answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.',
+                  answer: brandify('CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.'),
                 },
                 {
                   question: 'What if I am not eligible for treatment?',
@@ -100,7 +101,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'What states do you operate in?',
-                  answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.',
+                  answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.'),
                 },
               ]} />
             </div>
@@ -123,7 +124,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'What labs are included?',
-                  answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
+                  answer: 'We test 28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
                 },
                 {
                   question: 'Where do medications come from?',
@@ -163,10 +164,10 @@ export default function FAQPage() {
       </section>
 
       {/* Still Have Questions */}
-      <section className="py-16 px-6 bg-cultr-offwhite border-y border-cultr-sage">
+      <section className="py-16 px-6 grad-light border-y border-cultr-sage">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
-            <div className="w-16 h-16 rounded-full bg-cultr-mint flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-full grad-mint flex items-center justify-center mx-auto mb-6">
               <MessageCircle className="w-8 h-8 text-cultr-forest" />
             </div>
             <h3 className="text-2xl font-display font-bold text-cultr-forest mb-4">
@@ -187,7 +188,7 @@ export default function FAQPage() {
       {/* CTA */}
       <CTASection
         title="Ready to optimize your health?"
-        subtitle="Join thousands taking control of their biology with CULTR."
+        subtitle="Join thousands taking control of their biology."
         ctaText="Get Started"
       />
     </div>

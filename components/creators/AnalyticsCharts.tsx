@@ -148,7 +148,7 @@ export function AnalyticsCharts({
           </div>
           <div className="w-full bg-stone-100 rounded-full h-2">
             <div
-              className="bg-cultr-forest rounded-full h-2 transition-all duration-500"
+              className="grad-dark rounded-full h-2 transition-all duration-500"
               style={{ width: `${Math.min(100, conversionRate * 10)}%` }}
             />
           </div>

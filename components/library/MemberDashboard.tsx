@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans';
 import { TierGate } from '@/components/library/TierGate';
+import { brandify } from '@/lib/utils';
 
 interface MemberDashboardProps {
   tier: PlanTier | null;
@@ -350,7 +351,7 @@ export function MemberDashboard({
                 <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
             </TierGate>
-            <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
+            <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
               <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
                 <FileText className="w-6 h-6 text-stone-600" />
               </div>
@@ -370,11 +371,11 @@ export function MemberDashboard({
             <TierGate
               requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Join CULTR Club to unlock dosing calculators."
+              upgradeMessage={brandify("Join CULTR Club to unlock dosing calculators.")}
             >
               <Link
                 href="/library/dosing-calculator"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
               >
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                   <Scale className="w-6 h-6 text-purple-700" />
@@ -389,11 +390,11 @@ export function MemberDashboard({
             <TierGate
               requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Join CULTR Club to unlock the calorie calculator."
+              upgradeMessage={brandify("Join CULTR Club to unlock the calorie calculator.")}
             >
               <Link
                 href="/library/calorie-calculator"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
               >
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                   <Flame className="w-6 h-6 text-orange-700" />
@@ -407,7 +408,7 @@ export function MemberDashboard({
             </TierGate>
             <Link
               href="/library/peptide-faq"
-              className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+              className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
             >
               <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
                 <HelpCircle className="w-6 h-6 text-teal-700" />
@@ -421,11 +422,11 @@ export function MemberDashboard({
             <TierGate
               requiredTier="club"
               currentTier={tier}
-              upgradeMessage="Join CULTR Club to unlock stacking guides."
+              upgradeMessage={brandify("Join CULTR Club to unlock stacking guides.")}
             >
               <Link
                 href="/library/stack-guides"
-                className="group flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
               >
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                   <Dumbbell className="w-6 h-6 text-orange-700" />
@@ -449,7 +450,7 @@ export function MemberDashboard({
               currentTier={tier}
               upgradeMessage="Upgrade to Concierge to unlock provider note templates."
             >
-              <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
+              <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
                 <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-stone-600" />
                 </div>
@@ -464,7 +465,7 @@ export function MemberDashboard({
               currentTier={tier}
               upgradeMessage="Upgrade to Concierge to unlock custom protocol requests."
             >
-              <div className="flex items-center gap-4 px-6 py-5 bg-white border border-stone-200 rounded-2xl">
+              <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
                 <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
                   <Brain className="w-6 h-6 text-stone-600" />
                 </div>

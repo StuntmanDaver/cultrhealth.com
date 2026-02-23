@@ -16,7 +16,7 @@ export function brandify(text: string): React.ReactNode {
   if (parts.length === 1) return text
   return parts.map((part, i) =>
     part === 'CULTR'
-      ? React.createElement('span', { key: i, className: 'font-display font-bold' }, 'CULTR')
+      ? React.createElement('span', { key: i, className: 'font-display font-bold tracking-[0.08em]' }, 'CULTR')
       : part
   )
 }

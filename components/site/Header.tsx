@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 
 const navLinks = [
-  { href: '/quiz', label: 'Take the Quiz' },
   { href: '/pricing', label: 'Pricing', hasDropdown: false },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/science', label: 'Science' },
+  { href: '/science', label: 'Latest Research' },
 ];
 
 const rightNavLinks = [
@@ -58,10 +57,21 @@ export function Header() {
             pointer-events-auto w-full
             transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
             ${scrolled
-              ? 'max-w-[1080px] bg-brand-cream/[0.88] backdrop-blur-[20px] border border-brand-primary/10 rounded-[60px] shadow-[0_8px_32px_rgba(42,69,66,0.09),0_2px_6px_rgba(42,69,66,0.04)]'
-              : 'max-w-full bg-brand-cream/[0.97] backdrop-blur-sm border-b border-brand-primary/[0.07] rounded-none shadow-[0_1px_8px_rgba(42,69,66,0.04)]'
+              ? 'max-w-[1080px] rounded-[60px] shadow-lux-lg'
+              : 'max-w-full rounded-none shadow-[0_1px_8px_rgba(42,69,66,0.04)]'
             }
           `}
+          style={scrolled ? {
+            background: 'rgba(252, 251, 247, 0.72)',
+            backdropFilter: 'blur(24px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
+            border: '1px solid rgba(43, 69, 66, 0.08)',
+          } : {
+            background: 'rgba(252, 251, 247, 0.95)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderBottom: '1px solid rgba(43, 69, 66, 0.06)',
+          }}
         >
           <div
             className={`
@@ -96,7 +106,20 @@ export function Header() {
                 </div>
               </Link>
 
-              <nav className="hidden lg:flex items-center gap-0.5">
+              <nav className="hidden lg:flex items-center gap-0.5 ml-4">
+                <Link
+                  href="/quiz"
+                  className={`
+                    inline-flex items-center justify-center font-body font-medium text-white
+                    bg-brand-primary rounded-full whitespace-nowrap mr-2
+                    shadow-[0_2px_8px_rgba(43,69,66,0.18)]
+                    transition-all duration-250 ease-out
+                    hover:bg-brand-primaryLight hover:shadow-[0_4px_20px_rgba(43,69,66,0.22)] hover:-translate-y-px
+                    ${scrolled ? 'text-[12.5px] py-[7px] px-5' : 'text-[13.5px] py-[9px] px-6'}
+                  `}
+                >
+                  Get Started
+                </Link>
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
@@ -136,19 +159,6 @@ export function Header() {
                   )}
                 </Link>
               ))}
-              <Link
-                href="/quiz"
-                className={`
-                  inline-flex items-center justify-center font-body font-medium text-white
-                  bg-brand-primary rounded-full whitespace-nowrap
-                  shadow-[0_2px_8px_rgba(43,69,66,0.18)]
-                  transition-all duration-250 ease-out
-                  hover:bg-brand-primaryLight hover:shadow-[0_4px_20px_rgba(43,69,66,0.22)] hover:-translate-y-px
-                  ${scrolled ? 'text-[12.5px] py-[7px] px-5' : 'text-[13.5px] py-[9px] px-6'}
-                `}
-              >
-                Get Started
-              </Link>
             </div>
 
             {/* Mobile Toggle — animated 3-bar hamburger */}

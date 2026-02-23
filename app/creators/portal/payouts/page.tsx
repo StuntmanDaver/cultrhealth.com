@@ -149,7 +149,7 @@ export default function PayoutsPage() {
         <button
           onClick={handleSaveMethod}
           disabled={saving || selectedMethod === payoutMethod}
-          className="px-5 py-2.5 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
+          className="px-5 py-2.5 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save Method'}
         </button>

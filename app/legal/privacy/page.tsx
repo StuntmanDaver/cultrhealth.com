@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen grad-white">
       {/* Header */}
-      <section className="py-16 px-6 bg-cultr-forest text-white">
+      <section className="py-16 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto">
           <Link href="/" className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm mb-6">
             <ArrowLeft className="w-4 h-4" />
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">
-              Your privacy is critically important to us. This policy details how CULTR Health (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your information.
+              Your privacy is critically important to us. This policy details how <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your information.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">1. Information We Collect</h2>

@@ -18,6 +18,7 @@ import {
   Shield,
   Sparkles,
 } from 'lucide-react';
+import { brandify } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -81,7 +82,7 @@ export default function HowItWorksPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
@@ -109,13 +110,13 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Timeline Overview */}
-      <section className="py-16 px-6 bg-cultr-mint border-b border-cultr-sage">
+      <section className="py-16 px-6 grad-mint border-b border-cultr-sage">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { icon: Clock, label: '24-48 hrs', sublabel: 'First appointment' },
-              { icon: FlaskConical, label: '50+', sublabel: 'Lab markers tested' },
-              { icon: Dna, label: '100+', sublabel: 'Peptide protocols' },
+              { icon: FlaskConical, label: '28–59', sublabel: 'Biomarkers (SiPho Health)' },
+              { icon: Dna, label: '60+', sublabel: 'Peptide protocols' },
               { icon: MessageCircle, label: 'Unlimited', sublabel: 'Provider messaging' },
             ].map((stat, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
@@ -133,12 +134,12 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Safety & Compliance - MOVED ABOVE Four Steps */}
-      <section className="py-16 md:py-20 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
-            <div className="p-8 md:p-12 rounded-2xl bg-cultr-mint border border-cultr-sage">
+            <div className="p-8 md:p-12 rounded-2xl grad-mint border border-cultr-sage">
               <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="w-16 h-16 rounded-xl bg-cultr-forest flex items-center justify-center shrink-0">
+                <div className="w-16 h-16 rounded-xl grad-dark flex items-center justify-center shrink-0">
                   <Shield className="w-8 h-8 text-white" />
                 </div>
                 <div>
@@ -146,7 +147,7 @@ export default function HowItWorksPage() {
                     Safety is our priority
                   </h3>
                   <p className="text-cultr-textMuted mb-6 leading-relaxed">
-                    CULTR is a licensed medical practice. We screen all patients for contraindications and safety risks. Our providers follow evidence-based protocols and monitor your progress closely.
+                    <span className="font-display font-bold tracking-[0.08em]">CULTR</span> is a licensed medical practice. We screen all patients for contraindications and safety risks. Our providers follow evidence-based protocols and monitor your progress closely.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[
@@ -169,7 +170,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Steps - Detailed (Four Steps to Transformation) */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 grad-light">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -187,7 +188,7 @@ export default function HowItWorksPage() {
                   {/* Content */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="text-xs font-display font-bold text-cultr-forest tracking-widest bg-cultr-mint px-3 py-1 rounded-full">
+                      <span className="text-xs font-display font-bold text-cultr-forest tracking-widest grad-mint px-3 py-1 rounded-full">
                         STEP {step.step}
                       </span>
                     </div>
@@ -200,7 +201,7 @@ export default function HowItWorksPage() {
                     <ul className="space-y-3">
                       {step.features.map((feature, j) => (
                         <li key={j} className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full bg-cultr-forest flex items-center justify-center shrink-0">
+                          <div className="w-5 h-5 rounded-full grad-dark flex items-center justify-center shrink-0">
                             <Check className="w-3 h-3 text-white" />
                           </div>
                           <span className="text-cultr-text text-sm">{feature}</span>
@@ -212,7 +213,7 @@ export default function HowItWorksPage() {
                   {/* Visual */}
                   <div className="flex-1 w-full max-w-md">
                     <div className="relative p-8 rounded-2xl bg-white border border-cultr-sage">
-                      <div className="w-16 h-16 rounded-xl bg-cultr-forest flex items-center justify-center mx-auto mb-6">
+                      <div className="w-16 h-16 rounded-xl grad-dark flex items-center justify-center mx-auto mb-6">
                         <step.icon className="w-8 h-8 text-white" />
                       </div>
                       <div className="text-center">
@@ -233,7 +234,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-16 md:py-20 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -249,7 +250,7 @@ export default function HowItWorksPage() {
               {
                 icon: FlaskConical,
                 title: 'Comprehensive Lab Testing',
-                desc: 'Full metabolic panels, hormone testing, inflammation markers, and 50+ biomarkers analyzed.',
+                desc: 'Full metabolic panels, hormone testing, inflammation markers, and 28 biomarkers per test (upgradeable up to 59), provided by SiPho Health.',
               },
               {
                 icon: Dna,
@@ -278,8 +279,8 @@ export default function HowItWorksPage() {
               },
             ].map((feature, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-6 rounded-xl bg-cultr-offwhite border border-cultr-sage hover:border-cultr-forest/40 transition-colors h-full">
-                  <div className="w-12 h-12 rounded-xl bg-cultr-mint flex items-center justify-center mb-4">
+                <div className="p-6 rounded-xl grad-light border border-cultr-sage hover:border-cultr-forest/40 transition-colors h-full">
+                  <div className="w-12 h-12 rounded-xl grad-mint flex items-center justify-center mb-4">
                     <feature.icon className="w-6 h-6 text-cultr-forest" />
                   </div>
                   <h3 className="text-lg font-display font-bold text-cultr-text mb-2">{feature.title}</h3>
@@ -292,14 +293,14 @@ export default function HowItWorksPage() {
       </section>
 
       {/* FAQ Sections - MOVED FROM /faq page */}
-      <section id="faq" className="py-16 md:py-20 px-6 bg-cultr-offwhite scroll-mt-20">
+      <section id="faq" className="py-16 md:py-20 px-6 grad-light scroll-mt-20">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Frequently asked questions
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              Everything you need to know about CULTR Health, our memberships, and how we can help you optimize your health.
+              Everything you need to know about <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health, our memberships, and how we can help you optimize your health.
             </p>
           </ScrollReveal>
 
@@ -325,7 +326,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'Do you accept HSA/FSA?',
-                    answer: 'Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.',
+                    answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.'),
                   },
                 ]} />
               </div>
@@ -340,7 +341,7 @@ export default function HowItWorksPage() {
                 <FAQAccordion items={[
                   {
                     question: 'Who is CULTR Health for?',
-                    answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.',
+                    answer: brandify('CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.'),
                   },
                   {
                     question: 'What if I am not eligible for treatment?',
@@ -356,7 +357,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'What states do you operate in?',
-                    answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.',
+                    answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.'),
                   },
                 ]} />
               </div>
@@ -379,7 +380,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'What labs are included?',
-                    answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
+                    answer: 'We test 28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
                   },
                   {
                     question: 'Where do medications come from?',
@@ -420,10 +421,10 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Still Have Questions */}
-      <section className="py-16 px-6 bg-white border-y border-cultr-sage">
+      <section className="py-16 px-6 grad-white border-y border-cultr-sage">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
-            <div className="w-16 h-16 rounded-full bg-cultr-mint flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-full grad-mint flex items-center justify-center mx-auto mb-6">
               <MessageCircle className="w-8 h-8 text-cultr-forest" />
             </div>
             <h3 className="text-2xl font-display font-bold text-cultr-forest mb-4">

@@ -27,7 +27,7 @@ export default function TherapiesPage() {
   return (
     <div className="flex flex-col">
       {/* Hero — compact */}
-      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 bg-cultr-forest text-white">
+      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
@@ -37,6 +37,9 @@ export default function TherapiesPage() {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 leading-tight">
               Core Therapies
             </h1>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mt-1 mb-2">
+              <span className="text-sm text-cultr-sage font-semibold">Over 60 therapies available</span>
+            </div>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-lg text-white/80 max-w-2xl mx-auto">
@@ -48,7 +51,7 @@ export default function TherapiesPage() {
       </section>
 
       {/* 100+ Therapies — inline banner */}
-      <section className="py-5 px-6 bg-cultr-mint border-b border-cultr-sage">
+      <section className="py-5 px-6 grad-mint border-b border-cultr-sage">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-cultr-forest/10 flex items-center justify-center shrink-0">
@@ -56,7 +59,7 @@ export default function TherapiesPage() {
             </div>
             <div>
               <p className="font-display font-bold text-cultr-forest text-sm">
-                Over 100 therapies available
+                Over 60 therapies available
               </p>
               <p className="text-xs text-cultr-textMuted">
                 Become a member to access our full catalog of peptide blends and optimization protocols.
@@ -79,13 +82,13 @@ export default function TherapiesPage() {
         return (
           <section
             key={section.title}
-            className={`py-10 md:py-14 px-6 ${isAlt ? 'bg-cultr-offwhite' : 'bg-white'}`}
+            className={`py-10 md:py-14 px-6 ${isAlt ? 'grad-light' : 'grad-white'}`}
           >
             <div className="max-w-6xl mx-auto">
               {/* Section Header */}
               <ScrollReveal className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-cultr-mint flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full grad-mint flex items-center justify-center">
                     <Icon className="w-4 h-4 text-cultr-forest" />
                   </div>
                   <h2 className="text-xl md:text-2xl font-display font-bold text-cultr-forest">
@@ -106,7 +109,7 @@ export default function TherapiesPage() {
                         <h3 className="text-base font-display font-bold text-cultr-forest">
                           {therapy.name}
                         </h3>
-                        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-cultr-forest bg-cultr-mint px-2 py-0.5 rounded-full">
+                        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-cultr-forest grad-mint px-2 py-0.5 rounded-full">
                           {therapy.badge}
                         </span>
                       </div>
@@ -130,7 +133,7 @@ export default function TherapiesPage() {
       })}
 
       {/* Ready to Get Started */}
-      <section className="py-10 md:py-14 px-6 bg-cultr-forest">
+      <section className="py-10 md:py-14 px-6 grad-dark">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
@@ -150,14 +153,14 @@ export default function TherapiesPage() {
       </section>
 
       {/* Medical Disclaimer */}
-      <section className="py-8 px-6 bg-white border-b border-cultr-sage">
+      <section className="py-8 px-6 grad-white border-b border-cultr-sage">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
             <p className="text-xs text-cultr-textMuted leading-relaxed">
               <span className="font-semibold text-cultr-text">Medical Disclaimer:</span>{' '}
               All therapies listed require physician evaluation and prescription.
-              CULTR Health does not guarantee specific results. Outcomes vary by
+              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Outcomes vary by
               individual. If you have a medical emergency, call 911.
             </p>
           </div>

@@ -150,7 +150,7 @@ export const productEducation: Record<string, ResourceEntry> = {
         <SectionHeading>CULTR Starter ($199/mo)</SectionHeading>
         <BulletList items={[
           'Quarterly telehealth consultations',
-          'Comprehensive lab panel (50+ biomarkers)',
+          'Comprehensive lab panel (28–59 biomarkers)',
           'Basic messaging access with care team',
           'Standard protocol reviews',
           'Peptide Library access',
@@ -160,7 +160,7 @@ export const productEducation: Record<string, ResourceEntry> = {
         <SectionHeading>CULTR Creator ($299/mo)</SectionHeading>
         <BulletList items={[
           'Monthly telehealth consultations',
-          'Comprehensive lab panel (50+ biomarkers)',
+          'Comprehensive lab panel (28–59 biomarkers)',
           'Priority messaging with 24-hour response time',
           'Custom protocol reviews',
           'Full Peptide Library + Protocol Engine access',
@@ -170,7 +170,7 @@ export const productEducation: Record<string, ResourceEntry> = {
         <SectionHeading>CULTR Cognition ($399/mo)</SectionHeading>
         <BulletList items={[
           'Bi-weekly telehealth consultations',
-          'Comprehensive lab panel (50+ biomarkers)',
+          'Comprehensive lab panel (28–59 biomarkers)',
           'Priority messaging with 24-hour response time',
           'Advanced protocol reviews',
           'Priority scheduling',
@@ -220,13 +220,13 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <SectionHeading>General Questions</SectionHeading>
 
         <SubHeading>&quot;What is CULTR Health?&quot;</SubHeading>
-        <CopyBlock>{`CULTR is a telehealth platform that combines comprehensive lab testing (50+ biomarkers), licensed providers, and personalized protocols including peptides and GLP-1 medications. Plans start at $199/mo.`}</CopyBlock>
+        <CopyBlock>{`CULTR is a telehealth platform that combines comprehensive lab testing (28–59 biomarkers), licensed providers, and personalized protocols including peptides and GLP-1 medications. Plans start at $199/mo.`}</CopyBlock>
 
         <SubHeading>&quot;Is this legit / a scam?&quot;</SubHeading>
         <CopyBlock>{`CULTR is a licensed medical practice with board-certified providers. All medications come from licensed US pharmacies. The platform is HIPAA compliant. It's real healthcare, delivered through telehealth.`}</CopyBlock>
 
         <SubHeading>&quot;How is this different from my doctor?&quot;</SubHeading>
-        <CopyBlock>{`Most doctors test 5-10 basic blood markers and focus on disease treatment. CULTR tests 50+ biomarkers and focuses on optimization \u2014 helping you go from "fine" to feeling your best. Plus, appointments are available within 24-48 hours, not 2-4 weeks.`}</CopyBlock>
+        <CopyBlock>{`Most doctors test 5-10 basic blood markers and focus on disease treatment. CULTR tests 28–59 biomarkers and focuses on optimization \u2014 helping you go from "fine" to feeling your best. Plus, appointments are available within 24-48 hours, not 2-4 weeks.`}</CopyBlock>
 
         <SectionHeading>Cost & Coverage</SectionHeading>
 

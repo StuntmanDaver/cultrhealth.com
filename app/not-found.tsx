@@ -3,7 +3,7 @@ import { ArrowRight, Search } from 'lucide-react';
 
 export default function NotFound() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center bg-brand-cream">
+        <div className="flex flex-col items-center justify-center min-h-[70vh] px-6 text-center grad-light">
             <div className="space-y-6 max-w-lg">
                 <div className="flex justify-center">
                     <div className="p-4 bg-brand-primary/5 rounded-full">

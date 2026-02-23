@@ -54,7 +54,7 @@ export function BulletList({ items }: { items: string[] }) {
     <ul className="space-y-2 my-3">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-sm text-cultr-textMuted">
-          <span className="w-1.5 h-1.5 rounded-full bg-cultr-forest mt-1.5 shrink-0" />
+          <span className="w-1.5 h-1.5 rounded-full grad-dark mt-1.5 shrink-0" />
           <span>{item}</span>
         </li>
       ))}
@@ -88,7 +88,7 @@ export function DownloadButton({ href, label, format }: { href: string; label: s
       download
       className="flex items-center gap-3 p-3 bg-white border border-stone-200 rounded-xl hover:border-cultr-forest hover:shadow-sm transition-all group"
     >
-      <div className="w-9 h-9 rounded-lg bg-cultr-mint flex items-center justify-center">
+      <div className="w-9 h-9 rounded-lg grad-mint flex items-center justify-center">
         <Download className="w-4 h-4 text-cultr-forest" />
       </div>
       <div className="flex-1">

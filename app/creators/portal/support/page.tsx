@@ -58,7 +58,7 @@ export default function SupportPage() {
           className="bg-white border border-stone-200 rounded-xl p-5 hover:border-cultr-forest transition-colors"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-lg bg-cultr-mint flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg grad-mint flex items-center justify-center">
               <Mail className="w-[18px] h-[18px] text-cultr-forest" />
             </div>
             <p className="font-medium text-cultr-forest">Email Us</p>
@@ -69,7 +69,7 @@ export default function SupportPage() {
 
         <div className="bg-white border border-stone-200 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-lg bg-cultr-mint flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg grad-mint flex items-center justify-center">
               <MessageSquare className="w-[18px] h-[18px] text-cultr-forest" />
             </div>
             <p className="font-medium text-cultr-forest">FAQ</p>
@@ -141,7 +141,7 @@ export default function SupportPage() {
           <button
             type="submit"
             disabled={submitting || !subject.trim() || !message.trim()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
           >
             <Send className="w-4 h-4" />
             {submitting ? 'Submitting...' : 'Submit Ticket'}

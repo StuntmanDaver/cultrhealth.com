@@ -8,7 +8,7 @@ import { Mail, AlertCircle, CheckCircle, Lock, Shield } from 'lucide-react'
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_link: 'Invalid or malformed link. Please request a new one.',
   expired_link: 'Your link has expired. Please request a new one.',
-  no_subscription: 'No active subscription found. Please join CULTR to access the library.',
+  no_subscription: 'No active subscription found. Please join to access the library.',
   verification_failed: 'Verification failed. Please try again.',
 }
 
@@ -56,7 +56,7 @@ export function LibraryLogin({ error }: { error?: string }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero Section */}
-      <section className="py-24 px-6 bg-cultr-forest text-white">
+      <section className="py-24 px-6 grad-dark text-white">
         <div className="max-w-md mx-auto text-center">
           <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
             <Lock className="w-8 h-8 text-cultr-sage" />
@@ -71,7 +71,7 @@ export function LibraryLogin({ error }: { error?: string }) {
       </section>
 
       {/* Form Section */}
-      <section className="flex-1 py-12 px-6 bg-white">
+      <section className="flex-1 py-12 px-6 grad-white">
         <div className="max-w-md mx-auto">
           {/* Error from URL params */}
           {errorMessage && (
@@ -83,13 +83,13 @@ export function LibraryLogin({ error }: { error?: string }) {
 
           {success ? (
             /* Success State */
-            <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-8 text-center">
-              <div className="w-16 h-16 bg-cultr-mint rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="grad-light border border-cultr-sage rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 grad-mint rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="w-8 h-8 text-cultr-forest" />
               </div>
               <h2 className="text-xl font-display font-bold text-cultr-forest mb-3">Check Your Email</h2>
               <p className="text-cultr-textMuted mb-6">
-                If you have an active CULTR membership, you&apos;ll receive a link to access the library. The link expires in 15 minutes.
+                If you have an active <span className="font-display font-bold tracking-[0.08em]">CULTR</span> membership, you&apos;ll receive a link to access the library. The link expires in 15 minutes.
               </p>
               <button
                 onClick={() => {
@@ -103,7 +103,7 @@ export function LibraryLogin({ error }: { error?: string }) {
             </div>
           ) : (
             /* Login Form */
-            <div className="bg-cultr-offwhite border border-cultr-sage rounded-2xl p-8">
+            <div className="grad-light border border-cultr-sage rounded-2xl p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-cultr-text mb-2">
@@ -118,7 +118,7 @@ export function LibraryLogin({ error }: { error?: string }) {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       required
-                      className="w-full pl-11 pr-4 py-3 bg-white border border-cultr-sage rounded-xl text-cultr-text placeholder-cultr-textMuted focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 transition-colors"
+                      className="w-full pl-11 pr-4 py-3 grad-white border border-cultr-sage rounded-xl text-cultr-text placeholder-cultr-textMuted focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50 transition-colors"
                     />
                   </div>
                 </div>
@@ -143,7 +143,7 @@ export function LibraryLogin({ error }: { error?: string }) {
                 <p className="text-cultr-textMuted text-sm">
                   Not a member?{' '}
                   <Link href="/pricing" className="text-cultr-forest hover:text-cultr-forestDark transition-colors font-medium">
-                    Join CULTR
+                    Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span>
                   </Link>
                 </p>
               </div>
@@ -159,7 +159,7 @@ export function LibraryLogin({ error }: { error?: string }) {
           {/* Additional Info */}
           <div className="mt-4 text-center">
             <p className="text-cultr-textMuted text-xs">
-              Library access is included with all CULTR memberships.
+              Library access is included with all <span className="font-display font-bold tracking-[0.08em]">CULTR</span> memberships.
             </p>
           </div>
         </div>

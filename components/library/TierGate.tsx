@@ -16,7 +16,7 @@ function getTierRank(tier: PlanTier | null | undefined): number {
 interface TierGateProps {
   requiredTier: PlanTier
   currentTier: PlanTier | null | undefined
-  upgradeMessage: string
+  upgradeMessage: string | ReactNode
   children: ReactNode
 }
 

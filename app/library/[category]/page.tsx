@@ -51,8 +51,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   // Handle Stack Guides
   if (category === 'stack-guides' && !access.stackingGuides) {
     return (
-      <div className="min-h-screen bg-white">
-        <section className="py-16 px-6 bg-cultr-forest text-white">
+      <div className="min-h-screen grad-white">
+        <section className="py-16 px-6 grad-dark text-white">
           <div className="max-w-4xl mx-auto">
             <Link
               href="/library"
@@ -71,9 +71,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
         </section>
         <section className="py-12 px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
+            <div className="rounded-2xl border border-cultr-sage grad-light p-8">
               <p className="text-cultr-text font-medium mb-4">
-                Stack guides with persona-based protocols require a membership. Join CULTR Club (free) to get started.
+                Stack guides with persona-based protocols require a membership. Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Club (free) to get started.
               </p>
               <Link
                 href="/pricing"
@@ -92,8 +92,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   if (category === 'products') {
     if (!access.advancedProtocols) {
       return (
-        <div className="min-h-screen bg-white">
-          <section className="py-16 px-6 bg-cultr-forest text-white">
+        <div className="min-h-screen grad-white">
+          <section className="py-16 px-6 grad-dark text-white">
             <div className="max-w-4xl mx-auto">
               <Link
                 href="/library"
@@ -112,7 +112,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           </section>
           <section className="py-12 px-6">
             <div className="max-w-3xl mx-auto text-center">
-              <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
+              <div className="rounded-2xl border border-cultr-sage grad-light p-8">
                 <p className="text-cultr-text font-medium mb-4">
                   The product catalog is available starting at the Core tier ($199/mo).
                 </p>
@@ -139,9 +139,9 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen grad-white">
       {/* Header */}
-      <section className="py-16 px-6 bg-cultr-forest text-white">
+      <section className="py-16 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto">
           <Link
             href="/library"
@@ -176,10 +176,10 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
                 [&_li]:text-cultr-textMuted
                 [&_ol]:mb-4 [&_ol]:space-y-1 [&_ol]:list-decimal [&_ol]:pl-5
                 [&_table]:w-full [&_table]:border-collapse [&_table]:mb-6 [&_table]:text-sm
-                [&_thead]:bg-cultr-mint
+                [&_thead]:grad-mint
                 [&_th]:text-left [&_th]:p-3 [&_th]:text-cultr-forest [&_th]:font-medium [&_th]:border-b [&_th]:border-cultr-sage
                 [&_td]:p-3 [&_td]:border-b [&_td]:border-cultr-sage/50 [&_td]:text-cultr-textMuted
-                [&_tr:hover]:bg-cultr-offwhite
+                [&_tr:hover]:grad-light
                 [&_blockquote]:border-l-4 [&_blockquote]:border-cultr-forest [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-cultr-textMuted [&_blockquote]:my-6
                 [&_hr]:border-cultr-sage [&_hr]:my-12
                 [&_strong]:text-cultr-text [&_strong]:font-semibold

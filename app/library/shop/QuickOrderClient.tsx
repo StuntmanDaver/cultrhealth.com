@@ -98,7 +98,7 @@ function Dropdown({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 border border-brand-primary/15 rounded-lg bg-white hover:border-brand-primary/30 transition-colors text-sm min-w-[140px]"
+        className="flex items-center gap-2 px-3 py-2 border border-brand-primary/15 rounded-lg grad-white hover:border-brand-primary/30 transition-colors text-sm min-w-[140px]"
       >
         <span className="flex-1 text-left truncate text-brand-primary">
           {selected?.label || label}
@@ -371,7 +371,7 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
             )}
           </div>
           {product.description && (
-            <div className="pointer-events-none invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1 z-20 w-64 bg-cultr-forest text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+            <div className="pointer-events-none invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1 z-20 w-64 grad-dark text-white text-xs rounded-lg px-3 py-2 shadow-lg">
               {product.description}
             </div>
           )}
@@ -397,7 +397,7 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
         <select
           value={selectedVariant}
           onChange={(e) => setSelectedVariant(e.target.value)}
-          className="px-2 py-1.5 border border-brand-primary/15 rounded-lg text-xs bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary w-[120px] flex-shrink-0"
+          className="px-2 py-1.5 border border-brand-primary/15 rounded-lg text-xs grad-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary w-[120px] flex-shrink-0"
         >
           {product.variants.map(v => (
             <option key={v.value} value={v.value}>{v.label}</option>
@@ -468,7 +468,7 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
           <select
             value={selectedVariant}
             onChange={(e) => setSelectedVariant(e.target.value)}
-            className="px-2 py-1.5 border border-brand-primary/15 rounded-lg text-xs bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary flex-1 min-w-[100px]"
+            className="px-2 py-1.5 border border-brand-primary/15 rounded-lg text-xs grad-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary flex-1 min-w-[100px]"
           >
             {product.variants.map(v => (
               <option key={v.value} value={v.value}>{v.label}</option>
@@ -542,7 +542,7 @@ function VitaminRow({ product }: { product: VitaminProduct }) {
             <IconComponent className="w-5 h-5 text-brand-primary/40" />
           </div>
           {/* Hover tooltip with benefits */}
-          <div className="pointer-events-none invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1 z-20 w-64 bg-cultr-forest text-white text-xs rounded-lg px-3 py-2 shadow-lg">
+          <div className="pointer-events-none invisible opacity-0 group-hover/tip:visible group-hover/tip:opacity-100 transition-all duration-200 absolute left-0 top-full mt-1 z-20 w-64 grad-dark text-white text-xs rounded-lg px-3 py-2 shadow-lg">
             {product.benefits}
           </div>
         </div>
@@ -759,7 +759,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen grad-page">
       {/* Header Bar */}
       <header className="bg-brand-primary text-brand-cream py-5 px-6">
         <div className="max-w-[1400px] mx-auto">
@@ -870,7 +870,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
                       placeholder="Search products..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg bg-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
+                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg grad-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
                     />
                     {searchQuery && (
                       <button
@@ -979,7 +979,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
                       placeholder="Search vitamins & supplements..."
                       value={vitaminSearchQuery}
                       onChange={(e) => setVitaminSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg bg-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
+                      className="w-full pl-10 pr-10 py-2.5 border border-brand-primary/15 rounded-lg grad-white text-brand-primary placeholder:text-brand-primary/40 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary text-sm"
                     />
                     {vitaminSearchQuery && (
                       <button
@@ -1065,7 +1065,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
           {activeShopTab === 'peptides' ? (
             <p className="text-xs text-cultr-textMuted">
               <strong className="text-brand-primary">Note:</strong> All products require a valid prescription.
-              CULTR Health does not guarantee product availability.
+              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee product availability.
               Contact our team for current inventory and pricing.
             </p>
           ) : (

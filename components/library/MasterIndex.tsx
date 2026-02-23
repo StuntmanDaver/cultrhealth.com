@@ -35,7 +35,7 @@ export function MasterIndex() {
   return (
     <div className="bg-white min-h-screen pb-20">
       {/* Header */}
-      <div className="bg-cultr-forest text-white py-16 px-6">
+      <div className="grad-dark text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
           <Link href="/library" className="text-white/60 hover:text-white transition-colors mb-4 inline-flex items-center text-sm">
             ← Back to Library
@@ -98,7 +98,7 @@ export function MasterIndex() {
           sortedCategories.map(category => (
             <div key={category} className="scroll-mt-24" id={category}>
               <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 flex items-center gap-3">
-                <span className="w-2 h-8 bg-cultr-mint rounded-full"></span>
+                <span className="w-2 h-8 grad-mint rounded-full"></span>
                 {getCategoryDisplayName(category)}
                 <span className="text-sm font-sans font-normal text-stone-500 ml-2">
                   ({groupedProducts[category].length})

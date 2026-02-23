@@ -60,7 +60,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero */}
-      <section className="flex-1 flex items-center justify-center py-24 px-6 bg-cultr-forest">
+      <section className="flex-1 flex items-center justify-center py-24 px-6 grad-dark">
         <div className="max-w-md w-full text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-8">
@@ -140,7 +140,7 @@ export default function LoginPage() {
                 </p>
                 <Link href="/pricing">
                   <Button variant="ghost" className="text-cultr-sage hover:text-white">
-                    Join CULTR <ArrowRight className="w-4 h-4 ml-2" />
+                    Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
             <p className="text-sm text-white/60 mt-6">
               New here?{' '}
               <Link href="/pricing" className="text-cultr-sage hover:text-white transition-colors font-medium">
-                Join CULTR
+                Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span>
               </Link>
             </p>
           </ScrollReveal>
@@ -164,7 +164,7 @@ export default function LoginPage() {
       </section>
 
       {/* Help Section */}
-      <section className="py-12 px-6 bg-white border-t border-cultr-sage">
+      <section className="py-12 px-6 grad-white border-t border-cultr-sage">
         <div className="max-w-2xl mx-auto text-center">
           <h3 className="font-display font-bold text-cultr-text mb-2">Need help?</h3>
           <p className="text-sm text-cultr-textMuted mb-4">

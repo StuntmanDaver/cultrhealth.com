@@ -20,7 +20,7 @@ export const contentStrategy: Record<string, ResourceEntry> = {
           'How GLP-1 medications actually work (mechanism, not marketing)',
           'Why calorie counting alone fails — the hormonal component',
           'The difference between "normal" and "optimal" metabolic markers',
-          'What 50+ biomarkers reveal that a standard panel misses',
+          'What 28–59 biomarkers reveal that a standard panel misses',
           'The dose titration process: what to expect month by month',
           'Why muscle preservation matters during weight loss',
           'Insulin resistance explained in plain language',
@@ -72,7 +72,7 @@ TRUTH: CULTR uses licensed 503A/503B pharmacies held to the same FDA standards a
         <CopyBlock>{`→ "Take the 2-minute quiz to see if a GLP-1 protocol is right for you: [LINK]"
 → "Use code [CODE] for [discount] on your first month: [LINK]"
 → "Stop guessing. Start testing. Link in bio."
-→ "Your metabolism has a story — 50+ biomarkers will tell it: [LINK]"`}</CopyBlock>
+→ "Your metabolism has a story — 28–59 biomarkers will tell it: [LINK]"`}</CopyBlock>
       </>
     ),
   },
@@ -156,7 +156,7 @@ TRUTH: Your provider selects specific peptides, dosages, and timing based on YOU
         <SectionHeading>10 Evergreen Topics</SectionHeading>
         <BulletList items={[
           'What biological age is and why it matters more than chronological age',
-          'The 50+ biomarkers CULTR tests (and what each category reveals)',
+          'The 28–59 biomarkers CULTR tests (and what each category reveals)',
           'Why "normal" lab ranges aren\'t the same as "optimal"',
           'hs-CRP and inflammation: the silent killer marker',
           'Hormones 101: testosterone, estrogen, thyroid, cortisol',
@@ -169,7 +169,7 @@ TRUTH: Your provider selects specific peptides, dosages, and timing based on YOU
 
         <SectionHeading>10 Hooks (Labeled by Framework)</SectionHeading>
         <CopyBlock label="Proof-First Hooks">{`1. "My biological age was 8 years older than my real age. Here's what I changed."
-2. "50+ biomarkers tested. Here are the 3 that surprised me most."`}</CopyBlock>
+2. "28–59 biomarkers tested. Here are the 3 that surprised me most."`}</CopyBlock>
 
         <CopyBlock label="Mistake-Correction Hooks">{`3. "Your annual physical tests 5-10 markers. That's not enough — here's why."
 4. "The biggest misconception about 'normal' lab results."`}</CopyBlock>
@@ -200,7 +200,7 @@ MYTH: "Supplements can replace lab testing."
 TRUTH: Without labs, you're guessing which supplements you need. Most people are taking things they don't need while missing actual deficiencies.`}</CopyBlock>
 
         <SectionHeading>CTA Variants for This Pillar</SectionHeading>
-        <CopyBlock>{`→ "You can't optimize what you don't measure. Get your 50+ biomarker panel: [LINK]"
+        <CopyBlock>{`→ "You can't optimize what you don't measure. Get your 28–59 biomarker panel (SiPho Health): [LINK]"
 → "What does your biological age say about you? Find out: [LINK]"
 → "Use code [CODE] for [discount] on your first comprehensive panel: [LINK]"
 → "Annual physicals aren't enough. Start quarterly testing with CULTR: [LINK]"`}</CopyBlock>
@@ -270,7 +270,7 @@ TRUTH: Caffeine masks underlying issues. When your biomarkers are optimized, man
 
         <SectionHeading>CTA Variants for These Pillars</SectionHeading>
         <CopyBlock>{`→ "Your mouth bacteria could be affecting your heart. Get tested: [LINK]"
-→ "Brain fog isn't normal. Find out what's causing it with 50+ biomarker testing: [LINK]"
+→ "Brain fog isn't normal. Find out what's causing it with 28–59 biomarker testing (SiPho Health): [LINK]"
 → "The test nobody talks about — oral microbiome analysis through CULTR: [LINK]"
 → "Use code [CODE] to get your comprehensive panel including cognitive and inflammation markers: [LINK]"`}</CopyBlock>
       </>

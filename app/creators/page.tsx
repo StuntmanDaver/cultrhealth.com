@@ -24,7 +24,7 @@ export default function CreatorsPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -32,12 +32,12 @@ export default function CreatorsPage() {
               <span className="text-sm">Affiliate Program</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Earn with CULTR
+              Earn with <span className="tracking-[0.08em]">CULTR</span>
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Share CULTR Health with your audience and earn commissions on every referral. Tracking links, coupon codes, and a dedicated dashboard — all built for creators.
+              Share <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health with your audience and earn commissions on every referral. Tracking links, coupon codes, and a dedicated dashboard — all built for creators.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>
@@ -59,7 +59,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 md:py-20 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest">
@@ -89,7 +89,7 @@ export default function CreatorsPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 150} direction="up">
-                <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full">
+                <div className="relative p-8 rounded-2xl grad-mint border border-cultr-sage h-full">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
@@ -107,7 +107,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Benefits */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 grad-light">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -150,7 +150,7 @@ export default function CreatorsPage() {
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
                 <div className="flex items-start gap-4 p-6 rounded-xl bg-white border border-cultr-sage">
-                  <div className="w-10 h-10 rounded-lg bg-cultr-mint flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-lg grad-mint flex items-center justify-center shrink-0">
                     <item.icon className="w-5 h-5 text-cultr-forest" />
                   </div>
                   <div>
@@ -165,7 +165,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Commission Tiers */}
-      <section className="py-16 md:py-20 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -210,14 +210,14 @@ export default function CreatorsPage() {
       </section>
 
       {/* Apply CTA */}
-      <section id="apply" className="py-16 md:py-20 px-6 bg-cultr-forest text-white">
+      <section id="apply" className="py-16 md:py-20 px-6 grad-dark text-white">
         <div className="max-w-3xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
               Ready to earn?
             </h2>
             <p className="text-white/70 mb-10 max-w-xl mx-auto">
-              Apply to the CULTR Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.
+              Apply to the <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.
             </p>
             <Link href="/creators/apply">
               <Button variant="secondary" size="lg" className="text-white border-white/50 hover:bg-white/10 hover:border-white/70">

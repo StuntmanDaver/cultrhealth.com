@@ -139,7 +139,7 @@ export function ScheduleConsult({ tier }: ScheduleConsultProps) {
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 focus:border-transparent bg-white"
+                className="w-full px-4 py-2.5 border border-stone-200 rounded-xl text-stone-900 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 focus:border-transparent grad-white"
               >
                 <option value="">Select a reason...</option>
                 {REASON_OPTIONS.map((r) => (

@@ -101,7 +101,7 @@ export default async function BlogPostPage({
   return (
     <div className="flex flex-col">
       {/* Hero / Header */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-forest text-white">
+      <section className="py-16 md:py-20 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto">
           {/* Breadcrumb */}
           <ScrollReveal direction="none" duration={600}>
@@ -162,7 +162,7 @@ export default async function BlogPostPage({
       </section>
 
       {/* Article Content */}
-      <section className="py-12 px-6 bg-white">
+      <section className="py-12 px-6 grad-white">
         <div className="max-w-3xl mx-auto">
           {/* Quick Summary Box */}
           <ScrollReveal>
@@ -212,7 +212,7 @@ export default async function BlogPostPage({
                   {post.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 bg-cultr-offwhite text-cultr-textMuted text-sm rounded-full hover:bg-cultr-sage/50 transition-colors"
+                      className="px-3 py-1 grad-light text-cultr-textMuted text-sm rounded-full hover:bg-cultr-sage/50 transition-colors"
                     >
                       {tag}
                     </span>
@@ -224,9 +224,9 @@ export default async function BlogPostPage({
 
           {/* Author bio */}
           <ScrollReveal>
-            <div className="mt-8 p-6 bg-cultr-offwhite rounded-2xl">
+            <div className="mt-8 p-6 grad-light rounded-2xl">
               <div className="flex items-start gap-4">
-                <div className="w-14 h-14 rounded-full bg-cultr-forest flex items-center justify-center shrink-0">
+                <div className="w-14 h-14 rounded-full grad-dark flex items-center justify-center shrink-0">
                   <User className="w-7 h-7 text-white" />
                 </div>
                 <div>
@@ -246,7 +246,7 @@ export default async function BlogPostPage({
 
       {/* Related Articles */}
       {relatedPosts.length > 0 && (
-        <section className="py-12 px-6 bg-cultr-offwhite">
+        <section className="py-12 px-6 grad-light">
           <div className="max-w-5xl mx-auto">
             <ScrollReveal>
               <h3 className="text-2xl font-display font-bold text-cultr-forest mb-6">

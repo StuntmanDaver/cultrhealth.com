@@ -257,7 +257,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   // If plan doesn't exist, show error
   if (!plan) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center py-24 px-6 text-center bg-cultr-offwhite">
+      <div className="min-h-screen flex flex-col items-center justify-center py-24 px-6 text-center grad-light">
         <h1 className="text-4xl font-display font-bold text-cultr-forest mb-6">Plan Not Found</h1>
         <p className="text-cultr-textMuted mb-8">The membership tier you&apos;re looking for doesn&apos;t exist.</p>
         <Button onClick={() => router.push('/pricing')}>View All Plans</Button>
@@ -417,9 +417,9 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
+    <div className="min-h-screen grad-light">
       {/* Hero */}
-      <section className="py-16 px-6 bg-cultr-forest text-white">
+      <section className="py-16 px-6 grad-dark text-white">
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-block text-xs font-bold text-cultr-sage tracking-widest mb-4">
             {plan.tagline.toUpperCase()}
@@ -447,7 +447,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               <ul className="space-y-4">
                 {plan.features.map((feature, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-cultr-forest flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-5 h-5 rounded-full grad-dark flex items-center justify-center shrink-0 mt-0.5">
                       <Check className="w-3 h-3 text-white" />
                     </div>
                     <span className="text-cultr-text">{feature}</span>
@@ -457,7 +457,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             </div>
 
             {/* Best For */}
-            <div className="bg-cultr-mint rounded-xl p-6 mb-8 border border-cultr-sage">
+            <div className="grad-mint rounded-xl p-6 mb-8 border border-cultr-sage">
               <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase mb-2">
                 Best For
               </p>
@@ -610,7 +610,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   {MEMBERSHIP_DISCLAIMER}
                 </p>
                 <p className="text-xs text-amber-600">
-                  CULTR Health does not guarantee specific results. All services are provided via telehealth by licensed providers. 
+                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. All services are provided via telehealth by licensed providers. 
                   If you have a medical emergency, call 911.
                 </p>
               </div>
@@ -630,7 +630,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                 'Book your first consult with a provider',
               ].map((step, i) => (
                 <li key={i} className="flex gap-3">
-                  <span className="w-6 h-6 rounded-full bg-cultr-mint flex items-center justify-center shrink-0 text-xs font-bold text-cultr-forest">
+                  <span className="w-6 h-6 rounded-full grad-mint flex items-center justify-center shrink-0 text-xs font-bold text-cultr-forest">
                     {i + 1}
                   </span>
                   <span className="text-cultr-textMuted">{step}</span>

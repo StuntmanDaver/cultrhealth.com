@@ -16,6 +16,7 @@ import {
   Filter,
   Package,
 } from 'lucide-react'
+import { brandify } from '@/lib/utils'
 
 const RESOURCE_SECTIONS = [
   {
@@ -110,7 +111,7 @@ const RESOURCE_SECTIONS = [
     icon: Palette,
     items: [
       { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
-      { title: 'Brand Colors', desc: 'Forest #2A4542, Sage #B7E4C7, Mint #D8F3DC', type: 'info', slug: 'brand-colors' },
+      { title: 'Brand Colors', desc: 'Forest #2B4542, Mint #D7F3DC, Offwhite #FCFBF7', type: 'info', slug: 'brand-colors' },
       { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
       { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
     ],
@@ -134,7 +135,7 @@ function ResourceCard({ title, desc, type, slug }: { title: string; desc: string
       </div>
       <div className="flex-1">
         <p className="font-medium text-sm text-cultr-forest">{title}</p>
-        <p className="text-xs text-cultr-textMuted mt-0.5">{desc}</p>
+        <p className="text-xs text-cultr-textMuted mt-0.5">{brandify(desc)}</p>
       </div>
       <ExternalLink className="w-4 h-4 text-stone-300 flex-shrink-0 mt-1" />
     </Link>
@@ -167,7 +168,7 @@ export default function ResourcesPage() {
         </section>
       ))}
 
-      <div className="bg-cultr-mint border border-cultr-sage rounded-2xl p-6 text-center">
+      <div className="grad-mint border border-cultr-sage rounded-2xl p-6 text-center">
         <p className="font-display font-bold text-cultr-forest mb-2">
           Need custom content?
         </p>
@@ -176,7 +177,7 @@ export default function ResourcesPage() {
         </p>
         <a
           href="mailto:creators@cultrhealth.com"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
         >
           Contact Creator Support
         </a>

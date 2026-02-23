@@ -38,7 +38,7 @@ export function CTASection({
   };
 
   return (
-    <section className="py-12 px-6 bg-cultr-forest overflow-hidden">
+    <section className="py-12 px-6 grad-dark-glow overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
           {/* Left - CTA Content */}
@@ -56,7 +56,7 @@ export function CTASection({
             </span>
             {status === 'success' ? (
               <div className="text-white text-sm font-medium bg-white/10 px-6 py-2.5 rounded-full border border-white/20">
-                Thanks for joining the CULTR.
+                Thanks for joining the <span className="font-display font-bold tracking-[0.08em]">CULTR</span>.
               </div>
             ) : (
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
@@ -69,12 +69,12 @@ export function CTASection({
                   placeholder="Enter your email"
                   required
                   disabled={status === 'loading'}
-                  className="w-56 md:w-64 px-4 py-2.5 border border-white/30 bg-white/10 rounded-lg text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/20 focus:bg-white/15 transition-all disabled:opacity-50"
+                  className="w-56 md:w-64 px-4 py-2.5 border border-white/20 bg-white/8 backdrop-blur-sm rounded-lg text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 focus:bg-white/12 transition-all disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="px-5 py-2.5 bg-white text-cultr-forest text-sm font-medium rounded-full hover:bg-white/90 transition-all whitespace-nowrap disabled:opacity-50"
+                  className="px-5 py-2.5 grad-white text-cultr-forest text-sm font-medium rounded-full hover:bg-white/90 transition-all whitespace-nowrap disabled:opacity-50"
                 >
                   {status === 'loading' ? 'Joining...' : 'Subscribe'}
                 </button>
@@ -86,7 +86,7 @@ export function CTASection({
           </div>
 
           {/* Right - CULTR Logo */}
-          <span className="text-4xl md:text-5xl font-display font-bold text-white tracking-tight shrink-0">
+          <span className="text-4xl md:text-5xl font-display font-bold text-white tracking-[0.08em] shrink-0">
             CULTR
           </span>
         </div>

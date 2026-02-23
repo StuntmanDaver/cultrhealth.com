@@ -86,7 +86,7 @@ export function PaymentMethodSelector({
               ${selected === option.id ? 'border-cultr-forest' : 'border-cultr-sage'}
             `}>
               {selected === option.id && (
-                <div className="w-2 h-2 rounded-full bg-cultr-forest" />
+                <div className="w-2 h-2 rounded-full grad-dark" />
               )}
             </div>
 

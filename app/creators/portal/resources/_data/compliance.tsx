@@ -84,7 +84,7 @@ export const compliance: Record<string, ResourceEntry> = {
         <Paragraph>This document outlines what you can and cannot say when promoting CULTR Health. Following these guidelines protects you, your audience, and CULTR from regulatory issues.</Paragraph>
 
         <SectionHeading>Approved Claims (You CAN Say)</SectionHeading>
-        <CopyBlock label="About CULTR's Services">{`\u2705 "CULTR tests 50+ biomarkers"
+        <CopyBlock label="About CULTR's Services">{`\u2705 "CULTR tests 28–59 biomarkers"
 \u2705 "Licensed, board-certified providers"
 \u2705 "All medications from licensed US pharmacies"
 \u2705 "HIPAA-compliant platform"

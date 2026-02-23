@@ -24,9 +24,9 @@ export default async function QuoteSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
+    <div className="min-h-screen grad-light">
       {/* Header */}
-      <header className="bg-cultr-forest text-white py-6 px-6">
+      <header className="grad-dark text-white py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <Link
             href="/library"
@@ -59,7 +59,7 @@ export default async function QuoteSuccessPage() {
           
           <div className="space-y-4">
             <div className="flex gap-4">
-              <div className="w-10 h-10 bg-cultr-mint rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 grad-mint rounded-full flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5 text-cultr-forest" />
               </div>
               <div>
@@ -71,7 +71,7 @@ export default async function QuoteSuccessPage() {
             </div>
             
             <div className="flex gap-4">
-              <div className="w-10 h-10 bg-cultr-mint rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 grad-mint rounded-full flex items-center justify-center shrink-0">
                 <Mail className="w-5 h-5 text-cultr-forest" />
               </div>
               <div>
@@ -83,7 +83,7 @@ export default async function QuoteSuccessPage() {
             </div>
             
             <div className="flex gap-4">
-              <div className="w-10 h-10 bg-cultr-mint rounded-full flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 grad-mint rounded-full flex items-center justify-center shrink-0">
                 <CheckCircle className="w-5 h-5 text-cultr-forest" />
               </div>
               <div>
@@ -100,14 +100,14 @@ export default async function QuoteSuccessPage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
             href="/library/shop"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-cultr-forest text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 grad-dark text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
           >
             <ShoppingCart className="w-5 h-5" />
             Continue Shopping
           </Link>
           <Link
             href="/library"
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-white border border-cultr-sage text-cultr-text font-bold rounded-lg hover:bg-cultr-offwhite transition-colors"
+            className="flex items-center justify-center gap-2 px-6 py-3 grad-white border border-cultr-sage text-cultr-text font-bold rounded-lg hover:grad-light transition-colors"
           >
             Back to Library
             <ArrowRight className="w-5 h-5" />
@@ -115,7 +115,7 @@ export default async function QuoteSuccessPage() {
         </div>
 
         {/* Contact Info */}
-        <div className="mt-12 p-4 bg-cultr-mint border border-cultr-sage rounded-xl text-center">
+        <div className="mt-12 p-4 grad-mint border border-cultr-sage rounded-xl text-center">
           <p className="text-sm text-cultr-textMuted">
             <strong className="text-cultr-text">Questions?</strong> Contact us at{' '}
             <a href="mailto:support@cultrhealth.com" className="text-cultr-forest underline">

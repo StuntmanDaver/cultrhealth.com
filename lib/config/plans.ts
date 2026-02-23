@@ -28,6 +28,8 @@ export type Plan = {
   stripePriceId: string;
   paymentLink: string;
   isFeatured: boolean;
+  /** Whether this plan is highlighted as the recommended entry point */
+  isRecommended?: boolean;
   ctaLabel: string;
   /** Whether BNPL providers (Klarna/Affirm) are available for this plan */
   bnplEnabled: boolean;
@@ -64,10 +66,9 @@ export const PLANS: Plan[] = [
     tagline: 'Free community access',
     bestFor: 'Education & discovery',
     features: [
+      'Education & discovery',
       'Full protocol & peptide library',
       'Peptide calculator access',
-      'Calorie & macro calculator',
-      'Stacking guides',
       'Cycle guides & safety info',
       'Instruction video library',
     ],
@@ -83,6 +84,7 @@ export const PLANS: Plan[] = [
     stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy',
     paymentLink: '',
     isFeatured: false,
+    isRecommended: true,
     ctaLabel: 'Join Free',
     bnplEnabled: false,
   },
@@ -125,7 +127,7 @@ export const PLANS: Plan[] = [
       'One Core Therapy included + Two Enhancements',
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months'
+      'Complimentary physician follow up every 3 months'
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -153,7 +155,7 @@ export const PLANS: Plan[] = [
       'Two CORE Therapy included + up to 4 enhancements',
       'Initial Physician Consult $79',
       'Blood work prior to start $99, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months'
+      'Complimentary physician follow up every 1 month'
     ],
     libraryAccess: {
       masterIndex: 'full',

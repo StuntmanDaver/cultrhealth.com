@@ -25,15 +25,15 @@ const PricingCard = dynamic(() => import('@/components/site/PricingCard').then(m
 });
 
 const FAQAccordion = dynamic(() => import('@/components/site/FAQAccordion').then(mod => ({ default: mod.FAQAccordion })), {
-  loading: () => <div className="h-64 bg-cultr-mint rounded-lg animate-pulse" />,
+  loading: () => <div className="h-64 grad-mint rounded-lg animate-pulse" />,
 });
 
 const ClubBanner = dynamic(() => import('@/components/site/ClubBanner').then(mod => ({ default: mod.ClubBanner })), {
-  loading: () => <div className="h-32 bg-cultr-mint rounded-2xl animate-pulse" />,
+  loading: () => <div className="h-32 grad-mint rounded-2xl animate-pulse" />,
 });
 
 const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignup').then(mod => ({ default: mod.NewsletterSignup })), {
-  loading: () => <div className="h-48 bg-cultr-offwhite animate-pulse" />,
+  loading: () => <div className="h-48 grad-light animate-pulse" />,
 });
 
 export const revalidate = 3600;
@@ -47,7 +47,7 @@ export default function HomePage() {
     <div className="flex flex-col">
       {/* ─── Hero ─── */}
       {/* Mobile hero — natural aspect ratio, text at bottom */}
-      <section className="relative md:hidden bg-cultr-forest overflow-hidden">
+      <section className="relative md:hidden grad-dark-glow overflow-hidden">
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
@@ -61,7 +61,7 @@ export default function HomePage() {
       </section>
 
       {/* Desktop hero — cinematic wideshot */}
-      <section className="relative hidden md:flex h-[80vh] min-h-[550px] max-h-[900px] px-6 bg-cultr-forest overflow-hidden items-center">
+      <section className="relative hidden md:flex h-[80vh] min-h-[550px] max-h-[900px] px-6 grad-dark-glow overflow-hidden items-center">
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Five diverse women in athletic wear posing with CULTR branding"
@@ -77,7 +77,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10 w-full py-20 -mt-16">
           <div className="max-w-3xl">
             <h1 className="text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
-              Change the<br />CULTR,<br /><span className="italic">rebrand</span> yourself.
+              Change the<br /><span className="tracking-[0.08em]">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
@@ -103,7 +103,7 @@ export default function HomePage() {
           {/* Mobile slogan + CTA buttons — moved from hero */}
           <div className="md:hidden mb-12 -mt-10 text-center">
             <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-8 whitespace-nowrap">
-              Change the CULTR, <span className="italic">rebrand</span> yourself.
+              Change the <span className="tracking-[0.08em]">CULTR</span>, <span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center justify-center gap-2">
               <Link href="/quiz">
@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Image 1 - Smiling Man */}
             <ScrollReveal delay={100} direction="up" className="group">
-              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
                 <Image
                   src="/images/lifestyle-man-smiling.webp"
                   alt="Confident member after optimization"
@@ -133,7 +133,7 @@ export default function HomePage() {
                   className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
@@ -148,7 +148,7 @@ export default function HomePage() {
 
             {/* Image 2 - Woman Running */}
             <ScrollReveal delay={200} direction="up" className="group">
-              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
                 <Image
                   src="/images/lifestyle-woman-running-new.webp"
                   alt="Athletic woman running"
@@ -156,7 +156,7 @@ export default function HomePage() {
                   className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forestDark/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
@@ -171,7 +171,7 @@ export default function HomePage() {
 
             {/* Image 3 - Sunset Freedom */}
             <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1">
-              <div className="relative h-[400px] md:h-[500px] rounded-3xl overflow-hidden shadow-2xl">
+              <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
                 <Image
                   src="/images/lifestyle-girl-running.webp"
                   alt="Woman running outdoors representing freedom and vitality"
@@ -179,7 +179,7 @@ export default function HomePage() {
                   className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-cultr-forest/80 via-cultr-forest/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-2 h-2 rounded-full bg-cultr-sage" />
@@ -204,7 +204,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
         {/* Radial glow — center mint */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 50% at 50% 50%, rgba(215,243,220,0.3) 0%, transparent 100%)' }} />
         <div className="max-w-7xl mx-auto relative z-10">
@@ -236,7 +236,7 @@ export default function HomePage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 150} direction="up">
-                <div className="relative p-8 rounded-2xl bg-cultr-mint border border-cultr-sage h-full glow-card">
+                <div className="relative p-8 rounded-2xl glass-card border-gradient h-full glow-card">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
@@ -261,22 +261,22 @@ export default function HomePage() {
 
 
       {/* ─── Comparison Table ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-white overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-white overflow-hidden">
         {/* Radial glow — bottom center */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 40% at 50% 100%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-4xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest">
-              CULTR vs. the status quo
+              <span className="tracking-[0.08em]">CULTR</span> vs. the status quo
             </h2>
           </ScrollReveal>
 
           <ScrollReveal>
-            <div className="rounded-2xl border border-cultr-sage overflow-hidden">
-              <div className="grid grid-cols-3 bg-cultr-forest text-white font-display">
+            <div className="rounded-2xl overflow-hidden shadow-lux-lg border border-brand-primary/10">
+              <div className="grid grid-cols-3 grad-dark text-white font-display">
                 <div className="p-4 font-medium">Feature</div>
                 <div className="p-4 font-medium text-center">Standard Care</div>
-                <div className="p-4 font-medium text-center bg-cultr-forestDark">CULTR</div>
+                <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-bold tracking-[0.08em]">CULTR</span></div>
               </div>
               {[
                 ['Comprehensive lab panels', '5-10 markers', '50+ markers'],
@@ -298,7 +298,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Pricing Preview ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
         {/* Radial glow — top left accent */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 15% 10%, rgba(215,243,220,0.3) 0%, transparent 100%)' }} />
         {/* Radial glow — bottom right accent */}
@@ -335,21 +335,21 @@ export default function HomePage() {
       </section>
 
       {/* ─── CULTR Creator CTA ─── */}
-      <section className="relative py-12 px-6 bg-cultr-forest overflow-hidden">
+      <section className="relative py-12 px-6 grad-dark overflow-hidden">
         {/* Radial glow — left accent */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 70% at 20% 50%, rgba(215,243,220,0.08) 0%, transparent 100%)' }} />
         <div className="max-w-4xl mx-auto relative z-10">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+              <div className="w-16 h-16 rounded-2xl glass-card-dark flex items-center justify-center shrink-0">
                 <Users className="w-8 h-8 text-cultr-sage" />
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  CULTR Creator
+                  <span className="tracking-[0.08em]">CULTR</span> Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                  Earn commissions sharing <span className="font-display font-bold tracking-[0.08em]">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
                 </p>
               </div>
               <Link href="/creators" className="shrink-0">
@@ -366,7 +366,7 @@ export default function HomePage() {
       <NewsletterSignup />
 
       {/* ─── Testimonials (expanded) ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-cultr-forest text-white overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-dark text-white overflow-hidden">
         {/* Radial glow — top center mint */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.1) 0%, transparent 100%)' }} />
         {/* Radial glow — bottom center */}
@@ -389,7 +389,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {TESTIMONIALS.slice(0, 6).map((testimonial, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 h-full flex flex-col glow-card glow-card-dark">
+                <div className="p-6 rounded-2xl h-full flex flex-col glass-card-dark transition-all duration-300 glow-card glow-card-dark">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex">
                       {[...Array(testimonial.rating)].map((_, j) => (
@@ -415,7 +415,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Provider Credentials ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-white overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-white overflow-hidden">
         {/* Radial glow — center bloom */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 50% at 50% 40%, rgba(215,243,220,0.2) 0%, transparent 100%)' }} />
         <div className="max-w-5xl mx-auto relative z-10">
@@ -428,8 +428,8 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {PROVIDERS.map((provider, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="text-center p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage glow-card">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-cultr-mint flex items-center justify-center mb-4">
+                <div className="text-center p-8 rounded-2xl glass-card border-gradient glow-card">
+                  <div className="w-20 h-20 mx-auto rounded-full grad-mint flex items-center justify-center mb-4">
                     <Stethoscope className="w-8 h-8 text-cultr-forest" />
                   </div>
                   <h3 className="font-display font-bold text-cultr-forest">{provider.name}</h3>
@@ -456,7 +456,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section className="relative py-16 md:py-20 px-6 bg-cultr-offwhite overflow-hidden">
+      <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
         {/* Radial glow — top right */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(40% 40% at 80% 10%, rgba(215,243,220,0.25) 0%, transparent 100%)' }} />
         <div className="max-w-3xl mx-auto relative z-10">
@@ -469,8 +469,8 @@ export default function HomePage() {
           <FAQAccordion items={[
             { question: 'What is included in the membership?', answer: 'All memberships include telehealth consultations with licensed providers, access to our platform, messaging support, and our core lab panel review. Higher tiers include more frequent consults, peptide protocol access, and priority support.' },
             { question: 'How do the peptide protocols work?', answer: 'Our peptide library contains research-backed protocols for various health goals. After your consultation, your provider can recommend specific peptides based on your labs and objectives. All peptides are compounded at licensed pharmacies.' },
-            { question: 'Is CULTR available in my state?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.' },
-            { question: 'Can I use HSA/FSA funds?', answer: 'Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.' },
+            { question: 'Is CULTR available in my state?', answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.') },
+            { question: 'Can I use HSA/FSA funds?', answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We provide documentation needed for reimbursement from your health savings account.') },
           ]} />
 
           <div className="text-center mt-10">

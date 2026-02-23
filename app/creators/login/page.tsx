@@ -16,7 +16,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default function CreatorLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-[80vh] bg-cultr-forest flex items-center justify-center">
+      <div className="min-h-[80vh] grad-dark flex items-center justify-center">
         <div className="animate-pulse h-6 w-32 bg-white/20 rounded" />
       </div>
     }>
@@ -69,7 +69,7 @@ function CreatorLoginForm() {
   }
 
   return (
-    <div className="min-h-[80vh] bg-cultr-forest flex items-center justify-center px-6 py-16">
+    <div className="min-h-[80vh] grad-dark flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
 
         <div className="bg-white rounded-2xl p-8 shadow-xl">
@@ -100,7 +100,7 @@ function CreatorLoginForm() {
               {redirectUrl && (
                 <a
                   href={redirectUrl}
-                  className="block w-full text-center px-4 py-3 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
+                  className="block w-full text-center px-4 py-3 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
                 >
                   Open Portal (Dev Mode)
                 </a>
@@ -143,7 +143,7 @@ function CreatorLoginForm() {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
               >
                 {status === 'loading' ? (
                   <>

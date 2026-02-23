@@ -12,8 +12,8 @@ export default async function ProtocolBuilderPage() {
 
   if (!isProviderEmail(session.email)) {
     return (
-      <div className="min-h-screen bg-white">
-        <section className="py-16 px-6 bg-cultr-forest text-white">
+      <div className="min-h-screen grad-white">
+        <section className="py-16 px-6 grad-dark text-white">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-display font-bold mb-3">Access Restricted</h1>
             <p className="text-white/80 text-lg">
@@ -23,7 +23,7 @@ export default async function ProtocolBuilderPage() {
         </section>
         <section className="py-12 px-6">
           <div className="max-w-3xl mx-auto text-center">
-            <div className="rounded-2xl border border-cultr-sage bg-cultr-offwhite p-8">
+            <div className="rounded-2xl border border-cultr-sage grad-light p-8">
               <p className="text-cultr-text font-medium mb-4">
                 If you need access, contact the operations team.
               </p>

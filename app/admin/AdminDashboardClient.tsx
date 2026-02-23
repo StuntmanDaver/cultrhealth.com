@@ -113,7 +113,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen bg-brand-cream p-8">
+      <div className="min-h-screen grad-page p-8">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-brand-primary/10 rounded w-48 mb-8"></div>
@@ -130,7 +130,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream p-4 md:p-8">
+    <div className="min-h-screen grad-page p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
@@ -147,7 +147,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             <select
               value={periodDays}
               onChange={(e) => setPeriodDays(parseInt(e.target.value, 10))}
-              className="px-4 py-2 border border-brand-primary/20 rounded-lg bg-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-gold"
+              className="px-4 py-2 border border-brand-primary/20 rounded-lg grad-white text-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-gold"
             >
               <option value={7}>Last 7 days</option>
               <option value={30}>Last 30 days</option>
@@ -391,7 +391,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   href="https://app.gethealthie.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
                 >
                   Open Healthie →
                 </a>
@@ -399,7 +399,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   href="https://dashboard.stripe.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
                 >
                   Stripe Dashboard →
                 </a>
@@ -407,7 +407,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   href="https://analytics.google.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
                 >
                   Google Analytics →
                 </a>
@@ -415,7 +415,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   href="https://search.google.com/search-console"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
                 >
                   Search Console →
                 </a>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowRight, Loader2, CheckCircle, Sparkles } from 'lucide-react';
+import { ArrowRight, Loader2, CheckCircle, Sparkles, Star } from 'lucide-react';
 
 export function ClubBanner() {
   const router = useRouter();
@@ -42,12 +42,18 @@ export function ClubBanner() {
   };
 
   return (
-    <div className="w-full p-8 md:p-10 rounded-2xl bg-cultr-mint border border-cultr-sage">
+    <div className="w-full p-8 md:p-10 rounded-2xl grad-mint border border-cultr-sage">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-cultr-forest" />
-            <span className="text-xs font-display font-bold tracking-widest text-cultr-forest uppercase">Free</span>
+          <div className="flex items-center gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary text-white">
+              <Star className="w-3 h-3 fill-white" />
+              <span className="text-xs font-bold tracking-wider uppercase">Recommended Plan</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cultr-forest" />
+              <span className="text-xs font-display font-bold tracking-widest text-cultr-forest uppercase">Free</span>
+            </div>
           </div>
           <Link href="/therapies" className="hover:underline">
             <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
@@ -77,7 +83,7 @@ export function ClubBanner() {
                   required
                   className="
                     w-full px-4 py-3 rounded-full
-                    bg-white border border-cultr-sage
+                    grad-white border border-cultr-sage
                     text-cultr-text placeholder-cultr-textMuted
                     focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50
                     transition-colors text-sm
@@ -90,7 +96,7 @@ export function ClubBanner() {
                 className="
                   inline-flex items-center justify-center gap-2
                   px-6 py-3 rounded-full whitespace-nowrap
-                  bg-cultr-forest text-white font-medium text-sm
+                  grad-dark text-white font-medium text-sm
                   hover:bg-cultr-forestDark
                   disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors group

@@ -18,6 +18,7 @@ import {
   Dna,
   Users,
 } from 'lucide-react';
+import { brandify } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -32,7 +33,7 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-28 px-6 bg-cultr-forest text-white">
+      <section className="py-20 md:py-28 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -64,11 +65,11 @@ export default function PricingPage() {
       </section>
 
       {/* Value Props */}
-      <section className="py-16 px-6 bg-cultr-mint border-b border-cultr-sage">
+      <section className="py-16 px-6 grad-mint border-b border-cultr-sage">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: FlaskConical, label: '50+ Biomarkers', sublabel: 'Comprehensive testing' },
+              { icon: FlaskConical, label: '28–59 Biomarkers', sublabel: 'Provided by SiPho Health' },
               { icon: MessageCircle, label: 'Direct Access', sublabel: 'Provider messaging' },
               { icon: Dna, label: 'Peptide Protocols', sublabel: 'Personalized plans' },
               { icon: Shield, label: 'HIPAA Compliant', sublabel: 'Secure platform' },
@@ -88,7 +89,7 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section id="plans" className="py-16 md:py-20 px-6 bg-white">
+      <section id="plans" className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -119,7 +120,7 @@ export default function PricingPage() {
       </section>
 
       {/* CULTR Creator CTA */}
-      <section className="py-12 px-6 bg-cultr-forest">
+      <section className="py-12 px-6 grad-dark">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
@@ -128,10 +129,10 @@ export default function PricingPage() {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  CULTR Creator
+                  <span className="tracking-[0.08em]">CULTR</span> Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing CULTR with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                  Earn commissions sharing <span className="font-display font-bold tracking-[0.08em]">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
                 </p>
               </div>
               <Link href="/creators" className="shrink-0">
@@ -145,7 +146,7 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 grad-light">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -163,7 +164,7 @@ export default function PricingPage() {
                   <tr className="border-b border-cultr-sage">
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text">Feature</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm bg-cultr-mint rounded-t-xl">Catalyst+</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
                   </tr>
                 </thead>
@@ -204,7 +205,7 @@ export default function PricingPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-16 md:py-20 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -224,7 +225,7 @@ export default function PricingPage() {
               },
               {
                 title: 'Comprehensive Lab Panels',
-                desc: '50+ biomarkers analyzed with provider interpretation and recommendations.',
+                desc: '28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — analyzed with provider interpretation and recommendations.',
               },
               {
                 title: 'Provider Messaging',
@@ -240,8 +241,8 @@ export default function PricingPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="flex items-start gap-4 p-6 rounded-xl bg-cultr-offwhite border border-cultr-sage">
-                  <div className="w-6 h-6 rounded-full bg-cultr-forest flex items-center justify-center shrink-0 mt-0.5">
+                <div className="flex items-start gap-4 p-6 rounded-xl grad-light border border-cultr-sage">
+                  <div className="w-6 h-6 rounded-full grad-dark flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -256,7 +257,7 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-16 md:py-20 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 grad-light">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -287,7 +288,7 @@ export default function PricingPage() {
             },
             {
               question: 'Can I use HSA/FSA funds?',
-              answer: 'Yes! CULTR memberships are HSA/FSA eligible. We provide all necessary documentation for reimbursement from your health savings account.',
+              answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We provide all necessary documentation for reimbursement from your health savings account.'),
             },
           ]} />
 
@@ -300,7 +301,7 @@ export default function PricingPage() {
       </section>
 
       {/* Membership & Medical Disclaimer */}
-      <section className="py-12 px-6 bg-white border-y border-cultr-sage">
+      <section className="py-12 px-6 grad-white border-y border-cultr-sage">
         <div className="max-w-4xl mx-auto space-y-6">
           <ScrollReveal>
             <div className="flex items-start gap-4">
@@ -319,7 +320,7 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-display font-bold text-cultr-text mb-2">Medical Disclaimer</h4>
                 <p className="text-sm text-cultr-textMuted leading-relaxed">
-                  CULTR Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
+                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
                   All services are provided via telehealth by licensed providers. Prescriptions are issued only when clinically appropriate.
                   If you have a medical emergency, please call 911 or proceed to your nearest emergency room.
                 </p>

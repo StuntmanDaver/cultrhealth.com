@@ -577,7 +577,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen grad-page">
       {/* Minimal Header */}
       <header className="bg-white border-b border-brand-primary/10">
         <div className="max-w-7xl mx-auto px-6 py-4">

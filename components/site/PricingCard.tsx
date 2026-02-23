@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { BNPLBadge } from '@/components/payments/BNPLBadge';
+import { brandify } from '@/lib/utils';
 
 interface PlanProps {
   slug: string;
@@ -23,16 +24,16 @@ interface PlanProps {
 export function PricingCard({ plan }: { plan: PlanProps }) {
   return (
     <div className={`
-      p-8 rounded-2xl border flex flex-col h-full transition-all duration-300 ease-out group
+      p-8 rounded-[24px] flex flex-col h-full transition-all duration-300 ease-out group
       ${plan.isFeatured
-        ? 'bg-cultr-forest text-white shadow-xl hover:scale-[1.03] hover:shadow-2xl hover:shadow-cultr-forest/30'
-        : 'bg-white border-cultr-sage hover:border-cultr-forest/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-cultr-forest/10'
+        ? 'grad-dark-glow text-white shadow-lux-lg hover:scale-[1.03]'
+        : 'glass-card hover:-translate-y-1'
       }
     `}>
       {plan.isFeatured && (
         <span className="text-cultr-sage text-xs font-display font-bold tracking-widest uppercase mb-4 block animate-pulse-slow">Most Popular</span>
       )}
-      <h3 className={`text-2xl font-display font-bold mb-2 transition-transform duration-300 group-hover:translate-x-0.5 ${plan.isFeatured ? 'text-white' : 'text-cultr-text'}`}>{plan.name}</h3>
+      <h3 className={`text-2xl font-display font-bold mb-2 transition-transform duration-300 group-hover:translate-x-0.5 ${plan.isFeatured ? 'text-white' : 'text-cultr-text'}`}>{brandify(plan.name)}</h3>
       <div className="flex items-baseline gap-1 mb-2">
         <span className={`text-4xl font-bold transition-transform duration-300 group-hover:scale-105 origin-left ${plan.isFeatured ? 'text-white' : 'text-cultr-forest'}`}>${plan.price}</span>
         <span className={`text-sm ${plan.isFeatured ? 'text-white/70' : 'text-cultr-textMuted'}`}>/{plan.interval}</span>

@@ -291,8 +291,8 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
   }
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
-      <section className="bg-cultr-forest text-white sticky top-0 z-10 shadow-md">
+    <div className="min-h-screen grad-light">
+      <section className="grad-dark text-white sticky top-0 z-10 shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-display font-bold">Protocol Engine</h1>
@@ -328,7 +328,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
             <input
               value={patientId}
               onChange={(e) => setPatientId(e.target.value)}
-              className="w-full rounded-xl border border-cultr-sage/50 bg-cultr-offwhite px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
+              className="w-full rounded-xl border border-cultr-sage/50 grad-light px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
               placeholder="e.g. patient_123"
             />
           </div>
@@ -341,7 +341,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   <select
                     value={templateId}
                     onChange={(e) => handleTemplateChange(e.target.value)}
-                    className="w-full rounded-xl border border-cultr-sage/50 bg-cultr-offwhite px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
+                    className="w-full rounded-xl border border-cultr-sage/50 grad-light px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
                   >
                     {PROTOCOL_TEMPLATES.map((item) => (
                       <option key={item.id} value={item.id}>{item.name}</option>
@@ -432,7 +432,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   <input
                     value={symptomSearch}
                     onChange={(e) => setSymptomSearch(e.target.value)}
-                    className="w-full rounded-xl border border-cultr-sage/50 bg-cultr-offwhite pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
+                    className="w-full rounded-xl border border-cultr-sage/50 grad-light pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
                     placeholder="Search symptoms (e.g. anxiety, fatigue)"
                   />
                 </div>
@@ -442,7 +442,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                       <button
                         key={symptom.id}
                         onClick={() => addSymptom(symptom)}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-cultr-offwhite flex justify-between items-center group"
+                        className="w-full text-left px-4 py-2 text-sm hover:grad-light flex justify-between items-center group"
                       >
                         <span>{symptom.symptom}</span>
                         <Plus className="h-4 w-4 text-cultr-forest opacity-0 group-hover:opacity-100" />
@@ -504,7 +504,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                       <button
                         key={presetKey}
                         onClick={() => applyOutcomePreset(presetKey)}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-cultr-sage/30 bg-cultr-offwhite hover:bg-cultr-sage/20 transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-lg border border-cultr-sage/30 grad-light hover:bg-cultr-sage/20 transition-colors"
                       >
                         {presetKey.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </button>
@@ -575,7 +575,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   <button
                     onClick={addExpectedOutcome}
                     disabled={!selectedBiomarker || !outcomeTargetValue}
-                    className="w-full text-xs px-3 py-2 rounded-lg bg-cultr-forest text-white hover:bg-cultr-forestDark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full text-xs px-3 py-2 rounded-lg grad-dark text-white hover:bg-cultr-forestDark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     <Plus className="h-3 w-3" /> Add Outcome Target
                   </button>
@@ -654,7 +654,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
 
         {/* Right Column: Preview */}
         <div className="bg-white rounded-2xl shadow-sm border border-cultr-sage/20 overflow-hidden flex flex-col h-[calc(100vh-10rem)] sticky top-28">
-          <div className="bg-cultr-offwhite px-6 py-4 border-b border-cultr-sage/10">
+          <div className="grad-light px-6 py-4 border-b border-cultr-sage/10">
             <h2 className="font-display font-bold text-lg text-cultr-text flex items-center gap-2">
               <FileText className="h-5 w-5 text-cultr-forest" />
               Protocol Preview
@@ -683,7 +683,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   <h4 className="font-bold text-sm uppercase tracking-wide text-cultr-text/60">Monitoring</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {templatePreview.monitoringSchedule.map((item) => (
-                      <div key={item.label} className="bg-cultr-offwhite p-3 rounded-lg">
+                      <div key={item.label} className="grad-light p-3 rounded-lg">
                         <p className="text-xs text-cultr-textMuted font-medium">{item.label}</p>
                         <p className="text-sm font-bold text-cultr-text">{item.cadence}</p>
                       </div>
@@ -964,7 +964,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                 )}
 
                 {/* Protocol Metadata */}
-                <div className="bg-cultr-offwhite p-4 rounded-xl border border-cultr-sage/10 mt-6">
+                <div className="grad-light p-4 rounded-xl border border-cultr-sage/10 mt-6">
                   <h4 className="font-bold text-xs uppercase tracking-wide text-cultr-text/60 mb-3">Protocol Metadata</h4>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
@@ -1006,7 +1006,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                     </h4>
                     <div className="space-y-3">
                       {combinedProtocol.interventions.map((item) => (
-                        <div key={item.name} className="bg-cultr-offwhite border border-cultr-sage/10 p-4 rounded-xl">
+                        <div key={item.name} className="grad-light border border-cultr-sage/10 p-4 rounded-xl">
                           <div className="flex justify-between items-start mb-2">
                             <div>
                               <p className="font-bold text-cultr-text">{item.name}</p>
@@ -1017,7 +1017,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                               </span>
                             </div>
                             {item.frequency > 1 && (
-                              <span className="text-xs bg-cultr-forest text-white px-2 py-1 rounded-full font-medium" title="Targeting multiple symptoms">
+                              <span className="text-xs grad-dark text-white px-2 py-1 rounded-full font-medium" title="Targeting multiple symptoms">
                                 {item.frequency}x Match
                               </span>
                             )}
@@ -1046,7 +1046,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                       <ul className="grid grid-cols-1 gap-2">
                         {combinedProtocol.monitoring.map((m) => (
                           <li key={m} className="text-sm text-cultr-text flex items-start gap-2">
-                            <span className="text-cultr-forest mt-1.5 h-1.5 w-1.5 rounded-full bg-cultr-forest shrink-0" />
+                            <span className="text-cultr-forest mt-1.5 h-1.5 w-1.5 rounded-full grad-dark shrink-0" />
                             {m}
                           </li>
                         ))}
@@ -1109,7 +1109,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   )}
 
                   {/* Protocol Metadata - Symptom Mode */}
-                  <div className="bg-cultr-offwhite p-4 rounded-xl border border-cultr-sage/10 mt-6">
+                  <div className="grad-light p-4 rounded-xl border border-cultr-sage/10 mt-6">
                     <h4 className="font-bold text-xs uppercase tracking-wide text-cultr-text/60 mb-3">Protocol Metadata</h4>
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>

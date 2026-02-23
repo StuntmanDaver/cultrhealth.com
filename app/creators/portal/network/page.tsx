@@ -131,7 +131,7 @@ export default function NetworkPage() {
           </code>
           <button
             onClick={handleCopy}
-            className="flex-shrink-0 p-2.5 rounded-lg bg-cultr-forest text-white hover:bg-cultr-forestDark transition-colors"
+            className="flex-shrink-0 p-2.5 rounded-lg grad-dark text-white hover:bg-cultr-forestDark transition-colors"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>

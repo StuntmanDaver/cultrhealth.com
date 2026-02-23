@@ -112,7 +112,7 @@ Why it works: Relatable experience, includes disclaimer, curiosity-driven.`}</Co
 
         <SubHeading>Middle of Funnel (Consideration)</SubHeading>
         <Paragraph>Introduce CULTR as the solution. Use proof mechanisms.</Paragraph>
-        <CopyBlock>{`"I got 50+ biomarkers tested through CULTR — here are the 3 things that surprised me."
+        <CopyBlock>{`"I got 28–59 biomarkers tested through CULTR — here are the 3 things that surprised me."
 "My provider built a protocol based on MY data, not a generic one-size-fits-all plan."`}</CopyBlock>
 
         <SubHeading>Bottom of Funnel (Conversion)</SubHeading>

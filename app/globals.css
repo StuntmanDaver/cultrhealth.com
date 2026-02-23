@@ -13,8 +13,9 @@
   }
 
   body {
-    @apply antialiased font-body bg-brand-cream text-brand-primary;
+    @apply antialiased font-body text-brand-primary;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background: linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 50%, #FCFBF7 100%);
   }
 
   h1, h2, h3, h4, h5, h6, th {
@@ -92,19 +93,40 @@
 
   /* Card */
   .card {
-    @apply bg-white border border-brand-primary/10 rounded-2xl p-6 md:p-8
-           transition-all duration-300 hover:shadow-lg hover:shadow-brand-primary/10;
+    @apply bg-white/80 backdrop-blur-sm rounded-2xl p-6 md:p-8
+           transition-all duration-300;
+    border: 1px solid rgba(43, 69, 66, 0.08);
+    box-shadow:
+      0 1px 2px rgba(43, 69, 66, 0.03),
+      0 4px 16px rgba(43, 69, 66, 0.05);
+  }
+  .card:hover {
+    box-shadow:
+      0 4px 24px rgba(43, 69, 66, 0.08),
+      0 12px 48px rgba(43, 69, 66, 0.04);
+    transform: translateY(-2px);
   }
 
   .card-elevated {
-    @apply card shadow-xl shadow-brand-primary/10;
+    @apply card;
+    box-shadow:
+      0 2px 4px rgba(43, 69, 66, 0.04),
+      0 8px 32px rgba(43, 69, 66, 0.08),
+      0 24px 80px rgba(43, 69, 66, 0.04);
   }
 
   /* Product Card */
   .card-product {
-    @apply bg-white rounded-2xl p-6 
-           transition-all duration-300 
-           hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-primary/15;
+    @apply bg-white/90 backdrop-blur-sm rounded-2xl p-6
+           transition-all duration-300;
+    border: 1px solid rgba(43, 69, 66, 0.06);
+    box-shadow: 0 2px 8px rgba(43, 69, 66, 0.04);
+  }
+  .card-product:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      0 8px 32px rgba(43, 69, 66, 0.1),
+      0 2px 4px rgba(43, 69, 66, 0.04);
   }
 
   /* Feature Card with color background */
@@ -137,6 +159,177 @@
 }
 
 @layer utilities {
+  /* ─── Luxurious Gradient Backgrounds ─── */
+
+  /* Dark / hero sections — rich multi-layer teal mesh */
+  .grad-dark {
+    background:
+      radial-gradient(ellipse 80% 50% at 70% 20%, rgba(61,94,91,0.5) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 60% at 20% 80%, rgba(31,53,51,0.6) 0%, transparent 60%),
+      linear-gradient(160deg, #1A2E2B 0%, #2B4542 35%, #34524F 65%, #243C39 100%);
+  }
+
+  /* Light content sections — warm cream to white with soft orb */
+  .grad-light {
+    background:
+      radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.15) 0%, transparent 70%),
+      linear-gradient(180deg, #FCFBF7 0%, #FEFEFE 40%, #FFFFFF 100%);
+  }
+
+  /* White content sections — cream with layered soft glow */
+  .grad-white {
+    background:
+      radial-gradient(ellipse 60% 60% at 20% 80%, rgba(215,243,220,0.1) 0%, transparent 70%),
+      linear-gradient(180deg, #FFFFFF 0%, #FDFCF9 50%, #FCFBF7 100%);
+  }
+
+  /* Mint accent sections — multi-stop with warm bloom */
+  .grad-mint {
+    background:
+      radial-gradient(ellipse 50% 50% at 80% 30%, rgba(255,255,255,0.6) 0%, transparent 70%),
+      linear-gradient(150deg, #D7F3DC 0%, #E8F7EB 30%, #FCFBF7 70%, #FFFFFF 100%);
+  }
+
+  /* Page-level background — warm cream with ultra-subtle depth */
+  .grad-page {
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(215,243,220,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 60% at 50% 100%, rgba(215,243,220,0.06) 0%, transparent 60%),
+      linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 50%, #FCFBF7 100%);
+  }
+
+  /* Dark hero with luminous glow — for primary hero sections */
+  .grad-dark-glow {
+    background:
+      radial-gradient(ellipse 50% 40% at 50% 0%, rgba(215,243,220,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 90% 60%, rgba(61,94,91,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 10% 70%, rgba(31,53,51,0.5) 0%, transparent 60%),
+      linear-gradient(160deg, #1A2E2B 0%, #2B4542 30%, #34524F 70%, #243C39 100%);
+  }
+
+  /* Light section with soft mint glow — for featured content */
+  .grad-light-glow {
+    background:
+      radial-gradient(ellipse 60% 50% at 30% 0%, rgba(215,243,220,0.25) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 80% 100%, rgba(215,243,220,0.15) 0%, transparent 60%),
+      linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 100%);
+  }
+
+  /* ─── Section Divider Gradients ─── */
+  .divider-fade-down {
+    position: relative;
+  }
+  .divider-fade-down::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent 0%, #FCFBF7 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .divider-fade-up {
+    position: relative;
+  }
+  .divider-fade-up::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(to top, transparent 0%, #FCFBF7 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ─── Glassmorphism Card ─── */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 4px 24px rgba(43, 69, 66, 0.06),
+      0 1px 2px rgba(43, 69, 66, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow:
+      0 8px 40px rgba(43, 69, 66, 0.1),
+      0 2px 4px rgba(43, 69, 66, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  /* Glassmorphism card on dark backgrounds */
+  .glass-card-dark {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .glass-card-dark:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow:
+      0 8px 40px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /* ─── Modern Shadows ─── */
+  .shadow-lux {
+    box-shadow:
+      0 1px 2px rgba(43, 69, 66, 0.04),
+      0 4px 16px rgba(43, 69, 66, 0.06),
+      0 12px 48px rgba(43, 69, 66, 0.04);
+  }
+
+  .shadow-lux-lg {
+    box-shadow:
+      0 2px 4px rgba(43, 69, 66, 0.04),
+      0 8px 32px rgba(43, 69, 66, 0.08),
+      0 24px 80px rgba(43, 69, 66, 0.06);
+  }
+
+  /* ─── Subtle Noise Texture Overlay ─── */
+  .noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ─── Gradient Border (for premium cards) ─── */
+  .border-gradient {
+    position: relative;
+    border: none !important;
+  }
+  .border-gradient::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(145deg, rgba(215,243,220,0.5) 0%, rgba(43,69,66,0.15) 50%, rgba(215,243,220,0.3) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
   /* Eli-style Italic Accent (for headlines) */
   .text-italic-accent {
     @apply italic;
@@ -178,7 +371,10 @@
 
   /* Glass effect */
   .glass {
-    @apply bg-white/80 backdrop-blur-lg;
+    background: rgba(252, 251, 247, 0.7);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    box-shadow: 0 4px 24px rgba(43, 69, 66, 0.06);
   }
 
   /* Hide scrollbar */

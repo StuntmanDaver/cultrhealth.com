@@ -20,7 +20,7 @@ export function MyProviders() {
           </div>
           <div className="flex-1">
             <h4 className="text-stone-900 font-medium text-lg">
-              CULTR Health Medical Team
+              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health Medical Team
             </h4>
             <p className="text-stone-500 text-sm mt-1">
               Board-certified physicians specializing in weight management & longevity

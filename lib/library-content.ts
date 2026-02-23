@@ -72,7 +72,9 @@ export async function getLibraryContent(
     if (!filteredMarkdown) {
       return null
     }
-    const html = await marked(filteredMarkdown)
+    let html = await marked(filteredMarkdown)
+    // Brand-style CULTR in rendered HTML (skip if already inside a tag attribute)
+    html = html.replace(/(?<![<\w"])CULTR(?!["\w>])/g, '<span class="font-display font-bold">CULTR</span>')
     return html
   } catch (error) {
     console.error(`Failed to read library content for ${category}:`, error)

@@ -21,7 +21,7 @@ export const salesFunnel: Record<string, ResourceEntry> = {
           'Format: 5-7 question quiz hosted on your landing page or social bio link',
           'Questions cover: energy levels, weight history, sleep quality, diet patterns, exercise frequency',
           'Output: A "Metabolic Readiness Score" (1-10) with a personalized recommendation',
-          'CTA at the end: "Want to know your REAL metabolic markers? CULTR tests 50+ biomarkers → [LINK]"',
+          'CTA at the end: "Want to know your REAL metabolic markers? CULTR tests 28–59 biomarkers → [LINK]"',
           'Best for: Weight Loss Seekers, Busy Professionals',
         ]} />
 
@@ -93,14 +93,14 @@ export const salesFunnel: Record<string, ResourceEntry> = {
 Examples:
 - "Stop guessing about your health. Start testing."
 - "The protocols elite athletes use — now from $199/mo."
-- "50+ biomarkers. Licensed providers. Personalized protocols."
+- "28–59 biomarkers. Licensed providers. Personalized protocols."
 
 SUBHEADLINE: [Supporting context]
 - "CULTR Health combines comprehensive lab testing with provider-supervised protocols to optimize your health — not just treat disease."
 
 CTA BUTTON: "Take the Quiz" or "See Your Plan" → [YOUR LINK]
 
-TRUST BADGES: "Licensed Providers" | "50+ Biomarkers" | "HIPAA Compliant" | "HSA/FSA Eligible"`}</CopyBlock>
+TRUST BADGES: "Licensed Providers" | "28–59 Biomarkers" | "HIPAA Compliant" | "HSA/FSA Eligible"`}</CopyBlock>
 
         <SectionHeading>Section 2: Problem Statement</SectionHeading>
         <CopyBlock label="Template">{`HEADING: "Sound familiar?"
@@ -122,7 +122,7 @@ PAIN POINTS (pick 3-4 that match your audience):
 3. Get Optimized — "Personalized protocols delivered to your door. Quarterly retesting to track progress."
 
 KEY DIFFERENTIATORS:
-- 50+ biomarkers (vs. the 5-10 your doctor tests)
+- 28–59 biomarkers (vs. the 5-10 your doctor tests)
 - Licensed, board-certified providers
 - Peptides, GLP-1s, and hormone optimization
 - From $199/mo (less than most gym memberships)`}</CopyBlock>
@@ -134,7 +134,7 @@ YOUR TESTIMONIAL: Share your personal experience with specific details.
 
 STATS (use actual CULTR stats when available):
 - "5,000+ members optimizing their health"
-- "50+ biomarkers tested per panel"
+- "28–59 biomarkers tested per panel"
 - "Licensed providers in [X] states"
 
 TRUST ELEMENTS:
@@ -160,7 +160,7 @@ CTA BUTTON: "Get Started" → [YOUR LINK]`}</CopyBlock>
         <Paragraph>Include 4-5 questions from your FAQ Cheat Sheet (see Product Education resources). Focus on objections that prevent conversion: cost, legitimacy, side effects, time commitment.</Paragraph>
 
         <SectionHeading>Section 7: Final CTA</SectionHeading>
-        <CopyBlock label="Template">{`HEADING: "Your health has a story. 50+ biomarkers will tell it."
+        <CopyBlock label="Template">{`HEADING: "Your health has a story. 28–59 biomarkers will tell it."
 SUBHEADING: "Take the 2-minute quiz to find your plan."
 CTA BUTTON: "Start Now" → [YOUR LINK]
 DISCLOSURE: "Paid partnership with CULTR Health. [YOUR CODE] for [discount]."`}</CopyBlock>
@@ -225,7 +225,7 @@ P.S. Hit reply and tell me — what's your #1 health goal right now?`}</CopyBloc
         <CopyBlock label="Subject: This is what changed everything for me">{`[Formally introduce CULTR. Explain what it is, how it works (quiz → provider → protocol), and why you chose it. Include your first CTA link.]`}</CopyBlock>
 
         <SubHeading>Day 9 — Feature Deep-Dive</SubHeading>
-        <CopyBlock label="Subject: 50+ biomarkers. Here's what they test.">{`[Walk through what comprehensive testing actually includes. Make it tangible and impressive without being overwhelming.]`}</CopyBlock>
+        <CopyBlock label="Subject: 28–59 biomarkers. Here's what they test.">{`[Walk through what comprehensive testing actually includes. Make it tangible and impressive without being overwhelming.]`}</CopyBlock>
 
         <SubHeading>Day 10 — Objection Handling</SubHeading>
         <CopyBlock label="Subject: Your top questions, answered">{`[Use the FAQ Cheat Sheet content. Address: cost, legitimacy, side effects, how it differs from a regular doctor.]`}</CopyBlock>
@@ -242,7 +242,7 @@ P.S. Hit reply and tell me — what's your #1 health goal right now?`}</CopyBloc
         <CopyBlock label="Subject: Every month you wait is a month of data you're missing">{`[Frame urgency around opportunity cost, not fake scarcity. "You can't optimize what you don't measure." Reiterate the offer.]`}</CopyBlock>
 
         <SubHeading>Day 14 — Final Push</SubHeading>
-        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "50+ biomarkers + licensed provider + personalized protocol from $199/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
+        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "28–59 biomarkers + licensed provider + personalized protocol from $199/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
 
         <SectionHeading>Tips for the Sequence</SectionHeading>
         <BulletList items={[

@@ -29,7 +29,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
 
         <SubHeading>What&apos;s Included</SubHeading>
         <BulletList items={[
-          'Comprehensive metabolic lab panel (50+ biomarkers)',
+          'Comprehensive metabolic lab panel (28–59 biomarkers)',
           'Provider evaluation and GLP-1 eligibility assessment',
           'Personalized GLP-1 protocol with dose titration schedule',
           'Bi-weekly check-ins for the first 4 weeks, monthly thereafter',
@@ -90,7 +90,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
 
         <SubHeading>What&apos;s Included</SubHeading>
         <BulletList items={[
-          'Comprehensive longevity panel (50+ biomarkers including hs-CRP, homocysteine, insulin, full hormone profile)',
+          'Comprehensive longevity panel (28–59 biomarkers including hs-CRP, homocysteine, insulin, full hormone profile)',
           'Biological age baseline assessment',
           'Personalized optimization protocol (may include peptides, hormone support, metabolic interventions)',
           'Quarterly retesting to measure progress objectively',

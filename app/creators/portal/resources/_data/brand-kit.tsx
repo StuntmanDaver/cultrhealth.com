@@ -19,7 +19,7 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SectionHeading>Available Formats</SectionHeading>
         <div className="grid sm:grid-cols-2 gap-4 my-4">
-          <div className="bg-cultr-forest p-8 rounded-xl flex items-center justify-center">
+          <div className="grad-dark p-8 rounded-xl flex items-center justify-center">
             <span className="font-display font-bold text-white text-3xl tracking-[0.08em]">CULTR</span>
           </div>
           <div className="bg-white border border-stone-200 p-8 rounded-xl flex items-center justify-center">
@@ -176,7 +176,7 @@ export const brandKit: Record<string, ResourceEntry> = {
         <BulletList items={[
           'Use sentence case for headlines (capitalize first word only)',
           'Short sentences. Short paragraphs. White space is your friend.',
-          'Numbers are more powerful than adjectives ("50+ biomarkers" > "comprehensive testing")',
+          'Numbers are more powerful than adjectives ("28–59 biomarkers" > "comprehensive testing")',
           'Avoid exclamation marks in professional copy (one per piece maximum)',
           'CULTR is always written in all-caps. "CULTR Health" on first reference, "CULTR" thereafter.',
           'Never abbreviate to "CH" or "Cultr" (lowercase)',

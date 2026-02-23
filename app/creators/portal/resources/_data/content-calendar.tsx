@@ -20,7 +20,7 @@ export const contentCalendar: Record<string, ResourceEntry> = {
         <DataTable
           headers={['Day', 'Topic', 'Pillar', 'Format']}
           rows={[
-            ['1', 'Why I got 50+ biomarkers tested', 'Longevity', 'Reel / TikTok'],
+            ['1', 'Why I got 28–59 biomarkers tested', 'Longevity', 'Reel / TikTok'],
             ['2', 'Your doctor tests 5 markers. CULTR tests 50+.', 'Longevity', 'Carousel'],
             ['3', '"Normal" vs. "Optimal" — what the difference means', 'Longevity', 'Reel / TikTok'],
             ['4', 'My top 3 lab findings (personal story)', 'Metabolic', 'Story series'],
@@ -101,7 +101,7 @@ export const contentCalendar: Record<string, ResourceEntry> = {
           rows={[
             ['1', 'Why I Switched to CULTR (My Full Story)', 'YouTube / Blog', 'General'],
             ['2', 'GLP-1 Medications Explained: What You Need to Know', 'YouTube / Podcast', 'Metabolic'],
-            ['3', 'My Lab Results Walkthrough (50+ Biomarkers)', 'YouTube', 'Longevity'],
+            ['3', 'My Lab Results Walkthrough (28–59 Biomarkers)', 'YouTube', 'Longevity'],
             ['4', 'Peptides 101: What They Are and How They Work', 'YouTube / Blog', 'Recovery'],
             ['5', 'The Difference Between "Normal" and "Optimal" Health', 'Podcast / Blog', 'Longevity'],
             ['6', 'My [X]-Month Progress Report with CULTR', 'YouTube', 'General'],

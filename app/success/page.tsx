@@ -172,7 +172,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white text-center">
+      <section className="py-24 md:py-32 px-6 grad-dark text-white text-center">
         <div className="max-w-2xl mx-auto">
           <div className="w-20 h-20 bg-cultr-sage/20 rounded-full flex items-center justify-center mb-8 mx-auto border border-cultr-sage/30">
             {isPending ? (
@@ -200,7 +200,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           <p className="text-xl text-white/80 max-w-xl mx-auto">
             {isProductPurchase
               ? 'Your product order has been placed. We will process and ship your items shortly.'
-              : `Welcome to CULTR${planName ? ` ${planName}` : ''}. ${isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Complete these two steps to start your journey.'}`
+              : <>{`Welcome to `}<span className="font-display font-bold tracking-[0.08em]">CULTR</span>{planName ? ` ${planName}` : ''}. {isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Complete these two steps to start your journey.'}</>
+
             }
           </p>
 
@@ -220,12 +221,12 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
       {/* Next Steps (not shown for product purchases) */}
       {!isProductPurchase && (
-        <section className="py-16 px-6 bg-white">
+        <section className="py-16 px-6 grad-white">
           <div className="max-w-2xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6 mb-12">
               <Link href="/intake" className="block group">
-                <div className="h-full p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-xl bg-cultr-forest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-full p-8 rounded-2xl grad-light border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-xl grad-dark flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileText className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 1</span>
@@ -236,8 +237,8 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               </Link>
 
               <Link href="/dashboard" className="block group">
-                <div className="h-full p-8 rounded-2xl bg-cultr-offwhite border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-xl bg-cultr-forest flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <div className="h-full p-8 rounded-2xl grad-light border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
+                  <div className="w-14 h-14 rounded-xl grad-dark flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Calendar className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 2</span>
@@ -249,7 +250,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
             </div>
 
             {/* Timeline */}
-            <div className="bg-cultr-mint rounded-2xl p-8 border border-cultr-sage">
+            <div className="grad-mint rounded-2xl p-8 border border-cultr-sage">
               <h3 className="font-display font-bold text-cultr-forest mb-6">What happens next?</h3>
               <div className="space-y-6">
                 {[
@@ -300,7 +301,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
 
       {/* Product purchase: LMN and next steps */}
       {isProductPurchase && (
-        <section className="py-16 px-6 bg-white">
+        <section className="py-16 px-6 grad-white">
           <div className="max-w-2xl mx-auto">
             {/* HSA/FSA LMN Section */}
             {lmnNumber && (
@@ -372,13 +373,13 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/library/shop"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-cultr-forest text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
                 >
                   Continue Shopping
                 </Link>
                 <Link
                   href="/library"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-cultr-offwhite text-cultr-forest font-bold rounded-lg hover:bg-cultr-sage/30 transition-colors border border-cultr-sage"
+                  className="inline-flex items-center gap-2 px-6 py-3 grad-light text-cultr-forest font-bold rounded-lg hover:bg-cultr-sage/30 transition-colors border border-cultr-sage"
                 >
                   <FileText className="w-4 h-4" />
                   View All Documents
@@ -390,7 +391,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       )}
 
       {/* Support */}
-      <section className="py-8 px-6 bg-cultr-offwhite border-t border-cultr-sage">
+      <section className="py-8 px-6 grad-light border-t border-cultr-sage">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-sm text-cultr-textMuted">
             Need help?{' '}

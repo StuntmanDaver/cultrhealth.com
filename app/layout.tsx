@@ -98,7 +98,7 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
+      <body className="min-h-screen grad-page text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
         <LayoutShell>
           {children}
         </LayoutShell>

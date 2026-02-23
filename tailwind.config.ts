@@ -12,25 +12,25 @@ const config: Config = {
       colors: {
         // Brand colors
         brand: {
-          primary: '#2A4542',
+          primary: '#2B4542',
           primaryHover: '#1F3533',
-          primaryLight: '#3A5956',
-          cream: '#FDFBF7',
+          primaryLight: '#3D5E5B',
+          cream: '#FCFBF7',
           creamDark: '#F5F0E8',
         },
         // Primary brand color shortcuts (for easier use)
         forest: {
-          DEFAULT: '#2A4542',
-          light: '#3A5956',
+          DEFAULT: '#2B4542',
+          light: '#3D5E5B',
           dark: '#1F3533',
           muted: '#6B7280',
         },
         cream: {
-          DEFAULT: '#FDFBF7',
+          DEFAULT: '#FCFBF7',
           dark: '#F5F0E8',
         },
-        sage: '#B7E4C7',
-        mint: '#D8F3DC',
+        sage: '#D7F3DC',
+        mint: '#D7F3DC',
         // Aura gradient colors (decorative)
         aura: {
           purple: '#9333EA',
@@ -43,13 +43,13 @@ const config: Config = {
         },
         // Legacy colors (kept for compatibility)
         cultr: {
-          forest: '#2A4542',
-          forestLight: '#3A5956',
+          forest: '#2B4542',
+          forestLight: '#3D5E5B',
           forestDark: '#1F3533',
-          sage: '#B7E4C7',
-          mint: '#D8F3DC',
-          offwhite: '#FDFBF7',
-          text: '#2A4542',
+          sage: '#D7F3DC',
+          mint: '#D7F3DC',
+          offwhite: '#FCFBF7',
+          text: '#2B4542',
           textMuted: '#6B7280',
         },
       },

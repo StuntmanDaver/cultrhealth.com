@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { brandify } from '@/lib/utils'
 import {
   Megaphone,
   Gift,
@@ -39,11 +40,11 @@ const CAMPAIGNS: Campaign[] = [
     endDate: '2026-03-31',
     details: [
       'Focus messaging on "spring reset" and new health goals',
-      'Highlight the 50+ biomarker panel as a first step',
+      'Highlight the 28–59 biomarker panel (SiPho Health) as a first step',
       'Push the quiz as a low-commitment entry point',
       'Use seasonal hooks: "New year goals, spring action"',
     ],
-    cta: { label: 'Copy Spring Promo Caption', copy: "Spring is the perfect time to stop guessing and start optimizing. 🌱\n\nGet 50+ biomarkers tested, matched with a licensed provider, and start a personalized protocol.\n\nPlans from $199/mo. Take the quiz → {LINK}\n\n#ad #cultrhealth #springreset" },
+    cta: { label: 'Copy Spring Promo Caption', copy: "Spring is the perfect time to stop guessing and start optimizing. 🌱\n\nGet 28–59 biomarkers tested, matched with a licensed provider, and start a personalized protocol.\n\nPlans from $199/mo. Take the quiz → {LINK}\n\n#ad #cultrhealth #springreset" },
     badge: 'Active Now',
   },
   {
@@ -149,7 +150,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               </span>
             )}
           </div>
-          <p className="text-xs text-cultr-textMuted line-clamp-2">{campaign.description}</p>
+          <p className="text-xs text-cultr-textMuted line-clamp-2">{brandify(campaign.description)}</p>
         </div>
         <ChevronRight className={`w-4 h-4 text-stone-300 shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`} />
       </button>
@@ -171,7 +172,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             <ul className="space-y-1.5">
               {campaign.details.map((detail, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-cultr-textMuted">
-                  <span className="w-1 h-1 rounded-full bg-cultr-forest mt-1.5 shrink-0" />
+                  <span className="w-1 h-1 rounded-full grad-dark mt-1.5 shrink-0" />
                   {detail}
                 </li>
               ))}
@@ -184,7 +185,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               {campaign.cta.copy ? (
                 <button
                   onClick={handleCopyCta}
-                  className="flex items-center gap-2 px-4 py-2 bg-cultr-forest text-white rounded-lg text-xs font-medium hover:bg-cultr-forestDark transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 grad-dark text-white rounded-lg text-xs font-medium hover:bg-cultr-forestDark transition-colors"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   {copied ? 'Copied!' : campaign.cta.label}
@@ -192,7 +193,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
               ) : campaign.cta.url ? (
                 <a
                   href={campaign.cta.url}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-cultr-forest text-white rounded-lg text-xs font-medium hover:bg-cultr-forestDark transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 grad-dark text-white rounded-lg text-xs font-medium hover:bg-cultr-forestDark transition-colors"
                 >
                   {campaign.cta.label}
                   <ChevronRight className="w-3 h-3" />
@@ -215,7 +216,7 @@ export default function CampaignsPage() {
       <div>
         <h1 className="text-2xl font-display font-bold text-cultr-forest">Campaigns</h1>
         <p className="text-sm text-cultr-textMuted mt-1">
-          Active promotions, product launches, and bonus opportunities. Stay aligned with CULTR messaging.
+          Active promotions, product launches, and bonus opportunities. Stay aligned with <span className="font-display font-bold tracking-[0.08em]">CULTR</span> messaging.
         </p>
       </div>
 
@@ -253,7 +254,7 @@ export default function CampaignsPage() {
       )}
 
       {/* CTA */}
-      <div className="bg-cultr-mint border border-cultr-sage rounded-2xl p-6 text-center">
+      <div className="grad-mint border border-cultr-sage rounded-2xl p-6 text-center">
         <p className="font-display font-bold text-cultr-forest mb-2">
           Have a campaign idea?
         </p>
@@ -262,7 +263,7 @@ export default function CampaignsPage() {
         </p>
         <a
           href="mailto:creators@cultrhealth.com"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors"
         >
           Contact Creator Support
         </a>

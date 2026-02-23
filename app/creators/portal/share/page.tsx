@@ -42,7 +42,7 @@ function CopyableLink({ label, value, stats }: { label: string; value: string; s
         </code>
         <button
           onClick={handleCopy}
-          className="flex-shrink-0 p-2 rounded-lg bg-cultr-forest text-white hover:bg-cultr-forestDark transition-colors"
+          className="flex-shrink-0 p-2 rounded-lg grad-dark text-white hover:bg-cultr-forestDark transition-colors"
         >
           {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
         </button>
@@ -61,7 +61,7 @@ const SOCIAL_POSTS = [
         label: 'Lab Results Post',
         text: `Just got my comprehensive lab panel back from @cultrhealth 🧪
 
-50+ biomarkers tested. Turns out my regular doctor was only checking 5.
+28–59 biomarkers tested. Turns out my regular doctor was only checking 5.
 
 This is why "you're fine" isn't enough.
 
@@ -75,7 +75,7 @@ Use code {CODE} for a discount.
         label: 'Progress Update',
         text: `The same protocols celebrities pay $10K/year for — now from $199/mo.
 
-Licensed providers. Personalized peptide protocols. 50+ biomarker testing.
+Licensed providers. Personalized peptide protocols. 28–59 biomarker testing (SiPho Health).
 
 Not a supplement company. An actual medical practice.
 
@@ -94,7 +94,7 @@ Take the quiz → {LINK}
         text: `My doctor: "Your labs are normal"
 CULTR: "Here are 3 things that explain why you feel off"
 
-50+ biomarkers > the basic 5.
+28–59 biomarkers > the basic 5.
 
 {LINK}
 
@@ -120,7 +120,7 @@ Provider-supervised. Licensed pharmacy. Real science.
         label: 'Personal Story',
         text: `I've been working with CULTR Health for the past few months and wanted to share my experience.
 
-They test 50+ biomarkers (not the basic 5 your doctor runs) and match you with a licensed provider who builds a personalized protocol.
+They test 28–59 biomarkers (not the basic 5 your doctor runs) and match you with a licensed provider who builds a personalized protocol.
 
 Plans start at $199/mo — less than most gym memberships.
 
@@ -264,7 +264,7 @@ export default function ShareEarnPage() {
         </div>
 
         {showLinkForm && (
-          <div className="bg-cultr-mint border border-cultr-sage rounded-xl p-4 mb-4 space-y-3">
+          <div className="grad-mint border border-cultr-sage rounded-xl p-4 mb-4 space-y-3">
             <div>
               <label className="block text-xs font-medium text-cultr-forest mb-1">Slug</label>
               <div className="flex items-center gap-1">
@@ -274,7 +274,7 @@ export default function ShareEarnPage() {
                   value={newSlug}
                   onChange={(e) => setNewSlug(e.target.value.replace(/[^a-zA-Z0-9-]/g, ''))}
                   placeholder="my-link"
-                  className="flex-1 bg-white border border-cultr-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cultr-forest/20"
+                  className="flex-1 grad-white border border-cultr-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cultr-forest/20"
                 />
               </div>
             </div>
@@ -299,7 +299,7 @@ export default function ShareEarnPage() {
                       value={customUrl}
                       onChange={(e) => setCustomUrl(e.target.value.startsWith('/') ? e.target.value : '/' + e.target.value)}
                       placeholder="/products/glp-1"
-                      className="flex-1 bg-white border border-cultr-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cultr-forest/20"
+                      className="flex-1 grad-white border border-cultr-sage rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cultr-forest/20"
                     />
                   </div>
                   <p className="text-[11px] text-cultr-textMuted mt-1">
@@ -322,7 +322,7 @@ export default function ShareEarnPage() {
               <button
                 onClick={handleCreateLink}
                 disabled={creating || !newSlug.trim() || (useCustomUrl && !customUrl.startsWith('/'))}
-                className="px-4 py-2 bg-cultr-forest text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
+                className="px-4 py-2 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
               >
                 {creating ? 'Creating...' : 'Create Link'}
               </button>

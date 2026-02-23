@@ -5,7 +5,7 @@ import { Aura } from '@/components/ui/Aura'
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-brand-cream">
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden grad-light">
       {/* Aura Gradient Orbs */}
       <Aura variant="purple" size="xl" position="top-left" className="opacity-40" />
       <Aura variant="yellow" size="lg" position="top-right" className="opacity-50" />

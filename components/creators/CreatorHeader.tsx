@@ -88,7 +88,7 @@ export function CreatorHeader({ onMenuToggle }: CreatorHeaderProps) {
             />
           )}
           {creator && (
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-cultr-mint rounded-full">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 grad-mint rounded-full">
               <span className="text-xs font-medium text-cultr-forest">
                 {getTierName(creator.tier)}
               </span>

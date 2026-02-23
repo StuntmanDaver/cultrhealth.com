@@ -56,7 +56,7 @@ export default function CreatorApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-[80vh] bg-cultr-offwhite flex items-center justify-center px-6">
+      <div className="min-h-[80vh] grad-light flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
@@ -82,15 +82,15 @@ export default function CreatorApplyPage() {
   }
 
   return (
-    <div className="bg-cultr-offwhite py-16 px-6">
+    <div className="grad-light py-16 px-6">
       <div className="max-w-lg mx-auto">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-cultr-mint px-4 py-2 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 grad-mint px-4 py-2 rounded-full mb-4">
             <Megaphone className="w-4 h-4 text-cultr-forest" />
             <span className="text-sm font-medium text-cultr-forest">Creator Application</span>
           </div>
           <h1 className="text-3xl font-display font-bold text-cultr-forest mb-3">
-            Join the CULTR Creator Program
+            Join the <span className="tracking-[0.08em]">CULTR</span> Creator Program
           </h1>
           <p className="text-cultr-textMuted">
             Earn 10% commission on every referral. We review applications within 48 hours.
@@ -188,7 +188,7 @@ export default function CreatorApplyPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-cultr-forest text-white rounded-full text-sm font-medium hover:bg-cultr-forestDark transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 grad-dark text-white rounded-full text-sm font-medium hover:bg-cultr-forestDark transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {submitting ? 'Submitting...' : (
               <>Submit Application <ArrowRight className="w-4 h-4" /></>
@@ -196,7 +196,7 @@ export default function CreatorApplyPage() {
           </button>
 
           <p className="text-xs text-cultr-textMuted text-center">
-            By applying, you agree to CULTR Health&apos;s creator program terms.
+            By applying, you agree to <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health&apos;s creator program terms.
           </p>
         </form>
       </div>

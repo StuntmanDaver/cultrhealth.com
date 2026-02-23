@@ -68,9 +68,9 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
   }
 
   return (
-    <div className="min-h-screen bg-cultr-offwhite">
+    <div className="min-h-screen grad-light">
       {/* Header */}
-      <header className="bg-cultr-forest text-white py-6 px-6">
+      <header className="grad-dark text-white py-6 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <Link
@@ -104,7 +104,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             {/* Product Image */}
             {product.imageUrl && (
-              <div className="w-full md:w-64 h-64 bg-cultr-offwhite rounded-xl overflow-hidden flex-shrink-0">
+              <div className="w-full md:w-64 h-64 grad-light rounded-xl overflow-hidden flex-shrink-0">
                 <img
                   src={product.imageUrl}
                   alt={product.name}
@@ -114,7 +114,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
             )}
 
             <div className="flex-1">
-              <span className="inline-block text-xs px-2 py-1 bg-cultr-mint rounded-full text-cultr-forest mb-2">
+              <span className="inline-block text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest mb-2">
                 {getCategoryDisplayName(product.category)}
               </span>
               <h1 className="text-2xl md:text-3xl font-display font-bold text-cultr-text">
@@ -152,18 +152,18 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
           </div>
 
           {/* Add to Cart Section */}
-          <div className="flex flex-col sm:flex-row gap-4 items-center p-4 bg-cultr-offwhite rounded-xl">
+          <div className="flex flex-col sm:flex-row gap-4 items-center p-4 grad-light rounded-xl">
             <div className="flex items-center gap-3">
               <button
                 onClick={decrementQuantity}
-                className="w-10 h-10 flex items-center justify-center border border-cultr-sage rounded-lg hover:bg-cultr-mint transition-colors"
+                className="w-10 h-10 flex items-center justify-center border border-cultr-sage rounded-lg hover:grad-mint transition-colors"
               >
                 <Minus className="w-4 h-4" />
               </button>
               <span className="w-12 text-center font-bold text-lg">{quantity}</span>
               <button
                 onClick={incrementQuantity}
-                className="w-10 h-10 flex items-center justify-center border border-cultr-sage rounded-lg hover:bg-cultr-mint transition-colors"
+                className="w-10 h-10 flex items-center justify-center border border-cultr-sage rounded-lg hover:grad-mint transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -171,7 +171,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
             
             <button
               onClick={handleAddToCart}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 bg-cultr-forest text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-3 grad-dark text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
             >
               {inCart ? (
                 <>
@@ -206,7 +206,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
 
             {/* Evidence & Risk Badges */}
             <div className="flex flex-wrap gap-2 mb-4">
-              <span className="px-3 py-1 bg-cultr-mint rounded-full text-sm text-cultr-forest">
+              <span className="px-3 py-1 grad-mint rounded-full text-sm text-cultr-forest">
                 Evidence: Grade {peptideDetails.evidenceGrade}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm ${getRiskBadgeClass(peptideDetails.riskTier)}`}>
@@ -246,7 +246,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
                 <h3 className="text-sm font-bold text-cultr-text mb-2">Best For</h3>
                 <div className="flex flex-wrap gap-2">
                   {peptideDetails.bestFor.map((use, i) => (
-                    <span key={i} className="px-2 py-1 bg-cultr-offwhite border border-cultr-sage rounded text-xs text-cultr-textMuted">
+                    <span key={i} className="px-2 py-1 grad-light border border-cultr-sage rounded text-xs text-cultr-textMuted">
                       {use}
                     </span>
                   ))}
@@ -271,7 +271,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
 
             {/* Notes */}
             {peptideDetails.notes && (
-              <div className="mt-4 p-3 bg-cultr-mint border border-cultr-sage rounded-lg">
+              <div className="mt-4 p-3 grad-mint border border-cultr-sage rounded-lg">
                 <div className="flex items-start gap-2">
                   <Info className="w-4 h-4 text-cultr-forest mt-0.5" />
                   <p className="text-sm text-cultr-textMuted">{peptideDetails.notes}</p>
@@ -291,7 +291,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
               {product.blendComponents.map((componentId) => (
                 <span
                   key={componentId}
-                  className="px-3 py-2 bg-cultr-offwhite border border-cultr-sage rounded-lg text-sm"
+                  className="px-3 py-2 grad-light border border-cultr-sage rounded-lg text-sm"
                 >
                   {componentId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </span>
@@ -311,7 +311,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
                 <Link
                   key={relatedProduct.sku}
                   href={`/library/shop/${encodeURIComponent(relatedProduct.sku)}`}
-                  className="flex items-center justify-between p-3 bg-cultr-offwhite border border-cultr-sage rounded-lg hover:border-cultr-forest/50 transition-colors"
+                  className="flex items-center justify-between p-3 grad-light border border-cultr-sage rounded-lg hover:border-cultr-forest/50 transition-colors"
                 >
                   <div>
                     <p className="font-medium text-cultr-text">{relatedProduct.doseMg}mg</p>
@@ -325,7 +325,7 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
         )}
 
         {/* Disclaimer */}
-        <div className="p-4 bg-cultr-mint border border-cultr-sage rounded-xl">
+        <div className="p-4 grad-mint border border-cultr-sage rounded-xl">
           <p className="text-xs text-cultr-textMuted">
             <strong className="text-cultr-text">Note:</strong> All products require a valid prescription from a licensed provider.
             Pricing is provided upon quote request. Product availability may vary.

@@ -74,7 +74,7 @@ export function CreatorSidebar({ mobileOpen, onClose }: CreatorSidebarProps) {
           href="/"
           className="text-xs text-cultr-textMuted hover:text-cultr-forest transition-colors"
         >
-          Back to CULTR Health
+          Back to <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
         </Link>
       </div>
     </div>
