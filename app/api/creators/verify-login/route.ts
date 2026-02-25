@@ -7,6 +7,16 @@ function isStagingEmail(email: string): boolean {
   return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase())
 }
 
+function setCookieOnResponse(response: NextResponse, token: string) {
+  response.cookies.set('cultr_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  })
+}
+
 export async function GET(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -29,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     const { email } = verified
 
-    // Look up creator
+    // Look up creator in DB
     let creatorId: string | undefined
     let creatorStatus: string | undefined
     try {
@@ -43,20 +53,39 @@ export async function GET(request: NextRequest) {
       // DB lookup failed
     }
 
-    // No DB record — check staging bypass
-    if (!creatorId) {
-      if (isStagingEmail(email)) {
-        const sessionToken = await createSessionToken(email, 'staging_customer', 'staging_creator', 'creator')
-        const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
-        response.cookies.set('cultr_session', sessionToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 60 * 60 * 24 * 7,
-          path: '/',
+    // No DB record — auto-create for staging bypass emails
+    if (!creatorId && isStagingEmail(email)) {
+      try {
+        const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode } = await import('@/lib/creators/db')
+
+        // Derive a name from the email (e.g. "erik" from "erik@threepointshospitality.com")
+        const namePart = email.split('@')[0]
+        const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1)
+
+        const creator = await createCreator({
+          email,
+          full_name: fullName,
         })
-        return response
+
+        await updateCreatorStatus(creator.id, 'active', 'staging-auto-create')
+
+        const slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 1000)
+        await createTrackingLink(creator.id, slug, '/', true)
+
+        const code = namePart.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) + '10'
+        await createAffiliateCode(creator.id, code, true)
+
+        creatorId = creator.id
+        creatorStatus = 'active'
+
+        console.log('Auto-created staging creator:', { email, creatorId })
+      } catch (err) {
+        console.error('Failed to auto-create staging creator:', err)
+        return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
       }
+    }
+
+    if (!creatorId) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
     }
 
@@ -64,13 +93,7 @@ export async function GET(request: NextRequest) {
     if (creatorStatus === 'pending') {
       const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
       const response = NextResponse.redirect(`${baseUrl}/creators/pending`)
-      response.cookies.set('cultr_session', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 7,
-        path: '/',
-      })
+      setCookieOnResponse(response, sessionToken)
       return response
     }
 
@@ -78,16 +101,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=inactive_account`)
     }
 
-    // Create session with creator role — set cookie directly on the redirect response
+    // Create session with creator role
     const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
     const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
-    response.cookies.set('cultr_session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    })
+    setCookieOnResponse(response, sessionToken)
 
     console.log('Creator session created:', {
       email,
