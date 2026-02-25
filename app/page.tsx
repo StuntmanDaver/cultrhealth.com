@@ -75,12 +75,12 @@ export default function HomePage() {
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
         <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.5) 65%, transparent 100%)' }} />
 
-        <div className="max-w-7xl mx-auto relative z-10 w-full py-20 -mt-16">
-          <div className="max-w-3xl">
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="text-center">
             <h1 className="text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
               Change the<br /><span className="tracking-[0.08em]">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
             </h1>
-            <div className="flex flex-row items-center gap-3">
+            <div className="flex flex-row items-center justify-center gap-3">
               <Link href="/quiz">
                 <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
               </Link>
@@ -277,7 +277,7 @@ export default function HomePage() {
               <div className="grid grid-cols-3 grad-dark text-white font-display">
                 <div className="p-4 font-medium">Feature</div>
                 <div className="p-4 font-medium text-center">Standard Care</div>
-                <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-bold tracking-[0.08em]">CULTR</span></div>
+                <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold tracking-[0.08em]">CULTR</span></div>
               </div>
               {[
                 ['Comprehensive lab panels', '5-10 markers', '50+ markers'],
