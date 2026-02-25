@@ -2,11 +2,41 @@ import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode } from '@/lib/creators/db'
 import { createMagicLinkToken } from '@/lib/auth'
+import { Resend } from 'resend'
 
 const AUTO_APPROVE_EMAILS = [
   'erik@threepointshospitality.com',
   'stewart@cultrhealth.com',
 ]
+
+function getBaseUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+}
+
+async function sendCreatorEmail(to: string, subject: string, html: string) {
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
+    await resend.emails.send({ from: fromEmail, to, subject, html })
+  } catch (err) {
+    console.error('Failed to send creator email:', err)
+  }
+}
+
+function creatorEmailTemplate(content: string) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #2A4542; color: #fafafa; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0.15em; margin-bottom: 30px; color: #fff;">CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span></h1>
+    ${content}
+    <p style="color: #444; font-size: 12px; margin-top: 40px; border-top: 1px solid #3a5a57; padding-top: 20px;">CULTR Health Creator Program<br>This is an automated message.</p>
+  </div>
+</body>
+</html>`
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -79,6 +109,8 @@ export async function POST(request: NextRequest) {
       recruiter_id: recruiterId,
     })
 
+    const baseUrl = getBaseUrl()
+
     // Auto-approve whitelisted emails
     if (AUTO_APPROVE_EMAILS.includes(email.toLowerCase())) {
       await updateCreatorStatus(creator.id, 'active', 'system-auto-approve')
@@ -97,7 +129,21 @@ export async function POST(request: NextRequest) {
 
       await createAffiliateCode(creator.id, code, true)
 
-      const verificationToken = await createMagicLinkToken(email)
+      // Send login magic link email
+      const token = await createMagicLinkToken(email)
+      const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
+
+      await sendCreatorEmail(
+        email,
+        'Welcome to CULTR Creator Program — You\'re Approved!',
+        creatorEmailTemplate(`
+          <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${full_name},</p>
+          <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Your creator account has been approved! Click below to access your Creator Portal where you can find your tracking link, coupon code, and start earning commissions.</p>
+          <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Open Creator Portal</a>
+          <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7;">cultrhealth.com/creators/login</a>.</p>
+        `)
+      )
+
       console.log(`Creator auto-approved: ${email}`)
 
       return NextResponse.json({
@@ -107,23 +153,31 @@ export async function POST(request: NextRequest) {
         creatorId: creator.id,
         trackingSlug: defaultSlug,
         couponCode: code,
-        ...(process.env.NODE_ENV !== 'production' && { verificationToken }),
       })
     }
 
-    // Generate email verification token
-    const verificationToken = await createMagicLinkToken(email)
+    // Regular application — send verification email
+    const token = await createMagicLinkToken(email)
+    const verifyLink = `${baseUrl}/api/creators/verify-email?token=${encodeURIComponent(token)}`
 
-    // In production, send email with verification link
-    // For now, return token for testing
-    console.log(`Creator application: ${email}, verification token: ${verificationToken}`)
+    await sendCreatorEmail(
+      email,
+      'Verify Your CULTR Creator Application',
+      creatorEmailTemplate(`
+        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${full_name},</p>
+        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Thanks for applying to the CULTR Creator Program! Please verify your email address by clicking the button below.</p>
+        <a href="${verifyLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Verify Email</a>
+        <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin-top: 24px;">Once verified, our team will review your application within 48 hours. You'll receive an email when approved with your tracking link and coupon code.</p>
+        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">If you didn't apply, you can safely ignore this email.</p>
+      `)
+    )
+
+    console.log(`Creator application submitted: ${email}`)
 
     return NextResponse.json({
       success: true,
       message: 'Application submitted. Please check your email to verify your address.',
       creatorId: creator.id,
-      // Include token in non-production for testing
-      ...(process.env.NODE_ENV !== 'production' && { verificationToken }),
     })
   } catch (error) {
     console.error('Creator application error:', error)
