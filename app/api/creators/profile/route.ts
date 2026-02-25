@@ -9,6 +9,23 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Staging fallback — return mock profile if DB record doesn't exist
+    if (auth.creatorId === 'staging_creator') {
+      return NextResponse.json({
+        creator: {
+          id: 'staging_creator',
+          email: auth.email,
+          full_name: auth.email?.split('@')[0] || 'Staging User',
+          status: 'active',
+          tier: 'starter',
+          override_rate: '0',
+          payout_method: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      })
+    }
+
     const creator = await getCreatorById(auth.creatorId)
     if (!creator) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })

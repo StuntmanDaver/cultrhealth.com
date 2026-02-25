@@ -80,8 +80,10 @@ export async function GET(request: NextRequest) {
 
         console.log('Auto-created staging creator:', { email, creatorId })
       } catch (err) {
-        console.error('Failed to auto-create staging creator:', err)
-        return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
+        console.error('Failed to auto-create staging creator (DB may be unavailable):', err)
+        // DB failed but they're a staging email — grant access with staging ID
+        creatorId = 'staging_creator'
+        creatorStatus = 'active'
       }
     }
 
