@@ -12,17 +12,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const isStagingCreator = auth.creatorId === 'staging_creator' || auth.creatorId === 'dev_creator'
-  const mockLinks = () => NextResponse.json({
-    links: [
-      { id: '1', creator_id: auth.creatorId, slug: 'staging-creator', destination_path: '/', click_count: 847, conversion_count: 26, active: true, is_default: true, created_at: '2025-11-15T00:00:00Z' },
-      { id: '2', creator_id: auth.creatorId, slug: 'staging-pricing', destination_path: '/pricing', click_count: 312, conversion_count: 9, active: true, is_default: false, created_at: '2025-12-01T00:00:00Z' },
-      { id: '3', creator_id: auth.creatorId, slug: 'staging-glp1', destination_path: '/pricing', click_count: 88, conversion_count: 3, active: true, is_default: false, created_at: '2026-01-10T00:00:00Z' },
-    ],
-  })
-
-  if (isStagingCreator) return mockLinks()
-
   try {
     const links = await getTrackingLinksByCreator(auth.creatorId)
     return NextResponse.json({ links })

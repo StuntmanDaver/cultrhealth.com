@@ -8,24 +8,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const isStagingCreator = auth.creatorId === 'staging_creator' || auth.creatorId === 'dev_creator'
-  const mockCreator = {
-    id: auth.creatorId || 'staging_creator',
-    email: auth.email || 'creator@cultrhealth.com',
-    full_name: 'Staging Creator',
-    status: 'active',
-    tier: 2,
-    override_rate: '4.00',
-    recruit_count: 12,
-    payout_method: 'bank_transfer',
-    created_at: new Date().toISOString(),
-  }
-
   try {
-    if (isStagingCreator) {
-      return NextResponse.json({ creator: mockCreator })
-    }
-
     const creator = await getCreatorById(auth.creatorId)
     if (!creator) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
@@ -33,9 +16,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ creator })
   } catch (error) {
-    if (isStagingCreator) {
-      return NextResponse.json({ creator: mockCreator })
-    }
     console.error('Profile fetch error:', error)
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
   }
