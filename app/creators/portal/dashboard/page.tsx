@@ -227,6 +227,9 @@ export default function CreatorDashboardPage() {
           <div className="lg:col-span-2">
             <Leaderboard
               myName={creator?.full_name ?? ''}
+              myClicks={metrics.totalClicks}
+              myOrders={metrics.totalOrders}
+              myRevenue={metrics.totalRevenue}
             />
           </div>
         </div>
