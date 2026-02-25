@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 
 const navLinks = [
@@ -19,6 +20,9 @@ const rightNavLinks = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href);
 
   useEffect(() => {
     let ticking = false;
@@ -125,9 +129,10 @@ export function Header() {
                     key={link.href}
                     href={link.href}
                     className={`
-                      flex items-center gap-1 font-body font-medium text-brand-primary
+                      flex items-center gap-1 font-body font-medium
                       rounded-lg whitespace-nowrap tracking-[0.01em]
                       transition-all duration-200 ease-out hover:bg-brand-primary/[0.07]
+                      ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.08]' : 'text-brand-primary'}
                       ${scrolled ? 'text-[13px] py-1.5 px-3' : 'text-sm py-[7px] px-[15px]'}
                     `}
                   >
@@ -147,9 +152,10 @@ export function Header() {
                   key={link.href}
                   href={link.href}
                   className={`
-                    flex items-center gap-1 font-body font-medium text-brand-primary
+                    flex items-center gap-1 font-body font-medium
                     rounded-lg whitespace-nowrap tracking-[0.01em]
                     transition-all duration-200 ease-out hover:bg-brand-primary/[0.07]
+                    ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.08]' : 'text-brand-primary'}
                     ${scrolled ? 'text-[13px] py-1.5 px-3' : 'text-sm py-[7px] px-[15px]'}
                   `}
                 >
@@ -205,7 +211,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-3.5 text-base font-body font-medium text-brand-primary border-b border-brand-primary/[0.06]"
+              className={`block py-3.5 text-base font-body font-medium border-b border-brand-primary/[0.06] ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.06] pl-3 rounded-lg' : 'text-brand-primary'}`}
             >
               {link.label}
             </Link>
@@ -222,7 +228,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block py-3.5 text-base font-body font-medium text-brand-primary border-b border-brand-primary/[0.06]"
+              className={`block py-3.5 text-base font-body font-medium border-b border-brand-primary/[0.06] ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.06] pl-3 rounded-lg' : 'text-brand-primary'}`}
             >
               {link.label}
             </Link>
