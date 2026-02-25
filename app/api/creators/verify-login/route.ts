@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
 
+function isStagingEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase())
+}
+
 export async function GET(request: NextRequest) {
   const baseUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -37,7 +43,20 @@ export async function GET(request: NextRequest) {
       // DB lookup failed
     }
 
+    // No DB record — check staging bypass
     if (!creatorId) {
+      if (isStagingEmail(email)) {
+        const sessionToken = await createSessionToken(email, 'staging_customer', 'staging_creator', 'creator')
+        const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
+        response.cookies.set('cultr_session', sessionToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+          path: '/',
+        })
+        return response
+      }
       return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
     }
 

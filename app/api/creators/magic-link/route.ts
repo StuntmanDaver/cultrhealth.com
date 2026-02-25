@@ -1,47 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
 
+function isStagingEmail(email: string): boolean {
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase())
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
     const normalizedEmail = email.toLowerCase().trim()
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(normalizedEmail)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
     if (!checkRateLimit(normalizedEmail)) {
-      return NextResponse.json(
-        { error: 'Please wait before requesting another link' },
-        { status: 429 }
-      )
+      return NextResponse.json({ error: 'Please wait before requesting another link' }, { status: 429 })
     }
 
-    // Look up creator by email — they must exist and be active
-    let creatorExists = false
-    try {
-      const { getCreatorByEmail } = await import('@/lib/creators/db')
-      const creator = await getCreatorByEmail(normalizedEmail)
-      if (creator && (creator.status === 'active' || creator.status === 'pending')) {
-        creatorExists = true
+    // Check if creator exists in DB OR is a staging bypass email
+    let creatorExists = isStagingEmail(normalizedEmail)
+
+    if (!creatorExists) {
+      try {
+        const { getCreatorByEmail } = await import('@/lib/creators/db')
+        const creator = await getCreatorByEmail(normalizedEmail)
+        if (creator && (creator.status === 'active' || creator.status === 'pending')) {
+          creatorExists = true
+        }
+      } catch {
+        // DB lookup failed
       }
-    } catch {
-      // DB lookup failed
     }
 
-    // Always return same message to prevent email enumeration
+    // Silently return success to prevent email enumeration
     if (!creatorExists) {
       return NextResponse.json({
         success: true,
@@ -54,13 +54,11 @@ export async function POST(request: NextRequest) {
 
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000')
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
     const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
-    // In development, log the link
+    // In development, log the link and return it
     if (process.env.NODE_ENV === 'development') {
       console.log('Creator magic link:', magicLink)
       return NextResponse.json({
@@ -105,9 +103,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Creator magic link error:', error)
-    return NextResponse.json(
-      { error: 'An error occurred. Please try again.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'An error occurred. Please try again.' }, { status: 500 })
   }
 }
