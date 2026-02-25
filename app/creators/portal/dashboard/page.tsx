@@ -8,6 +8,8 @@ import {
   TrendingUp,
   Users,
   ArrowUpRight,
+  CheckCircle2,
+  Circle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
@@ -94,6 +96,50 @@ function TierProgressBar({ tier, recruitCount }: { tier: number; recruitCount: n
   )
 }
 
+function GettingStartedCard() {
+  return (
+    <div className="bg-white border border-cultr-sage rounded-2xl p-6">
+      <div className="flex items-start gap-4">
+        <div className="w-10 h-10 rounded-xl bg-cultr-mint flex items-center justify-center flex-shrink-0">
+          <CheckCircle2 className="w-5 h-5 text-cultr-forest" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-display font-bold text-cultr-forest">Getting Started</h3>
+          <p className="text-sm text-cultr-textMuted mt-1 mb-4">
+            Complete these steps to start earning commissions.
+          </p>
+          <ul className="space-y-3">
+            {[
+              { label: 'Application approved', done: true, href: null },
+              { label: 'Create your first tracking link', done: false, href: '/creators/portal/share' },
+              { label: 'Get your referral code', done: false, href: '/creators/portal/share' },
+              { label: 'Share CULTR with your audience', done: false, href: null },
+              { label: 'Make your first sale', done: false, href: null },
+            ].map((step, i) => (
+              <li key={i} className="flex items-center gap-3 text-sm">
+                {step.done ? (
+                  <CheckCircle2 className="w-4 h-4 text-cultr-forest flex-shrink-0" />
+                ) : (
+                  <Circle className="w-4 h-4 text-stone-300 flex-shrink-0" />
+                )}
+                {step.href ? (
+                  <Link href={step.href} className="text-cultr-forest hover:underline font-medium">
+                    {step.label}
+                  </Link>
+                ) : (
+                  <span className={step.done ? 'text-cultr-textMuted line-through' : 'text-stone-500'}>
+                    {step.label}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CreatorDashboardPage() {
   const { metrics, creator, loading } = useCreator()
 
@@ -154,6 +200,11 @@ export default function CreatorDashboardPage() {
         />
       </div>
 
+      {/* Getting Started (shown only to new creators with no activity) */}
+      {metrics && metrics.totalClicks === 0 && metrics.totalCommission === 0 && (
+        <GettingStartedCard />
+      )}
+
       {/* Milestones */}
       {metrics && creator && (
         <MilestoneBadges metrics={metrics} creator={creator} />
@@ -175,9 +226,6 @@ export default function CreatorDashboardPage() {
           </div>
           <div className="lg:col-span-2">
             <Leaderboard
-              myClicks={metrics.thisMonthClicks}
-              myOrders={metrics.thisMonthOrders}
-              myRevenue={metrics.thisMonthRevenue}
               myName={creator?.full_name ?? ''}
             />
           </div>

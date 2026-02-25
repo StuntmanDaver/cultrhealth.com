@@ -93,7 +93,7 @@ export default function EarningsPage() {
           label="Lifetime Earnings"
           value={fmt(earnings?.lifetimeEarnings ?? 0)}
           icon={DollarSign}
-          color="bg-emerald-100 text-emerald-600"
+          color="bg-cultr-mint text-cultr-forest"
         />
         <EarningsStat
           label="Pending"
@@ -105,7 +105,7 @@ export default function EarningsPage() {
           label="Paid Out"
           value={fmt(earnings?.paidEarnings ?? 0)}
           icon={CheckCircle}
-          color="bg-blue-100 text-blue-600"
+          color="bg-stone-100 text-stone-600"
         />
         <EarningsStat
           label="This Month"
@@ -174,13 +174,13 @@ export default function EarningsPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">{fmt(Number(o.net_revenue))}</td>
-                    <td className="py-3 px-4 text-right font-medium text-emerald-600">
+                    <td className="py-3 px-4 text-right font-medium text-cultr-forest">
                       {fmt(Number(o.direct_commission_amount))}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        o.status === 'approved' ? 'bg-emerald-100 text-emerald-700'
-                        : o.status === 'paid' ? 'bg-blue-100 text-blue-700'
+                        o.status === 'approved' ? 'bg-cultr-mint/30 text-cultr-forest'
+                        : o.status === 'paid' ? 'bg-stone-100 text-stone-600'
                         : o.status === 'refunded' ? 'bg-red-100 text-red-700'
                         : 'bg-amber-100 text-amber-700'
                       }`}>
@@ -221,8 +221,8 @@ export default function EarningsPage() {
                   <tr key={e.id} className="hover:bg-stone-50">
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        e.commission_type === 'direct' ? 'bg-emerald-100 text-emerald-700'
-                        : e.commission_type === 'override' ? 'bg-purple-100 text-purple-700'
+                        e.commission_type === 'direct' ? 'bg-cultr-mint/30 text-cultr-forest'
+                        : e.commission_type === 'override' ? 'bg-stone-100 text-stone-600'
                         : 'bg-stone-100 text-stone-700'
                       }`}>
                         {e.commission_type}
@@ -230,13 +230,13 @@ export default function EarningsPage() {
                     </td>
                     <td className="py-3 px-4 text-right">{fmt(Number(e.base_amount))}</td>
                     <td className="py-3 px-4 text-right">{Number(e.commission_rate)}%</td>
-                    <td className="py-3 px-4 text-right font-medium text-emerald-600">
+                    <td className="py-3 px-4 text-right font-medium text-cultr-forest">
                       {fmt(Number(e.commission_amount))}
                     </td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        e.status === 'approved' ? 'bg-emerald-100 text-emerald-700'
-                        : e.status === 'paid' ? 'bg-blue-100 text-blue-700'
+                        e.status === 'approved' ? 'bg-cultr-mint/30 text-cultr-forest'
+                        : e.status === 'paid' ? 'bg-stone-100 text-stone-600'
                         : e.status === 'reversed' ? 'bg-red-100 text-red-700'
                         : 'bg-amber-100 text-amber-700'
                       }`}>

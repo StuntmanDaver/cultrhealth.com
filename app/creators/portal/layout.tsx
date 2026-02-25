@@ -34,7 +34,7 @@ export default function CreatorPortalLayout({
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+      <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="animate-pulse space-y-4 text-center">
           <div className="h-6 w-32 bg-stone-200 rounded mx-auto" />
           <div className="h-4 w-48 bg-stone-100 rounded mx-auto" />
@@ -45,7 +45,7 @@ export default function CreatorPortalLayout({
 
   return (
     <CreatorProvider>
-      <div className="min-h-screen bg-stone-50">
+      <div className="min-h-screen bg-cream">
         <CreatorSidebar
           mobileOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}

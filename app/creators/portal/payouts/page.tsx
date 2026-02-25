@@ -81,8 +81,8 @@ export default function PayoutsPage() {
       <div className="grid md:grid-cols-2 gap-4">
         <div className="bg-white border border-stone-200 rounded-xl p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <CheckCircle className="w-[18px] h-[18px] text-emerald-600" />
+            <div className="w-9 h-9 rounded-lg bg-cultr-mint flex items-center justify-center">
+              <CheckCircle className="w-[18px] h-[18px] text-cultr-forest" />
             </div>
             <div>
               <p className="text-xs text-cultr-textMuted">Available for Payout</p>
@@ -185,8 +185,8 @@ export default function PayoutsPage() {
                     <td className="py-3 px-4 text-center text-xs">{p.payout_method?.replace('_', ' ') || '-'}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        p.status === 'completed' ? 'bg-emerald-100 text-emerald-700'
-                        : p.status === 'processing' ? 'bg-blue-100 text-blue-700'
+                        p.status === 'completed' ? 'bg-cultr-mint/30 text-cultr-forest'
+                        : p.status === 'processing' ? 'bg-stone-100 text-stone-600'
                         : p.status === 'failed' ? 'bg-red-100 text-red-700'
                         : 'bg-amber-100 text-amber-700'
                       }`}>

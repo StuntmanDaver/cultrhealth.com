@@ -20,10 +20,10 @@ const ICONS: Record<string, React.ElementType> = {
 }
 
 const ICON_COLORS: Record<string, string> = {
-  click: 'bg-blue-50 text-blue-600',
-  order: 'bg-green-50 text-green-600',
+  click: 'bg-stone-100 text-stone-600',
+  order: 'bg-cultr-mint/30 text-cultr-forest',
   commission: 'bg-amber-50 text-amber-600',
-  tier_up: 'bg-purple-50 text-purple-600',
+  tier_up: 'bg-cultr-mint/30 text-cultr-forest',
 }
 
 function generateNotifications(
@@ -144,7 +144,7 @@ export function NotificationBell({
       >
         <Bell className="w-5 h-5 text-cultr-textMuted" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-cultr-forest text-white text-[10px] font-bold flex items-center justify-center">
             {unreadCount}
           </span>
         )}

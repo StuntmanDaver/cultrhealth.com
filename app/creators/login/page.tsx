@@ -88,11 +88,11 @@ function CreatorLoginForm() {
 
           {status === 'success' ? (
             <div className="space-y-4">
-              <div className="flex items-start gap-2.5 p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <CheckCircle className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2.5 p-4 bg-cultr-mint/30 border border-cultr-sage rounded-xl">
+                <CheckCircle className="w-5 h-5 text-cultr-forest mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm text-emerald-800 font-medium">Check your email</p>
-                  <p className="text-sm text-emerald-700 mt-1">{message}</p>
+                  <p className="text-sm text-cultr-forest font-medium">Check your email</p>
+                  <p className="text-sm text-cultr-forest/80 mt-1">{message}</p>
                 </div>
               </div>
 
@@ -129,7 +129,7 @@ function CreatorLoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full bg-white border border-stone-200 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-stone-400 focus:outline-none focus:border-cultr-forest focus:ring-2 focus:ring-cultr-forest/10"
+                  className="w-full bg-white border border-cultr-sage/40 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-stone-400 focus:outline-none focus:border-cultr-forest focus:ring-2 focus:ring-cultr-forest/10"
                 />
               </div>
 

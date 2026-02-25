@@ -2,13 +2,13 @@
   "brand": "CULTR Health",
   "colors": {
     "primary": {
-      "forest": "#2A4542",
-      "forestDark": "#1E3330",
-      "forestLight": "#3A5956"
+      "forest": "#2B4542",
+      "forestDark": "#1F3533",
+      "forestLight": "#3D5E5B"
     },
     "accent": {
       "sage": "#B7E4C7",
-      "mint": "#D8F3DC",
+      "mint": "#D7F3DC",
       "copper": "#C87941"
     },
     "background": {

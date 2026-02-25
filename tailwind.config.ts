@@ -29,7 +29,7 @@ const config: Config = {
           DEFAULT: '#F7F6E8',
           dark: '#F0EDDF',
         },
-        sage: '#D7F3DC',
+        sage: '#B7E4C7',
         mint: '#D7F3DC',
         // Aura gradient colors (decorative)
         aura: {
@@ -46,7 +46,7 @@ const config: Config = {
           forest: '#2B4542',
           forestLight: '#3D5E5B',
           forestDark: '#1F3533',
-          sage: '#D7F3DC',
+          sage: '#B7E4C7',
           mint: '#D7F3DC',
           offwhite: '#F7F6E8',
           text: '#2B4542',

@@ -12,13 +12,15 @@ interface Milestone {
   check: (metrics: CreatorDashboardMetrics, creator: Creator) => boolean
 }
 
+const EARNED_COLOR = 'bg-cultr-mint/30 text-cultr-forest border-cultr-sage'
+
 const MILESTONES: Milestone[] = [
   {
     id: 'first-click',
     label: 'First Click',
     description: 'Got your first tracking link click',
     icon: Zap,
-    color: 'bg-blue-50 text-blue-600 border-blue-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalClicks >= 1,
   },
   {
@@ -26,7 +28,7 @@ const MILESTONES: Milestone[] = [
     label: 'First Sale',
     description: 'Earned your first commission',
     icon: Trophy,
-    color: 'bg-amber-50 text-amber-600 border-amber-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalOrders >= 1,
   },
   {
@@ -34,7 +36,7 @@ const MILESTONES: Milestone[] = [
     label: '10 Clicks',
     description: 'Reached 10 tracking link clicks',
     icon: Target,
-    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalClicks >= 10,
   },
   {
@@ -42,7 +44,7 @@ const MILESTONES: Milestone[] = [
     label: '10 Orders',
     description: 'Attributed 10 orders',
     icon: Star,
-    color: 'bg-purple-50 text-purple-600 border-purple-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalOrders >= 10,
   },
   {
@@ -50,7 +52,7 @@ const MILESTONES: Milestone[] = [
     label: '100 Clicks',
     description: 'Reached 100 tracking link clicks',
     icon: Flame,
-    color: 'bg-orange-50 text-orange-600 border-orange-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalClicks >= 100,
   },
   {
@@ -58,7 +60,7 @@ const MILESTONES: Milestone[] = [
     label: '$1K Revenue',
     description: 'Generated $1,000 in attributed revenue',
     icon: TrendingUp,
-    color: 'bg-green-50 text-green-600 border-green-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalRevenue >= 1000,
   },
   {
@@ -66,7 +68,7 @@ const MILESTONES: Milestone[] = [
     label: '50 Orders',
     description: 'Attributed 50 orders',
     icon: Award,
-    color: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalOrders >= 50,
   },
   {
@@ -74,7 +76,7 @@ const MILESTONES: Milestone[] = [
     label: '$5K Revenue',
     description: 'Generated $5,000 in attributed revenue',
     icon: Crown,
-    color: 'bg-yellow-50 text-yellow-600 border-yellow-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalRevenue >= 5000,
   },
   {
@@ -82,7 +84,7 @@ const MILESTONES: Milestone[] = [
     label: 'Tier Up!',
     description: 'Advanced beyond Starter tier',
     icon: Crown,
-    color: 'bg-cultr-mint text-cultr-forest border-cultr-sage',
+    color: EARNED_COLOR,
     check: (_m, c) => c.tier >= 1,
   },
   {
@@ -90,7 +92,7 @@ const MILESTONES: Milestone[] = [
     label: '1K Clicks',
     description: 'Reached 1,000 tracking link clicks',
     icon: Flame,
-    color: 'bg-red-50 text-red-600 border-red-200',
+    color: EARNED_COLOR,
     check: (m) => m.totalClicks >= 1000,
   },
   {
@@ -98,7 +100,7 @@ const MILESTONES: Milestone[] = [
     label: '$10K Revenue',
     description: 'Generated $10,000 in attributed revenue',
     icon: Crown,
-    color: 'bg-amber-50 text-amber-700 border-amber-300',
+    color: EARNED_COLOR,
     check: (m) => m.totalRevenue >= 10000,
   },
 ]

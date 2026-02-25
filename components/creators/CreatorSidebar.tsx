@@ -15,16 +15,41 @@ import {
   Megaphone,
 } from 'lucide-react'
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/creators/portal/dashboard', icon: LayoutDashboard },
-  { label: 'Share & Earn', href: '/creators/portal/share', icon: Share2 },
-  { label: 'Campaigns', href: '/creators/portal/campaigns', icon: Megaphone },
-  { label: 'Earnings', href: '/creators/portal/earnings', icon: DollarSign },
-  { label: 'My Network', href: '/creators/portal/network', icon: Users },
-  { label: 'Payouts', href: '/creators/portal/payouts', icon: Wallet },
-  { label: 'Resources', href: '/creators/portal/resources', icon: BookOpen },
-  { label: 'Support', href: '/creators/portal/support', icon: LifeBuoy },
-  { label: 'Settings', href: '/creators/portal/settings', icon: Settings },
+const NAV_GROUPS = [
+  {
+    label: null,
+    items: [
+      { label: 'Dashboard', href: '/creators/portal/dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'PROMOTE',
+    items: [
+      { label: 'Share & Earn', href: '/creators/portal/share', icon: Share2 },
+      { label: 'Campaigns', href: '/creators/portal/campaigns', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'MONEY',
+    items: [
+      { label: 'Earnings', href: '/creators/portal/earnings', icon: DollarSign },
+      { label: 'Payouts', href: '/creators/portal/payouts', icon: Wallet },
+    ],
+  },
+  {
+    label: 'TOOLS',
+    items: [
+      { label: 'My Network', href: '/creators/portal/network', icon: Users },
+      { label: 'Resources', href: '/creators/portal/resources', icon: BookOpen },
+    ],
+  },
+  {
+    label: null,
+    items: [
+      { label: 'Settings', href: '/creators/portal/settings', icon: Settings },
+      { label: 'Support', href: '/creators/portal/support', icon: LifeBuoy },
+    ],
+  },
 ]
 
 interface CreatorSidebarProps {
@@ -48,25 +73,36 @@ export function CreatorSidebar({ mobileOpen, onClose }: CreatorSidebarProps) {
         )}
       </div>
 
-      <nav className="flex-1 px-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                isActive
-                  ? 'bg-cultr-forest text-white'
-                  : 'text-cultr-textMuted hover:bg-cultr-mint hover:text-cultr-forest'
-              }`}
-            >
-              <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-              {item.label}
-            </Link>
-          )
-        })}
+      <nav className="flex-1 px-3 space-y-4 overflow-y-auto">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={gi}>
+            {group.label && (
+              <p className="px-3 mb-1 text-[10px] font-semibold tracking-widest text-stone-400 uppercase">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onClose}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-cultr-forest text-white'
+                        : 'text-cultr-textMuted hover:bg-cultr-mint hover:text-cultr-forest'
+                    }`}
+                  >
+                    <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="p-4 border-t border-stone-200">

@@ -62,15 +62,15 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SectionHeading>Primary Colors</SectionHeading>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
-          <ColorSwatch name="Forest (Primary)" hex="#2A4542" />
-          <ColorSwatch name="Forest Dark" hex="#1E3330" />
-          <ColorSwatch name="Forest Light" hex="#3A5956" />
+          <ColorSwatch name="Forest (Primary)" hex="#2B4542" />
+          <ColorSwatch name="Forest Dark" hex="#1F3533" />
+          <ColorSwatch name="Forest Light" hex="#3D5E5B" />
         </div>
 
         <SectionHeading>Accent Colors</SectionHeading>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
           <ColorSwatch name="Sage" hex="#B7E4C7" textColor="text-cultr-forest" />
-          <ColorSwatch name="Mint" hex="#D8F3DC" textColor="text-cultr-forest" />
+          <ColorSwatch name="Mint" hex="#D7F3DC" textColor="text-cultr-forest" />
           <ColorSwatch name="Copper" hex="#C87941" />
         </div>
 
@@ -83,7 +83,7 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SectionHeading>Usage Guidelines</SectionHeading>
         <BulletList items={[
-          'Forest (#2A4542) is the primary brand color \u2014 use for headlines, CTAs, and primary elements',
+          'Forest (#2B4542) is the primary brand color \u2014 use for headlines, CTAs, and primary elements',
           'Sage and Mint are supporting colors \u2014 use for backgrounds, badges, and secondary elements',
           'Copper is an accent \u2014 use sparingly for highlights and special callouts',
           'Cream/Off-White are background colors \u2014 maintain the warm, premium feel',
@@ -194,7 +194,7 @@ export const brandKit: Record<string, ResourceEntry> = {
           'Rounded corners (border-radius) on all cards, buttons, and containers',
           'Generous white space \u2014 never crowd elements together',
           'Subtle shadows over heavy borders',
-          'Forest green (#2A4542) as the dominant color with sage/mint accents',
+          'Forest green (#2B4542) as the dominant color with sage/mint accents',
           'Photography should feel warm and natural (see Photography resource)',
         ]} />
       </>
