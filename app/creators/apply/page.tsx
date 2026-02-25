@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle, Megaphone } from 'lucide-react'
 
-export default function CreatorApplyPage() {
+function ApplyForm() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -14,6 +15,13 @@ export default function CreatorApplyPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [autoApproved, setAutoApproved] = useState(false)
+
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) setRecruiterCode(ref)
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,6 +54,9 @@ export default function CreatorApplyPage() {
         return
       }
 
+      if (data.autoApproved) {
+        setAutoApproved(true)
+      }
       setSubmitted(true)
     } catch {
       setError('Network error. Please try again.')
@@ -62,19 +73,23 @@ export default function CreatorApplyPage() {
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
           <h1 className="text-2xl font-display font-bold text-cultr-forest mb-3">
-            Application Submitted
+            {autoApproved ? 'You\'re Approved!' : 'Application Submitted'}
           </h1>
           <p className="text-cultr-textMuted mb-2">
-            Check your email to verify your address. Once verified, our team will review your application within 48 hours.
+            {autoApproved
+              ? 'Your creator account is active. Log in to access your dashboard, tracking links, and coupon codes.'
+              : 'Check your email to verify your address. Once verified, our team will review your application within 48 hours.'}
           </p>
-          <p className="text-sm text-cultr-textMuted mb-6">
-            You&apos;ll receive an email when your application is approved with your tracking link and coupon code.
-          </p>
+          {!autoApproved && (
+            <p className="text-sm text-cultr-textMuted mb-6">
+              You&apos;ll receive an email when your application is approved with your tracking link and coupon code.
+            </p>
+          )}
           <Link
-            href="/creators"
-            className="text-sm text-cultr-forest font-medium hover:underline"
+            href={autoApproved ? '/creators/login' : '/creators'}
+            className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white rounded-full text-sm font-medium hover:opacity-90 transition-all"
           >
-            Back to Creator Program
+            {autoApproved ? 'Log In to Dashboard' : 'Back to Creator Program'}
           </Link>
         </div>
       </div>
@@ -201,5 +216,13 @@ export default function CreatorApplyPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function CreatorApplyPage() {
+  return (
+    <Suspense>
+      <ApplyForm />
+    </Suspense>
   )
 }

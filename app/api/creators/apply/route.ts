@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { createCreator, getCreatorByEmail } from '@/lib/creators/db'
+import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode } from '@/lib/creators/db'
 import { createMagicLinkToken } from '@/lib/auth'
+
+const AUTO_APPROVE_EMAILS = [
+  'erik@threepointshospitality.com',
+  'stewart@cultrhealth.com',
+]
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,13 +51,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Resolve recruiter code to recruiter ID
+    // Resolve recruiter code to recruiter ID (try slug first, fall back to affiliate code)
     let recruiterId: string | undefined
     if (recruiter_code) {
-      const { getTrackingLinkBySlug } = await import('@/lib/creators/db')
+      const { getTrackingLinkBySlug, getAffiliateCodeByCode, getCreatorById } = await import('@/lib/creators/db')
+      let resolvedCreatorId: string | undefined
       const link = await getTrackingLinkBySlug(recruiter_code)
       if (link) {
-        recruiterId = link.creator_id
+        resolvedCreatorId = link.creator_id
+      } else {
+        const code = await getAffiliateCodeByCode(recruiter_code)
+        if (code) resolvedCreatorId = code.creator_id
+      }
+      if (resolvedCreatorId) {
+        const recruiter = await getCreatorById(resolvedCreatorId)
+        if (recruiter?.status === 'active') recruiterId = resolvedCreatorId
       }
     }
 
@@ -65,6 +78,38 @@ export async function POST(request: NextRequest) {
       bio,
       recruiter_id: recruiterId,
     })
+
+    // Auto-approve whitelisted emails
+    if (AUTO_APPROVE_EMAILS.includes(email.toLowerCase())) {
+      await updateCreatorStatus(creator.id, 'active', 'system-auto-approve')
+
+      const defaultSlug = full_name
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '')
+        .slice(0, 20) + Math.floor(Math.random() * 1000)
+
+      await createTrackingLink(creator.id, defaultSlug, '/', true)
+
+      const code = full_name
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .slice(0, 6) + '10'
+
+      await createAffiliateCode(creator.id, code, true)
+
+      const verificationToken = await createMagicLinkToken(email)
+      console.log(`Creator auto-approved: ${email}`)
+
+      return NextResponse.json({
+        success: true,
+        autoApproved: true,
+        message: 'You have been approved! Check your email to log in.',
+        creatorId: creator.id,
+        trackingSlug: defaultSlug,
+        couponCode: code,
+        ...(process.env.NODE_ENV !== 'production' && { verificationToken }),
+      })
+    }
 
     // Generate email verification token
     const verificationToken = await createMagicLinkToken(email)
