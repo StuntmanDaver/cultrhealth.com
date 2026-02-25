@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
 
     const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
-    // In development, log the link and return it
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Creator magic link:', magicLink)
+    // Staging bypass emails or dev mode: return magic link directly (no email needed)
+    if (process.env.NODE_ENV === 'development' || isStagingEmail(normalizedEmail)) {
+      console.log('Creator magic link (direct):', magicLink)
       return NextResponse.json({
         success: true,
         message: 'If you have an active creator account, you will receive an email shortly.',
