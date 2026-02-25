@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMagicLinkToken, createSessionToken, setSessionCookie } from '@/lib/auth'
+import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   const baseUrl =
@@ -44,17 +44,31 @@ export async function GET(request: NextRequest) {
     // Pending creators go to pending page
     if (creatorStatus === 'pending') {
       const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
-      await setSessionCookie(sessionToken)
-      return NextResponse.redirect(`${baseUrl}/creators/pending`)
+      const response = NextResponse.redirect(`${baseUrl}/creators/pending`)
+      response.cookies.set('cultr_session', sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/',
+      })
+      return response
     }
 
     if (creatorStatus !== 'active') {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=inactive_account`)
     }
 
-    // Create session with creator role
+    // Create session with creator role — set cookie directly on the redirect response
     const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
-    await setSessionCookie(sessionToken)
+    const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
+    response.cookies.set('cultr_session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+    })
 
     console.log('Creator session created:', {
       email,
@@ -62,7 +76,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
 
-    return NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
+    return response
   } catch (error) {
     console.error('Creator verify error:', error)
     return NextResponse.redirect(`${baseUrl}/creators/login?error=verification_failed`)

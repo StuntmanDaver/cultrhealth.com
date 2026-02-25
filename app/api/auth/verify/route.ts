@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { verifyMagicLinkToken, createSessionToken, setSessionCookie } from '@/lib/auth'
+import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -16,15 +16,25 @@ function isStagingBypassEmail(email: string): boolean {
   return allowedEmails.includes(email.toLowerCase())
 }
 
+function setSessionOnResponse(response: NextResponse, token: string) {
+  response.cookies.set('cultr_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
+    path: '/',
+  })
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
 
     // Build base URL for redirects
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
 
     if (!token) {
@@ -33,13 +43,13 @@ export async function GET(request: NextRequest) {
 
     // Verify the magic link token
     const verified = await verifyMagicLinkToken(token)
-    
+
     if (!verified) {
       return NextResponse.redirect(`${baseUrl}/library?error=expired_link`)
     }
 
     const { email } = verified
-    
+
     // Check for staging bypass
     const isStagingAccess = isStagingBypassEmail(email)
     let customerId: string
@@ -48,9 +58,10 @@ export async function GET(request: NextRequest) {
       // Use staging IDs with full admin access for bypass emails
       customerId = 'staging_customer'
       const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
-      await setSessionCookie(sessionToken)
+      const response = NextResponse.redirect(`${baseUrl}/library`)
+      setSessionOnResponse(response, sessionToken)
       console.log('Staging admin access granted:', { email, timestamp: new Date().toISOString() })
-      return NextResponse.redirect(`${baseUrl}/library`)
+      return response
     } else {
       // Double-check customer still has active subscription
       const stripe = getStripe()
@@ -81,15 +92,14 @@ export async function GET(request: NextRequest) {
       if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
         return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
       }
-      
+
       customerId = customer.id
     }
 
-    // Create session token
+    // Create session token and set cookie directly on the redirect response
     const sessionToken = await createSessionToken(email, customerId)
-    
-    // Set session cookie
-    await setSessionCookie(sessionToken)
+    const response = NextResponse.redirect(`${baseUrl}/library`)
+    setSessionOnResponse(response, sessionToken)
 
     console.log('Session created:', {
       email,
@@ -97,17 +107,16 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     })
 
-    // Redirect to library
-    return NextResponse.redirect(`${baseUrl}/library`)
+    return response
 
   } catch (error) {
     console.error('Verify error:', error)
-    
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
-    
+
     return NextResponse.redirect(`${baseUrl}/library?error=verification_failed`)
   }
 }
