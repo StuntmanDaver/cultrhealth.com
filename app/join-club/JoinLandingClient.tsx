@@ -56,6 +56,9 @@ function JoinLandingInner() {
   }, [])
 
   const handleSignupComplete = useCallback((data: ClubMember) => {
+    // Persist to cookie so user doesn't have to sign up again
+    const cookieData = encodeURIComponent(JSON.stringify(data))
+    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
     setMember(data)
     setShowSignup(false)
   }, [])
