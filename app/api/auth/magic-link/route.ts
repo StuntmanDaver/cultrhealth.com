@@ -18,12 +18,27 @@ function getResend() {
   return new Resend(apiKey)
 }
 
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+]
+
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
 // Check if email is allowed for staging bypass
 function isStagingBypassEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
+  if (isStaging()) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
-  const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
-  return allowedEmails.includes(email.toLowerCase())
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
 }
 
 export async function POST(request: NextRequest) {

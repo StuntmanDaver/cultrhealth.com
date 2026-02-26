@@ -137,6 +137,19 @@ export function checkRateLimit(email: string): boolean {
   return true
 }
 
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+]
+
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
 const PLAN_ALIASES: Record<string, PlanTier> = {
   starter: 'core',
   core: 'core',
@@ -162,11 +175,14 @@ export async function getMembershipTier(customerId: string, email?: string): Pro
     return 'concierge' // Full access in dev/staging mode
   }
 
-  // Staging access emails get full access regardless of customerId in JWT
-  if (email && process.env.STAGING_ACCESS_EMAILS) {
-    const stagingEmails = process.env.STAGING_ACCESS_EMAILS.split(',').map(e => e.trim().toLowerCase())
-    if (stagingEmails.includes(email.toLowerCase())) {
-      return 'concierge'
+  // Team emails and staging always get full access
+  if (email) {
+    const lower = email.toLowerCase()
+    if (TEAM_EMAILS.includes(lower)) return 'concierge'
+    if (isStaging()) return 'concierge'
+    if (process.env.STAGING_ACCESS_EMAILS) {
+      const stagingEmails = process.env.STAGING_ACCESS_EMAILS.split(',').map(e => e.trim().toLowerCase())
+      if (stagingEmails.includes(lower)) return 'concierge'
     }
   }
 
@@ -242,6 +258,8 @@ export function hasFeatureAccess(tier: PlanTier | null | undefined, feature: key
 
 export function isProviderEmail(email: string): boolean {
   const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
+  if (isStaging()) return true
   const allowlist = process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
   const normalized = allowlist.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
   if (normalized.includes(lower)) return true
@@ -351,9 +369,13 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
     // DB unavailable — continue to staging fallback
   }
 
+  // Team emails always get creator access
+  if (TEAM_EMAILS.includes(auth.email.toLowerCase())) {
+    return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
+  }
+
   // Staging bypass: allow any email on staging domain, or check whitelist
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
-  if (siteUrl.includes('staging')) {
+  if (isStaging()) {
     return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
   }
 

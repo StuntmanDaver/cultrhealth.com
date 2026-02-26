@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
 
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+]
+
 function isStaging(): boolean {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
   return siteUrl.includes('staging')
 }
 
 function isStagingEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
-  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(email.toLowerCase())
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
 }
 
 export async function POST(request: NextRequest) {

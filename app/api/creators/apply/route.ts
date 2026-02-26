@@ -5,8 +5,11 @@ import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
 
 const AUTO_APPROVE_EMAILS = [
-  'erik@threepointshospitality.com',
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
   'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
 ]
 
 function getBaseUrl() {
