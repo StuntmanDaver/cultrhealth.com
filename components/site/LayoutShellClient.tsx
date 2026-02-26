@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { type ReactNode } from 'react'
 
-const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin']
+const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin', '/join-club']
 
 export function LayoutShellClient({
   header,
