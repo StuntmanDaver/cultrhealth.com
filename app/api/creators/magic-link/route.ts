@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
 
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
 function isStagingEmail(email: string): boolean {
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
@@ -27,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if creator exists in DB OR is a staging bypass email
-    let creatorExists = isStagingEmail(normalizedEmail)
+    let creatorExists = isStaging() || isStagingEmail(normalizedEmail)
 
     if (!creatorExists) {
       try {
@@ -59,7 +64,7 @@ export async function POST(request: NextRequest) {
     const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
     // Staging bypass emails or dev mode: return magic link directly (no email needed)
-    if (process.env.NODE_ENV === 'development' || isStagingEmail(normalizedEmail)) {
+    if (process.env.NODE_ENV === 'development' || isStaging() || isStagingEmail(normalizedEmail)) {
       console.log('Creator magic link (direct):', magicLink)
       return NextResponse.json({
         success: true,

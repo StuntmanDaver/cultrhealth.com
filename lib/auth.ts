@@ -351,7 +351,12 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
     // DB unavailable — continue to staging fallback
   }
 
-  // Staging bypass: check if email is in the staging access list
+  // Staging bypass: allow any email on staging domain, or check whitelist
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  if (siteUrl.includes('staging')) {
+    return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
+  }
+
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (stagingEmails) {
     const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())

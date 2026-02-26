@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
 
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
 function isStagingEmail(email: string): boolean {
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
@@ -54,7 +59,7 @@ export async function GET(request: NextRequest) {
     }
 
     // No DB record — auto-create for staging bypass emails
-    if (!creatorId && isStagingEmail(email)) {
+    if (!creatorId && (isStaging() || isStagingEmail(email))) {
       try {
         const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode } = await import('@/lib/creators/db')
 
