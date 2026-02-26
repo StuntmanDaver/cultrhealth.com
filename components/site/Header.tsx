@@ -95,7 +95,7 @@ export function Header() {
                       transition-[font-size] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                       ${scrolled ? 'text-lg' : 'text-[22px]'}
                     `}
-                    style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}
                   >
                     CULTR
                   </span>

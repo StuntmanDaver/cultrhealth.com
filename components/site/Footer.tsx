@@ -53,7 +53,7 @@ export function Footer() {
           {/* CULTR Wordmark */}
           <div className="mb-12">
             <Link href="/" className="inline-block">
-              <span className="font-display font-bold text-2xl tracking-[0.08em] text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              <span className="font-display font-bold text-2xl tracking-[0.08em] text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>
                 CULTR
               </span>
             </Link>
