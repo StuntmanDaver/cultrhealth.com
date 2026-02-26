@@ -2,13 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
-import { ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check, Loader2 } from 'lucide-react'
+import {
+  ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
+  Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight,
+} from 'lucide-react'
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
-import { JOIN_THERAPY_SECTIONS, type JoinTherapy } from '@/lib/config/join-therapies'
-import { cn } from '@/lib/utils'
+import { JOIN_THERAPY_SECTIONS, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { ScrollReveal } from '@/components/ui/ScrollReveal'
 
 // =============================================
-// MAIN WRAPPER (provides cart context)
+// MAIN WRAPPER
 // =============================================
 
 export function JoinLandingClient() {
@@ -20,7 +23,7 @@ export function JoinLandingClient() {
 }
 
 // =============================================
-// INNER COMPONENT (has access to cart)
+// INNER
 // =============================================
 
 interface ClubMember {
@@ -30,19 +33,18 @@ interface ClubMember {
   socialHandle: string
 }
 
+const SECTION_ICONS = [Flame, Zap] as const
+
 function JoinLandingInner() {
   const [member, setMember] = useState<ClubMember | null>(null)
   const [showSignup, setShowSignup] = useState(false)
-  const [showCart, setShowCart] = useState(false)
+  const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
   const cart = useJoinCart()
 
-  // Check for existing cookie on mount
   useEffect(() => {
     try {
-      const stored = document.cookie
-        .split('; ')
-        .find((c) => c.startsWith('cultr_club_visitor='))
+      const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
         const data = JSON.parse(decodeURIComponent(stored.split('=')[1]))
         setMember(data)
@@ -61,133 +63,146 @@ function JoinLandingInner() {
 
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
-    setShowCart(false)
+    setShowMobileCart(false)
   }, [])
 
-  // Show nothing until we know signup state
   if (!member && !showSignup) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+      <div className="min-h-screen grad-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-brand-primary/40" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="flex flex-col min-h-screen">
       {/* Signup Modal */}
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
 
-      {/* Header */}
-      <JoinHeader
-        itemCount={cart.getItemCount()}
-        onCartClick={() => setShowCart(true)}
-      />
+      {/* Hero — matches therapies page */}
+      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 grad-dark-glow text-white">
+        <div className="max-w-4xl mx-auto text-center">
+          <ScrollReveal direction="none" duration={800}>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
+              <Stethoscope className="w-4 h-4 text-cultr-sage" />
+              <span className="text-sm">Physician-Supervised</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 leading-tight">
+              Core Therapies
+            </h1>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mt-1 mb-2">
+              <span className="text-sm text-cultr-sage font-semibold">CULTR Club — Free Membership</span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={200} direction="none" duration={800}>
+            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+              Browse our catalog of physician-supervised therapies, add to your cart, and
+              submit your order for medical team review.
+            </p>
+            {member && (
+              <p className="mt-3 text-sm text-white/50">
+                Welcome, {member.name.split(' ')[0]}
+              </p>
+            )}
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Info banner — matches therapies page */}
+      <section className="py-5 px-6 grad-mint border-b border-cultr-sage">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-cultr-forest/10 flex items-center justify-center shrink-0">
+              <Shield className="w-4 h-4 text-cultr-forest" />
+            </div>
+            <div>
+              <p className="font-display font-bold text-cultr-forest text-sm">
+                Order Review Required
+              </p>
+              <p className="text-xs text-cultr-textMuted">
+                All orders are reviewed by our medical team before invoicing. No payment is taken today.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowMobileCart(true)}
+            className="shrink-0 lg:hidden inline-flex items-center justify-center py-2.5 px-5 bg-brand-primary text-brand-cream font-medium text-sm rounded-full transition-all hover:bg-brand-primaryHover relative"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Cart
+            {cart.getItemCount() > 0 && (
+              <span className="ml-2 w-5 h-5 bg-cultr-sage text-cultr-forest text-xs font-bold rounded-full flex items-center justify-center">
+                {cart.getItemCount()}
+              </span>
+            )}
+          </button>
+        </div>
+      </section>
 
       {/* Order Success Banner */}
       {orderSubmitted && (
-        <div className="bg-mint border-b border-sage/30 px-4 py-4 text-center">
-          <div className="flex items-center justify-center gap-2 text-brand-primary font-medium">
+        <div className="py-4 px-6 grad-mint border-b border-cultr-sage">
+          <div className="max-w-5xl mx-auto flex items-center justify-center gap-2 text-cultr-forest font-medium text-sm">
             <Check className="w-5 h-5" />
             <span>Order submitted! Check your email for confirmation.</span>
           </div>
         </div>
       )}
 
-      {/* Hero */}
-      <section className="pt-24 pb-12 px-4 text-center">
-        <h1 className="font-fraunces text-3xl md:text-5xl font-bold text-brand-primary mb-4">
-          Your Personalized Therapy Protocol
-        </h1>
-        <p className="text-brand-primary/70 text-lg max-w-2xl mx-auto font-body">
-          Browse physician-supervised therapies and build your custom wellness order.
-          Our team reviews every order for safety and efficacy.
-        </p>
-        {member && (
-          <p className="mt-3 text-sm text-brand-primary/50 font-body">
-            Welcome, {member.name.split(' ')[0]}
-          </p>
-        )}
-      </section>
+      {/* Main Content — two-column layout matching cart page */}
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-6 py-10">
+          <div className="grid lg:grid-cols-5 gap-12">
 
-      {/* Therapy Sections */}
-      <main className="max-w-6xl mx-auto px-4 pb-32">
-        {JOIN_THERAPY_SECTIONS.map((section) => (
-          <TherapySection key={section.title} section={section} />
-        ))}
+            {/* Left Column — Therapy Sections (matches therapies page card style) */}
+            <div className="lg:col-span-3 space-y-12">
+              {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
+                const Icon = SECTION_ICONS[sectionIdx]
+                return (
+                  <TherapySectionBlock key={section.title} section={section} Icon={Icon} sectionIdx={sectionIdx} />
+                )
+              })}
 
-        {/* Trust & Disclaimer */}
-        <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-mint/50 rounded-full text-sm text-brand-primary/70 font-body mb-6">
-            <span className="w-2 h-2 rounded-full bg-sage" />
-            All therapies are physician-supervised
+              {/* Medical Disclaimer — matches therapies page */}
+              <div className="flex items-start gap-3 py-6 border-t border-cultr-sage">
+                <Shield className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+                <p className="text-xs text-cultr-textMuted leading-relaxed">
+                  <span className="font-semibold text-cultr-text">Medical Disclaimer:</span>{' '}
+                  All therapies listed require physician evaluation and prescription.{' '}
+                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Outcomes vary by
+                  individual. If you have a medical emergency, call 911.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column — Sticky Cart Summary (matches CartClient layout) */}
+            <div className="lg:col-span-2 hidden lg:block">
+              <div className="sticky top-8">
+                <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} />
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-brand-primary/40 max-w-xl mx-auto font-body">
-            These products require a prescription and physician oversight. Your order will be
-            reviewed by our medical team before an invoice is generated. Individual results may vary.
-          </p>
         </div>
       </main>
 
       {/* Mobile Cart FAB */}
-      {cart.getItemCount() > 0 && !showCart && (
-        <button
-          onClick={() => setShowCart(true)}
-          className="fixed bottom-6 right-6 md:hidden bg-brand-primary text-white rounded-full px-6 py-4 shadow-xl flex items-center gap-3 z-40 hover:bg-forest-light transition-colors"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          <span className="font-medium">{cart.getItemCount()} items</span>
-          {cart.getCartTotal() > 0 && (
-            <span className="text-sm opacity-80">
-              ${cart.getCartTotal().toFixed(2)}
-            </span>
-          )}
-        </button>
+      {cart.getItemCount() > 0 && !showMobileCart && (
+        <div className="fixed bottom-6 right-6 lg:hidden z-40">
+          <button
+            onClick={() => setShowMobileCart(true)}
+            className="flex items-center gap-2 px-4 py-3 grad-dark text-white rounded-full shadow-lg hover:bg-cultr-forest/90 transition-colors"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            <span className="font-bold">{cart.getItemCount()}</span>
+          </button>
+        </div>
       )}
 
-      {/* Cart Sidebar */}
-      {showCart && (
-        <CartSidebar
-          member={member}
-          onClose={() => setShowCart(false)}
-          onOrderSubmitted={handleOrderSubmitted}
-        />
+      {/* Mobile Cart Full-Screen Overlay */}
+      {showMobileCart && (
+        <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} />
       )}
     </div>
-  )
-}
-
-// =============================================
-// HEADER
-// =============================================
-
-function JoinHeader({ itemCount, onCartClick }: { itemCount: number; onCartClick: () => void }) {
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-brand-cream/95 backdrop-blur-sm border-b border-brand-primary/5">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div />
-        <div className="flex items-center gap-1">
-          <Image
-            src="/creators/brand-kit/cultr-logo-dark.svg"
-            alt="CULTR Health"
-            width={120}
-            height={32}
-            priority
-          />
-        </div>
-        <button
-          onClick={onCartClick}
-          className="relative p-2 rounded-full hover:bg-brand-primary/5 transition-colors"
-        >
-          <ShoppingCart className="w-5 h-5 text-brand-primary" />
-          {itemCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-brand-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
-              {itemCount}
-            </span>
-          )}
-        </button>
-      </div>
-    </header>
   )
 }
 
@@ -206,12 +221,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-
-    if (!name.trim() || !email.trim()) {
-      setError('Name and email are required.')
-      return
-    }
-
+    if (!name.trim() || !email.trim()) { setError('Name and email are required.'); return }
     setLoading(true)
     try {
       const res = await fetch('/api/club/signup', {
@@ -220,112 +230,46 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
         body: JSON.stringify({ name: name.trim(), email: email.trim(), phone: phone.trim(), socialHandle: socialHandle.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Something went wrong. Please try again.')
-        setLoading(false)
-        return
-      }
+      if (!res.ok) { setError(data.error || 'Something went wrong.'); setLoading(false); return }
       onComplete({ name: name.trim(), email: email.trim(), phone: phone.trim(), socialHandle: socialHandle.trim() })
-    } catch {
-      setError('Network error. Please try again.')
-      setLoading(false)
-    }
+    } catch { setError('Network error.'); setLoading(false) }
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-primary/40 backdrop-blur-sm p-4">
-      <div className="bg-brand-cream rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(42,69,66,0.55)', backdropFilter: 'blur(8px)' }}>
+      <div className="bg-brand-cream rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Logo */}
-        <div className="pt-10 pb-4 text-center">
-          <Image
-            src="/creators/brand-kit/cultr-logo-dark.svg"
-            alt="CULTR Health"
-            width={140}
-            height={38}
-            priority
-            className="mx-auto"
-          />
+        <div className="pt-10 pb-2 grad-dark-glow flex items-center justify-center">
+          <Image src="/creators/brand-kit/cultr-logo-dark.svg" alt="CULTR Health" width={140} height={38} priority className="brightness-0 invert" />
+        </div>
+        <div className="pb-2 grad-dark-glow text-center">
+          <p className="text-white/60 text-xs">Free Membership</p>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-8 pb-10">
-          <h2 className="font-fraunces text-2xl font-bold text-brand-primary text-center mb-2">
+        <form onSubmit={handleSubmit} className="px-8 pb-10 pt-6">
+          <h2 className="font-display text-xl font-bold text-cultr-forest text-center mb-1">
             Join CULTR Club
           </h2>
-          <p className="text-brand-primary/60 text-sm text-center mb-8 font-body">
-            Free membership — browse therapies & build your order
+          <p className="text-cultr-textMuted text-sm text-center mb-6">
+            Browse therapies &amp; build your order
           </p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-body">
-              {error}
-            </div>
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-brand-primary/70 mb-1.5 font-body">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jane Smith"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-brand-primary/15 bg-white text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-body"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-brand-primary/70 mb-1.5 font-body">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@example.com"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-brand-primary/15 bg-white text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-body"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-brand-primary/70 mb-1.5 font-body">Phone Number</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(555) 123-4567"
-                className="w-full px-4 py-3 rounded-xl border border-brand-primary/15 bg-white text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-body"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-brand-primary/70 mb-1.5 font-body">Social Handle</label>
-              <input
-                type="text"
-                value={socialHandle}
-                onChange={(e) => setSocialHandle(e.target.value)}
-                placeholder="@yourusername"
-                className="w-full px-4 py-3 rounded-xl border border-brand-primary/15 bg-white text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 font-body"
-              />
-            </div>
+          <div className="space-y-3">
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" required className="input-eli" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="input-eli" />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" className="input-eli" />
+            <input type="text" value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@social handle" className="input-eli" />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-8 w-full bg-brand-primary text-brand-cream font-medium py-3.5 rounded-full hover:bg-forest-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2 font-body"
-          >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                Join Free & Start Shopping
-                <ChevronRight className="w-4 h-4" />
-              </>
-            )}
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-6 gap-2">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Join Free &amp; Start Shopping <ChevronRight className="w-4 h-4" /></>}
           </button>
 
-          <p className="mt-4 text-xs text-brand-primary/40 text-center font-body">
+          <p className="mt-4 text-xs text-cultr-textMuted text-center">
             By joining, you agree to our terms of service and privacy policy.
           </p>
         </form>
@@ -335,110 +279,94 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
 }
 
 // =============================================
-// THERAPY SECTION
+// THERAPY SECTION (matches therapies page exactly)
 // =============================================
 
-function TherapySection({ section }: { section: typeof JOIN_THERAPY_SECTIONS[number] }) {
+function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
+  const isAlt = sectionIdx % 2 === 1
   return (
-    <section className="mb-16">
-      <div className="mb-8">
-        <h2 className="font-fraunces text-2xl md:text-3xl font-bold text-brand-primary">
-          {section.title}
-        </h2>
-        <p className="text-brand-primary/50 text-sm mt-1 font-body">{section.subtitle}</p>
-        <p className="text-brand-primary/60 mt-3 max-w-2xl font-body">{section.description}</p>
-      </div>
+    <div className={`rounded-2xl p-6 md:p-8 ${isAlt ? 'grad-light' : 'grad-white'}`}>
+      <ScrollReveal className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-8 h-8 rounded-full grad-mint flex items-center justify-center">
+            <Icon className="w-4 h-4 text-cultr-forest" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-display font-bold text-cultr-forest">
+            {section.title}
+          </h2>
+        </div>
+        <p className="text-sm text-cultr-textMuted max-w-2xl ml-11">{section.description}</p>
+      </ScrollReveal>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {section.therapies.map((therapy) => (
-          <TherapyCard key={therapy.id} therapy={therapy} />
+      <div className="grid sm:grid-cols-2 gap-4">
+        {section.therapies.map((therapy, i) => (
+          <ScrollReveal key={therapy.id} delay={i * 60} direction="up">
+            <TherapyCard therapy={therapy} />
+          </ScrollReveal>
         ))}
       </div>
-    </section>
+    </div>
   )
 }
 
 // =============================================
-// THERAPY CARD
+// THERAPY CARD (matches therapies page card + shop add-to-cart)
 // =============================================
 
 function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const cart = useJoinCart()
   const inCart = cart.isInCart(therapy.id)
+  const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
 
-  function handleAddToCart() {
-    cart.addItem({
-      therapyId: therapy.id,
-      name: therapy.name,
-      price: therapy.price,
-      pricingNote: therapy.pricingNote,
-    })
+  function handleAdd() {
+    if (inCart && cartItem) {
+      cart.updateQuantity(therapy.id, cartItem.quantity + 1)
+    } else {
+      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote })
+    }
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-brand-primary/8 p-6 flex flex-col transition-shadow hover:shadow-lg">
-      {/* Aura gradient placeholder for product image area */}
-      <div className="w-full h-32 rounded-xl bg-gradient-to-br from-mint/60 via-brand-cream to-sage/40 mb-5 flex items-center justify-center">
-        <span className="text-3xl font-fraunces font-bold text-brand-primary/15">
-          {therapy.name.charAt(0)}
+    <div className="h-full p-5 rounded-xl bg-brand-cream border border-cultr-sage/40 hover:border-cultr-sage transition-colors flex flex-col">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="text-base font-display font-bold text-cultr-forest">{therapy.name}</h3>
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-cultr-forest grad-mint px-2 py-0.5 rounded-full">
+          {therapy.badge}
         </span>
       </div>
 
-      {/* Badge */}
-      <span className="inline-flex self-start px-2.5 py-1 rounded-full text-xs font-medium bg-mint/60 text-brand-primary/70 mb-3 font-body">
-        {therapy.badge}
-      </span>
-
-      {/* Name */}
-      <h3 className="font-display text-lg font-semibold text-brand-primary mb-1">
-        {therapy.name}
-      </h3>
-
-      {/* Note */}
       {therapy.note && (
-        <p className="text-xs text-brand-primary/50 mb-2 font-body">{therapy.note}</p>
+        <div className="inline-block text-[11px] text-cultr-forest/70 bg-cultr-sage/30 px-2 py-0.5 rounded-full mb-2 self-start">
+          {therapy.note}
+        </div>
       )}
 
-      {/* Description */}
-      <p className="text-sm text-brand-primary/60 mb-5 flex-1 font-body">
-        {therapy.description}
-      </p>
+      <p className="text-xs text-cultr-textMuted leading-relaxed mb-4 flex-1">{therapy.description}</p>
 
       {/* Price */}
-      <div className="mb-4">
+      <div className="mb-3">
         {therapy.price !== null ? (
-          <span className="text-xl font-bold text-brand-primary font-fraunces">
-            ${therapy.price.toFixed(2)}
-          </span>
+          <span className="text-lg font-display font-bold text-cultr-forest">${therapy.price.toFixed(2)}</span>
         ) : (
-          <span className="text-sm font-medium text-brand-primary/60 font-body">
-            {therapy.pricingNote || 'Consultation pricing'}
-          </span>
+          <span className="text-xs font-medium text-cultr-textMuted">{therapy.pricingNote || 'Consultation pricing'}</span>
         )}
       </div>
 
-      {/* Add to Cart */}
-      {inCart ? (
+      {/* Add to Cart — matches shop button style */}
+      {inCart && cartItem ? (
         <div className="flex items-center gap-2">
-          <QuantityControl
-            therapyId={therapy.id}
-            quantity={cart.items.find((i) => i.therapyId === therapy.id)?.quantity || 1}
-          />
-          <button
-            onClick={() => cart.removeItem(therapy.id)}
-            className="p-2 text-red-400 hover:text-red-600 transition-colors"
-            aria-label="Remove from cart"
-          >
-            <Trash2 className="w-4 h-4" />
+          <span className="text-xs text-cultr-forest flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            In cart ({cartItem.quantity})
+          </span>
+          <button onClick={handleAdd} className="p-2 grad-dark text-white rounded-lg hover:bg-cultr-forest/90 transition-colors">
+            <Plus className="w-4 h-4" />
           </button>
         </div>
       ) : (
-        <button
-          onClick={handleAddToCart}
-          className="w-full bg-brand-primary text-white py-3 rounded-full font-medium hover:bg-forest-light transition-colors flex items-center justify-center gap-2 font-body"
-        >
+        <button onClick={handleAdd} className="flex items-center gap-2 px-3 py-2 grad-dark text-white text-sm rounded-lg hover:bg-cultr-forest/90 transition-colors self-start">
           <Plus className="w-4 h-4" />
-          {therapy.price !== null ? 'Add to Cart' : 'Request Consultation'}
+          {therapy.price !== null ? 'Add' : 'Request'}
         </button>
       )}
     </div>
@@ -446,57 +374,17 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
 }
 
 // =============================================
-// QUANTITY CONTROL
+// CART SUMMARY PANEL (matches CartClient right column)
 // =============================================
 
-function QuantityControl({ therapyId, quantity }: { therapyId: string; quantity: number }) {
-  const cart = useJoinCart()
-
-  return (
-    <div className="flex items-center gap-0 bg-brand-primary/5 rounded-full flex-1">
-      <button
-        onClick={() => cart.updateQuantity(therapyId, quantity - 1)}
-        className="p-2.5 rounded-l-full hover:bg-brand-primary/10 transition-colors"
-        aria-label="Decrease quantity"
-      >
-        <Minus className="w-4 h-4 text-brand-primary" />
-      </button>
-      <span className="px-4 text-sm font-medium text-brand-primary font-body min-w-[2rem] text-center">
-        {quantity}
-      </span>
-      <button
-        onClick={() => cart.updateQuantity(therapyId, quantity + 1)}
-        className="p-2.5 rounded-r-full hover:bg-brand-primary/10 transition-colors"
-        aria-label="Increase quantity"
-      >
-        <Plus className="w-4 h-4 text-brand-primary" />
-      </button>
-    </div>
-  )
-}
-
-// =============================================
-// CART SIDEBAR
-// =============================================
-
-function CartSidebar({
-  member,
-  onClose,
-  onOrderSubmitted,
-}: {
-  member: ClubMember | null
-  onClose: () => void
-  onOrderSubmitted: () => void
-}) {
+function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | null; onOrderSubmitted: () => void }) {
   const cart = useJoinCart()
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmitOrder() {
-    if (!member) return
-    if (cart.items.length === 0) return
-
+    if (!member || cart.items.length === 0) return
     setError('')
     setSubmitting(true)
     try {
@@ -504,162 +392,105 @@ function CartSidebar({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: member.email,
-          name: member.name,
-          phone: member.phone,
-          items: cart.items.map((item) => ({
-            therapyId: item.therapyId,
-            name: item.name,
-            price: item.price,
-            pricingNote: item.pricingNote,
-            quantity: item.quantity,
-          })),
+          email: member.email, name: member.name, phone: member.phone,
+          items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, quantity: item.quantity })),
           notes: notes.trim() || undefined,
         }),
       })
-
       const data = await res.json()
-      if (!res.ok) {
-        setError(data.error || 'Failed to submit order.')
-        setSubmitting(false)
-        return
-      }
-
+      if (!res.ok) { setError(data.error || 'Failed to submit order.'); setSubmitting(false); return }
       cart.clearCart()
       onOrderSubmitted()
-    } catch {
-      setError('Network error. Please try again.')
-      setSubmitting(false)
-    }
+    } catch { setError('Network error.'); setSubmitting(false) }
   }
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-brand-primary/20 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
+    <div className="bg-brand-creamDark rounded-2xl p-6">
+      <h2 className="text-lg font-display text-brand-primary mb-6">Your Order</h2>
 
-      {/* Sidebar */}
-      <div className="fixed top-0 right-0 bottom-0 w-full max-w-md bg-brand-cream z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-brand-primary/10">
-          <h2 className="font-fraunces text-xl font-bold text-brand-primary">Your Order</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-brand-primary/5 transition-colors"
-          >
-            <X className="w-5 h-5 text-brand-primary" />
-          </button>
+      {cart.items.length === 0 ? (
+        <div className="text-center py-10">
+          <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
+          <p className="text-sm text-brand-primary/50">Add therapies to get started</p>
         </div>
+      ) : (
+        <>
+          {/* Summary Items */}
+          <div className="space-y-3 pb-4 border-b border-brand-primary/10">
+            {cart.items.map((item) => (
+              <div key={item.therapyId} className="flex justify-between text-sm">
+                <div className="flex items-center gap-2 truncate pr-4">
+                  <span className="text-brand-primary/60 truncate">{item.name} &times; {item.quantity}</span>
+                  <button onClick={() => cart.removeItem(item.therapyId)} className="text-brand-primary/30 hover:text-red-500 transition-colors shrink-0">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="text-brand-primary font-medium shrink-0">
+                  {item.price ? `$${(item.price * item.quantity).toFixed(2)}` : 'TBD'}
+                </span>
+              </div>
+            ))}
+          </div>
 
-        {/* Items */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-          {cart.items.length === 0 ? (
-            <div className="text-center py-16">
-              <ShoppingCart className="w-12 h-12 text-brand-primary/20 mx-auto mb-4" />
-              <p className="text-brand-primary/50 font-body">Your cart is empty</p>
-              <p className="text-sm text-brand-primary/30 mt-1 font-body">
-                Browse therapies and add them to your order
-              </p>
-            </div>
-          ) : (
-            cart.items.map((item) => (
-              <CartItemRow key={item.therapyId} item={item} />
-            ))
-          )}
-        </div>
-
-        {/* Footer / Checkout */}
-        {cart.items.length > 0 && (
-          <div className="border-t border-brand-primary/10 px-6 py-5 space-y-4">
-            {/* Subtotal */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-brand-primary/60 font-body">Subtotal</span>
-              <span className="text-lg font-bold text-brand-primary font-fraunces">
-                {cart.getCartTotal() > 0 ? `$${cart.getCartTotal().toFixed(2)}` : '—'}
+          {/* Total */}
+          <div className="pt-4 pb-4">
+            <div className="flex justify-between items-baseline">
+              <span className="text-brand-primary font-medium">Total</span>
+              <span className="text-2xl font-display text-brand-primary">
+                {cart.getCartTotal() > 0 ? `$${cart.getCartTotal().toFixed(2)}` : 'Quote Request'}
               </span>
             </div>
-
             {cart.hasConsultationItems() && (
-              <p className="text-xs text-brand-primary/50 font-body">
-                * Some items require consultation pricing. Final total will be provided after review.
+              <p className="text-xs text-brand-primary/50 mt-1">
+                * Some items require consultation pricing. Final total after review.
               </p>
             )}
-
-            {/* Notes */}
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Notes for your provider (optional)"
-              rows={2}
-              className="w-full px-4 py-3 rounded-xl border border-brand-primary/15 bg-white text-brand-primary placeholder:text-brand-primary/30 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 resize-none font-body"
-            />
-
-            {error && (
-              <p className="text-sm text-red-600 font-body">{error}</p>
-            )}
-
-            {/* Submit */}
-            <button
-              onClick={handleSubmitOrder}
-              disabled={submitting || !member}
-              className="w-full bg-brand-primary text-white py-3.5 rounded-full font-medium hover:bg-forest-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2 font-body"
-            >
-              {submitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  Submit Order Request
-                  <ChevronRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-
-            <p className="text-xs text-brand-primary/40 text-center font-body">
-              No payment required now. You&apos;ll receive an invoice after review.
-            </p>
           </div>
-        )}
-      </div>
-    </>
+
+          {/* Notes */}
+          <textarea
+            value={notes} onChange={(e) => setNotes(e.target.value)}
+            placeholder="Notes for your provider (optional)..."
+            className="w-full px-4 py-3 border border-brand-primary/20 rounded-lg focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 resize-none text-sm text-brand-primary placeholder:text-brand-primary/40 mb-4"
+            rows={2}
+          />
+
+          {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+
+          <button onClick={handleSubmitOrder} disabled={submitting || !member}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-primary text-brand-cream font-medium rounded-full hover:bg-brand-primaryHover hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <>Submit Order Request <ArrowRight className="w-4 h-4" /></>}
+          </button>
+
+          {/* Trust Signal */}
+          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-brand-primary/50">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Secure request &bull; No payment required</span>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
 
 // =============================================
-// CART ITEM ROW
+// MOBILE CART OVERLAY
 // =============================================
 
-function CartItemRow({ item }: { item: JoinCartItem }) {
-  const cart = useJoinCart()
-
+function MobileCartOverlay({ member, onClose, onOrderSubmitted }: { member: ClubMember | null; onClose: () => void; onOrderSubmitted: () => void }) {
   return (
-    <div className="flex items-start gap-4 bg-white rounded-xl p-4 border border-brand-primary/5">
-      <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-brand-primary text-sm font-body truncate">{item.name}</h4>
-        <div className="mt-1">
-          {item.price !== null ? (
-            <span className="text-sm font-semibold text-brand-primary font-body">
-              ${(item.price * item.quantity).toFixed(2)}
-            </span>
-          ) : (
-            <span className="text-xs text-brand-primary/50 font-body">
-              {item.pricingNote || 'Pricing TBD'}
-            </span>
-          )}
+    <div className="fixed inset-0 z-50 lg:hidden">
+      <div className="absolute inset-0 bg-brand-primary/20 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-x-0 bottom-0 top-16 bg-brand-cream rounded-t-2xl overflow-y-auto p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-display font-bold text-brand-primary">Your Order</h2>
+          <button onClick={onClose} className="p-2 hover:bg-brand-primary/5 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-brand-primary" />
+          </button>
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <QuantityControl therapyId={item.therapyId} quantity={item.quantity} />
-        </div>
+        <CartSummaryPanel member={member} onOrderSubmitted={onOrderSubmitted} />
       </div>
-      <button
-        onClick={() => cart.removeItem(item.therapyId)}
-        className="p-1.5 text-brand-primary/30 hover:text-red-500 transition-colors shrink-0"
-        aria-label="Remove item"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
     </div>
   )
 }
