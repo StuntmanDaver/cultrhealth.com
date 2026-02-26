@@ -63,8 +63,8 @@ export function CreatorSidebar({ mobileOpen, onClose }: CreatorSidebarProps) {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-6 pb-4">
-        <Link href="/" className="text-xl font-display font-bold text-cultr-forest">
-          CULTR <span className="text-sm font-body font-normal text-cultr-textMuted">Creator</span>
+        <Link href="/" className="text-xl font-display font-bold text-cultr-forest" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          CULTR <span className="text-sm font-body font-normal text-cultr-textMuted" style={{ fontFamily: 'var(--font-body), Inter, system-ui, sans-serif' }}>Creator</span>
         </Link>
         {onClose && (
           <button onClick={onClose} className="md:hidden p-1 text-cultr-textMuted hover:text-cultr-forest">

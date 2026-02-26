@@ -239,7 +239,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
       <div className="bg-brand-cream rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Logo */}
         <div className="pt-10 pb-2 grad-dark-glow flex items-center justify-center">
-          <span className="font-display font-bold text-3xl tracking-[0.3em] text-white">CULTR</span>
+          <span className="font-display font-bold text-3xl tracking-[0.3em] text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>CULTR</span>
         </div>
         <div className="pb-2 grad-dark-glow text-center">
           <p className="text-white/60 text-xs">Free Membership</p>
