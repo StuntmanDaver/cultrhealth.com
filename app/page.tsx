@@ -432,17 +432,26 @@ export default function HomePage() {
             </h2>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {PROVIDERS.map((provider, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
                 <div className="text-center p-8 rounded-2xl glass-card border-gradient glow-card">
-                  <div className="w-20 h-20 mx-auto rounded-full grad-mint flex items-center justify-center mb-4">
-                    <Stethoscope className="w-8 h-8 text-cultr-forest" />
+                  <div className="w-20 h-20 mx-auto rounded-full mb-4 overflow-hidden">
+                    {provider.image ? (
+                      <img src={provider.image} alt={provider.name} className="w-full h-full object-cover object-top" />
+                    ) : (
+                      <div className="w-full h-full grad-mint flex items-center justify-center">
+                        <Stethoscope className="w-8 h-8 text-cultr-forest" />
+                      </div>
+                    )}
                   </div>
                   <h3 className="font-display font-bold text-cultr-forest">{provider.name}</h3>
                   <p className="text-sm text-cultr-textMuted mt-1">{provider.specialty}</p>
                   <p className="text-xs text-cultr-textMuted mt-1">{provider.credentials}</p>
                   <p className="text-xs text-cultr-textMuted">{provider.yearsExperience}+ years experience</p>
+                  {provider.bio && (
+                    <p className="text-xs text-cultr-textMuted mt-3 leading-relaxed">{provider.bio}</p>
+                  )}
                 </div>
               </ScrollReveal>
             ))}

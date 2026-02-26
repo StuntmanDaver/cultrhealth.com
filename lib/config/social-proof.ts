@@ -14,6 +14,8 @@ export interface Provider {
   specialty: string;
   credentials: string;
   yearsExperience: number;
+  image?: string;
+  bio?: string;
 }
 
 export const TESTIMONIALS: Testimonial[] = [
@@ -93,6 +95,14 @@ export const PROVIDERS: Provider[] = [
     specialty: "Endocrinology & Metabolic Health",
     credentials: "Board-certified Endocrinology",
     yearsExperience: 10,
+  },
+  {
+    name: "Belinda Ruiz, FNP",
+    specialty: "Functional Medicine & Hormones",
+    credentials: "Family Nurse Practitioner",
+    yearsExperience: 8,
+    image: "/images/provider-belinda-ruiz.jpg",
+    bio: "Specializing in Functional Medicine and hormones since 2017, Belinda uses a science-based, root-cause, whole-body approach to help patients optimize health through personalized, patient-centered care. Passionate about education, she empowers men and women to understand their bodies and take ownership of their healing journey.",
   },
 ];
 
