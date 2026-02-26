@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
   Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight,
@@ -240,7 +239,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
       <div className="bg-brand-cream rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Logo */}
         <div className="pt-10 pb-2 grad-dark-glow flex items-center justify-center">
-          <Image src="/creators/brand-kit/cultr-logo-dark.svg" alt="CULTR Health" width={140} height={38} priority className="brightness-0 invert" />
+          <span className="font-display font-bold text-3xl tracking-[0.3em] text-white">CULTR</span>
         </div>
         <div className="pb-2 grad-dark-glow text-center">
           <p className="text-white/60 text-xs">Free Membership</p>
