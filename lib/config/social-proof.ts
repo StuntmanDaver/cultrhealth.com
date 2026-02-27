@@ -79,24 +79,6 @@ export const TESTIMONIALS: Testimonial[] = [
 
 export const PROVIDERS: Provider[] = [
   {
-    name: "Dr. Sarah Mitchell, DO",
-    specialty: "Integrative & Longevity Medicine",
-    credentials: "Board-certified Internal Medicine",
-    yearsExperience: 12,
-  },
-  {
-    name: "Dr. James Chen, MD",
-    specialty: "Sports Medicine & Peptide Therapy",
-    credentials: "Board-certified Sports Medicine",
-    yearsExperience: 15,
-  },
-  {
-    name: "Dr. Lisa Patel, MD",
-    specialty: "Endocrinology & Metabolic Health",
-    credentials: "Board-certified Endocrinology",
-    yearsExperience: 10,
-  },
-  {
     name: "Dr. Ali Saberi, MD",
     specialty: "Medical Director, Cultr Health",
     credentials: "Board-certified Internal Medicine",

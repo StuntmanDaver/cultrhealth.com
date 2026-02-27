@@ -432,7 +432,7 @@ export default function HomePage() {
             </h2>
           </ScrollReveal>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
             {PROVIDERS.map((provider, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
                 <div className="text-center p-8 rounded-2xl glass-card border-gradient glow-card">
