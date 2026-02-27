@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0.08em; margin-bottom: 30px; color: #fff;">
+    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0; margin-bottom: 30px; color: #fff;">
       CULTR
     </h1>
     

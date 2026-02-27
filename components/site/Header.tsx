@@ -21,7 +21,7 @@ export function Header() {
       <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-cultr-sage">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link href="/" className="flex flex-col">
-            <span className="text-2xl font-display font-bold text-cultr-forest tracking-wide">
+            <span className="text-2xl font-display font-bold text-cultr-forest">
               CULTR
             </span>
             <span className="text-[10px] text-cultr-textMuted tracking-widest uppercase">
