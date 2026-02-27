@@ -4,8 +4,7 @@
  * This is a SEPARATE config from lib/config/therapies.ts (which remains
  * untouched for the main staging/production site).
  *
- * Excluded from Enhancement: Sermorelin, TB-500, AOD9604, Lipo B
- * Prices sourced from lib/config/product-catalog.ts where available.
+ * Updated Feb 2026 — all therapies now have fixed pricing.
  */
 
 export interface JoinTherapy {
@@ -39,35 +38,33 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
     therapies: [
       {
         id: 'semaglutide',
-        name: 'Semaglutide',
+        name: 'Semaglutide GLP1',
         badge: 'Physician use only',
-        note: 'Reconstituted - ready to inject',
+        note: '5 MG | 3 ML',
         description:
           'GLP-1 receptor agonist for appetite regulation, metabolic improvement, and sustained weight loss.',
-        price: null,
-        pricingNote: 'Starting from $299/mo',
+        price: 225,
         category: 'glp1',
         catalogSku: 'SEMA-5MG-3ML',
       },
       {
         id: 'tirzepatide',
-        name: 'Tirzepatide',
+        name: 'Tirzepatide GLP1',
         badge: 'Physician use only',
-        note: 'Reconstituted - ready to inject',
+        note: '20 MG | 3 ML',
         description:
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
-        price: null,
-        pricingNote: 'Starting from $399/mo',
+        price: 290,
         category: 'glp1',
       },
       {
         id: 'retatrutide',
-        name: 'Retatrutide',
+        name: 'R3TA — GLP1/GIP/GCG',
         badge: 'Physician use only',
+        note: '20 MG | 3 ML',
         description:
           'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
-        price: null,
-        pricingNote: 'Starting from $499/mo',
+        price: 340,
         category: 'glp1',
       },
     ],
@@ -79,86 +76,77 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       'Advanced peptide protocols for recovery, longevity, and performance optimization — tailored to your biomarkers.',
     therapies: [
       {
-        id: 'tesamorelin',
-        name: 'Tesamorelin',
+        id: 'ghk-cu',
+        name: 'GHK-CU',
         badge: 'Physician use only',
+        note: '100 MG | 3 ML',
         description:
-          'Growth-hormone releasing peptide that targets visceral fat reduction and supports lean body composition.',
-        price: 69.70,
+          'Copper peptide complex supporting skin remodeling, wound healing, and tissue regeneration.',
+        price: 145,
         category: 'peptide',
-        catalogSku: 'TESAMORELIN-5MG-3ML',
+        catalogSku: 'GHKCU-100MG-3ML',
+      },
+      {
+        id: 'tesa-ipa',
+        name: 'TESA/IPA',
+        badge: 'Physician use only',
+        note: '12/6 MG | 3 ML',
+        description:
+          'Tesamorelin/Ipamorelin blend for growth hormone optimization, visceral fat reduction, and lean body composition.',
+        price: 175,
+        category: 'peptide',
+      },
+      {
+        id: 'cjc1295-ipa',
+        name: 'CJC1295/IPA',
+        badge: 'Physician use only',
+        note: '10/10 MG | 3 ML',
+        description:
+          'Growth hormone releasing hormone and secretagogue blend for sustained GH elevation, recovery, and body recomposition.',
+        price: 170,
+        category: 'peptide',
       },
       {
         id: 'nad-plus',
         name: 'NAD+',
         badge: 'Physician use only',
+        note: '1000 MG | 10 ML',
         description:
           'Essential coenzyme for cellular energy, DNA repair, and metabolic function — foundational to longevity.',
-        price: 102.00,
+        price: 175,
         category: 'peptide',
-        catalogSku: 'NAD-500MG-10ML',
-      },
-      {
-        id: 'ghk-cu',
-        name: 'GHK-CU',
-        badge: 'Physician use only',
-        description:
-          'Copper peptide complex supporting skin remodeling, wound healing, and tissue regeneration.',
-        price: 74.80,
-        category: 'peptide',
-        catalogSku: 'GHKCU-50MG-3ML',
-      },
-      {
-        id: 'bpc-157',
-        name: 'BPC-157',
-        badge: 'Physician use only',
-        description:
-          'Body Protection Compound for accelerated gut healing, tendon repair, and systemic anti-inflammatory support.',
-        price: 78.20,
-        category: 'peptide',
-        catalogSku: 'BPC157-5MG-3ML',
-      },
-      {
-        id: 'glutathione',
-        name: 'Glutathione',
-        badge: 'Physician use only',
-        note: 'Reconstituted - ready to inject',
-        description:
-          'Master antioxidant for detoxification, immune support, and protection against oxidative stress.',
-        price: null,
-        pricingNote: 'Consultation pricing',
-        category: 'peptide',
-      },
-      {
-        id: 'nad-ghkcu-glutathione-blend',
-        name: 'NAD+ / GHK-Cu / Glutathione Blend',
-        badge: 'Physician use only',
-        note: 'Reconstituted - ready to inject',
-        description:
-          'Synergistic triple-compound blend combining cellular energy restoration (NAD+), copper peptide tissue remodeling (GHK-Cu), and master antioxidant detoxification (Glutathione) for comprehensive rejuvenation.',
-        price: null,
-        pricingNote: 'Consultation pricing',
-        category: 'peptide',
-      },
-      {
-        id: 'mot-c',
-        name: 'MOT-C',
-        badge: 'Physician use only',
-        description:
-          'Mitochondrial-derived peptide that enhances metabolic flexibility, insulin sensitivity, and exercise capacity.',
-        price: 91.80,
-        category: 'peptide',
-        catalogSku: 'MOTSC-10MG-3ML',
+        catalogSku: 'NAD-1000MG-10ML',
       },
       {
         id: 'semax-selank',
         name: 'Semax/Selank',
         badge: 'Physician use only',
+        note: '5/5 MG | 3 ML',
         description:
           'Neuropeptide stack for cognitive enhancement, stress resilience, and focus without stimulant side effects.',
-        price: 76.50,
+        price: 115,
         category: 'peptide',
         catalogSku: 'SELANK-SEMAX-5MG-3ML',
+      },
+      {
+        id: 'bpc157-tb500',
+        name: 'BPC157/TB500',
+        badge: 'Physician use only',
+        note: '10/10 MG | 3 ML',
+        description:
+          'Dual-peptide recovery stack combining gut healing and tendon repair (BPC-157) with systemic tissue regeneration (TB-500).',
+        price: 150,
+        category: 'peptide',
+      },
+      {
+        id: 'melanotan-2',
+        name: 'Melanotan 2 (MT2)',
+        badge: 'Physician use only',
+        note: '10 MG | 3 ML',
+        description:
+          'Melanocortin peptide for enhanced tanning response, skin pigmentation support, and photoprotection.',
+        price: 110,
+        category: 'peptide',
       },
     ],
   },
