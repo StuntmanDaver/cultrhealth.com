@@ -43,20 +43,30 @@ function JoinLandingInner() {
 
   useEffect(() => {
     try {
+      // Check localStorage first (most reliable), then cookie as fallback
+      const lsData = localStorage.getItem('cultr_club_member')
+      if (lsData) {
+        const data = JSON.parse(lsData)
+        setMember(data)
+        return
+      }
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
         const data = JSON.parse(decodeURIComponent(stored.split('=')[1]))
         setMember(data)
-      } else {
-        setShowSignup(true)
+        // Sync to localStorage for future visits
+        localStorage.setItem('cultr_club_member', JSON.stringify(data))
+        return
       }
+      setShowSignup(true)
     } catch {
       setShowSignup(true)
     }
   }, [])
 
   const handleSignupComplete = useCallback((data: ClubMember) => {
-    // Persist to cookie so user doesn't have to sign up again
+    // Persist to localStorage (primary) and cookie (backup)
+    localStorage.setItem('cultr_club_member', JSON.stringify(data))
     const cookieData = encodeURIComponent(JSON.stringify(data))
     document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
     setMember(data)
