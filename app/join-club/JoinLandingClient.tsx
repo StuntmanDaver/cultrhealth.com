@@ -40,6 +40,7 @@ function JoinLandingInner() {
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
   const cart = useJoinCart()
+  const hasItems = cart.getItemCount() > 0
 
   useEffect(() => {
     try {
@@ -136,18 +137,18 @@ function JoinLandingInner() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setShowMobileCart(true)}
-            className="shrink-0 lg:hidden inline-flex items-center justify-center py-2.5 px-5 bg-brand-primary text-brand-cream font-medium text-sm rounded-full transition-all hover:bg-brand-primaryHover relative"
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Cart
-            {cart.getItemCount() > 0 && (
+          {hasItems && (
+            <button
+              onClick={() => setShowMobileCart(true)}
+              className="shrink-0 lg:hidden inline-flex items-center justify-center py-2.5 px-5 bg-brand-primary text-brand-cream font-medium text-sm rounded-full transition-all hover:bg-brand-primaryHover relative"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Cart
               <span className="ml-2 w-5 h-5 bg-cultr-sage text-cultr-forest text-xs font-bold rounded-full flex items-center justify-center">
                 {cart.getItemCount()}
               </span>
-            )}
-          </button>
+            </button>
+          )}
         </div>
       </section>
 
@@ -164,10 +165,10 @@ function JoinLandingInner() {
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-6 py-10">
-          <div className="grid lg:grid-cols-5 gap-12">
+          <div className={`grid gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
 
             {/* Left Column — Therapy Sections (matches therapies page card style) */}
-            <div className="lg:col-span-3 space-y-12">
+            <div className={hasItems ? 'lg:col-span-3 space-y-12' : 'space-y-12'}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx]
                 return (
@@ -187,12 +188,14 @@ function JoinLandingInner() {
               </div>
             </div>
 
-            {/* Right Column — Sticky Cart Summary (matches CartClient layout) */}
-            <div className="lg:col-span-2 hidden lg:block">
-              <div className="sticky top-8">
-                <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} />
+            {/* Right Column — Sticky Cart Summary, only visible when items in cart */}
+            {hasItems && (
+              <div className="lg:col-span-2 hidden lg:block">
+                <div className="sticky top-8">
+                  <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
