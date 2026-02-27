@@ -277,7 +277,7 @@ export default function HomePage() {
               <div className="grid grid-cols-3 grad-dark text-white font-display">
                 <div className="p-4 font-medium">Feature</div>
                 <div className="p-4 font-medium text-center">Standard Care</div>
-                <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold tracking-[0.08em]">CULTR</span></div>
+                <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold">CULTR</span></div>
               </div>
               {[
                 ['Comprehensive lab panels', '5-10 markers', '50+ markers'],
@@ -353,7 +353,7 @@ export default function HomePage() {
                   <span className="tracking-[0.08em]">CULTR</span> Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing <span className="font-display font-bold tracking-[0.08em]">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
                 </p>
               </div>
               <Link href="/creators" className="shrink-0">
@@ -436,7 +436,7 @@ export default function HomePage() {
             {PROVIDERS.map((provider, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
                 <div className="text-center p-8 rounded-2xl glass-card border-gradient glow-card">
-                  <div className="w-20 h-20 mx-auto rounded-full mb-4 overflow-hidden">
+                  <div className="w-36 h-36 mx-auto rounded-full mb-4 overflow-hidden">
                     {provider.image ? (
                       <img src={provider.image} alt={provider.name} className="w-full h-full object-cover object-top" />
                     ) : (
