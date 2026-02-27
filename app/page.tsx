@@ -464,9 +464,6 @@ export default function HomePage() {
             <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
               <Building className="w-4 h-4" /> Licensed 503A Pharmacy
             </div>
-            <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
-              <Shield className="w-4 h-4" /> DEA Licensed
-            </div>
           </div>
         </div>
       </section>
