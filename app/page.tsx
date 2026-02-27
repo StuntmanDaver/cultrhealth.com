@@ -462,7 +462,7 @@ export default function HomePage() {
               <Shield className="w-4 h-4" /> HIPAA Compliant
             </div>
             <div className="flex items-center gap-2 text-sm text-cultr-textMuted">
-              <Building className="w-4 h-4" /> Licensed 503A Pharmacy
+              <Stethoscope className="w-4 h-4" /> Licensed Providers &amp; 503A Pharmacy
             </div>
           </div>
         </div>
