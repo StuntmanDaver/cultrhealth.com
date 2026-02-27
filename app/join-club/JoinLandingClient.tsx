@@ -96,6 +96,8 @@ function JoinLandingInner() {
       <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-white mb-1" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>CULTR</h2>
+            <p className="text-xs text-white/50 uppercase tracking-widest mb-6">Health</p>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
               <Stethoscope className="w-4 h-4 text-cultr-sage" />
               <span className="text-sm">Physician-Supervised</span>
