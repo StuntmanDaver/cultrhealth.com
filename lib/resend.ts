@@ -54,7 +54,7 @@ function baseEmailTemplate(content: string, footerText?: string): string {
   <div style="max-width: 600px; margin: 0 auto;">
     <!-- Logo -->
     <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0.3em; color: #fff;">CULTR</span>
+      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0.08em; color: #fff;">CULTR</span>
     </div>
     
     ${content}
