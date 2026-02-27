@@ -33,7 +33,7 @@ function creatorEmailTemplate(content: string) {
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #2A4542; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0.15em; margin-bottom: 30px; color: #fff;">CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span></h1>
+    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0.08em; margin-bottom: 30px; color: #fff;">CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span></h1>
     ${content}
     <p style="color: #444; font-size: 12px; margin-top: 40px; border-top: 1px solid #3a5a57; padding-top: 20px;">CULTR Health Creator Program<br>This is an automated message.</p>
   </div>

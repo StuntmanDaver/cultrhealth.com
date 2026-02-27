@@ -41,7 +41,7 @@ function baseEmailTemplate(content: string, footerText?: string): string {
   <div style="max-width: 600px; margin: 0 auto;">
     <!-- Logo -->
     <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0.3em; color: #fff;">CULTR</span>
+      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0.08em; color: #fff;">CULTR</span>
     </div>
     
     ${content}
@@ -1361,6 +1361,135 @@ export async function sendPaymentFailedEmail(data: PaymentFailedEmailData): Prom
     return { success: true }
   } catch (err) {
     console.error('Failed to send payment failed email:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// FRAUD HELD ADMIN NOTIFICATION
+// ===========================================
+
+interface FraudHeldNotificationData {
+  transactionId: string
+  merchantRefId?: string
+  provider: string
+}
+
+export async function sendFraudHeldAdminNotification(data: FraudHeldNotificationData): Promise<EmailResult> {
+  const adminEmail = process.env.FOUNDER_EMAIL
+  if (!adminEmail) {
+    console.error('FOUNDER_EMAIL not configured - cannot send fraud alert')
+    return { success: false, error: 'Admin email not configured' }
+  }
+
+  const { transactionId, merchantRefId, provider } = data
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Payment Held for Fraud Review
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff8800;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">
+        A payment has been flagged and held for manual fraud review.
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; width: 140px;">Provider</td>
+          <td style="padding: 8px 0; color: #fff;">${provider}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Transaction ID</td>
+          <td style="padding: 8px 0; color: #fff; font-family: monospace; font-size: 13px;">${transactionId}</td>
+        </tr>
+        ${merchantRefId ? `<tr>
+          <td style="padding: 8px 0; color: #888;">Order Reference</td>
+          <td style="padding: 8px 0; color: #fff; font-family: monospace; font-size: 13px;">${merchantRefId}</td>
+        </tr>` : ''}
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Time</td>
+          <td style="padding: 8px 0; color: #fff;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #888; font-size: 13px;">
+      Please review this transaction in the ${provider} dashboard and approve or decline it.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: adminEmail,
+      subject: `[ACTION REQUIRED] Payment Held for Fraud Review - ${transactionId}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Fraud notification email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send fraud notification:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+// ===========================================
+// SUBSCRIPTION EXPIRING NOTIFICATION
+// ===========================================
+
+interface SubscriptionExpiringEmailData {
+  name: string
+  email: string
+}
+
+export async function sendSubscriptionExpiringEmail(data: SubscriptionExpiringEmailData): Promise<EmailResult> {
+  const { name, email } = data
+  const firstName = name.split(' ')[0]
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Your Subscription is Expiring Soon
+    </h1>
+
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, your CULTR Health subscription is expiring soon. To continue receiving your treatments without interruption, please renew your membership.
+    </p>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${siteUrl}/renewal" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Renew Subscription
+      </a>
+    </div>
+
+    <p style="color: #666; font-size: 13px; text-align: center;">
+      If you have any questions, contact us at support@cultrhealth.com.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: `Your CULTR Health Subscription is Expiring Soon`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Subscription expiring email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send subscription expiring email:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

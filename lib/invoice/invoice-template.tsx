@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Playfair Display',
     fontWeight: 'bold',
-    letterSpacing: 4,
+    letterSpacing: 2,
     color: '#1a1a1a',
     marginBottom: 5,
   },

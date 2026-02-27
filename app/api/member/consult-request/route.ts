@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0.3em; color: #fff;">CULTR</span>
+      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0.08em; color: #fff;">CULTR</span>
     </div>
     <h1 style="font-size: 24px; font-weight: 300; color: #fff; margin-bottom: 24px;">New Consultation Request</h1>
     <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0.3em; color: #fff;">CULTR</span>
+      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0.08em; color: #fff;">CULTR</span>
     </div>
     <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">Consultation Request Received</h1>
     <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">

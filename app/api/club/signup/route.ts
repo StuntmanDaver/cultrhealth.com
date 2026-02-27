@@ -85,7 +85,7 @@ async function sendClubWelcomeEmail(name: string, email: string) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0.3em; color: #2A4542;">CULTR</span>
+      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0.08em; color: #2A4542;">CULTR</span>
     </div>
     <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 16px;">Welcome to CULTR Club, ${name.split(' ')[0]}!</h1>
     <p style="text-align: center; color: #2A4542; opacity: 0.7; margin-bottom: 32px;">
