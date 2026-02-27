@@ -4,6 +4,91 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-02-26] - CULTR Club Landing Page, QuickBooks, Care Team & Brand Finalization
+
+### Summary
+Launched `join.cultrhealth.com` as a standalone CULTR Club landing page with full signup, order, and admin approval flow. Added QuickBooks Online integration for invoice management. Finalized care team to Dr. Ali Saberi MD (Medical Director) and Belinda Ruiz FNP. Completed CULTR logo brand standardization by removing all letter-spacing — relying on natural Playfair Display kerning. Hardened staging authentication with environment-aware team email bypass.
+
+### Added
+
+#### CULTR Club Landing Page (`join.cultrhealth.com`)
+- **`app/join-club/JoinLandingClient.tsx`** — Full landing page UI with hero, value props, product showcase, pricing, and signup modal with bot protection (Cloudflare Turnstile)
+- **`app/join-club/page.tsx`** — Server component wrapper for the join-club route
+- **`app/join-club/layout.tsx`** — Minimal layout suppressing site chrome (header/footer) for focused conversion experience
+- **`components/site/LayoutShellClient.tsx`** — Added `/join-club` to chrome suppression prefixes
+- **Signup persistence** — `localStorage` primary storage with `cookie` fallback; prevents re-showing signup modal to returning members
+- **Cookie-based member detection** — `cultr_club_member` cookie set server-side after successful signup
+
+#### Club Orders System
+- **`app/api/club/signup/route.ts`** — Club signup API; inserts member record, sets session cookie, sends Resend confirmation email
+- **`app/api/club/orders/route.ts`** — Order submission with HMAC-signed approval tokens (30-min expiry) and Resend admin notification
+- **`app/api/admin/club-orders/route.ts`** — Admin endpoint to list all pending/approved/rejected club orders
+- **`app/api/admin/club-orders/[orderId]/approve/route.ts`** — HMAC-protected one-click approval link handler
+- **`app/admin/club-orders/page.tsx`** — Admin club orders page with authentication gate
+- **`app/admin/club-orders/ClubOrdersClient.tsx`** — Expandable order list with inline approval/rejection actions
+- **`migrations/010_club_orders.sql`** — `club_members` and `club_orders` tables
+
+#### QuickBooks Integration
+- **`lib/quickbooks.ts`** — Full QuickBooks Online OAuth2 integration; token refresh with error handling, customer/invoice creation, payment recording
+- **`migrations/011_quickbooks_tokens.sql`** — `quickbooks_tokens` table for OAuth token persistence
+
+#### Care Team
+- **`public/images/provider-ali-saberi.jpg`** — Dr. Ali Saberi MD photo asset
+- **`public/images/provider-belinda-ruiz.jpg`** — Belinda Ruiz FNP photo asset
+
+#### Navigation & Pages
+- **Therapies page** (`app/therapies/page.tsx`) — Core Therapies landing page
+- **Core Therapies navbar link** — Added to site header navigation
+- **Active page highlighting** — Current route highlighted in navbar links
+
+### Changed
+
+#### Care Team / Social Proof
+- **`lib/config/social-proof.ts`** — Removed all placeholder providers; care team now contains only Dr. Ali Saberi MD (Medical Director) and Belinda Ruiz FNP
+- **Provider photo sizing** — Increased from `w-20` to `w-36` for better visual presence on homepage
+- **DEA Licensed badge** — Removed from care team display
+- **Trust badges** — Combined "Licensed 503A Pharmacy" into "Licensed Providers" badge for simpler presentation
+
+#### Brand Typography — CULTR Logo Letter-Spacing
+- **Complete removal of letter-spacing** — All `tracking-[0.08em]` Tailwind classes removed from 35+ JSX component files
+- **Email templates** — `letter-spacing: 0.08em` inline CSS changed to `letter-spacing: 0` across all Resend transactional emails, API route handlers, and confirmation flows
+- **PDF documents** — `letterSpacing: 2` removed from invoice template and LMN template (React PDF)
+- **Result** — CULTR brand name now renders with natural Playfair Display kerning on all surfaces (web, email, PDF)
+
+#### Staging Authentication
+- **Environment-aware bypass** — Staging site allows any email to authenticate without sending actual emails (returns magic link directly in response)
+- **Hardcoded team whitelist** — 5 team emails (`stewart@cultrhealth.com`, `erik@threepointshospitality.com`, etc.) guaranteed portal access by auto-creating DB records if missing
+- **Auto-approval** — `erik@` and `stewart@` are auto-approved on creator signup without admin review
+- **Staging resilience** — Creator login gracefully handles missing DB records for bypass emails
+
+#### Styling & UX
+- **Homepage hero** — Repositioned copy over center figure with left-justified text layout
+- **Homepage sections** — Merged Creator CTA, Newsletter, and Testimonials into continuous dark zone for visual cohesion
+- **Mobile transparency** — Light sections use transparent backgrounds on mobile for continuous scroll flow
+- **Pricing update** — Removed physician consult line item; blood work changed to "At-Home Lab Test ($135)"
+
+### Fixed
+- **CULTR logo font on join-club page** — Was loading raw Playfair Display instead of Next.js-optimized CSS variable; fixed to use `var(--font-display)`
+- **Session cookie persistence** — Fixed cookie not being set correctly on login redirects
+- **Creator login for staging bypass users** — Auto-creates minimal DB record when bypass email has no DB row
+- **Leaderboard missing props** — Fixed `Leaderboard` component receiving wrong prop shape from dashboard route
+
+### Files Modified
+- `app/page.tsx` — Hero layout, care team section, trust badges, dark zone merge
+- `app/join-club/JoinLandingClient.tsx` — Signup persistence, font fix, full page build
+- `app/api/auth/magic-link/route.ts` — Staging bypass + team email whitelist
+- `app/api/creators/magic-link/route.ts` — Staging bypass for creator login
+- `lib/config/social-proof.ts` — Providers array trimmed to 2; DEA badge removed
+- `lib/quickbooks.ts` — Improved token refresh error handling
+- `lib/resend.ts` — Removed letter-spacing from all email templates
+- `lib/invoice/invoice-template.tsx` — Removed letterSpacing from PDF logo style
+- `lib/lmn/lmn-template.tsx` — Removed letterSpacing from PDF logo style
+- `components/creators/Leaderboard.tsx` — Fixed prop types
+- `components/site/LayoutShellClient.tsx` — Added join-club to chrome suppression list
+- `components/site/Header.tsx` — Active page highlighting, Core Therapies link, removed letter-spacing
+
+---
+
 ## [2026-02-12] - Gold-Standard Performance Optimization
 
 ### Summary
