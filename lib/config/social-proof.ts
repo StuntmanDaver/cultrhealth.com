@@ -97,6 +97,14 @@ export const PROVIDERS: Provider[] = [
     yearsExperience: 10,
   },
   {
+    name: "Dr. Ali Saberi, MD",
+    specialty: "Medical Director, Cultr Health",
+    credentials: "Board-certified Internal Medicine",
+    yearsExperience: 20,
+    image: "/images/provider-ali-saberi.jpg",
+    bio: "A former Doctors Without Borders clinician with over 20 years of experience across primary care, hospital medicine, wound care, hyperbaric medicine, and integrative regenerative care. At Cultr Health, he guides a modern longevity model integrating evidence-based care with advanced nutrition, hormonal optimization, peptide therapeutics, and mind-body strategies.",
+  },
+  {
     name: "Belinda Ruiz, FNP",
     specialty: "Functional Medicine & Hormones",
     credentials: "Family Nurse Practitioner",
