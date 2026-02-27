@@ -304,7 +304,7 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
         <div className="p-4 grad-mint border border-cultr-sage rounded-xl">
           <p className="text-xs text-cultr-textMuted">
             <strong className="text-cultr-text">Note:</strong> All products require a valid prescription.
-            Pricing is provided upon quote request. <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee product availability.
+            Pricing is provided upon quote request. <span className="font-display font-bold">CULTR</span> Health does not guarantee product availability.
             Contact our team for current inventory and pricing.
           </p>
         </div>

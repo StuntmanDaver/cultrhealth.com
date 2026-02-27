@@ -58,7 +58,7 @@ export function LibraryContent({
           <div className="flex items-center justify-between h-16">
             {/* Logo & Tier Badge */}
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-xl font-display font-bold tracking-[0.08em] text-stone-900">
+              <Link href="/" className="text-xl font-display font-bold text-stone-900">
                 CULTR
               </Link>
               <span className="hidden sm:inline-flex px-3 py-1 bg-stone-900 text-white text-xs font-medium rounded-full">
@@ -173,7 +173,7 @@ export function LibraryContent({
                 <strong className="text-stone-700">Disclaimer:</strong> All peptides listed are for research purposes only.
                 This information is educational and should not be considered medical advice.
                 Always consult with a qualified healthcare provider before using any compound.
-                <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not sell or distribute peptides directly.
+                <span className="font-display font-bold">CULTR</span> Health does not sell or distribute peptides directly.
               </p>
             </div>
           </div>
@@ -197,7 +197,7 @@ export function LibraryContent({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-2xl font-display font-bold text-stone-900">
-                    <span className="tracking-[0.08em]">CULTR</span> {tierDisplay}
+                    <span className="">CULTR</span> {tierDisplay}
                   </p>
                   <p className="text-stone-500 text-sm mt-1">{email}</p>
                 </div>

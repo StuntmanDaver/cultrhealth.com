@@ -160,7 +160,7 @@ export default function HowItWorksPage() {
                     Safety is our priority
                   </h3>
                   <p className="text-cultr-textMuted mb-6 leading-relaxed">
-                    <span className="font-display font-bold tracking-[0.08em]">CULTR</span> is a licensed medical practice. We screen all patients for contraindications and safety risks. Our providers follow evidence-based protocols and monitor your progress closely.
+                    <span className="font-display font-bold">CULTR</span> is a licensed medical practice. We screen all patients for contraindications and safety risks. Our providers follow evidence-based protocols and monitor your progress closely.
                   </p>
                   <div className="grid sm:grid-cols-2 gap-4">
                     {[
@@ -313,7 +313,7 @@ export default function HowItWorksPage() {
               Frequently asked questions
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              Everything you need to know about <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health, our memberships, and how we can help you optimize your health.
+              Everything you need to know about <span className="font-display font-bold">CULTR</span> Health, our memberships, and how we can help you optimize your health.
             </p>
           </ScrollReveal>
 

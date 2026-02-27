@@ -200,7 +200,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           <p className="text-xl text-white/80 max-w-xl mx-auto">
             {isProductPurchase
               ? 'Your product order has been placed. We will process and ship your items shortly.'
-              : <>{`Welcome to `}<span className="font-display font-bold tracking-[0.08em]">CULTR</span>{planName ? ` ${planName}` : ''}. {isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Complete these two steps to start your journey.'}</>
+              : <>{`Welcome to `}<span className="font-display font-bold">CULTR</span>{planName ? ` ${planName}` : ''}. {isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Complete these two steps to start your journey.'}</>
 
             }
           </p>

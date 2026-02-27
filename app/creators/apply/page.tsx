@@ -105,7 +105,7 @@ function ApplyForm() {
             <span className="text-sm font-medium text-cultr-forest">Creator Application</span>
           </div>
           <h1 className="text-3xl font-display font-bold text-cultr-forest mb-3">
-            Join the <span className="tracking-[0.08em]">CULTR</span> Creator Program
+            Join the <span className="">CULTR</span> Creator Program
           </h1>
           <p className="text-cultr-textMuted">
             Earn 10% commission on every referral. We review applications within 48 hours.
@@ -211,7 +211,7 @@ function ApplyForm() {
           </button>
 
           <p className="text-xs text-cultr-textMuted text-center">
-            By applying, you agree to <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health&apos;s creator program terms.
+            By applying, you agree to <span className="font-display font-bold">CULTR</span> Health&apos;s creator program terms.
           </p>
         </form>
       </div>

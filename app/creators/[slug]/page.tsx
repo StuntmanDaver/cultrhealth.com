@@ -48,7 +48,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
             href="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 grad-dark text-white rounded-full text-sm font-medium hover:bg-cultr-forestDark transition-colors"
           >
-            Visit <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health <ArrowRight className="w-4 h-4" />
+            Visit <span className="font-display font-bold">CULTR</span> Health <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
         {/* Footer */}
         <div className="text-center pb-8">
           <Link href="/" className="text-xs text-cultr-textMuted hover:text-cultr-forest transition-colors">
-            Powered by <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
+            Powered by <span className="font-display font-bold">CULTR</span> Health
           </Link>
         </div>
       </div>

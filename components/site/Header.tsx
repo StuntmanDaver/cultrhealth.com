@@ -91,7 +91,7 @@ export function Header() {
                 <div className="flex flex-col items-end leading-none">
                   <span
                     className={`
-                      font-display font-bold tracking-[0.08em] uppercase text-brand-primary
+                      font-display font-bold uppercase text-brand-primary
                       transition-[font-size] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
                       ${scrolled ? 'text-lg' : 'text-[22px]'}
                     `}

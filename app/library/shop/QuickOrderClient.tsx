@@ -1065,7 +1065,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
           {activeShopTab === 'peptides' ? (
             <p className="text-xs text-cultr-textMuted">
               <strong className="text-brand-primary">Note:</strong> All products require a valid prescription.
-              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee product availability.
+              <span className="font-display font-bold">CULTR</span> Health does not guarantee product availability.
               Contact our team for current inventory and pricing.
             </p>
           ) : (

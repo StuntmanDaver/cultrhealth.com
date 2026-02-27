@@ -6,7 +6,7 @@ export function NewsletterSignup() {
     <section className="py-20 px-6 grad-dark">
       <div className="max-w-2xl mx-auto text-center">
         <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
-          Join the <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health Creator Club
+          Join the <span className="font-display font-bold">CULTR</span> Health Creator Club
         </h2>
         <p className="text-white/60 mb-8">
           Earn commissions, get tracking links, coupon codes, and a dedicated creator dashboard.

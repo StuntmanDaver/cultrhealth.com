@@ -298,7 +298,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
               <Calculator className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-display font-bold"><span className="tracking-[0.08em]">CULTR</span> Calculator</h1>
+              <h1 className="text-3xl font-display font-bold"><span className="">CULTR</span> Calculator</h1>
               <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
             </div>
           </div>

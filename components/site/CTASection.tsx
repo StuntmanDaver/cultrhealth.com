@@ -56,7 +56,7 @@ export function CTASection({
             </span>
             {status === 'success' ? (
               <div className="text-white text-sm font-medium bg-white/10 px-6 py-2.5 rounded-full border border-white/20">
-                Thanks for joining the <span className="font-display font-bold tracking-[0.08em]">CULTR</span>.
+                Thanks for joining the <span className="font-display font-bold">CULTR</span>.
               </div>
             ) : (
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
@@ -86,7 +86,7 @@ export function CTASection({
           </div>
 
           {/* Right - CULTR Logo */}
-          <span className="text-4xl md:text-5xl font-display font-bold text-white tracking-[0.08em] shrink-0">
+          <span className="text-4xl md:text-5xl font-display font-bold text-white shrink-0">
             CULTR
           </span>
         </div>

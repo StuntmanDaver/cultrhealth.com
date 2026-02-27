@@ -216,7 +216,7 @@ export default function CampaignsPage() {
       <div>
         <h1 className="text-2xl font-display font-bold text-cultr-forest">Campaigns</h1>
         <p className="text-sm text-cultr-textMuted mt-1">
-          Active promotions, product launches, and bonus opportunities. Stay aligned with <span className="font-display font-bold tracking-[0.08em]">CULTR</span> messaging.
+          Active promotions, product launches, and bonus opportunities. Stay aligned with <span className="font-display font-bold">CULTR</span> messaging.
         </p>
       </div>
 

@@ -73,7 +73,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           <div className="max-w-3xl mx-auto text-center">
             <div className="rounded-2xl border border-cultr-sage grad-light p-8">
               <p className="text-cultr-text font-medium mb-4">
-                Stack guides with persona-based protocols require a membership. Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Club (free) to get started.
+                Stack guides with persona-based protocols require a membership. Join <span className="font-display font-bold">CULTR</span> Club (free) to get started.
               </p>
               <Link
                 href="/pricing"

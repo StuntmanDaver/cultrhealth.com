@@ -78,7 +78,7 @@ export default function HomePage() {
         <div className="absolute inset-0 z-10 flex items-center">
           <div className="text-left absolute left-[32%] -translate-x-1/2">
             <h1 className="text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
-              Change the<br /><span className="tracking-[0.08em]">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
+              Change the<br /><span className="">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
@@ -104,7 +104,7 @@ export default function HomePage() {
           {/* Mobile slogan + CTA buttons — moved from hero */}
           <div className="md:hidden mb-12 -mt-10 text-center">
             <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-8 whitespace-nowrap">
-              Change the <span className="tracking-[0.08em]">CULTR</span>, <span className="italic">rebrand</span> yourself.
+              Change the <span className="">CULTR</span>, <span className="italic">rebrand</span> yourself.
             </h1>
             <div className="flex flex-row items-center justify-center gap-2">
               <Link href="/quiz">
@@ -268,7 +268,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto relative z-10">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest">
-              <span className="tracking-[0.08em]">CULTR</span> vs. the status quo
+              <span className="">CULTR</span> vs. the status quo
             </h2>
           </ScrollReveal>
 
@@ -350,7 +350,7 @@ export default function HomePage() {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  <span className="tracking-[0.08em]">CULTR</span> Creator
+                  <span className="">CULTR</span> Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
                   Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.

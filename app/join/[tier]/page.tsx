@@ -610,7 +610,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   {MEMBERSHIP_DISCLAIMER}
                 </p>
                 <p className="text-xs text-amber-600">
-                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. All services are provided via telehealth by licensed providers. 
+                  <span className="font-display font-bold">CULTR</span> Health does not guarantee specific results. All services are provided via telehealth by licensed providers. 
                   If you have a medical emergency, call 911.
                 </p>
               </div>

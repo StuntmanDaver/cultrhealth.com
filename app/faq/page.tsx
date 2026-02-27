@@ -27,7 +27,7 @@ export default function FAQPage() {
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Everything you need to know about <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health, our memberships, and how we can help you optimize your health.
+              Everything you need to know about <span className="font-display font-bold">CULTR</span> Health, our memberships, and how we can help you optimize your health.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>

@@ -32,12 +32,12 @@ export default function CreatorsPage() {
               <span className="text-sm">Affiliate Program</span>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Earn with <span className="tracking-[0.08em]">CULTR</span>
+              Earn with <span className="">CULTR</span>
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Share <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health with your audience and earn commissions on every referral. Tracking links, coupon codes, and a dedicated dashboard — all built for creators.
+              Share <span className="font-display font-bold">CULTR</span> Health with your audience and earn commissions on every referral. Tracking links, coupon codes, and a dedicated dashboard — all built for creators.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>
@@ -217,7 +217,7 @@ export default function CreatorsPage() {
               Ready to earn?
             </h2>
             <p className="text-white/70 mb-10 max-w-xl mx-auto">
-              Apply to the <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.
+              Apply to the <span className="font-display font-bold">CULTR</span> Creator program today. We review applications within 48 hours and onboard approved creators with links, codes, and resources immediately.
             </p>
             <Link href="/creators/apply">
               <Button variant="secondary" size="lg" className="text-white border-white/50 hover:bg-white/10 hover:border-white/70">

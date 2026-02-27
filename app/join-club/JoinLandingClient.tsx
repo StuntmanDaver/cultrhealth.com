@@ -181,7 +181,7 @@ function JoinLandingInner() {
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   <span className="font-semibold text-cultr-text">Medical Disclaimer:</span>{' '}
                   All therapies listed require physician evaluation and prescription.{' '}
-                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Outcomes vary by
+                  <span className="font-display font-bold">CULTR</span> Health does not guarantee specific results. Outcomes vary by
                   individual. If you have a medical emergency, call 911.
                 </p>
               </div>
@@ -252,7 +252,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
       <div className="bg-brand-cream rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Logo */}
         <div className="pt-10 pb-2 grad-dark-glow flex items-center justify-center">
-          <span className="font-display font-bold text-3xl tracking-[0.08em] text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>CULTR</span>
+          <span className="font-display font-bold text-3xl text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>CULTR</span>
         </div>
         <div className="pb-2 grad-dark-glow text-center">
           <p className="text-white/60 text-xs">Free Membership</p>

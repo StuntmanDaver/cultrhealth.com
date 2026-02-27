@@ -131,7 +131,7 @@ export default function ProductsPage() {
                   <span className="text-sm">Coming Soon</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-                  The <span className="tracking-[0.08em]">CULTR</span> <span className="italic">Peptide Library</span>
+                  The <span className="">CULTR</span> <span className="italic">Peptide Library</span>
                 </h2>
                 <p className="text-white/80 mb-8 leading-relaxed">
                   Access our comprehensive library of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, and real-world outcomes data.
@@ -319,7 +319,7 @@ export default function ProductsPage() {
                 <p className="text-sm text-cultr-textMuted leading-relaxed">
                   All products require a valid prescription from a licensed provider. Individual results may vary.
                   Medications are prescribed only when clinically appropriate based on your health history and lab results.
-                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> does not guarantee specific outcomes. These statements have not been evaluated by the FDA.
+                  <span className="font-display font-bold">CULTR</span> does not guarantee specific outcomes. These statements have not been evaluated by the FDA.
                 </p>
               </div>
             </div>

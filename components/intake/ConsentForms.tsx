@@ -189,7 +189,7 @@ export function ConsentForms() {
                 <strong>INFORMED CONSENT FOR TELEHEALTH SERVICES</strong>
               </p>
               <p className="mb-2">
-                I hereby consent to receiving telehealth services from <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health and its affiliated healthcare providers.
+                I hereby consent to receiving telehealth services from <span className="font-display font-bold">CULTR</span> Health and its affiliated healthcare providers.
                 I understand that telehealth involves the use of electronic communications to enable healthcare providers to
                 provide consultations, make diagnoses, recommend treatments, and prescribe medications at a distance.
               </p>

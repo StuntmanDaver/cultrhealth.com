@@ -28,7 +28,7 @@ export default function PrivacyPage() {
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">
-              Your privacy is critically important to us. This policy details how <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your information.
+              Your privacy is critically important to us. This policy details how <span className="font-display font-bold">CULTR</span> Health (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your information.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">1. Information We Collect</h2>

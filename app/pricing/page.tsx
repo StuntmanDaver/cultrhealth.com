@@ -129,10 +129,10 @@ export default function PricingPage() {
               </div>
               <div className="flex-1 text-center md:text-left">
                 <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  <span className="tracking-[0.08em]">CULTR</span> Creator
+                  <span className="">CULTR</span> Creator
                 </h3>
                 <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing <span className="font-display font-bold tracking-[0.08em]">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
                 </p>
               </div>
               <Link href="/creators" className="shrink-0">
@@ -319,7 +319,7 @@ export default function PricingPage() {
               <div>
                 <h4 className="font-display font-bold text-cultr-text mb-2">Medical Disclaimer</h4>
                 <p className="text-sm text-cultr-textMuted leading-relaxed">
-                  <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
+                  <span className="font-display font-bold">CULTR</span> Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
                   All services are provided via telehealth by licensed providers. Prescriptions are issued only when clinically appropriate.
                   If you have a medical emergency, please call 911 or proceed to your nearest emergency room.
                 </p>

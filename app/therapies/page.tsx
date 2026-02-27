@@ -160,7 +160,7 @@ export default function TherapiesPage() {
             <p className="text-xs text-cultr-textMuted leading-relaxed">
               <span className="font-semibold text-cultr-text">Medical Disclaimer:</span>{' '}
               All therapies listed require physician evaluation and prescription.
-              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health does not guarantee specific results. Outcomes vary by
+              <span className="font-display font-bold">CULTR</span> Health does not guarantee specific results. Outcomes vary by
               individual. If you have a medical emergency, call 911.
             </p>
           </div>

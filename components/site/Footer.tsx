@@ -53,11 +53,11 @@ export function Footer() {
           {/* CULTR Wordmark */}
           <div className="mb-12">
             <Link href="/" className="inline-block">
-              <span className="font-display font-bold text-2xl tracking-[0.08em] text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>
+              <span className="font-display font-bold text-2xl text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>
                 CULTR
               </span>
             </Link>
-            <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold tracking-[0.08em]">CULTR</span>, rebrand yourself.</p>
+            <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold">CULTR</span>, rebrand yourself.</p>
           </div>
 
           {/* Footer Links Grid */}
@@ -179,11 +179,11 @@ export function Footer() {
           {/* Bottom Section */}
           <div className="pt-8 border-t border-white/10">
             <p className="text-xs text-white/40 mb-4">
-              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold tracking-[0.08em]">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice.
+              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice.
             </p>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <p className="text-xs text-white/40">
-                © {new Date().getFullYear()} <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
+                © {new Date().getFullYear()} <span className="font-display font-bold">CULTR</span> Health
               </p>
               <div className="flex gap-4 text-xs text-white/40">
                 <Link href="/legal/privacy" className="hover:text-cultr-sage transition-all duration-200">

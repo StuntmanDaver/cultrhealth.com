@@ -28,17 +28,17 @@ export default function TermsPage() {
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">
-              Welcome to <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health. By accessing our website and services, you agree to these terms. Please read them carefully.
+              Welcome to <span className="font-display font-bold">CULTR</span> Health. By accessing our website and services, you agree to these terms. Please read them carefully.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">1. Services</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health provides a technology platform to connect members with healthcare providers. We do not provide medical services directly; medical services are provided by independent licensed healthcare professionals. <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health facilitates the connection between you and these providers.
+              <span className="font-display font-bold">CULTR</span> Health provides a technology platform to connect members with healthcare providers. We do not provide medical services directly; medical services are provided by independent licensed healthcare professionals. <span className="font-display font-bold">CULTR</span> Health facilitates the connection between you and these providers.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">2. Membership</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              Membership fees cover access to the <span className="font-display font-bold tracking-[0.08em]">CULTR</span> platform, care coordination, and included consultations as specified in your plan. Lab draw fees, medications, and certain specialized services may incur additional fees or be billed separately.
+              Membership fees cover access to the <span className="font-display font-bold">CULTR</span> platform, care coordination, and included consultations as specified in your plan. Lab draw fees, medications, and certain specialized services may incur additional fees or be billed separately.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">3. Eligibility</h2>
@@ -58,7 +58,7 @@ export default function TermsPage() {
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">6. Limitation of Liability</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health provides a platform for connecting you with healthcare services. We do not guarantee specific health outcomes. To the maximum extent permitted by law, <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health shall not be liable for any indirect, incidental, or consequential damages.
+              <span className="font-display font-bold">CULTR</span> Health provides a platform for connecting you with healthcare services. We do not guarantee specific health outcomes. To the maximum extent permitted by law, <span className="font-display font-bold">CULTR</span> Health shall not be liable for any indirect, incidental, or consequential damages.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">7. Changes to Terms</h2>

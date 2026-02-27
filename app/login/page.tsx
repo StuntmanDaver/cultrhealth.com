@@ -140,7 +140,7 @@ export default function LoginPage() {
                 </p>
                 <Link href="/pricing">
                   <Button variant="ghost" className="text-cultr-sage hover:text-white">
-                    Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> <ArrowRight className="w-4 h-4 ml-2" />
+                    Join <span className="font-display font-bold">CULTR</span> <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
               </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
             <p className="text-sm text-white/60 mt-6">
               New here?{' '}
               <Link href="/pricing" className="text-cultr-sage hover:text-white transition-colors font-medium">
-                Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span>
+                Join <span className="font-display font-bold">CULTR</span>
               </Link>
             </p>
           </ScrollReveal>

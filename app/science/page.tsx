@@ -222,7 +222,7 @@ export default async function SciencePage({
               href="/pricing"
               className="inline-flex items-center px-6 py-3 grad-dark text-white rounded-lg font-medium hover:bg-cultr-forest/90 transition-colors"
             >
-              Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health
+              Join <span className="font-display font-bold">CULTR</span> Health
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </ScrollReveal>

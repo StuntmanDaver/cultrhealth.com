@@ -31,7 +31,7 @@ export default function MedicalDisclaimerPage() {
               <div>
                 <h3 className="text-lg font-display font-bold text-red-800 mb-2">Not Emergency Care</h3>
                 <p className="text-red-700 leading-relaxed">
-                  If you are experiencing a medical emergency, call 911 immediately. Do not rely on <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health for emergency medical needs. Our services are not intended for urgent or emergency care.
+                  If you are experiencing a medical emergency, call 911 immediately. Do not rely on <span className="font-display font-bold">CULTR</span> Health for emergency medical needs. Our services are not intended for urgent or emergency care.
                 </p>
               </div>
             </div>
@@ -63,7 +63,7 @@ export default function MedicalDisclaimerPage() {
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Reporting Side Effects</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              If you experience any side effects from treatments prescribed through <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health, please contact your provider immediately through the patient portal. For severe or life-threatening reactions, seek emergency medical care by calling 911.
+              If you experience any side effects from treatments prescribed through <span className="font-display font-bold">CULTR</span> Health, please contact your provider immediately through the patient portal. For severe or life-threatening reactions, seek emergency medical care by calling 911.
             </p>
           </div>
         </div>

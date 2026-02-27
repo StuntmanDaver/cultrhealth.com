@@ -89,7 +89,7 @@ export function LibraryLogin({ error }: { error?: string }) {
               </div>
               <h2 className="text-xl font-display font-bold text-cultr-forest mb-3">Check Your Email</h2>
               <p className="text-cultr-textMuted mb-6">
-                If you have an active <span className="font-display font-bold tracking-[0.08em]">CULTR</span> membership, you&apos;ll receive a link to access the library. The link expires in 15 minutes.
+                If you have an active <span className="font-display font-bold">CULTR</span> membership, you&apos;ll receive a link to access the library. The link expires in 15 minutes.
               </p>
               <button
                 onClick={() => {
@@ -143,7 +143,7 @@ export function LibraryLogin({ error }: { error?: string }) {
                 <p className="text-cultr-textMuted text-sm">
                   Not a member?{' '}
                   <Link href="/pricing" className="text-cultr-forest hover:text-cultr-forestDark transition-colors font-medium">
-                    Join <span className="font-display font-bold tracking-[0.08em]">CULTR</span>
+                    Join <span className="font-display font-bold">CULTR</span>
                   </Link>
                 </p>
               </div>
@@ -159,7 +159,7 @@ export function LibraryLogin({ error }: { error?: string }) {
           {/* Additional Info */}
           <div className="mt-4 text-center">
             <p className="text-cultr-textMuted text-xs">
-              Library access is included with all <span className="font-display font-bold tracking-[0.08em]">CULTR</span> memberships.
+              Library access is included with all <span className="font-display font-bold">CULTR</span> memberships.
             </p>
           </div>
         </div>

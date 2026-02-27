@@ -428,8 +428,8 @@ function MealPlanModal({
           </div>
           <div class="footer">
             <p>This meal plan is AI-generated based on your nutritional targets.</p>
-            <p>Always consult your <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0.08em;">CULTR</span> Health provider for personalized nutrition advice.</p>
-            <p style="margin-top: 12px;">© ${new Date().getFullYear()} <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0.08em;">CULTR</span> Health — cultrhealth.com</p>
+            <p>Always consult your <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0;">CULTR</span> Health provider for personalized nutrition advice.</p>
+            <p style="margin-top: 12px;">© ${new Date().getFullYear()} <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; letter-spacing: 0;">CULTR</span> Health — cultrhealth.com</p>
           </div>
         </body>
       </html>
@@ -1048,7 +1048,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   <strong className="text-cultr-text">Disclaimer:</strong> This calculator provides estimates
                   based on established formulas. Individual needs vary based on genetics, body composition,
-                  medical conditions, and medications. Always consult your <span className="font-display font-bold tracking-[0.08em]">CULTR</span> Health provider before making
+                  medical conditions, and medications. Always consult your <span className="font-display font-bold">CULTR</span> Health provider before making
                   significant dietary changes.
                 </p>
               </div>

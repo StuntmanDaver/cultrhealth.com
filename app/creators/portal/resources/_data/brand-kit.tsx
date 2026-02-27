@@ -20,10 +20,10 @@ export const brandKit: Record<string, ResourceEntry> = {
         <SectionHeading>Available Formats</SectionHeading>
         <div className="grid sm:grid-cols-2 gap-4 my-4">
           <div className="grad-dark p-8 rounded-xl flex items-center justify-center">
-            <span className="font-display font-bold text-white text-3xl tracking-[0.08em]">CULTR</span>
+            <span className="font-display font-bold text-white text-3xl">CULTR</span>
           </div>
           <div className="bg-white border border-stone-200 p-8 rounded-xl flex items-center justify-center">
-            <span className="font-display font-bold text-cultr-forest text-3xl tracking-[0.08em]">CULTR</span>
+            <span className="font-display font-bold text-cultr-forest text-3xl">CULTR</span>
           </div>
         </div>
 
