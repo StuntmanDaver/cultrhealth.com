@@ -51,7 +51,7 @@ const COMPARISON_DATA: Record<string, Record<string, string | boolean>> = {
     response: 'Immediate',
     protocols: 'All Access',
     library: true,
-    priority: 'Concierge',
+    priority: 'Curated',
   },
 };
 

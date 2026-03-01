@@ -144,7 +144,7 @@ export const PLANS: Plan[] = [
   },
   {
     slug: 'concierge',
-    name: 'CULTR Concierge',
+    name: 'CULTR Curated',
     price: 1099,
     interval: 'month',
     tagline: 'Complete care',
@@ -166,7 +166,7 @@ export const PLANS: Plan[] = [
     stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK',
     paymentLink: 'https://buy.stripe.com/9B6dR8aqTaGF1ca8WQ6J20b',
     isFeatured: false,
-    ctaLabel: 'Join Concierge',
+    ctaLabel: 'Join Curated',
     bnplEnabled: true,
   },
 ];

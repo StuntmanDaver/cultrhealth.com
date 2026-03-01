@@ -143,7 +143,7 @@ export default function FAQPage() {
               <FAQAccordion items={[
                 {
                   question: 'How fast do you respond to messages?',
-                  answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge and Club members have 24/7 messaging access with expedited responses.',
+                  answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Curated and Club members have 24/7 messaging access with expedited responses.',
                 },
                 {
                   question: 'What if I have side effects?',

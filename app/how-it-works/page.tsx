@@ -94,7 +94,7 @@ export default function HowItWorksPage() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1A2E2B]/80 via-[#2B4542]/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.2) 50%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.2) 50%, transparent 100%)' }} />
 
         <div className="max-w-4xl mx-auto text-center relative z-10 py-20 md:py-28">
           <ScrollReveal direction="none" duration={800}>
@@ -412,7 +412,7 @@ export default function HowItWorksPage() {
                 <FAQAccordion items={[
                   {
                     question: 'How fast do you respond to messages?',
-                    answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge and Club members have 24/7 messaging access with expedited responses.',
+                    answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Curated and Club members have 24/7 messaging access with expedited responses.',
                   },
                   {
                     question: 'What if I have side effects?',

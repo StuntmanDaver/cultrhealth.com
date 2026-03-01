@@ -165,7 +165,7 @@ export default function PricingPage() {
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text">Feature</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Curated</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">

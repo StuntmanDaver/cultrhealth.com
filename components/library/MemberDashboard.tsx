@@ -448,7 +448,7 @@ export function MemberDashboard({
             <TierGate
               requiredTier="concierge"
               currentTier={tier}
-              upgradeMessage="Upgrade to Concierge to unlock provider note templates."
+              upgradeMessage="Upgrade to Curated to unlock provider note templates."
             >
               <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
                 <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
@@ -463,7 +463,7 @@ export function MemberDashboard({
             <TierGate
               requiredTier="concierge"
               currentTier={tier}
-              upgradeMessage="Upgrade to Concierge to unlock custom protocol requests."
+              upgradeMessage="Upgrade to Curated to unlock custom protocol requests."
             >
               <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
                 <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">

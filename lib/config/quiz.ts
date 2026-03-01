@@ -119,7 +119,7 @@ const TIER_INFO: Record<string, { name: string; price: number }> = {
   club: { name: 'CULTR Club', price: 0 },
   core: { name: 'CULTR Core', price: 199 },
   catalyst: { name: 'CULTR Catalyst+', price: 499 },
-  concierge: { name: 'CULTR Concierge', price: 1099 },
+  concierge: { name: 'CULTR Curated', price: 1099 },
 };
 
 export function calculateRecommendation(answers: Record<string, string | string[]>): QuizResult {

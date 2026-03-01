@@ -183,7 +183,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           'Weekly telehealth consultations',
           '24/7 messaging access with same-day response',
           'Comprehensive protocol management',
-          'Priority scheduling and concierge support',
+          'Priority scheduling and curated support',
           'Full Peptide Library + Protocol Engine access',
           'Best for: High-performers who want maximum access and support',
         ]} />

@@ -90,7 +90,7 @@ const RESOURCE_SECTIONS = [
     items: [
       { title: 'GLP-1 Overview', desc: 'How GLP-1 medications work, benefits, and eligibility', type: 'doc', slug: 'glp-1-overview' },
       { title: 'Peptide Protocols', desc: 'Introduction to peptide therapy and stacking', type: 'doc', slug: 'peptide-protocols' },
-      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Concierge explained', type: 'doc', slug: 'membership-tiers' },
+      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Curated explained', type: 'doc', slug: 'membership-tiers' },
       { title: 'FAQ Cheat Sheet', desc: 'Common questions your audience will ask', type: 'doc', slug: 'faq-cheat-sheet' },
     ],
   },
@@ -111,7 +111,7 @@ const RESOURCE_SECTIONS = [
     icon: Palette,
     items: [
       { title: 'Logo Pack', desc: 'CULTR logos in PNG, SVG, and dark/light', type: 'download', slug: 'logo-pack' },
-      { title: 'Brand Colors', desc: 'Forest #2B4542, Mint #D7F3DC, Ivory #F7F6E8', type: 'info', slug: 'brand-colors' },
+      { title: 'Brand Colors', desc: 'Forest #2B4542, Mint #D7F3DC, Ivory #FCFBF7', type: 'info', slug: 'brand-colors' },
       { title: 'Photography', desc: 'Approved product and lifestyle photos', type: 'download', slug: 'photography' },
       { title: 'Brand Guidelines', desc: 'Tone, voice, and usage rules', type: 'doc', slug: 'brand-guidelines' },
     ],

@@ -50,7 +50,7 @@ export const TESTIMONIALS: Testimonial[] = [
   {
     quote: "I've tried 4 telehealth platforms. CULTR is the only one where the provider actually knows peptides.",
     name: "Rachel M.",
-    title: "Concierge member, 10 months",
+    title: "Curated member, 10 months",
     rating: 5,
     highlight: "4 platforms tried",
   },

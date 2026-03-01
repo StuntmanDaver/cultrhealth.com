@@ -13,7 +13,7 @@ CULTR Health is a longevity and health optimization clinic offering:
 - **Core Membership**: Entry-level access to health library and basic protocols
 - **Creator Membership**: Advanced protocols and dosing calculators
 - **Catalyst Membership**: Full protocol access with stacking guides
-- **Concierge Membership**: VIP access with provider notes and custom requests
+- **Curated Membership**: VIP access with provider notes and custom requests
 
 ## Products
 We offer research-grade peptides and compounds including:
