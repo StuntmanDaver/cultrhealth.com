@@ -3,7 +3,8 @@
 import { usePathname } from 'next/navigation'
 import { type ReactNode } from 'react'
 
-const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin', '/join-club']
+const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin']
+const HIDE_CHROME_EXACT = ['/join']
 
 export function LayoutShellClient({
   header,
@@ -15,7 +16,7 @@ export function LayoutShellClient({
   children: ReactNode
 }) {
   const pathname = usePathname()
-  const hideChrome = HIDE_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix))
+  const hideChrome = HIDE_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || HIDE_CHROME_EXACT.includes(pathname)
 
   return (
     <>

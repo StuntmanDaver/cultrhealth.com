@@ -76,7 +76,7 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SectionHeading>Background Colors</SectionHeading>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
-          <ColorSwatch name="Cream" hex="#F7F6E8" textColor="text-cultr-forest" />
+          <ColorSwatch name="Cream" hex="#FCFBF7" textColor="text-cultr-forest" />
           <ColorSwatch name="Off-White" hex="#F5F3EF" textColor="text-cultr-forest" />
           <ColorSwatch name="White" hex="#FFFFFF" textColor="text-cultr-forest" />
         </div>

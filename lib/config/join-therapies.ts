@@ -18,6 +18,8 @@ export interface JoinTherapy {
   /** Displayed when price is null */
   pricingNote?: string
   category: 'glp1' | 'peptide'
+  /** When true, card spans full width across both columns */
+  featured?: boolean
   /** Reference SKU in product-catalog.ts (for cross-reference only) */
   catalogSku?: string
 }
@@ -37,8 +39,19 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       'Physician-supervised weight management protocols using the latest incretin-based therapies for sustainable fat loss.',
     therapies: [
       {
+        id: 'retatrutide',
+        name: 'R3TA — GLP1/GIP/GCG',
+        badge: 'Physician use only',
+        note: '20 MG | 3 ML',
+        description:
+          'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
+        price: 340,
+        category: 'glp1',
+        featured: true,
+      },
+      {
         id: 'semaglutide',
-        name: 'Semaglutide GLP1',
+        name: 'Semaglutide — GLP1',
         badge: 'Physician use only',
         note: '5 MG | 3 ML',
         description:
@@ -49,22 +62,12 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       },
       {
         id: 'tirzepatide',
-        name: 'Tirzepatide GLP1',
+        name: 'Tirzepatide — GLP1/GIP',
         badge: 'Physician use only',
         note: '20 MG | 3 ML',
         description:
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
         price: 290,
-        category: 'glp1',
-      },
-      {
-        id: 'retatrutide',
-        name: 'R3TA — GLP1/GIP/GCG',
-        badge: 'Physician use only',
-        note: '20 MG | 3 ML',
-        description:
-          'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
-        price: 340,
         category: 'glp1',
       },
     ],
@@ -146,6 +149,16 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         description:
           'Melanocortin peptide for enhanced tanning response, skin pigmentation support, and photoprotection.',
         price: 110,
+        category: 'peptide',
+      },
+      {
+        id: 'glutathione',
+        name: 'Glutathione',
+        badge: 'Physician use only',
+        description:
+          'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
+        price: null,
+        pricingNote: 'TBD',
         category: 'peptide',
       },
     ],

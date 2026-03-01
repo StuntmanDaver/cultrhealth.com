@@ -15,8 +15,9 @@ const config: Config = {
           primary: '#2B4542',
           primaryHover: '#1F3533',
           primaryLight: '#3D5E5B',
-          cream: '#F7F6E8',
-          creamDark: '#F0EDDF',
+          secondary: '#506C64',
+          cream: '#FCFBF7',
+          creamDark: '#F5F2ED',
         },
         // Primary brand color shortcuts (for easier use)
         forest: {
@@ -26,8 +27,8 @@ const config: Config = {
           muted: '#6B7280',
         },
         cream: {
-          DEFAULT: '#F7F6E8',
-          dark: '#F0EDDF',
+          DEFAULT: '#FCFBF7',
+          dark: '#F5F2ED',
         },
         sage: '#B7E4C7',
         mint: '#D7F3DC',
@@ -48,7 +49,7 @@ const config: Config = {
           forestDark: '#1F3533',
           sage: '#B7E4C7',
           mint: '#D7F3DC',
-          offwhite: '#F7F6E8',
+          offwhite: '#FCFBF7',
           text: '#2B4542',
           textMuted: '#6B7280',
         },

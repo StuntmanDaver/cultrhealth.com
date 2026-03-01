@@ -58,7 +58,7 @@ export default function HomePage() {
           quality={85}
           sizes="100vw"
         />
-        <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.15) 50%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.15) 50%, transparent 100%)' }} />
       </section>
 
       {/* Desktop hero — cinematic wideshot */}
@@ -73,7 +73,7 @@ export default function HomePage() {
           sizes="100vw"
         />
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.55) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.08) 65%, transparent 80%)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none" style={{ background: 'linear-gradient(to top, #F7F6E8 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.5) 65%, transparent 100%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.5) 65%, transparent 100%)' }} />
 
         <div className="absolute inset-0 z-10 flex items-center">
           <div className="text-left absolute left-[32%] -translate-x-1/2">

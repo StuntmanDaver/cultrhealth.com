@@ -67,12 +67,12 @@ export function Header() {
             }
           `}
           style={scrolled ? {
-            background: 'rgba(247, 246, 232, 0.72)',
+            background: 'rgba(252, 251, 247, 0.72)',
             backdropFilter: 'blur(24px) saturate(1.5)',
             WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
             border: '1px solid rgba(43, 69, 66, 0.08)',
           } : {
-            background: 'rgba(247, 246, 232, 0.95)',
+            background: 'rgba(252, 251, 247, 0.95)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             borderBottom: '1px solid rgba(43, 69, 66, 0.06)',
