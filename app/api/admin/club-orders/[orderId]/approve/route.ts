@@ -75,38 +75,60 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Try to create QuickBooks invoice
-    let qbInvoiceId: string | null = null
+    // QuickBooks invoice is REQUIRED — approval is blocked if QB fails
+    let qbInvoiceId: string
     let qbInvoiceUrl: string | null = null
 
     try {
       const qb = await import('@/lib/quickbooks')
       const accessToken = await qb.getAccessToken()
-      if (accessToken) {
-        const customerId = await qb.findOrCreateCustomer(
-          accessToken,
-          order.member_name,
-          order.member_email
+
+      if (!accessToken) {
+        return NextResponse.json(
+          { error: 'QuickBooks is not configured. Cannot approve without generating an invoice.' },
+          { status: 503 }
         )
-        const items = order.items as OrderItem[]
-        const invoice = await qb.createInvoice(accessToken, customerId, items, order.order_number)
-        if (invoice) {
-          qbInvoiceId = invoice.invoiceId
-          const sent = await qb.sendInvoice(accessToken, invoice.invoiceId)
-          qbInvoiceUrl = sent?.payNowLink || invoice.invoiceLink || null
-        }
       }
+
+      const customerId = await qb.findOrCreateCustomer(
+        accessToken,
+        order.member_name,
+        order.member_email
+      )
+
+      if (!customerId) {
+        return NextResponse.json(
+          { error: 'Failed to create QuickBooks customer. Cannot approve without generating an invoice.' },
+          { status: 502 }
+        )
+      }
+
+      const items = order.items as OrderItem[]
+      const invoice = await qb.createInvoice(accessToken, customerId, items, order.order_number)
+
+      if (!invoice) {
+        return NextResponse.json(
+          { error: 'Failed to create QuickBooks invoice. Cannot approve without generating an invoice.' },
+          { status: 502 }
+        )
+      }
+
+      qbInvoiceId = invoice.invoiceId
+      const sent = await qb.sendInvoice(accessToken, invoice.invoiceId)
+      qbInvoiceUrl = sent?.payNowLink || invoice.invoiceLink || null
     } catch (qbError) {
-      console.error('[club-orders/approve] QuickBooks error (non-fatal):', qbError)
-      // Continue without QB — order still gets approved
+      console.error('[club-orders/approve] QuickBooks error:', qbError)
+      return NextResponse.json(
+        { error: 'QuickBooks error. Cannot approve without generating an invoice.' },
+        { status: 502 }
+      )
     }
 
-    // Update order status
-    const newStatus = qbInvoiceId ? 'invoice_sent' : 'approved'
+    // Update order status — always invoice_sent since QB is required
     await sql`
       UPDATE club_orders
       SET
-        status = ${newStatus},
+        status = 'invoice_sent',
         approved_at = NOW(),
         approved_by = ${session?.email || 'email_link'},
         qb_invoice_id = ${qbInvoiceId},
@@ -115,7 +137,7 @@ export async function POST(
       WHERE id = ${orderId}::uuid
     `
 
-    // Send invoice email to customer, then copy to support
+    // Send invoice to customer + copy to support
     const emailData = {
       name: order.member_name,
       email: order.member_email,
@@ -138,7 +160,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      status: newStatus,
+      status: 'invoice_sent',
       qbInvoiceId,
       qbInvoiceUrl,
     })
@@ -160,7 +182,7 @@ async function sendInvoiceCopyToSupport(data: {
   name: string
   email: string
   orderNumber: string
-  invoiceUrl: string | null
+  invoiceUrl: string | null  // always set — approval blocked if QB fails
   items: OrderItem[]
   subtotal: number
 }) {
@@ -220,7 +242,6 @@ async function sendInvoiceCopyToSupport(data: {
     </p>
     ` : ''}
 
-    ${data.invoiceUrl ? `
     <div style="background: #f5f5f5; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 24px; word-break: break-all;">
       <strong>QuickBooks Invoice Link (sent to customer):</strong><br/>
       <a href="${data.invoiceUrl}" style="color: #2A4542;">${data.invoiceUrl}</a>
@@ -230,11 +251,6 @@ async function sendInvoiceCopyToSupport(data: {
         View Invoice in QuickBooks
       </a>
     </div>
-    ` : `
-    <div style="background: #fff8e1; border-radius: 8px; padding: 14px 16px; font-size: 14px; color: #856404;">
-      QuickBooks invoice was not generated — customer was notified that payment details will follow separately.
-    </div>
-    `}
 
   </div>
 </body>
@@ -246,7 +262,7 @@ async function sendApprovalEmailToCustomer(data: {
   name: string
   email: string
   orderNumber: string
-  invoiceUrl: string | null
+  invoiceUrl: string | null  // always set — approval blocked if QB fails
   items: OrderItem[]
   subtotal: number
 }) {
@@ -269,8 +285,7 @@ async function sendApprovalEmailToCustomer(data: {
     )
     .join('')
 
-  const paymentSection = data.invoiceUrl
-    ? `
+  const paymentSection = `
     <div style="text-align: center; margin: 32px 0;">
       <a href="${data.invoiceUrl}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 48px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">
         Pay Now
@@ -279,12 +294,6 @@ async function sendApprovalEmailToCustomer(data: {
     <p style="text-align: center; color: #2A454260; font-size: 13px;">
       Click above to view your invoice and complete payment securely via QuickBooks.
     </p>
-    `
-    : `
-    <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin: 24px 0;">
-      <p style="margin: 0; font-weight: 600; font-size: 14px;">Order Approved</p>
-      <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.7;">Our team will send you payment details shortly.</p>
-    </div>
     `
 
   await resend.emails.send({
