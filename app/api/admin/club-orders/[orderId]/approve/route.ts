@@ -7,6 +7,7 @@ interface OrderItem {
   name: string
   price: number | null
   pricingNote?: string
+  note?: string
   quantity: number
 }
 
@@ -114,15 +115,20 @@ export async function POST(
       WHERE id = ${orderId}::uuid
     `
 
-    // Send email to customer
-    sendApprovalEmailToCustomer({
+    // Send invoice email to customer, then copy to support
+    const emailData = {
       name: order.member_name,
       email: order.member_email,
       orderNumber: order.order_number,
       invoiceUrl: qbInvoiceUrl,
       items: order.items as OrderItem[],
       subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
-    }).catch((err) => console.error('[club-orders/approve] Email error:', err))
+    }
+
+    Promise.all([
+      sendApprovalEmailToCustomer(emailData),
+      sendInvoiceCopyToSupport(emailData),
+    ]).catch((err) => console.error('[club-orders/approve] Email error:', err))
 
     // If called from email link, redirect
     if (tokenFromUrl) {
@@ -148,6 +154,92 @@ export async function GET(
   { params }: { params: Promise<{ orderId: string }> }
 ) {
   return POST(request, { params })
+}
+
+async function sendInvoiceCopyToSupport(data: {
+  name: string
+  email: string
+  orderNumber: string
+  invoiceUrl: string | null
+  items: OrderItem[]
+  subtotal: number
+}) {
+  if (!process.env.RESEND_API_KEY) return
+
+  const { Resend } = await import('resend')
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
+
+  const itemRows = data.items
+    .map(
+      (item) =>
+        `<tr>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${item.note ? `${item.name} — ${item.note}` : item.name}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">
+            ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : (item.pricingNote || 'TBD')}
+          </td>
+        </tr>`
+    )
+    .join('')
+
+  await resend.emails.send({
+    from: fromEmail,
+    to: 'support@cultrhealth.com',
+    subject: `[Invoice Copy] ${data.orderNumber} — Sent to ${data.email}`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
+
+    <div style="background: #e8f5e9; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #2A4542;">
+      <strong>Invoice sent.</strong> The following invoice was emailed to <strong>${data.email}</strong> upon order approval.
+    </div>
+
+    <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${data.orderNumber}</h2>
+    <p style="color: #666; font-size: 14px; margin-bottom: 24px;">
+      <strong>Customer:</strong> ${data.name} &lt;${data.email}&gt;
+    </p>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px;">
+      <thead>
+        <tr style="border-bottom: 2px solid #eee;">
+          <th style="text-align: left; padding: 8px 0;">Therapy</th>
+          <th style="text-align: center; padding: 8px 0;">Qty</th>
+          <th style="text-align: right; padding: 8px 0;">Price</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+
+    ${data.subtotal > 0 ? `
+    <p style="text-align: right; font-weight: 700; font-size: 15px; margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
+      Total: $${data.subtotal.toFixed(2)}
+    </p>
+    ` : ''}
+
+    ${data.invoiceUrl ? `
+    <div style="background: #f5f5f5; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 24px; word-break: break-all;">
+      <strong>QuickBooks Invoice Link (sent to customer):</strong><br/>
+      <a href="${data.invoiceUrl}" style="color: #2A4542;">${data.invoiceUrl}</a>
+    </div>
+    <div style="text-align: center;">
+      <a href="${data.invoiceUrl}" style="display: inline-block; background: #2A4542; color: white; padding: 12px 36px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 14px;">
+        View Invoice in QuickBooks
+      </a>
+    </div>
+    ` : `
+    <div style="background: #fff8e1; border-radius: 8px; padding: 14px 16px; font-size: 14px; color: #856404;">
+      QuickBooks invoice was not generated — customer was notified that payment details will follow separately.
+    </div>
+    `}
+
+  </div>
+</body>
+</html>`,
+  })
 }
 
 async function sendApprovalEmailToCustomer(data: {
