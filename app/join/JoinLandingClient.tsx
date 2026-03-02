@@ -458,7 +458,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: member.email, name: member.name, phone: member.phone,
-          items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, quantity: item.quantity })),
+          items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity })),
           notes: notes.trim() || undefined,
         }),
       })
@@ -466,6 +466,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
       if (!res.ok) { setError(data.error || 'Failed to submit order.'); setSubmitting(false); return }
       cart.clearCart()
       onOrderSubmitted()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch { setError('Network error.'); setSubmitting(false) }
   }
 
