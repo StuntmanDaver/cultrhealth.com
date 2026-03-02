@@ -19,7 +19,12 @@ export async function GET(request: NextRequest) {
     session &&
     (allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email))
 
-  if (!isAdmin) {
+  // One-time setup bypass: ?setup_secret=<QUICKBOOKS_SETUP_SECRET>
+  const setupSecret = process.env.QUICKBOOKS_SETUP_SECRET
+  const providedSecret = request.nextUrl.searchParams.get('setup_secret')
+  const hasSetupBypass = setupSecret && providedSecret === setupSecret
+
+  if (!isAdmin && !hasSetupBypass) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
