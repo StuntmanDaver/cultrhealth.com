@@ -344,7 +344,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     if (inCart && cartItem) {
       cart.updateQuantity(therapy.id, cartItem.quantity + 1)
     } else {
-      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote })
+      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
     }
   }
 

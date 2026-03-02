@@ -7,6 +7,7 @@ interface OrderItem {
   name: string
   price: number | null
   pricingNote?: string
+  note?: string
   quantity: number
 }
 

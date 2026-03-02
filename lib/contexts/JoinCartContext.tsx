@@ -12,6 +12,8 @@ export interface JoinCartItem {
   /** Price per unit in USD. null = consultation/TBD pricing */
   price: number | null
   pricingNote?: string
+  /** Dosage/size info (e.g. "5 MG | 3 ML") — used in QB invoice descriptions */
+  note?: string
   quantity: number
 }
 
@@ -69,6 +71,7 @@ function cartReducer(state: JoinCartState, action: JoinCartAction): JoinCartStat
             name: action.payload.name,
             price: action.payload.price,
             pricingNote: action.payload.pricingNote,
+            note: action.payload.note,
             quantity: action.payload.quantity || 1,
           },
         ],
