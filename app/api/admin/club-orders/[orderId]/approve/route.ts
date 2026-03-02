@@ -114,7 +114,7 @@ export async function POST(
       }
 
       qbInvoiceId = invoice.invoiceId
-      const sent = await qb.sendInvoice(accessToken, invoice.invoiceId)
+      const sent = await qb.sendInvoice(accessToken, invoice.invoiceId, order.member_email)
       qbInvoiceUrl = sent?.payNowLink || invoice.invoiceLink || null
     } catch (qbError) {
       console.error('[club-orders/approve] QuickBooks error:', qbError)

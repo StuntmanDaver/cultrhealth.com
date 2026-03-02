@@ -361,59 +361,59 @@ function getNet30Date(): string {
 }
 
 /**
- * Send a QuickBooks invoice to the customer.
+ * Send a QuickBooks invoice to the customer via QB's email.
  * QB will email the invoice with a Pay Now button.
  * Returns the payment link URL (even if email send fails).
+ *
+ * QB API: POST /invoice/{id}/send?sendTo={email}
  */
 export async function sendInvoice(
   accessToken: string,
-  invoiceId: string
+  invoiceId: string,
+  customerEmail?: string
 ): Promise<{ payNowLink: string | null } | null> {
   try {
-    // First fetch the invoice to get customer email
-    const getRes = await qbFetch(accessToken, `/invoice/${invoiceId}`)
-    let customerEmail: string | null = null
-
-    if (getRes.ok) {
-      const invoiceData = await getRes.json() as {
-        Invoice?: {
-          CustomerRef?: { value: string }
-          BillAddr?: { Email?: string }
-        }
-      }
-      customerEmail = invoiceData.Invoice?.BillAddr?.Email || null
-    }
-
-    // Send the invoice via QB API
-    const sendRes = await qbFetch(accessToken, `/invoice/${invoiceId}?requestId=send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        sendTo: customerEmail || '',
-      }).toString(),
-    })
-
-    // Generate customer-facing payment link (QB Online app URL, not API URL)
     const isSandbox = process.env.QUICKBOOKS_SANDBOX === 'true'
     const appBase = isSandbox
       ? 'https://app.sandbox.qbo.intuit.com'
       : 'https://app.qbo.intuit.com'
-    const payNowLink = `${appBase}/app/invoice?txnId=${invoiceId}`
+    const fallbackLink = `${appBase}/app/invoice?txnId=${invoiceId}`
+
+    // Build send URL — sendTo is required for QB to email the customer
+    const sendPath = customerEmail
+      ? `/invoice/${invoiceId}/send?sendTo=${encodeURIComponent(customerEmail)}`
+      : `/invoice/${invoiceId}/send`
+
+    const sendRes = await qbFetch(accessToken, sendPath, {
+      method: 'POST',
+      headers: {
+        // QB send invoice requires octet-stream with empty body
+        'Content-Type': 'application/octet-stream',
+      },
+    })
 
     if (!sendRes.ok) {
       const errorText = await sendRes.text()
-      console.warn('[quickbooks] Send invoice request failed, but returning payment link:', errorText.slice(0, 100))
-      // Non-fatal — invoice was created, just not emailed. Return payment link anyway.
-      return { payNowLink }
+      console.warn('[quickbooks] Send invoice request failed, returning fallback payment link:', errorText.slice(0, 200))
+      // Non-fatal — invoice was created, just not emailed via QB. Return fallback link.
+      return { payNowLink: fallbackLink }
     }
 
-    console.log('[quickbooks] Invoice sent successfully:', invoiceId)
+    // QB send response includes the invoice with an InvoiceLink (customer-facing pay URL)
+    let payNowLink = fallbackLink
+    try {
+      const sendData = await sendRes.json() as { Invoice?: { Id: string; InvoiceLink?: string } }
+      if (sendData.Invoice?.InvoiceLink) {
+        payNowLink = sendData.Invoice.InvoiceLink
+      }
+    } catch {
+      // JSON parse failed — use fallback link
+    }
+
+    console.log('[quickbooks] Invoice sent successfully:', invoiceId, 'to:', customerEmail)
     return { payNowLink }
   } catch (error) {
     console.error('[quickbooks] sendInvoice error:', error)
-    // Return null to signal failure, but approval flow will continue
     return null
   }
 }
