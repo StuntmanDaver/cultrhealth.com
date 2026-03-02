@@ -89,32 +89,33 @@ export async function POST(request: Request) {
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
 
-    // Send emails (fire-and-forget)
-    const emailPromises = [
-      sendOrderConfirmationToCustomer({
-        name: name.trim(),
-        email: normalizedEmail,
-        orderNumber,
-        items,
-        subtotal,
-      }),
-      sendOrderApprovalRequestToAdmin({
-        name: name.trim(),
-        email: normalizedEmail,
-        phone: phone?.trim() || '',
-        orderNumber,
-        orderId: orderId || orderNumber,
-        items,
-        subtotal,
-        notes: notes || '',
-        approvalToken,
-        siteUrl,
-      }),
-    ]
-
-    Promise.all(emailPromises).catch((err) =>
-      console.error('[club/orders] Email error (non-fatal):', err)
-    )
+    // Send emails
+    try {
+      await Promise.all([
+        sendOrderConfirmationToCustomer({
+          name: name.trim(),
+          email: normalizedEmail,
+          orderNumber,
+          items,
+          subtotal,
+        }),
+        sendOrderApprovalRequestToAdmin({
+          name: name.trim(),
+          email: normalizedEmail,
+          phone: phone?.trim() || '',
+          orderNumber,
+          orderId: orderId || orderNumber,
+          items,
+          subtotal,
+          notes: notes || '',
+          approvalToken,
+          siteUrl,
+        }),
+      ])
+      console.log('[club/orders] Emails sent successfully for', orderNumber)
+    } catch (err) {
+      console.error('[club/orders] Email send failed:', err)
+    }
 
     return NextResponse.json({
       success: true,
