@@ -33,30 +33,71 @@ interface OrderItem {
 // =============================================
 
 const TOKEN_URL = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer'
+const QB_TOKEN_KEY = 'main'
 
 let cachedAccessToken: string | null = null
 let tokenExpiresAt = 0
 
 /**
  * Get a valid access token, refreshing if needed.
- * Returns null if QuickBooks is not configured.
- * Caches token in memory and refreshes automatically.
+ *
+ * Token priority (most → least current):
+ *   1. In-memory cache (avoids DB hit within same function lifecycle)
+ *   2. qb_tokens DB table (survives cold starts, always has latest rotated token)
+ *   3. QUICKBOOKS_REFRESH_TOKEN env var (initial seed only — will go stale after first rotation)
+ *
+ * After every token refresh QB issues a new refresh_token. We persist it to DB
+ * so subsequent cold starts don't use the stale env var.
  */
 export async function getAccessToken(): Promise<string | null> {
   const clientId = process.env.QUICKBOOKS_CLIENT_ID
   const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET
-  const refreshToken = process.env.QUICKBOOKS_REFRESH_TOKEN
 
-  if (!clientId || !clientSecret || !refreshToken) {
-    console.warn('[quickbooks] Missing QB credentials (CLIENT_ID, CLIENT_SECRET, or REFRESH_TOKEN)')
+  if (!clientId || !clientSecret) {
+    console.warn('[quickbooks] Missing QB credentials (CLIENT_ID or CLIENT_SECRET)')
     return null
   }
 
-  // Return cached token if still valid (with 60s buffer)
+  // 1. In-memory cache — valid within the same function lifecycle
   if (cachedAccessToken && Date.now() < tokenExpiresAt - 60_000) {
     return cachedAccessToken
   }
 
+  // 2. Try DB — may have a valid access token or a more current refresh token
+  let refreshToken: string | null = process.env.QUICKBOOKS_REFRESH_TOKEN || null
+
+  if (process.env.POSTGRES_URL) {
+    try {
+      const { sql } = await import('@vercel/postgres')
+      const result = await sql`
+        SELECT access_token, refresh_token, expires_at
+        FROM qb_tokens
+        WHERE key = ${QB_TOKEN_KEY}
+      `
+      if (result.rows.length > 0) {
+        const row = result.rows[0]
+        // Use the DB refresh token — it's always more current than the env var
+        refreshToken = row.refresh_token
+
+        // If DB access token is still valid, use it directly (no QB API call needed)
+        const dbExpiresAt = new Date(row.expires_at).getTime()
+        if (row.access_token && Date.now() < dbExpiresAt - 60_000) {
+          cachedAccessToken = row.access_token
+          tokenExpiresAt = dbExpiresAt
+          return cachedAccessToken
+        }
+      }
+    } catch (dbError) {
+      console.warn('[quickbooks] Could not read token from DB, falling back to env var:', dbError)
+    }
+  }
+
+  if (!refreshToken) {
+    console.warn('[quickbooks] No refresh token available (checked DB and QUICKBOOKS_REFRESH_TOKEN env var)')
+    return null
+  }
+
+  // 3. Exchange refresh token for new access token
   try {
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 
@@ -75,20 +116,32 @@ export async function getAccessToken(): Promise<string | null> {
     if (!response.ok) {
       const errorText = await response.text()
       console.error('[quickbooks] Token refresh failed:', response.status, errorText)
-      // Return null instead of throwing to allow orders to proceed without QB
       return null
     }
 
     const data = await response.json() as { access_token: string; expires_in: number; refresh_token?: string }
     cachedAccessToken = data.access_token
     tokenExpiresAt = Date.now() + data.expires_in * 1000
+    const newRefreshToken = data.refresh_token || refreshToken
 
-    // Note: QB may return a new refresh_token. In production, you'd want to persist this.
-    if (data.refresh_token && data.refresh_token !== refreshToken) {
-      console.warn(
-        '[quickbooks] New refresh token issued. Update QUICKBOOKS_REFRESH_TOKEN env var:',
-        data.refresh_token.slice(0, 10) + '...'
-      )
+    // Persist both tokens to DB — this is what keeps the integration alive long-term
+    if (process.env.POSTGRES_URL) {
+      try {
+        const { sql } = await import('@vercel/postgres')
+        const expiresAt = new Date(tokenExpiresAt).toISOString()
+        await sql`
+          INSERT INTO qb_tokens (key, access_token, refresh_token, expires_at, updated_at)
+          VALUES (${QB_TOKEN_KEY}, ${cachedAccessToken}, ${newRefreshToken}, ${expiresAt}, NOW())
+          ON CONFLICT (key) DO UPDATE SET
+            access_token = EXCLUDED.access_token,
+            refresh_token = EXCLUDED.refresh_token,
+            expires_at = EXCLUDED.expires_at,
+            updated_at = NOW()
+        `
+      } catch (dbError) {
+        // Non-fatal — tokens still work in memory for this request
+        console.warn('[quickbooks] Could not persist token to DB:', dbError)
+      }
     }
 
     return cachedAccessToken
