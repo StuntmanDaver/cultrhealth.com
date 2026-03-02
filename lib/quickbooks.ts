@@ -395,8 +395,12 @@ export async function sendInvoice(
       }).toString(),
     })
 
-    // Generate payment link (QB format)
-    const payNowLink = `${getBaseUrl()}/invoice/${invoiceId}`
+    // Generate customer-facing payment link (QB Online app URL, not API URL)
+    const isSandbox = process.env.QUICKBOOKS_SANDBOX === 'true'
+    const appBase = isSandbox
+      ? 'https://app.sandbox.qbo.intuit.com'
+      : 'https://app.qbo.intuit.com'
+    const payNowLink = `${appBase}/app/invoice?txnId=${invoiceId}`
 
     if (!sendRes.ok) {
       const errorText = await sendRes.text()
