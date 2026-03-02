@@ -129,7 +129,7 @@ function JoinLandingInner() {
       </section>
 
       {/* Info banner */}
-      <section className="py-4 px-6 bg-brand-primary/[0.04] border-b border-brand-secondary/10">
+      <section className="py-4 px-4 md:px-6 bg-brand-primary/[0.04] border-b border-brand-secondary/10">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-brand-primary/8 flex items-center justify-center shrink-0">
@@ -170,7 +170,7 @@ function JoinLandingInner() {
 
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-16">
           <div className={`grid gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
 
             {/* Left Column — Therapy Sections */}
@@ -304,7 +304,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
   return (
-    <div className="rounded-2xl border border-brand-secondary/10 bg-white p-6 md:p-8">
+    <div className="md:rounded-2xl md:border md:border-brand-secondary/10 md:bg-white md:p-8 pb-8 border-b border-brand-secondary/8 md:border-b-0">
       <ScrollReveal className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-9 h-9 rounded-xl bg-brand-primary/[0.06] flex items-center justify-center">
@@ -317,7 +317,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
             <p className="text-[11px] uppercase tracking-widest text-brand-secondary/50 font-medium">{section.subtitle}</p>
           </div>
         </div>
-        <p className="text-sm text-brand-secondary/80 max-w-2xl ml-12 leading-relaxed">{section.description}</p>
+        <p className="text-sm text-brand-secondary/80 max-w-2xl ml-0 md:ml-12 leading-relaxed">{section.description}</p>
       </ScrollReveal>
 
       <div className="grid sm:grid-cols-2 gap-4">
@@ -349,7 +349,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   }
 
   return (
-    <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-row items-center justify-between gap-6 shadow-sm' : 'bg-brand-cream border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-5 flex-col'}`}>
+    <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
       {therapy.featured ? (
         <>
           <div className="flex flex-col gap-1.5 min-w-0">
@@ -362,7 +362,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
             <h3 className="text-xl md:text-2xl font-display font-bold text-white">{therapy.name}</h3>
             <p className="text-sm text-white/60 leading-relaxed max-w-md">{therapy.description}</p>
           </div>
-          <div className="flex flex-col items-end gap-3 shrink-0">
+          <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
             <span className="text-2xl font-display font-bold text-white">${therapy.price?.toFixed(2)}</span>
             {inCart && cartItem ? (
               <div className="flex items-center gap-2">
