@@ -147,10 +147,15 @@ export async function POST(
       subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
     }
 
-    Promise.all([
-      sendApprovalEmailToCustomer(emailData),
-      sendInvoiceCopyToSupport(emailData),
-    ]).catch((err) => console.error('[club-orders/approve] Email error:', err))
+    try {
+      await Promise.all([
+        sendApprovalEmailToCustomer(emailData),
+        sendInvoiceCopyToSupport(emailData),
+      ])
+      console.log('[club-orders/approve] Approval emails sent for', order.order_number)
+    } catch (err) {
+      console.error('[club-orders/approve] Email error:', err)
+    }
 
     // If called from email link, redirect
     if (tokenFromUrl) {
