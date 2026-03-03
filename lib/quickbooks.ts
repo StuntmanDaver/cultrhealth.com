@@ -343,6 +343,8 @@ export async function createInvoice(
       DueDate: getNet30Date(),
       PrivateNote: `CULTR Club Order: ${orderNumber}`,
       TxnDate: new Date().toISOString().split('T')[0],
+      AllowOnlineCreditCardPayment: true,
+      AllowOnlineACHPayment: true,
     }
 
     if (customerMemo) {
