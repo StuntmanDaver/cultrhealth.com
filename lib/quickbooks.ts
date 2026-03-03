@@ -207,17 +207,29 @@ export async function findOrCreateCustomer(
   email: string
 ): Promise<string | null> {
   try {
-    // Search for existing customer by email
-    const query = encodeURIComponent(
-      `SELECT * FROM Customer WHERE PrimaryEmailAddr.Address = '${email.replace(/'/g, "\\'")}'`
-    )
-    const searchRes = await qbFetch(accessToken, `/query?query=${query}`)
+    const emailEscaped = email.replace(/'/g, "\\'")
 
-    if (searchRes.ok) {
-      const searchData = await searchRes.json() as { QueryResponse?: { Customer?: Array<{ Id: string }> } }
-      const existing = searchData.QueryResponse?.Customer?.[0]
+    // Search by email — QB Online uses 'Email' field in IDS queries
+    const emailQuery = encodeURIComponent(`SELECT * FROM Customer WHERE Email = '${emailEscaped}'`)
+    const emailSearchRes = await qbFetch(accessToken, `/query?query=${emailQuery}`)
+    if (emailSearchRes.ok) {
+      const data = await emailSearchRes.json() as { QueryResponse?: { Customer?: Array<{ Id: string }> } }
+      const existing = data.QueryResponse?.Customer?.[0]
       if (existing?.Id) {
-        console.log('[quickbooks] Found existing customer:', existing.Id)
+        console.log('[quickbooks] Found existing customer by email:', existing.Id)
+        return existing.Id
+      }
+    }
+
+    // Fall back: search by DisplayName in case email query is unsupported
+    const nameEscaped = displayName.slice(0, 41).replace(/'/g, "\\'")
+    const nameQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${nameEscaped}'`)
+    const nameSearchRes = await qbFetch(accessToken, `/query?query=${nameQuery}`)
+    if (nameSearchRes.ok) {
+      const data = await nameSearchRes.json() as { QueryResponse?: { Customer?: Array<{ Id: string }> } }
+      const existing = data.QueryResponse?.Customer?.[0]
+      if (existing?.Id) {
+        console.log('[quickbooks] Found existing customer by name:', existing.Id)
         return existing.Id
       }
     }
@@ -229,7 +241,7 @@ export async function findOrCreateCustomer(
     const createRes = await qbFetch(accessToken, '/customer', {
       method: 'POST',
       body: JSON.stringify({
-        DisplayName: displayName.slice(0, 41), // QB limit
+        DisplayName: displayName.slice(0, 41),
         PrimaryEmailAddr: { Address: email },
         GivenName: givenName || displayName,
         FamilyName: familyNameParts.join(' ') || 'Customer',
@@ -239,6 +251,22 @@ export async function findOrCreateCustomer(
     if (!createRes.ok) {
       const errorText = await createRes.text()
       console.error('[quickbooks] Create customer failed:', errorText)
+
+      // If duplicate name, the customer exists under a different email — search by name
+      if (errorText.includes('6240') || errorText.toLowerCase().includes('duplicate')) {
+        console.log('[quickbooks] Duplicate name detected, searching by DisplayName...')
+        const dupQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${nameEscaped}'`)
+        const dupRes = await qbFetch(accessToken, `/query?query=${dupQuery}`)
+        if (dupRes.ok) {
+          const dupData = await dupRes.json() as { QueryResponse?: { Customer?: Array<{ Id: string }> } }
+          const dupCustomer = dupData.QueryResponse?.Customer?.[0]
+          if (dupCustomer?.Id) {
+            console.log('[quickbooks] Resolved duplicate — using existing customer:', dupCustomer.Id)
+            return dupCustomer.Id
+          }
+        }
+      }
+
       return null
     }
 

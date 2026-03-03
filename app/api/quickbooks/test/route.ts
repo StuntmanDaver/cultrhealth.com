@@ -32,14 +32,22 @@ export async function GET(request: Request) {
     results.realm = realmId || 'missing'
     results.sandbox = isSandbox
 
-    // Step 2: Test customer search (raw)
+    // Step 2: Test customer search by Email field
     const testEmail = 'qb-test-diag@cultrhealth.com'
-    const query = encodeURIComponent(`SELECT * FROM Customer WHERE PrimaryEmailAddr.Address = '${testEmail}'`)
+    const query = encodeURIComponent(`SELECT * FROM Customer WHERE Email = '${testEmail}'`)
     const searchRes = await fetch(`${base}/query?query=${query}`, {
       headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
     })
     const searchBody = await searchRes.text()
-    results.step2_search = { status: searchRes.status, body: searchBody.slice(0, 400) }
+    results.step2_search_by_email = { status: searchRes.status, body: searchBody.slice(0, 400) }
+
+    // Step 2b: Test customer search by DisplayName
+    const nameQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = 'QB Diag Test User'`)
+    const nameSearchRes = await fetch(`${base}/query?query=${nameQuery}`, {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
+    })
+    const nameSearchBody = await nameSearchRes.text()
+    results.step2_search_by_name = { status: nameSearchRes.status, body: nameSearchBody.slice(0, 400) }
 
     // Step 3: Test customer create (raw)
     const createRes = await fetch(`${base}/customer`, {
