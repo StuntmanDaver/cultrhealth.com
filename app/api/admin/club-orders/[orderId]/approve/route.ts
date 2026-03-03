@@ -115,7 +115,10 @@ export async function POST(
 
       qbInvoiceId = invoice.invoiceId
       const sent = await qb.sendInvoice(accessToken, invoice.invoiceId, order.member_email)
-      qbInvoiceUrl = sent?.payNowLink || invoice.invoiceLink || null
+      // GET the invoice to reliably retrieve InvoiceLink — QB populates this field
+      // with the customer-facing payment URL once QB Payments is active.
+      const fetchedLink = await qb.getInvoiceLink(accessToken, invoice.invoiceId)
+      qbInvoiceUrl = fetchedLink || sent?.payNowLink || invoice.invoiceLink || null
     } catch (qbError) {
       console.error('[club-orders/approve] QuickBooks error:', qbError)
       return NextResponse.json(

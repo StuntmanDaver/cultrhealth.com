@@ -418,6 +418,29 @@ export async function sendInvoice(
   }
 }
 
+/**
+ * Fetch the InvoiceLink for an existing invoice via GET.
+ *
+ * After QB Payments is activated, InvoiceLink is a customer-accessible
+ * payment page (viewinvoice?docId=...) that does not require a QB login.
+ *
+ * This GET call is more reliable than depending on the create or send
+ * response payloads, which may omit InvoiceLink before QB Payments is active.
+ */
+export async function getInvoiceLink(
+  accessToken: string,
+  invoiceId: string
+): Promise<string | null> {
+  try {
+    const res = await qbFetch(accessToken, `/invoice/${invoiceId}`)
+    if (!res.ok) return null
+    const data = await res.json() as { Invoice?: { InvoiceLink?: string } }
+    return data.Invoice?.InvoiceLink || null
+  } catch {
+    return null
+  }
+}
+
 // =============================================
 // SETUP & TROUBLESHOOTING
 // =============================================
