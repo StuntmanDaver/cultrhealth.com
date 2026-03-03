@@ -41,7 +41,11 @@ export async function POST(request: Request) {
     const orderNumber = `CLB-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`
 
     // Generate HMAC-signed approval token
-    const approvalSecret = process.env.CLUB_ORDER_APPROVAL_SECRET || process.env.JWT_SECRET || 'fallback-secret'
+    const approvalSecret = process.env.CLUB_ORDER_APPROVAL_SECRET || process.env.JWT_SECRET
+    if (!approvalSecret) {
+      console.error('[club/orders] CRITICAL: Neither CLUB_ORDER_APPROVAL_SECRET nor JWT_SECRET is set')
+      return NextResponse.json({ error: 'Server configuration error.' }, { status: 500 })
+    }
     const approvalToken = crypto
       .createHmac('sha256', approvalSecret)
       .update(`${orderNumber}:${normalizedEmail}:${Date.now()}`)
@@ -139,7 +143,10 @@ async function sendOrderConfirmationToCustomer(data: {
   items: OrderItem[]
   subtotal: number
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[club/orders] CRITICAL: RESEND_API_KEY not set — customer confirmation email not sent')
+    return
+  }
 
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -224,12 +231,15 @@ async function sendOrderApprovalRequestToAdmin(data: {
   approvalToken: string
   siteUrl: string
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[club/orders] CRITICAL: RESEND_API_KEY not set — admin approval request email not sent')
+    return
+  }
 
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
-  const adminEmail = 'support@cultrhealth.com'
+  const adminEmail = process.env.ADMIN_APPROVAL_EMAIL || 'support@cultrhealth.com'
 
   const approveUrl = `${data.siteUrl}/api/admin/club-orders/${data.orderId}/approve?token=${data.approvalToken}`
 

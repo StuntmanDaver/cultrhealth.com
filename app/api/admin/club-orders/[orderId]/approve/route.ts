@@ -127,7 +127,52 @@ export async function POST(
       )
     }
 
-    // Update order status — always invoice_sent since QB is required
+    // Require a valid payment URL — a null link means the customer can't pay
+    if (!qbInvoiceUrl) {
+      console.error('[club-orders/approve] QB invoice created but no payment link returned. invoiceId:', qbInvoiceId)
+      return NextResponse.json(
+        { error: 'QB invoice was created but no payment link is available. Ensure QB Payments is active and retry.', qbInvoiceId },
+        { status: 502 }
+      )
+    }
+
+    const emailData = {
+      name: order.member_name,
+      email: order.member_email,
+      orderNumber: order.order_number,
+      invoiceUrl: qbInvoiceUrl,
+      items: order.items as OrderItem[],
+      subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
+    }
+
+    // Send emails BEFORE updating DB status — if email fails, don't mark as invoice_sent
+    try {
+      await Promise.all([
+        sendApprovalEmailToCustomer(emailData),
+        sendInvoiceCopyToSupport(emailData),
+      ])
+      console.log('[club-orders/approve] Approval emails sent for', order.order_number)
+    } catch (err) {
+      console.error(
+        '[club-orders/approve] CRITICAL: Email send failed after QB invoice created.',
+        'QB invoice ID:', qbInvoiceId,
+        'Pay Now URL:', qbInvoiceUrl,
+        'Order:', order.order_number,
+        'Customer:', order.member_email,
+        'Error:', err
+      )
+      // Don't update status — order stays pending_approval so admin can retry
+      return NextResponse.json(
+        {
+          error: 'QB invoice created but customer email failed to send. Retry approval to resend.',
+          qbInvoiceId,
+          qbInvoiceUrl,
+        },
+        { status: 500 }
+      )
+    }
+
+    // Update order status only after emails succeed
     await sql`
       UPDATE club_orders
       SET
@@ -139,26 +184,6 @@ export async function POST(
         updated_at = NOW()
       WHERE id = ${orderId}::uuid
     `
-
-    // Send invoice to customer + copy to support
-    const emailData = {
-      name: order.member_name,
-      email: order.member_email,
-      orderNumber: order.order_number,
-      invoiceUrl: qbInvoiceUrl,
-      items: order.items as OrderItem[],
-      subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
-    }
-
-    try {
-      await Promise.all([
-        sendApprovalEmailToCustomer(emailData),
-        sendInvoiceCopyToSupport(emailData),
-      ])
-      console.log('[club-orders/approve] Approval emails sent for', order.order_number)
-    } catch (err) {
-      console.error('[club-orders/approve] Email error:', err)
-    }
 
     // If called from email link, redirect
     if (tokenFromUrl) {
@@ -194,7 +219,10 @@ async function sendInvoiceCopyToSupport(data: {
   items: OrderItem[]
   subtotal: number
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
+    throw new Error('RESEND_API_KEY not configured')
+  }
 
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -274,7 +302,10 @@ async function sendApprovalEmailToCustomer(data: {
   items: OrderItem[]
   subtotal: number
 }) {
-  if (!process.env.RESEND_API_KEY) return
+  if (!process.env.RESEND_API_KEY) {
+    console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
+    throw new Error('RESEND_API_KEY not configured')
+  }
 
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)

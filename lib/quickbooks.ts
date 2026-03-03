@@ -187,7 +187,7 @@ async function qbFetch(
   // Log errors for debugging
   if (!response.ok) {
     const text = await response.text()
-    console.error(`[quickbooks] ${options.method || 'GET'} ${path} failed:`, response.status, text.slice(0, 200))
+    console.error(`[quickbooks] ${options.method || 'GET'} ${path} failed:`, response.status, text.slice(0, 500))
   }
 
   return response
