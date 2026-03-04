@@ -41,7 +41,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'retatrutide',
         name: 'R3TA — GLP1/GIP/GCG',
-        badge: 'Physician use only',
+        badge: '',
         note: '20 MG | 3 ML · 2-3 month supply',
         description:
           'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
@@ -52,7 +52,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'semaglutide',
         name: 'Semaglutide — GLP1',
-        badge: 'Physician use only',
+        badge: '',
         note: '5 MG | 3 ML · 2-3 month supply',
         description:
           'GLP-1 receptor agonist for appetite regulation, metabolic improvement, and sustained weight loss.',
@@ -63,7 +63,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'tirzepatide',
         name: 'Tirzepatide — GLP1/GIP',
-        badge: 'Physician use only',
+        badge: '',
         note: '20 MG | 3 ML · 2-3 month supply',
         description:
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
@@ -81,7 +81,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'ghk-cu',
         name: 'GHK-CU',
-        badge: 'Physician use only',
+        badge: '',
         note: '100 MG | 3 ML',
         description:
           'Copper peptide complex supporting skin remodeling, wound healing, and tissue regeneration.',
@@ -92,7 +92,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'tesa-ipa',
         name: 'TESA/IPA',
-        badge: 'Physician use only',
+        badge: '',
         note: '12/6 MG | 3 ML',
         description:
           'Tesamorelin/Ipamorelin blend for growth hormone optimization, visceral fat reduction, and lean body composition.',
@@ -102,7 +102,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'cjc1295-ipa',
         name: 'CJC1295/IPA',
-        badge: 'Physician use only',
+        badge: '',
         note: '10/10 MG | 3 ML',
         description:
           'Growth hormone releasing hormone and secretagogue blend for sustained GH elevation, recovery, and body recomposition.',
@@ -112,7 +112,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'nad-plus',
         name: 'NAD+',
-        badge: 'Physician use only',
+        badge: '',
         note: '1000 MG | 10 ML',
         description:
           'Essential coenzyme for cellular energy, DNA repair, and metabolic function — foundational to longevity.',
@@ -123,7 +123,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'semax-selank',
         name: 'Semax/Selank',
-        badge: 'Physician use only',
+        badge: '',
         note: '5/5 MG | 3 ML',
         description:
           'Neuropeptide stack for cognitive enhancement, stress resilience, and focus without stimulant side effects.',
@@ -134,7 +134,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'bpc157-tb500',
         name: 'BPC157/TB500',
-        badge: 'Physician use only',
+        badge: '',
         note: '10/10 MG | 3 ML',
         description:
           'Dual-peptide recovery stack combining gut healing and tendon repair (BPC-157) with systemic tissue regeneration (TB-500).',
@@ -144,7 +144,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'melanotan-2',
         name: 'Melanotan 2 (MT2)',
-        badge: 'Physician use only',
+        badge: '',
         note: '10 MG | 3 ML',
         description:
           'Melanocortin peptide for enhanced tanning response, skin pigmentation support, and photoprotection.',
@@ -154,7 +154,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       {
         id: 'glutathione',
         name: 'Glutathione',
-        badge: 'Physician use only',
+        badge: '',
         description:
           'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
         price: null,
