@@ -49,9 +49,9 @@ export async function POST(request: Request) {
     const orderNumber = `CLB-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`
 
     // Generate HMAC-signed approval token
-    const approvalSecret = process.env.CLUB_ORDER_APPROVAL_SECRET || process.env.JWT_SECRET
+    const approvalSecret = process.env.JWT_SECRET
     if (!approvalSecret) {
-      console.error('[club/orders] CRITICAL: Neither CLUB_ORDER_APPROVAL_SECRET nor JWT_SECRET is set')
+      console.error('[club/orders] CRITICAL: JWT_SECRET is not set')
       return NextResponse.json({ error: 'Server configuration error.' }, { status: 500 })
     }
     const approvalToken = crypto
