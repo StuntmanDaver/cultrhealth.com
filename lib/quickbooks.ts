@@ -447,9 +447,11 @@ export async function sendInvoice(
 
     if (!sendRes.ok) {
       const errorText = await sendRes.text()
-      console.warn('[quickbooks] Send invoice request failed, returning fallback payment link:', errorText.slice(0, 200))
-      // Non-fatal — invoice was created, just not emailed via QB. Return fallback link.
-      return { payNowLink: fallbackLink }
+      console.warn('[quickbooks] Send invoice request failed, no customer payment URL available. Admin link:', fallbackLink, errorText.slice(0, 200))
+      // Non-fatal — invoice was created, just not emailed via QB.
+      // Return null payNowLink — don't return admin portal URL as customer payment link.
+      // The approval route will correctly block with error if payNowLink is null.
+      return { payNowLink: null }
     }
 
     // QB send response includes the invoice with an InvoiceLink (customer-facing pay URL)

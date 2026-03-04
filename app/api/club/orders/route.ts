@@ -176,8 +176,7 @@ async function sendOrderConfirmationToCustomer(data: {
   discountPercent: number
 }) {
   if (!process.env.RESEND_API_KEY) {
-    console.error('[club/orders] CRITICAL: RESEND_API_KEY not set — customer confirmation email not sent')
-    return
+    throw new Error('RESEND_API_KEY not configured — customer confirmation email not sent')
   }
 
   const { Resend } = await import('resend')
@@ -278,8 +277,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   siteUrl: string
 }) {
   if (!process.env.RESEND_API_KEY) {
-    console.error('[club/orders] CRITICAL: RESEND_API_KEY not set — admin approval request email not sent')
-    return
+    throw new Error('RESEND_API_KEY not configured — admin approval request email not sent')
   }
 
   const { Resend } = await import('resend')
