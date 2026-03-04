@@ -262,8 +262,10 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
         {/* Logo */}
         <div className="pt-10 pb-5 grad-dark-glow flex flex-col items-center justify-center relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
-          <span className="font-display font-bold text-2xl uppercase text-white relative z-10">CULTR</span>
-          <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 mt-0.5 relative z-10">Health</span>
+          <div className="flex flex-col items-end leading-none relative z-10">
+            <span className="font-display font-bold text-2xl uppercase text-white">CULTR</span>
+            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 mt-0.5">Health</span>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="px-8 pb-10 pt-7">
