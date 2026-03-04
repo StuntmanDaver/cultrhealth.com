@@ -200,7 +200,7 @@ export async function getMembershipTier(customerId: string, email?: string): Pro
     try {
       const { default: Stripe } = await import('stripe')
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2026-01-28.clover',
+        apiVersion: '2026-02-25.clover',
       })
 
       const activeSubscriptions = await stripe.subscriptions.list({
