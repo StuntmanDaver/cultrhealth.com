@@ -395,7 +395,7 @@ export async function createInvoice(
       return null
     }
 
-    console.log('[quickbooks] Created invoice:', invoice.Id)
+    console.log('[quickbooks] Created invoice:', invoice.Id, '| InvoiceLink:', invoice.InvoiceLink || 'NULL')
 
     return {
       invoiceId: invoice.Id,
@@ -458,9 +458,13 @@ export async function sendInvoice(
       const sendData = await sendRes.json() as { Invoice?: { Id: string; InvoiceLink?: string } }
       if (sendData.Invoice?.InvoiceLink) {
         payNowLink = sendData.Invoice.InvoiceLink
+        console.log('[quickbooks] InvoiceLink from send response:', payNowLink)
+      } else {
+        console.log('[quickbooks] No InvoiceLink in send response, using fallback:', fallbackLink)
       }
     } catch {
       // JSON parse failed — use fallback link
+      console.log('[quickbooks] Failed to parse send response, using fallback:', fallbackLink)
     }
 
     console.log('[quickbooks] Invoice sent successfully:', invoiceId, 'to:', customerEmail)
@@ -486,10 +490,25 @@ export async function getInvoiceLink(
 ): Promise<string | null> {
   try {
     const res = await qbFetch(accessToken, `/invoice/${invoiceId}`)
-    if (!res.ok) return null
-    const data = await res.json() as { Invoice?: { InvoiceLink?: string } }
-    return data.Invoice?.InvoiceLink || null
-  } catch {
+    if (!res.ok) {
+      console.log('[quickbooks] getInvoiceLink failed with status:', res.status)
+      return null
+    }
+    const data = await res.json() as { Invoice?: { InvoiceLink?: string; AllowOnlineCreditCardPayment?: boolean; AllowOnlineACHPayment?: boolean } }
+    const link = data.Invoice?.InvoiceLink || null
+    const hasCC = data.Invoice?.AllowOnlineCreditCardPayment
+    const hasACH = data.Invoice?.AllowOnlineACHPayment
+
+    console.log('[quickbooks] getInvoiceLink result:', {
+      invoiceId,
+      link: link || 'NULL',
+      allowCC: hasCC,
+      allowACH: hasACH,
+    })
+
+    return link
+  } catch (error) {
+    console.error('[quickbooks] getInvoiceLink error:', error)
     return null
   }
 }

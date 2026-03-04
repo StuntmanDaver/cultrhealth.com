@@ -78,6 +78,19 @@ export async function POST(
       }, { status: 400 })
     }
 
+    // Validate QB is configured BEFORE starting approval
+    const realmId = process.env.QUICKBOOKS_REALM_ID
+    const clientId = process.env.QUICKBOOKS_CLIENT_ID
+    const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET
+
+    if (!realmId || !clientId || !clientSecret) {
+      console.error('[club-orders/approve] CRITICAL: QB not fully configured')
+      return NextResponse.json(
+        { error: 'QuickBooks configuration incomplete. Contact admin.' },
+        { status: 503 }
+      )
+    }
+
     // QuickBooks invoice is REQUIRED — approval is blocked if QB fails
     let qbInvoiceId: string
     let qbInvoiceUrl: string | null = null
@@ -123,6 +136,14 @@ export async function POST(
       // with the customer-facing payment URL once QB Payments is active.
       const fetchedLink = await qb.getInvoiceLink(accessToken, invoice.invoiceId)
       qbInvoiceUrl = fetchedLink || sent?.payNowLink || invoice.invoiceLink || null
+
+      console.log('[club-orders/approve] QB Invoice Link Debug:', {
+        invoiceId: invoice.invoiceId,
+        invoiceLink_fromCreate: invoice.invoiceLink,
+        payNowLink_fromSend: sent?.payNowLink,
+        invoiceLink_fromFetch: fetchedLink,
+        final_qbInvoiceUrl: qbInvoiceUrl,
+      })
     } catch (qbError) {
       console.error('[club-orders/approve] QuickBooks error:', qbError)
       return NextResponse.json(
