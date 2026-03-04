@@ -211,7 +211,15 @@ function ApplyForm() {
           </button>
 
           <p className="text-xs text-cultr-textMuted text-center">
-            By applying, you agree to <span className="font-display font-bold">CULTR</span> Health&apos;s creator program terms.
+            By applying, you agree to{' '}
+            <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-cultr-forest hover:underline">
+              CULTR Health&apos;s terms
+            </a>
+            {' '}and{' '}
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-cultr-forest hover:underline">
+              privacy policy
+            </a>
+            .
           </p>
         </form>
       </div>

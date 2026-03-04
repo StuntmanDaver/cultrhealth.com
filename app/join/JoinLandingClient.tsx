@@ -295,7 +295,15 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           </button>
 
           <p className="mt-5 text-[11px] text-brand-secondary/40 text-center">
-            By joining, you agree to our terms of service and privacy policy.
+            By joining, you agree to our{' '}
+            <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
+              terms of service
+            </a>
+            {' '}and{' '}
+            <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">
+              privacy policy
+            </a>
+            .
           </p>
         </form>
       </div>
