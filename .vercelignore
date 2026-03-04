@@ -1,0 +1,14 @@
+.ralph
+.agents
+.cursor
+archive
+*.png
+*.jpg
+*.jpeg
+*.pdf
+"*Screenshot*"
+"*AGENT*"
+"*ARCHITECTURE*"
+"*fix_plan*"
+"*PROMPT*"
+*.output
