@@ -276,7 +276,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
-  const adminEmail = process.env.ADMIN_APPROVAL_EMAIL || 'support@cultrhealth.com'
+  const adminEmail = process.env.ADMIN_APPROVAL_EMAIL || 'admin@cultrhealth.com'
 
   const approveUrl = `${data.siteUrl}/api/admin/club-orders/${data.orderId}/approve?token=${data.approvalToken}`
 

@@ -244,7 +244,7 @@ async function sendInvoiceCopyToSupport(data: {
 
   await resend.emails.send({
     from: fromEmail,
-    to: 'support@cultrhealth.com',
+    to: process.env.ADMIN_APPROVAL_EMAIL || 'admin@cultrhealth.com',
     subject: `[Invoice Copy] ${data.orderNumber} — Sent to ${data.email}`,
     html: `
 <!DOCTYPE html>
