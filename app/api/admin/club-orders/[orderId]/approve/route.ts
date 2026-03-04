@@ -66,7 +66,10 @@ export async function POST(
     if (order.status !== 'pending_approval') {
       // If called from email link, redirect to a success page
       if (tokenFromUrl) {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+        const hostHeader = request.headers.get('host') || ''
+        const siteUrl = (hostHeader.includes('join.cultrhealth.com') || hostHeader.includes('staging.cultrhealth.com'))
+          ? `https://${hostHeader}`
+          : process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
         return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}&already=true`)
       }
       return NextResponse.json({
@@ -188,7 +191,10 @@ export async function POST(
 
     // If called from email link, redirect
     if (tokenFromUrl) {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+      const hostHeader = request.headers.get('host') || ''
+      const siteUrl = (hostHeader.includes('join.cultrhealth.com') || hostHeader.includes('staging.cultrhealth.com'))
+        ? `https://${hostHeader}`
+        : process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
       return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}`)
     }
 

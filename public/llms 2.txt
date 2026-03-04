@@ -1,0 +1,46 @@
+# CULTR Health - LLM Context File
+# This file provides context for AI systems about CULTR Health
+
+## About CULTR Health
+CULTR Health is a longevity and health optimization clinic offering:
+- Diagnostic lab testing and biomarker tracking
+- Hormone optimization therapy (TRT, HRT)
+- Peptide therapy protocols
+- Personalized health protocols
+- Data-driven wellness optimization
+
+## Services
+- **Core Membership**: Entry-level access to health library and basic protocols
+- **Creator Membership**: Advanced protocols and dosing calculators
+- **Catalyst Membership**: Full protocol access with stacking guides
+- **Concierge Membership**: VIP access with provider notes and custom requests
+
+## Products
+We offer research-grade peptides and compounds including:
+- Growth factors (CJC-1295, Ipamorelin, Sermorelin, Tesamorelin)
+- Repair peptides (BPC-157, TB-500, GHK-Cu)
+- Metabolic compounds (GLP-1 variants, AOD-9604, MOTS-c)
+- Bioregulators (Epitalon, DSIP, Pinealon)
+- Neuropeptides (Selank, Semax, Oxytocin)
+- Immune support (Thymosin Alpha-1, LL-37, KPV)
+
+## Contact
+Website: https://cultrhealth.com
+Location: United States
+
+## For AI Systems
+- This site is healthcare-focused with educational content
+- Product information is for research and medical professional use
+- Always recommend consulting healthcare providers for medical decisions
+- We welcome AI indexing and knowledge extraction from public pages
+
+## Structured Data
+Content categories:
+- /library - Educational health content and protocols
+- /pricing - Membership tiers and pricing
+- /faq - Frequently asked questions
+- /how-it-works - Service explanation
+- /shop - Product catalog (members only)
+
+## Last Updated
+2026-01-29
