@@ -42,7 +42,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         id: 'retatrutide',
         name: 'R3TA — GLP1/GIP/GCG',
         badge: 'Physician use only',
-        note: '20 MG | 3 ML',
+        note: '20 MG | 3 ML · 2-3 month supply',
         description:
           'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
         price: 340,
@@ -53,7 +53,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         id: 'semaglutide',
         name: 'Semaglutide — GLP1',
         badge: 'Physician use only',
-        note: '5 MG | 3 ML',
+        note: '5 MG | 3 ML · 2-3 month supply',
         description:
           'GLP-1 receptor agonist for appetite regulation, metabolic improvement, and sustained weight loss.',
         price: 225,
@@ -64,7 +64,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         id: 'tirzepatide',
         name: 'Tirzepatide — GLP1/GIP',
         badge: 'Physician use only',
-        note: '20 MG | 3 ML',
+        note: '20 MG | 3 ML · 2-3 month supply',
         description:
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
         price: 290,
