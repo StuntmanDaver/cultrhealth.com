@@ -1,10 +1,11 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin']
 const HIDE_CHROME_EXACT = ['/join']
+const HIDE_CHROME_HOSTNAMES = ['join.cultrhealth.com']
 
 export function LayoutShellClient({
   header,
@@ -16,7 +17,13 @@ export function LayoutShellClient({
   children: ReactNode
 }) {
   const pathname = usePathname()
-  const hideChrome = HIDE_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || HIDE_CHROME_EXACT.includes(pathname)
+  const [isJoinDomain, setIsJoinDomain] = useState(false)
+
+  useEffect(() => {
+    setIsJoinDomain(HIDE_CHROME_HOSTNAMES.includes(window.location.hostname))
+  }, [])
+
+  const hideChrome = isJoinDomain || HIDE_CHROME_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || HIDE_CHROME_EXACT.includes(pathname)
 
   return (
     <>
