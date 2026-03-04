@@ -102,7 +102,16 @@ export async function POST(request: Request) {
       console.error('[club/orders] DB error (non-fatal):', dbError)
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+    // Determine the correct site URL based on request hostname
+    // This ensures approval links point to the correct domain (staging vs production)
+    const hostHeader = request.headers.get('host') || ''
+    let siteUrl: string
+    if (hostHeader.includes('join.cultrhealth.com') || hostHeader.includes('staging.cultrhealth.com')) {
+      siteUrl = `https://${hostHeader}`
+    } else {
+      siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+    }
+    console.log('[club/orders] Using siteUrl:', siteUrl, 'from host:', hostHeader)
 
     // Send emails
     try {
