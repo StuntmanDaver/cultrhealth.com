@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
+import { validateCoupon } from '@/lib/config/coupons'
 
 interface OrderItem {
   therapyId: string
@@ -14,13 +15,18 @@ interface OrderItem {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, name, phone, items, notes } = body as {
+    const { email, name, phone, items, notes, couponCode } = body as {
       email: string
       name: string
       phone?: string
       items: OrderItem[]
       notes?: string
+      couponCode?: string
     }
+
+    // Validate coupon server-side
+    const coupon = couponCode ? validateCoupon(couponCode) : null
+    const discountPercent = coupon?.discount ?? 0
 
     // Validation
     if (!email?.trim() || !name?.trim()) {
@@ -33,9 +39,11 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase()
 
     // Calculate subtotal (only items with prices)
-    const subtotal = items.reduce((sum, item) => {
+    const subtotalBeforeDiscount = items.reduce((sum, item) => {
       return item.price ? sum + item.price * item.quantity : sum
     }, 0)
+    const discountAmount = discountPercent > 0 ? Math.round(subtotalBeforeDiscount * discountPercent) / 100 : 0
+    const subtotal = subtotalBeforeDiscount - discountAmount
 
     // Generate order number
     const orderNumber = `CLB-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`
@@ -68,8 +76,9 @@ export async function POST(request: Request) {
         memberId = memberResult.rows[0]?.id
 
         if (memberId) {
+          const appliedCouponCode = coupon ? couponCode!.trim().toUpperCase() : null
           const orderResult = await sql`
-            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token)
+            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent)
             VALUES (
               ${orderNumber},
               ${memberId},
@@ -80,7 +89,9 @@ export async function POST(request: Request) {
               ${subtotal > 0 ? subtotal : null},
               ${notes || null},
               'pending_approval',
-              ${approvalToken}
+              ${approvalToken},
+              ${appliedCouponCode},
+              ${discountPercent > 0 ? discountPercent : null}
             )
             RETURNING id
           `
@@ -101,7 +112,11 @@ export async function POST(request: Request) {
           email: normalizedEmail,
           orderNumber,
           items,
+          subtotalBeforeDiscount,
+          discountAmount,
           subtotal,
+          couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+          discountPercent,
         }),
         sendOrderApprovalRequestToAdmin({
           name: name.trim(),
@@ -110,7 +125,11 @@ export async function POST(request: Request) {
           orderNumber,
           orderId: orderId || orderNumber,
           items,
+          subtotalBeforeDiscount,
+          discountAmount,
           subtotal,
+          couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+          discountPercent,
           notes: notes || '',
           approvalToken,
           siteUrl,
@@ -141,7 +160,11 @@ async function sendOrderConfirmationToCustomer(data: {
   email: string
   orderNumber: string
   items: OrderItem[]
+  subtotalBeforeDiscount: number
+  discountAmount: number
   subtotal: number
+  couponCode?: string
+  discountPercent: number
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[club/orders] CRITICAL: RESEND_API_KEY not set — customer confirmation email not sent')
@@ -195,9 +218,19 @@ async function sendOrderConfirmationToCustomer(data: {
         </thead>
         <tbody>${itemRows}</tbody>
       </table>
-      ${data.subtotal > 0 ? `
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215; text-align: right;">
-        <span style="font-weight: 700; font-size: 16px;">Subtotal: $${data.subtotal.toFixed(2)}</span>
+      ${data.subtotalBeforeDiscount > 0 ? `
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215;">
+        ${data.discountAmount > 0 ? `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+          <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #16a34a; margin-bottom: 4px;">
+          <span>Discount (${data.couponCode} ${data.discountPercent}% off)</span><span>−$${data.discountAmount.toFixed(2)}</span>
+        </div>
+        ` : ''}
+        <div style="text-align: right;">
+          <span style="font-weight: 700; font-size: 16px;">Total: $${data.subtotal.toFixed(2)}</span>
+        </div>
       </div>
       ` : ''}
     </div>
@@ -226,7 +259,11 @@ async function sendOrderApprovalRequestToAdmin(data: {
   orderNumber: string
   orderId: string
   items: OrderItem[]
+  subtotalBeforeDiscount: number
+  discountAmount: number
   subtotal: number
+  couponCode?: string
+  discountPercent: number
   notes: string
   approvalToken: string
   siteUrl: string
@@ -287,10 +324,14 @@ async function sendOrderApprovalRequestToAdmin(data: {
       <tbody>${itemRows}</tbody>
     </table>
 
-    ${data.subtotal > 0 ? `
-    <p style="text-align: right; font-weight: 700; font-size: 16px; margin-bottom: 24px;">
-      Subtotal: $${data.subtotal.toFixed(2)}
-    </p>
+    ${data.subtotalBeforeDiscount > 0 ? `
+    <div style="margin-bottom: 24px;">
+      ${data.discountAmount > 0 ? `
+      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
+      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${data.couponCode} (${data.discountPercent}% off): −$${data.discountAmount.toFixed(2)}</p>
+      ` : ''}
+      <p style="text-align: right; font-weight: 700; font-size: 16px; margin: 0;">Total: $${data.subtotal.toFixed(2)}</p>
+    </div>
     ` : ''}
 
     ${data.notes ? `

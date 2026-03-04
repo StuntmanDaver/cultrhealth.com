@@ -298,7 +298,9 @@ export async function createInvoice(
   accessToken: string,
   customerId: string,
   items: OrderItem[],
-  orderNumber: string
+  orderNumber: string,
+  discountPercent: number = 0,
+  couponCode?: string
 ): Promise<{ invoiceId: string; invoiceLink: string | null } | null> {
   try {
     // Filter to items with prices (QB requires priced line items)
@@ -328,6 +330,27 @@ export async function createInvoice(
         },
       }
     })
+
+    const subtotalBeforeDiscount = lineItems.reduce((sum, line) => sum + line.Amount, 0)
+
+    // Add discount line if a coupon was applied
+    if (discountPercent > 0) {
+      const discountAmount = Math.round(subtotalBeforeDiscount * discountPercent) / 100
+      const discountLabel = couponCode
+        ? `Discount (${couponCode} — ${discountPercent}% off)`
+        : `Discount (${discountPercent}% off)`
+      lineItems.push({
+        LineNum: lineItems.length + 1,
+        Amount: -Number(discountAmount.toFixed(2)),
+        DetailType: 'SalesItemLineDetail',
+        Description: discountLabel,
+        SalesItemLineDetail: {
+          ItemRef: { value: itemRef },
+          Qty: 1,
+          UnitPrice: -Number(discountAmount.toFixed(2)),
+        },
+      })
+    }
 
     const total = lineItems.reduce((sum, line) => sum + line.Amount, 0)
 

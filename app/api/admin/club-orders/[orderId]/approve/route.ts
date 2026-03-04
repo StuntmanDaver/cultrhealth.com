@@ -52,7 +52,7 @@ export async function POST(
 
     // Fetch the order
     const orderResult = await sql`
-      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status
+      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status, coupon_code, discount_percent
       FROM club_orders
       WHERE id = ${orderId}::uuid
     `
@@ -104,7 +104,8 @@ export async function POST(
       }
 
       const items = order.items as OrderItem[]
-      const invoice = await qb.createInvoice(accessToken, customerId, items, order.order_number)
+      const discountPercent = order.discount_percent ? Number(order.discount_percent) : 0
+      const invoice = await qb.createInvoice(accessToken, customerId, items, order.order_number, discountPercent, order.coupon_code || undefined)
 
       if (!invoice) {
         return NextResponse.json(

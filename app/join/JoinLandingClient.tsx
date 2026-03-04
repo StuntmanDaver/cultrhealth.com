@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
-  Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info,
+  Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
@@ -449,6 +449,42 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [couponInput, setCouponInput] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string } | null>(null)
+  const [couponError, setCouponError] = useState('')
+  const [couponApplying, setCouponApplying] = useState(false)
+
+  async function handleApplyCoupon() {
+    const code = couponInput.trim().toUpperCase()
+    if (!code) return
+    setCouponError('')
+    setCouponApplying(true)
+    try {
+      const res = await fetch('/api/club/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      })
+      const data = await res.json()
+      if (data.valid) {
+        setAppliedCoupon({ code, discount: data.discount, label: data.label })
+        setCouponInput('')
+        setCouponError('')
+      } else {
+        setCouponError('Invalid coupon code.')
+        setAppliedCoupon(null)
+      }
+    } catch {
+      setCouponError('Could not validate code.')
+    } finally {
+      setCouponApplying(false)
+    }
+  }
+
+  function handleRemoveCoupon() {
+    setAppliedCoupon(null)
+    setCouponError('')
+  }
 
   async function handleSubmitOrder() {
     if (!member || cart.items.length === 0) return
@@ -462,6 +498,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
           email: member.email, name: member.name, phone: member.phone,
           items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity })),
           notes: notes.trim() || undefined,
+          couponCode: appliedCoupon?.code,
         }),
       })
       const data = await res.json()
@@ -511,14 +548,71 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
             })}
           </div>
 
+          {/* Coupon Code */}
+          <div className="pt-4 pb-2">
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 text-sm text-green-700">
+                  <Tag className="w-3.5 h-3.5" />
+                  <span className="font-medium">{appliedCoupon.code}</span>
+                  <span className="text-green-600">— {appliedCoupon.discount}% off</span>
+                </div>
+                <button onClick={handleRemoveCoupon} className="text-green-500 hover:text-green-700 transition-colors">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponInput}
+                  onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError('') }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                  placeholder="Coupon code"
+                  className="flex-1 min-w-0 px-3 py-2 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40 uppercase"
+                />
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={!couponInput.trim() || couponApplying}
+                  className="px-4 py-2 bg-brand-primary text-brand-cream text-sm font-medium rounded-xl hover:bg-brand-primaryHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                >
+                  {couponApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
+                </button>
+              </div>
+            )}
+            {couponError && <p className="text-xs text-red-500 mt-1.5 pl-1">{couponError}</p>}
+          </div>
+
           {/* Total */}
-          <div className="pt-4 pb-4">
-            <div className="flex justify-between items-baseline">
-              <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
-              <span className="text-2xl font-display font-bold text-brand-primary">
-                {cart.getCartTotal() > 0 ? `$${cart.getCartTotal().toFixed(2)}` : 'Quote Request'}
-              </span>
-            </div>
+          <div className="pt-2 pb-4">
+            {appliedCoupon && cart.getCartTotal() > 0 && (() => {
+              const discountAmt = Math.round(cart.getCartTotal() * appliedCoupon.discount) / 100
+              const discountedTotal = cart.getCartTotal() - discountAmt
+              return (
+                <div className="space-y-1 mb-1">
+                  <div className="flex justify-between text-sm text-brand-secondary/60">
+                    <span>Subtotal</span>
+                    <span>${cart.getCartTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
+                    <span>−${discountAmt.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-baseline pt-1 border-t border-brand-secondary/10">
+                    <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
+                    <span className="text-2xl font-display font-bold text-brand-primary">${discountedTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              )
+            })()}
+            {!appliedCoupon && (
+              <div className="flex justify-between items-baseline">
+                <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
+                <span className="text-2xl font-display font-bold text-brand-primary">
+                  {cart.getCartTotal() > 0 ? `$${cart.getCartTotal().toFixed(2)}` : 'Quote Request'}
+                </span>
+              </div>
+            )}
             {cart.hasConsultationItems() && (
               <p className="text-xs text-brand-secondary/50 mt-1">
                 * Some items require consultation pricing. Final total after review.
