@@ -158,12 +158,19 @@ function JoinLandingInner() {
 
       {/* Order Success Banner */}
       {orderSubmitted && (
-        <div className="py-4 px-6 bg-brand-primary/[0.06] border-b border-brand-secondary/10">
-          <div className="max-w-5xl mx-auto flex items-center justify-center gap-2.5 text-brand-primary font-medium text-sm">
-            <div className="w-6 h-6 rounded-full bg-brand-primary/10 flex items-center justify-center">
-              <Check className="w-3.5 h-3.5" />
+        <div className="py-8 px-6 bg-green-50 border-b-2 border-green-200">
+          <div className="max-w-5xl mx-auto flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-200/50 flex items-center justify-center">
+              <Check className="w-6 h-6 text-green-600" />
             </div>
-            <span>Order submitted! Check your email for confirmation.</span>
+            <div className="text-center">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-green-700 mb-1">
+                Thank you for your order!
+              </h3>
+              <p className="text-base text-green-600 font-medium">
+                Order submitted successfully. Check your email for confirmation.
+              </p>
+            </div>
           </div>
         </div>
       )}
