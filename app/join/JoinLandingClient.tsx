@@ -105,10 +105,6 @@ function JoinLandingInner() {
               </div>
             </div>
             <div className="w-12 h-px bg-white/20 mx-auto mb-6" />
-            <div className="inline-flex items-center gap-2 bg-white/8 backdrop-blur-sm rounded-full px-5 py-2 mb-5 border border-white/10">
-              <Stethoscope className="w-4 h-4 text-brand-cream/70" />
-              <span className="text-sm font-medium text-brand-cream/90">Physician-Supervised</span>
-            </div>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-5 leading-tight">
               Core Therapies
             </h1>
@@ -116,7 +112,7 @@ function JoinLandingInner() {
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-base md:text-lg text-brand-cream/70 max-w-xl mx-auto leading-relaxed">
-              Browse physician-supervised therapies, add to your cart, and
+              Add therapies to your cart and
               submit your order for medical team review.
             </p>
             {member && (
