@@ -144,7 +144,7 @@ function JoinLandingInner() {
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-base md:text-lg text-brand-secondary/75 leading-relaxed">
-              Add therapies to your cart and submit your order for medical team review.
+              Add therapies to your cart and submit your order for CULTR team review.
             </p>
             {member && (
               <p className="mt-3 text-sm text-brand-secondary/50 font-medium">
