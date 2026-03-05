@@ -1,6 +1,20 @@
-# Changelog
+## [2026-03-05] - Mailchimp Configuration Audit & Deployment Readiness
 
-All notable changes to the Cultr Health Website project are documented in this file.
+### Summary
+Completed comprehensive environment variable audit for the CULTR Club email flow. Verified all required Mailchimp environment variables, documented fallbacks, and identified critical Vercel configuration gaps. All code is deployed and tested on staging; ready to configure Mailchimp environment variables and execute end-to-end testing.
+
+### Documentation
+- **Environment Audit Complete** — Identified 3 critical Mailchimp vars missing from Vercel, 1 important var with fallback, and verified existing Resend/database configurations
+- **Testing Plan Created** — 5-touchpoint email flow verification checklist including signup welcome, order confirmation, admin approval request, auto-logout gate, and customer approval confirmation
+- **Deployment Plan** — Add MAILCHIMP_API_KEY, MAILCHIMP_AUDIENCE_ID, MAILCHIMP_SERVER_PREFIX to Vercel staging environment
+- **Memory Updated** — Full audit results documented in cross-session memory for future reference
+
+### Technical Details
+- **Critical vars** — MAILCHIMP_API_KEY, MAILCHIMP_AUDIENCE_ID, MAILCHIMP_SERVER_PREFIX (silent degradation if missing)
+- **Verify in Vercel** — JWT_SECRET (returns 500 if missing; must exist)
+- **Optional vars** — NEXT_PUBLIC_SITE_URL, ADMIN_APPROVAL_EMAIL (have safe fallbacks)
+- **Current status** — ✅ Code deployed to staging, ✅ Email infrastructure hardened with independent error handling, ✅ Admin approval links working with one-click functionality
+- **Next step** — Add Mailchimp vars to Vercel staging and execute comprehensive email flow testing
 
 ---
 
