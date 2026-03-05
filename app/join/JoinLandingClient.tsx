@@ -417,13 +417,13 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       ) : (
         <>
           {showImage && (
-            <div className="w-full h-32 relative mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
+            <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-8">
               <Image
                 src={therapy.image}
                 alt={therapy.name}
-                fill
-                className="object-contain"
-                sizes="100%"
+                width={200}
+                height={200}
+                className="object-contain max-w-full h-auto"
                 unoptimized
               />
             </div>
