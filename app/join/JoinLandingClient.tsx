@@ -411,7 +411,18 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
       {therapy.featured ? (
         <>
-          <div className="flex flex-col gap-1.5 min-w-0">
+          {therapy.image && (
+            <div className="hidden md:flex w-40 h-40 flex-shrink-0 relative">
+              <Image
+                src={therapy.image}
+                alt={therapy.name}
+                fill
+                className="object-contain"
+                sizes="160px"
+              />
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
             <div className="flex items-center gap-3">
               <span className="shrink-0 text-[9px] font-semibold uppercase tracking-widest bg-white/15 text-white/90 px-2.5 py-1 rounded-full border border-white/10">Flagship</span>
               {therapy.note && (
@@ -443,61 +454,70 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
         </>
       ) : (
         <>
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="text-base font-display font-bold text-brand-primary">{therapy.name}</h3>
-        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-brand-secondary/70 bg-brand-primary/[0.05] px-2 py-0.5 rounded-full">
-          {therapy.badge}
-        </span>
-      </div>
+          {therapy.image && (
+            <div className="w-full h-32 relative mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden">
+              <Image
+                src={therapy.image}
+                alt={therapy.name}
+                fill
+                className="object-contain bg-gradient-to-b from-brand-cream to-brand-creamDark"
+                sizes="100%"
+              />
+            </div>
+          )}
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="text-base font-display font-bold text-brand-primary">{therapy.name}</h3>
+            <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-brand-secondary/70 bg-brand-primary/[0.05] px-2 py-0.5 rounded-full">
+              {therapy.badge}
+            </span>
+          </div>
 
-      {therapy.note && (
-        <div className="inline-block text-[11px] text-brand-secondary/60 font-medium bg-brand-primary/[0.04] px-2.5 py-0.5 rounded-full mb-2.5 self-start">
-          {therapy.note}
-        </div>
-      )}
+          {therapy.note && (
+            <div className="inline-block text-[11px] text-brand-secondary/60 font-medium bg-brand-primary/[0.04] px-2.5 py-0.5 rounded-full mb-2.5 self-start">
+              {therapy.note}
+            </div>
+          )}
 
-      <p className="text-xs text-brand-secondary/70 leading-relaxed mb-4 flex-1">{therapy.description}</p>
+          <p className="text-xs text-brand-secondary/70 leading-relaxed mb-4 flex-1">{therapy.description}</p>
 
-      {/* Hover tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
-        <p className="font-semibold mb-1">{therapy.name}</p>
-        <p className="text-white/80">{therapy.description}</p>
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-primary" />
-      </div>
+          {/* Hover tooltip */}
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
+            <p className="font-semibold mb-1">{therapy.name}</p>
+            <p className="text-white/80">{therapy.description}</p>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-primary" />
+          </div>
 
-      {/* Price */}
-      <div className="mb-3">
-        {therapy.price !== null ? (
-          <span className="text-lg font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
-        ) : (
-          <span className="text-xs font-medium text-brand-secondary">{therapy.pricingNote || 'Consultation pricing'}</span>
-        )}
-      </div>
+          {/* Price */}
+          <div className="mb-3">
+            {therapy.price !== null ? (
+              <span className="text-lg font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+            ) : (
+              <span className="text-xs font-medium text-brand-secondary">{therapy.pricingNote || 'Consultation pricing'}</span>
+            )}
+          </div>
 
-      {/* Add to Cart */}
-      {inCart && cartItem ? (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-brand-primary/70 flex items-center gap-1">
-            <Check className="w-3 h-3" />
-            In cart ({cartItem.quantity})
-          </span>
-          <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      ) : (
-        <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors self-start">
-          <Plus className="w-4 h-4" />
-          {therapy.price !== null ? 'Add' : 'Request'}
-        </button>
-      )}
+          {/* Add to Cart */}
+          {inCart && cartItem ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-brand-primary/70 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                In cart ({cartItem.quantity})
+              </span>
+              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors self-start">
+              <Plus className="w-4 h-4" />
+              {therapy.price !== null ? 'Add' : 'Request'}
+            </button>
+          )}
         </>
       )}
     </div>
   )
 }
-
-// =============================================
 // CART SUMMARY PANEL (matches CartClient right column)
 // =============================================
 

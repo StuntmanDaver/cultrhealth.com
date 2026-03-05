@@ -22,6 +22,8 @@ export interface JoinTherapy {
   featured?: boolean
   /** Reference SKU in product-catalog.ts (for cross-reference only) */
   catalogSku?: string
+  /** Product image URL */
+  image?: string
 }
 
 export interface JoinTherapySection {
@@ -48,6 +50,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 340,
         category: 'glp1',
         featured: true,
+        image: '/images/products/r3ta-glp1-gip-gcg.png',
       },
       {
         id: 'semaglutide',
@@ -59,6 +62,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 225,
         category: 'glp1',
         catalogSku: 'SEMA-5MG-3ML',
+        image: '/images/products/semaglutide-glp1.png',
       },
       {
         id: 'tirzepatide',
@@ -69,6 +73,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
         price: 290,
         category: 'glp1',
+        image: '/images/products/tirzepatide-glp1-gip.png',
       },
     ],
   },
@@ -88,6 +93,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 145,
         category: 'peptide',
         catalogSku: 'GHKCU-100MG-3ML',
+        image: '/images/products/ghk-cu.png',
       },
       {
         id: 'tesa-ipa',
@@ -98,6 +104,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Tesamorelin/Ipamorelin blend for growth hormone optimization, visceral fat reduction, and lean body composition.',
         price: 175,
         category: 'peptide',
+        image: '/images/products/tesa-ipa.png',
       },
       {
         id: 'cjc1295-ipa',
@@ -108,6 +115,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Growth hormone releasing hormone and secretagogue blend for sustained GH elevation, recovery, and body recomposition.',
         price: 170,
         category: 'peptide',
+        image: '/images/products/cjc1295-ipa.png',
       },
       {
         id: 'nad-plus',
@@ -119,6 +127,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 175,
         category: 'peptide',
         catalogSku: 'NAD-1000MG-10ML',
+        image: '/images/products/nad-plus.png',
       },
       {
         id: 'semax-selank',
@@ -130,6 +139,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 115,
         category: 'peptide',
         catalogSku: 'SELANK-SEMAX-5MG-3ML',
+        image: '/images/products/semax-selank.png',
       },
       {
         id: 'bpc157-tb500',
@@ -140,6 +150,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Dual-peptide recovery stack combining gut healing and tendon repair (BPC-157) with systemic tissue regeneration (TB-500).',
         price: 150,
         category: 'peptide',
+        image: '/images/products/bpc157-tb500.png',
       },
       {
         id: 'melanotan-2',
@@ -150,6 +161,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Melanocortin peptide for enhanced tanning response, skin pigmentation support, and photoprotection.',
         price: 110,
         category: 'peptide',
+        image: '/images/products/melanotan2-mt2.png',
       },
       {
         id: 'glutathione',
