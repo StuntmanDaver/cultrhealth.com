@@ -383,7 +383,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
                 fill
                 className="object-contain"
                 sizes="160px"
-                unoptimized
+                loading="lazy"
+                quality={85}
               />
             </div>
           )}
@@ -427,7 +428,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
                 width={200}
                 height={200}
                 className="object-contain max-w-full h-auto"
-                unoptimized
+                loading="lazy"
+                quality={85}
               />
             </div>
           )}
