@@ -124,39 +124,36 @@ function JoinLandingInner() {
         </div>
       )}
 
-      {/* Hero with Background Image and Overlay Text */}
-      <section className="relative h-[45vh] min-h-[320px] md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
+      {/* Hero Image — Full-width on mobile with aspect ratio, fixed height on desktop */}
+      <section className="relative aspect-[4/3] md:aspect-auto md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
           className="w-full h-full object-cover object-center"
         />
-
-        {/* Text Overlay with Translucent Background */}
-        <div className="absolute inset-0 z-10 flex items-center">
-          <div className="px-6 md:px-8 md:ml-24 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
-            <div className="max-w-md">
-              <ScrollReveal direction="none" duration={800}>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
-                  Core Therapies
-                </h1>
-                <p className="text-sm uppercase tracking-widest text-white/70 font-medium mb-3">Browse & Build Your Stack</p>
-              </ScrollReveal>
-              <ScrollReveal delay={200} direction="none" duration={800}>
-                <p className="text-base md:text-lg text-white/90 max-w-xl leading-relaxed drop-shadow">
-                  Add therapies to your cart and submit your order for medical team review.
-                </p>
-                {member && (
-                  <p className="mt-4 text-sm text-white/70 font-medium">
-                    Welcome, {member.name.split(' ')[0]}
-                  </p>
-                )}
-              </ScrollReveal>
-            </div>
-          </div>
-        </div>
       </section>
 
+      {/* Hero Copy Section — Text in dedicated white section below banner */}
+      <section className="px-6 py-8 md:px-8 md:py-12 bg-brand-cream border-b border-brand-secondary/8">
+        <div className="max-w-3xl mx-auto">
+          <ScrollReveal direction="none" duration={800}>
+            <p className="text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-3">Browse & Build Your Stack</p>
+            <h1 className="text-3xl md:text-5xl font-display font-bold leading-tight text-brand-primary mb-3">
+              Core Therapies
+            </h1>
+          </ScrollReveal>
+          <ScrollReveal delay={200} direction="none" duration={800}>
+            <p className="text-base md:text-lg text-brand-secondary/75 leading-relaxed">
+              Add therapies to your cart and submit your order for medical team review.
+            </p>
+            {member && (
+              <p className="mt-3 text-sm text-brand-secondary/50 font-medium">
+                Welcome, {member.name.split(' ')[0]}
+              </p>
+            )}
+          </ScrollReveal>
+        </div>
+      </section>
 
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
@@ -354,17 +351,19 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
       {therapy.featured ? (
         <>
-          {/* Reserved space for featured image — prevents layout shift */}
-          <div className="flex w-32 h-32 md:w-40 md:h-40 flex-shrink-0 relative rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
+          {/* Image container — full-width on mobile, fixed square on desktop */}
+          <div className="w-full flex items-center justify-center py-10 md:py-0 md:w-40 md:h-40 md:flex-shrink-0 relative rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
             {showImage && (
               <Image
                 src={therapy.image}
                 alt={therapy.name}
-                fill
+                width={220}
+                height={220}
                 className="object-contain"
-                sizes="160px"
+                sizes="(max-width: 768px) 220px, 160px"
                 loading="lazy"
                 quality={85}
+                unoptimized
               />
             )}
           </div>
@@ -401,13 +400,13 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       ) : (
         <>
           {/* Non-featured card image — reserved aspect ratio prevents layout shift */}
-          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-8 aspect-square">
+          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-12 sm:py-16 aspect-square">
             {showImage && (
               <Image
                 src={therapy.image}
                 alt={therapy.name}
-                width={200}
-                height={200}
+                width={280}
+                height={280}
                 className="object-contain max-w-full h-auto rounded-lg"
                 loading="lazy"
                 quality={85}
