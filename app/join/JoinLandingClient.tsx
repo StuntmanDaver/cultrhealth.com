@@ -38,6 +38,7 @@ const SECTION_ICONS = [Flame, Zap] as const
 function JoinLandingInner() {
   const [member, setMember] = useState<ClubMember | null>(null)
   const [showSignup, setShowSignup] = useState(false)
+  const [showLogin, setShowLogin] = useState(false)
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
   const cart = useJoinCart()
@@ -60,6 +61,13 @@ function JoinLandingInner() {
         localStorage.setItem('cultr_club_member', JSON.stringify(data))
         return
       }
+      // Check if this is a returning member (logged out after placing an order)
+      const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
+      if (hasOrdered) {
+        setShowLogin(true)
+        return
+      }
+
       setShowSignup(true)
     } catch {
       setShowSignup(true)
@@ -73,11 +81,12 @@ function JoinLandingInner() {
     document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
     setMember(data)
     setShowSignup(false)
+    setShowLogin(false)
   }, [])
 
   // Prevent body scroll when modals are open
   useEffect(() => {
-    if (showSignup || showMobileCart) {
+    if (showSignup || showLogin || showMobileCart) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
@@ -85,14 +94,21 @@ function JoinLandingInner() {
     return () => {
       document.body.style.overflow = ''
     }
-  }, [showSignup, showMobileCart])
+  }, [showSignup, showLogin, showMobileCart])
 
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
     setShowMobileCart(false)
+
+    // Auto-logout: clear auth but keep success banner visible
+    localStorage.removeItem('cultr_club_member')
+    document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
+
+    // Set persistent flag so returning members trigger login gate
+    localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
 
-  if (!member && !showSignup) {
+  if (!member && !showSignup && !showLogin) {
     return (
       <div className="min-h-screen grad-page flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-brand-primary/40" />
@@ -102,8 +118,11 @@ function JoinLandingInner() {
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-cream">
+      {/* Login Modal for Returning Members */}
+      {showLogin && !member && <LoginModal onComplete={handleSignupComplete} onSignUpInstead={() => { setShowLogin(false); setShowSignup(true) }} />}
+
       {/* Signup Modal */}
-      {showSignup && <SignupModal onComplete={handleSignupComplete} />}
+      {showSignup && !member && <SignupModal onComplete={handleSignupComplete} />}
 
       {/* Order Success Banner — Reserve space to prevent layout shift on mobile */}
       {orderSubmitted && (
@@ -294,6 +313,85 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
     </div>
   )
 }
+
+// =============================================
+// LOGIN MODAL
+// =============================================
+
+function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMember) => void; onSignUpInstead: () => void }) {
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    if (!email.trim() || !phone.trim()) { setError('Email and phone number are required.'); return }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/club/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), phone: phone.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Authentication failed.')
+        setLoading(false)
+        return
+      }
+      // Clear the "has ordered" flag on successful re-auth
+      localStorage.removeItem('cultr_club_has_ordered')
+      onComplete(data)
+    } catch {
+      setError('Network error.')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(42,69,66,0.6)', backdropFilter: 'blur(12px)' }}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-brand-secondary/10">
+        {/* Logo */}
+        <div className="pt-10 pb-5 grad-dark-glow flex flex-col items-center justify-center relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
+          <div className="flex flex-col items-end leading-none relative z-10">
+            <span className="font-display font-bold text-2xl uppercase text-white">CULTR</span>
+            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 mt-0.5">Health</span>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-8 pb-10 pt-7">
+          <h2 className="font-display text-xl font-bold text-brand-primary text-center mb-1">
+            Welcome Back
+          </h2>
+          <p className="text-brand-secondary/60 text-sm text-center mb-6">
+            Re-authenticate to continue
+          </p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
+          )}
+
+          <div className="space-y-3">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+          </div>
+
+          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 mt-6 px-6 py-3.5 bg-brand-primary text-white font-medium rounded-full hover:bg-brand-primaryHover transition-colors disabled:opacity-50 shadow-sm">
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ChevronRight className="w-4 h-4" /></>}
+          </button>
+
+          <button type="button" onClick={onSignUpInstead} className="w-full mt-3 px-6 py-3 text-brand-primary font-medium hover:bg-brand-primary/5 transition-colors rounded-full">
+            Create New Account
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 
 // =============================================
 // THERAPY SECTION (matches therapies page exactly)
