@@ -15,7 +15,12 @@ export function middleware(request: NextRequest) {
     if (
       url.pathname.startsWith('/api') ||
       url.pathname.startsWith('/join') ||
-      url.pathname.startsWith('/_next')
+      url.pathname.startsWith('/_next') ||
+      url.pathname.startsWith('/images') ||
+      url.pathname.startsWith('/favicon') ||
+      url.pathname.startsWith('/cultr-logo') ||
+      url.pathname === '/robots.txt' ||
+      url.pathname === '/sitemap.xml'
     ) {
       return NextResponse.next()
     }
