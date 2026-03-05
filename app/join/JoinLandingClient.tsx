@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
   Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info, Tag,
@@ -129,29 +130,43 @@ function JoinLandingInner() {
         </div>
       </section>
 
-      {/* Hero */}
-      <section className="relative pt-16 pb-12 md:pt-20 md:pb-16 px-6 grad-dark-glow text-white overflow-hidden">
-        {/* Decorative glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <ScrollReveal direction="none" duration={800}>
-            <div className="flex flex-col items-center mb-6">
-              <div className="flex flex-col items-end leading-none">
-                <span className="font-display font-bold text-4xl md:text-5xl lg:text-6xl uppercase text-white">Core Therapies</span>
-              </div>
+      {/* Hero with Background Image */}
+      <section className="relative h-[70vh] min-h-[450px] md:h-[75vh] md:min-h-[550px] overflow-hidden">
+        <Image
+          src="/images/hero-cultr-diverse-women.png"
+          alt="CULTR — Diverse women in athletic wear"
+          fill
+          className="object-cover object-center"
+          priority
+          quality={85}
+          sizes="100vw"
+        />
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.5) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.1) 65%, transparent 85%)' }} />
+        <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.45) 65%, transparent 100%)' }} />
+
+        {/* Content */}
+        <div className="absolute inset-0 z-10 flex items-center">
+          <div className="w-full px-6">
+            <div className="max-w-3xl">
+              <ScrollReveal direction="none" duration={800}>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
+                  Core Therapies
+                </h1>
+                <p className="text-sm uppercase tracking-widest text-brand-cream/50 font-medium mb-3">Browse & Build Your Stack</p>
+              </ScrollReveal>
+              <ScrollReveal delay={200} direction="none" duration={800}>
+                <p className="text-base md:text-lg text-brand-cream/80 max-w-xl leading-relaxed drop-shadow">
+                  Add therapies to your cart and submit your order for medical team review.
+                </p>
+                {member && (
+                  <p className="mt-4 text-sm text-brand-cream/60 font-medium">
+                    Welcome, {member.name.split(' ')[0]}
+                  </p>
+                )}
+              </ScrollReveal>
             </div>
-            <p className="text-sm uppercase tracking-widest text-brand-cream/40 font-medium mb-4">Browse & Add to Cart</p>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-base md:text-lg text-brand-cream/70 max-w-xl mx-auto leading-relaxed">
-              Add therapies to your cart and submit your order for medical team review.
-            </p>
-            {member && (
-              <p className="mt-4 text-sm text-brand-cream/40 font-medium">
-                Welcome, {member.name.split(' ')[0]}
-              </p>
-            )}
-          </ScrollReveal>
+          </div>
         </div>
       </section>
 
