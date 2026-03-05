@@ -105,9 +105,9 @@ function JoinLandingInner() {
         <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.45) 65%, transparent 100%)' }} />
 
         {/* Content */}
-        <div className="absolute inset-0 z-10 flex items-center justify-end">
-          <div className="px-6 md:px-16">
-            <div className="max-w-md">
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="px-6 md:px-8">
+            <div className="max-w-md text-center md:text-left">
               <ScrollReveal direction="none" duration={800}>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
                   Core Therapies
