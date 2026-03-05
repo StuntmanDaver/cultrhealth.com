@@ -94,15 +94,15 @@ function JoinLandingInner() {
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
 
       {/* Hero with Background Image */}
-      <section className="relative h-[70vh] min-h-[450px] md:h-[75vh] md:min-h-[550px] overflow-hidden bg-gray-200">
+      <section className="relative h-[45vh] min-h-[320px] md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
         <Image
           src="/images/hero-cultr-diverse-women.png"
           alt="CULTR — Diverse women in athletic wear"
-          width={1536}
-          height={1024}
-          className="w-full h-full object-cover object-center"
+          fill
+          className="object-cover object-center"
           priority
-          quality={85}
+          quality={90}
+          unoptimized={false}
         />
         {/* Gradient overlay for text readability */}
         <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.5) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.1) 65%, transparent 85%)' }} />
