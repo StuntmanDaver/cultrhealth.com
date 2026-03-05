@@ -93,43 +93,6 @@ function JoinLandingInner() {
       {/* Signup Modal */}
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
 
-      {/* Welcome Banner — styled like staging's ClubBanner */}
-      <section className="px-6 pt-8 md:pt-10 pb-2">
-        <div className="max-w-6xl mx-auto">
-          <div className="p-8 md:p-12 rounded-3xl bg-gradient-to-br from-[#D8F3DC] to-[#B7E4C7] border-2 border-[#9DD4B3] shadow-sm">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-block px-3 py-1.5 rounded-full bg-cultr-forest text-white text-xs font-bold tracking-wider uppercase">
-                    Personalized Order
-                  </span>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-3 leading-tight">
-                  Build Your Wellness Stack
-                </h2>
-                <p className="text-cultr-forest/80 text-base md:text-lg max-w-xl leading-relaxed">
-                  Choose from our core therapies, build a protocol tailored to your goals, and let our medical team review your selections before next steps.
-                </p>
-              </div>
-
-              <div className="flex-shrink-0 lg:w-[300px]">
-                <div className="bg-white rounded-2xl shadow-md p-7 border border-white/60 text-center space-y-3">
-                  <div className="flex justify-center">
-                    <div className="w-12 h-12 rounded-full bg-cultr-sage flex items-center justify-center">
-                      <Check className="w-6 h-6 text-cultr-forest" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-cultr-forest font-display font-bold text-lg">Zero Charges Today</p>
-                    <p className="text-cultr-textMuted text-sm mt-1">Medical team review before invoicing</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Hero with Background Image */}
       <section className="relative h-[70vh] min-h-[450px] md:h-[75vh] md:min-h-[550px] overflow-hidden">
         <Image
@@ -398,6 +361,14 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const cart = useJoinCart()
   const inCart = cart.isInCart(therapy.id)
   const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
+  const [isJoinSubdomain, setIsJoinSubdomain] = useState(false)
+
+  useEffect(() => {
+    // Only show images on join.cultrhealth.com subdomain
+    if (typeof window !== 'undefined') {
+      setIsJoinSubdomain(window.location.hostname === 'join.cultrhealth.com')
+    }
+  }, [])
 
   function handleAdd() {
     if (inCart && cartItem) {
@@ -407,11 +378,13 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     }
   }
 
+  const showImage = isJoinSubdomain && therapy.image
+
   return (
     <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
       {therapy.featured ? (
         <>
-          {therapy.image && (
+          {showImage && (
             <div className="hidden md:flex w-40 h-40 flex-shrink-0 relative">
               <Image
                 src={therapy.image}
@@ -454,7 +427,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
         </>
       ) : (
         <>
-          {therapy.image && (
+          {showImage && (
             <div className="w-full h-32 relative mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden">
               <Image
                 src={therapy.image}
@@ -498,6 +471,26 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
 
           {/* Add to Cart */}
           {inCart && cartItem ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-brand-primary/70 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                In cart ({cartItem.quantity})
+              </span>
+              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors self-start">
+              <Plus className="w-4 h-4" />
+              {therapy.price !== null ? 'Add' : 'Request'}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
             <div className="flex items-center gap-2">
               <span className="text-xs text-brand-primary/70 flex items-center gap-1">
                 <Check className="w-3 h-3" />
