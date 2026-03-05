@@ -5,10 +5,11 @@ import crypto from 'crypto'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { name, email, phone, socialHandle } = body
+    const { firstName, lastName, email, phone, socialHandle } = body
+    const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
 
-    if (!name?.trim() || !email?.trim()) {
-      return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 })
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
+      return NextResponse.json({ error: 'First name, last name, email, and phone are required.' }, { status: 400 })
     }
 
     const normalizedEmail = email.trim().toLowerCase()
@@ -42,9 +43,10 @@ export async function POST(request: Request) {
 
     // Set visitor cookie (7 days)
     const cookieData = JSON.stringify({
-      name: name.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       email: normalizedEmail,
-      phone: phone?.trim() || '',
+      phone: phone.trim(),
       socialHandle: socialHandle?.trim() || '',
     })
 
@@ -62,7 +64,7 @@ export async function POST(request: Request) {
     })
 
     // Send welcome email (fire-and-forget)
-    sendClubWelcomeEmail(name.trim(), normalizedEmail).catch((err) =>
+    sendClubWelcomeEmail(firstName.trim(), normalizedEmail).catch((err) =>
       console.error('[club/signup] Email error (non-fatal):', err)
     )
 
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
   }
 }
 
-async function sendClubWelcomeEmail(name: string, email: string) {
+async function sendClubWelcomeEmail(firstName: string, email: string) {
   if (!process.env.RESEND_API_KEY) return
 
   const { Resend } = await import('resend')
@@ -93,7 +95,7 @@ async function sendClubWelcomeEmail(name: string, email: string) {
     <div style="text-align: center; margin-bottom: 40px;">
       <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #2A4542;">CULTR</span>
     </div>
-    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 16px;">Welcome to CULTR Club, ${name.split(' ')[0]}!</h1>
+    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 16px;">Welcome to CULTR Club, ${firstName}!</h1>
     <p style="text-align: center; color: #2A4542; opacity: 0.7; margin-bottom: 32px;">
       You now have access to browse our physician-supervised therapies and build your personalized wellness order.
     </p>

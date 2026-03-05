@@ -52,8 +52,13 @@ export async function POST(request: Request) {
       }
 
       // Return member data and set cookie
+      const nameParts = member.name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.slice(1).join(' ');
+      
       const memberData = {
-        name: member.name,
+        firstName,
+        lastName,
         email: member.email,
         phone: member.phone || '',
         socialHandle: member.social_handle || '',
