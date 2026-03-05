@@ -75,6 +75,18 @@ function JoinLandingInner() {
     setShowSignup(false)
   }, [])
 
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showSignup || showMobileCart) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showSignup, showMobileCart])
+
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
     setShowMobileCart(false)
@@ -92,6 +104,25 @@ function JoinLandingInner() {
     <div className="flex flex-col min-h-screen bg-brand-cream">
       {/* Signup Modal */}
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
+
+      {/* Order Success Banner — Reserve space to prevent layout shift on mobile */}
+      {orderSubmitted && (
+        <div className="py-8 px-6 bg-green-50 border-b-2 border-green-200">
+          <div className="max-w-5xl mx-auto flex flex-col items-center justify-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-200/50 flex items-center justify-center">
+              <Check className="w-6 h-6 text-green-600" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-xl md:text-2xl font-display font-bold text-green-700 mb-1">
+                Thank you for your order!
+              </h3>
+              <p className="text-base text-green-600 font-medium">
+                Order submitted successfully. Check your email for confirmation.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero with Background Image and Overlay Text */}
       <section className="relative h-[45vh] min-h-[320px] md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
@@ -126,24 +157,6 @@ function JoinLandingInner() {
         </div>
       </section>
 
-      {/* Order Success Banner */}
-      {orderSubmitted && (
-        <div className="py-8 px-6 bg-green-50 border-b-2 border-green-200">
-          <div className="max-w-5xl mx-auto flex flex-col items-center justify-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-green-200/50 flex items-center justify-center">
-              <Check className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-xl md:text-2xl font-display font-bold text-green-700 mb-1">
-                Thank you for your order!
-              </h3>
-              <p className="text-base text-green-600 font-medium">
-                Order submitted successfully. Check your email for confirmation.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
@@ -183,9 +196,9 @@ function JoinLandingInner() {
         </div>
       </main>
 
-      {/* Mobile Cart FAB */}
-      {cart.getItemCount() > 0 && !showMobileCart && (
-        <div className="fixed bottom-6 right-6 lg:hidden z-40">
+      {/* Mobile Cart FAB — Reserve space even when not visible to prevent layout shift */}
+      <div className="fixed bottom-6 right-6 lg:hidden z-40 h-[52px] flex items-center">
+        {cart.getItemCount() > 0 && !showMobileCart && (
           <button
             onClick={() => setShowMobileCart(true)}
             className="flex items-center gap-2.5 px-5 py-3.5 bg-brand-primary text-white rounded-full shadow-lg hover:bg-brand-primaryHover transition-all hover:scale-[1.02] border border-white/10"
@@ -193,8 +206,8 @@ function JoinLandingInner() {
             <ShoppingCart className="w-5 h-5" />
             <span className="font-bold text-sm">{cart.getItemCount()} items</span>
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Mobile Cart Full-Screen Overlay */}
       {showMobileCart && (
@@ -341,8 +354,9 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
       {therapy.featured ? (
         <>
-          {showImage && (
-            <div className="flex w-32 h-32 md:w-40 md:h-40 flex-shrink-0 relative rounded-lg overflow-hidden">
+          {/* Reserved space for featured image — prevents layout shift */}
+          <div className="flex w-32 h-32 md:w-40 md:h-40 flex-shrink-0 relative rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
+            {showImage && (
               <Image
                 src={therapy.image}
                 alt={therapy.name}
@@ -352,8 +366,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
                 loading="lazy"
                 quality={85}
               />
-            </div>
-          )}
+            )}
+          </div>
           <div className="flex flex-col gap-1.5 min-w-0 flex-1">
             <div className="flex items-center gap-3">
               <span className="shrink-0 text-[9px] font-semibold uppercase tracking-widest bg-white/15 text-white/90 px-2.5 py-1 rounded-full border border-white/10">Flagship</span>
@@ -386,8 +400,9 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
         </>
       ) : (
         <>
-          {showImage && (
-            <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-8">
+          {/* Non-featured card image — reserved aspect ratio prevents layout shift */}
+          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-8 aspect-square">
+            {showImage && (
               <Image
                 src={therapy.image}
                 alt={therapy.name}
@@ -397,8 +412,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
                 loading="lazy"
                 quality={85}
               />
-            </div>
-          )}
+            )}
+          </div>
           <div className="flex items-start justify-between gap-2 mb-2">
             <h3 className="text-base font-display font-bold text-brand-primary">{therapy.name}</h3>
             <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-brand-secondary/70 bg-brand-primary/[0.05] px-2 py-0.5 rounded-full">
