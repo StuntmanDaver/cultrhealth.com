@@ -215,6 +215,12 @@ async function sendApprovalConfirmationToAdmin(data: {
   })
 }
 
+// TODO (Version 2): Implement Option A — Automated Payment Link
+// - Generate Stripe checkout link or QuickBooks invoice URL on approval
+// - Include "Pay Now" button in this email with one-click payment
+// - Customer completes payment automatically without manual admin follow-up
+// Currently using Option C (manual workaround): admin sends payment details separately
+
 async function sendApprovalEmailToCustomer(data: {
   name: string
   email: string
@@ -281,12 +287,23 @@ async function sendApprovalEmailToCustomer(data: {
       ` : ''}
     </div>
     <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 32px;">
-      <p style="margin: 0; font-weight: 600; font-size: 14px;">Status: Confirmed</p>
-      <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.7;">Our team will reach out within 1-2 business days with next steps.</p>
+      <p style="margin: 0; font-weight: 600; font-size: 14px;">Status: Confirmed by Medical Team</p>
+      <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.7;">Your order is approved and ready for payment processing.</p>
     </div>
+
+    <div style="background: #f5f0e8; border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #2A4542;">
+      <p style="margin: 0 0 12px; font-weight: 600; font-size: 14px; color: #2A4542;">Next Step: Payment</p>
+      <p style="margin: 0 0 12px; font-size: 14px; color: #2A4542CC;">
+        Our team will send you a payment link within 1-2 business days. You can reference your order number below when following up.
+      </p>
+      <p style="margin: 0; font-size: 13px; color: #2A454280;">
+        <strong>Your Order Number:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 600;">${data.orderNumber}</code>
+      </p>
+    </div>
+
     <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #2A454215;">
       <p style="color: #2A454260; font-size: 12px; text-align: center; margin: 0;">CULTR Health — Personalized Longevity Medicine</p>
-      <p style="color: #2A454240; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com</p>
+      <p style="color: #2A454240; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com or reply to this email.</p>
     </div>
   </div>
 </body>

@@ -113,46 +113,63 @@ export async function POST(request: Request) {
     }
     console.log('[club/orders] Using siteUrl:', siteUrl, 'from host:', hostHeader)
 
-    // Send emails
+    // Send emails independently (not with Promise.all, so one failure doesn't block the other)
+    let customerEmailSent = false
+    let adminEmailSent = false
+
     try {
-      await Promise.all([
-        sendOrderConfirmationToCustomer({
-          name: name.trim(),
-          email: normalizedEmail,
-          orderNumber,
-          items,
-          subtotalBeforeDiscount,
-          discountAmount,
-          subtotal,
-          couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
-          discountPercent,
-        }),
-        sendOrderApprovalRequestToAdmin({
-          name: name.trim(),
-          email: normalizedEmail,
-          phone: phone?.trim() || '',
-          orderNumber,
-          orderId: orderId || orderNumber,
-          items,
-          subtotalBeforeDiscount,
-          discountAmount,
-          subtotal,
-          couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
-          discountPercent,
-          notes: notes || '',
-          approvalToken,
-          siteUrl,
-        }),
-      ])
-      console.log('[club/orders] Emails sent successfully for', orderNumber)
+      await sendOrderConfirmationToCustomer({
+        name: name.trim(),
+        email: normalizedEmail,
+        orderNumber,
+        items,
+        subtotalBeforeDiscount,
+        discountAmount,
+        subtotal,
+        couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+        discountPercent,
+      })
+      customerEmailSent = true
     } catch (err) {
-      console.error('[club/orders] Email send failed:', err)
+      console.error('[club/orders] Customer confirmation email failed:', err)
+    }
+
+    try {
+      await sendOrderApprovalRequestToAdmin({
+        name: name.trim(),
+        email: normalizedEmail,
+        phone: phone?.trim() || '',
+        orderNumber,
+        orderId: orderId || orderNumber,
+        items,
+        subtotalBeforeDiscount,
+        discountAmount,
+        subtotal,
+        couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+        discountPercent,
+        notes: notes || '',
+        approvalToken,
+        siteUrl,
+      })
+      adminEmailSent = true
+    } catch (err) {
+      console.error('[club/orders] Admin approval request email failed:', err)
+    }
+
+    if (customerEmailSent && adminEmailSent) {
+      console.log('[club/orders] Both emails sent successfully for', orderNumber)
+    } else if (customerEmailSent || adminEmailSent) {
+      console.warn('[club/orders] Partial email failure for', orderNumber, { customerEmailSent, adminEmailSent })
+    } else {
+      console.error('[club/orders] Both emails failed for', orderNumber)
     }
 
     return NextResponse.json({
       success: true,
       orderNumber,
       orderId,
+      customerEmailSent,
+      adminEmailSent,
     })
   } catch (error) {
     console.error('[club/orders] Error:', error)
@@ -347,8 +364,14 @@ async function sendOrderApprovalRequestToAdmin(data: {
     </div>
     ` : ''}
 
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${data.siteUrl}/api/admin/club-orders/${data.orderId}/approve?token=${data.approvalToken}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">
+        Approve This Order
+      </a>
+    </div>
+
     <p style="color: #666; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
-      Process this order manually. Contact the customer at <strong>${data.email}</strong> to finalize payment and next steps.
+      If you prefer, you can also <a href="${data.siteUrl}/admin/club-orders" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
     </p>
   </div>
 </body>
