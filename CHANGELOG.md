@@ -4,6 +4,44 @@ All notable changes to the Cultr Health Website project are documented in this f
 
 ---
 
+## [2026-03-05] - Join Page Mobile Responsive Design Fixes
+
+### Summary
+Fixed three critical mobile layout issues on the join landing page (`join.cultrhealth.com`): hero image now shows full CULTR watermark without cropping, hero text moved from image overlay to dedicated section, and featured R3TA product card image now displays centered and enlarged on mobile for parity with other product cards.
+
+### Changed
+
+#### Hero Banner Layout
+- **Hero image container** — Changed from fixed viewport height (`h-[45vh]`) to aspect ratio container (`aspect-[4/3]`) on mobile; desktop reverts to fixed height (`md:h-[50vh]`)
+- **Result** — CULTR watermark text no longer crops on right edge of mobile screens (375px viewports)
+
+#### Hero Text Section
+- **Text overlay removal** — Removed absolutely-positioned text overlay from inside hero image
+- **Dedicated content section** — Created separate "Hero Copy Section" below banner with:
+  - Cream background (`bg-brand-cream`) with bottom border
+  - Dark text styling (`text-brand-primary` and `text-brand-secondary`)
+  - Responsive padding (`px-6 py-8 md:px-8 md:py-12`)
+  - Preserved scroll reveal animations for visual consistency
+- **Result** — Clean typographic hierarchy; text no longer competes visually with hero image
+
+#### Featured Card (R3TA) Image Display
+- **Image container responsiveness** — Changed from fixed small dimensions (`w-32 h-32 md:w-40 md:h-40`) to:
+  - Mobile: `w-full flex items-center justify-center py-10` (centered, full-width)
+  - Desktop: `md:w-40 md:h-40 md:flex-shrink-0` (reverts to side-by-side layout)
+- **Image render size** — Increased from 160px to 220px on mobile
+- **Image optimization** — Added `unoptimized` flag for compatibility
+- **Result** — R3TA product image displays at visual parity with non-featured cards on mobile
+
+### Technical Details
+- **File modified** — `app/join/JoinLandingClient.tsx`
+  - Lines 127-156: Hero image + hero copy section
+  - Lines 354-369: Featured card image container
+- **Build status** — ✅ Compiles successfully with `npm run build`
+- **Deployment** — Staged on branch `staging` and ready at `join.cultrhealth.com/join`
+- **Commit** — b0c2173 "feat: increase product image sizes on mobile for better visibility"
+
+---
+
 ## [2026-02-26] - CULTR Club Landing Page, QuickBooks, Care Team & Brand Finalization
 
 ### Summary
