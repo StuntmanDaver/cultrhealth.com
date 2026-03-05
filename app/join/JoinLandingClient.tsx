@@ -92,28 +92,59 @@ function JoinLandingInner() {
       {/* Signup Modal */}
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
 
+      {/* Welcome Banner — styled like staging's ClubBanner */}
+      <section className="px-6 pt-8 md:pt-10 pb-2">
+        <div className="max-w-6xl mx-auto">
+          <div className="p-8 md:p-12 rounded-3xl bg-gradient-to-br from-[#D8F3DC] to-[#B7E4C7] border-2 border-[#9DD4B3] shadow-sm">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-block px-3 py-1.5 rounded-full bg-cultr-forest text-white text-xs font-bold tracking-wider uppercase">
+                    Personalized Order
+                  </span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-3 leading-tight">
+                  Build Your Wellness Stack
+                </h2>
+                <p className="text-cultr-forest/80 text-base md:text-lg max-w-xl leading-relaxed">
+                  Choose from our core therapies, build a protocol tailored to your goals, and let our medical team review your selections before next steps.
+                </p>
+              </div>
+
+              <div className="flex-shrink-0 lg:w-[300px]">
+                <div className="bg-white rounded-2xl shadow-md p-7 border border-white/60 text-center space-y-3">
+                  <div className="flex justify-center">
+                    <div className="w-12 h-12 rounded-full bg-cultr-sage flex items-center justify-center">
+                      <Check className="w-6 h-6 text-cultr-forest" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-cultr-forest font-display font-bold text-lg">Zero Charges Today</p>
+                    <p className="text-cultr-textMuted text-sm mt-1">Medical team review before invoicing</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero */}
-      <section className="relative pt-20 pb-14 md:pt-24 md:pb-16 px-6 grad-dark-glow text-white overflow-hidden">
+      <section className="relative pt-16 pb-12 md:pt-20 md:pb-16 px-6 grad-dark-glow text-white overflow-hidden">
         {/* Decorative glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <ScrollReveal direction="none" duration={800}>
-            <div className="flex flex-col items-center mb-8">
+            <div className="flex flex-col items-center mb-6">
               <div className="flex flex-col items-end leading-none">
-                <span className="font-display font-bold text-4xl md:text-5xl lg:text-6xl uppercase text-white">CULTR</span>
-                <span className="font-display font-medium text-[9px] tracking-[0.12em] uppercase text-white/50 mt-0.5">Health</span>
+                <span className="font-display font-bold text-4xl md:text-5xl lg:text-6xl uppercase text-white">Core Therapies</span>
               </div>
             </div>
-            <div className="w-12 h-px bg-white/20 mx-auto mb-6" />
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-5 leading-tight">
-              Core Therapies
-            </h1>
-            <p className="text-sm uppercase tracking-widest text-brand-cream/40 font-medium mb-2">CULTR Club — Free Membership</p>
+            <p className="text-sm uppercase tracking-widest text-brand-cream/40 font-medium mb-4">Browse & Add to Cart</p>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-base md:text-lg text-brand-cream/70 max-w-xl mx-auto leading-relaxed">
-              Add therapies to your cart and
-              submit your order for medical team review.
+              Add therapies to your cart and submit your order for medical team review.
             </p>
             {member && (
               <p className="mt-4 text-sm text-brand-cream/40 font-medium">
