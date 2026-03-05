@@ -2,9 +2,6 @@
 .agents
 .cursor
 archive
-*.png
-*.jpg
-*.jpeg
 *.pdf
 "*Screenshot*"
 "*AGENT*"
@@ -12,3 +9,8 @@ archive
 "*fix_plan*"
 "*PROMPT*"
 *.output
+# Exclude root images but keep public/images for product bottles and hero images
+/public/*.png
+/public/*.jpg
+/public/*.jpeg
+!/public/images
