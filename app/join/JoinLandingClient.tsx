@@ -93,67 +93,36 @@ function JoinLandingInner() {
       {/* Signup Modal */}
       {showSignup && <SignupModal onComplete={handleSignupComplete} />}
 
-      {/* Hero with Background Image */}
+      {/* Hero with Background Image and Overlay Text */}
       <section className="relative h-[45vh] min-h-[320px] md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
           className="w-full h-full object-cover object-center"
         />
-        {/* Gradient overlay for text readability */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to right, rgba(43,69,66,0.5) 0%, rgba(43,69,66,0.3) 40%, rgba(43,69,66,0.1) 65%, transparent 85%)' }} />
-        <div className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.45) 65%, transparent 100%)' }} />
 
-        {/* Content */}
-        <div className="absolute inset-0 z-10 flex items-center justify-end">
-          <div className="px-6 md:px-12">
-            <div className="max-w-md text-center md:text-left">
+        {/* Text Overlay with Translucent Background */}
+        <div className="absolute inset-0 z-10 flex items-center">
+          <div className="px-6 md:px-8 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
+            <div className="max-w-md">
               <ScrollReveal direction="none" duration={800}>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
                   Core Therapies
                 </h1>
-                <p className="text-sm uppercase tracking-widest text-brand-cream/50 font-medium mb-3">Browse & Build Your Stack</p>
+                <p className="text-sm uppercase tracking-widest text-white/70 font-medium mb-3">Browse & Build Your Stack</p>
               </ScrollReveal>
               <ScrollReveal delay={200} direction="none" duration={800}>
-                <p className="text-base md:text-lg text-brand-cream/80 max-w-xl leading-relaxed drop-shadow">
+                <p className="text-base md:text-lg text-white/90 max-w-xl leading-relaxed drop-shadow">
                   Add therapies to your cart and submit your order for medical team review.
                 </p>
                 {member && (
-                  <p className="mt-4 text-sm text-brand-cream/60 font-medium">
+                  <p className="mt-4 text-sm text-white/70 font-medium">
                     Welcome, {member.name.split(' ')[0]}
                   </p>
                 )}
               </ScrollReveal>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Info banner */}
-      <section className="py-4 px-4 md:px-6 bg-brand-primary/[0.04] border-b border-brand-secondary/10">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand-primary/8 flex items-center justify-center shrink-0">
-              <Shield className="w-3.5 h-3.5 text-brand-primary" />
-            </div>
-            <div>
-              <p className="font-medium text-brand-primary text-sm">
-                Order Review Required
-              </p>
-              <p className="text-xs text-brand-secondary/80">
-                All orders reviewed by our medical team before invoicing. No payment taken today.
-              </p>
-            </div>
-          </div>
-          {hasItems && (
-            <button
-              onClick={() => setShowMobileCart(true)}
-              className="shrink-0 lg:hidden inline-flex items-center justify-center py-2.5 px-5 bg-brand-primary text-white font-medium text-sm rounded-full transition-all hover:bg-brand-primaryHover"
-            >
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Cart ({cart.getItemCount()})
-            </button>
-          )}
         </div>
       </section>
 
@@ -373,7 +342,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       {therapy.featured ? (
         <>
           {showImage && (
-            <div className="hidden md:flex w-40 h-40 flex-shrink-0 relative rounded-lg overflow-hidden">
+            <div className="flex w-32 h-32 md:w-40 md:h-40 flex-shrink-0 relative rounded-lg overflow-hidden">
               <Image
                 src={therapy.image}
                 alt={therapy.name}
