@@ -291,7 +291,9 @@ async function sendOrderApprovalRequestToAdmin(data: {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #eee;">${item.name}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #eee;">
+            ${item.note ? `${item.name} — ${item.note}` : item.name}
+          </td>
           <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #eee; text-align: right;">
             ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : (item.pricingNote || 'TBD')}
@@ -303,7 +305,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   await resend.emails.send({
     from: fromEmail,
     to: adminEmail,
-    subject: `[ACTION REQUIRED] New Club Order — ${data.orderNumber}`,
+    subject: `New Club Order — ${data.orderNumber}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -323,7 +325,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
       <thead>
         <tr style="border-bottom: 2px solid #eee;">
-          <th style="text-align: left; padding: 8px 0;">Therapy</th>
+          <th style="text-align: left; padding: 8px 0;">Therapy / Dosage</th>
           <th style="text-align: center; padding: 8px 0;">Qty</th>
           <th style="text-align: right; padding: 8px 0;">Price</th>
         </tr>
@@ -347,13 +349,8 @@ async function sendOrderApprovalRequestToAdmin(data: {
     </div>
     ` : ''}
 
-    <div style="text-align: center; margin-top: 32px;">
-      <a href="${approveUrl}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">
-        APPROVE ORDER
-      </a>
-    </div>
-    <p style="text-align: center; font-size: 12px; color: #999; margin-top: 16px;">
-      Clicking approve will create a QuickBooks invoice and send the payment link to the customer.
+    <p style="color: #666; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
+      Process this order manually. Contact the customer at <strong>${data.email}</strong> to finalize payment and next steps.
     </p>
   </div>
 </body>

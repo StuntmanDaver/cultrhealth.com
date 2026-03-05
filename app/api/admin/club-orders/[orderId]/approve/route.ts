@@ -78,134 +78,36 @@ export async function POST(
       }, { status: 400 })
     }
 
-    // Validate QB is configured BEFORE starting approval
-    const realmId = process.env.QUICKBOOKS_REALM_ID
-    const clientId = process.env.QUICKBOOKS_CLIENT_ID
-    const clientSecret = process.env.QUICKBOOKS_CLIENT_SECRET
-
-    if (!realmId || !clientId || !clientSecret) {
-      console.error('[club-orders/approve] CRITICAL: QB not fully configured')
-      return NextResponse.json(
-        { error: 'QuickBooks configuration incomplete. Contact admin.' },
-        { status: 503 }
-      )
-    }
-
-    // QuickBooks invoice is REQUIRED — approval is blocked if QB fails
-    let qbInvoiceId: string
-    let qbInvoiceUrl: string | null = null
-
-    try {
-      const qb = await import('@/lib/quickbooks')
-      const accessToken = await qb.getAccessToken()
-
-      if (!accessToken) {
-        return NextResponse.json(
-          { error: 'QuickBooks is not configured. Cannot approve without generating an invoice.' },
-          { status: 503 }
-        )
-      }
-
-      const customerId = await qb.findOrCreateCustomer(
-        accessToken,
-        order.member_name,
-        order.member_email
-      )
-
-      if (!customerId) {
-        return NextResponse.json(
-          { error: 'Failed to create QuickBooks customer. Cannot approve without generating an invoice.' },
-          { status: 502 }
-        )
-      }
-
-      const items = order.items as OrderItem[]
-      const discountPercent = order.discount_percent ? Number(order.discount_percent) : 0
-      const invoice = await qb.createInvoice(accessToken, customerId, items, order.order_number, discountPercent, order.coupon_code || undefined)
-
-      if (!invoice) {
-        return NextResponse.json(
-          { error: 'Failed to create QuickBooks invoice. Cannot approve without generating an invoice.' },
-          { status: 502 }
-        )
-      }
-
-      qbInvoiceId = invoice.invoiceId
-      const sent = await qb.sendInvoice(accessToken, invoice.invoiceId, order.member_email)
-      // GET the invoice to reliably retrieve InvoiceLink — QB populates this field
-      // with the customer-facing payment URL once QB Payments is active.
-      const fetchedLink = await qb.getInvoiceLink(accessToken, invoice.invoiceId)
-      qbInvoiceUrl = fetchedLink || sent?.payNowLink || invoice.invoiceLink || null
-
-      console.log('[club-orders/approve] QB Invoice Link Debug:', {
-        invoiceId: invoice.invoiceId,
-        invoiceLink_fromCreate: invoice.invoiceLink,
-        payNowLink_fromSend: sent?.payNowLink,
-        invoiceLink_fromFetch: fetchedLink,
-        final_qbInvoiceUrl: qbInvoiceUrl,
-      })
-    } catch (qbError) {
-      console.error('[club-orders/approve] QuickBooks error:', qbError)
-      return NextResponse.json(
-        { error: 'QuickBooks error. Cannot approve without generating an invoice.' },
-        { status: 502 }
-      )
-    }
-
-    // Require a valid payment URL — a null link means the customer can't pay
-    if (!qbInvoiceUrl) {
-      console.error('[club-orders/approve] QB invoice created but no payment link returned. invoiceId:', qbInvoiceId)
-      return NextResponse.json(
-        { error: 'QB invoice was created but no payment link is available. Ensure QB Payments is active and retry.', qbInvoiceId },
-        { status: 502 }
-      )
-    }
-
+    // Send approval emails to customer and admin
     const emailData = {
       name: order.member_name,
       email: order.member_email,
       orderNumber: order.order_number,
-      invoiceUrl: qbInvoiceUrl,
       items: order.items as OrderItem[],
       subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
     }
 
-    // Send emails BEFORE updating DB status — if email fails, don't mark as invoice_sent
     try {
       await Promise.all([
         sendApprovalEmailToCustomer(emailData),
-        sendInvoiceCopyToSupport(emailData),
+        sendApprovalConfirmationToAdmin(emailData),
       ])
       console.log('[club-orders/approve] Approval emails sent for', order.order_number)
     } catch (err) {
-      console.error(
-        '[club-orders/approve] CRITICAL: Email send failed after QB invoice created.',
-        'QB invoice ID:', qbInvoiceId,
-        'Pay Now URL:', qbInvoiceUrl,
-        'Order:', order.order_number,
-        'Customer:', order.member_email,
-        'Error:', err
-      )
-      // Don't update status — order stays pending_approval so admin can retry
+      console.error('[club-orders/approve] Email send failed:', err)
       return NextResponse.json(
-        {
-          error: 'QB invoice created but customer email failed to send. Retry approval to resend.',
-          qbInvoiceId,
-          qbInvoiceUrl,
-        },
+        { error: 'Email send failed. Please retry approval.' },
         { status: 500 }
       )
     }
 
-    // Update order status only after emails succeed
+    // Update order status to approved
     await sql`
       UPDATE club_orders
       SET
-        status = 'invoice_sent',
+        status = 'approved',
         approved_at = NOW(),
         approved_by = ${session?.email || 'email_link'},
-        qb_invoice_id = ${qbInvoiceId},
-        qb_invoice_url = ${qbInvoiceUrl},
         updated_at = NOW()
       WHERE id = ${orderId}::uuid
     `
@@ -221,9 +123,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      status: 'invoice_sent',
-      qbInvoiceId,
-      qbInvoiceUrl,
+      status: 'approved',
     })
   } catch (error) {
     console.error('[club-orders/approve] Error:', error)
@@ -239,11 +139,10 @@ export async function GET(
   return POST(request, { params })
 }
 
-async function sendInvoiceCopyToSupport(data: {
+async function sendApprovalConfirmationToAdmin(data: {
   name: string
   email: string
   orderNumber: string
-  invoiceUrl: string | null  // always set — approval blocked if QB fails
   items: OrderItem[]
   subtotal: number
 }) {
@@ -272,7 +171,7 @@ async function sendInvoiceCopyToSupport(data: {
   await resend.emails.send({
     from: fromEmail,
     to: process.env.ADMIN_APPROVAL_EMAIL || 'admin@cultrhealth.com',
-    subject: `[Invoice Copy] ${data.orderNumber} — Sent to ${data.email}`,
+    subject: `[PROCESSED] Order Approved — ${data.orderNumber}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -281,7 +180,7 @@ async function sendInvoiceCopyToSupport(data: {
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
 
     <div style="background: #e8f5e9; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #2A4542;">
-      <strong>Invoice sent.</strong> The following invoice was emailed to <strong>${data.email}</strong> upon order approval.
+      <strong>Order approved.</strong> Confirmation email has been sent to <strong>${data.email}</strong>.
     </div>
 
     <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${data.orderNumber}</h2>
@@ -292,7 +191,7 @@ async function sendInvoiceCopyToSupport(data: {
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px;">
       <thead>
         <tr style="border-bottom: 2px solid #eee;">
-          <th style="text-align: left; padding: 8px 0;">Therapy</th>
+          <th style="text-align: left; padding: 8px 0;">Therapy / Dosage</th>
           <th style="text-align: center; padding: 8px 0;">Qty</th>
           <th style="text-align: right; padding: 8px 0;">Price</th>
         </tr>
@@ -306,15 +205,9 @@ async function sendInvoiceCopyToSupport(data: {
     </p>
     ` : ''}
 
-    <div style="background: #f5f5f5; border-radius: 8px; padding: 14px 16px; font-size: 14px; margin-bottom: 24px; word-break: break-all;">
-      <strong>QuickBooks Invoice Link (sent to customer):</strong><br/>
-      <a href="${data.invoiceUrl}" style="color: #2A4542;">${data.invoiceUrl}</a>
-    </div>
-    <div style="text-align: center;">
-      <a href="${data.invoiceUrl}" style="display: inline-block; background: #2A4542; color: white; padding: 12px 36px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 14px;">
-        View Invoice in QuickBooks
-      </a>
-    </div>
+    <p style="color: #666; font-size: 14px; margin-top: 24px;">
+      The order is now marked as approved. Next steps: contact the customer to finalize payment and shipping details.
+    </p>
 
   </div>
 </body>
@@ -326,7 +219,6 @@ async function sendApprovalEmailToCustomer(data: {
   name: string
   email: string
   orderNumber: string
-  invoiceUrl: string | null  // always set — approval blocked if QB fails
   items: OrderItem[]
   subtotal: number
 }) {
@@ -343,7 +235,7 @@ async function sendApprovalEmailToCustomer(data: {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #2A454210;">${item.name}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #2A454210;">${item.note ? `${item.name} — ${item.note}` : item.name}</td>
           <td style="padding: 8px 0; border-bottom: 1px solid #2A454210; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px 0; border-bottom: 1px solid #2A454210; text-align: right;">
             ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : (item.pricingNote || 'TBD')}
@@ -352,21 +244,10 @@ async function sendApprovalEmailToCustomer(data: {
     )
     .join('')
 
-  const paymentSection = `
-    <div style="text-align: center; margin: 32px 0;">
-      <a href="${data.invoiceUrl}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 48px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">
-        Pay Now
-      </a>
-    </div>
-    <p style="text-align: center; color: #2A454260; font-size: 13px;">
-      Click above to view your invoice and complete payment securely via QuickBooks.
-    </p>
-    `
-
   await resend.emails.send({
     from: fromEmail,
     to: data.email,
-    subject: `Your Order is Approved — ${data.orderNumber}`,
+    subject: `Your Order is Confirmed — ${data.orderNumber}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -376,25 +257,33 @@ async function sendApprovalEmailToCustomer(data: {
     <div style="text-align: center; margin-bottom: 40px;">
       <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #2A4542;">CULTR</span>
     </div>
-    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 8px;">Order Approved!</h1>
+    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 8px;">Order Confirmed!</h1>
     <p style="text-align: center; color: #2A454280; font-size: 14px; margin-bottom: 32px;">Order #${data.orderNumber}</p>
     <p style="margin-bottom: 24px;">Hi ${data.name.split(' ')[0]},</p>
     <p style="margin-bottom: 24px; color: #2A4542CC;">
-      Great news — your order has been reviewed and approved by our medical team.
+      Great news — your order has been reviewed and confirmed by our medical team.
     </p>
     <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #2A454210; margin-bottom: 24px;">
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <thead>
           <tr style="border-bottom: 2px solid #2A454215;">
-            <th style="text-align: left; padding: 8px 0; font-weight: 600;">Therapy</th>
+            <th style="text-align: left; padding: 8px 0; font-weight: 600;">Therapy / Dosage</th>
             <th style="text-align: center; padding: 8px 0; font-weight: 600;">Qty</th>
             <th style="text-align: right; padding: 8px 0; font-weight: 600;">Price</th>
           </tr>
         </thead>
         <tbody>${itemRows}</tbody>
       </table>
+      ${data.subtotal > 0 ? `
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215; text-align: right;">
+        <span style="font-weight: 700; font-size: 16px;">Total: $${data.subtotal.toFixed(2)}</span>
+      </div>
+      ` : ''}
     </div>
-    ${paymentSection}
+    <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 32px;">
+      <p style="margin: 0; font-weight: 600; font-size: 14px;">Status: Confirmed</p>
+      <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.7;">Our team will reach out within 1-2 business days with next steps.</p>
+    </div>
     <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #2A454215;">
       <p style="color: #2A454260; font-size: 12px; text-align: center; margin: 0;">CULTR Health — Personalized Longevity Medicine</p>
       <p style="color: #2A454240; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com</p>
