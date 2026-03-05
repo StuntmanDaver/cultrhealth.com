@@ -384,6 +384,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
                 fill
                 className="object-contain"
                 sizes="160px"
+                unoptimized
               />
             </div>
           )}
@@ -420,13 +421,14 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       ) : (
         <>
           {showImage && (
-            <div className="w-full h-32 relative mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden">
+            <div className="w-full h-32 relative mb-3 -mx-4 -mt-4 -mr-4 rounded-t-xl overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
               <Image
                 src={therapy.image}
                 alt={therapy.name}
                 fill
-                className="object-contain bg-gradient-to-b from-brand-cream to-brand-creamDark"
+                className="object-contain"
                 sizes="100%"
+                unoptimized
               />
             </div>
           )}
