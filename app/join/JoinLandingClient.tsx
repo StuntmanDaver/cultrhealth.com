@@ -134,7 +134,7 @@ function JoinLandingInner() {
 
         {/* Text Overlay with Translucent Background */}
         <div className="absolute inset-0 z-10 flex items-center">
-          <div className="px-6 md:px-8 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
+          <div className="px-6 md:px-8 md:ml-12 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
             <div className="max-w-md">
               <ScrollReveal direction="none" duration={800}>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
