@@ -134,7 +134,7 @@ function JoinLandingInner() {
 
         {/* Text Overlay with Translucent Background */}
         <div className="absolute inset-0 z-10 flex items-center">
-          <div className="px-6 md:px-8 md:ml-12 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
+          <div className="px-6 md:px-8 md:ml-24 py-8 rounded-lg" style={{ background: 'rgba(255, 255, 255, 0.15)' }}>
             <div className="max-w-md">
               <ScrollReveal direction="none" duration={800}>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
@@ -317,7 +317,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
             <p className="text-[11px] uppercase tracking-widest text-brand-secondary/50 font-medium">{section.subtitle}</p>
           </div>
         </div>
-        <p className="text-sm text-brand-secondary/80 max-w-2xl ml-0 md:ml-12 leading-relaxed">{section.description}</p>
+        <p className="text-sm text-brand-secondary/80 max-w-2xl ml-0 md:ml-24 leading-relaxed">{section.description}</p>
       </ScrollReveal>
 
       <div className="grid sm:grid-cols-2 gap-4">
