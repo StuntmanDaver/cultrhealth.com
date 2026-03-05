@@ -483,26 +483,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     </div>
   )
 }
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-brand-primary/70 flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                In cart ({cartItem.quantity})
-              </span>
-              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors self-start">
-              <Plus className="w-4 h-4" />
-              {therapy.price !== null ? 'Add' : 'Request'}
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  )
-}
+
+// =============================================
 // CART SUMMARY PANEL (matches CartClient right column)
 // =============================================
 
