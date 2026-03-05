@@ -361,14 +361,6 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const cart = useJoinCart()
   const inCart = cart.isInCart(therapy.id)
   const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
-  const [isJoinSubdomain, setIsJoinSubdomain] = useState(false)
-
-  useEffect(() => {
-    // Only show images on join.cultrhealth.com subdomain
-    if (typeof window !== 'undefined') {
-      setIsJoinSubdomain(window.location.hostname === 'join.cultrhealth.com')
-    }
-  }, [])
 
   function handleAdd() {
     if (inCart && cartItem) {
@@ -378,7 +370,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
     }
   }
 
-  const showImage = isJoinSubdomain && therapy.image
+  const showImage = !!therapy.image
 
   return (
     <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
