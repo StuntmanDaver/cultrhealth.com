@@ -38,7 +38,7 @@ const SECTION_ICONS = [Flame, Zap] as const
 
 function JoinLandingInner() {
   const [member, setMember] = useState<ClubMember | null>(null)
-  const [showSignup, setShowSignup] = useState(false)
+  const [showSignup, setShowSignup] = useState(true)
   const [showLogin, setShowLogin] = useState(false)
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
@@ -51,27 +51,35 @@ function JoinLandingInner() {
       const lsData = localStorage.getItem('cultr_club_member')
       if (lsData) {
         const data = JSON.parse(lsData)
-        setMember(data)
-        return
+        if (data?.firstName && data?.lastName && data?.email && data?.phone) {
+          setMember(data)
+          setShowSignup(false)
+          return
+        }
+        localStorage.removeItem('cultr_club_member') // clear old/invalid format
       }
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
         const data = JSON.parse(decodeURIComponent(stored.split('=')[1]))
-        setMember(data)
-        // Sync to localStorage for future visits
-        localStorage.setItem('cultr_club_member', JSON.stringify(data))
-        return
+        if (data?.firstName && data?.lastName && data?.email && data?.phone) {
+          setMember(data)
+          setShowSignup(false)
+          // Sync to localStorage for future visits
+          localStorage.setItem('cultr_club_member', JSON.stringify(data))
+          return
+        }
+        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax' // clear old/invalid format
       }
       // Check if this is a returning member (logged out after placing an order)
       const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
       if (hasOrdered) {
         setShowLogin(true)
+        setShowSignup(false)
         return
       }
-
-      setShowSignup(true)
+      // New user — showSignup stays true (already the default)
     } catch {
-      setShowSignup(true)
+      // showSignup stays true (already the default)
     }
   }, [])
 
@@ -108,14 +116,6 @@ function JoinLandingInner() {
     // Set persistent flag so returning members trigger login gate
     localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
-
-  if (!member && !showSignup && !showLogin) {
-    return (
-      <div className="min-h-screen grad-page flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-primary/40" />
-      </div>
-    )
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-cream">
@@ -287,7 +287,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
           <div className="flex flex-col items-end leading-none relative z-10">
             <span className="font-display font-bold text-2xl uppercase text-white">CULTR</span>
-            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 mt-0.5">Health</span>
+            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 -mt-0.5">Health</span>
           </div>
         </div>
 
@@ -366,7 +366,7 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
           <div className="flex flex-col items-end leading-none relative z-10">
             <span className="font-display font-bold text-2xl uppercase text-white">CULTR</span>
-            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 mt-0.5">Health</span>
+            <span className="font-display font-medium text-[8px] tracking-[0.14em] uppercase text-white/40 -mt-0.5">Health</span>
           </div>
         </div>
 

@@ -51,7 +51,17 @@ const nextConfig = {
       },
       // Authenticated/dynamic pages: never cache (HIPAA compliance)
       {
-        source: '/(dashboard|library|intake|renewal|admin|creators/portal)/:path*',
+        source: '/(dashboard|library|intake|renewal|admin|creators/portal|join)/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+      // Join page root: never cache (serves personalized content)
+      {
+        source: '/join',
         headers: [
           {
             key: 'Cache-Control',
