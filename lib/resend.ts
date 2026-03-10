@@ -173,12 +173,12 @@ interface WelcomeEmailData {
   name: string
   email: string
   planName: string
-  healthiePortalUrl: string
+  dashboardUrl: string
   stripePortalUrl?: string
 }
 
 export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailResult> {
-  const { name, email, planName, healthiePortalUrl, stripePortalUrl } = data
+  const { name, email, planName, dashboardUrl, stripePortalUrl } = data
   const firstName = name.split(' ')[0]
 
   const content = `
@@ -213,15 +213,15 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailRes
     </div>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${healthiePortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
-        Access Patient Portal
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        Go to Your Dashboard
       </a>
     </div>
     
     <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
       <p style="color: #888; font-size: 14px; margin: 0;">
         <strong style="color: #fff;">Need help?</strong> Our care team is here for you. 
-        Simply reply to this email or message us through the patient portal.
+        Simply reply to this email or message us through the member dashboard.
       </p>
     </div>
     
@@ -264,13 +264,13 @@ interface BookingConfirmationData {
   appointmentType: string
   appointmentDate: Date
   providerName?: string
-  healthiePortalUrl: string
+  dashboardUrl: string
   isVideo: boolean
   meetingLink?: string
 }
 
 export async function sendBookingConfirmation(data: BookingConfirmationData): Promise<EmailResult> {
-  const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink } = data
+  const { name, email, appointmentType, appointmentDate, providerName, dashboardUrl, isVideo, meetingLink } = data
   const firstName = name.split(' ')[0]
 
   // Format date nicely
@@ -335,8 +335,8 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     </div>
     ` : `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${healthiePortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
-        View in Patient Portal
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+        View in Dashboard
       </a>
     </div>
     `}
@@ -346,7 +346,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
         Before Your Appointment
       </p>
       <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
-        <li style="margin-bottom: 6px;">Complete all intake forms in the patient portal</li>
+        <li style="margin-bottom: 6px;">Complete all intake forms in the member dashboard</li>
         <li style="margin-bottom: 6px;">Have your ID ready for verification</li>
         <li style="margin-bottom: 6px;">Prepare a list of current medications</li>
         ${isVideo ? '<li>Test your camera and microphone</li>' : '<li>Arrive 10 minutes early</li>'}
@@ -354,7 +354,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
     </div>
     
     <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
-      Need to reschedule? <a href="${healthiePortalUrl}" style="color: #c9a962; text-decoration: none;">Manage your appointment</a> in the patient portal.
+      Need to reschedule? <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none;">Manage your appointment</a> in the member dashboard.
     </p>
   `
 
@@ -390,14 +390,14 @@ interface AppointmentReminderData {
   appointmentType: string
   appointmentDate: Date
   providerName?: string
-  healthiePortalUrl: string
+  dashboardUrl: string
   isVideo: boolean
   meetingLink?: string
   hoursUntil: number  // 24, 2, etc.
 }
 
 export async function sendAppointmentReminder(data: AppointmentReminderData): Promise<EmailResult> {
-  const { name, email, appointmentType, appointmentDate, providerName, healthiePortalUrl, isVideo, meetingLink, hoursUntil } = data
+  const { name, email, appointmentType, appointmentDate, providerName, dashboardUrl, isVideo, meetingLink, hoursUntil } = data
   const firstName = name.split(' ')[0]
 
   const timeOptions: Intl.DateTimeFormatOptions = {
@@ -450,7 +450,7 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
     </div>
     ` : `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${healthiePortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
         View Appointment
       </a>
     </div>
@@ -497,7 +497,7 @@ interface PostVisitFollowUpData {
   appointmentType: string
   appointmentDate: Date
   providerName?: string
-  healthiePortalUrl: string
+  dashboardUrl: string
   prescriptionsSent?: boolean
   labsOrdered?: boolean
   followUpWeeks?: number
@@ -511,7 +511,7 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     appointmentType,
     appointmentDate,
     providerName,
-    healthiePortalUrl,
+    dashboardUrl,
     prescriptionsSent,
     labsOrdered,
     followUpWeeks,
@@ -572,7 +572,7 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     ` : ''}
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${healthiePortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         View Visit Summary
       </a>
     </div>
@@ -584,21 +584,21 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
       <table style="width: 100%;">
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${healthiePortalUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
               → Message your care team
             </a>
           </td>
         </tr>
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${healthiePortalUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
               → Book follow-up appointment
             </a>
           </td>
         </tr>
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${healthiePortalUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
               → View lab results
             </a>
           </td>
@@ -608,7 +608,7 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     
     <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
       <p style="color: #888; font-size: 13px; margin: 0; line-height: 1.6;">
-        <strong style="color: #fff;">Questions?</strong> Message us anytime through the patient portal. 
+        <strong style="color: #fff;">Questions?</strong> Message us anytime through the member dashboard. 
         For urgent medical concerns, please call 911 or visit your nearest emergency room.
       </p>
     </div>
@@ -1258,7 +1258,7 @@ export async function sendCancellationEmail(data: CancellationEmailData): Promis
     <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
         You will continue to have access to your member benefits until the end of your current billing period. 
-        Your Healthie patient portal account will remain accessible for your medical records.
+        Your member dashboard will remain accessible for your medical records.
       </p>
     </div>
     

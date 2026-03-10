@@ -15,10 +15,9 @@ import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton
 import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm';
 import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED } from '@/lib/config/payments';
 
-// Initialize Stripe with Healthie's publishable key for HIPAA-compliant tokenization
-// Card data goes directly to Stripe (via Healthie's Stripe Connect) - never touches our servers
+// Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_HEALTHIE_STRIPE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
 );
 
 // Card Element styling
@@ -81,8 +80,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
 
     try {
       // Create a token from the card element
-      // This sends card data directly to Stripe (via Healthie's Stripe Connect)
-      // Card data never touches our servers - HIPAA compliant
+      // Card data goes directly to Stripe - never touches our servers
       const { token, error: tokenError } = await stripe.createToken(cardElement);
 
       if (tokenError) {
@@ -97,7 +95,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
         return;
       }
 
-      // Send the token to our API to complete checkout via Healthie
+      // Send the token to our API to complete checkout
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,7 +116,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
       }
 
       // Success - redirect to success page
-      onSuccess(data.redirectUrl || `/success?provider=healthie&plan=${plan.slug}`);
+      onSuccess(data.redirectUrl || `/success?provider=stripe&plan=${plan.slug}`);
     } catch (err) {
       console.error('Checkout error:', err);
       onError(err instanceof Error ? err.message : 'An error occurred during checkout');
@@ -235,7 +233,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe');
 
-  // Determine primary card payment provider (Stripe Elements/Healthie vs Authorize.net)
+  // Determine primary card payment provider (Stripe vs Authorize.net)
   const primaryProvider = getPrimaryPaymentProvider();
   const useAuthorizeNet = primaryProvider === 'authorize_net' && AUTHORIZE_NET_ENABLED;
 
@@ -504,7 +502,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   />
                 </div>
               ) : (
-                /* Stripe Elements via Healthie (HIPAA-compliant) */
+                /* Stripe Elements */
                 <Elements stripe={stripePromise}>
                   <CheckoutForm 
                     plan={plan}
@@ -625,7 +623,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             <ol className="space-y-4">
               {[
                 'Your payment is processed securely via our HIPAA-compliant system',
-                'You\'ll receive a welcome email with your Healthie portal login',
+                'You\'ll receive a welcome email with your dashboard login',
                 'Complete your intake forms (takes ~15 minutes)',
                 'Book your first consult with a provider',
               ].map((step, i) => (

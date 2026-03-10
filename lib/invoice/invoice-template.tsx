@@ -237,7 +237,7 @@ export function InvoiceDocument({ data }: InvoiceDocumentProps) {
   const getPaymentMethodDisplay = (method: string, provider: string) => {
     const providerNames: Record<string, string> = {
       stripe: 'Credit Card (Stripe)',
-      healthie: 'Credit Card (Healthie)',
+      legacy: 'Credit Card (Legacy)',
       authorize_net: 'Credit Card (Authorize.net)',
       klarna: 'Klarna - Pay in 4',
       affirm: 'Affirm Financing',

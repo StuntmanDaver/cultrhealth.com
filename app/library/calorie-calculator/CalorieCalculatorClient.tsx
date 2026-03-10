@@ -577,7 +577,7 @@ function MealPlanModal({
 
 // --- Main component ---
 
-export function CalorieCalculatorClient({ email }: { email: string }) {
+export function CalorieCalculatorClient({ email, backHref = '/library' }: { email?: string; backHref?: string }) {
   // Body inputs
   const [sex, setSex] = useState<Sex>('male')
   const [units, setUnits] = useState<UnitSystem>('imperial')
@@ -684,7 +684,7 @@ export function CalorieCalculatorClient({ email }: { email: string }) {
       <section className="py-8 sm:py-12 px-4 sm:px-6 grad-dark text-white">
         <div className="max-w-5xl mx-auto">
           <Link
-            href="/library"
+            href={backHref}
             className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />

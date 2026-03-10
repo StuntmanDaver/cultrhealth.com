@@ -31,9 +31,9 @@ import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton
 import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm'
 import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED } from '@/lib/config/payments'
 
-// Initialize Stripe with Healthie's publishable key for HIPAA-compliant tokenization
+// Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_HEALTHIE_STRIPE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
 )
 
 // Card Element styling
@@ -96,29 +96,13 @@ function ProductCheckoutForm({
 
     try {
       // Create a token from the card element
-      // Card data goes directly to Stripe (via Healthie) - HIPAA compliant
-      const { token, error: tokenError } = await stripe.createToken(cardElement)
-
-      if (tokenError) {
-        setCardError(tokenError.message || 'Invalid card details')
-        setIsLoading(false)
-        return
-      }
-
-      if (!token) {
-        setCardError('Failed to process card')
-        setIsLoading(false)
-        return
-      }
-
-      // Send to our API for Healthie checkout
+      // Create Stripe checkout session via our API
       const response = await fetch('/api/checkout/product', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items,
           email,
-          stripeToken: token.id,
           firstName,
           lastName,
         }),
@@ -130,8 +114,15 @@ function ProductCheckoutForm({
         throw new Error(data.error || 'Checkout failed')
       }
 
+      // Redirect to Stripe's hosted checkout page
+      if (data.checkoutUrl) {
+        clearCart()
+        window.location.href = data.checkoutUrl
+        return
+      }
+
       clearCart()
-      onSuccess(data.redirectUrl || `/success?provider=healthie&type=product&order_id=${data.orderId}`)
+      onSuccess(data.redirectUrl || `/success?provider=stripe&type=product`)
     } catch (err) {
       console.error('Product checkout error:', err)
       onError(err instanceof Error ? err.message : 'Checkout failed')
@@ -218,7 +209,7 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
   const [supplementSubmitted, setSupplementSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Determine primary card payment provider (Stripe Elements/Healthie vs Authorize.net)
+  // Determine primary card payment provider (Stripe vs Authorize.net)
   const primaryProvider = getPrimaryPaymentProvider()
   const useAuthorizeNet = primaryProvider === 'authorize_net' && AUTHORIZE_NET_ENABLED
 

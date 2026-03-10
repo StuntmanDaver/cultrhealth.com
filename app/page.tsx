@@ -447,8 +447,8 @@ export default function HomePage() {
                   </div>
                   <h3 className="font-display font-bold text-cultr-forest">{provider.name}</h3>
                   <p className="text-sm text-cultr-textMuted mt-1">{provider.specialty}</p>
-                  <p className="text-xs text-cultr-textMuted mt-1">{provider.credentials}</p>
-                  <p className="text-xs text-cultr-textMuted">{provider.yearsExperience}+ years experience</p>
+                  {provider.credentials && <p className="text-xs text-cultr-textMuted mt-1">{provider.credentials}</p>}
+                  {provider.yearsExperience > 0 && <p className="text-xs text-cultr-textMuted">{provider.yearsExperience}+ years experience</p>}
                   {provider.bio && (
                     <p className="text-xs text-cultr-textMuted mt-3 leading-relaxed">{provider.bio}</p>
                   )}

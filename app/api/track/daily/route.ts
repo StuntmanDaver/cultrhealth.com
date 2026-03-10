@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Note: Using customerId as user_id since that's our unique identifier
     const result = await createOrUpdateDailyLog({
       user_id: session.customerId,
-      healthie_patient_id: body.healthie_patient_id,
+      asher_patient_id: body.asher_patient_id,
       log_date: body.log_date,
       energy_level: body.energy_level,
       mood_rating: body.mood_rating,

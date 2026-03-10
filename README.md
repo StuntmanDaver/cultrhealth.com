@@ -357,18 +357,6 @@ DEBUG=cultr:*
 
 ---
 
-## Migration from Healthie
-
-This project was previously integrated with Healthie and has been migrated to Asher Med Partner Portal. Legacy Healthie code remains in the codebase for reference:
-
-- `lib/healthie-api.ts` - Old Healthie API client (deprecated)
-- Tests referencing Healthie
-- Some database fields may still reference Healthie IDs
-
-**Important:** New development should use the Asher Med integration exclusively. The Healthie integration is no longer maintained.
-
----
-
 ## Contributing
 
 ### Development Workflow

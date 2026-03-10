@@ -56,7 +56,6 @@ This file provides guidance to Claude Code when working with the CULTR Health We
 | **Curator.io** | Social media feed aggregation (Community page) | Feed IDs via env vars |
 | **Google Analytics** | Page tracking, conversion events | Measurement ID |
 | **QuickBooks Online** | Invoice creation, customer management, payment recording for club orders | OAuth2 (tokens in DB) |
-| **Healthie** (deprecated) | Legacy EHR integration — migrated to Asher Med | API key |
 
 ### Dev Dependencies
 - **Testing:** Vitest ^4.0.18 + @testing-library/react ^16.3.2 + @testing-library/jest-dom ^6.9.1
@@ -234,8 +233,7 @@ app/                              # Next.js 14 App Router
     │   ├── stripe/route.ts       # Stripe webhook handler
     │   ├── affirm/route.ts       # Affirm webhook
     │   ├── klarna/route.ts       # Klarna webhook
-    │   ├── authorize-net/route.ts # Authorize.net webhook
-    │   └── healthie/route.ts     # Healthie webhook (legacy)
+    │   └── authorize-net/route.ts # Authorize.net webhook
     │
     ├── creators/
     │   ├── apply/route.ts        # Creator application submission
@@ -300,7 +298,6 @@ app/                              # Next.js 14 App Router
     │   ├── approve-commissions/route.ts  # Auto-approve commissions after 30-day window
     │   └── update-tiers/route.ts         # Auto-update creator tiers by recruit count
     │
-    ├── healthie/sso-token/route.ts       # Legacy Healthie SSO
     └── waitlist/route.ts                  # Waitlist signup
 ```
 
@@ -393,7 +390,6 @@ lib/
 ├── config/                       # Configuration files (11 files)
 │   ├── affiliate.ts              # Affiliate types, commission config (10% direct, 20% cap), tier config, FTC disclosures
 │   ├── asher-med.ts              # Asher Med API configuration
-│   ├── healthie.ts               # Healthie config (deprecated)
 │   ├── links.ts                  # Centralized URL registry (social, internal routes, external services)
 │   ├── payments.ts               # Payment provider configuration
 │   ├── plans.ts                  # Membership tiers: Club ($0), Core ($199), Catalyst+ ($499), Concierge ($1099)
@@ -441,8 +437,6 @@ lib/
 ├── cart-context.tsx              # Shopping cart React context
 ├── data-normalization.ts         # Data normalization utilities
 ├── db.ts                         # Database connection & query utilities (@vercel/postgres)
-├── healthie-api.ts               # Healthie GraphQL client (deprecated)
-├── healthie-sso.ts               # Healthie SSO (deprecated)
 ├── library-content.ts            # Library content loading & rendering
 ├── peptide-calculator.ts         # Peptide dosage calculator (syringe visualization)
 ├── protocol-templates.ts         # Treatment protocol templates
@@ -506,7 +500,6 @@ tests/                            # Test suite (Vitest + React Testing Library)
 │   └── protocol-engine.test.ts
 └── lib/
     ├── auth.test.ts
-    ├── healthie-api.test.ts
     ├── library-content.test.ts
     ├── plans.test.ts
     └── protocol-templates.test.ts
@@ -1026,14 +1019,13 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Coverage target:** Critical user paths (auth, checkout, intake forms)
 - **Test location:** `tests/` directory organized by type (`api/`, `components/`, `integration/`, `lib/`)
 - **Run:** `npm test`
-- **8 test files** covering: auth, plans, protocol templates, library content, healthie API, TierGate component, protocol generation API, protocol engine integration
+- **7 test files** covering: auth, plans, protocol templates, library content, TierGate component, protocol generation API, protocol engine integration
 
 ---
 
 ## Known Technical Debt
 
 ### Legacy/Deprecated Code
-- **Healthie integration** (`lib/healthie-api.ts`, `lib/healthie-sso.ts`, `lib/config/healthie.ts`, `app/api/healthie/`, `app/api/webhook/healthie/`) — Deprecated, migrated to Asher Med. Kept during transition.
 - **Root-level components** (`components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx`) — Legacy, superseded by `components/site/` equivalents.
 - **`components/sections/`** (9 files: Hero, Services, About, HowItWorks, Results, Pricing, Testimonials, FAQ, Waitlist) — NOT imported anywhere. The homepage builds all sections inline in `app/page.tsx`. These are legacy/unused.
 - **`class-variance-authority`** — Listed in `package.json` dependencies but never imported or used.

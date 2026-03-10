@@ -371,7 +371,7 @@ export function BiomarkerTrends({
         <AlertCircle className="w-12 h-12 mx-auto text-gray-400 mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">No Biomarker Data</h3>
         <p className="text-gray-500 max-w-md mx-auto">
-          Upload your lab results or connect with Healthie to start tracking your biomarkers.
+          Upload your lab results to start tracking your biomarkers.
         </p>
       </div>
     )

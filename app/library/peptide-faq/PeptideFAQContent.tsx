@@ -1299,7 +1299,7 @@ const GLOSSARY = [
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 
-export function PeptideFAQContent({ tier }: { tier: PlanTier | null }) {
+export function PeptideFAQContent({ tier, backHref = '/library' }: { tier: PlanTier | null; backHref?: string }) {
   const [openItems, setOpenItems] = useState<Record<string, number | null>>({})
   const [activeSection, setActiveSection] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -1331,7 +1331,7 @@ export function PeptideFAQContent({ tier }: { tier: PlanTier | null }) {
       <section className="grad-dark text-white py-12 md:py-16 px-6">
         <div className="max-w-4xl mx-auto">
           <Link
-            href="/library"
+            href={backHref}
             className="inline-flex items-center text-white/60 hover:text-white text-sm mb-6 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

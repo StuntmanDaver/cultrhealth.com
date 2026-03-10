@@ -45,7 +45,7 @@ export default function PrivacyPage() {
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">2. HIPAA Compliance</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              Protected Health Information (PHI) is stored in HIPAA-compliant systems through our partner Healthie. We maintain Business Associate Agreements (BAAs) with all vendors who handle PHI. We do not sell your health data to third parties.
+              Protected Health Information (PHI) is stored in HIPAA-compliant systems through our partner Asher Med. We maintain Business Associate Agreements (BAAs) with all vendors who handle PHI. We do not sell your health data to third parties.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">3. How We Use Your Information</h2>

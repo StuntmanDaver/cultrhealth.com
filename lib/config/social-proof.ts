@@ -87,12 +87,11 @@ export const PROVIDERS: Provider[] = [
     bio: "A former Doctors Without Borders clinician with over 20 years of experience across primary care, hospital medicine, wound care, hyperbaric medicine, and integrative regenerative care. At Cultr Health, he guides a modern longevity model integrating evidence-based care with advanced nutrition, hormonal optimization, peptide therapeutics, and mind-body strategies.",
   },
   {
-    name: "Belinda Ruiz, FNP",
-    specialty: "Functional Medicine & Hormones",
-    credentials: "Family Nurse Practitioner",
-    yearsExperience: 8,
-    image: "/images/provider-belinda-ruiz.jpg",
-    bio: "Specializing in Functional Medicine and hormones since 2017, Belinda uses a science-based, root-cause, whole-body approach to help patients optimize health through personalized, patient-centered care. Passionate about education, she empowers men and women to understand their bodies and take ownership of their healing journey.",
+    name: "New Provider Coming Soon",
+    specialty: "Expanding Our Care Team",
+    credentials: "",
+    yearsExperience: 0,
+    bio: "We're growing! A new licensed provider will be joining the CULTR Health care team soon. Stay tuned.",
   },
 ];
 

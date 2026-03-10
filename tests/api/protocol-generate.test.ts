@@ -7,12 +7,9 @@ vi.mock('@/lib/auth', () => ({
   isProviderEmail: vi.fn(),
 }))
 
-// Mock the healthie-api module
-vi.mock('@/lib/healthie-api', () => ({
+// Mock the asher-med-api module
+vi.mock('@/lib/asher-med-api', () => ({
   getPatientById: vi.fn(),
-  createCarePlan: vi.fn(),
-  createDocument: vi.fn(),
-  enrollInProgram: vi.fn(),
 }))
 
 // Mock Vercel Postgres
@@ -22,7 +19,7 @@ vi.mock('@vercel/postgres', () => ({
 
 import { POST } from '@/app/api/protocol/generate/route'
 import * as auth from '@/lib/auth'
-import * as healthieApi from '@/lib/healthie-api'
+import * as asherApi from '@/lib/asher-med-api'
 
 describe('Protocol Generate API', () => {
   beforeEach(() => {
@@ -47,7 +44,7 @@ describe('Protocol Generate API', () => {
 
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
@@ -66,7 +63,7 @@ describe('Protocol Generate API', () => {
 
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
@@ -84,22 +81,22 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
+      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('returns 400 when templateId is missing', async () => {
       const request = createRequest({
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Template/Symptoms and patientHealthieId are required')
+      expect(data.error).toBe('Template/Symptoms and patientId are required')
     })
 
-    it('returns 400 when patientHealthieId is missing', async () => {
+    it('returns 400 when patientId is missing', async () => {
       const request = createRequest({
         templateId: 'glp1-standard',
       })
@@ -108,13 +105,13 @@ describe('Protocol Generate API', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.error).toBe('Template/Symptoms and patientHealthieId are required')
+      expect(data.error).toBe('Template/Symptoms and patientId are required')
     })
 
     it('returns 400 for invalid template ID', async () => {
       const request = createRequest({
         templateId: 'non-existent-template',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
@@ -125,7 +122,7 @@ describe('Protocol Generate API', () => {
     })
   })
 
-  describe('Healthie Integration', () => {
+  describe('Asher Med Integration', () => {
     beforeEach(() => {
       vi.mocked(auth.getSession).mockResolvedValue({
         email: 'provider@cultrhealth.com',
@@ -134,12 +131,12 @@ describe('Protocol Generate API', () => {
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
     })
 
-    it('returns 404 when patient is not found in Healthie', async () => {
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue(null)
+    it('returns 404 when patient is not found', async () => {
+      vi.mocked(asherApi.getPatientById).mockResolvedValue(null as any)
 
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'invalid-patient',
+        patientId: '999',
       })
 
       const response = await POST(request)
@@ -149,20 +146,12 @@ describe('Protocol Generate API', () => {
       expect(data.error).toBe('Patient not found')
     })
 
-    it('creates care plan and documents on success', async () => {
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
-      vi.mocked(healthieApi.createCarePlan).mockResolvedValue({
-        id: 'careplan-456',
-        name: 'GLP-1 Standard Protocol',
-      })
-      vi.mocked(healthieApi.createDocument).mockResolvedValue({
-        id: 'doc-789',
-        displayName: 'Protocol Summary',
-      })
+    it('generates protocol and stores in DB on success', async () => {
+      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
 
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
         parameters: {
           startingDose: 0.25,
           targetDose: 1.0,
@@ -174,60 +163,22 @@ describe('Protocol Generate API', () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.carePlanId).toBe('careplan-456')
-
-      // Verify care plan was created
-      expect(healthieApi.createCarePlan).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: 'GLP-1 Standard Protocol',
-          patientId: 'patient-123',
-        })
-      )
-
-      // Verify documents were created
-      expect(healthieApi.createDocument).toHaveBeenCalled()
+      expect(data.protocolName).toBe('GLP-1 Standard Protocol')
     })
 
-    it('enrolls in program when courseMembershipId is provided', async () => {
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
-      vi.mocked(healthieApi.createCarePlan).mockResolvedValue({
-        id: 'careplan-456',
-        name: 'GLP-1 Standard Protocol',
-      })
-      vi.mocked(healthieApi.createDocument).mockResolvedValue({
-        id: 'doc-789',
-        displayName: 'Protocol Summary',
-      })
-      vi.mocked(healthieApi.enrollInProgram).mockResolvedValue({ id: 'enrollment-999' })
+    it('handles API errors gracefully', async () => {
+      vi.mocked(asherApi.getPatientById).mockRejectedValue(new Error('Asher Med API error'))
 
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
-        courseMembershipId: 'membership-abc',
-      })
-
-      const response = await POST(request)
-
-      expect(response.status).toBe(200)
-      expect(healthieApi.enrollInProgram).toHaveBeenCalledWith({
-        courseMembershipId: 'membership-abc',
-      })
-    })
-
-    it('handles Healthie API errors gracefully', async () => {
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
-      vi.mocked(healthieApi.createCarePlan).mockRejectedValue(new Error('Healthie API error'))
-
-      const request = createRequest({
-        templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe('Healthie API error')
+      expect(data.error).toBe('Asher Med API error')
     })
   })
 
@@ -238,35 +189,25 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
-      vi.mocked(healthieApi.createCarePlan).mockResolvedValue({
-        id: 'careplan-456',
-        name: 'GLP-1 Standard Protocol',
-      })
-      vi.mocked(healthieApi.createDocument).mockResolvedValue({
-        id: 'doc-789',
-        displayName: 'Protocol Summary',
-      })
+      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('uses default parameters when none provided', async () => {
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
         parameters: {},
       })
 
       const response = await POST(request)
 
       expect(response.status).toBe(200)
-      // The protocol should be generated with default values
-      expect(healthieApi.createCarePlan).toHaveBeenCalled()
     })
 
     it('accepts custom parameters', async () => {
       const request = createRequest({
         templateId: 'glp1-standard',
-        patientHealthieId: 'patient-123',
+        patientId: '123',
         parameters: {
           startingDose: 0.5,
           targetDose: 2.0,
@@ -287,21 +228,13 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(healthieApi.getPatientById).mockResolvedValue({ id: 'patient-123' })
-      vi.mocked(healthieApi.createCarePlan).mockResolvedValue({
-        id: 'careplan-symptom',
-        name: 'Custom Protocol: Anxiety...',
-      })
-      vi.mocked(healthieApi.createDocument).mockResolvedValue({
-        id: 'doc-symptom',
-        displayName: 'Custom Protocol Instructions',
-      })
+      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('generates protocol from symptom IDs', async () => {
       const request = createRequest({
         symptomIds: ['anxiety', 'insomnia'],
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)
@@ -309,30 +242,12 @@ describe('Protocol Generate API', () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.carePlanId).toBe('careplan-symptom')
-
-      // Verify care plan creation
-      expect(healthieApi.createCarePlan).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: expect.stringContaining('Custom Protocol'),
-          patientId: 'patient-123',
-        })
-      )
-
-      // Verify document creation with combined content
-      expect(healthieApi.createDocument).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Custom Protocol Instructions',
-          patientId: 'patient-123',
-          content: expect.stringContaining('CUSTOM PROTOCOL FOR: Anxiety, Insomnia'),
-        })
-      )
     })
 
     it('returns 400 for invalid symptoms', async () => {
       const request = createRequest({
         symptomIds: ['invalid-symptom-id'],
-        patientHealthieId: 'patient-123',
+        patientId: '123',
       })
 
       const response = await POST(request)

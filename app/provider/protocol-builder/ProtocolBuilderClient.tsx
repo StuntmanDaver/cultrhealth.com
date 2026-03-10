@@ -227,7 +227,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
     setResultMessage(null)
 
     if (!patientId) {
-      setErrorMessage('Healthie Patient ID is required.')
+      setErrorMessage('Patient ID is required.')
       return
     }
 
@@ -248,7 +248,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
       const payload = mode === 'template' 
         ? {
             templateId: template?.id,
-            patientHealthieId: patientId,
+            patientId: patientId,
             parameters,
             // N=1 Trial Tracking Fields
             protocolVersion,
@@ -258,7 +258,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
           }
         : {
             symptomIds: selectedSymptoms.map(s => s.id),
-            patientHealthieId: patientId,
+            patientId: patientId,
             // N=1 Trial Tracking Fields
             protocolVersion,
             engineVersion: PROTOCOL_ENGINE_VERSION,
@@ -278,7 +278,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
         return
       }
 
-      setResultMessage('Protocol created successfully in Healthie.')
+      setResultMessage('Protocol created successfully.')
       // Optional: Clear selection after success
       if (mode === 'symptom') {
         setSelectedSymptoms([])
@@ -324,7 +324,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
         {/* Left Column: Input Controls */}
         <div className="space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-cultr-sage/20">
-            <label className="block text-sm font-medium text-cultr-text mb-2">Healthie Patient ID</label>
+            <label className="block text-sm font-medium text-cultr-text mb-2">Asher Med Patient ID</label>
             <input
               value={patientId}
               onChange={(e) => setPatientId(e.target.value)}
@@ -648,7 +648,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
             isLoading={isSubmitting} 
             className="w-full py-4 text-base shadow-lg hover:shadow-xl transition-all"
           >
-            Generate & Push to Healthie
+            Generate Protocol
           </Button>
         </div>
 

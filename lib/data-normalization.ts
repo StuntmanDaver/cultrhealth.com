@@ -1,9 +1,9 @@
 /**
  * Data Normalization Service
- * 
- * Standardizes lab results from Healthie API into computable biological data
+ *
+ * Standardizes lab results into computable biological data
  * for the Resilience Engine and data warehouse exports.
- * 
+ *
  * Converts various lab result formats (strings, PDFs, different units) into
  * normalized, queryable values aligned with BIOMARKER_DEFINITIONS.
  */
@@ -137,7 +137,7 @@ const BIOMARKER_ALIASES: Record<string, string> = {
 }
 
 // ============================================================================
-// RAW LAB RESULT TYPES (from Healthie or other sources)
+// RAW LAB RESULT TYPES
 // ============================================================================
 
 export interface RawLabResult {
@@ -422,10 +422,10 @@ export function toBiomarkerValues(normalized: NormalizedLabResult[]): BiomarkerV
 }
 
 // ============================================================================
-// HEALTHIE INTEGRATION
+// LAB RESULT INTEGRATION
 // ============================================================================
 
-export interface HealthieLabResultInput {
+export interface LabResultInput {
   id: string
   name?: string
   value?: string
@@ -436,12 +436,12 @@ export interface HealthieLabResultInput {
 }
 
 /**
- * Transform Healthie API lab results to raw format for normalization
+ * Transform external lab results to raw format for normalization
  */
-export function transformHealthieResults(
-  healthieResults: HealthieLabResultInput[]
+export function transformLabResults(
+  labResults: LabResultInput[]
 ): RawLabResult[] {
-  return healthieResults
+  return labResults
     .filter(r => r.name && r.value) // Must have name and value
     .map(r => ({
       name: r.name!,
@@ -449,20 +449,20 @@ export function transformHealthieResults(
       unit: r.unit,
       referenceRange: r.normal_range,
       date: r.date,
-      source: 'Healthie',
+      source: 'lab-import',
     }))
 }
 
 /**
- * Full pipeline: Healthie results -> Normalized -> BiomarkerValues
+ * Full pipeline: Lab results -> Normalized -> BiomarkerValues
  */
-export function processHealthieLabResults(
-  healthieResults: HealthieLabResultInput[]
+export function processLabResults(
+  labResults: LabResultInput[]
 ): {
   biomarkerValues: BiomarkerValue[]
   normalizationResult: NormalizationResult
 } {
-  const rawResults = transformHealthieResults(healthieResults)
+  const rawResults = transformLabResults(labResults)
   const normalizationResult = normalizeLabResults(rawResults)
   const biomarkerValues = toBiomarkerValues(normalizationResult.successful)
   

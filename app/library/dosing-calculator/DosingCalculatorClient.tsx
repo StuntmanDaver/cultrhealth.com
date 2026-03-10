@@ -250,7 +250,7 @@ function PillButtonGroup({
   )
 }
 
-export function DosingCalculatorClient({ email }: { email: string }) {
+export function DosingCalculatorClient({ email, backHref = '/library' }: { email?: string; backHref?: string }) {
   // Input states
   const [vialSelection, setVialSelection] = useState<number | 'custom'>(5)
   const [customVial, setCustomVial] = useState('')
@@ -287,7 +287,7 @@ export function DosingCalculatorClient({ email }: { email: string }) {
       <section className="py-12 px-6 grad-dark text-white">
         <div className="max-w-4xl mx-auto">
           <Link
-            href="/library"
+            href={backHref}
             className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />

@@ -32,7 +32,7 @@ export interface MembershipEntry {
   stripe_subscription_id: string
   plan_tier: string
   subscription_status: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   created_at: Date
   updated_at: Date
   cancelled_at?: Date
@@ -44,13 +44,13 @@ export interface CreateMembershipInput {
   stripe_subscription_id: string
   plan_tier: string
   subscription_status: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
 }
 
 export interface UpdateMembershipInput {
   subscription_status?: string
   plan_tier?: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   cancelled_at?: Date
   cancellation_reason?: string
 }
@@ -148,26 +148,26 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
 // ===========================================
 
 export async function createMembership(input: CreateMembershipInput): Promise<{ id: string }> {
-  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, healthie_patient_id } = input
+  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id } = input
 
   try {
     const result = await sql`
       INSERT INTO memberships (
-        stripe_customer_id, 
-        stripe_subscription_id, 
-        plan_tier, 
-        subscription_status, 
-        healthie_patient_id,
-        created_at, 
+        stripe_customer_id,
+        stripe_subscription_id,
+        plan_tier,
+        subscription_status,
+        asher_patient_id,
+        created_at,
         updated_at
       )
       VALUES (
-        ${stripe_customer_id}, 
-        ${stripe_subscription_id}, 
-        ${plan_tier}, 
-        ${subscription_status}, 
-        ${healthie_patient_id || null},
-        NOW(), 
+        ${stripe_customer_id},
+        ${stripe_subscription_id},
+        ${plan_tier},
+        ${subscription_status},
+        ${asher_patient_id || null},
+        NOW(),
         NOW()
       )
       ON CONFLICT (stripe_subscription_id)
@@ -202,9 +202,9 @@ export async function updateMembershipBySubscriptionId(
       updates.push('plan_tier')
       values.push(input.plan_tier)
     }
-    if (input.healthie_patient_id !== undefined) {
-      updates.push('healthie_patient_id')
-      values.push(input.healthie_patient_id)
+    if (input.asher_patient_id !== undefined) {
+      updates.push('asher_patient_id')
+      values.push(String(input.asher_patient_id))
     }
     if (input.cancelled_at !== undefined) {
       updates.push('cancelled_at')
@@ -225,7 +225,7 @@ export async function updateMembershipBySubscriptionId(
       SET 
         subscription_status = COALESCE(${input.subscription_status || null}, subscription_status),
         plan_tier = COALESCE(${input.plan_tier || null}, plan_tier),
-        healthie_patient_id = COALESCE(${input.healthie_patient_id || null}, healthie_patient_id),
+        asher_patient_id = COALESCE(${input.asher_patient_id || null}, asher_patient_id),
         cancelled_at = ${input.cancelled_at?.toISOString() || null},
         cancellation_reason = COALESCE(${input.cancellation_reason || null}, cancellation_reason),
         updated_at = NOW()
@@ -305,8 +305,8 @@ export interface OrderEntry {
   customer_email: string
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
-  healthie_patient_id?: string
-  payment_provider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'healthie'
+  asher_patient_id?: number
+  payment_provider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
   currency: string
@@ -330,8 +330,8 @@ export interface CreateOrderInput {
   customer_email: string
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
-  healthie_patient_id?: string
-  payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'healthie'
+  asher_patient_id?: number
+  payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
   currency?: string
@@ -341,7 +341,7 @@ export interface CreateOrderInput {
 
 export interface UpdateOrderInput {
   status?: 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded' | 'shipped'
-  healthie_patient_id?: string
+  asher_patient_id?: number
   fulfilled_at?: Date
   shipped_at?: Date
   tracking_carrier?: string
@@ -362,7 +362,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ id: string
     customer_email,
     stripe_payment_intent_id,
     stripe_customer_id,
-    healthie_patient_id,
+    asher_patient_id,
     payment_provider = 'stripe',
     status,
     total_amount,
@@ -378,7 +378,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ id: string
         customer_email,
         stripe_payment_intent_id,
         stripe_customer_id,
-        healthie_patient_id,
+        asher_patient_id,
         payment_provider,
         status,
         total_amount,
@@ -393,7 +393,7 @@ export async function createOrder(input: CreateOrderInput): Promise<{ id: string
         ${customer_email.toLowerCase()},
         ${stripe_payment_intent_id || null},
         ${stripe_customer_id || null},
-        ${healthie_patient_id || null},
+        ${asher_patient_id || null},
         ${payment_provider},
         ${status},
         ${total_amount},
@@ -422,7 +422,7 @@ export async function updateOrderByOrderNumber(
       UPDATE orders
       SET 
         status = COALESCE(${input.status || null}, status),
-        healthie_patient_id = COALESCE(${input.healthie_patient_id || null}, healthie_patient_id),
+        asher_patient_id = COALESCE(${input.asher_patient_id || null}, asher_patient_id),
         fulfilled_at = ${input.fulfilled_at?.toISOString() || null},
         notes = COALESCE(${input.notes || null}, notes),
         updated_at = NOW()
@@ -773,7 +773,7 @@ export async function testDatabaseConnection(): Promise<{ success: boolean; erro
 export interface DailyLogEntry {
   id: string
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   log_date: string
   energy_level?: number
   mood_rating?: number
@@ -804,7 +804,7 @@ export interface DailyLogEntry {
 
 export interface CreateDailyLogInput {
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   log_date: string
   energy_level?: number
   mood_rating?: number
@@ -835,7 +835,7 @@ export async function createOrUpdateDailyLog(input: CreateDailyLogInput): Promis
   try {
     const result = await sql`
       INSERT INTO daily_logs (
-        user_id, healthie_patient_id, log_date,
+        user_id, asher_patient_id, log_date,
         energy_level, mood_rating, sleep_quality, sleep_hours, stress_level,
         weight_kg, resting_hr, hrv_ms, blood_pressure_systolic, blood_pressure_diastolic,
         wearable_source, wearable_sleep_score, wearable_readiness_score, wearable_activity_score,
@@ -844,7 +844,7 @@ export async function createOrUpdateDailyLog(input: CreateDailyLogInput): Promis
         notes, symptoms_reported, created_at, updated_at
       )
       VALUES (
-        ${input.user_id}, ${input.healthie_patient_id || null}, ${input.log_date},
+        ${input.user_id}, ${input.asher_patient_id || null}, ${input.log_date},
         ${input.energy_level || null}, ${input.mood_rating || null}, ${input.sleep_quality || null}, 
         ${input.sleep_hours || null}, ${input.stress_level || null},
         ${input.weight_kg || null}, ${input.resting_hr || null}, ${input.hrv_ms || null},
@@ -934,7 +934,7 @@ export async function getDailyLogByDate(
 export interface BiomarkerEntry {
   id: string
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   biomarker_id: string
   biomarker_name: string
   category: string
@@ -957,7 +957,7 @@ export interface BiomarkerEntry {
 
 export interface CreateBiomarkerEntryInput {
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   biomarker_id: string
   biomarker_name: string
   category: string
@@ -980,13 +980,13 @@ export async function createBiomarkerEntry(input: CreateBiomarkerEntryInput): Pr
   try {
     const result = await sql`
       INSERT INTO biomarker_entries (
-        user_id, healthie_patient_id, biomarker_id, biomarker_name, category,
+        user_id, asher_patient_id, biomarker_id, biomarker_name, category,
         value, unit, original_value, original_unit, original_name,
         confidence, conversion_applied, source, lab_company, reference_range,
         measured_at, score, status, created_at, updated_at
       )
       VALUES (
-        ${input.user_id}, ${input.healthie_patient_id || null},
+        ${input.user_id}, ${input.asher_patient_id || null},
         ${input.biomarker_id}, ${input.biomarker_name}, ${input.category},
         ${input.value}, ${input.unit}, ${input.original_value || null},
         ${input.original_unit || null}, ${input.original_name || null},
@@ -1079,7 +1079,7 @@ export interface ActualOutcome {
 export interface ProtocolOutcomeEntry {
   id: string
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   protocol_id: string
   protocol_version: string
   protocol_type: 'template' | 'symptom' | 'custom'
@@ -1112,7 +1112,7 @@ export interface ProtocolOutcomeEntry {
 
 export interface CreateProtocolOutcomeInput {
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   protocol_id: string
   protocol_version: string
   protocol_type: 'template' | 'symptom' | 'custom'
@@ -1128,13 +1128,13 @@ export async function createProtocolOutcome(input: CreateProtocolOutcomeInput): 
   try {
     const result = await sql`
       INSERT INTO protocol_outcomes (
-        user_id, healthie_patient_id, protocol_id, protocol_version, protocol_type,
+        user_id, asher_patient_id, protocol_id, protocol_version, protocol_type,
         template_id, symptom_ids, started_at, expected_outcomes,
         baseline_resilience_score, baseline_phenotype, status,
         goals_total, created_at, updated_at
       )
       VALUES (
-        ${input.user_id}, ${input.healthie_patient_id || null},
+        ${input.user_id}, ${input.asher_patient_id || null},
         ${input.protocol_id}, ${input.protocol_version}, ${input.protocol_type},
         ${input.template_id || null}, ${input.symptom_ids ? JSON.stringify(input.symptom_ids) : null},
         ${input.started_at}, ${JSON.stringify(input.expected_outcomes || [])},
@@ -1260,7 +1260,7 @@ export async function getProtocolOutcomesByUser(
 export interface ResilienceScoreEntry {
   id: string
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   overall_score: number
   grade: string
   category_scores: Record<string, number>
@@ -1281,7 +1281,7 @@ export interface ResilienceScoreEntry {
 
 export interface CreateResilienceScoreInput {
   user_id: string
-  healthie_patient_id?: string
+  asher_patient_id?: number
   overall_score: number
   grade: string
   category_scores: Record<string, number>
@@ -1302,14 +1302,14 @@ export async function createResilienceScore(input: CreateResilienceScoreInput): 
   try {
     const result = await sql`
       INSERT INTO resilience_scores (
-        user_id, healthie_patient_id, overall_score, grade, category_scores,
+        user_id, asher_patient_id, overall_score, grade, category_scores,
         data_completeness, biomarkers_used, chronological_age, biological_age, age_gap,
         primary_phenotype, secondary_phenotypes, phenotype_confidence,
         top_strengths, priority_areas, protocol_outcome_id,
         calculated_at, created_at
       )
       VALUES (
-        ${input.user_id}, ${input.healthie_patient_id || null},
+        ${input.user_id}, ${input.asher_patient_id || null},
         ${input.overall_score}, ${input.grade}, ${JSON.stringify(input.category_scores)},
         ${input.data_completeness}, ${input.biomarkers_used},
         ${input.chronological_age || null}, ${input.biological_age || null}, ${input.age_gap || null},
