@@ -139,38 +139,31 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   });
 
   const stripe = getStripe();
-  let healthiePatientId: string | undefined;
 
-  // Get customer details for Healthie patient creation
+  // Look up Asher Med patient ID from asher_orders table (patient already created during intake)
+  let asherPatientId: number | undefined;
   const customerId = typeof session.customer === 'string'
     ? session.customer
     : session.customer?.id;
 
-  if (customerId) {
+  if (customerId && process.env.POSTGRES_URL) {
     try {
       const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
       const customerEmail = customer.email || session.customer_details?.email;
 
       if (customerEmail) {
-        // Create or get existing Healthie patient
-        const { ensureHealthiePatient } = await import('@/lib/healthie-sso');
-
-        healthiePatientId = await ensureHealthiePatient({
-          email: customerEmail,
-          firstName: customer.name?.split(' ')[0] || session.customer_details?.name?.split(' ')[0],
-          lastName: customer.name?.split(' ').slice(1).join(' ') || session.customer_details?.name?.split(' ').slice(1).join(' '),
-          phone: customer.phone || session.customer_details?.phone || undefined,
-        });
-
-        console.log('Healthie patient ensured:', {
-          email: customerEmail,
-          healthiePatientId,
-        });
+        const { sql } = await import('@vercel/postgres');
+        const asherResult = await sql`
+          SELECT asher_patient_id FROM asher_orders WHERE patient_email = ${customerEmail} ORDER BY created_at DESC LIMIT 1
+        `;
+        if (asherResult.rows[0]?.asher_patient_id) {
+          asherPatientId = asherResult.rows[0].asher_patient_id;
+          console.log('Asher Med patient found:', { email: customerEmail, asherPatientId });
+        }
       }
-    } catch (healthieError) {
-      console.error('Failed to create Healthie patient:', healthieError);
-      // We throw here because failing to create Healthie patient means the user is stuck
-      throw healthieError;
+    } catch (lookupError) {
+      console.error('Failed to look up Asher Med patient:', lookupError);
+      // Non-fatal — patient may not have completed intake yet
     }
   }
 
@@ -183,19 +176,19 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       const subscriptionId = typeof session.subscription === 'string'
         ? session.subscription
         : session.subscription?.id;
-      const customerId = typeof session.customer === 'string'
+      const custId = typeof session.customer === 'string'
         ? session.customer
         : session.customer?.id;
 
-      if (subscriptionId && customerId) {
+      if (subscriptionId && custId) {
         await createMembership({
-          stripe_customer_id: customerId,
+          stripe_customer_id: custId,
           stripe_subscription_id: subscriptionId,
           plan_tier: planTier,
           subscription_status: 'active',
-          healthie_patient_id: healthiePatientId,
+          asher_patient_id: asherPatientId,
         });
-        console.log('Membership record created/updated with Healthie patient ID');
+        console.log('Membership record created/updated');
       }
     } catch (dbError) {
       console.error('Failed to update membership database:', dbError);
@@ -204,39 +197,105 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
+  // Process creator attribution for subscription checkout
+  const customerEmail = session.customer_details?.email;
+  if (process.env.POSTGRES_URL && customerEmail) {
+    try {
+      const { resolveAttribution } = await import('@/lib/creators/attribution');
+      const { processOrderAttribution } = await import('@/lib/creators/commission');
+      const { upsertPortfolioEntry } = await import('@/lib/creators/db');
+
+      // Check for attribution cookie via client_reference_id
+      let attributionCookieValue: string | undefined;
+      const clientRefId = session.client_reference_id;
+      if (clientRefId?.startsWith('attr_')) {
+        attributionCookieValue = clientRefId.slice(5);
+      }
+
+      // Check for coupon code from Stripe discount
+      let couponCode: string | undefined;
+      if (session.total_details?.breakdown?.discounts) {
+        for (const discount of session.total_details.breakdown.discounts) {
+          const discountObj = discount.discount as unknown as Record<string, unknown>;
+          const coupon = discountObj?.coupon as Record<string, unknown> | undefined;
+          if (coupon?.name && typeof coupon.name === 'string') {
+            couponCode = coupon.name;
+          }
+        }
+      }
+
+      const attribution = await resolveAttribution({
+        customerEmail,
+        attributionCookie: attributionCookieValue,
+        couponCode,
+      });
+
+      if (attribution) {
+        const subscriptionId = typeof session.subscription === 'string'
+          ? session.subscription
+          : session.subscription?.id;
+
+        const netRevenue = (session.amount_total || 0) / 100;
+
+        // Create portfolio entry for subscription tracking
+        if (subscriptionId) {
+          await upsertPortfolioEntry({
+            creator_id: attribution.creatorId,
+            customer_email: customerEmail,
+            stripe_subscription_id: subscriptionId,
+            subscription_status: 'active',
+          });
+        }
+
+        // Generate unique order ID for this checkout
+        const orderId = `SUB-${session.id.slice(-12)}`;
+
+        const result = await processOrderAttribution({
+          orderId,
+          netRevenue,
+          customerEmail,
+          attribution,
+          isSubscription: true,
+          subscriptionPaymentNumber: 1,
+        });
+
+        if (result) {
+          console.log('Subscription attribution processed:', {
+            sessionId: session.id,
+            creatorId: result.creatorId,
+            directCommission: result.directCommission,
+            overrideCommission: result.overrideCommission,
+          });
+        }
+      }
+    } catch (attrError) {
+      console.error('Failed to process subscription attribution:', attrError);
+    }
+  }
+
   // Send welcome email with next steps
   const customerIdStr = typeof session.customer === 'string' ? session.customer : session.customer?.id;
   if (customerIdStr) {
     try {
       const { sendWelcomeEmail } = await import('@/lib/resend');
-      const { getPatientPortalUrl } = await import('@/lib/healthie-api');
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com';
+      const dashboardUrl = `${siteUrl}/dashboard`;
 
       const customer = await stripe.customers.retrieve(customerIdStr) as Stripe.Customer;
-      const customerEmail = customer.email || session.customer_details?.email;
+      const custEmail = customer.email || session.customer_details?.email;
       const customerName = customer.name || session.customer_details?.name || 'there';
 
-      if (customerEmail) {
+      if (custEmail) {
         await sendWelcomeEmail({
           name: customerName,
-          email: customerEmail,
+          email: custEmail,
           planName: session.metadata?.plan_tier || 'Membership',
-          healthiePortalUrl: getPatientPortalUrl(healthiePatientId),
+          dashboardUrl,
         });
-        console.log('Welcome email sent to:', customerEmail);
+        console.log('Welcome email sent to:', custEmail);
       }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
-    }
-  }
-
-  // Trigger onboarding workflow (optional: could be a Healthie tag or internal flag)
-  if (healthiePatientId) {
-    try {
-      console.log('Triggering onboarding workflow for patient:', healthiePatientId);
-      // In a real scenario, this might involve tagging the patient in Healthie
-      // or adding them to a specific program.
-    } catch (onboardingError) {
-      console.error('Failed to trigger onboarding workflow:', onboardingError);
     }
   }
 }
@@ -533,6 +592,7 @@ async function handleSubscriptionCancelledNotification(subscription: Stripe.Subs
 
 /**
  * Handle subscription deletion/cancellation
+ * Breaks attribution permanently — no commission on re-signups
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('Subscription deleted:', {
@@ -553,6 +613,17 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       console.log('Membership marked as cancelled');
     } catch (dbError) {
       console.error('Failed to mark membership as cancelled:', dbError);
+    }
+
+    // Break portfolio attribution — re-signups get no credit
+    try {
+      const { breakPortfolioAttribution } = await import('@/lib/creators/db');
+      const broken = await breakPortfolioAttribution(subscription.id);
+      if (broken) {
+        console.log('Portfolio attribution broken for subscription:', subscription.id);
+      }
+    } catch (portfolioError) {
+      console.error('Failed to break portfolio attribution:', portfolioError);
     }
   }
 
@@ -579,31 +650,94 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.error('Failed to send cancellation email:', emailError);
   }
 
-  // Update Healthie patient status (optional)
+  // Update Asher Med patient status
   const membership = await (await import('@/lib/db')).getMembershipBySubscriptionId(subscription.id);
-  if (membership?.healthie_patient_id) {
+  if (membership?.asher_patient_id) {
     try {
-      const { deactivatePatient } = await import('@/lib/healthie-api');
-      await deactivatePatient(membership.healthie_patient_id);
-      console.log('Healthie patient deactivated:', membership.healthie_patient_id);
-    } catch (healthieError) {
-      console.error('Failed to deactivate Healthie patient:', healthieError);
+      const { updatePatient } = await import('@/lib/asher-med-api');
+      await updatePatient(membership.asher_patient_id, { status: 'INACTIVE' });
+      console.log('Asher Med patient deactivated:', membership.asher_patient_id);
+    } catch (asherError) {
+      console.error('Failed to deactivate Asher Med patient:', asherError);
     }
   }
 }
 
 /**
- * Handle successful payment
+ * Handle successful payment (recurring subscription invoices)
  */
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
+  const subscriptionId = typeof (invoice as any).subscription === 'string'
+    ? (invoice as any).subscription
+    : (invoice as any).subscription?.id;
+
   console.log('Payment succeeded:', {
     invoice_id: invoice.id,
     customer: invoice.customer,
-    subscription: (invoice as { subscription?: string | Stripe.Subscription | null }).subscription,
+    subscription: subscriptionId,
     amount: invoice.amount_paid,
+    billing_reason: (invoice as any).billing_reason,
   });
 
-  // TODO: Send payment receipt (optional - Stripe already sends one)
+  // Only process recurring subscription payments (not the first one which is handled by checkout.session.completed)
+  const billingReason = (invoice as any).billing_reason;
+  if (!subscriptionId || billingReason === 'subscription_create') return;
+  if (!process.env.POSTGRES_URL) return;
+
+  try {
+    const { getPortfolioEntryBySubscription, incrementPortfolioPayment } = await import('@/lib/creators/db');
+    const { processOrderAttribution } = await import('@/lib/creators/commission');
+    const { resolveAttribution } = await import('@/lib/creators/attribution');
+
+    // Find the portfolio entry for this subscription
+    const portfolio = await getPortfolioEntryBySubscription(subscriptionId);
+    if (!portfolio || !portfolio.attribution_active) return;
+
+    // Increment payment count
+    await incrementPortfolioPayment(subscriptionId);
+
+    // Get customer email for the invoice
+    const stripe = getStripe();
+    const customer = await stripe.customers.retrieve(invoice.customer as string) as Stripe.Customer;
+    const customerEmail = customer.email;
+    if (!customerEmail) return;
+
+    const netRevenue = (invoice.amount_paid || 0) / 100;
+    if (netRevenue <= 0) return;
+
+    // Re-resolve attribution from the portfolio entry's creator
+    const { getCreatorById } = await import('@/lib/creators/db');
+    const creator = await getCreatorById(portfolio.creator_id);
+    if (!creator || creator.status !== 'active') return;
+
+    // Process commission for recurring payment
+    const orderId = `INV-${invoice.id.slice(-12)}-${Date.now()}`;
+
+    const result = await processOrderAttribution({
+      orderId,
+      netRevenue,
+      customerEmail,
+      attribution: {
+        creatorId: portfolio.creator_id,
+        method: 'coupon_code',
+        isSelfReferral: creator.email.toLowerCase() === customerEmail.toLowerCase(),
+      },
+      isSubscription: true,
+      subscriptionPaymentNumber: portfolio.payment_count + 1,
+    });
+
+    if (result) {
+      console.log('Recurring payment commission:', {
+        invoiceId: invoice.id,
+        creatorId: result.creatorId,
+        directCommission: result.directCommission,
+        paymentNumber: portfolio.payment_count + 1,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to process recurring payment commission:', error);
+    // Don't fail the webhook
+  }
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   getCreatorById,
   getRecruitsByCreatorId,
   getCommissionsByCreator,
+  getPortfolioByCreator,
 } from '@/lib/creators/db'
 import { getNextTierRequirement, getTierName } from '@/lib/config/affiliate'
 
@@ -39,6 +40,11 @@ export async function GET(request: NextRequest) {
       { id: 'r11', full_name: 'Avery Brooks', status: 'pending', created_at: '2026-02-06T00:00:00Z' },
       { id: 'r12', full_name: 'Quinn Davis', status: 'pending', created_at: '2026-02-07T00:00:00Z' },
     ],
+    portfolio: [
+      { id: 'p1', customer_email: 'j***@gmail.com', subscription_status: 'active', payment_count: 4, first_payment_at: '2025-11-15T00:00:00Z', attribution_active: true },
+      { id: 'p2', customer_email: 's***@yahoo.com', subscription_status: 'active', payment_count: 3, first_payment_at: '2025-12-01T00:00:00Z', attribution_active: true },
+      { id: 'p3', customer_email: 'm***@outlook.com', subscription_status: 'cancelled', payment_count: 2, first_payment_at: '2026-01-10T00:00:00Z', attribution_active: false },
+    ],
   })
 
   if (isStagingCreator) return mockNetwork()
@@ -49,7 +55,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
     }
 
-    const recruits = await getRecruitsByCreatorId(auth.creatorId)
+    const [recruits, portfolio] = await Promise.all([
+      getRecruitsByCreatorId(auth.creatorId),
+      getPortfolioByCreator(auth.creatorId),
+    ])
 
     // Get override commissions (use large limit to get all for summing)
     const overrideCommissions = await getCommissionsByCreator(auth.creatorId, undefined, 10000)
@@ -75,6 +84,14 @@ export async function GET(request: NextRequest) {
         full_name: r.full_name,
         status: r.status,
         created_at: r.created_at,
+      })),
+      portfolio: portfolio.map((p) => ({
+        id: p.id,
+        customer_email: p.customer_email?.replace(/(.{2}).+@/, '$1***@'),
+        subscription_status: p.subscription_status,
+        payment_count: p.payment_count,
+        first_payment_at: p.first_payment_at,
+        attribution_active: p.attribution_active,
       })),
     })
   } catch (error) {

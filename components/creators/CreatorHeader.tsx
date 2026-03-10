@@ -24,9 +24,9 @@ export function CreatorHeader({ onMenuToggle }: CreatorHeaderProps) {
       format: 'number',
     },
     {
-      label: 'Revenue',
-      value: metrics?.thisMonthRevenue ?? 0,
-      format: 'currency',
+      label: 'Members',
+      value: metrics?.activeMemberCount ?? 0,
+      format: 'number',
     },
     {
       label: 'Commission',
@@ -78,7 +78,7 @@ export function CreatorHeader({ onMenuToggle }: CreatorHeaderProps) {
           )}
         </div>
 
-        {/* Right side — notifications + tier */}
+        {/* Right side — notifications + tier + override */}
         <div className="flex items-center gap-2">
           {metrics && (
             <NotificationBell
@@ -90,7 +90,7 @@ export function CreatorHeader({ onMenuToggle }: CreatorHeaderProps) {
           {creator && (
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 grad-mint rounded-full">
               <span className="text-xs font-medium text-cultr-forest">
-                {getTierName(creator.tier)}
+                {getTierName(creator.tier)} | {creator.override_rate}% override
               </span>
             </div>
           )}

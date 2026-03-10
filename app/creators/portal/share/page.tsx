@@ -355,26 +355,43 @@ export default function ShareEarnPage() {
         </div>
       </section>
 
-      {/* Coupon Codes */}
+      {/* Coupon Codes — Dual Code System */}
       <section>
         <h2 className="text-lg font-display font-bold text-cultr-forest flex items-center gap-2 mb-4">
-          <Tag className="w-5 h-5" /> Coupon Codes
+          <Tag className="w-5 h-5" /> Your Codes
         </h2>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm mb-4">
+          <p className="font-medium text-amber-800">Two codes, two purposes</p>
+          <p className="text-amber-700 mt-1">
+            <strong>Membership code</strong> — share when referring someone to a subscription plan.{' '}
+            <strong>Product code</strong> — share for one-time product purchases. Both earn you 10% commission.
+          </p>
+        </div>
 
         <div className="space-y-3">
           {codes.length > 0 ? (
-            codes.map((code) => (
-              <CopyableLink
-                key={code.id}
-                label={code.is_primary ? 'Primary Code' : 'Code'}
-                value={code.code}
-                stats={`${code.use_count} uses | $${Number(code.total_revenue).toFixed(2)} revenue`}
-              />
-            ))
+            codes.map((code) => {
+              const codeType = (code as any).code_type
+              const label = codeType === 'membership'
+                ? 'Membership Code'
+                : codeType === 'product'
+                ? 'Product Code (10% off)'
+                : code.is_primary ? 'Primary Code' : 'Code'
+
+              return (
+                <CopyableLink
+                  key={code.id}
+                  label={label}
+                  value={code.code}
+                  stats={`${code.use_count} uses | $${Number(code.total_revenue).toFixed(2)} revenue`}
+                />
+              )
+            })
           ) : (
             <div className="bg-white border border-stone-200 rounded-xl p-8 text-center">
               <Tag className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-              <p className="text-cultr-textMuted text-sm">Coupon codes are assigned by admin upon approval.</p>
+              <p className="text-cultr-textMuted text-sm">Coupon codes are assigned upon approval.</p>
             </div>
           )}
         </div>

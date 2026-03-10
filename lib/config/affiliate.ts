@@ -13,6 +13,8 @@ export type AttributionStatus = 'pending' | 'approved' | 'paid' | 'refunded'
 export type PayoutMethod = 'stripe_connect' | 'bank_transfer' | 'paypal'
 export type PayoutStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+export type CodeType = 'membership' | 'product' | 'general'
+
 export interface Creator {
   id: string
   email: string
@@ -25,6 +27,9 @@ export interface Creator {
   recruit_count: number
   tier: number
   override_rate: number
+  active_member_count: number
+  commission_rate: number
+  creator_start_date?: string
   payout_method?: PayoutMethod
   payout_destination_id?: string
   email_verified: boolean
@@ -38,6 +43,7 @@ export interface AffiliateCode {
   id: string
   creator_id: string
   code: string
+  code_type: CodeType
   is_primary: boolean
   discount_type: 'percentage' | 'fixed'
   discount_value: number
@@ -91,8 +97,24 @@ export interface OrderAttribution {
   net_revenue: number
   direct_commission_rate: number
   direct_commission_amount: number
+  is_subscription: boolean
+  subscription_payment_number?: number
   status: AttributionStatus
   is_self_referral: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface PortfolioEntry {
+  id: string
+  creator_id: string
+  customer_email: string
+  stripe_subscription_id?: string
+  subscription_status: 'active' | 'cancelled' | 'past_due' | 'paused'
+  first_payment_at: string
+  last_payment_at?: string
+  payment_count: number
+  attribution_active: boolean
   created_at: string
   updated_at: string
 }
@@ -156,6 +178,14 @@ export interface CreatorDashboardMetrics {
   overrideRate: number
   recruitCount: number
   nextTierRequirement: number
+  activeMemberCount: number
+  commissionRate: number
+  creatorStartDate?: string
+  isInBonusWindow: boolean
+  bonusWindowDaysLeft: number
+  directMembershipEarnings: number
+  directProductEarnings: number
+  overrideEarnings: number
 }
 
 export interface EarningsOverview {
@@ -184,11 +214,17 @@ export interface NetworkSummary {
 // ===========================================
 
 export const COMMISSION_CONFIG = {
-  // Direct commission rate (10% of net revenue)
+  // Direct commission rate (10% of net revenue — both membership + product)
   directRate: 10.00,
 
-  // Total commission cap per order (20% of net revenue)
-  totalCapRate: 20.00,
+  // Total commission cap per sale (25% during first 6 months)
+  totalCapRate: 25.00,
+
+  // Post-bonus-window flat rate (after 6 months, everything is flat 10%)
+  postBonusRate: 10.00,
+
+  // Creator bonus window (months from creator_start_date)
+  bonusWindowMonths: 6,
 
   // Minimum payout threshold
   minPayoutAmount: 50.00,
@@ -218,11 +254,10 @@ export interface TierConfig {
 }
 
 export const TIER_CONFIGS: TierConfig[] = [
-  { tier: 0, name: 'Starter', minRecruits: 0, overrideRate: 0.00 },
-  { tier: 1, name: 'Bronze', minRecruits: 5, overrideRate: 2.00 },
-  { tier: 2, name: 'Silver', minRecruits: 10, overrideRate: 4.00 },
-  { tier: 3, name: 'Gold', minRecruits: 15, overrideRate: 6.00 },
-  { tier: 4, name: 'Platinum', minRecruits: 20, overrideRate: 8.00 },
+  { tier: 0, name: 'Starter', minRecruits: 0, overrideRate: 5.00 },
+  { tier: 1, name: 'Bronze', minRecruits: 5, overrideRate: 10.00 },
+  { tier: 2, name: 'Silver', minRecruits: 10, overrideRate: 15.00 },
+  { tier: 3, name: 'Gold', minRecruits: 15, overrideRate: 20.00 },
 ]
 
 export function getTierForRecruitCount(recruitCount: number): TierConfig {
@@ -242,6 +277,39 @@ export function getNextTierRequirement(currentTier: number): number {
 
 export function getTierName(tier: number): string {
   return TIER_CONFIGS.find(t => t.tier === tier)?.name || 'Starter'
+}
+
+// ===========================================
+// BONUS WINDOW HELPERS
+// ===========================================
+
+export function isInBonusWindow(creatorStartDate?: string | null): boolean {
+  if (!creatorStartDate) return false
+  const start = new Date(creatorStartDate)
+  const bonusEnd = new Date(start)
+  bonusEnd.setMonth(bonusEnd.getMonth() + COMMISSION_CONFIG.bonusWindowMonths)
+  return new Date() < bonusEnd
+}
+
+export function getBonusWindowDaysLeft(creatorStartDate?: string | null): number {
+  if (!creatorStartDate) return 0
+  const start = new Date(creatorStartDate)
+  const bonusEnd = new Date(start)
+  bonusEnd.setMonth(bonusEnd.getMonth() + COMMISSION_CONFIG.bonusWindowMonths)
+  const diff = bonusEnd.getTime() - Date.now()
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+}
+
+// ===========================================
+// COUPON CODE GENERATION
+// ===========================================
+
+export function generateCreatorCodes(fullName: string): { membershipCode: string; productCode: string } {
+  const lastName = fullName.split(' ').pop()?.toUpperCase().replace(/[^A-Z]/g, '') || 'CREATOR'
+  return {
+    membershipCode: lastName,
+    productCode: `${lastName}10`,
+  }
 }
 
 // ===========================================

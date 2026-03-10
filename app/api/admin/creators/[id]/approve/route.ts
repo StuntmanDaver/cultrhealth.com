@@ -6,7 +6,9 @@ import {
   createTrackingLink,
   createAffiliateCode,
   createAdminAction,
+  checkAffiliateCodeExists,
 } from '@/lib/creators/db'
+import { generateCreatorCodes } from '@/lib/config/affiliate'
 
 export async function POST(
   request: NextRequest,
@@ -30,7 +32,7 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}))
-    const { coupon_code, reason } = body as { coupon_code?: string; reason?: string }
+    const { reason } = body as { reason?: string }
 
     // Approve the creator
     await updateCreatorStatus(id, 'active', auth.email)
@@ -44,13 +46,26 @@ export async function POST(
     // Create default tracking link
     await createTrackingLink(id, defaultSlug, '/', true)
 
-    // Create affiliate code if provided, otherwise auto-generate
-    const code = coupon_code || creator.full_name
-      .toUpperCase()
-      .replace(/[^A-Z]/g, '')
-      .slice(0, 6) + '10'
+    // Generate dual coupon codes from last name
+    let { membershipCode, productCode } = generateCreatorCodes(creator.full_name)
 
-    await createAffiliateCode(id, code, true)
+    // Handle naming collisions — append number suffix if either code already exists
+    let suffix = 1
+    const baseName = generateCreatorCodes(creator.full_name).membershipCode
+    while (
+      await checkAffiliateCodeExists(membershipCode) ||
+      await checkAffiliateCodeExists(productCode)
+    ) {
+      membershipCode = `${baseName}${suffix}`
+      productCode = `${baseName}${suffix}10`
+      suffix++
+    }
+
+    // Create membership code (e.g., SMITH)
+    await createAffiliateCode(id, membershipCode, true, 'percentage', 10.00, 'membership')
+
+    // Create product code (e.g., SMITH10)
+    await createAffiliateCode(id, productCode, false, 'percentage', 10.00, 'product')
 
     // Log admin action
     await createAdminAction({
@@ -59,14 +74,19 @@ export async function POST(
       entity_type: 'creator',
       entity_id: id,
       reason,
-      metadata: { coupon_code: code, default_slug: defaultSlug },
+      metadata: {
+        membership_code: membershipCode,
+        product_code: productCode,
+        default_slug: defaultSlug,
+      },
     })
 
     return NextResponse.json({
       success: true,
       message: 'Creator approved',
       trackingSlug: defaultSlug,
-      couponCode: code,
+      membershipCode,
+      productCode,
     })
   } catch (error) {
     console.error('Admin approve creator error:', error)

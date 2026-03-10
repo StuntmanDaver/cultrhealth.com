@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, Trophy, Copy, Check } from 'lucide-react'
-import { getTierName, TIER_CONFIGS, getNextTierRequirement } from '@/lib/config/affiliate'
+import { Users, Trophy, Copy, Check, Timer } from 'lucide-react'
+import { getTierName, TIER_CONFIGS, getNextTierRequirement, isInBonusWindow, getBonusWindowDaysLeft } from '@/lib/config/affiliate'
 import type { NetworkSummary, Creator } from '@/lib/config/affiliate'
 
 export default function NetworkPage() {
@@ -10,6 +10,8 @@ export default function NetworkPage() {
   const [recruits, setRecruits] = useState<Partial<Creator>[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [tab, setTab] = useState<'recruits' | 'portfolio'>('recruits')
+  const [portfolio, setPortfolio] = useState<any[]>([])
 
   useEffect(() => {
     async function fetchNetwork() {
@@ -19,6 +21,7 @@ export default function NetworkPage() {
           const data = await res.json()
           setNetwork(data.network)
           setRecruits(data.recruits || [])
+          setPortfolio(data.portfolio || [])
         }
       } catch (err) {
         console.error('Failed to fetch network:', err)
@@ -50,6 +53,8 @@ export default function NetworkPage() {
     )
   }
 
+  const maxTier = TIER_CONFIGS.length - 1
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -75,7 +80,7 @@ export default function NetworkPage() {
           </div>
           <div>
             <p className="text-xs text-white/60">Override Rate</p>
-            <p className="text-2xl font-bold">{network?.overrideRate ?? 0}%</p>
+            <p className="text-2xl font-bold">{network?.overrideRate ?? 5}%</p>
           </div>
           <div>
             <p className="text-xs text-white/60">Override Earnings</p>
@@ -85,7 +90,7 @@ export default function NetworkPage() {
 
         {/* Tier milestones */}
         <div className="space-y-2">
-          {TIER_CONFIGS.filter(t => t.tier > 0).map((t) => {
+          {TIER_CONFIGS.map((t) => {
             const achieved = (network?.recruitCount ?? 0) >= t.minRecruits
             return (
               <div
@@ -105,18 +110,31 @@ export default function NetworkPage() {
                   </span>
                 </div>
                 <span className={`text-sm font-bold ${achieved ? 'text-cultr-sage' : 'text-white/40'}`}>
-                  +{t.overrideRate}%
+                  {t.overrideRate}% override
                 </span>
               </div>
             )
           })}
         </div>
 
-        {(network?.tier ?? 0) < 4 && (
+        {(network?.tier ?? 0) < maxTier && (
           <p className="text-sm text-white/60 mt-4">
             {getNextTierRequirement(network?.tier ?? 0) - (network?.recruitCount ?? 0)} more recruits to unlock the next tier.
           </p>
         )}
+      </div>
+
+      {/* Commission Cap Explainer */}
+      <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 text-sm">
+        <div className="flex items-center gap-2 mb-1">
+          <Timer className="w-4 h-4 text-cultr-forest" />
+          <p className="font-medium text-cultr-forest">How Override Commissions Work</p>
+        </div>
+        <p className="text-cultr-textMuted">
+          During your first 6 months, you earn override commissions at your tier rate on all sales made by creators you recruited.
+          Total commissions per sale are capped at 25% (10% direct + up to 15% override).
+          After 6 months, all commissions simplify to flat 10%.
+        </p>
       </div>
 
       {/* Invite Creator */}
@@ -138,44 +156,122 @@ export default function NetworkPage() {
         </div>
       </div>
 
-      {/* Recruits List */}
-      <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-stone-100">
-          <h3 className="font-display font-bold text-cultr-forest flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Your Recruits ({recruits.length})
-          </h3>
+      {/* Tabs: Recruits / Customer Portfolio */}
+      <div className="border-b border-stone-200">
+        <div className="flex gap-6">
+          <button
+            onClick={() => setTab('recruits')}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'recruits'
+                ? 'border-cultr-forest text-cultr-forest'
+                : 'border-transparent text-cultr-textMuted hover:text-cultr-forest'
+            }`}
+          >
+            Recruited Creators ({recruits.length})
+          </button>
+          <button
+            onClick={() => setTab('portfolio')}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors ${
+              tab === 'portfolio'
+                ? 'border-cultr-forest text-cultr-forest'
+                : 'border-transparent text-cultr-textMuted hover:text-cultr-forest'
+            }`}
+          >
+            Customer Portfolio ({portfolio.length})
+          </button>
         </div>
+      </div>
 
-        {recruits.length > 0 ? (
-          <div className="divide-y divide-stone-100">
-            {recruits.map((r) => (
-              <div key={r.id} className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium text-cultr-forest text-sm">{r.full_name}</p>
-                  <p className="text-xs text-cultr-textMuted">
-                    Joined {r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                  r.status === 'active' ? 'bg-emerald-100 text-emerald-700'
-                  : r.status === 'pending' ? 'bg-amber-100 text-amber-700'
-                  : 'bg-stone-100 text-stone-600'
-                }`}>
-                  {r.status}
-                </span>
-              </div>
-            ))}
+      {/* Tab Content */}
+      {tab === 'recruits' ? (
+        <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-stone-100">
+            <h3 className="font-display font-bold text-cultr-forest flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Your Recruits ({recruits.length})
+            </h3>
           </div>
-        ) : (
-          <div className="p-8 text-center">
-            <Users className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-            <p className="text-cultr-textMuted text-sm">
-              No recruits yet. Share your invite link to start building your network.
+
+          {recruits.length > 0 ? (
+            <div className="divide-y divide-stone-100">
+              {recruits.map((r) => (
+                <div key={r.id} className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="font-medium text-cultr-forest text-sm">{r.full_name}</p>
+                    <p className="text-xs text-cultr-textMuted">
+                      Joined {r.created_at ? new Date(r.created_at).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                    r.status === 'active' ? 'bg-emerald-100 text-emerald-700'
+                    : r.status === 'pending' ? 'bg-amber-100 text-amber-700'
+                    : 'bg-stone-100 text-stone-600'
+                  }`}>
+                    {r.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <Users className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+              <p className="text-cultr-textMuted text-sm">
+                No recruits yet. Share your invite link to start building your network.
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-stone-100">
+            <h3 className="font-display font-bold text-cultr-forest flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Customer Portfolio ({portfolio.length})
+            </h3>
+            <p className="text-xs text-cultr-textMuted mt-1">
+              Customers who signed up through your codes with active subscriptions.
             </p>
           </div>
-        )}
-      </div>
+
+          {portfolio.length > 0 ? (
+            <div className="divide-y divide-stone-100">
+              {portfolio.map((entry: any) => (
+                <div key={entry.id} className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="font-medium text-cultr-forest text-sm">
+                      {entry.customer_email?.replace(/(.{2}).+@/, '$1***@')}
+                    </p>
+                    <p className="text-xs text-cultr-textMuted">
+                      {entry.payment_count} payment{entry.payment_count !== 1 ? 's' : ''} | Since {new Date(entry.first_payment_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!entry.attribution_active && (
+                      <span className="px-2 py-0.5 rounded text-xs bg-stone-100 text-stone-500">
+                        Attribution ended
+                      </span>
+                    )}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                      entry.subscription_status === 'active' ? 'bg-emerald-100 text-emerald-700'
+                      : entry.subscription_status === 'cancelled' ? 'bg-red-100 text-red-700'
+                      : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {entry.subscription_status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <Users className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+              <p className="text-cultr-textMuted text-sm">
+                No customers in your portfolio yet. Share your membership code to start building.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { Trophy, Zap, TrendingUp, Star, Crown, Target, Award, Flame } from 'lucide-react'
+import { Trophy, Zap, TrendingUp, Star, Crown, Target, Award, Flame, Users, UserPlus } from 'lucide-react'
 import type { CreatorDashboardMetrics, Creator } from '@/lib/config/affiliate'
 
 interface Milestone {
@@ -32,12 +32,28 @@ const MILESTONES: Milestone[] = [
     check: (m) => m.totalOrders >= 1,
   },
   {
+    id: 'first-recruit',
+    label: 'First Recruit',
+    description: 'Recruited your first creator',
+    icon: UserPlus,
+    color: EARNED_COLOR,
+    check: (m) => m.recruitCount >= 1,
+  },
+  {
     id: '10-clicks',
     label: '10 Clicks',
     description: 'Reached 10 tracking link clicks',
     icon: Target,
     color: EARNED_COLOR,
     check: (m) => m.totalClicks >= 10,
+  },
+  {
+    id: '5-recruits',
+    label: 'Bronze Network',
+    description: 'Recruited 5 creators — unlocked 10% override',
+    icon: Users,
+    color: EARNED_COLOR,
+    check: (m) => m.recruitCount >= 5,
   },
   {
     id: '10-orders',
@@ -48,12 +64,12 @@ const MILESTONES: Milestone[] = [
     check: (m) => m.totalOrders >= 10,
   },
   {
-    id: '100-clicks',
-    label: '100 Clicks',
-    description: 'Reached 100 tracking link clicks',
-    icon: Flame,
+    id: '10-recruits',
+    label: 'Silver Network',
+    description: 'Recruited 10 creators — unlocked 15% override',
+    icon: Users,
     color: EARNED_COLOR,
-    check: (m) => m.totalClicks >= 100,
+    check: (m) => m.recruitCount >= 10,
   },
   {
     id: '1k-revenue',
@@ -64,42 +80,26 @@ const MILESTONES: Milestone[] = [
     check: (m) => m.totalRevenue >= 1000,
   },
   {
-    id: '50-orders',
-    label: '50 Orders',
-    description: 'Attributed 50 orders',
-    icon: Award,
+    id: '15-recruits',
+    label: 'Gold Network',
+    description: 'Recruited 15 creators — unlocked 20% override',
+    icon: Crown,
     color: EARNED_COLOR,
-    check: (m) => m.totalOrders >= 50,
+    check: (m) => m.recruitCount >= 15,
   },
   {
     id: '5k-revenue',
     label: '$5K Revenue',
     description: 'Generated $5,000 in attributed revenue',
-    icon: Crown,
+    icon: Award,
     color: EARNED_COLOR,
     check: (m) => m.totalRevenue >= 5000,
-  },
-  {
-    id: 'tier-up',
-    label: 'Tier Up!',
-    description: 'Advanced beyond Starter tier',
-    icon: Crown,
-    color: EARNED_COLOR,
-    check: (_m, c) => c.tier >= 1,
-  },
-  {
-    id: '1k-clicks',
-    label: '1K Clicks',
-    description: 'Reached 1,000 tracking link clicks',
-    icon: Flame,
-    color: EARNED_COLOR,
-    check: (m) => m.totalClicks >= 1000,
   },
   {
     id: '10k-revenue',
     label: '$10K Revenue',
     description: 'Generated $10,000 in attributed revenue',
-    icon: Crown,
+    icon: Flame,
     color: EARNED_COLOR,
     check: (m) => m.totalRevenue >= 10000,
   },

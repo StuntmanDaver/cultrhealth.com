@@ -4,6 +4,7 @@ import type {
   Creator,
   CreatorStatus,
   AffiliateCode,
+  CodeType,
   TrackingLink,
   ClickEvent,
   OrderAttribution,
@@ -11,6 +12,7 @@ import type {
   CommissionType,
   CommissionStatus,
   AttributionMethod,
+  PortfolioEntry,
   Payout,
   PayoutMethod,
 } from '@/lib/config/affiliate'
@@ -88,11 +90,16 @@ export async function updateCreatorStatus(
   approvedBy?: string
 ): Promise<boolean> {
   try {
+    const now = new Date().toISOString()
     const result = await sql`
       UPDATE creators
       SET
         status = ${status},
-        approved_at = ${status === 'active' ? new Date().toISOString() : null},
+        approved_at = ${status === 'active' ? now : null},
+        creator_start_date = CASE
+          WHEN ${status} = 'active' AND creator_start_date IS NULL THEN ${now}::timestamptz
+          ELSE creator_start_date
+        END,
         approved_by = ${approvedBy || null},
         updated_at = NOW()
       WHERE id = ${id}
@@ -234,12 +241,13 @@ export async function createAffiliateCode(
   code: string,
   isPrimary = false,
   discountType: 'percentage' | 'fixed' = 'percentage',
-  discountValue = 10.00
+  discountValue = 10.00,
+  codeType: CodeType = 'general'
 ): Promise<AffiliateCode> {
   try {
     const result = await sql`
-      INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value)
-      VALUES (${creatorId}, ${code.toUpperCase()}, ${isPrimary}, ${discountType}, ${discountValue})
+      INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value, code_type)
+      VALUES (${creatorId}, ${code.toUpperCase()}, ${isPrimary}, ${discountType}, ${discountValue}, ${codeType})
       RETURNING *
     `
     return result.rows[0] as AffiliateCode
@@ -467,12 +475,15 @@ export async function createOrderAttribution(input: {
   direct_commission_rate?: number
   direct_commission_amount: number
   is_self_referral?: boolean
+  is_subscription?: boolean
+  subscription_payment_number?: number
 }): Promise<OrderAttribution> {
   try {
     const result = await sql`
       INSERT INTO order_attributions (
         order_id, creator_id, attribution_method, link_id, code_id, click_event_id,
-        customer_email, net_revenue, direct_commission_rate, direct_commission_amount, is_self_referral
+        customer_email, net_revenue, direct_commission_rate, direct_commission_amount,
+        is_self_referral, is_subscription, subscription_payment_number
       )
       VALUES (
         ${input.order_id},
@@ -485,7 +496,9 @@ export async function createOrderAttribution(input: {
         ${input.net_revenue},
         ${input.direct_commission_rate ?? 10.00},
         ${input.direct_commission_amount},
-        ${input.is_self_referral || false}
+        ${input.is_self_referral || false},
+        ${input.is_subscription || false},
+        ${input.subscription_payment_number ?? null}
       )
       ON CONFLICT (order_id) DO NOTHING
       RETURNING *
@@ -831,6 +844,216 @@ export async function createAdminAction(input: {
   } catch (error) {
     console.error('Database error creating admin action:', error)
     // Don't throw - audit logging shouldn't break flows
+  }
+}
+
+// ===========================================
+// CREATOR CUSTOMER PORTFOLIO CRUD
+// ===========================================
+
+export async function upsertPortfolioEntry(input: {
+  creator_id: string
+  customer_email: string
+  stripe_subscription_id?: string
+  subscription_status?: string
+}): Promise<PortfolioEntry> {
+  try {
+    const result = await sql`
+      INSERT INTO creator_customer_portfolio (
+        creator_id, customer_email, stripe_subscription_id, subscription_status
+      )
+      VALUES (
+        ${input.creator_id},
+        ${input.customer_email.toLowerCase()},
+        ${input.stripe_subscription_id || null},
+        ${input.subscription_status || 'active'}
+      )
+      ON CONFLICT (creator_id, customer_email)
+      DO UPDATE SET
+        stripe_subscription_id = COALESCE(EXCLUDED.stripe_subscription_id, creator_customer_portfolio.stripe_subscription_id),
+        subscription_status = COALESCE(EXCLUDED.subscription_status, creator_customer_portfolio.subscription_status),
+        last_payment_at = NOW(),
+        payment_count = creator_customer_portfolio.payment_count + 1,
+        updated_at = NOW()
+      RETURNING *
+    `
+    return result.rows[0] as PortfolioEntry
+  } catch (error) {
+    console.error('Database error upserting portfolio entry:', error)
+    throw new DatabaseError('Failed to upsert portfolio entry', error)
+  }
+}
+
+export async function getPortfolioEntry(
+  creatorId: string,
+  customerEmail: string
+): Promise<PortfolioEntry | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM creator_customer_portfolio
+      WHERE creator_id = ${creatorId} AND customer_email = ${customerEmail.toLowerCase()}
+    `
+    return (result.rows[0] as PortfolioEntry) || null
+  } catch (error) {
+    console.error('Database error fetching portfolio entry:', error)
+    throw new DatabaseError('Failed to fetch portfolio entry', error)
+  }
+}
+
+export async function updatePortfolioStatus(
+  subscriptionId: string,
+  status: string
+): Promise<boolean> {
+  try {
+    const result = await sql`
+      UPDATE creator_customer_portfolio
+      SET subscription_status = ${status}, updated_at = NOW()
+      WHERE stripe_subscription_id = ${subscriptionId}
+    `
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error updating portfolio status:', error)
+    throw new DatabaseError('Failed to update portfolio status', error)
+  }
+}
+
+export async function breakPortfolioAttribution(
+  subscriptionId: string
+): Promise<boolean> {
+  try {
+    const result = await sql`
+      UPDATE creator_customer_portfolio
+      SET attribution_active = FALSE, subscription_status = 'cancelled', updated_at = NOW()
+      WHERE stripe_subscription_id = ${subscriptionId}
+    `
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error breaking portfolio attribution:', error)
+    throw new DatabaseError('Failed to break portfolio attribution', error)
+  }
+}
+
+export async function getPortfolioByCreator(
+  creatorId: string,
+  activeOnly = false
+): Promise<PortfolioEntry[]> {
+  try {
+    const result = activeOnly
+      ? await sql`
+          SELECT * FROM creator_customer_portfolio
+          WHERE creator_id = ${creatorId} AND attribution_active = TRUE AND subscription_status = 'active'
+          ORDER BY first_payment_at DESC
+        `
+      : await sql`
+          SELECT * FROM creator_customer_portfolio
+          WHERE creator_id = ${creatorId}
+          ORDER BY first_payment_at DESC
+        `
+    return result.rows as PortfolioEntry[]
+  } catch (error) {
+    console.error('Database error fetching portfolio:', error)
+    throw new DatabaseError('Failed to fetch portfolio', error)
+  }
+}
+
+export async function updateCreatorActiveMemberCount(creatorId: string): Promise<number> {
+  try {
+    const result = await sql`
+      UPDATE creators
+      SET
+        active_member_count = (
+          SELECT COUNT(*) FROM creator_customer_portfolio
+          WHERE creator_id = ${creatorId}
+            AND attribution_active = TRUE
+            AND subscription_status = 'active'
+        ),
+        updated_at = NOW()
+      WHERE id = ${creatorId}
+      RETURNING active_member_count
+    `
+    return result.rows[0]?.active_member_count ?? 0
+  } catch (error) {
+    console.error('Database error updating active member count:', error)
+    throw new DatabaseError('Failed to update active member count', error)
+  }
+}
+
+export async function getPortfolioEntryBySubscription(
+  subscriptionId: string
+): Promise<PortfolioEntry | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM creator_customer_portfolio
+      WHERE stripe_subscription_id = ${subscriptionId}
+      LIMIT 1
+    `
+    return (result.rows[0] as PortfolioEntry) || null
+  } catch (error) {
+    console.error('Database error fetching portfolio by subscription:', error)
+    throw new DatabaseError('Failed to fetch portfolio by subscription', error)
+  }
+}
+
+export async function incrementPortfolioPayment(subscriptionId: string): Promise<void> {
+  try {
+    await sql`
+      UPDATE creator_customer_portfolio
+      SET payment_count = payment_count + 1, last_payment_at = NOW(), updated_at = NOW()
+      WHERE stripe_subscription_id = ${subscriptionId}
+    `
+  } catch (error) {
+    console.error('Database error incrementing portfolio payment:', error)
+    throw new DatabaseError('Failed to increment portfolio payment', error)
+  }
+}
+
+// ===========================================
+// COMMISSION BREAKDOWN QUERIES
+// ===========================================
+
+export async function getCommissionBreakdownByCreator(
+  creatorId: string
+): Promise<{ directMembership: number; directProduct: number; override: number }> {
+  try {
+    const result = await sql`
+      SELECT
+        COALESCE(SUM(CASE
+          WHEN cl.commission_type = 'direct' AND oa.is_subscription = TRUE
+          THEN cl.commission_amount ELSE 0
+        END), 0) as direct_membership,
+        COALESCE(SUM(CASE
+          WHEN cl.commission_type = 'direct' AND (oa.is_subscription = FALSE OR oa.is_subscription IS NULL)
+          THEN cl.commission_amount ELSE 0
+        END), 0) as direct_product,
+        COALESCE(SUM(CASE
+          WHEN cl.commission_type = 'override'
+          THEN cl.commission_amount ELSE 0
+        END), 0) as override_total
+      FROM commission_ledger cl
+      LEFT JOIN order_attributions oa ON cl.order_attribution_id = oa.id
+      WHERE cl.beneficiary_creator_id = ${creatorId} AND cl.status != 'reversed'
+    `
+    const row = result.rows[0]
+    return {
+      directMembership: parseFloat(row?.direct_membership || '0'),
+      directProduct: parseFloat(row?.direct_product || '0'),
+      override: parseFloat(row?.override_total || '0'),
+    }
+  } catch (error) {
+    console.error('Database error fetching commission breakdown:', error)
+    throw new DatabaseError('Failed to fetch commission breakdown', error)
+  }
+}
+
+export async function checkAffiliateCodeExists(code: string): Promise<boolean> {
+  try {
+    const result = await sql`
+      SELECT 1 FROM affiliate_codes WHERE lower(code) = ${code.toLowerCase()} LIMIT 1
+    `
+    return result.rows.length > 0
+  } catch (error) {
+    console.error('Database error checking code exists:', error)
+    throw new DatabaseError('Failed to check code exists', error)
   }
 }
 

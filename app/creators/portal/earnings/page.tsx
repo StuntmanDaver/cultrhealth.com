@@ -30,6 +30,7 @@ export default function EarningsPage() {
   const [orders, setOrders] = useState<OrderAttribution[]>([])
   const [ledger, setLedger] = useState<CommissionLedgerEntry[]>([])
   const [tab, setTab] = useState<'orders' | 'ledger'>('orders')
+  const [ledgerFilter, setLedgerFilter] = useState<'all' | 'direct' | 'override'>('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -115,11 +116,16 @@ export default function EarningsPage() {
         />
       </div>
 
-      {/* 30-day hold explainer */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm">
-        <p className="font-medium text-amber-800">30-Day Hold Period</p>
-        <p className="text-amber-700 mt-1">
-          Commissions are held for 30 days after the order date to account for refunds. After the hold period, they move to &quot;approved&quot; status and become eligible for payout.
+      {/* Commission model explainer */}
+      <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 text-sm">
+        <p className="font-medium text-cultr-forest">Three Commission Streams</p>
+        <ul className="text-cultr-textMuted mt-1 space-y-1">
+          <li><strong>Membership direct (10%):</strong> Earned on each subscription payment from customers who use your code</li>
+          <li><strong>Product direct (10%):</strong> Earned on product purchases using your product code</li>
+          <li><strong>Recruitment override (5-20%):</strong> Earned on sales by creators you recruited (during your first 6 months)</li>
+        </ul>
+        <p className="text-cultr-textMuted mt-2">
+          All commissions are held for 30 days before approval (refund window). Total cap: 25% per sale.
         </p>
       </div>
 
@@ -146,6 +152,24 @@ export default function EarningsPage() {
           >
             Commission Ledger ({ledger.length})
           </button>
+
+          {tab === 'ledger' && (
+            <div className="ml-auto flex items-center gap-2">
+              {(['all', 'direct', 'override'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setLedgerFilter(f)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                    ledgerFilter === f
+                      ? 'bg-cultr-forest text-white'
+                      : 'bg-stone-100 text-cultr-textMuted hover:bg-stone-200'
+                  }`}
+                >
+                  {f === 'all' ? 'All' : f === 'direct' ? 'Direct' : 'Override'}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -217,7 +241,7 @@ export default function EarningsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {ledger.length > 0 ? ledger.map((e) => (
+                {ledger.length > 0 ? ledger.filter(e => ledgerFilter === 'all' || e.commission_type === ledgerFilter).map((e) => (
                   <tr key={e.id} className="hover:bg-stone-50">
                     <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${

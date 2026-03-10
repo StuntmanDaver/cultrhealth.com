@@ -142,6 +142,7 @@ export interface ResolvedAttribution {
   method: 'link_click' | 'coupon_code'
   linkId?: string
   codeId?: string
+  codeType?: 'membership' | 'product' | 'general'
   clickEventId?: string
   isSelfReferral: boolean
 }
@@ -162,6 +163,7 @@ export async function resolveAttribution(params: {
           creatorId: creator.id,
           method: 'coupon_code',
           codeId: code.id,
+          codeType: (code as any).code_type || 'general',
           isSelfReferral,
         }
       }

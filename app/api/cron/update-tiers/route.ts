@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
   try {
     const result = await recalculateAllTiers()
 
-    console.log(`Cron: Updated ${result.updated}/${result.total} creator tiers`)
+    console.log(
+      `Cron: Updated ${result.updated}/${result.total} creator tiers, ` +
+      `${result.portfolioUpdated} portfolio counts changed`
+    )
 
     return NextResponse.json({
       success: true,

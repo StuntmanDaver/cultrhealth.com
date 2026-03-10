@@ -10,6 +10,8 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Circle,
+  Timer,
+  UserPlus,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
@@ -48,10 +50,80 @@ function MetricCard({
   )
 }
 
+function BonusWindowBanner({ daysLeft }: { daysLeft: number }) {
+  if (daysLeft <= 0) return null
+
+  return (
+    <div className="bg-gradient-to-r from-cultr-forest to-forest-dark rounded-2xl p-5 text-white">
+      <div className="flex items-center gap-3 mb-2">
+        <Timer className="w-5 h-5 text-cultr-sage" />
+        <h3 className="font-display font-bold">Bonus Window Active</h3>
+      </div>
+      <p className="text-sm text-white/80">
+        You have <span className="font-bold text-cultr-sage">{daysLeft} days</span> left to earn
+        enhanced override commissions (up to 20%). After this window, override rates drop to flat 10%.
+      </p>
+      <div className="mt-3 w-full bg-white/20 rounded-full h-2">
+        <div
+          className="bg-cultr-sage rounded-full h-2 transition-all"
+          style={{ width: `${Math.max(5, (daysLeft / 180) * 100)}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function CommissionBreakdown({ metrics }: { metrics: NonNullable<ReturnType<typeof useCreator>['metrics']> }) {
+  const fmt = (n: number) =>
+    `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  const total = (metrics.directMembershipEarnings ?? 0) + (metrics.directProductEarnings ?? 0) + (metrics.overrideEarnings ?? 0)
+
+  return (
+    <div className="bg-white border border-stone-200 rounded-2xl p-6">
+      <h3 className="font-display font-bold text-cultr-forest mb-4">Commission Breakdown</h3>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+            <span className="text-sm text-cultr-text">Membership (10%)</span>
+          </div>
+          <span className="text-sm font-bold text-cultr-forest">
+            {fmt(metrics.directMembershipEarnings ?? 0)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <span className="text-sm text-cultr-text">Product (10%)</span>
+          </div>
+          <span className="text-sm font-bold text-cultr-forest">
+            {fmt(metrics.directProductEarnings ?? 0)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-purple-500" />
+            <span className="text-sm text-cultr-text">Recruitment Override ({metrics.overrideRate}%)</span>
+          </div>
+          <span className="text-sm font-bold text-cultr-forest">
+            {fmt(metrics.overrideEarnings ?? 0)}
+          </span>
+        </div>
+        <div className="border-t border-stone-100 pt-2 flex items-center justify-between">
+          <span className="text-sm font-medium text-cultr-text">Total</span>
+          <span className="text-sm font-bold text-cultr-forest">{fmt(total)}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function TierProgressBar({ tier, recruitCount }: { tier: number; recruitCount: number }) {
+  const maxTier = TIER_CONFIGS.length - 1
   const nextTierReq = getNextTierRequirement(tier)
   const currentTierReq = TIER_CONFIGS[tier]?.minRecruits || 0
-  const progress = tier >= 4
+  const progress = tier >= maxTier
     ? 100
     : ((recruitCount - currentTierReq) / (nextTierReq - currentTierReq)) * 100
 
@@ -63,7 +135,7 @@ function TierProgressBar({ tier, recruitCount }: { tier: number; recruitCount: n
             {getTierName(tier)}
           </h3>
           <p className="text-sm text-cultr-textMuted">
-            {tier >= 4 ? 'Max tier reached' : `${nextTierReq - recruitCount} more recruits to ${getTierName(tier + 1)}`}
+            {tier >= maxTier ? 'Max tier reached' : `${nextTierReq - recruitCount} more recruits to ${getTierName(tier + 1)}`}
           </p>
         </div>
         <span className="text-sm font-bold text-cultr-forest">
@@ -112,7 +184,7 @@ function GettingStartedCard() {
             {[
               { label: 'Application approved', done: true, href: null },
               { label: 'Create your first tracking link', done: false, href: '/creators/portal/share' },
-              { label: 'Get your referral code', done: false, href: '/creators/portal/share' },
+              { label: 'Get your referral codes', done: false, href: '/creators/portal/share' },
               { label: 'Share CULTR with your audience', done: false, href: null },
               { label: 'Make your first sale', done: false, href: null },
             ].map((step, i) => (
@@ -172,6 +244,11 @@ export default function CreatorDashboardPage() {
         </p>
       </div>
 
+      {/* Bonus Window Banner */}
+      {metrics?.isInBonusWindow && (
+        <BonusWindowBanner daysLeft={metrics.bonusWindowDaysLeft} />
+      )}
+
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
@@ -187,10 +264,10 @@ export default function CreatorDashboardPage() {
           subtitle={`${(metrics?.conversionRate ?? 0).toFixed(1)}% conversion`}
         />
         <MetricCard
-          label="Revenue"
-          value={fmt(metrics?.thisMonthRevenue ?? 0)}
-          icon={TrendingUp}
-          subtitle={`${fmt(metrics?.totalRevenue ?? 0)} lifetime`}
+          label="Active Members"
+          value={(metrics?.activeMemberCount ?? 0).toLocaleString()}
+          icon={Users}
+          subtitle="Customers with active subscriptions"
         />
         <MetricCard
           label="Commission"
@@ -203,6 +280,17 @@ export default function CreatorDashboardPage() {
       {/* Getting Started (shown only to new creators with no activity) */}
       {metrics && metrics.totalClicks === 0 && metrics.totalCommission === 0 && (
         <GettingStartedCard />
+      )}
+
+      {/* Commission Breakdown + Tier Progress */}
+      {metrics && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          <CommissionBreakdown metrics={metrics} />
+          <TierProgressBar
+            tier={creator?.tier ?? 0}
+            recruitCount={creator?.recruit_count ?? 0}
+          />
+        </div>
       )}
 
       {/* Milestones */}
@@ -235,12 +323,6 @@ export default function CreatorDashboardPage() {
         </div>
       )}
 
-      {/* Tier Progress */}
-      <TierProgressBar
-        tier={creator?.tier ?? 0}
-        recruitCount={creator?.recruit_count ?? 0}
-      />
-
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-4">
         <Link
@@ -249,9 +331,9 @@ export default function CreatorDashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-display font-bold">Share Your Link</p>
+              <p className="font-display font-bold">Share Your Codes</p>
               <p className="text-sm text-white/70 mt-1">
-                Get your tracking link and start earning
+                Share your membership & product codes
               </p>
             </div>
             <ArrowUpRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
@@ -264,12 +346,12 @@ export default function CreatorDashboardPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-display font-bold text-cultr-forest">Grow Your Network</p>
+              <p className="font-display font-bold text-cultr-forest">Recruit Creators</p>
               <p className="text-sm text-cultr-textMuted mt-1">
-                Recruit creators for override commissions
+                Earn {metrics?.overrideRate ?? 5}% override on their sales
               </p>
             </div>
-            <Users className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
+            <UserPlus className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
           </div>
         </Link>
 
@@ -281,7 +363,7 @@ export default function CreatorDashboardPage() {
             <div>
               <p className="font-display font-bold text-cultr-forest">View Earnings</p>
               <p className="text-sm text-cultr-textMuted mt-1">
-                Track your commissions and payouts
+                Track all three commission streams
               </p>
             </div>
             <DollarSign className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
