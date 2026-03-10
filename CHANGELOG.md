@@ -1,3 +1,98 @@
+## [2026-03-10] - Creator Commission System Overhaul
+
+### Summary
+Complete restructuring of the creator affiliate commission model from flat 10% + old override tiers to a three-stream system: direct membership (10%), direct product (10%), and recruitment override (5-20% tiered). Includes dual coupon codes, portfolio tracking, 25% total cap during 6-month bonus window, and attribution break on subscription cancellation.
+
+### New (3 files)
+- `migrations/013_commission_overhaul.sql` — Adds `code_type` to affiliate_codes, `active_member_count`/`commission_rate`/`creator_start_date` to creators, `is_subscription`/`subscription_payment_number` to order_attributions, new `creator_customer_portfolio` table
+- Dual coupon code system: `{LASTNAME}` (membership) + `{LASTNAME}10` (product) auto-generated on approval
+- Portfolio-based subscription lifecycle tracking with attribution break rule
+
+### Rewritten (6 files)
+- **`lib/config/affiliate.ts`** — New 4-tier config (Starter 5%, Bronze 10%, Silver 15%, Gold 20%), 25% total cap, 6-month bonus window, `isInBonusWindow()`/`getBonusWindowDaysLeft()`/`generateCreatorCodes()` helpers
+- **`lib/creators/commission.ts`** — Three-stream engine with dynamic cap (25% during bonus, 10% after), re-signup attribution blocking, portfolio-based active member recalculation
+- **`app/api/admin/creators/[id]/approve/route.ts`** — Auto-generates dual coupon codes with collision handling
+- **`app/api/cron/update-tiers/route.ts`** — Updated for portfolio-based active member counting
+- **`app/creators/portal/dashboard/page.tsx`** — Bonus window banner, commission breakdown, active member metrics
+- **`app/creators/portal/network/page.tsx`** — Two-tab layout (Recruited Creators + Customer Portfolio), updated tier milestones
+
+### Modified (10 files)
+- `lib/creators/db.ts` — 8 new portfolio CRUD functions, commission breakdown query, `creator_start_date` set on approval
+- `lib/creators/attribution.ts` — Added `codeType` to `ResolvedAttribution`
+- `app/api/webhook/stripe/route.ts` — Portfolio entry on checkout, recurring payment tracking, attribution break on cancel
+- `app/api/checkout/product/route.ts` — Passes attribution cookie as `client_reference_id`
+- `app/api/creators/dashboard/route.ts` — Returns bonus window, commission breakdown, active members
+- `app/api/creators/network/route.ts` — Returns portfolio data alongside recruits
+- `app/creators/portal/earnings/page.tsx` — Commission model explainer, ledger type filters
+- `app/creators/portal/share/page.tsx` — Dual code labels (Membership Code / Product Code)
+- `components/creators/Milestones.tsx` — Recruitment-based milestones (First Recruit, Bronze/Silver/Gold Network)
+- `components/creators/CreatorHeader.tsx` — Active Members metric, override rate in tier badge
+
+### Bugs Fixed During Audit
+- **Static total cap** — Commission cap was always 25%; now dynamic (25% during bonus, 10% after)
+- **Missing creator_start_date** — New creators had NULL start date; now set on first approval
+- **Incomplete collision check** — Dual code creation now checks both codes before insert
+
+### Database Migration
+- Migration 013 run on staging Neon database (requires migration 009 as prerequisite)
+
+---
+
+## [2026-03-10] - Asher Med Full Integration & Healthie Removal
+
+### Summary
+Completed full migration from Healthie EHR to Asher Med EMR. Removed all Healthie code, rewrote critical API routes, updated email templates, and created DB migration to drop legacy columns.
+
+### Deleted (9 files)
+- `lib/healthie-api.ts`, `lib/healthie-sso.ts`, `lib/config/healthie.ts`
+- `app/api/healthie/sso-token/route.ts`, `app/api/webhook/healthie/route.ts`
+- `tests/lib/healthie-api.test.ts`
+- `docs/HEALTHIE-SSO-IMPLEMENTATION.md`, `docs/HEALTHIE-SSO-SETUP.md`, `docs/HEALTHIE-SSO-QUICKSTART.md`
+
+### Rewritten (3 files)
+- **`app/api/webhook/stripe/route.ts`** — Removed Healthie patient creation; looks up asher_patient_id from DB; welcome email uses dashboard URL; subscription deletion calls Asher Med updatePatient
+- **`app/api/protocol/generate/route.ts`** — Removed Healthie care plan/document creation; stores protocols locally in DB with protocol_notes column
+- **`app/api/checkout/product/route.ts`** — Replaced Healthie Stripe Connect flow with direct Stripe Checkout Sessions
+
+### Modified (~15 files)
+- `lib/db.ts` — healthie_patient_id → asher_patient_id (number), removed 'healthie' from payment_provider union
+- `lib/resend.ts` — healthiePortalUrl → dashboardUrl, updated button labels and portal references
+- `lib/data-normalization.ts` — Renamed HealthieLabResultInput → LabResultInput, transformHealthieResults → transformLabResults, processHealthieLabResults → processLabResults
+- `lib/invoice/invoice-template.tsx` — Renamed healthie provider label to legacy
+- `app/admin/AdminDashboardClient.tsx` — Healthie link → Asher Med Portal link
+- `app/library/cart/CartClient.tsx` — Updated Stripe key env var, redirects to Stripe Checkout
+- `app/join/[tier]/page.tsx` — Updated Stripe key env var and comments
+- `app/provider/protocol-builder/ProtocolBuilderClient.tsx` — patientHealthieId → patientId, updated labels
+- `app/api/track/daily/route.ts` — healthie_patient_id → asher_patient_id
+- `app/legal/privacy/page.tsx` — Healthie → Asher Med in HIPAA section
+- `components/dashboard/BiomarkerTrends.tsx` — Removed Healthie mention
+- `tests/api/protocol-generate.test.ts` — Rewrote for Asher Med API mocks
+- `tests/setup.ts` — HEALTHIE env vars → ASHER_MED env vars
+- `.env.example`, `env.example` — Removed all HEALTHIE variables
+- `CLAUDE.md` — Removed all Healthie references from documentation
+
+### Migration Created
+- `migrations/012_drop_healthie_columns.sql` — Adds asher_patient_id columns, copies data, drops healthie_patient_id columns (run post-deploy)
+
+### Post-Migration Audit (Mar 10)
+Full codebase audit verified migration completeness:
+- **14 interfaces** — all use `asher_patient_id: number` (not string)
+- **19 SQL functions** — all reference `asher_patient_id` column
+- **13 email functions** — all use `dashboardUrl` (not `healthiePortalUrl`)
+- **3 API routes** — fully rewritten, no Healthie imports
+- **9 deleted files** — confirmed removed from disk
+- **0 Healthie references** in active TS/TSX code (only "healthier" in unused legacy About.tsx)
+- `docs/README.md` updated to remove broken Healthie SSO doc links
+- Minor: `lib/db.ts:207` has dead code (String() in unused dynamic query path) — no functional impact
+
+### Verification
+- TypeScript: passes clean
+- Build: passes clean
+- Tests: 7 files, 171 tests, all passing
+- Grep healthie in *.ts/*.tsx: 0 results
+
+---
+
 ## [2026-03-05] - Mailchimp Configuration Audit & Deployment Readiness
 
 ### Summary
