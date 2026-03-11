@@ -361,31 +361,32 @@ export default function ShareEarnPage() {
           <Tag className="w-5 h-5" /> Your Codes
         </h2>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm mb-4">
-          <p className="font-medium text-amber-800">Two codes, two purposes</p>
-          <p className="text-amber-700 mt-1">
-            <strong>Membership code</strong> — share when referring someone to a subscription plan.{' '}
-            <strong>Product code</strong> — share for one-time product purchases. Both earn you 10% commission.
-          </p>
-        </div>
-
-        <div className="space-y-3">
+        <div className="space-y-4">
           {codes.length > 0 ? (
             codes.map((code) => {
-              const codeType = (code as any).code_type
-              const label = codeType === 'membership'
+              const label = code.code_type === 'membership'
                 ? 'Membership Code'
-                : codeType === 'product'
+                : code.code_type === 'product'
                 ? 'Product Code (10% off)'
                 : code.is_primary ? 'Primary Code' : 'Code'
 
+              const description = code.code_type === 'membership'
+                ? 'Share when referring someone to a CULTR subscription'
+                : code.code_type === 'product'
+                ? 'Share for one-time peptide/product purchases'
+                : null
+
               return (
-                <CopyableLink
-                  key={code.id}
-                  label={label}
-                  value={code.code}
-                  stats={`${code.use_count} uses | $${Number(code.total_revenue).toFixed(2)} revenue`}
-                />
+                <div key={code.id}>
+                  <CopyableLink
+                    label={label}
+                    value={code.code}
+                    stats={`${code.use_count} uses | $${Number(code.total_revenue).toFixed(2)} revenue`}
+                  />
+                  {description && (
+                    <p className="text-xs text-cultr-textMuted mt-1.5 ml-1">{description}</p>
+                  )}
+                </div>
               )
             })
           ) : (

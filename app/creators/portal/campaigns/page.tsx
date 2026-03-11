@@ -10,9 +10,11 @@ import {
   Copy,
   Check,
   ChevronRight,
+  ChevronDown,
   Tag,
   Calendar,
   Zap,
+  Inbox,
 } from 'lucide-react'
 import { useCreator } from '@/lib/contexts/CreatorContext'
 
@@ -40,11 +42,11 @@ const CAMPAIGNS: Campaign[] = [
     endDate: '2026-03-31',
     details: [
       'Focus messaging on "spring reset" and new health goals',
-      'Highlight the 28–59 biomarker panel (SiPho Health) as a first step',
+      'Highlight the 28-59 biomarker panel (SiPho Health) as a first step',
       'Push the quiz as a low-commitment entry point',
       'Use seasonal hooks: "New year goals, spring action"',
     ],
-    cta: { label: 'Copy Spring Promo Caption', copy: "Spring is the perfect time to stop guessing and start optimizing. 🌱\n\nGet 28–59 biomarkers tested, matched with a licensed provider, and start a personalized protocol.\n\nPlans from $199/mo. Take the quiz → {LINK}\n\n#ad #cultrhealth #springreset" },
+    cta: { label: 'Copy Spring Promo Caption', copy: "Spring is the perfect time to stop guessing and start optimizing. \n\nGet 28-59 biomarkers tested, matched with a licensed provider, and start a personalized protocol.\n\nPlans from $199/mo. Take the quiz \u2192 {LINK}\n\n#ad #cultrhealth #springreset" },
     badge: 'Active Now',
   },
   {
@@ -59,7 +61,7 @@ const CAMPAIGNS: Campaign[] = [
       'Address safety concerns proactively',
       'Share the GLP-1 Overview from Resources',
       'Avoid before/after transformation content',
-      'Use approved claims only — review the Compliance section',
+      'Use approved claims only \u2014 review the Compliance section',
     ],
     cta: { label: 'View GLP-1 Talking Points', url: '/creators/portal/resources/glp-1-overview' },
     badge: 'Priority',
@@ -74,7 +76,7 @@ const CAMPAIGNS: Campaign[] = [
     endDate: '2026-02-28',
     details: [
       '$25 bonus per new member who completes their first consultation',
-      'Bonus applied automatically — no action needed from you',
+      'Bonus applied automatically \u2014 no action needed from you',
       'Stacks with your normal 10% commission',
       'Unlimited bonus referrals during the campaign period',
     ],
@@ -82,7 +84,7 @@ const CAMPAIGNS: Campaign[] = [
   },
   {
     id: 'peptide-launch-q2',
-    title: 'New Peptide Protocols — Q2 Launch',
+    title: 'New Peptide Protocols \u2014 Q2 Launch',
     description: 'CULTR is expanding peptide offerings in Q2. New protocols for recovery and cognitive performance. Details coming soon.',
     type: 'announcement',
     status: 'upcoming',
@@ -137,20 +139,20 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
         className="w-full text-left px-5 py-4 flex items-start gap-4"
       >
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-          campaign.status === 'active' ? 'bg-cultr-mint' : 'bg-stone-100'
+          campaign.status === 'active' ? 'bg-cultr-mint' : campaign.status === 'ended' ? 'bg-stone-50' : 'bg-stone-100'
         }`}>
           <Icon className={`w-5 h-5 ${campaign.status === 'active' ? 'text-cultr-forest' : 'text-stone-400'}`} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-display font-bold text-cultr-forest text-sm">{campaign.title}</h3>
+            <h3 className={`font-display font-bold text-sm ${campaign.status === 'ended' ? 'text-stone-400' : 'text-cultr-forest'}`}>{campaign.title}</h3>
             {campaign.badge && (
               <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${STATUS_STYLES[campaign.status]}`}>
                 {campaign.badge}
               </span>
             )}
           </div>
-          <p className="text-xs text-cultr-textMuted line-clamp-2">{brandify(campaign.description)}</p>
+          <p className={`text-xs line-clamp-2 ${campaign.status === 'ended' ? 'text-stone-400' : 'text-cultr-textMuted'}`}>{brandify(campaign.description)}</p>
         </div>
         <ChevronRight className={`w-4 h-4 text-stone-300 shrink-0 mt-1 transition-transform ${expanded ? 'rotate-90' : ''}`} />
       </button>
@@ -162,7 +164,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
             <Calendar className="w-3.5 h-3.5" />
             <span>
               {new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              {campaign.endDate && ` — ${new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+              {campaign.endDate && ` \u2014 ${new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
             </span>
           </div>
 
@@ -180,7 +182,7 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
           </div>
 
           {/* CTA */}
-          {campaign.cta && (
+          {campaign.cta && campaign.status !== 'ended' && (
             <div>
               {campaign.cta.copy ? (
                 <button
@@ -208,8 +210,22 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
 }
 
 export default function CampaignsPage() {
-  const activeCampaigns = CAMPAIGNS.filter((c) => c.status === 'active')
-  const upcomingCampaigns = CAMPAIGNS.filter((c) => c.status === 'upcoming')
+  const [showPast, setShowPast] = useState(false)
+
+  // Auto-expire campaigns whose endDate is in the past
+  const now = new Date()
+  const processedCampaigns = CAMPAIGNS.map(c => {
+    if (c.endDate && new Date(c.endDate) < now && c.status === 'active') {
+      return { ...c, status: 'ended' as const, badge: 'Ended' }
+    }
+    return c
+  })
+
+  const activeCampaigns = processedCampaigns.filter((c) => c.status === 'active')
+  const upcomingCampaigns = processedCampaigns.filter((c) => c.status === 'upcoming')
+  const endedCampaigns = processedCampaigns.filter((c) => c.status === 'ended')
+
+  const hasNoCurrent = activeCampaigns.length === 0 && upcomingCampaigns.length === 0
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -219,6 +235,17 @@ export default function CampaignsPage() {
           Active promotions, product launches, and bonus opportunities. Stay aligned with <span className="font-display font-bold">CULTR</span> messaging.
         </p>
       </div>
+
+      {/* Empty state when no active or upcoming campaigns */}
+      {hasNoCurrent && (
+        <div className="bg-white border border-stone-200 rounded-2xl p-10 text-center">
+          <Inbox className="w-10 h-10 text-stone-300 mx-auto mb-3" />
+          <h3 className="font-display font-bold text-cultr-forest mb-2">No active campaigns right now</h3>
+          <p className="text-sm text-cultr-textMuted max-w-md mx-auto">
+            Check back soon or contact your creator manager for upcoming opportunities.
+          </p>
+        </div>
+      )}
 
       {/* Active */}
       {activeCampaigns.length > 0 && (
@@ -250,6 +277,26 @@ export default function CampaignsPage() {
               <CampaignCard key={c.id} campaign={c} />
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Past Campaigns (collapsed by default) */}
+      {endedCampaigns.length > 0 && (
+        <section>
+          <button
+            onClick={() => setShowPast(!showPast)}
+            className="flex items-center gap-2 text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors"
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform ${showPast ? 'rotate-0' : '-rotate-90'}`} />
+            <span className="font-medium">Past Campaigns ({endedCampaigns.length})</span>
+          </button>
+          {showPast && (
+            <div className="space-y-3 mt-4">
+              {endedCampaigns.map((c) => (
+                <CampaignCard key={c.id} campaign={c} />
+              ))}
+            </div>
+          )}
         </section>
       )}
 

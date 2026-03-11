@@ -38,6 +38,12 @@ export async function GET(request: NextRequest) {
         ? Math.round((allTimeStats.totalRevenue / allTimeStats.totalOrders) * 100) / 100
         : 0
 
+    // TODO: thisMonthEarnings and lastMonthEarnings only count direct commissions
+    // from order_attributions (via getCreatorOrderStats), not overrides from
+    // commission_ledger. lifetimeEarnings includes all streams (via
+    // getCommissionSummaryByCreator). This is a known inconsistency — to fix
+    // properly, add a getCommissionSummaryByCreatorSince(id, start, end) that
+    // queries commission_ledger with date boundaries.
     return NextResponse.json({
       earnings: {
         lifetimeEarnings: commissionSummary.total,
