@@ -9,6 +9,7 @@ import type {
   AffirmItem,
 } from './payment-types';
 import { AFFIRM_CONFIG } from '@/lib/config/payments';
+import { calculateTaxCents } from '@/lib/config/tax';
 
 function getAuthHeader(): string {
   const publicKey = process.env.NEXT_PUBLIC_AFFIRM_PUBLIC_KEY;
@@ -81,6 +82,8 @@ export function buildAffirmCheckoutConfig(params: {
         },
       ];
 
+  const taxCents = calculateTaxCents(params.amountCents)
+
   return {
     merchant: {
       user_confirmation_url: params.confirmationUrl,
@@ -95,7 +98,8 @@ export function buildAffirmCheckoutConfig(params: {
     },
     order_id: params.orderId,
     currency: AFFIRM_CONFIG.currency,
-    total: params.amountCents,
+    tax_amount: taxCents,
+    total: params.amountCents + taxCents,
   };
 }
 

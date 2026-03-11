@@ -9,6 +9,7 @@ import type {
   CheckoutItem,
 } from './payment-types';
 import { AUTHORIZE_NET_CONFIG } from '@/lib/config/payments';
+import { calculateTaxCents } from '@/lib/config/tax';
 
 // ---------------------
 // Authentication
@@ -119,17 +120,23 @@ export interface CreateTransactionParams {
 export async function createTransaction(
   params: CreateTransactionParams
 ): Promise<AuthorizeNetTransactionResponse> {
-  const amount = (params.amountCents / 100).toFixed(2);
-  
+  const taxCents = calculateTaxCents(params.amountCents);
+  const totalWithTax = ((params.amountCents + taxCents) / 100).toFixed(2);
+
   const transactionRequest: Record<string, unknown> = {
     transactionType: 'authCaptureTransaction',
-    amount,
+    amount: totalWithTax,
     payment: {
       opaqueData: params.opaqueData,
     },
     order: {
       invoiceNumber: params.orderId.substring(0, 20), // Max 20 chars
       description: (params.description || 'CULTR Health Purchase').substring(0, 255),
+    },
+    tax: {
+      amount: (taxCents / 100).toFixed(2),
+      name: 'Sales Tax',
+      description: 'FL State + Alachua County (7.5%)',
     },
     customer: {
       email: params.customerEmail,
@@ -196,7 +203,8 @@ export interface CreateSubscriptionParams {
 export async function createSubscription(
   params: CreateSubscriptionParams
 ): Promise<AuthorizeNetSubscriptionResponse> {
-  const amount = (params.amountCents / 100).toFixed(2);
+  const taxCents = calculateTaxCents(params.amountCents);
+  const amount = ((params.amountCents + taxCents) / 100).toFixed(2);
   const startDate = params.startDate || new Date().toISOString().split('T')[0];
   
   const subscription: Record<string, unknown> = {

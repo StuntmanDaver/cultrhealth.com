@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
       mode: 'payment',
       customer_email: email,
       line_items: lineItems,
+      automatic_tax: { enabled: true },
       ...(clientReferenceId && { client_reference_id: clientReferenceId }),
       metadata: {
         customer_name: firstName && lastName ? `${firstName} ${lastName}` : firstName || '',

@@ -9,6 +9,7 @@ import type {
   CheckoutItem,
 } from './payment-types';
 import { KLARNA_CONFIG } from '@/lib/config/payments';
+import { FL_TAX_RATE, calculateTaxCents } from '@/lib/config/tax';
 
 function getAuthHeader(): string {
   const apiKey = process.env.KLARNA_API_KEY;
@@ -58,17 +59,23 @@ export function buildOrderLines(
   items: CheckoutItem[],
   description?: string
 ): KlarnaOrderLine[] {
+  const klarnaTaxRate = Math.round(FL_TAX_RATE * 10000) // 750 = 7.5%
+
   if (items.length > 0) {
-    return items.map((item) => ({
-      type: 'physical' as const,
-      name: item.name,
-      quantity: item.quantity,
-      unit_price: item.unitPriceCents,
-      total_amount: item.unitPriceCents * item.quantity,
-      total_tax_amount: 0,
-      tax_rate: 0,
-      reference: item.sku,
-    }));
+    return items.map((item) => {
+      const lineTotal = item.unitPriceCents * item.quantity
+      const lineTax = calculateTaxCents(lineTotal)
+      return {
+        type: 'physical' as const,
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: item.unitPriceCents,
+        total_amount: lineTotal + lineTax,
+        total_tax_amount: lineTax,
+        tax_rate: klarnaTaxRate,
+        reference: item.sku,
+      }
+    });
   }
 
   // Fallback: single line item (e.g. subscription first payment)
@@ -80,7 +87,7 @@ export function buildOrderLines(
       unit_price: 0, // caller must set
       total_amount: 0,
       total_tax_amount: 0,
-      tax_rate: 0,
+      tax_rate: klarnaTaxRate,
     },
   ];
 }
@@ -96,6 +103,9 @@ export async function createKlarnaSession(params: {
   confirmationUrl: string;
   pushUrl: string;
 }): Promise<KlarnaSessionResponse> {
+  const klarnaTaxRate = Math.round(FL_TAX_RATE * 10000)
+  const taxCents = calculateTaxCents(params.amountCents)
+
   const orderLines = params.items?.length
     ? buildOrderLines(params.items)
     : [
@@ -104,18 +114,21 @@ export async function createKlarnaSession(params: {
           name: params.description || 'CULTR Health Membership',
           quantity: 1,
           unit_price: params.amountCents,
-          total_amount: params.amountCents,
-          total_tax_amount: 0,
-          tax_rate: 0,
+          total_amount: params.amountCents + taxCents,
+          total_tax_amount: taxCents,
+          tax_rate: klarnaTaxRate,
         },
       ];
+
+  const orderTaxAmount = orderLines.reduce((sum, l) => sum + l.total_tax_amount, 0)
+  const orderAmount = orderLines.reduce((sum, l) => sum + l.total_amount, 0)
 
   const body: KlarnaSessionRequest = {
     purchase_country: KLARNA_CONFIG.purchaseCountry,
     purchase_currency: KLARNA_CONFIG.purchaseCurrency,
     locale: KLARNA_CONFIG.locale,
-    order_amount: params.amountCents,
-    order_tax_amount: 0,
+    order_amount: orderAmount,
+    order_tax_amount: orderTaxAmount,
     order_lines: orderLines,
     merchant_urls: {
       terms: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/terms`,
@@ -143,6 +156,9 @@ export async function createKlarnaOrder(
     description?: string;
   }
 ): Promise<KlarnaOrderResponse> {
+  const klarnaTaxRate = Math.round(FL_TAX_RATE * 10000)
+  const taxCents = calculateTaxCents(params.amountCents)
+
   const orderLines = params.items?.length
     ? buildOrderLines(params.items)
     : [
@@ -151,17 +167,20 @@ export async function createKlarnaOrder(
           name: params.description || 'CULTR Health Membership',
           quantity: 1,
           unit_price: params.amountCents,
-          total_amount: params.amountCents,
-          total_tax_amount: 0,
-          tax_rate: 0,
+          total_amount: params.amountCents + taxCents,
+          total_tax_amount: taxCents,
+          tax_rate: klarnaTaxRate,
         },
       ];
+
+  const orderTaxAmount = orderLines.reduce((sum, l) => sum + l.total_tax_amount, 0)
+  const orderAmount = orderLines.reduce((sum, l) => sum + l.total_amount, 0)
 
   const body = {
     purchase_country: KLARNA_CONFIG.purchaseCountry,
     purchase_currency: KLARNA_CONFIG.purchaseCurrency,
-    order_amount: params.amountCents,
-    order_tax_amount: 0,
+    order_amount: orderAmount,
+    order_tax_amount: orderTaxAmount,
     order_lines: orderLines,
   };
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
+import { TAX_RATE_LABEL } from '@/lib/config/tax'
 
 interface OrderItem {
   therapyId: string
@@ -52,7 +53,7 @@ export async function POST(
 
     // Fetch the order
     const orderResult = await sql`
-      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status, coupon_code, discount_percent
+      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status, coupon_code, discount_percent, tax_rate, tax_amount_usd
       FROM club_orders
       WHERE id = ${orderId}::uuid
     `
@@ -79,12 +80,16 @@ export async function POST(
     }
 
     // Send approval emails to customer and admin
+    const taxAmountUsd = order.tax_amount_usd ? Number(order.tax_amount_usd) : 0
+    const subtotal = order.subtotal_usd ? Number(order.subtotal_usd) : 0
     const emailData = {
       name: order.member_name,
       email: order.member_email,
       orderNumber: order.order_number,
       items: order.items as OrderItem[],
-      subtotal: order.subtotal_usd ? Number(order.subtotal_usd) : 0,
+      subtotal,
+      taxAmount: taxAmountUsd,
+      total: subtotal + taxAmountUsd,
     }
 
     try {
@@ -145,6 +150,8 @@ async function sendApprovalConfirmationToAdmin(data: {
   orderNumber: string
   items: OrderItem[]
   subtotal: number
+  taxAmount: number
+  total: number
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
@@ -200,9 +207,15 @@ async function sendApprovalConfirmationToAdmin(data: {
     </table>
 
     ${data.subtotal > 0 ? `
-    <p style="text-align: right; font-weight: 700; font-size: 15px; margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
-      Total: $${data.subtotal.toFixed(2)}
-    </p>
+    <div style="margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
+      ${data.taxAmount > 0 ? `
+      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>
+      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
+      ` : ''}
+      <p style="text-align: right; font-weight: 700; font-size: 15px; margin: 0;">
+        Total: $${data.total.toFixed(2)}
+      </p>
+    </div>
     ` : ''}
 
     <p style="color: #666; font-size: 14px; margin-top: 24px;">
@@ -227,6 +240,8 @@ async function sendApprovalEmailToCustomer(data: {
   orderNumber: string
   items: OrderItem[]
   subtotal: number
+  taxAmount: number
+  total: number
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
@@ -281,8 +296,18 @@ async function sendApprovalEmailToCustomer(data: {
         <tbody>${itemRows}</tbody>
       </table>
       ${data.subtotal > 0 ? `
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215; text-align: right;">
-        <span style="font-weight: 700; font-size: 16px;">Total: $${data.subtotal.toFixed(2)}</span>
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215;">
+        ${data.taxAmount > 0 ? `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+          <span>Subtotal</span><span>$${data.subtotal.toFixed(2)}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+          <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
+        </div>
+        ` : ''}
+        <div style="text-align: right;">
+          <span style="font-weight: 700; font-size: 16px;">Total: $${data.total.toFixed(2)}</span>
+        </div>
       </div>
       ` : ''}
     </div>

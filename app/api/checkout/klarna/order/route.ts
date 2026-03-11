@@ -6,6 +6,7 @@ import { PLANS } from '@/lib/config/plans';
 import { createOrder } from '@/lib/db';
 import { sendOrderConfirmationEmail } from '@/lib/resend';
 import { withRetry, isTransientDbError, logCheckoutEvent } from '@/lib/resilience';
+import { calculateTaxCents } from '@/lib/config/tax';
 
 interface KlarnaItem {
   sku: string;
@@ -82,7 +83,8 @@ export async function POST(request: NextRequest) {
 
     // Create order in database if fraud check passed
     const orderNumber = `KLARNA-${klarnaOrder.order_id}`;
-    const totalAmount = totalCents / 100;
+    const taxCents = calculateTaxCents(totalCents);
+    const totalAmount = (totalCents + taxCents) / 100;
     const email = customerEmail || '';
 
     // Create order items from passed items or generate placeholder

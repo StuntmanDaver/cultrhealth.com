@@ -721,6 +721,8 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
             {appliedCoupon && cart.getCartTotal() > 0 && (() => {
               const discountAmt = Math.round(cart.getCartTotal() * appliedCoupon.discount) / 100
               const discountedTotal = cart.getCartTotal() - discountAmt
+              const taxAmt = Math.round(discountedTotal * 0.075 * 100) / 100
+              const finalTotal = discountedTotal + taxAmt
               return (
                 <div className="space-y-1 mb-1">
                   <div className="flex justify-between text-sm text-brand-secondary/60">
@@ -731,19 +733,37 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
                     <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
                     <span>−${discountAmt.toFixed(2)}</span>
                   </div>
+                  <div className="flex justify-between text-sm text-brand-secondary/60">
+                    <span>Sales Tax (7.5%)</span>
+                    <span>${taxAmt.toFixed(2)}</span>
+                  </div>
                   <div className="flex justify-between items-baseline pt-1 border-t border-brand-secondary/10">
                     <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
-                    <span className="text-2xl font-display font-bold text-brand-primary">${discountedTotal.toFixed(2)}</span>
+                    <span className="text-2xl font-display font-bold text-brand-primary">${finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
               )
             })()}
             {!appliedCoupon && (
-              <div className="flex justify-between items-baseline">
-                <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
-                <span className="text-2xl font-display font-bold text-brand-primary">
-                  {cart.getCartTotal() > 0 ? `$${cart.getCartTotal().toFixed(2)}` : 'Quote Request'}
-                </span>
+              <div className="space-y-1">
+                {cart.getCartTotal() > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm text-brand-secondary/60">
+                      <span>Subtotal</span>
+                      <span>${cart.getCartTotal().toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-brand-secondary/60">
+                      <span>Sales Tax (7.5%)</span>
+                      <span>${(Math.round(cart.getCartTotal() * 0.075 * 100) / 100).toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-baseline pt-1 border-t border-brand-secondary/10">
+                  <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
+                  <span className="text-2xl font-display font-bold text-brand-primary">
+                    {cart.getCartTotal() > 0 ? `$${(cart.getCartTotal() + Math.round(cart.getCartTotal() * 0.075 * 100) / 100).toFixed(2)}` : 'Quote Request'}
+                  </span>
+                </div>
               </div>
             )}
             {cart.hasConsultationItems() && (

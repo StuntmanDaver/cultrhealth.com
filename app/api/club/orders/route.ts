@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { validateCoupon } from '@/lib/config/coupons'
+import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
 
 interface OrderItem {
   therapyId: string
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
     }, 0)
     const discountAmount = discountPercent > 0 ? Math.round(subtotalBeforeDiscount * discountPercent) / 100 : 0
     const subtotal = subtotalBeforeDiscount - discountAmount
+    const taxAmount = subtotal > 0 ? calculateTaxDollars(subtotal) : 0
+    const total = subtotal + taxAmount
 
     // Generate order number
     const orderNumber = `CLB-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`
@@ -78,7 +81,7 @@ export async function POST(request: Request) {
         if (memberId) {
           const appliedCouponCode = coupon ? couponCode!.trim().toUpperCase() : null
           const orderResult = await sql`
-            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent)
+            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent, tax_rate, tax_amount_usd)
             VALUES (
               ${orderNumber},
               ${memberId},
@@ -91,7 +94,9 @@ export async function POST(request: Request) {
               'pending_approval',
               ${approvalToken},
               ${appliedCouponCode},
-              ${discountPercent > 0 ? discountPercent : null}
+              ${discountPercent > 0 ? discountPercent : null},
+              ${FL_TAX_RATE},
+              ${taxAmount > 0 ? taxAmount : 0}
             )
             RETURNING id
           `
@@ -126,6 +131,8 @@ export async function POST(request: Request) {
         subtotalBeforeDiscount,
         discountAmount,
         subtotal,
+        taxAmount,
+        total,
         couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
         discountPercent,
       })
@@ -145,6 +152,8 @@ export async function POST(request: Request) {
         subtotalBeforeDiscount,
         discountAmount,
         subtotal,
+        taxAmount,
+        total,
         couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
         discountPercent,
         notes: notes || '',
@@ -189,6 +198,8 @@ async function sendOrderConfirmationToCustomer(data: {
   subtotalBeforeDiscount: number
   discountAmount: number
   subtotal: number
+  taxAmount: number
+  total: number
   couponCode?: string
   discountPercent: number
 }) {
@@ -253,8 +264,11 @@ async function sendOrderConfirmationToCustomer(data: {
           <span>Discount (${data.couponCode} ${data.discountPercent}% off)</span><span>−$${data.discountAmount.toFixed(2)}</span>
         </div>
         ` : ''}
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+          <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
+        </div>
         <div style="text-align: right;">
-          <span style="font-weight: 700; font-size: 16px;">Total: $${data.subtotal.toFixed(2)}</span>
+          <span style="font-weight: 700; font-size: 16px;">Total: $${data.total.toFixed(2)}</span>
         </div>
       </div>
       ` : ''}
@@ -287,6 +301,8 @@ async function sendOrderApprovalRequestToAdmin(data: {
   subtotalBeforeDiscount: number
   discountAmount: number
   subtotal: number
+  taxAmount: number
+  total: number
   couponCode?: string
   discountPercent: number
   notes: string
@@ -354,7 +370,8 @@ async function sendOrderApprovalRequestToAdmin(data: {
       <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${data.couponCode} (${data.discountPercent}% off): −$${data.discountAmount.toFixed(2)}</p>
       ` : ''}
-      <p style="text-align: right; font-weight: 700; font-size: 16px; margin: 0;">Total: $${data.subtotal.toFixed(2)}</p>
+      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
+      <p style="text-align: right; font-weight: 700; font-size: 16px; margin: 0;">Total: $${data.total.toFixed(2)}</p>
     </div>
     ` : ''}
 
