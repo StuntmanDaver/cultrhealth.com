@@ -1,5 +1,15 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { SignJWT, jwtVerify } from 'jose'
+import { SignJWT } from 'jose'
+
+// Mock next/headers since we're in node environment (not jsdom)
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => ({
+    get: vi.fn(),
+    set: vi.fn(),
+    delete: vi.fn(),
+  })),
+}))
 
 // We need to control cookies() mock per test, so we import it
 import { cookies } from 'next/headers'
