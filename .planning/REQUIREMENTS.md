@@ -11,10 +11,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **AUTH-01**: Member can log in with phone number + OTP via Twilio SMS
 - [ ] **AUTH-02**: OTP input auto-fills from SMS notification (`autocomplete='one-time-code'`)
-- [ ] **AUTH-03**: Member session persists across browser refresh (7-day JWT in httpOnly cookie)
-- [ ] **AUTH-04**: Member session times out after 15 minutes of inactivity with auto-logout
+- [x] **AUTH-03**: Member session persists across browser refresh (7-day JWT in httpOnly cookie)
+- [x] **AUTH-04**: Member session times out after 15 minutes of inactivity with auto-logout
 - [ ] **AUTH-05**: Member can securely log out from any portal page
-- [ ] **AUTH-06**: Phone OTP auth coexists with existing magic link, creator, and admin JWT flows
+- [x] **AUTH-06**: Phone OTP auth coexists with existing magic link, creator, and admin JWT flows
 - [ ] **AUTH-07**: First login resolves phone to Asher Med patient ID and caches in local DB
 - [ ] **AUTH-08**: OTP requests are rate-limited to prevent SMS bombing
 - [ ] **AUTH-09**: Phone number input displays with US formatting mask
@@ -104,10 +104,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | AUTH-01 | Phase 1 | Pending |
 | AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
+| AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Complete |
 | AUTH-07 | Phase 1 | Pending |
 | AUTH-08 | Phase 1 | Pending |
 | AUTH-09 | Phase 1 | Pending |

@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Portal auth foundation: dual-token JWT library, DB migration, DB helpers
+- [x] 01-01-PLAN.md -- Portal auth foundation: dual-token JWT library, DB migration, DB helpers
 - [ ] 01-02-PLAN.md -- Portal API routes: send-otp, verify-otp, refresh, logout
 - [ ] 01-03-PLAN.md -- Portal login UI, portal layout with auth guard, site integration
 
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Phone OTP Authentication | 0/3 | Planning complete | - |
+| 1. Phone OTP Authentication | 1/3 | In progress | - |
 | 2. Dashboard & Order Tracking | 0/2 | Not started | - |
 | 3. Profile & Documents | 0/2 | Not started | - |
 | 4. Forms & Renewals | 0/2 | Not started | - |
