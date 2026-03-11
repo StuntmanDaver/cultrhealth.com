@@ -1,3 +1,28 @@
+## [2026-03-11] - Fix Intake Data Sync to Asher Med + Admin Intake Viewer
+
+### Summary
+Fixed intake form data not fully reaching Asher Med providers. Partner notes with treatment preferences and medications are now sent via PATCH after order creation. Added admin intake viewer at `/admin/intakes`.
+
+### Bugs Fixed
+- `buildPartnerNote()` was missing `bestTimeToContact`, `pharmacyPreference`, and `customSolution` fields
+- Current medications formatting produced `[object Object]` instead of `"Name - Dosage - Frequency"`
+- Partner note was only stored locally — never sent to Asher Med
+
+### New (4 files)
+- `app/api/admin/intakes/route.ts` — Admin API: pending_intakes LEFT JOIN LATERAL asher_orders (case-insensitive, deduped)
+- `app/admin/intakes/page.tsx` — Admin server component with auth guard
+- `app/admin/intakes/IntakeViewerClient.tsx` — Expandable row UI: patient info, medications, treatment prefs, partner note, Asher status
+- `tests/api/intake-submit.test.ts` — 14 tests for buildPartnerNote and formatMedicationsList
+
+### Modified (2 files)
+- `app/api/intake/submit/route.ts` — Enriched partner note, fixed medications format, PATCH to Asher Med, JSONB enrichment
+- `app/admin/AdminDashboardClient.tsx` — Added Intake Submissions + Club Orders to Quick Links
+
+### Tests
+- 253 total passing (14 new, 0 regressions)
+
+---
+
 ## [2026-03-11] - Sales Tax Implementation (7.5% — Alachua County, FL)
 
 ### Summary
