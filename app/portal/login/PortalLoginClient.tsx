@@ -39,8 +39,8 @@ function OTPSlot({ char, isActive, hasFakeCaret }: { char: string | null; isActi
   return (
     <div
       className={`
-        relative w-12 h-14 border-2 rounded-xl flex items-center justify-center
-        text-2xl font-bold text-white bg-white/10 transition-all duration-200
+        relative w-14 h-16 border-2 rounded-xl flex items-center justify-center
+        text-3xl font-bold text-white bg-white/10 transition-all duration-200
         ${isActive ? 'border-cultr-sage ring-2 ring-cultr-sage/30' : 'border-white/20'}
       `}
     >
@@ -245,7 +245,7 @@ export default function PortalLoginClient() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6 grad-dark">
-      <div className="max-w-md w-full relative overflow-hidden">
+      <div className="max-w-lg w-full relative overflow-hidden">
 
         {/* ── PHONE STEP ── */}
         <div
@@ -259,36 +259,36 @@ export default function PortalLoginClient() {
         >
           <div className="text-center">
             <ScrollReveal direction="none" duration={800}>
-              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-8">
-                <Phone className="w-8 h-8 text-white" />
+              <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-8">
+                <Phone className="w-10 h-10 text-white" />
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={100} direction="none" duration={800}>
               <div className="mb-2">
                 <span
-                  className="font-display font-bold uppercase text-white text-2xl tracking-wide"
+                  className="font-display font-bold uppercase text-white text-3xl tracking-wide"
                   style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}
                 >
                   CULTR
                 </span>
-                <span className="block font-display font-medium tracking-[0.12em] uppercase text-white/60 text-[10px]">
+                <span className="block font-display font-medium tracking-[0.12em] uppercase text-white/60 text-xs">
                   Health
                 </span>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={200} direction="none" duration={800}>
-              <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-2">
+              <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
                 Change the CULTR
               </h1>
-              <p className="text-white/70 mb-10">Access your portal</p>
+              <p className="text-white/70 text-lg mb-12">Access your portal</p>
             </ScrollReveal>
 
             <ScrollReveal delay={400} direction="none" duration={800}>
               <form onSubmit={handlePhoneSubmit} className="space-y-4">
                 <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                  <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-white/40" />
                   <input
                     type="tel"
                     inputMode="numeric"
@@ -296,7 +296,7 @@ export default function PortalLoginClient() {
                     value={phone}
                     onChange={handlePhoneChange}
                     placeholder="(555) 123-4567"
-                    className="w-full pl-12 pr-4 py-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-white/40 focus:outline-none focus:border-cultr-sage focus:ring-1 focus:ring-cultr-sage transition-colors"
+                    className="w-full pl-14 pr-5 py-5 bg-white/10 border border-white/20 rounded-xl text-lg text-white placeholder:text-white/40 focus:outline-none focus:border-cultr-sage focus:ring-1 focus:ring-cultr-sage transition-colors"
                     data-testid="phone-input"
                   />
                 </div>
@@ -352,10 +352,10 @@ export default function PortalLoginClient() {
               <span className="text-sm font-medium">Back</span>
             </button>
 
-            <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-3">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">
               Enter verification code
             </h2>
-            <p className="text-white/60 text-sm mb-8">
+            <p className="text-white/60 text-base mb-8">
               We sent a 6-digit code to{' '}
               <span className="text-white/80 font-medium">{maskPhone(phoneE164 || phone)}</span>
             </p>
