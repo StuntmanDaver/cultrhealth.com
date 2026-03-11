@@ -1,3 +1,35 @@
+## [2026-03-11] - Sync Vercel Env Vars, Recover Lost Data, Remove Dead Code
+
+### Summary
+Synced 29 missing environment variables (including POSTGRES_URL) to the active `cultrhealth-com` Vercel project, fixing silent database write failures since ~Mar 4. Recovered 2 real customers and 3 orders from Resend email history. Removed 143 dead files (Healthie remnants + 140 duplicate route files). Added go-live env var checklist.
+
+### Root Cause
+The active Vercel project (`cultrhealth-com`) only had 7 of 36 required env vars. Code guards DB writes with `if (process.env.POSTGRES_URL)` which silently skipped all inserts.
+
+### Data Recovered
+- **Allison Cooper** (marycooper2004@gmail.com) — 2 orders: R3TA+GHK-CU ($388), R3TA ($272)
+- **Madison** (maddiegacree@gmail.com) — 1 signup + 1 order: R3TA ($272)
+- All orders status `pending_approval` with CULTRFAM 20% coupon
+
+### Dead Code Removed (143 files)
+- `lib/config/healthie.ts` — Orphaned Healthie platform config
+- `tests/lib/healthie-api.test.ts` — Tests for already-deleted module
+- `app/api/healthie/sso-token/route.ts` — Dead SSO endpoint
+- 140 duplicate `route N.ts` files across `app/api/` (macOS copy artifacts)
+
+### New (1 file)
+- `docs/env-vars-go-live.md` — Exhaustive env var checklist (10 critical, 7 security, 12 optional, 17 BNPL)
+
+### Verified
+- Live staging test: club signup returns `memberId` (DB write working)
+- Live staging test: club order returns `orderId` + both emails sent
+- 239 tests passing, 0 regressions
+
+### Known Issue
+- `MAILCHIMP_API_KEY` on Vercel is invalid (401) — needs new key from Mailchimp dashboard
+
+---
+
 ## [2026-03-11] - Fix Intake Data Sync to Asher Med + Admin Intake Viewer
 
 ### Summary
