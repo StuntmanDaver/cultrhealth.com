@@ -94,13 +94,12 @@ export function PersonalInfoForm() {
           <select
             id="gender"
             value={formData.gender || ''}
-            onChange={(e) => updateFormData({ gender: e.target.value as 'male' | 'female' | 'other' })}
+            onChange={(e) => updateFormData({ gender: e.target.value as 'male' | 'female' })}
             className="w-full px-4 py-3 rounded-xl border border-forest-light/20 focus:border-forest focus:ring-2 focus:ring-mint outline-none transition-all grad-white"
           >
             <option value="">Select...</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
-            <option value="other">Other/Prefer not to say</option>
           </select>
         </div>
       </div>
