@@ -38,7 +38,13 @@ export async function POST(request: Request) {
       return rateLimitResponse(phoneResult)
     }
 
-    // 5. Send OTP via Twilio Verify
+    // 5. Staging bypass — skip Twilio, accept any phone
+    const isStaging = (process.env.NEXT_PUBLIC_SITE_URL || '').includes('staging')
+    if (isStaging) {
+      return NextResponse.json({ success: true, phone: phoneE164 })
+    }
+
+    // 6. Send OTP via Twilio Verify
     const client = twilio(
       process.env.TWILIO_ACCOUNT_SID,
       process.env.TWILIO_AUTH_TOKEN
@@ -48,7 +54,7 @@ export async function POST(request: Request) {
       .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
       .verifications.create({ channel: 'sms', to: phoneE164 })
 
-    // 6. Return success (does NOT reveal whether phone is registered)
+    // 7. Return success (does NOT reveal whether phone is registered)
     return NextResponse.json({ success: true, phone: phoneE164 })
   } catch (error: unknown) {
     // Map Twilio error codes to user-friendly messages
