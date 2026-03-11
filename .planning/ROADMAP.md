@@ -48,7 +48,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Status mapping utility, portal orders API routes (list + detail), and tests
+- [x] 02-01-PLAN.md -- Status mapping utility, portal orders API routes (list + detail), and tests
 - [ ] 02-02-PLAN.md -- Dashboard client UI: hero card, order list, slide-over panel, empty state, quick links
 
 ### Phase 3: Profile & Documents
@@ -88,6 +88,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
-| 2. Dashboard & Order Tracking | 0/2 | Not started | - |
+| 2. Dashboard & Order Tracking | 1/2 | In progress | - |
 | 3. Profile & Documents | 0/2 | Not started | - |
 | 4. Forms & Renewals | 0/2 | Not started | - |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 01-03-PLAN.md (Phase 1 complete)
-last_updated: "2026-03-11T15:09:30.857Z"
-last_activity: 2026-03-11 -- Completed Plan 01-03 (portal login UI and site integration)
+status: in-progress
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-11T19:16:15Z"
+last_activity: 2026-03-11 -- Completed Plan 02-01 (portal orders data layer)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 33
+  total_plans: 9
+  completed_plans: 4
+  percent: 44
 ---
 
 # Project State
@@ -21,32 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Members can log in and immediately see the status of their treatment -- orders, profile, documents -- without calling support or checking email.
-**Current focus:** Phase 1: Phone OTP Authentication
+**Current focus:** Phase 2: Dashboard & Order Tracking
 
 ## Current Position
 
-Phase: 1 of 4 (Phone OTP Authentication) -- COMPLETE
-Plan: 3 of 3 in current phase (all plans done)
-Status: Phase Complete
-Last activity: 2026-03-11 - Completed quick task 1: Optimize Creator portal UX
+Phase: 2 of 4 (Dashboard & Order Tracking)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-11 - Completed Plan 02-01 (portal orders data layer)
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 7.7 min
-- Total execution time: 0.38 hours
+- Total plans completed: 4
+- Average duration: 7 min
+- Total execution time: 0.47 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
+| 2 - Dashboard & Order Tracking | 1/2 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min), 01-02 (7 min), 01-03 (12 min)
+- Last 5 plans: 01-01 (4 min), 01-02 (7 min), 01-03 (12 min), 02-01 (5 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [01-03]: Portal layout auth guard skips /portal/login via pathname check (Next.js App Router nests login under portal layout).
 - [01-03]: Activity-based refresh fires at 12 minutes (3 min before 15-min token expiry).
 - [01-03]: Intake auto-link wrapped in try/catch so portal DB failures never break intake submission.
+- [02-01]: Best-effort medication name enrichment from local asher_orders table with JSON parse fallback chain.
+- [02-01]: Ownership verification returns 403 (not 404) for another patient's order to distinguish from not-found.
+- [02-01]: Case C users (no asherPatientId) get empty orders array with 200 (not error) since it's a valid state.
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T12:39:49Z
-Stopped at: Completed 01-03-PLAN.md (Phase 1 complete)
-Resume file: Phase 2 planning needed (02-01-PLAN.md does not exist yet)
+Last session: 2026-03-11T19:16:15Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-dashboard-order-tracking/02-02-PLAN.md
