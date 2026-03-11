@@ -1,3 +1,42 @@
+## [2026-03-11] - Fix Intake Build Error, Upload Staging Bypass, Goals & Motivation Step
+
+### Summary
+Fixed Vercel build failure caused by non-route exports in `app/api/intake/submit/route.ts`. Added staging bypass for file uploads (ID + consent signatures) when Asher Med API key is not configured. Added new Goals & Motivation intake step with 8 client engagement questions.
+
+### Build Fix
+- Moved `formatMedicationsList` and `buildPartnerNote` from route file to `lib/intake-utils.ts` — Next.js disallows non-route exports from route files
+- Updated test imports to match new location
+
+### Staging Upload Bypass
+- `app/api/intake/upload/route.ts` — returns mock presigned URLs on staging when `ASHER_MED_API_KEY` is absent (same pattern as OTP staging bypass)
+- `components/intake/ConsentForms.tsx` — added `isMockUpload` check to skip S3 PUT for mock URLs (IDUploader already had this)
+- Only triggers when API key is missing AND environment is dev/staging — production fails loudly if misconfigured
+
+### New: Goals & Motivation Form
+- `components/intake/GoalsMotivationForm.tsx` — 8 questions: primary goal, why now, top symptoms (max 3), priority problem, urgency (1-10 scale), previous attempts, discovery source, barriers
+- Added as required step after Physical Measurements, before Wellness Questionnaire
+- Removed duplicate questions from WellnessQuestionnaire (weight loss history, weight management goals)
+- ReviewSummary displays all 8 goals fields
+
+### Modified (8 files)
+- `app/api/intake/submit/route.ts` — imports from lib/intake-utils
+- `app/api/intake/upload/route.ts` — staging mock bypass
+- `app/intake/IntakeFormClient.tsx` — GoalsMotivationForm routing
+- `components/intake/ConsentForms.tsx` — mock upload handling
+- `components/intake/WellnessQuestionnaire.tsx` — removed 2 duplicate questions
+- `components/intake/ReviewSummary.tsx` — goals section
+- `lib/config/asher-med.ts` — goals step config
+- `lib/contexts/intake-form-context.tsx` — goals validation + step order
+
+### New (2 files)
+- `lib/intake-utils.ts` — extracted formatMedicationsList + buildPartnerNote
+- `components/intake/GoalsMotivationForm.tsx` — 8-question engagement form
+
+### Tests
+- 253 total passing, 0 regressions
+
+---
+
 ## [2026-03-11] - Sync Vercel Env Vars, Recover Lost Data, Remove Dead Code
 
 ### Summary
