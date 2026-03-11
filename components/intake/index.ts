@@ -3,6 +3,7 @@ export { PersonalInfoForm } from './PersonalInfoForm';
 export { ShippingAddressForm } from './ShippingAddressForm';
 export { MedicationSelector } from './MedicationSelector';
 export { PhysicalMeasurementsForm } from './PhysicalMeasurementsForm';
+export { GoalsMotivationForm } from './GoalsMotivationForm';
 export { WellnessQuestionnaire } from './WellnessQuestionnaire';
 export { GLP1HistoryForm } from './GLP1HistoryForm';
 export { CurrentMedicationsForm } from './CurrentMedicationsForm';

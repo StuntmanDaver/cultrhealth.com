@@ -23,6 +23,7 @@ export interface SimpleFormData {
   heightInches?: number;
   weightLbs?: number;
   goalWeightLbs?: number;
+  goalsMotivation?: Record<string, string | string[] | number>;
   wellnessQuestionnaire?: Record<string, string | string[]>;
   glp1History?: Record<string, string>;
   currentMedications?: Array<{ name: string; dosage: string; frequency: string }>;
@@ -108,6 +109,21 @@ export function IntakeFormProvider({ children }: { children: ReactNode }) {
             formData.heightInches !== undefined &&
             formData.weightLbs
           );
+        case 'goals': {
+          const g = formData.goalsMotivation || {};
+          const symptoms = (g.topSymptoms as string[]) || [];
+          const barriers = (g.barriers as string[]) || [];
+          return !!(
+            g.primaryGoal &&
+            g.whyNow &&
+            symptoms.length >= 1 && symptoms.length <= 3 &&
+            g.priorityProblem &&
+            g.urgency &&
+            g.previousAttempts &&
+            g.discoverySource &&
+            barriers.length >= 1
+          );
+        }
         case 'wellness':
           return Object.keys(formData.wellnessQuestionnaire || {}).length >= 5;
         case 'glp1-history':
@@ -139,6 +155,7 @@ export function IntakeFormProvider({ children }: { children: ReactNode }) {
       'shipping',
       'medications',
       'physical',
+      'goals',
       'wellness',
       'glp1-history',
       'current-medications',

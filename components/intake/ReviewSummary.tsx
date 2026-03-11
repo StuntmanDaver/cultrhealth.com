@@ -62,6 +62,20 @@ export function ReviewSummary({ onSubmit, isSubmitting, error }: ReviewSummaryPr
         { label: 'Goal Weight', value: formData.goalWeightLbs ? `${formData.goalWeightLbs} lbs` : 'Not specified' },
       ],
     },
+    {
+      title: 'Goals & Motivation',
+      stepIndex: 4,
+      items: [
+        { label: 'Primary Goal', value: (formData.goalsMotivation?.primaryGoal as string) || '' },
+        { label: 'Why Now', value: (formData.goalsMotivation?.whyNow as string) || '' },
+        { label: 'Top Symptoms', value: ((formData.goalsMotivation?.topSymptoms as string[]) || []).join(', ') },
+        { label: 'Priority Problem', value: (formData.goalsMotivation?.priorityProblem as string) || '' },
+        { label: 'Urgency', value: formData.goalsMotivation?.urgency ? `${formData.goalsMotivation.urgency}/10` : '' },
+        { label: 'Previous Attempts', value: (formData.goalsMotivation?.previousAttempts as string) || '' },
+        { label: 'How You Found Us', value: (formData.goalsMotivation?.discoverySource as string) || '' },
+        { label: 'Barriers', value: ((formData.goalsMotivation?.barriers as string[]) || []).join(', ') },
+      ],
+    },
   ];
 
   return (

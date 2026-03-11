@@ -5,12 +5,6 @@ import { Info } from 'lucide-react';
 
 const QUESTIONNAIRE_ITEMS = [
   {
-    id: 'previousWeightLossAttempts',
-    question: 'Have you tried to lose weight before?',
-    type: 'select',
-    options: ['No', 'Yes, with diet only', 'Yes, with exercise only', 'Yes, with diet and exercise', 'Yes, with medication', 'Yes, with surgery'],
-  },
-  {
     id: 'medicalConditions',
     question: 'Do you have any of the following conditions? (Select all that apply)',
     type: 'multiselect',
@@ -52,12 +46,6 @@ const QUESTIONNAIRE_ITEMS = [
     type: 'select',
     options: ['No', 'Yes - Insulin', 'Yes - Oral medications', 'Yes - Both'],
   },
-  {
-    id: 'weightLossGoals',
-    question: 'What is your primary goal for weight management?',
-    type: 'select',
-    options: ['Lose weight for health reasons', 'Improve energy levels', 'Better manage diabetes/blood sugar', 'Improve mobility', 'Feel more confident', 'Other'],
-  },
 ];
 
 export function WellnessQuestionnaire() {
@@ -94,7 +82,7 @@ export function WellnessQuestionnaire() {
     <div className="space-y-8">
       <div className="bg-mint/40 rounded-xl p-4 mb-6 flex items-start gap-3">
         <Info className="w-5 h-5 text-forest shrink-0 mt-0.5" />
-        <p className="text-sm text-forest-muted">These questions are clinically required. They help screen for contraindications.</p>
+        <p className="text-sm text-forest-muted">These questions help screen for contraindications and ensure safe treatment.</p>
       </div>
 
       {QUESTIONNAIRE_ITEMS.map((item) => (

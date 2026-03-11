@@ -9,6 +9,7 @@ import { PersonalInfoForm } from '@/components/intake/PersonalInfoForm';
 import { ShippingAddressForm } from '@/components/intake/ShippingAddressForm';
 import { MedicationSelector } from '@/components/intake/MedicationSelector';
 import { PhysicalMeasurementsForm } from '@/components/intake/PhysicalMeasurementsForm';
+import { GoalsMotivationForm } from '@/components/intake/GoalsMotivationForm';
 import { WellnessQuestionnaire } from '@/components/intake/WellnessQuestionnaire';
 import { GLP1HistoryForm } from '@/components/intake/GLP1HistoryForm';
 import { CurrentMedicationsForm } from '@/components/intake/CurrentMedicationsForm';
@@ -141,6 +142,8 @@ function IntakeFormContent() {
         return <MedicationSelector />;
       case 'physical':
         return <PhysicalMeasurementsForm />;
+      case 'goals':
+        return <GoalsMotivationForm />;
       case 'wellness':
         return <WellnessQuestionnaire />;
       case 'glp1-history':

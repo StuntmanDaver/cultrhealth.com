@@ -128,17 +128,20 @@ export function ConsentForms() {
 
       const { uploadUrl, key } = await presignedResponse.json();
 
-      // Upload to S3
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: blob,
-        headers: {
-          'Content-Type': 'image/png',
-        },
-      });
+      // Upload to S3 (skip if mock URL from dev/staging)
+      const isMockUpload = uploadUrl.startsWith('data:');
+      if (!isMockUpload) {
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: blob,
+          headers: {
+            'Content-Type': 'image/png',
+          },
+        });
 
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload signature');
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload signature');
+        }
       }
 
       // Save the key

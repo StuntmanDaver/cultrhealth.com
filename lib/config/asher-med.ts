@@ -231,6 +231,15 @@ export const INTAKE_FORM_STEPS: IntakeFormStep[] = [
     required: true,
   },
   {
+    id: 'goals',
+    name: 'Goals & Motivation',
+    title: 'Your Goals & Motivation',
+    shortTitle: 'Goals',
+    description: 'Tell us what you want to achieve and why',
+    path: '/intake/goals-motivation',
+    required: true,
+  },
+  {
     id: 'wellness',
     name: 'Health Questionnaire',
     title: 'Wellness Questionnaire',

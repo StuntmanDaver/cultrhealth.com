@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildPartnerNote, formatMedicationsList } from '@/app/api/intake/submit/route'
+import { buildPartnerNote, formatMedicationsList } from '@/lib/intake-utils'
 
 describe('formatMedicationsList', () => {
   it('formats medication objects with name, dosage, and frequency', () => {

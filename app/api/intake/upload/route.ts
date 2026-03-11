@@ -60,17 +60,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Development mode: Mock upload if API key not configured
-    const isDevelopment = process.env.NODE_ENV === 'development' && !process.env.ASHER_MED_API_KEY;
+    // Mock upload if API key not configured (development or staging without Asher Med)
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const isStaging = siteUrl.includes('staging');
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const shouldMock = (!process.env.ASHER_MED_API_KEY) && (isDevelopment || isStaging);
 
-    if (isDevelopment) {
-      // Generate mock key for development
-      const mockKey = `dev/${purpose}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    if (shouldMock) {
+      // Generate mock key for development/staging
+      const mockKey = `mock/${purpose}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-      console.log('⚠️  DEV MODE: Using mock upload (ASHER_MED_API_KEY not configured):', {
+      console.log('⚠️  MOCK UPLOAD (no ASHER_MED_API_KEY):', {
         purpose,
         contentType,
         mockKey,
+        environment: isStaging ? 'staging' : 'development',
       });
 
       // Return a mock data URL that simulates successful upload
