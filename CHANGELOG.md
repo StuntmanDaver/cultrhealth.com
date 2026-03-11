@@ -1,3 +1,45 @@
+## [2026-03-11] - Creator Portal Production-Ready: Remove Fake Data, Optimize UX, Fix Coupon Codes
+
+### Summary
+Complete creator portal production readiness pass. Removed all mock/fake data from 6 API routes, optimized dashboard UX with grouped sections, fixed coupon code generation for staging auto-provisioning, and cleared placeholder campaigns.
+
+### Fake Data Removed (6 API routes)
+- `app/api/creators/dashboard/route.ts` — removed `isStagingCreator` mock with fake metrics (1247 clicks, 38 orders, etc.)
+- `app/api/creators/earnings/overview/route.ts` — removed mock earnings ($1482 lifetime)
+- `app/api/creators/earnings/orders/route.ts` — removed 5 fake order rows
+- `app/api/creators/earnings/ledger/route.ts` — removed 5 fake commission entries
+- `app/api/creators/network/route.ts` — removed 12 fake recruits + 3 fake portfolio entries
+- `app/api/creators/profile/route.ts` — removed staging_creator mock profile
+- All routes now query real DB only (203 lines of mock data deleted)
+
+### Creator Portal UX Optimization
+- Dashboard organized into 3 labeled sections: Performance, Commissions, Growth
+- Dynamic Getting Started checklist reflects actual creator state (links, codes, clicks, orders)
+- Removed fabricated leaderboard (fake competitor data) — replaced with Creator Tip card
+- Removed synthetic NotificationBell from header
+- Full-width analytics chart (no longer split with leaderboard)
+- Sidebar reorganized: PROMOTE, MONEY, GROW, ACCOUNT groups
+
+### Share Page & Campaigns
+- Fixed `(code as any).code_type` type cast — uses typed `code.code_type` directly
+- Inline per-code descriptions (membership vs product purpose)
+- Campaign date-awareness: auto-expires past endDate campaigns
+- Cleared 4 hardcoded placeholder campaigns (empty state shows until real campaigns added)
+
+### Coupon Code Fix
+- `app/api/creators/verify-login/route.ts` — staging auto-provisioning now creates dual codes (membership + product) with collision handling, matching the real approval flow (was only creating 1 generic code)
+
+### Modified (10 files)
+- `app/api/creators/dashboard/route.ts`, `earnings/overview/route.ts`, `earnings/orders/route.ts`, `earnings/ledger/route.ts`, `network/route.ts`, `profile/route.ts`
+- `app/creators/portal/dashboard/page.tsx`, `share/page.tsx`, `campaigns/page.tsx`
+- `components/creators/CreatorHeader.tsx`, `CreatorSidebar.tsx`
+- `app/api/creators/verify-login/route.ts`
+
+### Tests
+- 253 total passing, 0 type errors, 0 regressions
+
+---
+
 ## [2026-03-11] - Wire Goals & Motivation Data to Asher Med + Admin Viewer
 
 ### Summary
