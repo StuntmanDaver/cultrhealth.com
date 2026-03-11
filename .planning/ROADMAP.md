@@ -45,11 +45,11 @@ Plans:
   2. Member can view a list of all their orders with current status pulled live from Asher Med
   3. Member can tap an order to see full details including medication name, status, dates, and assigned doctor
   4. A new member with no orders sees an empty state with a clear call-to-action to start their intake
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Status mapping utility, portal orders API routes (list + detail), and tests
+- [ ] 02-02-PLAN.md -- Dashboard client UI: hero card, order list, slide-over panel, empty state, quick links
 
 ### Phase 3: Profile & Documents
 **Goal**: Members can view and manage their personal information and access their uploaded documents without contacting support
