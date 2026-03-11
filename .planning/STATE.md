@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-11T02:03:19Z"
-last_activity: 2026-03-11 -- Completed Plan 01-02 (portal API routes)
+status: phase_complete
+stopped_at: Completed 01-03-PLAN.md (Phase 1 complete)
+last_updated: "2026-03-11T12:39:49Z"
+last_activity: 2026-03-11 -- Completed Plan 01-03 (portal login UI and site integration)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 9
-  completed_plans: 2
-  percent: 22
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -25,29 +25,29 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 
 ## Current Position
 
-Phase: 1 of 4 (Phone OTP Authentication)
-Plan: 2 of 3 in current phase
-Status: Executing
-Last activity: 2026-03-11 -- Completed Plan 01-02 (portal API routes)
+Phase: 1 of 4 (Phone OTP Authentication) -- COMPLETE
+Plan: 3 of 3 in current phase (all plans done)
+Status: Phase Complete
+Last activity: 2026-03-11 -- Completed Plan 01-03 (portal login UI and site integration)
 
-Progress: [██░░░░░░░░] 22%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 5.5 min
-- Total execution time: 0.18 hours
+- Total plans completed: 3
+- Average duration: 7.7 min
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 - Phone OTP Auth | 2/3 | 11 min | 5.5 min |
+| 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min), 01-02 (7 min)
-- Trend: Starting
+- Last 5 plans: 01-01 (4 min), 01-02 (7 min), 01-03 (12 min)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -65,6 +65,10 @@ Recent decisions affecting current work:
 - [01-02]: Patient resolution order: Asher Med lookup takes priority, cached local DB as fallback when Asher Med is down.
 - [01-02]: Cookies set in all three verify-otp cases (even never-seen phones) since phone is verified regardless of patient status.
 - [01-02]: Plain object mocks for NextRequest in API route tests to avoid vitest module caching issues.
+- [01-03]: Login page uses CSS translateX transitions for phone->OTP->support steps (not route navigation).
+- [01-03]: Portal layout auth guard skips /portal/login via pathname check (Next.js App Router nests login under portal layout).
+- [01-03]: Activity-based refresh fires at 12 minutes (3 min before 15-min token expiry).
+- [01-03]: Intake auto-link wrapped in try/catch so portal DB failures never break intake submission.
 
 ### Pending Todos
 
@@ -77,6 +81,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T02:03:19Z
-Stopped at: Completed 01-02-PLAN.md
-Resume file: .planning/phases/01-phone-otp-authentication/01-03-PLAN.md
+Last session: 2026-03-11T12:39:49Z
+Stopped at: Completed 01-03-PLAN.md (Phase 1 complete)
+Resume file: Phase 2 planning needed (02-01-PLAN.md does not exist yet)

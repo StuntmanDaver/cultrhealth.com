@@ -12,7 +12,7 @@ Build an authenticated members portal that lets CULTR Health patients log in wit
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Phone OTP Authentication** - Twilio-based phone login with session management and patient identity linking
+- [x] **Phase 1: Phone OTP Authentication** - Twilio-based phone login with session management and patient identity linking
 - [ ] **Phase 2: Dashboard & Order Tracking** - Status-first dashboard with live order data from Asher Med
 - [ ] **Phase 3: Profile & Documents** - Patient profile view/edit and document viewer/uploader
 - [ ] **Phase 4: Forms & Renewals** - Inline intake and renewal flows with pre-fill and proactive prompts
@@ -33,8 +33,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md -- Portal auth foundation: dual-token JWT library, DB migration, DB helpers
-- [ ] 01-02-PLAN.md -- Portal API routes: send-otp, verify-otp, refresh, logout
-- [ ] 01-03-PLAN.md -- Portal login UI, portal layout with auth guard, site integration
+- [x] 01-02-PLAN.md -- Portal API routes: send-otp, verify-otp, refresh, logout
+- [x] 01-03-PLAN.md -- Portal login UI, portal layout with auth guard, site integration
 
 ### Phase 2: Dashboard & Order Tracking
 **Goal**: Members can see live order status from Asher Med the moment they log in, with the most important information front and center
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Phone OTP Authentication | 1/3 | In progress | - |
+| 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
 | 2. Dashboard & Order Tracking | 0/2 | Not started | - |
 | 3. Profile & Documents | 0/2 | Not started | - |
 | 4. Forms & Renewals | 0/2 | Not started | - |
