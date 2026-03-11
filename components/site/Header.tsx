@@ -14,7 +14,7 @@ const navLinks = [
 ];
 
 const rightNavLinks = [
-  { href: '/library', label: 'Members', hasDropdown: true },
+  { href: '/portal/login', label: 'Members', hasDropdown: true },
   { href: '/creators', label: 'Creators' },
   { href: '/community', label: 'Community' },
 ];
@@ -241,7 +241,7 @@ export function Header() {
         {/* Mobile CTAs */}
         <div className="flex flex-col gap-2.5 mt-9">
           <Link
-            href="/login"
+            href="/portal/login"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-center w-full py-4 text-[15px] font-body font-medium text-brand-primary bg-transparent border border-brand-primary/[0.12] rounded-[14px] transition-colors duration-200 hover:bg-brand-primary/[0.07]"
           >

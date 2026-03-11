@@ -9,6 +9,7 @@ import {
 } from '@/lib/asher-med-api';
 import { MEDICATION_OPTIONS } from '@/lib/config/asher-med';
 import { getAsherMedIdFromProductId } from '@/lib/config/product-to-asher-mapping';
+import { updatePortalPatientId } from '@/lib/portal-db';
 
 /**
  * POST /api/intake/submit
@@ -208,6 +209,20 @@ export async function POST(request: NextRequest) {
       } catch (dbError) {
         console.error('Failed to update database:', dbError);
         // Don't fail the request - the order was created in Asher Med
+      }
+    }
+
+    // Auto-link portal session with new Asher Med patient ID (AUTH-07)
+    // If user came through portal login -> intake, their phone is in the portal_sessions table.
+    // Link their new patient ID so next dashboard visit shows full data without re-login.
+    if (result.data?.id && body.phone) {
+      try {
+        const phoneE164 = formatPhoneNumber(body.phone)
+        await updatePortalPatientId(phoneE164, result.data.id)
+        console.log('Portal session auto-linked with Asher Med patient ID')
+      } catch (linkError) {
+        // Non-fatal: portal session link failed, user can still re-login to get linked
+        console.error('Failed to auto-link portal session:', linkError)
       }
     }
 

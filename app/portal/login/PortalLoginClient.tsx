@@ -363,7 +363,7 @@ export default function PortalLoginClient() {
             <div className="flex justify-center mb-4">
               <OTPInput
                 maxLength={6}
-                pattern={REGEXP_ONLY_DIGITS.source}
+                pattern={REGEXP_ONLY_DIGITS}
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 value={otp}

@@ -18,4 +18,8 @@ export const LINKS = {
   login: '/login',
   pricing: '/pricing',
   success: '/success',
+
+  // Portal Routes
+  portalLogin: '/portal/login',
+  portalDashboard: '/portal/dashboard',
 };
