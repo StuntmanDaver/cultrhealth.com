@@ -9,16 +9,16 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & Identity
 
-- [ ] **AUTH-01**: Member can log in with phone number + OTP via Twilio SMS
+- [x] **AUTH-01**: Member can log in with phone number + OTP via Twilio SMS
 - [ ] **AUTH-02**: OTP input auto-fills from SMS notification (`autocomplete='one-time-code'`)
 - [x] **AUTH-03**: Member session persists across browser refresh (7-day JWT in httpOnly cookie)
 - [x] **AUTH-04**: Member session times out after 15 minutes of inactivity with auto-logout
-- [ ] **AUTH-05**: Member can securely log out from any portal page
+- [x] **AUTH-05**: Member can securely log out from any portal page
 - [x] **AUTH-06**: Phone OTP auth coexists with existing magic link, creator, and admin JWT flows
-- [ ] **AUTH-07**: First login resolves phone to Asher Med patient ID and caches in local DB
-- [ ] **AUTH-08**: OTP requests are rate-limited to prevent SMS bombing
+- [x] **AUTH-07**: First login resolves phone to Asher Med patient ID and caches in local DB
+- [x] **AUTH-08**: OTP requests are rate-limited to prevent SMS bombing
 - [ ] **AUTH-09**: Phone number input displays with US formatting mask
-- [ ] **AUTH-10**: OTP flow shows loading states and clear error messages for invalid/expired codes
+- [x] **AUTH-10**: OTP flow shows loading states and clear error messages for invalid/expired codes
 
 ### Order Status Tracking
 
@@ -102,16 +102,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Pending |
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
-| AUTH-05 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
-| AUTH-07 | Phase 1 | Pending |
-| AUTH-08 | Phase 1 | Pending |
+| AUTH-07 | Phase 1 | Complete |
+| AUTH-08 | Phase 1 | Complete |
 | AUTH-09 | Phase 1 | Pending |
-| AUTH-10 | Phase 1 | Pending |
+| AUTH-10 | Phase 1 | Complete |
 | ORDR-01 | Phase 2 | Pending |
 | ORDR-02 | Phase 2 | Pending |
 | ORDR-03 | Phase 2 | Pending |

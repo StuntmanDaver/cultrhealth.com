@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-11T01:53:01Z"
-last_activity: 2026-03-11 -- Completed Plan 01-01 (portal auth foundation)
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-11T02:03:19Z"
+last_activity: 2026-03-11 -- Completed Plan 01-02 (portal API routes)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 9
-  completed_plans: 1
-  percent: 11
+  completed_plans: 2
+  percent: 22
 ---
 
 # Project State
@@ -26,27 +26,27 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 ## Current Position
 
 Phase: 1 of 4 (Phone OTP Authentication)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-11 -- Completed Plan 01-01 (portal auth foundation)
+Last activity: 2026-03-11 -- Completed Plan 01-02 (portal API routes)
 
-Progress: [█░░░░░░░░░] 11%
+Progress: [██░░░░░░░░] 22%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 4 min
-- Total execution time: 0.07 hours
+- Total plans completed: 2
+- Average duration: 5.5 min
+- Total execution time: 0.18 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1 - Phone OTP Auth | 1/3 | 4 min | 4 min |
+| 1 - Phone OTP Auth | 2/3 | 11 min | 5.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min)
+- Last 5 plans: 01-01 (4 min), 01-02 (7 min)
 - Trend: Starting
 
 *Updated after each plan completion*
@@ -62,6 +62,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Provider features (PROV-01 through PROV-04) deferred to v2 per REQUIREMENTS.md.
 - [01-01]: Portal auth tests use @vitest-environment node (not jsdom) for jose v6 Uint8Array compatibility.
 - [01-01]: Refresh cookie scoped to /api/portal/refresh path for security.
+- [01-02]: Patient resolution order: Asher Med lookup takes priority, cached local DB as fallback when Asher Med is down.
+- [01-02]: Cookies set in all three verify-otp cases (even never-seen phones) since phone is verified regardless of patient status.
+- [01-02]: Plain object mocks for NextRequest in API route tests to avoid vitest module caching issues.
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T01:53:01Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-phone-otp-authentication/01-02-PLAN.md
+Last session: 2026-03-11T02:03:19Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: .planning/phases/01-phone-otp-authentication/01-03-PLAN.md
