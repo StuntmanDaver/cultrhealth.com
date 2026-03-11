@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   createNewOrder,
+  updateOrderApproval,
   AsherNewOrderRequest,
   AsherMedicationName,
   AsherMedicationType,
@@ -148,9 +149,7 @@ export async function POST(request: NextRequest) {
       wellnessQuestionnaire: body.wellnessQuestionnaire || {},
       glp1MedicationHistory: medications.some(m => m.isGLP1) && body.glp1History ? body.glp1History : undefined,
       currentMedicationDetails: body.currentMedications ? {
-        which_medications_have_you_been_taking: Array.isArray(body.currentMedications)
-          ? body.currentMedications.join(', ')
-          : body.currentMedications,
+        which_medications_have_you_been_taking: formatMedicationsList(body.currentMedications),
       } : undefined,
       treatmentPreferences: {
         providerCustomSolution: body.treatmentPreferences?.customSolution ? 'yes_custom' : 'no_custom',
@@ -160,6 +159,19 @@ export async function POST(request: NextRequest) {
 
     // Submit to Asher Med
     const result = await createNewOrder(orderRequest);
+
+    // Send partner note to Asher Med via PATCH (non-fatal)
+    if (result.data?.id && partnerNote) {
+      try {
+        await updateOrderApproval(result.data.id, {
+          approvalStatus: 'PENDING',
+          partnerNote,
+        });
+        console.log('Partner note sent to Asher Med');
+      } catch (noteError) {
+        console.error('Failed to send partner note to Asher Med:', noteError);
+      }
+    }
 
     // Update pending intake status in database
     if (process.env.POSTGRES_URL && body.stripeSessionId) {
@@ -174,6 +186,9 @@ export async function POST(request: NextRequest) {
             intake_data = intake_data || ${JSON.stringify({
               asher_patient_id: result.data?.id,
               submitted_at: new Date().toISOString(),
+              treatmentPreferences: body.treatmentPreferences || null,
+              currentMedications: body.currentMedications || null,
+              partnerNote: partnerNote || null,
             })}::jsonb
           WHERE stripe_payment_intent_id = ${body.stripeSessionId}
             OR intake_data->>'session_id' = ${body.stripeSessionId}
@@ -251,31 +266,88 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Build partner note from form data
+ * Format medications list preserving dosage and frequency.
+ * Handles both object arrays and string arrays/strings.
  */
-function buildPartnerNote(body: Record<string, unknown>): string {
-  const notes: string[] = [];
+export function formatMedicationsList(
+  medications: unknown
+): string | undefined {
+  if (!medications) return undefined;
 
-  // Add treatment preferences
+  if (typeof medications === 'string') return medications;
+
+  if (Array.isArray(medications) && medications.length > 0) {
+    return medications
+      .map((med) => {
+        if (typeof med === 'string') return med;
+        if (typeof med === 'object' && med !== null) {
+          const m = med as Record<string, unknown>;
+          const parts = [m.name || m.medication];
+          if (m.dosage) parts.push(m.dosage);
+          if (m.frequency) parts.push(m.frequency);
+          return parts.filter(Boolean).join(' - ');
+        }
+        return String(med);
+      })
+      .join(', ');
+  }
+
+  return undefined;
+}
+
+/**
+ * Build partner note from form data with all treatment preference fields.
+ */
+export function buildPartnerNote(body: Record<string, unknown>): string {
+  const sections: string[] = [];
+
+  // Treatment preferences section
   if (body.treatmentPreferences) {
     const prefs = body.treatmentPreferences as Record<string, unknown>;
+    const prefLines: string[] = [];
+
     if (prefs.preferredContactMethod) {
-      notes.push(`Preferred contact: ${prefs.preferredContactMethod}`);
+      prefLines.push(`Preferred contact: ${prefs.preferredContactMethod}`);
+    }
+    if (prefs.bestTimeToContact) {
+      prefLines.push(`Best time to contact: ${prefs.bestTimeToContact}`);
+    }
+    if (prefs.pharmacyPreference) {
+      prefLines.push(`Pharmacy preference: ${prefs.pharmacyPreference}`);
+    }
+    if (prefs.customSolution !== undefined) {
+      prefLines.push(`Custom solution requested: ${prefs.customSolution ? 'Yes' : 'No'}`);
     }
     if (prefs.additionalNotes) {
-      notes.push(`Patient notes: ${prefs.additionalNotes}`);
+      prefLines.push(`Patient notes: ${prefs.additionalNotes}`);
+    }
+
+    if (prefLines.length > 0) {
+      sections.push(`--- TREATMENT PREFERENCES ---\n${prefLines.join('\n')}`);
     }
   }
 
-  // Add current medications if specified
+  // Current medications section
   if (body.currentMedications && Array.isArray(body.currentMedications) && body.currentMedications.length > 0) {
-    notes.push(`Current medications: ${body.currentMedications.join(', ')}`);
+    const medLines = body.currentMedications.map((med: unknown, i: number) => {
+      if (typeof med === 'string') return `${i + 1}. ${med}`;
+      if (typeof med === 'object' && med !== null) {
+        const m = med as Record<string, unknown>;
+        const parts = [m.name || m.medication];
+        if (m.dosage) parts.push(m.dosage);
+        if (m.frequency) parts.push(m.frequency);
+        return `${i + 1}. ${parts.filter(Boolean).join(' - ')}`;
+      }
+      return `${i + 1}. ${String(med)}`;
+    });
+
+    sections.push(`--- CURRENT MEDICATIONS ---\n${medLines.join('\n')}`);
   }
 
-  // Add plan tier
+  // Plan tier section
   if (body.planTier) {
-    notes.push(`CULTR Plan: ${body.planTier}`);
+    sections.push(`--- PLAN ---\nCULTR Plan: ${body.planTier}`);
   }
 
-  return notes.join('\n');
+  return sections.join('\n\n');
 }

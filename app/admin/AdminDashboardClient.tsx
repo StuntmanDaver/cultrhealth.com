@@ -382,6 +382,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               <h2 className="font-display text-xl text-brand-primary mb-4">Quick Links</h2>
               <div className="flex flex-wrap gap-4">
                 <Link
+                  href="/admin/intakes"
+                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
+                >
+                  Intake Submissions
+                </Link>
+                <Link
+                  href="/admin/club-orders"
+                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
+                >
+                  Club Orders
+                </Link>
+                <Link
                   href="/provider/protocol-builder"
                   className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
                 >
