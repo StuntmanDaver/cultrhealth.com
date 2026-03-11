@@ -1,3 +1,31 @@
+## [2026-03-11] - Sales Tax Implementation (7.5% — Alachua County, FL)
+
+### Summary
+Added 7.5% Florida sales tax (6% state + 1.5% county surtax) across all 6 payment flows, club order emails, and the join page cart UI.
+
+### New (2 files)
+- `lib/config/tax.ts` — Centralized tax utility: FL_TAX_RATE (0.075), TAX_RATE_LABEL, calculateTaxCents, calculateTaxDollars
+- `migrations/015_club_orders_tax.sql` — Adds `tax_rate` and `tax_amount_usd` columns to `club_orders` table
+
+### Modified (8 files)
+- `app/api/checkout/product/route.ts` — Stripe: `automatic_tax: { enabled: true }` on checkout sessions
+- `app/api/club/orders/route.ts` — Server-side tax calc, DB storage, tax line in customer + admin emails
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` — Reads tax from DB, tax line in approval emails (customer + admin)
+- `lib/payments/klarna-api.ts` — Per-line tax in buildOrderLines, tax-inclusive order_amount/order_tax_amount
+- `app/api/checkout/klarna/order/route.ts` — Tax-inclusive totalAmount for DB storage
+- `lib/payments/affirm-api.ts` — Sets tax_amount, adds tax to total in checkout config
+- `lib/payments/authorize-net-api.ts` — Tax object on transactions, tax-inclusive amounts on transactions + subscriptions
+- `app/join/JoinLandingClient.tsx` — Cart UI shows Subtotal → Sales Tax (7.5%) → Total
+
+### Manual Dashboard Steps Required
+- **Stripe:** Enable Stripe Tax → Add FL tax registration → Enable on each Payment Link
+- **QuickBooks:** Enable automatic sales tax → Set FL nexus
+
+### Migration
+- `015_club_orders_tax.sql` run on staging Neon DB
+
+---
+
 ## [2026-03-11] - Phone OTP Portal Authentication (Phase 1)
 
 ### Summary
