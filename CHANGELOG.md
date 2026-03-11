@@ -1,3 +1,55 @@
+## [2026-03-11] - Phone OTP Portal Authentication (Phase 1)
+
+### Summary
+New member authentication system using phone number + SMS OTP via Twilio Verify. Members authenticate at `/portal/login` with a dual-token JWT session (15-min access + 7-day refresh). Three verification outcomes: patient found (dashboard), known phone without patient (intake redirect), or never-seen phone (support message). Fully coexists with existing magic link auth.
+
+### New (12 files)
+- `lib/portal-auth.ts` — Dual-token JWT session management (8 exported functions, separate cookie namespace)
+- `lib/portal-db.ts` — Portal session DB helpers (upsert, get by phone, update patient ID)
+- `migrations/014_portal_sessions.sql` — `portal_sessions` table with phone_e164 unique index
+- `app/api/portal/send-otp/route.ts` — Phone validation, dual rate limiting (IP + phone), Twilio Verify SMS
+- `app/api/portal/verify-otp/route.ts` — OTP verification, 3-way patient resolution, session creation
+- `app/api/portal/refresh/route.ts` — Silent access token refresh from refresh cookie
+- `app/api/portal/logout/route.ts` — Clears both portal cookies (idempotent)
+- `app/portal/login/page.tsx` — Server component entry point
+- `app/portal/login/PortalLoginClient.tsx` — Phone input (US mask), 6-digit OTP boxes, slide transitions, support message
+- `app/portal/layout.tsx` — Auth guard with activity-based session refresh
+- `app/portal/dashboard/page.tsx` — Placeholder portal dashboard
+- `tests/` — 50 new tests across 7 files (portal-auth, portal-db, send-otp, verify-otp, logout, refresh, PortalLogin component)
+
+### Modified (4 files)
+- `components/site/Header.tsx` — "Members" nav link now points to `/portal/login`
+- `components/site/LayoutShellClient.tsx` — Hides site chrome on `/portal/*` routes
+- `lib/config/links.ts` — Added `portalLogin` and `portalDashboard` entries
+- `app/api/intake/submit/route.ts` — Auto-links portal session with new Asher Med patient ID after intake
+
+### Packages Added
+- `twilio` — Twilio SDK for Verify API
+- `input-otp` — 6-digit OTP input component with autocomplete='one-time-code'
+
+### Environment Variables Required (Production)
+- `TWILIO_ACCOUNT_SID` — Twilio Console
+- `TWILIO_AUTH_TOKEN` — Twilio Console
+- `TWILIO_VERIFY_SERVICE_SID` — Create Verify Service in Twilio Console
+
+### Staging Notes
+- send-otp skips Twilio call entirely on staging
+- verify-otp accepts code `123456` on staging
+- Migration 014 run on staging Neon DB
+
+---
+
+## [2026-03-11] - Intake Form Updates
+
+### Summary
+Simplified intake form gender options and replaced dynamic medication selector with curated product list.
+
+### Modified (2 files)
+- `components/intake/PersonalInfoForm.tsx` — Removed "Other/Prefer not to say" gender option (Male/Female only)
+- `components/intake/MedicationSelector.tsx` — Replaced dynamic product catalog with flat list of 10 specific medications: Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2
+
+---
+
 ## [2026-03-10] - Creator Commission System Overhaul
 
 ### Summary
