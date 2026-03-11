@@ -17,7 +17,15 @@ import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
 import { MilestoneBadges } from '@/components/creators/Milestones'
 import { AnalyticsCharts } from '@/components/creators/AnalyticsCharts'
-import { Leaderboard } from '@/components/creators/Leaderboard'
+
+function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4">
+      <Icon className="w-4 h-4 text-cultr-textMuted" />
+      <h2 className="text-sm font-semibold uppercase tracking-wider text-cultr-textMuted">{label}</h2>
+    </div>
+  )
+}
 
 function MetricCard({
   label,
@@ -168,7 +176,28 @@ function TierProgressBar({ tier, recruitCount }: { tier: number; recruitCount: n
   )
 }
 
-function GettingStartedCard() {
+function GettingStartedCard({
+  linksCreated,
+  codesAssigned,
+  hasClicks,
+  hasOrders,
+}: {
+  linksCreated: boolean
+  codesAssigned: boolean
+  hasClicks: boolean
+  hasOrders: boolean
+}) {
+  const steps = [
+    { label: 'Application approved', done: true, href: null },
+    { label: 'Create your first tracking link', done: linksCreated, href: '/creators/portal/share' },
+    { label: 'Get your referral codes', done: codesAssigned, href: '/creators/portal/share' },
+    { label: 'Share CULTR with your audience', done: hasClicks, href: null },
+    { label: 'Make your first sale', done: hasOrders, href: null },
+  ]
+
+  const allDone = steps.every((s) => s.done)
+  if (allDone) return null
+
   return (
     <div className="bg-white border border-cultr-sage rounded-2xl p-6">
       <div className="flex items-start gap-4">
@@ -181,20 +210,14 @@ function GettingStartedCard() {
             Complete these steps to start earning commissions.
           </p>
           <ul className="space-y-3">
-            {[
-              { label: 'Application approved', done: true, href: null },
-              { label: 'Create your first tracking link', done: false, href: '/creators/portal/share' },
-              { label: 'Get your referral codes', done: false, href: '/creators/portal/share' },
-              { label: 'Share CULTR with your audience', done: false, href: null },
-              { label: 'Make your first sale', done: false, href: null },
-            ].map((step, i) => (
+            {steps.map((step, i) => (
               <li key={i} className="flex items-center gap-3 text-sm">
                 {step.done ? (
                   <CheckCircle2 className="w-4 h-4 text-cultr-forest flex-shrink-0" />
                 ) : (
                   <Circle className="w-4 h-4 text-stone-300 flex-shrink-0" />
                 )}
-                {step.href ? (
+                {step.href && !step.done ? (
                   <Link href={step.href} className="text-cultr-forest hover:underline font-medium">
                     {step.label}
                   </Link>
@@ -213,7 +236,7 @@ function GettingStartedCard() {
 }
 
 export default function CreatorDashboardPage() {
-  const { metrics, creator, loading } = useCreator()
+  const { metrics, creator, links, codes, loading } = useCreator()
 
   if (loading) {
     return (
@@ -234,7 +257,7 @@ export default function CreatorDashboardPage() {
     `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-8 max-w-6xl">
       <div>
         <h1 className="text-2xl font-display font-bold text-cultr-forest">
           Welcome back{creator?.full_name ? `, ${creator.full_name.split(' ')[0]}` : ''}
@@ -244,64 +267,48 @@ export default function CreatorDashboardPage() {
         </p>
       </div>
 
-      {/* Bonus Window Banner */}
-      {metrics?.isInBonusWindow && (
-        <BonusWindowBanner daysLeft={metrics.bonusWindowDaysLeft} />
-      )}
+      {/* Getting Started (shown until all 5 steps are complete) */}
+      <GettingStartedCard
+        linksCreated={links.length > 0}
+        codesAssigned={codes.length > 0}
+        hasClicks={(metrics?.totalClicks ?? 0) > 0}
+        hasOrders={(metrics?.totalOrders ?? 0) > 0}
+      />
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          label="Clicks"
-          value={(metrics?.thisMonthClicks ?? 0).toLocaleString()}
-          icon={MousePointerClick}
-          subtitle={`${(metrics?.totalClicks ?? 0).toLocaleString()} total`}
-        />
-        <MetricCard
-          label="Orders"
-          value={(metrics?.thisMonthOrders ?? 0).toLocaleString()}
-          icon={ShoppingCart}
-          subtitle={`${(metrics?.conversionRate ?? 0).toFixed(1)}% conversion`}
-        />
-        <MetricCard
-          label="Active Members"
-          value={(metrics?.activeMemberCount ?? 0).toLocaleString()}
-          icon={Users}
-          subtitle="Customers with active subscriptions"
-        />
-        <MetricCard
-          label="Commission"
-          value={fmt(metrics?.thisMonthCommission ?? 0)}
-          icon={DollarSign}
-          subtitle={`${fmt(metrics?.pendingCommission ?? 0)} pending`}
-        />
-      </div>
+      {/* ─── PERFORMANCE ─── */}
+      <section>
+        <SectionLabel icon={TrendingUp} label="Performance" />
 
-      {/* Getting Started (shown only to new creators with no activity) */}
-      {metrics && metrics.totalClicks === 0 && metrics.totalCommission === 0 && (
-        <GettingStartedCard />
-      )}
-
-      {/* Commission Breakdown + Tier Progress */}
-      {metrics && (
-        <div className="grid lg:grid-cols-2 gap-6">
-          <CommissionBreakdown metrics={metrics} />
-          <TierProgressBar
-            tier={creator?.tier ?? 0}
-            recruitCount={creator?.recruit_count ?? 0}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <MetricCard
+            label="Clicks"
+            value={(metrics?.thisMonthClicks ?? 0).toLocaleString()}
+            icon={MousePointerClick}
+            subtitle={`${(metrics?.totalClicks ?? 0).toLocaleString()} total`}
+          />
+          <MetricCard
+            label="Orders"
+            value={(metrics?.thisMonthOrders ?? 0).toLocaleString()}
+            icon={ShoppingCart}
+            subtitle={`${(metrics?.conversionRate ?? 0).toFixed(1)}% conversion`}
+          />
+          <MetricCard
+            label="Active Members"
+            value={(metrics?.activeMemberCount ?? 0).toLocaleString()}
+            icon={Users}
+            subtitle="Customers with active subscriptions"
+          />
+          <MetricCard
+            label="Commission"
+            value={fmt(metrics?.thisMonthCommission ?? 0)}
+            icon={DollarSign}
+            subtitle={`${fmt(metrics?.pendingCommission ?? 0)} pending`}
           />
         </div>
-      )}
 
-      {/* Milestones */}
-      {metrics && creator && (
-        <MilestoneBadges metrics={metrics} creator={creator} />
-      )}
-
-      {/* Analytics Charts + Leaderboard */}
-      {metrics && (
-        <div className="grid lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3">
+        {/* Analytics Charts — full width */}
+        {metrics && (
+          <div className="mt-4">
             <AnalyticsCharts
               totalClicks={metrics.totalClicks}
               totalOrders={metrics.totalOrders}
@@ -312,16 +319,49 @@ export default function CreatorDashboardPage() {
               conversionRate={metrics.conversionRate}
             />
           </div>
-          <div className="lg:col-span-2">
-            <Leaderboard
-              myName={creator?.full_name ?? ''}
-              myClicks={metrics.totalClicks}
-              myOrders={metrics.totalOrders}
-              myRevenue={metrics.totalRevenue}
-            />
-          </div>
-        </div>
+        )}
+      </section>
+
+      {/* ─── COMMISSIONS ─── */}
+      {metrics && (
+        <section>
+          <SectionLabel icon={DollarSign} label="Commissions" />
+
+          {metrics.isInBonusWindow && (
+            <div className="mb-4">
+              <BonusWindowBanner daysLeft={metrics.bonusWindowDaysLeft} />
+            </div>
+          )}
+
+          <CommissionBreakdown metrics={metrics} />
+        </section>
       )}
+
+      {/* ─── GROWTH ─── */}
+      {metrics && creator && (
+        <section>
+          <SectionLabel icon={Users} label="Growth" />
+
+          <div className="space-y-4">
+            <TierProgressBar
+              tier={creator.tier ?? 0}
+              recruitCount={creator.recruit_count ?? 0}
+            />
+            <MilestoneBadges metrics={metrics} creator={creator} />
+          </div>
+        </section>
+      )}
+
+      {/* Creator Tip (replaces leaderboard) */}
+      <div className="bg-white border border-stone-200 rounded-2xl p-6">
+        <h3 className="font-display font-bold text-cultr-forest mb-2">Creator Tip</h3>
+        <p className="text-sm text-cultr-textMuted mb-3">
+          Creators who post consistently see 3x more conversions. Check out our content calendar and social templates.
+        </p>
+        <Link href="/creators/portal/resources" className="text-sm font-medium text-cultr-forest hover:underline">
+          Browse Resources &rarr;
+        </Link>
+      </div>
 
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-4">

@@ -3,7 +3,6 @@
 import { Menu } from 'lucide-react'
 import { useCreator } from '@/lib/contexts/CreatorContext'
 import { getTierName } from '@/lib/config/affiliate'
-import { NotificationBell } from '@/components/creators/NotificationBell'
 
 interface CreatorHeaderProps {
   onMenuToggle: () => void
@@ -78,15 +77,8 @@ export function CreatorHeader({ onMenuToggle }: CreatorHeaderProps) {
           )}
         </div>
 
-        {/* Right side — notifications + tier + override */}
+        {/* Right side — tier badge */}
         <div className="flex items-center gap-2">
-          {metrics && (
-            <NotificationBell
-              thisMonthClicks={metrics.thisMonthClicks}
-              thisMonthOrders={metrics.thisMonthOrders}
-              thisMonthCommission={metrics.thisMonthCommission}
-            />
-          )}
           {creator && (
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 grad-mint rounded-full">
               <span className="text-xs font-medium text-cultr-forest">

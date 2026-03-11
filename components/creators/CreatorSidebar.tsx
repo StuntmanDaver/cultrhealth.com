@@ -37,14 +37,14 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'TOOLS',
+    label: 'GROW',
     items: [
       { label: 'My Network', href: '/creators/portal/network', icon: Users },
       { label: 'Resources', href: '/creators/portal/resources', icon: BookOpen },
     ],
   },
   {
-    label: null,
+    label: 'ACCOUNT',
     items: [
       { label: 'Settings', href: '/creators/portal/settings', icon: Settings },
       { label: 'Support', href: '/creators/portal/support', icon: LifeBuoy },
