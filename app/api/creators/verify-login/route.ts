@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
     // No DB record — auto-create for staging bypass emails
     if (!creatorId && (isStaging() || isStagingEmail(email))) {
       try {
-        const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode } = await import('@/lib/creators/db')
+        const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } = await import('@/lib/creators/db')
+        const { generateCreatorCodes } = await import('@/lib/config/affiliate')
 
         // Derive a name from the email (e.g. "erik" from "erik@threepointshospitality.com")
         const namePart = email.split('@')[0]
@@ -87,13 +88,25 @@ export async function GET(request: NextRequest) {
         const slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 1000)
         await createTrackingLink(creator.id, slug, '/', true)
 
-        const code = namePart.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) + '10'
-        await createAffiliateCode(creator.id, code, true)
+        // Generate dual coupon codes (matching approval flow)
+        let { membershipCode, productCode } = generateCreatorCodes(fullName)
+        const baseName = membershipCode
+        let suffix = 1
+        while (
+          await checkAffiliateCodeExists(membershipCode) ||
+          await checkAffiliateCodeExists(productCode)
+        ) {
+          membershipCode = `${baseName}${suffix}`
+          productCode = `${baseName}${suffix}10`
+          suffix++
+        }
+        await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
+        await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
 
         creatorId = creator.id
         creatorStatus = 'active'
 
-        console.log('Auto-created staging creator:', { email, creatorId })
+        console.log('Auto-created staging creator:', { email, creatorId, membershipCode, productCode })
       } catch (err) {
         console.error('Failed to auto-create staging creator (DB may be unavailable):', err)
         // DB failed but they're a staging email — grant access with staging ID
