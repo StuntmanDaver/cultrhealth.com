@@ -31,73 +31,8 @@ interface Campaign {
   badge?: string
 }
 
-const CAMPAIGNS: Campaign[] = [
-  {
-    id: 'spring-2026',
-    title: 'Spring Optimization Push',
-    description: 'Help your audience start spring with comprehensive lab testing. Special emphasis on GLP-1 and metabolic protocols.',
-    type: 'promo',
-    status: 'active',
-    startDate: '2026-02-01',
-    endDate: '2026-03-31',
-    details: [
-      'Focus messaging on "spring reset" and new health goals',
-      'Highlight the 28-59 biomarker panel (SiPho Health) as a first step',
-      'Push the quiz as a low-commitment entry point',
-      'Use seasonal hooks: "New year goals, spring action"',
-    ],
-    cta: { label: 'Copy Spring Promo Caption', copy: "Spring is the perfect time to stop guessing and start optimizing. \n\nGet 28-59 biomarkers tested, matched with a licensed provider, and start a personalized protocol.\n\nPlans from $199/mo. Take the quiz \u2192 {LINK}\n\n#ad #cultrhealth #springreset" },
-    badge: 'Active Now',
-  },
-  {
-    id: 'glp1-awareness',
-    title: 'GLP-1 Education Campaign',
-    description: 'New FDA guidelines on compounded GLP-1s. Position CULTR as the trusted, compliant provider.',
-    type: 'launch',
-    status: 'active',
-    startDate: '2026-01-15',
-    details: [
-      'Emphasize licensed providers + licensed pharmacies',
-      'Address safety concerns proactively',
-      'Share the GLP-1 Overview from Resources',
-      'Avoid before/after transformation content',
-      'Use approved claims only \u2014 review the Compliance section',
-    ],
-    cta: { label: 'View GLP-1 Talking Points', url: '/creators/portal/resources/glp-1-overview' },
-    badge: 'Priority',
-  },
-  {
-    id: 'referral-bonus-feb',
-    title: 'February Referral Bonus',
-    description: 'Extra $25 bonus per qualified referral through the end of February. Stacks on top of your normal 10% commission.',
-    type: 'bonus',
-    status: 'active',
-    startDate: '2026-02-01',
-    endDate: '2026-02-28',
-    details: [
-      '$25 bonus per new member who completes their first consultation',
-      'Bonus applied automatically \u2014 no action needed from you',
-      'Stacks with your normal 10% commission',
-      'Unlimited bonus referrals during the campaign period',
-    ],
-    badge: 'Bonus Active',
-  },
-  {
-    id: 'peptide-launch-q2',
-    title: 'New Peptide Protocols \u2014 Q2 Launch',
-    description: 'CULTR is expanding peptide offerings in Q2. New protocols for recovery and cognitive performance. Details coming soon.',
-    type: 'announcement',
-    status: 'upcoming',
-    startDate: '2026-04-01',
-    details: [
-      'New recovery peptide stack launching',
-      'Cognitive performance protocol in development',
-      'Creator early access for content creation',
-      'Full briefing materials will be shared before launch',
-    ],
-    badge: 'Coming Q2',
-  },
-]
+// Campaigns are managed by the CULTR team. Add new campaigns here as they launch.
+const CAMPAIGNS: Campaign[] = []
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   promo: Tag,

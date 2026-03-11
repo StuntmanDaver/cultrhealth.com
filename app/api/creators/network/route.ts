@@ -14,41 +14,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const isStagingCreator = auth.creatorId === 'staging_creator' || auth.creatorId === 'dev_creator'
-  const mockNetwork = () => NextResponse.json({
-    network: {
-      totalRecruits: 12,
-      activeRecruits: 10,
-      overrideEarnings: 287.64,
-      tier: 2,
-      tierName: 'Silver',
-      overrideRate: 4,
-      recruitCount: 12,
-      nextTierAt: 15,
-    },
-    recruits: [
-      { id: 'r1', full_name: 'Alex Johnson', status: 'active', created_at: '2025-12-01T00:00:00Z' },
-      { id: 'r2', full_name: 'Maria Garcia', status: 'active', created_at: '2025-12-15T00:00:00Z' },
-      { id: 'r3', full_name: 'Chris Lee', status: 'active', created_at: '2026-01-03T00:00:00Z' },
-      { id: 'r4', full_name: 'Priya Patel', status: 'active', created_at: '2026-01-10T00:00:00Z' },
-      { id: 'r5', full_name: 'Jordan Kim', status: 'active', created_at: '2026-01-18T00:00:00Z' },
-      { id: 'r6', full_name: 'Taylor Swift', status: 'active', created_at: '2026-01-22T00:00:00Z' },
-      { id: 'r7', full_name: 'Sam Rivera', status: 'active', created_at: '2026-01-25T00:00:00Z' },
-      { id: 'r8', full_name: 'Dana White', status: 'active', created_at: '2026-01-28T00:00:00Z' },
-      { id: 'r9', full_name: 'Morgan Chen', status: 'active', created_at: '2026-02-01T00:00:00Z' },
-      { id: 'r10', full_name: 'Riley Thompson', status: 'active', created_at: '2026-02-04T00:00:00Z' },
-      { id: 'r11', full_name: 'Avery Brooks', status: 'pending', created_at: '2026-02-06T00:00:00Z' },
-      { id: 'r12', full_name: 'Quinn Davis', status: 'pending', created_at: '2026-02-07T00:00:00Z' },
-    ],
-    portfolio: [
-      { id: 'p1', customer_email: 'j***@gmail.com', subscription_status: 'active', payment_count: 4, first_payment_at: '2025-11-15T00:00:00Z', attribution_active: true },
-      { id: 'p2', customer_email: 's***@yahoo.com', subscription_status: 'active', payment_count: 3, first_payment_at: '2025-12-01T00:00:00Z', attribution_active: true },
-      { id: 'p3', customer_email: 'm***@outlook.com', subscription_status: 'cancelled', payment_count: 2, first_payment_at: '2026-01-10T00:00:00Z', attribution_active: false },
-    ],
-  })
-
-  if (isStagingCreator) return mockNetwork()
-
   try {
     const creator = await getCreatorById(auth.creatorId)
     if (!creator) {

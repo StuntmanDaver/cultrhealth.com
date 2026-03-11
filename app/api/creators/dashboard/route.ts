@@ -9,50 +9,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const isStagingCreator = auth.creatorId === 'staging_creator' || auth.creatorId === 'dev_creator'
-
-  const mockDashboard = () => NextResponse.json({
-    metrics: {
-      totalClicks: 1247,
-      totalOrders: 38,
-      totalRevenue: 14820,
-      totalCommission: 1482,
-      pendingCommission: 396,
-      thisMonthClicks: 312,
-      thisMonthOrders: 11,
-      thisMonthRevenue: 4290,
-      thisMonthCommission: 429,
-      conversionRate: 3.05,
-      tier: 2,
-      overrideRate: 15,
-      recruitCount: 12,
-      nextTierRequirement: getNextTierRequirement(2),
-      activeMemberCount: 24,
-      commissionRate: 10,
-      creatorStartDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-      isInBonusWindow: true,
-      bonusWindowDaysLeft: 120,
-      directMembershipEarnings: 890,
-      directProductEarnings: 340,
-      overrideEarnings: 252,
-    },
-    creator: {
-      id: auth.creatorId || 'staging_creator',
-      full_name: 'Staging Creator',
-      status: 'active',
-      tier: 2,
-      override_rate: 15,
-      recruit_count: 12,
-      active_member_count: 24,
-      commission_rate: 10,
-      creator_start_date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-    },
-  })
-
-  if (isStagingCreator) {
-    return mockDashboard()
-  }
-
   try {
     const creator = await getCreatorById(auth.creatorId)
     if (!creator) {
