@@ -1,442 +1,340 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-03-10
+**Analysis Date:** 2026-03-11
 
 ## Directory Layout
 
 ```
-/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr\ Health\ Website/
-├── app/                          # Next.js 14 App Router (61 page routes, 72 API endpoints)
-│   ├── page.tsx                  # Homepage (server component with dynamic imports)
-│   ├── layout.tsx                # Root layout (fonts, GA, LayoutShell wrapper)
-│   ├── globals.css               # Global styles (reset, Tailwind directives)
+project-root/
+├── app/                          # Next.js 14 App Router (pages + API routes)
+│   ├── page.tsx                  # Homepage (server component, inline sections)
+│   ├── layout.tsx                # Root layout (fonts, GA, LayoutShell)
+│   ├── globals.css               # Global Tailwind base styles
 │   ├── error.tsx                 # Error boundary
 │   ├── not-found.tsx             # 404 page
-│   ├── robots.ts                 # SEO robots.txt generator
-│   ├── sitemap.ts                # SEO sitemap generator
+│   ├── robots.ts                 # Dynamic robots.txt
+│   ├── sitemap.ts                # Dynamic sitemap
 │   │
-│   ├── pricing/page.tsx          # Pricing page
-│   ├── quiz/page.tsx + QuizClient.tsx
-│   ├── how-it-works/page.tsx     # How It Works
-│   ├── faq/page.tsx              # FAQ page
-│   ├── community/page.tsx        # Curator.io social feed
-│   ├── science/page.tsx + [slug]/page.tsx  # Blog articles
-│   ├── legal/ (privacy, terms)
+│   ├── (marketing pages)
+│   ├── pricing/                  # Pricing page
+│   ├── how-it-works/             # How It Works
+│   ├── faq/                      # FAQ
+│   ├── quiz/                     # Recommendation quiz
+│   ├── science/                  # Blog / Science library
+│   ├── community/                # Curator.io social feed
+│   ├── therapies/                # Therapies overview
+│   ├── tools/                    # Health tools
+│   ├── legal/                    # Privacy, Terms, Medical Disclaimer
 │   │
-│   ├── join/                     # Checkout flow (Stripe payment link)
-│   │   ├── layout.tsx
-│   │   ├── [tier]/page.tsx       # Tier-specific checkout (core, catalyst, concierge, club)
-│   │   └── JoinLandingClient.tsx
-│   │
-│   ├── intake/                   # Medical intake forms
-│   │   ├── page.tsx              # Wrapper
-│   │   ├── IntakeFormClient.tsx  # Multi-step form controller + context provider
-│   │   └── success/page.tsx
-│   │
-│   ├── library/                  # Members library (tier-gated)
-│   │   ├── page.tsx              # Library landing
-│   │   ├── layout.tsx            # Library layout
-│   │   ├── [category]/page.tsx   # metabolic, repair, growth-factors, bioregulators
-│   │   ├── calorie-calculator/
-│   │   ├── dosing-calculator/
-│   │   ├── peptide-faq/
-│   │   ├── cart/                 # Shopping cart
-│   │   └── shop/                 # Members shop
-│   │
-│   ├── login/page.tsx            # Magic link login
-│   ├── dashboard/page.tsx        # Member dashboard
+│   ├── (authenticated member pages)
+│   ├── login/                    # Magic-link login
+│   ├── dashboard/                # Member dashboard
+│   ├── intake/                   # Multi-step medical intake form
+│   ├── library/                  # Peptide library + member shop
 │   ├── renewal/                  # Subscription renewal flow
-│   ├── track/daily/page.tsx      # Daily tracking
+│   ├── track/                    # Daily tracking
+│   ├── success/                  # Post-checkout success
 │   │
-│   ├── provider/                 # Provider tools (access-controlled)
-│   │   └── protocol-builder/     # AI protocol builder
+│   ├── (checkout)
+│   ├── join/[tier]/              # Tier-specific checkout (club/core/catalyst/concierge)
+│   ├── join-club/                # CULTR Club landing (join.cultrhealth.com alias)
 │   │
-│   ├── creators/                 # Creator affiliate portal
-│   │   ├── page.tsx              # Landing
-│   │   ├── login/page.tsx
-│   │   ├── apply/page.tsx        # Application form
-│   │   ├── pending/page.tsx
-│   │   ├── [slug]/page.tsx       # Public creator profiles
-│   │   └── portal/               # Authenticated portal
-│   │       ├── layout.tsx        # Auth + CreatorContext
-│   │       ├── dashboard/page.tsx
-│   │       ├── earnings/page.tsx
-│   │       ├── network/page.tsx
-│   │       ├── payouts/page.tsx
-│   │       ├── share/page.tsx
-│   │       ├── campaigns/page.tsx
-│   │       ├── resources/page.tsx
-│   │       ├── settings/page.tsx
-│   │       └── support/page.tsx
+│   ├── (portal — phone OTP auth)
+│   ├── portal/login/             # Phone OTP login
+│   ├── portal/dashboard/         # Patient portal dashboard
 │   │
-│   ├── admin/                    # Admin panel
-│   │   ├── page.tsx
-│   │   ├── AdminDashboardClient.tsx
-│   │   ├── orders/[orderNumber]/fulfill/route.ts
-│   │   ├── club-orders/
-│   │   │   ├── page.tsx
-│   │   │   └── ClubOrdersClient.tsx
-│   │   └── creators/
-│   │       ├── page.tsx
-│   │       ├── approvals/page.tsx
-│   │       └── campaigns/page.tsx
+│   ├── (creator affiliate)
+│   ├── creators/                 # Creator program landing
+│   ├── creators/apply/           # Creator application
+│   ├── creators/login/           # Creator login
+│   ├── creators/[slug]/          # Public creator profile
+│   ├── creators/portal/          # Authenticated creator dashboard (8 sub-pages)
 │   │
-│   └── api/                      # API Routes (72 endpoints)
-│       ├── auth/
-│       │   ├── magic-link/route.ts
-│       │   ├── verify/route.ts
-│       │   └── logout/route.ts
-│       ├── checkout/
-│       │   ├── route.ts          # Stripe payment link redirect
-│       │   ├── product/route.ts
-│       │   ├── affirm/
-│       │   ├── klarna/
-│       │   └── authorize-net/
-│       ├── webhook/
-│       │   ├── stripe/route.ts
-│       │   ├── affirm/route.ts
-│       │   ├── klarna/route.ts
-│       │   └── authorize-net/route.ts
-│       ├── creators/
-│       │   ├── apply/route.ts
-│       │   ├── dashboard/route.ts
-│       │   ├── links/route.ts
-│       │   ├── codes/route.ts
-│       │   ├── earnings/
-│       │   └── [many more...]
-│       ├── club/
-│       │   ├── signup/route.ts
-│       │   └── orders/route.ts
-│       ├── admin/
-│       │   ├── analytics/route.ts
-│       │   ├── club-orders/[orderId]/approve/route.ts
-│       │   └── creators/[...operations]
-│       ├── intake/
-│       │   ├── submit/route.ts
-│       │   └── upload/route.ts
-│       ├── protocol/generate/route.ts  # AI protocol generation
-│       ├── r/[slug]/route.ts      # Click tracking redirect
-│       ├── cron/                  # Scheduled tasks
-│       │   ├── approve-commissions/route.ts
-│       │   └── update-tiers/route.ts
-│       └── [many more...]
+│   ├── (admin)
+│   ├── admin/                    # Admin dashboard
+│   ├── admin/club-orders/        # Club order management
+│   ├── admin/creators/           # Creator management + approvals
+│   ├── admin/intakes/            # Intake form viewer
+│   │
+│   ├── (provider)
+│   ├── provider/protocol-builder/ # AI-powered protocol builder
+│   │
+│   ├── (redirect/tracking)
+│   ├── r/[slug]/                 # Affiliate click tracking redirect
+│   ├── products/                 # Redirects → /pricing (301 in next.config.js)
+│   │
+│   └── api/                      # API routes (80+ endpoints)
+│       ├── auth/                 # Magic-link auth (magic-link, verify, logout)
+│       ├── portal/               # Phone OTP auth (send-otp, verify-otp, refresh, logout)
+│       ├── checkout/             # Stripe + BNPL checkout (route, product, affirm, klarna, authorize-net)
+│       ├── stripe/checkout/      # Stripe-specific checkout endpoint
+│       ├── webhook/              # Webhook handlers (stripe, affirm, klarna, authorize-net, quickbooks)
+│       ├── creators/             # Creator portal API (apply, profile, dashboard, links, codes, earnings, network, payouts, support)
+│       ├── admin/                # Admin API (analytics, club-orders, creators, intakes, orders)
+│       ├── club/                 # CULTR Club (signup, orders, validate-coupon, login)
+│       ├── intake/               # Intake form (questions, submit, upload)
+│       ├── member/               # Member API (profile, orders, files, medical-records, transactions, consult-*)
+│       ├── portal/               # Portal session API
+│       ├── lmn/                  # Lab Management Numbers (list, generate, [lmnNumber])
+│       ├── protocol/generate/    # AI protocol generation
+│       ├── meal-plan/            # AI meal plans
+│       ├── quote/                # Product quote generation
+│       ├── renewal/              # Subscription renewal (check, submit)
+│       ├── track/                # Click tracking + daily tracking
+│       ├── quickbooks/           # QuickBooks OAuth (auth, callback)
+│       ├── supplement-order/     # Supplement order endpoint
+│       ├── cron/                 # Scheduled jobs (approve-commissions, update-tiers)
+│       └── waitlist/             # Waitlist signup
 │
-├── components/                   # React components (61 files)
-│   ├── ui/                       # Reusable UI primitives (6 files)
-│   │   ├── Button.tsx            # Variants: primary, secondary, ghost; isLoading state
-│   │   ├── Input.tsx
-│   │   ├── Aura.tsx              # Decorative gradient blobs
-│   │   ├── ScrollReveal.tsx      # Scroll-triggered animations
-│   │   ├── SectionWrapper.tsx    # Section layout wrapper
-│   │   └── Spinner.tsx
-│   │
-│   ├── site/                     # Marketing site components (11 files)
-│   │   ├── Header.tsx            # Floating navbar (morphs on scroll)
-│   │   ├── Footer.tsx
-│   │   ├── LayoutShell.tsx       # Wrapper for header/footer
-│   │   ├── LayoutShellClient.tsx # Client wrapper (hides chrome on /admin, /creators/portal, /join)
-│   │   ├── PricingCard.tsx
-│   │   ├── ComparisonTable.tsx
-│   │   ├── FAQAccordion.tsx
-│   │   ├── NewsletterSignup.tsx
-│   │   ├── ClubBanner.tsx
-│   │   ├── CommunityFeed.tsx
-│   │   └── CTASection.tsx
-│   │
-│   ├── intake/                   # Intake form components (13 files)
-│   │   ├── PersonalInfoForm.tsx
-│   │   ├── PhysicalMeasurementsForm.tsx
-│   │   ├── CurrentMedicationsForm.tsx
-│   │   ├── GLP1HistoryForm.tsx
-│   │   ├── TreatmentPreferencesForm.tsx
-│   │   ├── [... 8 more form components]
-│   │
-│   ├── payments/                 # Payment provider components (6 files)
-│   │   ├── PaymentMethodSelector.tsx
-│   │   ├── AffirmCheckoutButton.tsx
-│   │   ├── KlarnaWidget.tsx
-│   │   ├── AuthorizeNetForm.tsx
-│   │   └── BNPLBadge.tsx
-│   │
+├── components/
+│   ├── ui/                       # Reusable primitives (6 files)
+│   ├── site/                     # Marketing site chrome (11 files)
+│   ├── intake/                   # Intake form steps (14 files)
 │   ├── creators/                 # Creator portal components (6 files)
-│   │   ├── AnalyticsCharts.tsx   # Recharts visualization
-│   │   ├── CreatorHeader.tsx
-│   │   ├── CreatorSidebar.tsx
-│   │   ├── Leaderboard.tsx
-│   │   ├── Milestones.tsx
-│   │   └── NotificationBell.tsx
-│   │
-│   ├── library/                  # Library components (5 files)
-│   │   ├── TierGate.tsx          # Access control by plan tier
-│   │   ├── CategoryGrid.tsx
-│   │   ├── MasterIndex.tsx
-│   │   └── [2 more]
-│   │
-│   ├── dashboard/                # Health dashboard (2 files)
-│   │   ├── BiologicalAgeCard.tsx
-│   │   └── BiomarkerTrends.tsx
-│   │
-│   └── sections/                 # Legacy components (9 files, NOT USED)
+│   ├── library/                  # Member library components (5 files)
+│   ├── payments/                 # Payment provider UIs (6 files)
+│   ├── dashboard/                # Health dashboard widgets (2 files)
+│   └── sections/                 # UNUSED legacy sections (9 files — do not use)
 │
-├── lib/                          # Business logic & utilities (49 files)
+├── lib/
 │   ├── config/                   # Configuration constants (11 files)
-│   │   ├── plans.ts              # Membership tiers + Stripe config
-│   │   ├── products.ts           # Product definitions
-│   │   ├── product-catalog.ts    # Peptide catalog with SKUs & prices
-│   │   ├── quiz.ts               # Quiz question/answer config
-│   │   ├── affiliate.ts          # Commission tiers, FTC disclosures
-│   │   ├── links.ts              # Centralized URL registry
-│   │   ├── social-proof.ts       # Testimonials, trust badges
-│   │   ├── payments.ts           # Payment provider config
-│   │   ├── asher-med.ts
-│   │   ├── product-to-asher-mapping.ts
-│   │   └── coupons.ts
-│   │
 │   ├── contexts/                 # React Context providers (2 files)
-│   │   ├── intake-form-context.tsx    # Multi-step form state
-│   │   └── JoinCartContext.tsx        # Shopping cart state
-│   │
-│   ├── creators/                 # Affiliate business logic (3 files)
-│   │   ├── attribution.ts        # Click tracking, cookie serialization
-│   │   ├── commission.ts         # Commission calculation engine
-│   │   └── db.ts                 # Creator database operations
-│   │
-│   ├── payments/                 # Payment provider APIs (4 files)
-│   │   ├── affirm-api.ts
-│   │   ├── klarna-api.ts
-│   │   ├── authorize-net-api.ts
-│   │   └── payment-types.ts
-│   │
+│   ├── creators/                 # Creator affiliate logic (3 files)
 │   ├── invoice/                  # Invoice generation (4 files)
-│   │   ├── invoice-generator.tsx
-│   │   ├── invoice-template.tsx
-│   │   ├── invoice-types.ts
-│   │   └── index.ts
-│   │
-│   ├── lmn/                      # Lab Management Number system (5 files)
-│   │   ├── lmn-generator.tsx
-│   │   ├── lmn-template.tsx
-│   │   ├── lmn-eligibility.ts
-│   │   ├── lmn-types.ts
-│   │   └── index.ts
-│   │
-│   ├── db.ts                     # Database connection & queries (Neon PostgreSQL)
-│   ├── auth.ts                   # JWT token management, session handling
-│   ├── asher-med-api.ts          # Asher Med API client
-│   ├── resend.ts                 # Resend email service wrapper
+│   ├── lmn/                      # LMN generation (5 files)
+│   ├── payments/                 # Payment provider APIs (4 files)
+│   ├── auth.ts                   # Member/admin JWT auth
+│   ├── portal-auth.ts            # Portal OTP JWT auth
+│   ├── portal-db.ts              # Portal database operations
+│   ├── db.ts                     # Core database client + queries
+│   ├── asher-med-api.ts          # Asher Med external API client
+│   ├── resend.ts                 # Email service wrapper
 │   ├── quickbooks.ts             # QuickBooks OAuth2 integration
-│   ├── library-content.ts        # Load & render markdown library content
-│   ├── analytics.ts              # Google Analytics event tracking
-│   ├── validation.ts             # Zod schemas for forms & APIs
-│   ├── rate-limit.ts             # Upstash Redis rate limiting
-│   ├── resilience.ts             # Retry patterns, circuit breaker
-│   ├── turnstile.ts              # Cloudflare bot protection
+│   ├── analytics.ts              # GA4 event tracking helpers
+│   ├── validation.ts             # Zod schemas
 │   ├── utils.ts                  # cn() utility (clsx + tailwind-merge)
+│   ├── intake-utils.ts           # Intake form utilities (buildPartnerNote, formatMedicationsList)
+│   ├── resilience.ts             # withRetry(), biomarker scoring engine
+│   ├── rate-limit.ts             # API rate limiting
+│   ├── turnstile.ts              # Cloudflare Turnstile verification
+│   ├── cart-context.tsx          # Shopping cart React context
+│   ├── blog-content.ts           # Blog markdown loading (gray-matter + marked)
+│   ├── library-content.ts        # Library content loading
 │   ├── protocol-templates.ts     # Treatment protocol templates
-│   ├── calorie-calculator.ts     # Calorie calculation algorithms
-│   ├── peptide-calculator.ts     # Dosage calculator
-│   ├── blog-content.ts           # Blog post loading (gray-matter)
-│   ├── data-normalization.ts     # Data transformation utilities
-│   ├── cart-context.tsx          # Shopping cart React Context
-│   └── stores/                   # Empty directory
+│   ├── calorie-calculator.ts     # Calorie calculation
+│   ├── peptide-calculator.ts     # Peptide dosage calculator
+│   └── data-normalization.ts     # Data normalization utilities
 │
-├── middleware.ts                 # Edge middleware (rewrites join.cultrhealth.com → /join)
-├── migrations/                   # Database migrations (SQL) (11 files)
-│   ├── 001_init.sql
-│   ├── 002_orders_table.sql
-│   ├── 003_lmn_table.sql
-│   ├── [...more migrations]
-│   └── 012_drop_healthie_columns.sql
+├── content/
+│   ├── blog/                     # 12 science article markdown files
+│   └── library/                  # 6 peptide library markdown files
 │
-├── content/                      # Markdown content (gray-matter frontmatter)
-│   ├── blog/                     # Science/blog articles (12 posts)
-│   │   ├── biomarker-basics.md
-│   │   ├── glp1-beyond-weight-loss.md
-│   │   └── [10 more]
-│   └── library/                  # Peptide library content (6 files)
-│       ├── metabolic.md
-│       ├── repair-recovery.md
-│       └── [4 more]
+├── migrations/                   # SQL migration files (run manually)
+│   └── *.sql                     # 002–015 (canonical), with duplicates from macOS copy artifacts
 │
-├── public/                       # Static assets
-│   ├── images/                   # Hero & lifestyle images (14+ files)
-│   │   ├── hero-cultr-diverse-women.png
-│   │   ├── lifestyle-man-smiling.webp
-│   │   └── [12 more]
-│   ├── creators/brand-kit/       # Creator brand assets
-│   │   ├── cultr-logo-dark.svg
-│   │   ├── cultr-logo-white.svg
-│   │   └── cultr-brand-colors.json
-│   ├── cultr-logo-*.svg
-│   ├── robots.txt
-│   └── llms.txt
-│
-├── tests/                        # Test suite (Vitest + React Testing Library)
-│   ├── setup.ts                  # Test setup (mocks, globals)
+├── tests/                        # Vitest test suite
+│   ├── setup.ts
 │   ├── api/
-│   │   └── protocol-generate.test.ts
 │   ├── components/
-│   │   └── TierGate.test.tsx
-│   ├── lib/
-│   │   ├── auth.test.ts
-│   │   ├── plans.test.ts
-│   │   └── protocol-templates.test.ts
-│   └── integration/
-│       └── protocol-engine.test.ts
+│   ├── integration/
+│   └── lib/
 │
-├── scripts/                      # Utility scripts
-│   └── run-migration.mjs         # Database migration runner
+├── public/                       # Static assets (images, logos, SVGs)
+│   ├── images/                   # Hero and lifestyle images
+│   └── creators/brand-kit/       # Creator brand assets
 │
-├── .planning/                    # GSD planning documents
-│   └── codebase/                 # Codebase analysis (this directory)
-│       ├── ARCHITECTURE.md
-│       └── STRUCTURE.md
+├── scripts/
+│   └── run-migration.mjs         # Manual DB migration runner
 │
-├── .env.example                  # Environment variable template
-├── .vercelignore                 # Vercel build exclusions (fixed: includes images)
-├── .eslintrc.json                # ESLint configuration
-├── .prettierrc                   # Prettier config (2 spaces)
+├── middleware.ts                 # Edge middleware (hostname rewriting for join.cultrhealth.com)
+├── next.config.js                # Next.js config (caching headers, redirects, image formats)
+├── tailwind.config.ts            # Tailwind theme (brand colors, fonts, animations)
 ├── tsconfig.json                 # TypeScript config (strict: false, allowJs: true)
-├── next.config.js                # Next.js configuration (caching headers, redirects)
-├── package.json                  # Dependencies + scripts
-├── package-lock.json             # Dependency lock file
-├── vitest.config.js              # Vitest test runner config
-├── postcss.config.js             # PostCSS (Tailwind, autoprefixer)
-├── tailwind.config.ts            # Tailwind CSS config (brand colors)
-└── README.md                     # Project documentation
+├── vitest.config.js              # Vitest config
+└── vercel.json                   # Vercel cron job configuration
 ```
 
 ## Directory Purposes
 
-**`app/`** — Next.js App Router pages and API routes. Pages are server components by default; interactive sections extracted to `*Client.tsx` files. API routes implement REST endpoints with middleware (auth, rate limiting). Total: 61 page routes, 72 API endpoints.
+**`app/` — Pages and API Routes:**
+- All routing via Next.js App Router file-system conventions
+- Server components by default; `'use client'` only in `*Client.tsx` files
+- API routes: `route.ts` with named exports `GET`, `POST`, etc.
+- Key sub-trees: `app/creators/portal/` (8-page creator dashboard), `app/library/` (member shop + calculators + content), `app/admin/` (admin panel)
 
-**`components/`** — React components organized by domain. UI primitives in `ui/`, marketing site components in `site/`, form components in `intake/`, portal-specific components in `creators/`, etc. All components use Tailwind CSS (no CSS modules). Button component manually manages variants (not CVA).
+**`components/ui/` — Design System Primitives:**
+- `Button.tsx`: `primary`/`secondary`/`ghost` variants, `sm`/`md`/`lg` sizes, `isLoading` prop, all `rounded-full`
+- `ScrollReveal.tsx`: IntersectionObserver animation wrapper
+- `Aura.tsx`: Decorative gradient blobs
+- `Input.tsx`, `Spinner.tsx`, `SectionWrapper.tsx`
 
-**`lib/`** — Business logic, utilities, and configuration. Core subdirectories: `config/` (constants), `creators/` (affiliate logic), `contexts/` (React Context providers), `payments/` (payment provider APIs), `invoice/` and `lmn/` (document generation). Utilities include database client, auth, external API wrappers.
+**`components/site/` — Site Chrome:**
+- `Header.tsx`: Floating pill navbar with scroll morphing
+- `Footer.tsx`: Two-tier footer with social icons
+- `LayoutShell.tsx` + `LayoutShellClient.tsx`: Conditionally wraps pages with Header/Footer
+- Other marketing components: `PricingCard.tsx`, `FAQAccordion.tsx`, `CTASection.tsx`, `ComparisonTable.tsx`, `ClubBanner.tsx`, `NewsletterSignup.tsx`, `CommunityFeed.tsx`, `ProductCard.tsx`
 
-**`migrations/`** — SQL database migration files. Run sequentially via `scripts/run-migration.mjs`. 11 migrations total, latest: `012_drop_healthie_columns.sql` (removes Healthie integration columns). Migrations use raw SQL on Neon PostgreSQL.
+**`components/sections/` — DEAD CODE:**
+- 9 files (Hero, Services, About, HowItWorks, Results, Pricing, Testimonials, FAQ, Waitlist)
+- Not imported anywhere — homepage builds all sections inline in `app/page.tsx`
+- Do not import or extend these files
 
-**`content/`** — Markdown files with gray-matter frontmatter. Blog posts in `blog/`, library content in `library/`. Loaded at runtime via `gray-matter` + `marked` + `DOMPurify`. Not compiled into bundle.
+**`lib/config/` — Central Configuration (read-only constants):**
+- `plans.ts`: `PLANS` array + `PlanTier` type + `STRIPE_CONFIG`
+- `affiliate.ts`: Commission rates, tier thresholds, Creator/AffiliateCode/TrackingLink types
+- `social-proof.ts`: `TESTIMONIALS`, `PROVIDERS`, `TRUST_METRICS`, `TRUST_BADGES`
+- `product-catalog.ts`: SKUs, prices (70% markup applied), stock status
+- `product-to-asher-mapping.ts`: SKU → Asher Med product ID mapping
+- `links.ts`: `LINKS` object with all external URLs and internal routes
+- `payments.ts`: Payment provider configuration
+- `tax.ts`: `FL_TAX_RATE = 0.075`, `calculateTaxCents()`, `calculateTaxDollars()`
 
-**`public/`** — Static assets served at root. Images in `images/` (optimized by Next.js Image component), SVGs in root and `creators/brand-kit/`. Robots.txt and sitemaps generated dynamically in `app/robots.ts` and `app/sitemap.ts`.
+**`lib/creators/` — Creator Affiliate Domain:**
+- `attribution.ts`: Cookie serialization, token generation, `resolveAttribution()`
+- `commission.ts`: `processOrderAttribution()` — direct/override/cap calculation
+- `db.ts`: All DB queries for creator-related tables (creators, affiliate_codes, tracking_links, click_events, order_attributions, commission_ledger, payouts)
 
-**`tests/`** — Vitest test suite with React Testing Library. Test files co-located with source (no separate `__tests__` directory). 8 test files covering auth, components, library content, protocol templates, API endpoints.
-
-**`scripts/`** — Utility scripts. `run-migration.mjs` executes SQL migrations sequentially on Neon PostgreSQL.
-
-**`.planning/codebase/`** — GSD codebase mapping documents (ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md, TESTING.md, STACK.md, INTEGRATIONS.md, CONCERNS.md). Used by planner/executor to navigate and understand codebase.
+**`migrations/` — Database Schema:**
+- Canonical files: `002_orders_table.sql` through `015_club_orders_tax.sql`
+- Files with ` 2.sql`, ` 3.sql` etc. suffixes are macOS duplicate artifacts — ignore them
+- Run manually: `node scripts/run-migration.mjs`
 
 ## Key File Locations
 
 **Entry Points:**
-- `app/layout.tsx`: Root layout (fonts, GA, LayoutShell wrapper)
-- `app/page.tsx`: Homepage (all sections inline, dynamic imports for below-fold)
-- `middleware.ts`: Edge middleware (rewrites `join.cultrhealth.com` → `/join`)
+- `app/layout.tsx`: Root HTML shell, font loading, GA injection
+- `middleware.ts`: Only edge middleware — hostname rewriting for `join.cultrhealth.com`
+- `app/page.tsx`: Homepage (inline sections, dynamic imports for below-fold)
+
+**Authentication:**
+- `lib/auth.ts`: `verifyAuth()`, `verifyCreatorAuth()`, `verifyAdminAuth()`, `getMembershipTier()`, `getSession()`
+- `lib/portal-auth.ts`: `verifyPortalSession()`, `createPortalAccessToken()`, `createPortalRefreshToken()`
+- `app/api/auth/magic-link/route.ts`: Sends magic link email
+- `app/api/auth/verify/route.ts`: Verifies token, creates session cookie
+- `app/api/portal/send-otp/route.ts`: Sends Twilio OTP
+- `app/api/portal/verify-otp/route.ts`: Verifies OTP, creates dual JWT cookies
+
+**Database:**
+- `lib/db.ts`: Core database functions (waitlist, membership, orders, intake, sessions)
+- `lib/portal-db.ts`: Portal session database functions
+- `lib/creators/db.ts`: All creator affiliate database functions
+
+**External Integrations:**
+- `lib/asher-med-api.ts`: Asher Med patient/order API client
+- `lib/resend.ts`: Transactional email templates and sending
+- `lib/quickbooks.ts`: QuickBooks OAuth2 token management, invoice/customer creation
+- `lib/payments/affirm-api.ts`, `lib/payments/klarna-api.ts`, `lib/payments/authorize-net-api.ts`: BNPL APIs
 
 **Configuration:**
-- `lib/config/plans.ts`: Membership tiers, Stripe product/price IDs
-- `lib/config/affiliate.ts`: Commission rates, tiers, FTC disclosures
-- `lib/config/social-proof.ts`: Testimonials, trust badges, providers
-- `lib/config/products.ts`: Product definitions, peptide catalog
+- `lib/config/plans.ts`: Membership tiers, Stripe IDs, library access per tier
+- `lib/config/affiliate.ts`: Creator types, commission config, tier thresholds
+- `lib/config/product-catalog.ts`: Full peptide product catalog with SKUs
 
-**Core Logic:**
-- `lib/db.ts`: PostgreSQL client, query builders, table creation
-- `lib/auth.ts`: JWT token management, session handling, magic link flows
-- `lib/asher-med-api.ts`: Asher Med API client (patients, orders, uploads)
-- `lib/creators/commission.ts`: Commission calculation engine
-- `lib/creators/attribution.ts`: Click tracking and attribution logic
+**Core Utilities:**
+- `lib/utils.ts`: `cn()` function (clsx + tailwind-merge) — use for all className construction
+- `lib/validation.ts`: Zod schemas for API input validation
+- `lib/rate-limit.ts`: `apiLimiter.check()` for rate-gating API routes
+- `lib/resilience.ts`: `withRetry()` and `isTransientDbError()` for external API calls
 
-**Checkout & Payments:**
-- `app/api/checkout/route.ts`: Stripe payment link redirect
-- `app/api/webhook/stripe/route.ts`: Stripe webhook handler (subscriptions, payments)
-- `app/api/checkout/affirm/`, `klarna/`, `authorize-net/`: BNPL provider APIs
+**Key Webhook:**
+- `app/api/webhook/stripe/route.ts`: Subscription lifecycle, membership creation, commission attribution
 
-**Intake Forms:**
-- `app/intake/IntakeFormClient.tsx`: Multi-step form controller + state
-- `lib/contexts/intake-form-context.tsx`: Form state provider
-- `components/intake/`: Form step components (13 files)
-
-**Creators Portal:**
-- `app/creators/portal/layout.tsx`: Portal layout with CreatorContext
-- `lib/creators/db.ts`: Creator database operations
-- `components/creators/`: Portal components (analytics, sidebar, etc.)
-
-**Admin:**
-- `app/admin/page.tsx`: Admin dashboard
-- `app/api/admin/`: Admin API routes (approvals, payouts, analytics)
-
-**Library & Content:**
-- `app/library/page.tsx`: Library landing
-- `lib/library-content.ts`: Markdown loading and rendering
-- `components/library/TierGate.tsx`: Tier-based access control
-- `content/library/`: Markdown library content
+**Cron Jobs:**
+- `app/api/cron/approve-commissions/route.ts`: Approves commissions after 30-day window
+- `app/api/cron/update-tiers/route.ts`: Recalculates creator tiers and active member counts
 
 ## Naming Conventions
 
 **Files:**
-- Pages: `page.tsx` (Next.js convention)
-- Client components: `*Client.tsx` (e.g., `QuizClient.tsx`, `IntakeFormClient.tsx`)
-- API routes: `route.ts` (Next.js convention)
-- Layout wrappers: `layout.tsx`
-- Components: PascalCase (e.g., `Button.tsx`, `Header.tsx`, `PricingCard.tsx`)
-- Context providers: `*Context.tsx` (e.g., `intake-form-context.tsx`)
-- Utilities/services: camelCase (e.g., `auth.ts`, `asher-med-api.ts`, `rate-limit.ts`)
-- Styles: Tailwind utilities only (no CSS files except `globals.css`)
-- Tests: `*.test.ts` or `*.test.tsx`
+- Page files: `page.tsx` (server), `layout.tsx` (server), `route.ts` (API)
+- Client counterparts: `[FeatureName]Client.tsx` — e.g., `IntakeFormClient.tsx`, `ShopClient.tsx`
+- Components: PascalCase — e.g., `CreatorSidebar.tsx`, `TierGate.tsx`
+- Library utilities: camelCase — e.g., `auth.ts`, `asher-med-api.ts`, `portal-db.ts`
+- Config files: kebab-case — e.g., `product-catalog.ts`, `social-proof.ts`
 
 **Directories:**
-- Feature directories: kebab-case if multi-word (e.g., `intake-forms/`, `club-orders/`)
-- Component categories: plural nouns (e.g., `components/`, `lib/creators/`, `lib/payments/`)
-- API groupings: domain-based (e.g., `/api/checkout/`, `/api/creators/`, `/api/webhook/`)
+- `app/`: kebab-case route segments matching URL paths
+- `components/`: kebab-case domain groups (`site/`, `intake/`, `creators/`)
+- `lib/`: kebab-case domain groups (`config/`, `creators/`, `payments/`)
+
+**Exports:**
+- Components: Named exports preferred (e.g., `export function Button`) — some use default export
+- Config constants: SCREAMING_SNAKE_CASE (e.g., `PLANS`, `TRUST_BADGES`, `COMMISSION_CONFIG`)
+- Types: PascalCase (e.g., `PlanTier`, `Creator`, `CommissionResult`)
+
+**API Routes:**
+- Named HTTP verb exports: `export async function GET(request: NextRequest)`
+- Dynamic segments: `[slug]`, `[tier]`, `[id]`, `[orderId]`, `[lmnNumber]`
 
 ## Where to Add New Code
 
-**New Feature Endpoint:**
-- Implementation: `app/api/[domain]/[resource]/route.ts` (follow domain grouping pattern)
-- Types: Add interface to appropriate file in `lib/config/` or create new `lib/[domain]/types.ts`
-- Database: Add query functions to `lib/db.ts` or `lib/[domain]/db.ts`
-- Tests: Create `tests/api/[feature].test.ts`
+**New Marketing Page:**
+- Create: `app/[route-name]/page.tsx` (server component)
+- If interactive: Extract to `app/[route-name]/[FeatureName]Client.tsx`
+- Add to Header nav in `components/site/Header.tsx` if needed
 
-**New Component/Module:**
-- Component: `components/[category]/ComponentName.tsx` (PascalCase)
-- If client-only: add `'use client'` directive at top
-- Styles: Use Tailwind utilities in `className` prop
-- Exports: Named export, import in pages/other components with path alias `@/components/[...]`
+**New API Endpoint:**
+- Create: `app/api/[domain]/[action]/route.ts`
+- Always call `verifyAuth()` / `verifyCreatorAuth()` / `verifyAdminAuth()` at top
+- Add rate limiting via `lib/rate-limit.ts:apiLimiter.check()` for mutation endpoints
 
-**New Page/Route:**
-- Page: `app/[feature]/page.tsx` (wraps optional `*Client.tsx` for interactivity)
-- Layout: `app/[feature]/layout.tsx` (shared UI for route group)
-- Metadata: Add `export const metadata` in server component if SEO needed
-- Protected routes: Check session token at top of page or in middleware
+**New UI Component:**
+- Reusable primitive → `components/ui/[Component].tsx`
+- Marketing/site-wide → `components/site/[Component].tsx`
+- Domain-specific → `components/[domain]/[Component].tsx`
+- Always use `cn()` from `lib/utils.ts` for className construction
 
-**New Library/Utility:**
-- Pure logic: `lib/[domain]/utility.ts` (e.g., `lib/creators/commission.ts`)
-- Database operations: `lib/[domain]/db.ts` (e.g., `lib/db.ts` for users, `lib/creators/db.ts` for creators)
-- API clients: `lib/[service]-api.ts` (e.g., `lib/asher-med-api.ts`)
-- Contexts: `lib/contexts/[feature]-context.tsx`
-- Types: Inline in file or separate `types.ts` file
+**New Configuration Constant:**
+- Add to appropriate `lib/config/*.ts` file (never hardcode in components or API routes)
+- If new config file needed: `lib/config/[domain].ts`
 
-**New Configuration:**
-- Constants: `lib/config/[domain].ts` (e.g., `lib/config/plans.ts`, `lib/config/affiliate.ts`)
-- Import: Re-export from files to consolidate (e.g., `lib/config/plans.ts` exports `PLANS`)
+**New Database Operations:**
+- Core tables (users, subscriptions, orders): `lib/db.ts`
+- Creator tables: `lib/creators/db.ts`
+- Portal tables: `lib/portal-db.ts`
+- New domain: `lib/[domain]-db.ts`
 
-**Testing:**
-- Co-located: Tests live in `tests/` directory, mirroring source structure
-- File pattern: `[feature].test.ts` or `[component].test.tsx`
-- Setup: Use `tests/setup.ts` for mocks and global configuration
+**New DB Migration:**
+- Create: `migrations/0NN_[description].sql` (sequential number)
+- Run: `node scripts/run-migration.mjs`
+
+**New Content:**
+- Blog post: `content/blog/[slug].md` (with gray-matter frontmatter)
+- Library article: `content/library/[slug].md`
+
+**New External Integration:**
+- Create client: `lib/[service-name].ts` with typed functions
+- Add env vars to `.env.example` and document in CLAUDE.md
+- Never call external APIs directly from pages or components — always via `lib/`
 
 ## Special Directories
 
-**`_archive/`** — Archived/legacy code not in use. Safe to delete.
+**`.planning/`:**
+- Purpose: GSD planning docs (phases, codebase maps, research)
+- Generated: No (hand-maintained and agent-written)
+- Committed: Yes
 
-**`lib/stores/`** — Empty directory, no files. Intended for future state management (Zustand, Jotai) but currently using React Context only.
+**`.next/`:**
+- Purpose: Next.js build output and cache
+- Generated: Yes (by `npm run build` or `npm run dev`)
+- Committed: No
 
-**`components/sections/`** — 9 legacy components (Hero, Services, About, HowItWorks, Results, Pricing, Testimonials, FAQ, Waitlist). NOT IMPORTED anywhere. Homepage builds sections inline in `app/page.tsx`. Safe to delete.
+**`migrations/`:**
+- Purpose: SQL schema migration files
+- Note: Files with space-number suffixes (e.g., `002_orders_table 2.sql`) are macOS copy artifacts — use only the canonical file without suffix
+- Canonical range: `002` through `015`
+- Committed: Yes (canonical files only)
 
-**`migrations/`** — Database migration files must be run sequentially in order. Each migration creates or alters tables. Production: run migrations AFTER deploying code. Development: run via `node scripts/run-migration.mjs` when pulling schema changes.
+**`_archive/` and `archive/`:**
+- Purpose: Archived/deprecated files
+- Committed: Yes
+- Status: Do not import from or modify
 
-**`content/`** — NOT committed as compiled/bundled assets. Markdown files loaded at runtime by `lib/library-content.ts` and `lib/blog-content.ts`. Allows updating content without redeploying if served from external source.
+**`public/images/`:**
+- Purpose: Hero and lifestyle images served by Next.js Image component
+- Note: `.vercelignore` was previously misconfigured to exclude these — fixed with `!/public/images` negative pattern
+- Committed: Yes
 
 ---
 
-*Structure analysis: 2026-03-10*
+*Structure analysis: 2026-03-11*
