@@ -29,12 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Member can log out from any portal page and is redirected to the login screen
   4. Entering a wrong or expired OTP shows a clear error message; spamming OTP requests gets rate-limited
   5. Existing magic link login, creator login, and admin login all continue to work unchanged
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Portal auth foundation: dual-token JWT library, DB migration, DB helpers
+- [ ] 01-02-PLAN.md -- Portal API routes: send-otp, verify-otp, refresh, logout
+- [ ] 01-03-PLAN.md -- Portal login UI, portal layout with auth guard, site integration
 
 ### Phase 2: Dashboard & Order Tracking
 **Goal**: Members can see live order status from Asher Med the moment they log in, with the most important information front and center
@@ -87,7 +87,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Phone OTP Authentication | 0/3 | Not started | - |
+| 1. Phone OTP Authentication | 0/3 | Planning complete | - |
 | 2. Dashboard & Order Tracking | 0/2 | Not started | - |
 | 3. Profile & Documents | 0/2 | Not started | - |
 | 4. Forms & Renewals | 0/2 | Not started | - |
