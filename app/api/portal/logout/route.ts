@@ -1,6 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-// Stub - not yet implemented
+import { NextResponse } from 'next/server'
+import { clearPortalCookies } from '@/lib/portal-auth'
+
 export async function POST() {
-  throw new Error('Not implemented')
+  // Clear both portal cookies (idempotent -- works even if no cookies present)
+  await clearPortalCookies()
+
+  return NextResponse.json({ success: true })
 }

@@ -7,41 +7,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock next/server
 vi.mock('next/server', () => {
-  class MockCookieStore {
-    private cookies: Map<string, { name: string; value: string; options?: Record<string, unknown> }>
-
-    constructor(initial: Record<string, string> = {}) {
-      this.cookies = new Map()
-      for (const [name, value] of Object.entries(initial)) {
-        this.cookies.set(name, { name, value })
-      }
-    }
-
-    get(name: string) {
-      return this.cookies.get(name) || undefined
-    }
-
-    set(name: string, value: string, options?: Record<string, unknown>) {
-      this.cookies.set(name, { name, value, options })
-    }
-
-    getAll() {
-      return Array.from(this.cookies.values())
-    }
-  }
-
-  class MockNextRequest {
-    cookies: MockCookieStore
-    method: string
-    url: string
-
-    constructor(url: string, init?: { method?: string; cookies?: Record<string, string> }) {
-      this.url = url
-      this.method = init?.method || 'GET'
-      this.cookies = new MockCookieStore(init?.cookies || {})
-    }
-  }
-
   class MockNextResponse {
     body: unknown
     status: number
@@ -79,7 +44,7 @@ vi.mock('next/server', () => {
     }
   }
 
-  return { NextRequest: MockNextRequest, NextResponse: MockNextResponse }
+  return { NextResponse: MockNextResponse }
 })
 
 // Mock portal-auth
@@ -97,12 +62,22 @@ vi.mock('@/lib/portal-auth', () => ({
 // HELPERS
 // --------------------------------------------------
 
-function makeRefreshRequest(cookies: Record<string, string> = {}) {
-  const { NextRequest } = require('next/server')
-  return new NextRequest('http://localhost:3000/api/portal/refresh', {
+function makeRefreshRequest(cookieEntries: Record<string, string> = {}) {
+  // Create a plain object with the shape the route handler expects from NextRequest
+  const cookieMap = new Map<string, { name: string; value: string }>()
+  for (const [name, value] of Object.entries(cookieEntries)) {
+    cookieMap.set(name, { name, value })
+  }
+
+  return {
     method: 'POST',
-    cookies,
-  })
+    url: 'http://localhost:3000/api/portal/refresh',
+    cookies: {
+      get(name: string) {
+        return cookieMap.get(name) || undefined
+      },
+    },
+  }
 }
 
 // --------------------------------------------------
@@ -122,7 +97,7 @@ describe('POST /api/portal/refresh', () => {
   it('returns 200 and sets new access token cookie when refresh token is valid', async () => {
     const { POST } = await import('@/app/api/portal/refresh/route')
     const request = makeRefreshRequest({ cultr_portal_refresh: 'valid-refresh-token' })
-    const response = await POST(request)
+    const response = await POST(request as any)
     const data = await response.json()
 
     expect(response.status).toBe(200)
@@ -137,7 +112,7 @@ describe('POST /api/portal/refresh', () => {
   it('returns 401 when no refresh token cookie is present', async () => {
     const { POST } = await import('@/app/api/portal/refresh/route')
     const request = makeRefreshRequest({}) // no cookies
-    const response = await POST(request)
+    const response = await POST(request as any)
     const data = await response.json()
 
     expect(response.status).toBe(401)
@@ -149,7 +124,7 @@ describe('POST /api/portal/refresh', () => {
 
     const { POST } = await import('@/app/api/portal/refresh/route')
     const request = makeRefreshRequest({ cultr_portal_refresh: 'expired-token' })
-    const response = await POST(request)
+    const response = await POST(request as any)
     const data = await response.json()
 
     expect(response.status).toBe(401)
@@ -164,7 +139,7 @@ describe('POST /api/portal/refresh', () => {
 
     const { POST } = await import('@/app/api/portal/refresh/route')
     const request = makeRefreshRequest({ cultr_portal_refresh: 'valid-refresh-token' })
-    await POST(request)
+    await POST(request as any)
 
     expect(mockCreatePortalAccessToken).toHaveBeenCalledWith('+15559876543', 99)
   })
