@@ -147,7 +147,23 @@ export async function POST(request: NextRequest) {
         consentCompoundedSigS3Key: body.compoundedConsentKey,
         consentHealthcareConsultation: true,
       },
-      wellnessQuestionnaire: body.wellnessQuestionnaire || {},
+      wellnessQuestionnaire: (() => {
+        const base = body.wellnessQuestionnaire || {};
+        if (!body.goalsMotivation) return base;
+        const g = body.goalsMotivation as Record<string, unknown>;
+        return {
+          ...base,
+          goals_primary_result: g.primaryGoal,
+          goals_why_seeking_help_now: g.whyNow,
+          goals_top_symptoms: Array.isArray(g.topSymptoms) ? (g.topSymptoms as string[]).join(', ') : g.topSymptoms,
+          goals_priority_problem_to_solve: g.priorityProblem,
+          goals_urgency_1_to_10: g.urgency,
+          goals_what_have_you_tried: g.previousAttempts,
+          goals_how_did_you_hear_about_us: g.discoverySource,
+          goals_what_made_you_trust_us: g.trustReason,
+          goals_barriers_to_follow_through: Array.isArray(g.barriers) ? (g.barriers as string[]).join(', ') : g.barriers,
+        };
+      })(),
       glp1MedicationHistory: medications.some(m => m.isGLP1) && body.glp1History ? body.glp1History : undefined,
       currentMedicationDetails: body.currentMedications ? {
         which_medications_have_you_been_taking: formatMedicationsList(body.currentMedications),
@@ -190,6 +206,7 @@ export async function POST(request: NextRequest) {
               treatmentPreferences: body.treatmentPreferences || null,
               currentMedications: body.currentMedications || null,
               partnerNote: partnerNote || null,
+              goalsMotivation: body.goalsMotivation || null,
             })}::jsonb
           WHERE stripe_payment_intent_id = ${body.stripeSessionId}
             OR intake_data->>'session_id' = ${body.stripeSessionId}

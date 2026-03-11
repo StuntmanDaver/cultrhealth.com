@@ -39,6 +39,28 @@ export function formatMedicationsList(
 export function buildPartnerNote(body: Record<string, unknown>): string {
   const sections: string[] = [];
 
+  // Goals & motivation section (top of note — most important context for providers)
+  if (body.goalsMotivation) {
+    const g = body.goalsMotivation as Record<string, unknown>;
+    const goalLines: string[] = [];
+    if (g.primaryGoal) goalLines.push(`Primary goal: ${g.primaryGoal}`);
+    if (g.whyNow) goalLines.push(`Why now: ${g.whyNow}`);
+    if (g.topSymptoms && Array.isArray(g.topSymptoms)) {
+      goalLines.push(`Top symptoms: ${(g.topSymptoms as string[]).join(', ')}`);
+    }
+    if (g.priorityProblem) goalLines.push(`Priority problem: ${g.priorityProblem}`);
+    if (g.urgency) goalLines.push(`Urgency: ${g.urgency}/10`);
+    if (g.previousAttempts) goalLines.push(`Previous attempts: ${g.previousAttempts}`);
+    if (g.discoverySource) goalLines.push(`Discovery source: ${g.discoverySource}`);
+    if (g.trustReason) goalLines.push(`Trust reason: ${g.trustReason}`);
+    if (g.barriers && Array.isArray(g.barriers)) {
+      goalLines.push(`Barriers: ${(g.barriers as string[]).join(', ')}`);
+    }
+    if (goalLines.length > 0) {
+      sections.push(`--- GOALS & MOTIVATION ---\n${goalLines.join('\n')}`);
+    }
+  }
+
   // Treatment preferences section
   if (body.treatmentPreferences) {
     const prefs = body.treatmentPreferences as Record<string, unknown>;

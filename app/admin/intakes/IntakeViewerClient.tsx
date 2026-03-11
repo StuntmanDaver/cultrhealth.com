@@ -220,6 +220,28 @@ export default function IntakeViewerClient() {
                         </DetailSection>
                       )}
 
+                      {/* Goals & Motivation */}
+                      {intakeData.goalsMotivation && (
+                        <DetailSection title="Goals & Motivation">
+                          {(() => {
+                            const g = intakeData.goalsMotivation as Record<string, unknown>
+                            return (
+                              <>
+                                <DetailRow label="Primary Goal" value={g.primaryGoal as string} />
+                                <DetailRow label="Why Now" value={g.whyNow as string} />
+                                <DetailRow label="Top Symptoms" value={Array.isArray(g.topSymptoms) ? (g.topSymptoms as string[]).join(', ') : g.topSymptoms as string} />
+                                <DetailRow label="Priority Problem" value={g.priorityProblem as string} />
+                                <DetailRow label="Urgency" value={g.urgency ? `${g.urgency}/10` : undefined} />
+                                <DetailRow label="Previous Attempts" value={g.previousAttempts as string} />
+                                <DetailRow label="Discovery Source" value={g.discoverySource as string} />
+                                <DetailRow label="Trust Reason" value={g.trustReason as string} />
+                                <DetailRow label="Barriers" value={Array.isArray(g.barriers) ? (g.barriers as string[]).join(', ') : g.barriers as string} />
+                              </>
+                            )
+                          })()}
+                        </DetailSection>
+                      )}
+
                       {/* Partner Note */}
                       {intake.partner_note && (
                         <DetailSection title="Partner Note (sent to Asher Med)">

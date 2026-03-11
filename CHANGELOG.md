@@ -1,3 +1,22 @@
+## [2026-03-11] - Wire Goals & Motivation Data to Asher Med + Admin Viewer
+
+### Summary
+Goals & Motivation form data (8 questions) was previously collected but silently dropped on submission. Now wired to all 4 destinations: Asher Med wellnessQuestionnaire, Asher Med partnerNote, database JSONB, and admin intake viewer.
+
+### Changes
+- `app/api/intake/submit/route.ts` — merged 9 goals fields into `wellnessQuestionnaire` with `goals_` prefix (arrays joined to comma-separated strings); added `goalsMotivation` to `pending_intakes.intake_data` JSONB merge
+- `lib/intake-utils.ts` — added "GOALS & MOTIVATION" section at top of `buildPartnerNote()` (before treatment preferences) with all 8 fields formatted for provider readability
+- `app/admin/intakes/IntakeViewerClient.tsx` — added expandable "Goals & Motivation" detail section between Treatment Preferences and Partner Note, displaying all 9 fields
+
+### Asher Med API Field Mapping
+- Channel A (wellnessQuestionnaire): `goals_primary_result`, `goals_why_seeking_help_now`, `goals_top_symptoms`, `goals_priority_problem_to_solve`, `goals_urgency_1_to_10`, `goals_what_have_you_tried`, `goals_how_did_you_hear_about_us`, `goals_what_made_you_trust_us`, `goals_barriers_to_follow_through`
+- Channel B (partnerNote): formatted text section at top of note
+
+### Tests
+- 253 total passing, 0 type errors, 0 regressions
+
+---
+
 ## [2026-03-11] - Fix Intake Build Error, Upload Staging Bypass, Goals & Motivation Step
 
 ### Summary
