@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { verifyAdminAuth } from '@/lib/auth'
 import {
   getCreatorById,
@@ -7,8 +8,43 @@ import {
   createAffiliateCode,
   createAdminAction,
   checkAffiliateCodeExists,
+  updateAffiliateCodeStripeIds,
 } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
+
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2026-02-25.clover',
+  })
+}
+
+async function createStripePromotionCode(
+  stripe: Stripe,
+  code: string,
+  percentOff: number
+): Promise<{ couponId: string; promotionCodeId: string } | null> {
+  try {
+    // Create a Stripe coupon named after the code
+    const coupon = await stripe.coupons.create({
+      percent_off: percentOff,
+      duration: 'once',
+      name: code,
+      metadata: { source: 'cultr_affiliate', code },
+    })
+
+    // Create a promotion code customers can enter at checkout
+    const promotionCode = await stripe.promotionCodes.create({
+      promotion: { type: 'coupon', coupon: coupon.id },
+      code: code,
+      metadata: { source: 'cultr_affiliate', code },
+    })
+
+    return { couponId: coupon.id, promotionCodeId: promotionCode.id }
+  } catch (error) {
+    console.error(`Failed to create Stripe promotion code for ${code}:`, error)
+    return null
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -62,10 +98,37 @@ export async function POST(
     }
 
     // Create membership code (e.g., SMITH)
-    await createAffiliateCode(id, membershipCode, true, 'percentage', 10.00, 'membership')
+    const membershipAffCode = await createAffiliateCode(id, membershipCode, true, 'percentage', 10.00, 'membership')
 
     // Create product code (e.g., SMITH10)
-    await createAffiliateCode(id, productCode, false, 'percentage', 10.00, 'product')
+    const productAffCode = await createAffiliateCode(id, productCode, false, 'percentage', 10.00, 'product')
+
+    // Sync codes to Stripe as promotion codes (non-blocking — approval succeeds even if Stripe sync fails)
+    if (process.env.STRIPE_SECRET_KEY) {
+      const stripe = getStripe()
+
+      const [membershipStripe, productStripe] = await Promise.all([
+        createStripePromotionCode(stripe, membershipCode, 10),
+        createStripePromotionCode(stripe, productCode, 10),
+      ])
+
+      // Store Stripe IDs for future management (deactivation, etc.)
+      if (membershipStripe) {
+        await updateAffiliateCodeStripeIds(
+          membershipAffCode.id,
+          membershipStripe.couponId,
+          membershipStripe.promotionCodeId
+        ).catch((err) => console.error('Failed to store membership Stripe IDs:', err))
+      }
+
+      if (productStripe) {
+        await updateAffiliateCodeStripeIds(
+          productAffCode.id,
+          productStripe.couponId,
+          productStripe.promotionCodeId
+        ).catch((err) => console.error('Failed to store product Stripe IDs:', err))
+      }
+    }
 
     // Log admin action
     await createAdminAction({

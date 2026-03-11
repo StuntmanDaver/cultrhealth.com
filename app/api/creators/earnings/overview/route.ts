@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCreatorAuth } from '@/lib/auth'
-import { getCommissionSummaryByCreator, getCreatorOrderStats } from '@/lib/creators/db'
+import { getCommissionSummaryByCreator, getCreatorOrderStats, getCommissionTotalSince } from '@/lib/creators/db'
 
 export async function GET(request: NextRequest) {
   const auth = await verifyCreatorAuth(request)
@@ -15,8 +15,12 @@ export async function GET(request: NextRequest) {
     const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-    const thisMonthStats = await getCreatorOrderStats(auth.creatorId, thisMonthStart)
-    const lastMonthStats = await getCreatorOrderStats(auth.creatorId, lastMonthStart)
+    // Use commission_ledger for monthly earnings (all streams: direct + override)
+    const [thisMonthEarnings, lastMonthEarnings] = await Promise.all([
+      getCommissionTotalSince(auth.creatorId, thisMonthStart),
+      getCommissionTotalSince(auth.creatorId, lastMonthStart, thisMonthStart),
+    ])
+
     const allTimeStats = await getCreatorOrderStats(auth.creatorId)
 
     const avgOrderValue =
@@ -24,19 +28,13 @@ export async function GET(request: NextRequest) {
         ? Math.round((allTimeStats.totalRevenue / allTimeStats.totalOrders) * 100) / 100
         : 0
 
-    // TODO: thisMonthEarnings and lastMonthEarnings only count direct commissions
-    // from order_attributions (via getCreatorOrderStats), not overrides from
-    // commission_ledger. lifetimeEarnings includes all streams (via
-    // getCommissionSummaryByCreator). This is a known inconsistency — to fix
-    // properly, add a getCommissionSummaryByCreatorSince(id, start, end) that
-    // queries commission_ledger with date boundaries.
     return NextResponse.json({
       earnings: {
         lifetimeEarnings: commissionSummary.total,
         pendingEarnings: commissionSummary.pending + commissionSummary.approved,
         paidEarnings: commissionSummary.paid,
-        thisMonthEarnings: thisMonthStats.totalCommission,
-        lastMonthEarnings: lastMonthStats.totalCommission - thisMonthStats.totalCommission,
+        thisMonthEarnings,
+        lastMonthEarnings,
         avgOrderValue,
       },
     })

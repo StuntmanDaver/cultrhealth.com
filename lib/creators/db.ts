@@ -682,6 +682,28 @@ export async function getCommissionSummaryByCreator(
   }
 }
 
+export async function getCommissionTotalSince(
+  creatorId: string,
+  since: Date,
+  until?: Date
+): Promise<number> {
+  try {
+    const untilDate = until || new Date()
+    const result = await sql`
+      SELECT COALESCE(SUM(commission_amount), 0) as total
+      FROM commission_ledger
+      WHERE beneficiary_creator_id = ${creatorId}
+        AND status != 'reversed'
+        AND created_at >= ${since.toISOString()}
+        AND created_at < ${untilDate.toISOString()}
+    `
+    return parseFloat(result.rows[0]?.total || '0')
+  } catch (error) {
+    console.error('Database error fetching commission total since:', error)
+    throw new DatabaseError('Failed to fetch commission total', error)
+  }
+}
+
 export async function updateCommissionStatus(
   id: string,
   status: CommissionStatus,
@@ -1054,6 +1076,25 @@ export async function checkAffiliateCodeExists(code: string): Promise<boolean> {
   } catch (error) {
     console.error('Database error checking code exists:', error)
     throw new DatabaseError('Failed to check code exists', error)
+  }
+}
+
+export async function updateAffiliateCodeStripeIds(
+  codeId: string,
+  stripeCouponId: string,
+  stripePromotionCodeId: string
+): Promise<void> {
+  try {
+    await sql`
+      UPDATE affiliate_codes
+      SET stripe_coupon_id = ${stripeCouponId},
+          stripe_promotion_code_id = ${stripePromotionCodeId},
+          updated_at = NOW()
+      WHERE id = ${codeId}
+    `
+  } catch (error) {
+    console.error('Database error updating Stripe IDs:', error)
+    throw new DatabaseError('Failed to update Stripe IDs', error)
   }
 }
 

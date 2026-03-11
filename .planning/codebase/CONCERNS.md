@@ -6,264 +6,292 @@
 
 ## Tech Debt
 
-**macOS Copy Artifacts (114 files):**
-- Issue: macOS Finder copy artifacts like `page 2.tsx`, `page 3.tsx`, `ClubOrdersClient 2.tsx`, etc. persist across the entire codebase — a prior cleanup pass removed 140 such files but the problem has recurred.
-- Files: `app/admin/club-orders/page 2.tsx`, `app/admin/club-orders/ClubOrdersClient 2.tsx`, `app/creators/portal/layout 2.tsx`, `app/library/peptide-faq/PeptideFAQContent 2.tsx`, `app/track/daily/page 3.tsx`, and 109 more.
-- Impact: Build artifact bloat, risk of Next.js picking up duplicate page definitions, confusing directory listings. Spaces in filenames cause issues with certain CLI tools.
-- Fix approach: Run `find . -name "* [0-9].tsx" -o -name "* [0-9].ts" | grep -v node_modules | xargs rm` then add a pre-commit lint rule or `.gitignore` pattern to block future copies.
+**`TEAM_EMAILS` Duplicated Across 5 Files:**
+- Issue: The same hardcoded list of team email addresses is defined independently in `app/api/auth/magic-link/route.ts`, `app/api/auth/verify/route.ts`, `app/api/creators/magic-link/route.ts`, `app/api/creators/verify-login/route.ts`, and `lib/auth.ts`. Adding or removing a team member requires updating all 5 locations and they can silently drift out of sync.
+- Files: `lib/auth.ts:140`, `app/api/auth/magic-link/route.ts:21`, `app/api/auth/verify/route.ts:13`, `app/api/creators/magic-link/route.ts:4`, `app/api/creators/verify-login/route.ts:4`
+- Impact: Silent access-control divergence — a team member added to one file but not others either gets unexpected access or no access depending on the code path.
+- Fix approach: Centralize in `lib/auth.ts` (already has the canonical list) and export; import from there in all four route files.
 
-**Legacy/Unused Component Directories:**
-- Issue: `components/sections/` (9 files: Hero, Services, About, HowItWorks, Results, Pricing, Testimonials, FAQ, Waitlist) and three root-level components (`components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx`) are not imported anywhere in the codebase.
-- Files: `components/sections/Hero.tsx`, `components/sections/Services.tsx`, `components/sections/About.tsx`, `components/sections/HowItWorks.tsx`, `components/sections/Results.tsx`, `components/sections/Pricing.tsx`, `components/sections/Testimonials.tsx`, `components/sections/FAQ.tsx`, `components/sections/Waitlist.tsx`, `components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx`
-- Impact: Increases cognitive overhead. Developers may edit the wrong file. Increases build analysis surface.
-- Fix approach: Delete all 12 files. The active equivalents live in `components/site/`.
+**`isStaging()` and Bypass Logic Re-Implemented Locally in Route Files:**
+- Issue: Each auth route re-implements `isStaging()` and `isStagingBypassEmail()` locally instead of using the shared `lib/auth.ts` exports.
+- Files: `app/api/auth/magic-link/route.ts:29-41`, `app/api/auth/verify/route.ts:21-33`, `app/api/creators/magic-link/route.ts:14-26`
+- Impact: Logic inconsistency — if the staging detection rule changes, only `lib/auth.ts` might be updated.
+- Fix approach: Remove local re-implementations; import the shared `isProviderEmail` and staging bypass helpers from `lib/auth.ts`.
 
-**Unused Dependency (`class-variance-authority`):**
-- Issue: `class-variance-authority` ^0.7.1 is in `package.json` but is never imported anywhere. All button variant logic uses manual objects + `cn()` instead.
-- Files: `package.json`
-- Impact: Adds to bundle analysis noise; confuses future developers who may expect CVA patterns.
+**Inconsistent Admin Authorization Pattern Across API Routes:**
+- Issue: Admin API routes use two different auth approaches. Creator management routes (`/api/admin/creators/*`) call `verifyAdminAuth(request)` from `lib/auth.ts`. Analytics, club-orders, and intake routes build an inline email allowlist check that duplicates the page server component logic.
+- Files: `app/api/admin/analytics/route.ts:18-24`, `app/api/admin/club-orders/route.ts:13-17`, `app/api/admin/intakes/route.ts:13-17` vs `app/api/admin/creators/pending/route.ts:6`
+- Impact: Easy to introduce a new admin endpoint using the weaker inline pattern.
+- Fix approach: Standardize all admin API routes to call `verifyAdminAuth(request)`.
+
+**Magic Link Auth Rate Limiter is In-Memory (Not Redis-Backed):**
+- Issue: `lib/auth.ts` `checkRateLimit()` stores magic link timestamps in a module-level `Map`. In a serverless environment, every cold-start gets a fresh Map, rendering the rate limit ineffective across different function instances.
+- Files: `lib/auth.ts:112-130`
+- Impact: A determined attacker can enumerate valid subscriber emails across multiple requests, bypassing the 60-second cooldown.
+- Fix approach: Replace with the Redis-backed limiter already available in `lib/rate-limit.ts` (used by checkout routes), which has in-memory fallback when Redis is absent.
+
+**`lastMonthEarnings` Calculation is Mathematically Wrong (Known Bug):**
+- Issue: The earnings overview endpoint computes `lastMonthEarnings = lastMonthStats.totalCommission - thisMonthStats.totalCommission`. This subtracts the current month's cumulative total from the prior month's full stats, producing negative or wildly inaccurate numbers for active creators.
+- Files: `app/api/creators/earnings/overview/route.ts:39`
+- Impact: Creator earnings dashboard shows incorrect "Last Month" figures.
+- Fix approach: Add a `getCreatorOrderStats(id, start, end)` date-range overload and call it with `(lastMonthStart, thisMonthStart)` for the previous month window.
+
+**Monthly Earnings Exclude Override Commissions (Known Inconsistency):**
+- Issue: Monthly earnings figures come from `getCreatorOrderStats()` which queries `order_attributions` (direct commissions only). `lifetimeEarnings` comes from `getCommissionSummaryByCreator()` which queries `commission_ledger` (all streams). The two sources are intentionally inconsistent per the TODO comment.
+- Files: `app/api/creators/earnings/overview/route.ts:27-32`
+- Impact: Creators with recruits see lower-than-expected monthly totals; inconsistency between monthly and lifetime figures erodes trust.
+- Fix approach: Add `getCommissionSummaryByCreatorSince(id, startDate, endDate)` querying `commission_ledger` with date boundaries.
+
+**`STRIPE_SECRET_KEY` Initialized with Empty String Fallback:**
+- Issue: `getStripe()` factory functions in four route files use `process.env.STRIPE_SECRET_KEY || ''`, which allows the Stripe SDK to instantiate with an empty key. API calls fail at runtime rather than at startup.
+- Files: `app/api/webhook/stripe/route.ts:6`, `app/api/auth/magic-link/route.ts:8`, `app/api/auth/verify/route.ts:8`, `app/api/checkout/product/route.ts:7`
+- Impact: Misconfigured production environments produce cryptic Stripe API errors instead of clear startup failures.
+- Fix approach: Guard with `if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is required')` before constructing the client.
+
+**TypeScript `strict: false` and Legacy `moduleResolution: "node"`:**
+- Issue: `tsconfig.json` has `strict: false` and `moduleResolution: "node"` (legacy resolution). Both suppress classes of type errors that would be caught in strict mode.
+- Files: `tsconfig.json:14`, `tsconfig.json:19`
+- Impact: Nullability bugs, incorrect property access, and import resolution mismatches can slip past TypeScript at build time.
+- Fix approach: Enable `strict: true` incrementally (add `strictNullChecks` first). Migrate `moduleResolution` to `bundler` when the Next.js version supports it.
+
+**`class-variance-authority` Dependency Installed but Unused:**
+- Issue: `class-variance-authority` is in `package.json` dependencies but no file imports it. Button variants use manual objects and the `cn()` utility.
+- Files: `package.json` (dependencies)
+- Impact: Adds bundle weight and signals design-system inconsistency to future contributors.
 - Fix approach: `npm uninstall class-variance-authority`.
 
-**Empty `lib/stores/` Directory:**
-- Issue: `lib/stores/` directory exists but contains no files and is not referenced anywhere.
+**`lib/stores/` Directory is Empty:**
+- Issue: `lib/stores/` exists but contains no files.
 - Files: `lib/stores/`
-- Impact: Low — cosmetic only.
-- Fix approach: Remove the directory.
+- Impact: Implies an unimplemented state management approach; confuses contributors.
+- Fix approach: Delete the directory or populate it with intended stores.
 
-**`lib/data-normalization.ts` Potentially Unused in App:**
-- Issue: `lib/data-normalization.ts` (586 lines) defines biomarker normalization utilities but no file in `app/` imports from it. It appears to be infrastructure built ahead of a feature that hasn't launched.
-- Files: `lib/data-normalization.ts`
-- Impact: Dead code at 586 lines adds maintenance burden without value.
-- Fix approach: Verify no usage, then either delete or move to a `_future/` holding area if planned for upcoming biomarker feature.
-
-**`strict: false` in TypeScript Config:**
-- Issue: `tsconfig.json` sets `"strict": false`, disabling null checks, implicit any checks, and other safety guards. Combined with `"allowJs": true`, this permits silent type holes throughout the codebase.
-- Files: `tsconfig.json`
-- Impact: Type errors can slip through. Several patterns use `as any` casts (13 in `app/`) that would be caught under strict mode.
-- Fix approach: Enable `strict: true` and work through errors incrementally. Start with `lib/` utilities, then API routes.
-
-**Legacy `moduleResolution: "node"` in TypeScript Config:**
-- Issue: `tsconfig.json` uses `"moduleResolution": "node"` (legacy). Modern Next.js recommends `"bundler"` resolution for correct ESM/CJS interop.
-- Files: `tsconfig.json`
-- Impact: Subtle import resolution mismatches in edge cases, particularly with packages that export different CJS/ESM bundles.
-- Fix approach: Change to `"moduleResolution": "bundler"` and test build.
+**Admin Email Allowlist Falls Back to `PROTOCOL_BUILDER_ALLOWED_EMAILS`:**
+- Issue: All admin pages and API routes use `process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''`. If `ADMIN_ALLOWED_EMAILS` is not set, provider-level users unexpectedly receive full admin access.
+- Files: `app/admin/page.tsx:18`, `app/api/admin/analytics/route.ts:18`, `app/api/admin/club-orders/route.ts:13`, `app/api/admin/intakes/route.ts:13`
+- Impact: Role boundary collapse — providers and admins are treated as the same group.
+- Fix approach: Add `ADMIN_ALLOWED_EMAILS` to Vercel env vars and remove the `|| process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS` fallback.
 
 ---
 
 ## Known Bugs
 
-**Creator Earnings: `lastMonthEarnings` Calculation is Wrong:**
-- Symptoms: `lastMonthEarnings` is computed as `lastMonthStats.totalCommission - thisMonthStats.totalCommission` — subtracting this month from last month rather than computing last month in isolation with a date range query.
-- Files: `app/api/creators/earnings/overview/route.ts` line 39
-- Trigger: Any creator who earned commissions this month will see a negative or incorrect `lastMonthEarnings` value on the Earnings Overview page.
-- Workaround: None — the value is displayed in the creator portal Earnings section.
-- Fix approach: Add a `getCommissionSummaryByCreatorSince(id, start, end)` function to `lib/creators/db.ts` that queries `commission_ledger` with date boundaries, and use it for `thisMonthEarnings` and `lastMonthEarnings`.
+**`result.data.id` from `createNewOrder()` May Be Patient ID, Not Order ID:**
+- Symptoms: The PATCH call to `updateOrderApproval()` immediately after order creation may target the wrong Asher Med resource ID, silently failing.
+- Files: `app/api/intake/submit/route.ts:181-189`
+- Trigger: Every intake form submission.
+- Workaround: The PATCH is wrapped in a try/catch and fails gracefully — intake submission succeeds but the partner note may not attach to the order in Asher Med.
 
-**Creator Earnings: `thisMonthEarnings` / `lastMonthEarnings` Exclude Override Commissions:**
-- Symptoms: Monthly earnings figures only count direct commissions from `order_attributions` (via `getCreatorOrderStats`), not override/recruitment commissions from `commission_ledger`. `lifetimeEarnings` correctly includes all streams.
-- Files: `app/api/creators/earnings/overview/route.ts` lines 27-39
-- Trigger: Creators with active recruits generating overrides will see artificially low monthly earnings.
-- Workaround: None — documented as a known TODO in the route file.
+**`lastMonthEarnings` Shows Incorrect Values:**
+- Symptoms: On the creator earnings dashboard, "Last Month" earnings can display as negative or incorrect dollar amounts for creators with significant current-month revenue.
+- Files: `app/api/creators/earnings/overview/route.ts:39`
+- Trigger: Any creator who has earned commission in the current month.
+- Workaround: None — `lifetimeEarnings` is accurate and can be cross-referenced.
 
-**Asher Med Patient ID Ambiguity:**
-- Symptoms: `createNewOrder()` returns `AsherApiSuccess<AsherPatient>`, so `result.data.id` is the **patient ID** not an order ID. This value is then used in two ways: (1) sent to `updateOrderApproval(result.data.id, ...)` which expects an order ID, and (2) stored as `asher_patient_id` in the local DB. The PATCH to Asher Med likely fails silently.
-- Files: `app/api/intake/submit/route.ts` lines 183, 204, 254; `lib/asher-med-api.ts` line 379
-- Trigger: Every new intake form submission — the partner note PATCH call uses the wrong ID type.
-- Workaround: PATCH fails inside a `try/catch` so intake succeeds, but the partner note is never sent to Asher Med.
-- Fix approach: Confirm actual Asher Med API behavior via their docs/sandbox. If the new-order endpoint returns a patient-only response, investigate if there is a separate order ID in the response payload or if a subsequent order-lookup call is needed before PATCH.
+**Authorize.net Webhook Missing Admin Notifications (TODO-Marked):**
+- Symptoms: Payment declines and expiring subscriptions via Authorize.net trigger no admin alerts.
+- Files: `app/api/webhook/authorize-net/route.ts:162`, `app/api/webhook/authorize-net/route.ts:266`
+- Trigger: Failed Authorize.net payments; subscriptions nearing expiry.
+- Workaround: Manual monitoring of the Authorize.net dashboard.
 
-**Mailchimp Integration is Broken:**
-- Symptoms: The Mailchimp API key stored in environment variables is invalid (returns 401). Club member signups silently fail Mailchimp sync.
-- Files: `app/api/club/signup/route.ts` lines 122-143
-- Trigger: Every `POST /api/club/signup` call attempts Mailchimp sync via `syncToMailchimp()` which fails silently via `.catch()`.
-- Workaround: Error is swallowed; user signup still succeeds but is not added to the Mailchimp audience.
-- Fix approach: Regenerate the Mailchimp API key from the Mailchimp dashboard and update `MAILCHIMP_API_KEY` in both Vercel projects.
+**Portal Dashboard is a Stub Page:**
+- Symptoms: Authenticated patients who log in via phone OTP and land on `/portal/dashboard` see only "Your dashboard is being built. Check back soon." with a logout button.
+- Files: `app/portal/dashboard/page.tsx`
+- Trigger: Successful OTP login (any of the three auth paths).
+- Workaround: Users must use `/library`, `/dashboard`, or `/member` pages via the main site.
 
 ---
 
 ## Security Considerations
 
-**Order Fulfillment Route Has No Proper Authentication:**
-- Risk: `POST /api/admin/orders/[orderNumber]/fulfill` and `GET /api/admin/orders/[orderNumber]/fulfill` use a simple header secret (`x-admin-secret` vs `ADMIN_SECRET` env var) instead of the JWT-based `verifyAdminAuth` used by all other admin routes. Critically, the check is only enforced when `NODE_ENV === 'production'` — anyone on staging can call this endpoint without any credentials.
-- Files: `app/api/admin/orders/[orderNumber]/fulfill/route.ts` lines 27-35, 180-187
-- Current mitigation: `NODE_ENV === 'production'` gate exists, but `ADMIN_SECRET` is not defined in the known environment variable inventory, suggesting it may not be set.
-- Recommendations: Replace the `x-admin-secret` check with `verifyAdminAuth(request)` to match all other admin routes. Remove the `NODE_ENV` gate.
+**`/api/admin/orders/[orderNumber]/fulfill` Uses Weak Secret Header Auth:**
+- Risk: The order fulfillment endpoint authenticates via an `x-admin-secret` header compared against `process.env.ADMIN_SECRET`. This check is skipped entirely in non-production environments (`NODE_ENV !== 'production'`), meaning development and staging allow unauthenticated order status changes. There is no JWT session or email allowlist check.
+- Files: `app/api/admin/orders/[orderNumber]/fulfill/route.ts:29-35`, `:180-188`
+- Current mitigation: `ADMIN_SECRET` env var check in production.
+- Recommendations: Replace with `verifyAdminAuth(request)` from `lib/auth.ts` to match the pattern used by other admin routes. Remove the `NODE_ENV` production-only bypass.
 
-**Development Mode Auto-Grants Admin Session:**
-- Risk: `getSession()` in `lib/auth.ts` returns a hardcoded admin session (`role: 'admin'`) when `NODE_ENV === 'development'`. Any developer running locally has full admin access without authentication.
-- Files: `lib/auth.ts` lines 96-99
-- Current mitigation: Only affects `NODE_ENV === 'development'` builds.
-- Recommendations: Acceptable for local dev, but document clearly. Ensure `NODE_ENV` is never `development` on any deployed environment.
-
-**Magic Link Rate Limiter Uses In-Memory State (Serverless Unsafe):**
-- Risk: `lib/auth.ts` implements rate limiting for magic link requests via a module-level `Map<string, number>`. In a serverless environment (Vercel), each function invocation may run in a different process, making this rate limit completely ineffective — an attacker can send unlimited magic link requests.
-- Files: `lib/auth.ts` lines 112-138
-- Current mitigation: Upstash Redis is listed as optional but may not be configured. The `lib/rate-limit.ts` module supports Redis but the magic link limiter in `lib/auth.ts` uses its own independent in-memory implementation.
-- Recommendations: Replace with `lib/rate-limit.ts` backed by Upstash Redis. Ensure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are set in production.
-
-**Staging Authentication Bypass Has No Hard Production Guard:**
-- Risk: The staging bypass in `lib/auth.ts` (`getSession()` returning concierge tier for `customerId === 'staging_customer'`) and the magic link bypass (any email gets a token on staging) rely on `NEXT_PUBLIC_SITE_URL` containing `"staging"`. If `NEXT_PUBLIC_SITE_URL` is misconfigured on production to include the word "staging", the bypass would activate on production.
-- Files: `lib/auth.ts` lines 173-178; `app/api/auth/magic-link/route.ts` lines 29-41; `app/api/portal/send-otp/route.ts` line 42; `app/api/portal/verify-otp/route.ts` line 52
-- Current mitigation: Controlled by env var. Bypass is intentional for testing.
-- Recommendations: Add a secondary hard guard using `NODE_ENV === 'production'` to block staging bypasses, or switch to an explicit `ENABLE_STAGING_BYPASS=true` env var that is only set on staging.
-
-**No Security Headers (CSP, X-Frame-Options, HSTS):**
-- Risk: `next.config.js` only defines cache-control headers. There are no Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, or HSTS headers. This is particularly concerning for a HIPAA-adjacent application.
-- Files: `next.config.js` lines 30-91
-- Current mitigation: Vercel may add some default headers, but application-level headers are absent.
-- Recommendations: Add security headers to the `headers()` function in `next.config.js`. At minimum: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
-
-**Intake Form Has No Bot Protection:**
-- Risk: `POST /api/intake/submit` has no Turnstile or rate limit check. A bot could submit thousands of fake intake forms, creating fake Asher Med patient records and incurring API costs.
+**Intake Form Submit Has No Authentication or Rate Limiting:**
+- Risk: `POST /api/intake/submit` accepts full PHI payloads (name, DOB, address, phone) from any unauthenticated caller, with no IP-based rate limiting. Any external party can submit intake data that reaches Asher Med's API.
 - Files: `app/api/intake/submit/route.ts`
-- Current mitigation: Turnstile is only used on the waitlist (`app/api/waitlist/route.ts`). Creator apply route also lacks Turnstile.
-- Recommendations: Add Cloudflare Turnstile verification to intake submit and creator apply routes. The `lib/turnstile.ts` utility and `@marsidev/react-turnstile` are already installed.
+- Current mitigation: Asher Med API key is required server-side, so submissions do reach a gated external system.
+- Recommendations: Add `verifyAuth(request)` (membership JWT check) and import `apiLimiter` from `lib/rate-limit.ts`.
 
-**Club Member Export Endpoint Uses Weak Bearer Token Auth:**
-- Risk: `GET /api/admin/club-members/export/route.ts` authenticates by comparing the raw `Authorization: Bearer <token>` header against `CLUB_ORDER_APPROVAL_SECRET || JWT_SECRET`. Sharing the JWT secret as a bearer token is poor practice — compromise of the export token compromises session authentication.
-- Files: `app/api/admin/club-members/export/route.ts` lines 7-17
-- Current mitigation: Token check is implemented; endpoint is not publicly documented.
-- Recommendations: Switch to `verifyAdminAuth(request)` consistent with all other admin routes.
+**Intake Upload Has No Authentication:**
+- Risk: `POST /api/intake/upload` returns presigned S3 URLs (via Asher Med) without checking any session token.
+- Files: `app/api/intake/upload/route.ts`
+- Current mitigation: Requires `ASHER_MED_API_KEY` configured; staging mock returns dummy URLs.
+- Recommendations: Add `verifyAuth(request)` before calling Asher Med presigned URL endpoint.
+
+**`isProviderEmail()` Returns `true` for ALL Users on Staging:**
+- Risk: `lib/auth.ts:262` returns `true` from `isProviderEmail()` whenever `isStaging()` is true, granting admin-level privileges to any authenticated user on `staging.cultrhealth.com`. If staging URL detection fails (env var misconfigured) or staging is accidentally promoted, all users have admin access.
+- Files: `lib/auth.ts:260-262`
+- Current mitigation: Staging URL detection relies on `NEXT_PUBLIC_SITE_URL` containing the string "staging".
+- Recommendations: Use a separate `STAGING_ADMIN_BYPASS=true` env var instead of URL-sniffing. Remove the blanket `if (isStaging()) return true` from `isProviderEmail()` and replace with explicit team email check only.
+
+**Customer Email Addresses Logged in Vercel Production Logs:**
+- Risk: Multiple API routes log customer email addresses to `console.log`. Vercel logs are accessible to anyone with dashboard access and are not HIPAA-safe storage.
+- Files: `app/api/webhook/stripe/route.ts:161,295,501,520`, `app/api/club/signup/route.ts:168`, `app/api/admin/orders/[orderNumber]/fulfill/route.ts:112`, `app/api/creators/apply/route.ts:150,178`
+- Current mitigation: Emails are not combined with medical data in the same log line.
+- Recommendations: Replace logged email values with hashed or truncated identifiers in production log lines.
+
+**Mailchimp API Key is Invalid:**
+- Risk: `MAILCHIMP_API_KEY` in Vercel is expired/invalid (documented in MEMORY.md since Mar 10 2026), causing silent audience sync failures on every club signup.
+- Files: `app/api/club/signup/route.ts:121-166`
+- Current mitigation: `syncToMailchimp()` failure is caught non-fatally; signups succeed.
+- Recommendations: Regenerate the API key from the Mailchimp dashboard and update the Vercel env var.
+
+**Klarna and Affirm Default to Sandbox Endpoints:**
+- Risk: Klarna defaults to `https://api.playground.klarna.com` and Affirm defaults to `https://sandbox.affirm.com` and `cdn1-sandbox.affirm.com`. If `KLARNA_API_URL`, `AFFIRM_API_URL`, or `NEXT_PUBLIC_AFFIRM_SCRIPT_URL` are not explicitly set in production, real orders would be processed against sandbox environments and funds never captured.
+- Files: `lib/config/payments.ts:82,90,92`
+- Current mitigation: Authorize.net correctly gates on an `AUTHORIZE_NET_ENVIRONMENT` env var — Klarna and Affirm do not have equivalent guards.
+- Recommendations: Add production URL assertions for Klarna and Affirm matching the Authorize.net conditional pattern.
+
+**Twilio Production Credentials Not Configured:**
+- Risk: `app/api/portal/send-otp/route.ts` bypasses OTP on staging but requires `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` for production. These are not yet set in the Vercel production environment.
+- Files: `app/api/portal/send-otp/route.ts:47-54`, `app/api/portal/verify-otp/route.ts:56-60`
+- Current mitigation: Staging bypass accepts any phone and code `123456`.
+- Recommendations: Provision Twilio Verify service and add the three env vars to Vercel production before enabling the portal for real patients.
+
+**`/api/quickbooks/callback` Renders OAuth Tokens in Browser HTML:**
+- Risk: The QuickBooks OAuth callback route returns the `REALM_ID` and `REFRESH_TOKEN` values rendered in an HTML page visible in the browser and captured in browser history.
+- Files: `app/api/quickbooks/callback/route.ts:110`
+- Current mitigation: Route is behind admin allowlist check.
+- Recommendations: Store tokens directly to DB on callback instead of displaying them; this is a one-time setup flow but tokens should never appear in HTML output.
 
 ---
 
 ## Performance Bottlenecks
 
-**`lib/protocol-templates.ts` is 4,074 Lines:**
-- Problem: The entire protocol template library is a single file with inline data structures, scoring algorithms, and catalog entries. It is imported by multiple routes and the ProtocolBuilderClient.
+**`recalculateAllTiers()` Cron Does Sequential N+1 DB Queries:**
+- Problem: For each creator in `getAllActiveCreators()`, the function makes separate sequential calls to `updateCreatorRecruitCount(creator.id)`, `updateCreatorTier(...)`, and `updateCreatorActiveMemberCount(creator.id)` inside a `for` loop.
+- Files: `lib/creators/commission.ts:182-210`
+- Cause: No batching — each creator requires 2-3 DB round trips in sequence.
+- Improvement path: Run creator updates in parallel batches using `Promise.all()`, or rewrite as a single SQL `UPDATE ... FROM` bulk statement.
+
+**`lib/protocol-templates.ts` is 4,074 Lines of Inline Static Data:**
+- Problem: A single file exports all protocol template data — 4,000+ lines of hardcoded object literals loaded on every server bundle.
 - Files: `lib/protocol-templates.ts`
-- Cause: No splitting or lazy loading — the full 4K+ line module loads on any page that imports a single function.
-- Improvement path: Split into `protocol-catalog.ts` (static peptide data), `protocol-scoring.ts` (matching algorithms), and `protocol-templates.ts` (template definitions). Use dynamic imports where only partial data is needed.
+- Cause: All templates hardcoded inline with no pagination or lazy loading.
+- Improvement path: Split into individual template files under `lib/protocols/` and import dynamically in the protocol builder route; or move to the database for query-time filtering.
 
-**`lib/resend.ts` is 1,495 Lines with All Email Templates Bundled:**
-- Problem: All 15+ email templates are defined as inline HTML strings in a single file. Every API route that sends any email loads the entire module.
+**`lib/resend.ts` is 1,495 Lines (All Email Templates Inline):**
+- Problem: Every email template is defined inline in a single file, making it large and expensive to parse on each import.
 - Files: `lib/resend.ts`
-- Cause: Monolithic email module.
-- Improvement path: Split templates into separate files under `lib/emails/` and dynamically import only the needed template function.
+- Cause: No template separation or lazy loading.
+- Improvement path: Split email templates into separate files under `lib/emails/` and import them only where needed.
 
-**Payout Batch Route Uses N+1 Database Queries:**
-- Problem: `POST /api/admin/creators/payouts/batch` iterates over all active creators in a `for` loop, executing `getApprovedCommissionsForPayout(creator.id)` as a separate DB query per creator, then `createPayout()` and one `updateCommissionStatus()` per commission.
-- Files: `app/api/admin/creators/payouts/batch/route.ts` lines 33-83
-- Cause: Sequential DB queries in a loop.
-- Improvement path: Batch commission fetching with a single `WHERE creator_id = ANY($1)` query; use a transaction for the payout + commission-status updates.
+**`lib/db.ts` is 1,453 Lines — All DB Operations in One File:**
+- Problem: All database functions for users, orders, memberships, protocol outcomes, resilience scores, LMNs, and Stripe idempotency live in one file.
+- Files: `lib/db.ts`
+- Cause: No domain-based splitting was done as the schema grew.
+- Improvement path: Split into domain-specific files (`lib/db/memberships.ts`, `lib/db/orders.ts`, `lib/db/lmn.ts`, etc.) with a barrel export at `lib/db/index.ts`.
 
 ---
 
 ## Fragile Areas
 
-**Stripe Webhook: `plan_tier` Falls Back to `'unknown'`:**
-- Files: `app/api/webhook/stripe/route.ts` line 175
-- Why fragile: If `session.metadata.plan_tier` is not set at Stripe checkout session creation, the membership record is created with `plan_tier = 'unknown'`. This silently corrupts the membership tier and the member gets no library access.
-- Safe modification: Ensure every Stripe checkout session creation call passes `metadata.plan_tier`. Add a validation log before the `createMembership` call to alert if the tier is unknown.
-- Test coverage: No tests for the Stripe webhook handler.
+**108 macOS Copy Artifact Files Still in Repository:**
+- Files: 108 files matching `* 2.tsx`, `* 3.tsx`, `* 4.tsx` patterns across `app/admin/club-orders/`, `app/creators/portal/`, `app/library/`, `app/science/[slug]/`, `app/track/daily/`, `app/renewal/success/`, `app/intake/success/`, and `app/creators/portal/resources/_data/`. Also `app/opengraph-image 2-4.png`, `app/twitter-image 2-4.png`.
+- Why fragile: Next.js App Router ignores `page 2.tsx` as a route (space breaks the name), but the files confuse contributors and inflate `find`/`grep` output. The `_data/*.tsx` duplicates are imported by exact name — a future refactor could accidentally import a stale copy.
+- Safe modification: `find app -name "* [2-9].*" -delete` after verifying canonical files are correct.
+- Test coverage: None.
 
-**Creator Commission Cap Logic: 25% Cap Duration is From `creator_start_date`:**
-- Files: `lib/creators/commission.ts`, `lib/config/affiliate.ts`
-- Why fragile: The 25% total cap applies for 6 months from `creator_start_date`. After 6 months the cap drops to 10% (no stacking). If `creator_start_date` is NULL (creators approved before the field was added), commission calculations may behave unexpectedly.
-- Safe modification: Ensure `creator_start_date` is populated via backfill migration before the 6-month window expires for any creator.
-- Test coverage: Commission tests exist in integration suite but do not cover the 6-month rollover edge case.
+**12 Legacy Unused Component Files Still in Repository:**
+- Files: `components/sections/` (9 files: Hero.tsx, Services.tsx, About.tsx, HowItWorks.tsx, Results.tsx, Pricing.tsx, Testimonials.tsx, FAQ.tsx, Waitlist.tsx), `components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx`
+- Why fragile: Zero imports in the entire codebase. These are dead code that bloat the repo and confuse contributors looking for "the hero component", who might edit an unused file.
+- Safe modification: Delete all 12 files — no import anywhere references them.
+- Test coverage: None.
 
-**Club Order Approval Flow: No Payment Automation:**
-- Files: `app/api/admin/club-orders/[orderId]/approve/route.ts` lines 231-235
-- Why fragile: After admin approves a club order, the customer is told "payment link within 1-2 business days" and admin must manually send payment details. This is an entirely manual step with no code path — if admin forgets, the customer receives no payment link and the order stalls.
-- Safe modification: Version 2 TODO at line 231 describes automated Stripe payment link generation. Implement before scaling club orders.
-- Test coverage: None for the approval flow.
+**QuickBooks Token Refresh Silently Returns `null` on Many Error Paths:**
+- Files: `lib/quickbooks.ts` (12+ `return null` statements in token refresh and API call functions)
+- Why fragile: Callers must handle `null` returns before chaining QuickBooks operations, but several call sites proceed without null-guarding, leading to runtime failures at invoice creation time.
+- Safe modification: Add explicit `if (!result) throw new Error(...)` guards at call sites in `app/api/admin/club-orders/[orderId]/approve/route.ts`.
+- Test coverage: No QuickBooks integration tests exist.
 
-**Asher Med API Client Has No Request Idempotency:**
-- Files: `lib/asher-med-api.ts`
-- Why fragile: `createNewOrder()` and `createRenewalOrder()` have no idempotency keys. If the intake form submission network times out after Asher Med receives the request but before the client receives the response, a retry will create a duplicate patient/order.
-- Safe modification: Add an idempotency key header (e.g., hash of patient email + DOB + timestamp rounded to 5 minutes) if Asher Med API supports it.
-- Test coverage: No test for duplicate submission behavior.
-
-**In-Memory Rate Limiter Falls Back Silently:**
-- Files: `lib/rate-limit.ts` lines 47-58
-- Why fragile: When Redis is unavailable, the rate limiter silently falls back to an in-memory store. On Vercel serverless, this means rate limiting does not work across invocations. There is no alerting when Redis is down.
-- Safe modification: Add a warning log when the Redis client cannot be created, so ops team is alerted.
-- Test coverage: Rate limiter behavior under Redis failure is not tested.
-
-**Middleware Only Handles `join.cultrhealth.com` Rewriting:**
-- Files: `middleware.ts`
-- Why fragile: The middleware contains no authentication enforcement. All route protection is done per-API-route. If a new page route is added under `/library/` or `/admin/` without explicit `getSession()` / `verifyAuth()` calls, it will be publicly accessible. There is no central auth guard.
-- Safe modification: Consider adding lightweight middleware-level auth checks for `/admin/*`, `/creators/portal/*`, and `/library/*` to provide a defense-in-depth layer.
-- Test coverage: Middleware behavior is not tested.
+**Portal Dashboard is a Stub — Real Patients Hit a Dead End:**
+- Files: `app/portal/dashboard/page.tsx`
+- Why fragile: Patients who authenticate via the new Phone OTP flow reach a page with only a logout button. The portal auth infrastructure (OTP, JWT, refresh tokens, portal sessions table) is fully built but the destination page is a placeholder.
+- Safe modification: Implement order tracking and intake CTA as described in `.planning/phases/02-dashboard-order-tracking`.
+- Test coverage: None.
 
 ---
 
 ## Scaling Limits
 
-**Vercel Postgres (`@vercel/postgres`) Connection Limits:**
-- Current capacity: Neon PostgreSQL serverless with `@vercel/postgres` SDK. Neon's free/hobby tiers limit concurrent connections.
-- Limit: High-concurrency traffic (many simultaneous requests) will hit Postgres connection pool limits, resulting in `too many connections` errors (referenced in `lib/resilience.ts` line 784).
-- Scaling path: Enable Neon connection pooling (PgBouncer). The `POSTGRES_URL` should point to the pooled endpoint.
+**In-Memory Rate Limiters Reset on Each Serverless Cold Start:**
+- Current capacity: Works within a single long-running server process.
+- Limit: On Vercel's serverless infrastructure each function invocation may run in a fresh container, resetting the in-memory `Map`. High-traffic scenarios with concurrent containers bypass all rate limits.
+- Scaling path: `lib/rate-limit.ts` already has Upstash Redis integration — set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in Vercel to activate the Redis backend automatically.
 
-**Creator Payout Batch is Synchronous:**
-- Current capacity: Works for small creator counts (< ~50).
-- Limit: `POST /api/admin/creators/payouts/batch` runs all payout creation sequentially in a `for` loop within a single serverless function invocation. At 200+ creators, this will hit Vercel's 60-second function timeout.
-- Scaling path: Process payouts in background jobs (Vercel Cron + queue) rather than a single synchronous request.
+**`@vercel/postgres` SDK Creates New Connections Per Request:**
+- Current capacity: Functional at current Neon free-tier limits.
+- Limit: No connection pooling configuration is visible. Neon's free tier has a connection limit; high-concurrency serverless deployments can exhaust the pool.
+- Scaling path: Enable Neon connection pooling (PgBouncer) at the Neon dashboard level; no code changes required.
 
 ---
 
 ## Dependencies at Risk
 
-**Twilio Env Vars Not Yet Set in Production:**
-- Risk: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` are not listed as configured env vars in the Vercel `cultrhealth-com` project. The OTP phone login flow (`/portal/login`) is live in code but will crash on production because the staging bypass checks `NEXT_PUBLIC_SITE_URL.includes('staging')`.
-- Impact: `POST /api/portal/send-otp` will throw `Error: Access to api.twilio.com failed` on production.
-- Migration plan: Configure the three Twilio env vars in Vercel production environment before enabling the `/portal/login` route in production.
+**`@vercel/postgres` Ties All DB Queries to Vercel Platform:**
+- Risk: Every database query (`lib/db.ts`, `lib/creators/db.ts`, `lib/portal-db.ts`, inline route files) imports from `@vercel/postgres`. Migrating off Vercel hosting requires replacing every query.
+- Impact: Full codebase DB layer change if platform is ever switched.
+- Migration plan: Abstract behind a thin `lib/db/client.ts` wrapper that re-exports `sql` from `@vercel/postgres`. A future migration swaps only the wrapper.
 
-**Stripe API Version Pinned to Unreleased API:**
-- Risk: `app/api/webhook/stripe/route.ts` line 7 uses `apiVersion: '2026-02-25.clover'`. This is a very recent/beta API version string.
-- Impact: May break if Stripe deprecates this version or if behavior changes in patch releases.
-- Migration plan: Pin to a stable, GA Stripe API version (e.g., `2024-06-20`).
-
-**QuickBooks OAuth Refresh Token Expiry:**
-- Risk: QuickBooks Online refresh tokens expire after 100 days of inactivity. If the QB integration is not used for 100 days, the token in the `quickbooks_tokens` table becomes invalid and all club order approvals fail silently (QB integration gracefully degrades).
-- Impact: Club orders are approved but no QB invoice is created. Admin must manually re-authenticate via `/api/quickbooks/auth`.
-- Migration plan: Implement a QB token health-check cron job (weekly) that attempts a token refresh to keep it alive.
+**Mailchimp Integration Has No Valid API Key:**
+- Risk: Every club signup silently skips audience list sync. The Mailchimp account is not receiving new signups.
+- Impact: `app/api/club/signup/route.ts:121-166`
+- Migration plan: Regenerate key from Mailchimp dashboard, or replace with Resend audience lists (already a dependency with a verified sending domain).
 
 ---
 
 ## Missing Critical Features
 
-**Creator Payout Disbursement Has No Actual Money Transfer:**
-- Problem: The payout batch route (`app/api/admin/creators/payouts/batch/route.ts`) creates `payout` records in the database and marks commissions as `paid`, but does not actually initiate any money transfer — no Stripe Connect transfer, no PayPal payout, no bank transfer API call. Payouts are purely accounting records.
-- Blocks: Creators cannot receive actual payments through the portal. Admin must manually transfer money outside the system.
+**Twilio Production OTP Not Configured:**
+- Problem: The phone OTP portal auth system is fully built but requires `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, and `TWILIO_VERIFY_SERVICE_SID` in production Vercel env vars before it can serve real patients.
+- Blocks: Launching the patient portal to production users.
 
-**`/portal/*` Route Authentication Not Enforced in Middleware:**
-- Problem: The member portal (`/portal/login`, future `/portal/dashboard`) has authentication logic in individual API routes but no middleware or layout-level server-side auth guard for the portal page routes. A user who navigates directly to any future `/portal/dashboard` URL without a valid session could potentially access UI before the client-side redirect kicks in.
-- Blocks: Full production launch of the portal flow.
+**Club Order Payment Link Auto-Generation Not Implemented:**
+- Problem: Club order approvals require manual QuickBooks invoice creation and manual payment link sharing. The `TODO (Version 2)` comment describes automated payment link generation on approval.
+- Blocks: Scaling club order volume without additional manual admin effort.
+- Files: `app/api/admin/club-orders/[orderId]/approve/route.ts:231`
+
+**Authorize.net Webhook Admin Notifications Missing:**
+- Problem: Failed Authorize.net payments and expiring subscriptions generate no admin notification email.
+- Blocks: Timely response to payment failures for Authorize.net subscribers.
+- Files: `app/api/webhook/authorize-net/route.ts:162,266`
 
 ---
 
 ## Test Coverage Gaps
 
-**Stripe Webhook Handler — Untested:**
-- What's not tested: `handleCheckoutCompleted`, `handleSubscriptionUpdated`, `handleSubscriptionDeleted`, `handlePaymentFailed`, `handleChargeRefunded`, commission attribution on checkout, portfolio entry creation.
-- Files: `app/api/webhook/stripe/route.ts` (817 lines)
-- Risk: Silent regressions in subscription lifecycle, commission attribution, and membership creation could go undetected.
+**Admin Routes Entirely Untested:**
+- What's not tested: All routes under `app/api/admin/` — creator approval/rejection, payout processing, club order approval, intake viewing, and order fulfillment.
+- Files: `app/api/admin/`
+- Risk: Admin actions could produce incorrect DB state (e.g., commission records marked `paid` without payment) with no test catching the regression.
 - Priority: High
 
-**Creator Commission Engine — Partial Coverage:**
-- What's not tested: The 6-month bonus window rollover (25% → 10% cap), attribution break rule on subscription cancel, override commission calculation with edge cases (recruits at tier boundaries).
-- Files: `lib/creators/commission.ts`, `lib/creators/attribution.ts`
-- Risk: Commission miscalculations that either underpay creators or overpay (exceeding the 25% cap).
+**QuickBooks Integration Untested:**
+- What's not tested: `lib/quickbooks.ts` — token refresh, customer creation, invoice creation, payment recording.
+- Files: `lib/quickbooks.ts`
+- Risk: QuickBooks token expiry or API schema changes surface only at runtime during club order approval.
 - Priority: High
 
-**Admin API Routes — No Tests:**
-- What's not tested: Creator approve/reject, payout batch, intake viewer, club order approval, order fulfillment.
-- Files: `app/api/admin/creators/[id]/approve/route.ts`, `app/api/admin/creators/[id]/reject/route.ts`, `app/api/admin/creators/payouts/batch/route.ts`, `app/api/admin/club-orders/[orderId]/approve/route.ts`, `app/api/admin/orders/[orderNumber]/fulfill/route.ts`
-- Risk: Admin actions (approval, payout, fulfillment) could silently fail or produce incorrect state changes.
+**Creator Commission Engine Partially Untested:**
+- What's not tested: `lib/creators/commission.ts` `processOrderAttribution()` — specifically the 25% cap logic within the 6-month bonus window, the `attribution_active` re-signup block, and multi-tier override calculation.
+- Files: `lib/creators/commission.ts`
+- Risk: Commission miscalculation affects creator payouts and can expose the company to under- or over-payment.
 - Priority: High
 
-**Payment Provider Webhooks — No Tests:**
-- What's not tested: Affirm, Klarna, Authorize.net webhook handlers.
-- Files: `app/api/webhook/affirm/route.ts`, `app/api/webhook/klarna/route.ts`, `app/api/webhook/authorize-net/route.ts`
-- Risk: Failed order status updates after BNPL payment events go undetected.
-- Priority: Medium
+**Payment Webhook Handlers Untested:**
+- What's not tested: `app/api/webhook/stripe/route.ts` (817 lines), `app/api/webhook/authorize-net/route.ts`, `app/api/webhook/affirm/route.ts`, `app/api/webhook/klarna/route.ts`
+- Files: `app/api/webhook/`
+- Risk: Subscription lifecycle events (cancellation, renewal, payment failure) could silently misfire, leaving DB state inconsistent with Stripe's truth.
+- Priority: High
 
-**Authorize.net Fraud Events — No Notification Path:**
-- What's not tested (and not implemented): `handleFraudHeld()` in the Authorize.net webhook has a `// TODO: Send notification to admin for manual review` comment but does nothing. Fraud-held transactions are silently dropped.
-- Files: `app/api/webhook/authorize-net/route.ts` line 162
-- Risk: Fraudulent transactions held by Authorize.net are not reviewed and may auto-expire.
+**Intake Form Submission Flow Untested:**
+- What's not tested: `app/api/intake/submit/route.ts` — medication ID mapping, Asher Med order creation, DB record writes, and partner note PATCH.
+- Files: `app/api/intake/submit/route.ts`, `lib/intake-utils.ts`
+- Risk: Any Asher Med API contract change goes undetected until a real patient submits a form.
 - Priority: Medium
 
 ---

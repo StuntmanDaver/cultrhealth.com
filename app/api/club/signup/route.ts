@@ -5,7 +5,7 @@ import crypto from 'crypto'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, phone, socialHandle } = body
+    const { firstName, lastName, email, phone, socialHandle, address } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
 
     if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
@@ -18,14 +18,22 @@ export async function POST(request: Request) {
     let memberId: string | null = null
     try {
       if (process.env.POSTGRES_URL) {
+        const addressStreet = address?.street?.trim() || null
+        const addressCity = address?.city?.trim() || null
+        const addressState = address?.state?.trim() || null
+        const addressZip = address?.zip?.trim() || null
         const result = await sql`
-          INSERT INTO club_members (name, email, phone, social_handle, source)
-          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, 'join_landing')
+          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source)
+          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing')
           ON CONFLICT (LOWER(email))
           DO UPDATE SET
             name = ${name.trim()},
             phone = COALESCE(${phone?.trim() || null}, club_members.phone),
             social_handle = COALESCE(${socialHandle?.trim() || null}, club_members.social_handle),
+            address_street = COALESCE(${addressStreet}, club_members.address_street),
+            address_city = COALESCE(${addressCity}, club_members.address_city),
+            address_state = COALESCE(${addressState}, club_members.address_state),
+            address_zip = COALESCE(${addressZip}, club_members.address_zip),
             updated_at = NOW()
           RETURNING id
         `
@@ -48,6 +56,7 @@ export async function POST(request: Request) {
       email: normalizedEmail,
       phone: phone.trim(),
       socialHandle: socialHandle?.trim() || '',
+      address: address?.street ? { street: address.street.trim(), city: address.city?.trim() || '', state: address.state?.trim() || '', zip: address.zip?.trim() || '' } : undefined,
     })
 
     const response = NextResponse.json({

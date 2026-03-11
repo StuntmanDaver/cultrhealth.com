@@ -50,6 +50,8 @@ export interface AffiliateCode {
   use_count: number
   total_revenue: number
   active: boolean
+  stripe_coupon_id?: string | null
+  stripe_promotion_code_id?: string | null
   created_at: string
   updated_at: string
 }

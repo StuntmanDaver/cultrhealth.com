@@ -10,6 +10,7 @@ import {
   User,
   AtSign,
   Mail,
+  AlertCircle,
 } from 'lucide-react'
 import type { Creator } from '@/lib/config/affiliate'
 
@@ -18,8 +19,8 @@ export default function AdminApprovalsPage() {
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [modalCreator, setModalCreator] = useState<Creator | null>(null)
-  const [couponCode, setCouponCode] = useState('')
   const [reason, setReason] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPending()
@@ -41,24 +42,25 @@ export default function AdminApprovalsPage() {
 
   async function handleApprove(creator: Creator) {
     setProcessingId(creator.id)
+    setError(null)
     try {
       const res = await fetch(`/api/admin/creators/${creator.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          coupon_code: couponCode || undefined,
-          reason,
-        }),
+        body: JSON.stringify({ reason }),
       })
 
       if (res.ok) {
         setPending((prev) => prev.filter((c) => c.id !== creator.id))
         setModalCreator(null)
-        setCouponCode('')
         setReason('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || `Approval failed (${res.status})`)
       }
     } catch (err) {
       console.error('Approve failed:', err)
+      setError('Network error — please try again')
     } finally {
       setProcessingId(null)
     }
@@ -66,6 +68,7 @@ export default function AdminApprovalsPage() {
 
   async function handleReject(creator: Creator) {
     setProcessingId(creator.id)
+    setError(null)
     try {
       const res = await fetch(`/api/admin/creators/${creator.id}/reject`, {
         method: 'POST',
@@ -77,12 +80,22 @@ export default function AdminApprovalsPage() {
         setPending((prev) => prev.filter((c) => c.id !== creator.id))
         setModalCreator(null)
         setReason('')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error || `Rejection failed (${res.status})`)
       }
     } catch (err) {
       console.error('Reject failed:', err)
+      setError('Network error — please try again')
     } finally {
       setProcessingId(null)
     }
+  }
+
+  function closeModal() {
+    setModalCreator(null)
+    setReason('')
+    setError(null)
   }
 
   if (loading) {
@@ -165,12 +178,7 @@ export default function AdminApprovalsPage() {
 
                   <div className="flex gap-2">
                     <button
-                      onClick={() => {
-                        setModalCreator(creator)
-                        setCouponCode(
-                          creator.full_name.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) + '10'
-                        )
-                      }}
+                      onClick={() => setModalCreator(creator)}
                       disabled={processingId === creator.id}
                       className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
                     >
@@ -194,7 +202,7 @@ export default function AdminApprovalsPage() {
         {modalCreator && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={() => setModalCreator(null)}
+            onClick={closeModal}
           >
             <div
               className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6"
@@ -204,34 +212,27 @@ export default function AdminApprovalsPage() {
                 Approve {modalCreator.full_name}
               </h3>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-cultr-forest/70 mb-1.5">
-                    Coupon Code
-                  </label>
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    placeholder="e.g., DAVE10"
-                    className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
-                  />
-                  <p className="text-xs text-cultr-textMuted mt-1">
-                    Auto-generated from name. Edit if needed.
-                  </p>
-                </div>
+              <p className="text-sm text-cultr-textMuted mb-4">
+                Dual coupon codes will be auto-generated from their name (e.g., SMITH + SMITH10).
+              </p>
 
-                <div>
-                  <label className="block text-sm font-medium text-cultr-forest/70 mb-1.5">
-                    Notes (optional)
-                  </label>
-                  <textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    rows={2}
-                    className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 resize-none"
-                  />
+              {error && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                  <p className="text-sm text-red-700">{error}</p>
                 </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-cultr-forest/70 mb-1.5">
+                  Notes (optional)
+                </label>
+                <textarea
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={2}
+                  className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 resize-none"
+                />
               </div>
 
               <div className="flex gap-3 mt-6">
@@ -240,10 +241,10 @@ export default function AdminApprovalsPage() {
                   disabled={processingId === modalCreator.id}
                   className="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50"
                 >
-                  {processingId === modalCreator.id ? 'Approving...' : 'Approve & Create'}
+                  {processingId === modalCreator.id ? 'Approving...' : 'Approve & Create Codes'}
                 </button>
                 <button
-                  onClick={() => setModalCreator(null)}
+                  onClick={closeModal}
                   className="px-4 py-2.5 text-cultr-textMuted text-sm hover:text-cultr-forest"
                 >
                   Cancel

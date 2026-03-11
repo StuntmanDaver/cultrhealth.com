@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     try {
       const result = await sql`
-        SELECT id, name, email, phone, social_handle
+        SELECT id, name, email, phone, social_handle, address_street, address_city, address_state, address_zip
         FROM club_members
         WHERE LOWER(email) = LOWER(${normalizedEmail})
         LIMIT 1
@@ -62,6 +62,12 @@ export async function POST(request: Request) {
         email: member.email,
         phone: member.phone || '',
         socialHandle: member.social_handle || '',
+        address: member.address_street ? {
+          street: member.address_street,
+          city: member.address_city || '',
+          state: member.address_state || '',
+          zip: member.address_zip || '',
+        } : undefined,
       }
 
       const response = NextResponse.json(memberData, { status: 200 })

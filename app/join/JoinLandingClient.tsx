@@ -32,6 +32,12 @@ interface ClubMember {
   email: string
   phone: string
   socialHandle: string
+  address?: {
+    street: string
+    city: string
+    state: string
+    zip: string
+  }
 }
 
 const SECTION_ICONS = [Flame, Zap] as const
@@ -149,7 +155,7 @@ function JoinLandingInner() {
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-[center_35%]"
         />
       </section>
 
@@ -244,37 +250,48 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [socialHandle, setSocialHandle] = useState('')
+  const [street, setStreet] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [zip, setZip] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) { 
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
       setError('First name, last name, email, and phone are required.')
-      return 
+      return
+    }
+    if (!street.trim() || !city.trim() || !state.trim() || !zip.trim()) {
+      setError('Full address is required.')
+      return
     }
     setLoading(true)
+    const address = { street: street.trim(), city: city.trim(), state: state.trim(), zip: zip.trim() }
     try {
       const res = await fetch('/api/club/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          firstName: firstName.trim(), 
+        body: JSON.stringify({
+          firstName: firstName.trim(),
           lastName: lastName.trim(),
-          email: email.trim(), 
-          phone: phone.trim(), 
-          socialHandle: socialHandle.trim() 
+          email: email.trim(),
+          phone: phone.trim(),
+          socialHandle: socialHandle.trim(),
+          address,
         }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); setLoading(false); return }
-      onComplete({ 
-        firstName: firstName.trim(), 
+      onComplete({
+        firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim(), 
-        phone: phone.trim(), 
-        socialHandle: socialHandle.trim() 
+        email: email.trim(),
+        phone: phone.trim(),
+        socialHandle: socialHandle.trim(),
+        address,
       })
     } catch { setError('Network error.'); setLoading(false) }
   }
@@ -308,6 +325,12 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
             <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Street Address" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            <div className="grid grid-cols-3 gap-2">
+              <input type="text" value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+              <input type="text" value={state} onChange={(e) => setState(e.target.value)} placeholder="State" required maxLength={2} className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40 uppercase" />
+              <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="ZIP" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            </div>
             <input type="text" value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@social handle (optional)" className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
           </div>
 
@@ -629,6 +652,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: member.email, name: `${member.firstName} ${member.lastName}`, phone: member.phone,
+          address: member.address,
           items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity })),
           notes: notes.trim() || undefined,
           couponCode: appliedCoupon?.code,

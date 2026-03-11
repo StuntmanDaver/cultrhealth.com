@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
       mode: 'payment',
       customer_email: email,
       line_items: lineItems,
+      allow_promotion_codes: true,
       automatic_tax: { enabled: true },
       ...(clientReferenceId && { client_reference_id: clientReferenceId }),
       metadata: {

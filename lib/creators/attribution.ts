@@ -163,7 +163,7 @@ export async function resolveAttribution(params: {
           creatorId: creator.id,
           method: 'coupon_code',
           codeId: code.id,
-          codeType: (code as any).code_type || 'general',
+          codeType: code.code_type || 'general',
           isSelfReferral,
         }
       }

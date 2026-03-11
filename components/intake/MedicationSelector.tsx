@@ -1,26 +1,27 @@
 'use client';
 
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
-import { Check, Info, Pill } from 'lucide-react';
+import { Check, Info } from 'lucide-react';
 
 interface Medication {
   id: string;
   name: string;
   dosage: string;
   tag?: string;
+  image?: string;
 }
 
 const MEDICATIONS: Medication[] = [
-  { id: 'semaglutide', name: 'Semaglutide', dosage: '5 MG | 3 ML', tag: 'GLP-1' },
-  { id: 'tirzepatide', name: 'Tirzepatide', dosage: '20 MG | 3 ML', tag: 'GLP-1' },
-  { id: 'r3ta', name: 'R3TA', dosage: '20 MG | 3 ML', tag: 'GLP-1/GIP/GCG' },
-  { id: 'ghk-cu', name: 'GHK-CU', dosage: '100 MG | 3 ML' },
-  { id: 'tesa-ipa', name: 'TESA/IPA', dosage: '12/6 MG | 3 ML' },
-  { id: 'cjc1295-ipa', name: 'CJC1295/IPA', dosage: '10/10 MG | 3 ML' },
-  { id: 'nad-plus', name: 'NAD+', dosage: '1000 MG | 10 ML' },
-  { id: 'semax-selank', name: 'Semax/Selank', dosage: '5/5 MG | 3 ML' },
-  { id: 'bpc157-tb500', name: 'BPC157/TB500', dosage: '10/10 MG | 3 ML' },
-  { id: 'melanotan-2', name: 'Melanotan 2 (MT2)', dosage: '10 MG | 3 ML' },
+  { id: 'semaglutide', name: 'Semaglutide', dosage: '5 MG | 3 ML', tag: 'GLP-1', image: '/images/products/semaglutide-glp1.png' },
+  { id: 'tirzepatide', name: 'Tirzepatide', dosage: '20 MG | 3 ML', tag: 'GLP-1', image: '/images/products/tirzepatide-glp1-gip.png' },
+  { id: 'r3ta', name: 'R3TA', dosage: '20 MG | 3 ML', tag: 'GLP-1/GIP/GCG', image: '/images/products/r3ta-glp1-gip-gcg.png' },
+  { id: 'ghk-cu', name: 'GHK-CU', dosage: '100 MG | 3 ML', image: '/images/products/ghk-cu.png' },
+  { id: 'tesa-ipa', name: 'TESA/IPA', dosage: '12/6 MG | 3 ML', image: '/images/products/tesa-ipa.png' },
+  { id: 'cjc1295-ipa', name: 'CJC1295/IPA', dosage: '10/10 MG | 3 ML', image: '/images/products/cjc1295-ipa.png' },
+  { id: 'nad-plus', name: 'NAD+', dosage: '1000 MG | 10 ML', image: '/images/products/nad-plus.png' },
+  { id: 'semax-selank', name: 'Semax/Selank', dosage: '5/5 MG | 3 ML', image: '/images/products/semax-selank.png' },
+  { id: 'bpc157-tb500', name: 'BPC157/TB500', dosage: '10/10 MG | 3 ML', image: '/images/products/bpc157-tb500.png' },
+  { id: 'melanotan-2', name: 'Melanotan 2 (MT2)', dosage: '10 MG | 3 ML', image: '/images/products/melanotan2-mt2.png' },
 ];
 
 export function MedicationSelector() {
@@ -74,7 +75,17 @@ export function MedicationSelector() {
                 {selected && <Check className="w-4 h-4" />}
               </div>
 
-              <Pill className={`w-5 h-5 flex-shrink-0 ${selected ? 'text-forest' : 'text-forest-light'}`} />
+              {med.image ? (
+                <img
+                  src={med.image}
+                  alt={med.name}
+                  className="w-12 h-12 object-contain flex-shrink-0 rounded"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-cream-dark rounded flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs text-forest-muted font-medium">RX</span>
+                </div>
+              )}
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

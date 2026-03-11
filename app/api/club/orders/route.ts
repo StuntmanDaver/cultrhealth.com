@@ -16,13 +16,14 @@ interface OrderItem {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, name, phone, items, notes, couponCode } = body as {
+    const { email, name, phone, items, notes, couponCode, address } = body as {
       email: string
       name: string
       phone?: string
       items: OrderItem[]
       notes?: string
       couponCode?: string
+      address?: { street: string; city: string; state: string; zip: string }
     }
 
     // Validate coupon server-side
@@ -146,6 +147,7 @@ export async function POST(request: Request) {
         name: name.trim(),
         email: normalizedEmail,
         phone: phone?.trim() || '',
+        address,
         orderNumber,
         orderId: orderId || orderNumber,
         items,
@@ -295,6 +297,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   name: string
   email: string
   phone: string
+  address?: { street: string; city: string; state: string; zip: string }
   orderNumber: string
   orderId: string
   items: OrderItem[]
@@ -351,6 +354,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
       <p style="margin: 4px 0; font-size: 14px;"><strong>Name:</strong> ${data.name}</p>
       <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${data.email}</p>
       ${data.phone ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Phone:</strong> ${data.phone}</p>` : ''}
+      ${data.address?.street ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Address:</strong> ${data.address.street}, ${data.address.city}, ${data.address.state} ${data.address.zip}</p>` : ''}
     </div>
 
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">

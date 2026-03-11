@@ -7,6 +7,7 @@ import {
   getPortfolioByCreator,
 } from '@/lib/creators/db'
 import { getNextTierRequirement, getTierName } from '@/lib/config/affiliate'
+import { redactEmail } from '@/lib/creators/attribution'
 
 export async function GET(request: NextRequest) {
   const auth = await verifyCreatorAuth(request)
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       })),
       portfolio: portfolio.map((p) => ({
         id: p.id,
-        customer_email: p.customer_email?.replace(/(.{2}).+@/, '$1***@'),
+        customer_email: p.customer_email ? redactEmail(p.customer_email) : null,
         subscription_status: p.subscription_status,
         payment_count: p.payment_count,
         first_payment_at: p.first_payment_at,
