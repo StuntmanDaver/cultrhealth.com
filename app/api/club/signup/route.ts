@@ -5,7 +5,7 @@ import crypto from 'crypto'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, phone, socialHandle, address } = body
+    const { firstName, lastName, email, phone, socialHandle, address, signupType } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
 
     if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
@@ -22,9 +22,10 @@ export async function POST(request: Request) {
         const addressCity = address?.city?.trim() || null
         const addressState = address?.state?.trim() || null
         const addressZip = address?.zip?.trim() || null
+        const validSignupType = signupType === 'membership' ? 'membership' : 'products'
         const result = await sql`
-          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source)
-          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing')
+          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source, signup_type)
+          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing', ${validSignupType})
           ON CONFLICT (LOWER(email))
           DO UPDATE SET
             name = ${name.trim()},
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
             address_city = COALESCE(${addressCity}, club_members.address_city),
             address_state = COALESCE(${addressState}, club_members.address_state),
             address_zip = COALESCE(${addressZip}, club_members.address_zip),
+            signup_type = ${validSignupType},
             updated_at = NOW()
           RETURNING id
         `

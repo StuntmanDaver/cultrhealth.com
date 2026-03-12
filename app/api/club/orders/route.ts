@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
-import { validateCoupon } from '@/lib/config/coupons'
+import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
 
 interface OrderItem {
@@ -26,9 +26,9 @@ export async function POST(request: Request) {
       address?: { street: string; city: string; state: string; zip: string }
     }
 
-    // Validate coupon server-side
-    const coupon = couponCode ? validateCoupon(couponCode) : null
-    const discountPercent = coupon?.discount ?? 0
+    // Validate coupon server-side (checks both staff coupons and creator affiliate codes)
+    const couponResult: UnifiedCouponResult | null = couponCode ? await validateCouponUnified(couponCode) : null
+    const discountPercent = couponResult?.discount ?? 0
 
     // Validation
     if (!email?.trim() || !name?.trim()) {
@@ -80,9 +80,11 @@ export async function POST(request: Request) {
         memberId = memberResult.rows[0]?.id
 
         if (memberId) {
-          const appliedCouponCode = coupon ? couponCode!.trim().toUpperCase() : null
+          const appliedCouponCode = couponResult ? couponCode!.trim().toUpperCase() : null
+          const attributedCreatorId = couponResult?.isCreatorCode ? couponResult.creatorId : null
+          const attributionMethod = couponResult?.isCreatorCode ? 'coupon_code' : null
           const orderResult = await sql`
-            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent, tax_rate, tax_amount_usd)
+            INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
             VALUES (
               ${orderNumber},
               ${memberId},
@@ -97,11 +99,35 @@ export async function POST(request: Request) {
               ${appliedCouponCode},
               ${discountPercent > 0 ? discountPercent : null},
               ${FL_TAX_RATE},
-              ${taxAmount > 0 ? taxAmount : 0}
+              ${taxAmount > 0 ? taxAmount : 0},
+              ${attributedCreatorId || null},
+              ${attributionMethod}
             )
             RETURNING id
           `
           orderId = orderResult.rows[0]?.id
+
+          // Process creator attribution for commission tracking
+          if (couponResult?.isCreatorCode && orderId && subtotal > 0) {
+            try {
+              const { processOrderAttribution } = await import('@/lib/creators/commission')
+              await processOrderAttribution({
+                orderId,
+                netRevenue: subtotal,
+                customerEmail: normalizedEmail,
+                attribution: {
+                  creatorId: couponResult.creatorId!,
+                  method: 'coupon_code',
+                  codeId: couponResult.codeId,
+                  codeType: couponResult.codeType,
+                  isSelfReferral: false,
+                },
+                isSubscription: false,
+              })
+            } catch (attrError) {
+              console.error('[club/orders] Attribution processing failed (non-fatal):', attrError)
+            }
+          }
         }
       }
     } catch (dbError) {
@@ -134,7 +160,7 @@ export async function POST(request: Request) {
         subtotal,
         taxAmount,
         total,
-        couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+        couponCode: couponResult ? couponCode!.trim().toUpperCase() : undefined,
         discountPercent,
       })
       customerEmailSent = true
@@ -156,11 +182,12 @@ export async function POST(request: Request) {
         subtotal,
         taxAmount,
         total,
-        couponCode: coupon ? couponCode!.trim().toUpperCase() : undefined,
+        couponCode: couponResult ? couponCode!.trim().toUpperCase() : undefined,
         discountPercent,
         notes: notes || '',
         approvalToken,
         siteUrl,
+        referredBy: couponResult?.isCreatorCode ? couponResult.creatorName : undefined,
       })
       adminEmailSent = true
     } catch (err) {
@@ -311,6 +338,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   notes: string
   approvalToken: string
   siteUrl: string
+  referredBy?: string
 }) {
   if (!process.env.RESEND_API_KEY) {
     throw new Error('RESEND_API_KEY not configured — admin approval request email not sent')
@@ -355,6 +383,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
       <p style="margin: 4px 0; font-size: 14px;"><strong>Email:</strong> ${data.email}</p>
       ${data.phone ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Phone:</strong> ${data.phone}</p>` : ''}
       ${data.address?.street ? `<p style="margin: 4px 0; font-size: 14px;"><strong>Address:</strong> ${data.address.street}, ${data.address.city}, ${data.address.state} ${data.address.zip}</p>` : ''}
+      ${data.referredBy ? `<p style="margin: 4px 0; font-size: 14px; color: #16a34a;"><strong>Referred by:</strong> ${data.referredBy} (code: ${data.couponCode})</p>` : ''}
     </div>
 
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">

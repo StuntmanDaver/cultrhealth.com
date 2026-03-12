@@ -32,6 +32,7 @@ interface ClubMember {
   email: string
   phone: string
   socialHandle: string
+  signupType: 'membership' | 'products'
   address?: {
     street: string
     city: string
@@ -55,7 +56,7 @@ function JoinLandingInner() {
     try {
       // Dev bypass: skip signup on localhost
       if (window.location.hostname === 'localhost') {
-        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '' })
+        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products' })
         setShowSignup(false)
         return
       }
@@ -64,7 +65,7 @@ function JoinLandingInner() {
       if (lsData) {
         const data = JSON.parse(lsData)
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
-          setMember(data)
+          setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
           return
         }
@@ -74,7 +75,7 @@ function JoinLandingInner() {
       if (stored) {
         const data = JSON.parse(decodeURIComponent(stored.split('=')[1]))
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
-          setMember(data)
+          setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
           // Sync to localStorage for future visits
           localStorage.setItem('cultr_club_member', JSON.stringify(data))
@@ -165,7 +166,7 @@ function JoinLandingInner() {
         />
         <div className="absolute inset-0 bg-brand-primary/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-10 px-4 text-center">
-          <h1 className="font-fraunces text-2xl md:text-4xl lg:text-5xl text-white font-medium tracking-tight">
+          <h1 className="font-display text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
             Change the CULTR. Rebrand Yourself.
           </h1>
           <p className="mt-2 text-xs md:text-sm text-white/80 max-w-2xl">
@@ -269,6 +270,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [zip, setZip] = useState('')
+  const [signupType, setSignupType] = useState<'membership' | 'products' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -283,6 +285,10 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
       setError('Full address is required.')
       return
     }
+    if (!signupType) {
+      setError('Please select if you\'re signing up for a membership or buying products.')
+      return
+    }
     setLoading(true)
     const address = { street: street.trim(), city: city.trim(), state: state.trim(), zip: zip.trim() }
     try {
@@ -295,6 +301,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           email: email.trim(),
           phone: phone.trim(),
           socialHandle: socialHandle.trim(),
+          signupType,
           address,
         }),
       })
@@ -306,16 +313,17 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
         email: email.trim(),
         phone: phone.trim(),
         socialHandle: socialHandle.trim(),
+        signupType,
         address,
       })
     } catch { setError('Network error.'); setLoading(false) }
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(42,69,66,0.6)', backdropFilter: 'blur(12px)' }}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-brand-secondary/10">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 overflow-y-auto" style={{ background: 'rgba(42,69,66,0.6)', backdropFilter: 'blur(12px)' }}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-md border border-brand-secondary/10 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Logo */}
-        <div className="pt-10 pb-5 grad-dark-glow flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="pt-8 pb-4 sm:pt-10 sm:pb-5 grad-dark-glow flex flex-col items-center justify-center relative overflow-hidden sticky top-0 z-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
           <div className="flex flex-col items-end leading-none relative z-10">
             <span className="font-display font-bold text-2xl uppercase text-white">CULTR</span>
@@ -323,11 +331,11 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-8 pb-10 pt-7">
+        <form onSubmit={handleSubmit} className="px-6 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
           <h2 className="font-display text-xl font-bold text-brand-primary text-center mb-1">
             Join CULTR Club
           </h2>
-          <p className="text-brand-secondary/60 text-sm text-center mb-6">
+          <p className="text-brand-secondary/60 text-sm text-center mb-5">
             Browse therapies &amp; build your order
           </p>
 
@@ -335,9 +343,11 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
           )}
 
-          <div className="space-y-3">
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+          <div className="space-y-2.5">
+            <div className="grid grid-cols-2 gap-2">
+              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            </div>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Street Address" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
@@ -347,13 +357,40 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
               <input type="text" value={zip} onChange={(e) => setZip(e.target.value)} placeholder="ZIP" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             </div>
             <input type="text" value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@social handle (optional)" className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+
+            {/* Signup Type Selector */}
+            <div className="pt-1">
+              <p className="text-xs font-medium text-brand-primary/70 mb-2">I&apos;m signing up for:</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSignupType('membership')}
+                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    signupType === 'membership'
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
+                  }`}
+                >
+                  Membership
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSignupType('products')}
+                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    signupType === 'products'
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
+                  }`}
+                >
+                  Products Only
+                </button>
+              </div>
+            </div>
           </div>
 
-          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 mt-6 px-6 py-3.5 bg-brand-primary text-white font-medium rounded-full hover:bg-brand-primaryHover transition-colors disabled:opacity-50 shadow-sm">
+          <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 mt-5 px-6 py-3.5 bg-brand-primary text-white font-medium rounded-full hover:bg-brand-primaryHover transition-colors disabled:opacity-50 shadow-sm">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Join Free &amp; Start Shopping <ChevronRight className="w-4 h-4" /></>}
           </button>
-
-          <p className="mt-5 text-[11px] text-brand-secondary/40 text-center"></p>
         </form>
       </div>
     </div>
@@ -544,7 +581,7 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       ) : (
         <>
           {/* Non-featured card image — reserved aspect ratio prevents layout shift */}
-          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-12 sm:py-16 aspect-square">
+          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-10 sm:py-16 aspect-[4/3] sm:aspect-square">
             {showImage && (
               <Image
                 src={therapy.image}
@@ -572,8 +609,8 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
 
           <p className="text-xs text-brand-secondary/70 leading-relaxed mb-4 flex-1">{therapy.description}</p>
 
-          {/* Hover tooltip */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20">
+          {/* Hover tooltip — hidden on touch/mobile */}
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20 hidden md:block">
             <p className="font-semibold mb-1">{therapy.name}</p>
             <p className="text-white/80">{therapy.description}</p>
             <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-primary" />
@@ -621,7 +658,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [couponInput, setCouponInput] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string; isCreatorCode?: boolean; creatorName?: string; creatorId?: string } | null>(null)
   const [couponError, setCouponError] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
 
@@ -638,7 +675,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
       })
       const data = await res.json()
       if (data.valid) {
-        setAppliedCoupon({ code, discount: data.discount, label: data.label })
+        setAppliedCoupon({ code, discount: data.discount, label: data.label, isCreatorCode: data.isCreatorCode, creatorName: data.creatorName, creatorId: data.creatorId })
         setCouponInput('')
         setCouponError('')
       } else {
@@ -723,15 +760,20 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
           {/* Coupon Code */}
           <div className="pt-4 pb-2">
             {appliedCoupon ? (
-              <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2">
-                <div className="flex items-center gap-2 text-sm text-green-700">
-                  <Tag className="w-3.5 h-3.5" />
-                  <span className="font-medium">{appliedCoupon.code}</span>
-                  <span className="text-green-600">— {appliedCoupon.discount}% off</span>
+              <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-green-700">
+                    <Tag className="w-3.5 h-3.5" />
+                    <span className="font-medium">{appliedCoupon.code}</span>
+                    <span className="text-green-600">— {appliedCoupon.discount}% off</span>
+                  </div>
+                  <button onClick={handleRemoveCoupon} className="text-green-500 hover:text-green-700 transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button onClick={handleRemoveCoupon} className="text-green-500 hover:text-green-700 transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
+                {appliedCoupon.isCreatorCode && appliedCoupon.creatorName && (
+                  <p className="text-xs text-green-600 mt-1 pl-5">Referred by {appliedCoupon.creatorName}</p>
+                )}
               </div>
             ) : (
               <div className="flex gap-2">

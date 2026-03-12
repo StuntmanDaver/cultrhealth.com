@@ -1,3 +1,41 @@
+## [2026-03-11] - Join Page: Address Fields, Signup Type, Creator Coupon Attribution, UI Polish
+
+### Summary
+Enhanced join.cultrhealth.com signup with address collection, membership/products intent selector, unified coupon validation (staff + creator affiliate codes), and creator attribution on club orders. Various UI polish for mobile.
+
+### Join Page Signup Form
+- Added shipping address fields (street, city, state, ZIP) — required on signup
+- Added "Membership" vs "Products Only" intent selector
+- First/Last name now side-by-side on desktop
+- Modal scrollable on small screens (rounded-t on mobile, full rounded on desktop)
+- Sticky logo header while scrolling form
+
+### Creator Coupon Attribution on Club Orders
+- `validateCouponUnified()` in `lib/config/coupons.ts` — checks staff coupons first, then creator affiliate codes in DB
+- Club orders now track `attributed_creator_id` and `attribution_method` in DB
+- Creator commission processing triggered on attributed orders via `processOrderAttribution()`
+- Admin email shows "Referred by {creator}" when a creator code is used
+- Cart UI shows "Referred by {creator}" under applied coupon badge
+- `validate-coupon` API returns creator info for display
+
+### Database Migrations
+- **017:** `address_street`, `address_city`, `address_state`, `address_zip` on `club_members`
+- **018:** `attributed_creator_id`, `attribution_method` on `club_orders`; `signup_type` on `club_members`
+
+### UI Polish
+- Hero banner: 16:9 aspect ratio with overlay text and tagline
+- Non-featured card images: 4:3 aspect on mobile, square on desktop
+- Hover tooltips hidden on mobile (touch devices)
+
+### Modified (6 files)
+- `app/join/JoinLandingClient.tsx`, `app/api/club/signup/route.ts`, `app/api/club/login/route.ts`
+- `app/api/club/orders/route.ts`, `app/api/club/validate-coupon/route.ts`, `lib/config/coupons.ts`
+
+### Added (2 files)
+- `migrations/017_club_member_address.sql`, `migrations/018_club_orders_attribution.sql`
+
+---
+
 ## [2026-03-11] - Product Images Update & Intake Form Medication Mapping Fix
 
 ### Summary
