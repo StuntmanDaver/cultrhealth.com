@@ -176,6 +176,48 @@ export const MEDICATION_OPTIONS: MedicationOption[] = [
     durations: [30, 60, 90],
     packageId: 'semax-selank',
   },
+
+  // Medications available in intake form but not natively in Asher Med — sent as 'Other'
+  {
+    id: 'r3ta',
+    name: 'Other',
+    displayName: 'R3TA (Retatrutide)',
+    description: 'Triple-agonist GLP-1/GIP/GCG receptor peptide',
+    types: ['Injection'],
+    category: 'GLP1',
+    isGLP1: true,
+    durations: [30, 60, 90],
+  },
+  {
+    id: 'tesa-ipa',
+    name: 'Other',
+    displayName: 'Tesamorelin/Ipamorelin',
+    description: 'GH optimization blend for visceral fat reduction',
+    types: ['Injection'],
+    category: 'NonGLP1',
+    isGLP1: false,
+    durations: [30, 60, 90],
+  },
+  {
+    id: 'cjc1295-ipa',
+    name: 'Other',
+    displayName: 'CJC-1295/Ipamorelin',
+    description: 'GH releasing hormone and secretagogue blend',
+    types: ['Injection'],
+    category: 'NonGLP1',
+    isGLP1: false,
+    durations: [30, 60, 90],
+  },
+  {
+    id: 'melanotan-2',
+    name: 'Other',
+    displayName: 'Melanotan 2 (MT2)',
+    description: 'Melanocortin peptide for tanning and photoprotection',
+    types: ['Injection'],
+    category: 'NonGLP1',
+    isGLP1: false,
+    durations: [30, 60, 90],
+  },
 ];
 
 // ============================================================

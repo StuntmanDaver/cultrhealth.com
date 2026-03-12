@@ -53,6 +53,12 @@ function JoinLandingInner() {
 
   useEffect(() => {
     try {
+      // Dev bypass: skip signup on localhost
+      if (window.location.hostname === 'localhost') {
+        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '' })
+        setShowSignup(false)
+        return
+      }
       // Check localStorage first (most reliable), then cookie as fallback
       const lsData = localStorage.getItem('cultr_club_member')
       if (lsData) {
@@ -150,13 +156,22 @@ function JoinLandingInner() {
         </div>
       )}
 
-      {/* Hero Image — Full-width on mobile with aspect ratio, fixed height on desktop */}
-      <section className="relative aspect-[4/3] md:aspect-auto md:h-[50vh] md:min-h-[380px] overflow-hidden bg-gray-200">
+      {/* Hero Banner — Media kit style with overlay text */}
+      <section className="relative aspect-[16/9] md:aspect-auto md:h-[42vh] md:min-h-[320px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
           className="w-full h-full object-cover object-[center_35%]"
         />
+        <div className="absolute inset-0 bg-brand-primary/30" />
+        <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-10 px-4 text-center">
+          <h1 className="font-fraunces text-2xl md:text-4xl lg:text-5xl text-white font-medium tracking-tight">
+            Change the CULTR. Rebrand Yourself.
+          </h1>
+          <p className="mt-2 text-xs md:text-sm text-white/80 max-w-2xl">
+            HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
+          </p>
+        </div>
       </section>
 
       {/* Hero Copy Section — Text in dedicated white section below banner */}

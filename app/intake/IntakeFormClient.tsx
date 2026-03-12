@@ -73,7 +73,7 @@ function IntakeFormContent() {
   // Calculate visible steps based on medication selection
   const selectedMeds = formData.selectedMedications || (formData.selectedMedication ? [formData.selectedMedication] : []);
   const isGLP1 = selectedMeds.some(med =>
-    med.includes('glp1') || med.includes('tirzepatide') || med.includes('semaglutide')
+    med.includes('glp1') || med.includes('tirzepatide') || med.includes('semaglutide') || med === 'r3ta'
   );
 
   const visibleSteps = INTAKE_FORM_STEPS.filter((step) => {

@@ -13,7 +13,9 @@ interface ReviewSummaryProps {
 export function ReviewSummary({ onSubmit, isSubmitting, error }: ReviewSummaryProps) {
   const { formData, setCurrentStep } = useIntakeForm();
 
-  const selectedMedication = MEDICATION_OPTIONS.find((m) => m.id === formData.selectedMedication);
+  const selectedMedNames = (formData.selectedMedications || (formData.selectedMedication ? [formData.selectedMedication] : []))
+    .map((id: string) => MEDICATION_OPTIONS.find(m => m.id === id)?.displayName)
+    .filter(Boolean);
 
   const calculateBMI = () => {
     if (formData.heightFeet && formData.heightInches !== undefined && formData.weightLbs) {
@@ -50,7 +52,7 @@ export function ReviewSummary({ onSubmit, isSubmitting, error }: ReviewSummaryPr
     {
       title: 'Medication Selection',
       stepIndex: 2,
-      items: [{ label: 'Selected', value: selectedMedication?.name || 'None selected' }],
+      items: [{ label: 'Selected', value: selectedMedNames.length > 0 ? selectedMedNames.join(', ') : 'None selected' }],
     },
     {
       title: 'Physical Measurements',

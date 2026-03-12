@@ -2,7 +2,18 @@
 // This maps the 160+ products in the catalog to the ~12 medications Asher Med accepts
 
 export const PRODUCT_TO_ASHER_MED_MAP: Record<string, string | null> = {
-  // GLP-1 Medications
+  // Intake form MedicationSelector IDs (curated 10-item list)
+  'semaglutide': 'semaglutide',
+  'tirzepatide': 'tirzepatide',
+  'r3ta': 'r3ta',
+  'tesa-ipa': 'tesa-ipa',
+  'cjc1295-ipa': 'cjc1295-ipa',
+  'semax-selank': 'semax-selank',
+  'bpc157-tb500': 'bpc157-tb500',
+  'melanotan-2': 'melanotan-2',
+  // ghk-cu and nad-plus already exist below
+
+  // GLP-1 Medications (product catalog IDs)
   'glp1-tirzepatide': 'tirzepatide',
   'glp1-semaglutide': 'semaglutide',
   'glp1-retatrutide': null, // Not supported by Asher Med yet
@@ -54,7 +65,7 @@ export const PRODUCT_TO_ASHER_MED_MAP: Record<string, string | null> = {
 
   // Hormonal
   'pt-141': null, // Not supported
-  'melanotan-2': null, // Not supported
+  // melanotan-2 mapped above in intake form section
   'melanotan-1': null, // Not supported
   'gonadorelin': null, // Not supported
   'kisspeptin-10': null, // Not supported
