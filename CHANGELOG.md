@@ -1,3 +1,29 @@
+## [2026-03-11] - Product Images Update & Intake Form Medication Mapping Fix
+
+### Summary
+Replaced 8 product vial images with new branded CULTR photos across join page, intake form, and shop. Fixed critical intake form bug where 8 of 10 medications silently failed Asher Med submission due to mismatched mapping IDs.
+
+### Product Images
+- Replaced 8 vial photos in `public/images/products/`: BPC157/TB500, GHK-CU, Melanotan 2, NAD+, Semaglutide, TESA/IPA, Tirzepatide, CJC1295/IPA
+- Added `imageUrl` to 10 shop products in `lib/config/product-catalog.ts`
+- Added product vial thumbnails to intake form MedicationSelector
+
+### Intake Form Medication Mapping (Critical Bug Fix)
+- **Root cause:** MedicationSelector used IDs like `semaglutide` but `PRODUCT_TO_ASHER_MED_MAP` only had catalog IDs like `glp1-semaglutide` — only `ghk-cu` and `nad-plus` actually mapped
+- Added all 10 MedicationSelector IDs to `lib/config/product-to-asher-mapping.ts`
+- Added 4 new MEDICATION_OPTIONS (R3TA, TESA/IPA, CJC1295/IPA, Melanotan 2) using Asher Med `'Other'` type in `lib/config/asher-med.ts`
+- Fixed `ReviewSummary.tsx` to use `selectedMedications` (plural array) instead of `selectedMedication` (singular)
+- Fixed GLP-1 detection in `IntakeFormClient.tsx` to include R3TA
+
+### Modified (7 files)
+- `lib/config/product-to-asher-mapping.ts`, `lib/config/asher-med.ts`
+- `lib/config/product-catalog.ts`
+- `components/intake/MedicationSelector.tsx`, `components/intake/ReviewSummary.tsx`
+- `app/intake/IntakeFormClient.tsx`
+- `app/join/JoinLandingClient.tsx`
+
+---
+
 ## [2026-03-11] - Creator Portal Production-Ready: Remove Fake Data, Optimize UX, Fix Coupon Codes
 
 ### Summary
