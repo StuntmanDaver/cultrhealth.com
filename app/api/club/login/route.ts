@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     try {
       const result = await sql`
-        SELECT id, name, email, phone, social_handle, address_street, address_city, address_state, address_zip, signup_type
+        SELECT *
         FROM club_members
         WHERE LOWER(email) = LOWER(${normalizedEmail})
         LIMIT 1
