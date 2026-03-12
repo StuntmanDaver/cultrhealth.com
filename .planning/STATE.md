@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-11T19:16:15Z"
-last_activity: 2026-03-11 -- Completed Plan 02-01 (portal orders data layer)
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-12T02:22:00Z"
+last_activity: 2026-03-11 -- Completed Plan 02-02 (dashboard client UI)
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 4
-  percent: 44
+  completed_plans: 5
+  percent: 56
 ---
 
 # Project State
@@ -25,29 +25,29 @@ See: .planning/PROJECT.md (updated 2026-03-10)
 
 ## Current Position
 
-Phase: 2 of 4 (Dashboard & Order Tracking)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-03-11 - Completed Plan 02-01 (portal orders data layer)
+Phase: 2 of 4 (Dashboard & Order Tracking) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-03-11 -- Completed Plan 02-02 (dashboard client UI)
 
-Progress: [████░░░░░░] 44%
+Progress: [██████░░░░] 56%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 7 min
-- Total execution time: 0.47 hours
+- Total execution time: 0.55 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
-| 2 - Dashboard & Order Tracking | 1/2 | 5 min | 5 min |
+| 2 - Dashboard & Order Tracking | 2/2 | 13 min | 6.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4 min), 01-02 (7 min), 01-03 (12 min), 02-01 (5 min)
+- Last 5 plans: 01-02 (7 min), 01-03 (12 min), 02-01 (5 min), 02-02 (8 min)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - [02-01]: Best-effort medication name enrichment from local asher_orders table with JSON parse fallback chain.
 - [02-01]: Ownership verification returns 403 (not 404) for another patient's order to distinguish from not-found.
 - [02-01]: Case C users (no asherPatientId) get empty orders array with 200 (not error) since it's a valid state.
+- [02-02]: Hero card selects most recent active order via isActiveStatus(), falls back to orders[0] if no active order exists.
+- [02-02]: Slide-over panel fetches fresh data on open and merges it back into local state on close to prevent stale status.
+- [02-02]: Body scroll locked when slide-over is open via document.body.style.overflow.
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-11T19:16:15Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-dashboard-order-tracking/02-02-PLAN.md
+Last session: 2026-03-12T02:22:00Z
+Stopped at: Completed 02-02-PLAN.md (Phase 2 complete)
+Resume file: .planning/phases/03-profile-documents/03-01-PLAN.md

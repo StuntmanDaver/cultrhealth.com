@@ -23,10 +23,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Order Status Tracking
 
 - [x] **ORDR-01**: Member can view list of orders with live status from Asher Med
-- [ ] **ORDR-02**: Dashboard shows status-first layout with prominent hero card for active order
+- [x] **ORDR-02**: Dashboard shows status-first layout with prominent hero card for active order
 - [x] **ORDR-03**: Member can view order details (medication, status, dates, doctor assignment)
 - [x] **ORDR-04**: Order statuses display plain-language explanations
-- [ ] **ORDR-05**: New members with no orders see empty state with CTA to start intake
+- [x] **ORDR-05**: New members with no orders see empty state with CTA to start intake
 
 ### Patient Profile
 
@@ -113,10 +113,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-09 | Phase 1 | Complete |
 | AUTH-10 | Phase 1 | Complete |
 | ORDR-01 | Phase 2 | Complete |
-| ORDR-02 | Phase 2 | Pending |
+| ORDR-02 | Phase 2 | Complete |
 | ORDR-03 | Phase 2 | Complete |
 | ORDR-04 | Phase 2 | Complete |
-| ORDR-05 | Phase 2 | Pending |
+| ORDR-05 | Phase 2 | Complete |
 | PROF-01 | Phase 3 | Pending |
 | PROF-02 | Phase 3 | Pending |
 | PROF-03 | Phase 3 | Pending |
