@@ -533,15 +533,14 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
       {therapy.featured ? (
         <>
           {/* Image container — full-width on mobile, fixed square on desktop */}
-          <div className="w-full flex items-center justify-center py-10 md:py-0 md:w-40 md:h-40 md:flex-shrink-0 relative rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark">
+          <div className="w-full aspect-square md:aspect-auto md:w-44 md:h-44 md:flex-shrink-0 relative rounded-lg overflow-hidden">
             {showImage && (
               <Image
                 src={therapy.image}
                 alt={therapy.name}
-                width={220}
-                height={220}
-                className="object-contain"
-                sizes="(max-width: 768px) 220px, 160px"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100%, 176px"
                 loading="lazy"
                 quality={85}
                 unoptimized
