@@ -17,6 +17,7 @@ import {
   Check,
   Clock,
   RefreshCw,
+  AlertCircle,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -28,6 +29,10 @@ export default function DashboardClient() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [detailOrder, setDetailOrder] = useState<PortalOrder | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+
+  // Renewal prompt state
+  const [supplyData, setSupplyData] = useState<{ daysRemaining: number; isLow: boolean } | null>(null)
+  const [renewalEligible, setRenewalEligible] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true)
@@ -73,6 +78,25 @@ export default function DashboardClient() {
       }
     }
     load()
+    return () => { cancelled = true }
+  }, [])
+
+  // Fetch renewal/supply data for prompt
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/portal/prefill')
+      .then(async (res) => {
+        if (cancelled || !res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        if (data.success && data.prefill) {
+          setSupplyData(data.prefill.supply)
+          setRenewalEligible(data.prefill.renewalEligible)
+        }
+      })
+      .catch(() => {
+        // Fail silently -- renewal prompt is a nice-to-have
+      })
     return () => { cancelled = true }
   }, [])
 
@@ -202,7 +226,7 @@ export default function DashboardClient() {
           <p className="text-brand-primary/60 mb-6">
             Start your journey by completing your medical intake.
           </p>
-          <Link href="/intake">
+          <Link href="/portal/intake">
             <Button variant="primary" size="lg">
               Start Intake
             </Button>
@@ -257,6 +281,32 @@ export default function DashboardClient() {
         </div>
       )}
 
+      {/* Renewal Prompt */}
+      {!isLoading && renewalEligible && supplyData?.isLow && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-medium text-amber-900">
+                {supplyData.daysRemaining <= 0
+                  ? 'Your medication supply may have run out'
+                  : `${supplyData.daysRemaining} day${supplyData.daysRemaining === 1 ? '' : 's'} of medication remaining`}
+              </p>
+              <p className="text-sm text-amber-700 mt-1">
+                Start your renewal now to avoid a gap in treatment.
+              </p>
+              <Link
+                href="/portal/renewal"
+                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-amber-600 text-white rounded-full text-sm font-medium hover:bg-amber-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Start Renewal
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Order List */}
       {!isLoading && !error && listOrders.length > 0 && (
         <div className="space-y-3 mb-6">
@@ -299,7 +349,7 @@ export default function DashboardClient() {
         </h3>
         <div className="space-y-3">
           <Link
-            href="/intake"
+            href="/portal/intake"
             className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
           >
             <FileText className="w-5 h-5 text-brand-primary/40" />
@@ -309,6 +359,20 @@ export default function DashboardClient() {
               </span>
               <span className="text-xs text-brand-primary/40">
                 Complete your medical questionnaire
+              </span>
+            </div>
+          </Link>
+          <Link
+            href="/portal/renewal"
+            className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
+          >
+            <RefreshCw className="w-5 h-5 text-brand-primary/40" />
+            <div>
+              <span className="font-medium text-brand-primary block">
+                Renew Prescription
+              </span>
+              <span className="text-xs text-brand-primary/40">
+                Renew with your info pre-filled
               </span>
             </div>
           </Link>

@@ -52,11 +52,25 @@ const mockOrders = [
   },
 ]
 
+const prefillResponse = {
+  ok: true,
+  json: async () => ({ success: true, prefill: { supply: null, renewalEligible: false } }),
+}
+
+function mockFetchForOrders(ordersResponse: any) {
+  global.fetch = vi.fn((url: string) => {
+    if (typeof url === 'string' && url.includes('/api/portal/prefill')) {
+      return Promise.resolve(prefillResponse)
+    }
+    return Promise.resolve(ordersResponse)
+  }) as any
+}
+
 let DashboardClient: any
 
 beforeEach(async () => {
   vi.resetModules()
-  global.fetch = vi.fn()
+  global.fetch = vi.fn(() => Promise.resolve(prefillResponse)) as any
   // Dynamic import to pick up fresh mocks
   const mod = await import('@/app/portal/dashboard/DashboardClient')
   DashboardClient = mod.default
@@ -68,7 +82,7 @@ afterEach(() => {
 
 describe('PortalDashboard', () => {
   it('renders hero card when orders exist', async () => {
-    ;(global.fetch as any).mockResolvedValueOnce({
+    mockFetchForOrders({
       ok: true,
       json: async () => ({ success: true, orders: mockOrders }),
     })
@@ -83,7 +97,7 @@ describe('PortalDashboard', () => {
   })
 
   it('renders empty state when no orders', async () => {
-    ;(global.fetch as any).mockResolvedValueOnce({
+    mockFetchForOrders({
       ok: true,
       json: async () => ({ success: true, orders: [] }),
     })
@@ -97,7 +111,7 @@ describe('PortalDashboard', () => {
   })
 
   it('renders quick links in all states', async () => {
-    ;(global.fetch as any).mockResolvedValueOnce({
+    mockFetchForOrders({
       ok: true,
       json: async () => ({ success: true, orders: [] }),
     })
@@ -112,7 +126,7 @@ describe('PortalDashboard', () => {
   })
 
   it('renders quick links when orders exist', async () => {
-    ;(global.fetch as any).mockResolvedValueOnce({
+    mockFetchForOrders({
       ok: true,
       json: async () => ({ success: true, orders: mockOrders }),
     })
@@ -127,8 +141,13 @@ describe('PortalDashboard', () => {
   })
 
   it('renders loading skeletons initially', () => {
-    // Never resolve fetch
-    ;(global.fetch as any).mockReturnValue(new Promise(() => {}))
+    // Never resolve fetch for orders, prefill resolves normally
+    global.fetch = vi.fn((url: string) => {
+      if (typeof url === 'string' && url.includes('/api/portal/prefill')) {
+        return Promise.resolve(prefillResponse)
+      }
+      return new Promise(() => {}) // never resolve orders
+    }) as any
 
     const { container } = render(<DashboardClient />)
 
@@ -137,7 +156,7 @@ describe('PortalDashboard', () => {
   })
 
   it('renders error state when fetch fails', async () => {
-    ;(global.fetch as any).mockResolvedValueOnce({
+    mockFetchForOrders({
       ok: false,
       status: 500,
       json: async () => ({ success: false, error: 'Server error' }),
