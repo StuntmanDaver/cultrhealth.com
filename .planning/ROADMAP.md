@@ -74,11 +74,11 @@ Plans:
   1. Member can launch the intake form from the dashboard and see fields pre-filled with their existing Asher Med patient data
   2. Member can launch the renewal form from the dashboard and see it pre-filled from their last order and patient data
   3. Member whose medication supply is running low sees a proactive renewal prompt on the dashboard
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- Prefill data layer: mapping utilities, supply estimation, and prefill API route with tests
+- [ ] 04-02-PLAN.md -- Portal intake/renewal wrapper pages, IntakeFormProvider/RenewalFormClient enhancements, dashboard renewal prompt
 
 ## Progress
 
