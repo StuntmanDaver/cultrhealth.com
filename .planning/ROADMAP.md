@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Phone OTP Authentication** - Twilio-based phone login with session management and patient identity linking
 - [x] **Phase 2: Dashboard & Order Tracking** - Status-first dashboard with live order data from Asher Med
 - [x] **Phase 3: Profile & Documents** - Patient profile view/edit and document viewer/uploader
-- [ ] **Phase 4: Forms & Renewals** - Inline intake and renewal flows with pre-fill and proactive prompts
+- [x] **Phase 4: Forms & Renewals** - Inline intake and renewal flows with pre-fill and proactive prompts (completed 2026-03-14)
 
 ## Phase Details
 
@@ -90,4 +90,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
 | 2. Dashboard & Order Tracking | 2/2 | Complete | 2026-03-11 |
 | 3. Profile & Documents | 2/2 | Complete | 2026-03-14 |
-| 4. Forms & Renewals | 1/2 | In progress | - |
+| 4. Forms & Renewals | 2/2 | Complete   | 2026-03-14 |

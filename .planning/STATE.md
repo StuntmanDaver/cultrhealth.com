@@ -10,8 +10,8 @@ progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 9
-  completed_plans: 8
-  percent: 89
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Members can log in and immediately see the status of their treatment -- orders, profile, documents -- without calling support or checking email.
-**Current focus:** Phase 4: Forms & Renewals -- Plan 01 complete, Plan 02 next
+**Current focus:** Phase 4: Forms & Renewals -- Plan 02 tasks 1-2 complete, Task 3 human verification pending
 
 ## Current Position
 
 Phase: 4 of 4 (Forms & Renewals)
-Plan: 1 of 2 in current phase -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE (awaiting human verification)
 Status: In Progress
-Last activity: 2026-03-14 -- Completed Plan 04-01 (prefill data layer)
+Last activity: 2026-03-14 -- Completed Plan 04-02 Tasks 1-2 (portal forms + dashboard renewal prompt)
 
-Progress: [█████████░] 89%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -46,10 +46,10 @@ Progress: [█████████░] 89%
 | 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
 | 2 - Dashboard & Order Tracking | 2/2 | 13 min | 6.5 min |
 | 3 - Profile & Documents | 2/2 | 7 min | 3.5 min |
-| 4 - Forms & Renewals | 1/2 | 2 min | 2.0 min |
+| 4 - Forms & Renewals | 2/2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (8 min), 03-01 (3 min), 03-02 (4 min), 04-01 (2 min)
+- Last 5 plans: 02-02 (8 min), 03-01 (3 min), 03-02 (4 min), 04-01 (2 min), 04-02 (3 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -89,6 +89,10 @@ Recent decisions affecting current work:
 - [04-01]: Supply isLow threshold set at 7 days remaining to trigger renewal prompts.
 - [04-01]: Default duration 28 days when medication_packages JSON is null or malformed.
 - [04-01]: Address field mapping stateAbbreviation->state, zipcode->zipCode consistent with Phase 3 profile patterns.
+- [04-02]: IntakeFormProvider initialData only seeds form when localStorage is empty (resuming user keeps progress).
+- [04-02]: Prefill failure is non-blocking -- forms render without pre-fill, user fills manually.
+- [04-02]: Prefill API augmented with patientId for renewal form submission.
+- [04-02]: Renewal prompt uses amber warning style, positioned between hero card and order list.
 
 ### Pending Todos
 
@@ -107,6 +111,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T23:47:49Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-14T23:52:39Z
+Stopped at: 04-02-PLAN.md Task 3 checkpoint (human verification)
 Resume file: .planning/phases/04-forms-renewals/04-02-PLAN.md
