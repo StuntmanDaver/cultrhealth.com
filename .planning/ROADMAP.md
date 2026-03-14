@@ -60,11 +60,11 @@ Plans:
   2. Member can view and edit their shipping address, with changes synced back to Asher Med
   3. Member can view previously uploaded documents (IDs, consent forms, prescriptions) rendered from S3 preview URLs
   4. Member can upload a new document from the portal and see it appear in their document list
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Profile API route (GET/PUT) with tests, profile client page with personal info display and address editing
+- [ ] 03-02-PLAN.md -- Documents DB migration, API route (GET/POST) with tests, documents client page with list and upload UI
 
 ### Phase 4: Forms & Renewals
 **Goal**: Members can start or continue intake and renewal flows directly from their dashboard, with forms pre-filled from their existing data
