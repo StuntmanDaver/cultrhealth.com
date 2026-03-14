@@ -30,10 +30,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Patient Profile
 
-- [ ] **PROF-01**: Member can view personal info (name, DOB, phone, email, gender)
-- [ ] **PROF-02**: Member can view shipping address on file
-- [ ] **PROF-03**: Member can edit shipping address (synced back to Asher Med)
-- [ ] **PROF-04**: Member can view physical measurements (height, weight, BMI)
+- [x] **PROF-01**: Member can view personal info (name, DOB, phone, email, gender)
+- [x] **PROF-02**: Member can view shipping address on file
+- [x] **PROF-03**: Member can edit shipping address (synced back to Asher Med)
+- [x] **PROF-04**: Member can view physical measurements (height, weight, BMI)
 
 ### Document Management
 
@@ -117,10 +117,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ORDR-03 | Phase 2 | Complete |
 | ORDR-04 | Phase 2 | Complete |
 | ORDR-05 | Phase 2 | Complete |
-| PROF-01 | Phase 3 | Pending |
-| PROF-02 | Phase 3 | Pending |
-| PROF-03 | Phase 3 | Pending |
-| PROF-04 | Phase 3 | Pending |
+| PROF-01 | Phase 3 | Complete |
+| PROF-02 | Phase 3 | Complete |
+| PROF-03 | Phase 3 | Complete |
+| PROF-04 | Phase 3 | Complete |
 | DOCS-01 | Phase 3 | Pending |
 | DOCS-02 | Phase 3 | Pending |
 | FORM-01 | Phase 4 | Pending |

@@ -63,8 +63,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Profile API route (GET/PUT) with tests, profile client page with personal info display and address editing
-- [ ] 03-02-PLAN.md -- Documents DB migration, API route (GET/POST) with tests, documents client page with list and upload UI
+- [x] 03-01-PLAN.md -- Profile API route (GET/PUT) with tests, profile client page with personal info display and address editing
+- [x] 03-02-PLAN.md -- Documents DB migration, API route (GET/POST) with tests, documents client page with list and upload UI
 
 ### Phase 4: Forms & Renewals
 **Goal**: Members can start or continue intake and renewal flows directly from their dashboard, with forms pre-filled from their existing data
@@ -89,5 +89,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
 | 2. Dashboard & Order Tracking | 2/2 | Complete | 2026-03-11 |
-| 3. Profile & Documents | 0/2 | Not started | - |
+| 3. Profile & Documents | 2/2 | Complete | 2026-03-14 |
 | 4. Forms & Renewals | 0/2 | Not started | - |

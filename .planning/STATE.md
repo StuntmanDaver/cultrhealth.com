@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02-02-PLAN.md (Phase 2 complete)
-last_updated: "2026-03-12T02:25:27.055Z"
-last_activity: 2026-03-11 -- Completed Plan 02-02 (dashboard client UI)
+status: in_progress
+stopped_at: Completed 03-02-PLAN.md (Phase 3 complete)
+last_updated: "2026-03-14T22:25:21Z"
+last_activity: 2026-03-14 -- Completed Plan 03-02 (documents API and UI)
 progress:
   total_phases: 4
-  completed_phases: 2
-  total_plans: 5
-  completed_plans: 5
-  percent: 56
+  completed_phases: 3
+  total_plans: 7
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Members can log in and immediately see the status of their treatment -- orders, profile, documents -- without calling support or checking email.
-**Current focus:** Phase 2: Dashboard & Order Tracking
+**Current focus:** Phase 3: Profile & Documents -- COMPLETE
 
 ## Current Position
 
-Phase: 2 of 4 (Dashboard & Order Tracking) -- COMPLETE
-Plan: 2 of 2 in current phase
+Phase: 3 of 4 (Profile & Documents) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
 Status: Phase Complete
-Last activity: 2026-03-11 -- Completed Plan 02-02 (dashboard client UI)
+Last activity: 2026-03-14 -- Completed Plan 03-02 (documents API and UI)
 
-Progress: [██████░░░░] 56%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 7 min
-- Total execution time: 0.55 hours
+- Total plans completed: 7
+- Average duration: 5.9 min
+- Total execution time: 0.68 hours
 
 **By Phase:**
 
@@ -45,10 +45,11 @@ Progress: [██████░░░░] 56%
 |-------|-------|-------|----------|
 | 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
 | 2 - Dashboard & Order Tracking | 2/2 | 13 min | 6.5 min |
+| 3 - Profile & Documents | 2/2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (7 min), 01-03 (12 min), 02-01 (5 min), 02-02 (8 min)
-- Trend: Stable
+- Last 5 plans: 02-01 (5 min), 02-02 (8 min), 03-01 (3 min), 03-02 (4 min)
+- Trend: Accelerating
 
 *Updated after each plan completion*
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - [02-02]: Hero card selects most recent active order via isActiveStatus(), falls back to orders[0] if no active order exists.
 - [02-02]: Slide-over panel fetches fresh data on open and merges it back into local state on close to prevent stale status.
 - [02-02]: Body scroll locked when slide-over is open via document.body.style.overflow.
+- [03-01]: Address field names mapped between portal convention (state, zipCode) and Asher Med API convention (stateAbbreviation, zipcode).
+- [03-01]: ZIP code validated as exactly 5 digits via regex (US-only service).
+- [03-01]: US_STATES imported from lib/config/asher-med.ts for both API validation and UI dropdown (single source of truth).
 
 ### Pending Todos
 
@@ -94,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T02:22:00Z
-Stopped at: Completed 02-02-PLAN.md (Phase 2 complete)
-Resume file: .planning/phases/03-profile-documents/03-01-PLAN.md
+Last session: 2026-03-14T22:25:00Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: .planning/phases/03-profile-documents/03-02-PLAN.md
