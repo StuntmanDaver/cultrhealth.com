@@ -77,7 +77,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- Prefill data layer: mapping utilities, supply estimation, and prefill API route with tests
+- [x] 04-01-PLAN.md -- Prefill data layer: mapping utilities, supply estimation, and prefill API route with tests
 - [ ] 04-02-PLAN.md -- Portal intake/renewal wrapper pages, IntakeFormProvider/RenewalFormClient enhancements, dashboard renewal prompt
 
 ## Progress
@@ -90,4 +90,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
 | 2. Dashboard & Order Tracking | 2/2 | Complete | 2026-03-11 |
 | 3. Profile & Documents | 2/2 | Complete | 2026-03-14 |
-| 4. Forms & Renewals | 0/2 | Not started | - |
+| 4. Forms & Renewals | 1/2 | In progress | - |

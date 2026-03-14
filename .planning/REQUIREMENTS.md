@@ -42,11 +42,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Forms & Renewals
 
-- [ ] **FORM-01**: Intake form pre-fills from existing Asher Med patient data
-- [ ] **FORM-02**: Renewal form pre-fills from last order and patient data
-- [ ] **FORM-03**: Member can launch intake form inline from dashboard
+- [x] **FORM-01**: Intake form pre-fills from existing Asher Med patient data
+- [x] **FORM-02**: Renewal form pre-fills from last order and patient data
+- [x] **FORM-03**: Member can launch intake form inline from dashboard
 - [ ] **FORM-04**: Member can launch renewal form inline from dashboard
-- [ ] **FORM-05**: Dashboard shows proactive renewal prompt when medication supply is running low
+- [x] **FORM-05**: Dashboard shows proactive renewal prompt when medication supply is running low
 
 ## v2 Requirements
 
@@ -123,11 +123,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROF-04 | Phase 3 | Complete |
 | DOCS-01 | Phase 3 | Complete |
 | DOCS-02 | Phase 3 | Complete |
-| FORM-01 | Phase 4 | Pending |
-| FORM-02 | Phase 4 | Pending |
-| FORM-03 | Phase 4 | Pending |
+| FORM-01 | Phase 4 | Complete |
+| FORM-02 | Phase 4 | Complete |
+| FORM-03 | Phase 4 | Complete |
 | FORM-04 | Phase 4 | Pending |
-| FORM-05 | Phase 4 | Pending |
+| FORM-05 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total

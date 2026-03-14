@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 03-02-PLAN.md (Phase 3 complete)
-last_updated: "2026-03-14T22:31:50.789Z"
-last_activity: 2026-03-14 -- Completed Plan 03-02 (documents API and UI)
+status: in-progress
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-14T23:50:05Z"
+last_activity: 2026-03-14 -- Completed Plan 04-01 (prefill data layer)
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 7
-  completed_plans: 7
-  percent: 88
+  total_plans: 9
+  completed_plans: 8
+  percent: 89
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-10)
 
 **Core value:** Members can log in and immediately see the status of their treatment -- orders, profile, documents -- without calling support or checking email.
-**Current focus:** Phase 3: Profile & Documents -- COMPLETE
+**Current focus:** Phase 4: Forms & Renewals -- Plan 01 complete, Plan 02 next
 
 ## Current Position
 
-Phase: 3 of 4 (Profile & Documents) -- COMPLETE
-Plan: 2 of 2 in current phase -- COMPLETE
-Status: Phase Complete
-Last activity: 2026-03-14 -- Completed Plan 03-02 (documents API and UI)
+Phase: 4 of 4 (Forms & Renewals)
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: In Progress
+Last activity: 2026-03-14 -- Completed Plan 04-01 (prefill data layer)
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 5.9 min
-- Total execution time: 0.68 hours
+- Total plans completed: 8
+- Average duration: 5.4 min
+- Total execution time: 0.72 hours
 
 **By Phase:**
 
@@ -46,9 +46,10 @@ Progress: [█████████░] 88%
 | 1 - Phone OTP Auth | 3/3 | 23 min | 7.7 min |
 | 2 - Dashboard & Order Tracking | 2/2 | 13 min | 6.5 min |
 | 3 - Profile & Documents | 2/2 | 7 min | 3.5 min |
+| 4 - Forms & Renewals | 1/2 | 2 min | 2.0 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (5 min), 02-02 (8 min), 03-01 (3 min), 03-02 (4 min)
+- Last 5 plans: 02-02 (8 min), 03-01 (3 min), 03-02 (4 min), 04-01 (2 min)
 - Trend: Accelerating
 
 *Updated after each plan completion*
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [03-02]: Preview URLs generated fresh on each page load, not cached, to avoid S3 presigned URL expiration.
 - [03-02]: Portal upload purposes use portal_ prefix to distinguish from intake-created documents.
 - [03-02]: Mock mode records in DB even for fake uploads so document list works on staging.
+- [04-01]: Height conversion uses Math.floor(height/12) for feet and height%12 for inches, matching AsherPatient total-inches format.
+- [04-01]: Supply isLow threshold set at 7 days remaining to trigger renewal prompts.
+- [04-01]: Default duration 28 days when medication_packages JSON is null or malformed.
+- [04-01]: Address field mapping stateAbbreviation->state, zipcode->zipCode consistent with Phase 3 profile patterns.
 
 ### Pending Todos
 
@@ -102,6 +107,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T22:25:21Z
-Stopped at: Completed 03-02-PLAN.md (Phase 3 complete)
-Resume file: .planning/phases/04-forms-renewals/04-01-PLAN.md
+Last session: 2026-03-14T23:47:49Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: .planning/phases/04-forms-renewals/04-02-PLAN.md
