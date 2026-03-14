@@ -76,6 +76,7 @@ export async function GET(request: NextRequest) {
         renewal,
         supply,
         renewalEligible: patient.status === 'ACTIVE',
+        patientId: auth.asherPatientId,
       },
     })
   } catch (error) {

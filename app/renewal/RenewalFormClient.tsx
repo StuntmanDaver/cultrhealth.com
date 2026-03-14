@@ -38,26 +38,32 @@ const RENEWAL_STEPS: { id: RenewalStep; title: string }[] = [
   { id: 'review', title: 'Review' },
 ];
 
-export function RenewalFormClient() {
+interface RenewalFormProps {
+  portalMode?: boolean;
+  initialPatient?: PatientInfo;
+  initialMedication?: string;
+}
+
+export function RenewalFormClient({ portalMode, initialPatient, initialMedication }: RenewalFormProps = {}) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(portalMode && initialPatient ? 1 : 0);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [checkError, setCheckError] = useState<string | null>(null);
-  const [patient, setPatient] = useState<PatientInfo | null>(null);
+  const [patient, setPatient] = useState<PatientInfo | null>(initialPatient || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Renewal form data
   const [formData, setFormData] = useState({
-    selectedMedication: '',
+    selectedMedication: initialMedication || '',
     weightLbs: '',
     shippingAddress: {
-      address1: '',
-      address2: '',
-      city: '',
-      state: '',
-      zipCode: '',
+      address1: initialPatient?.shippingAddress?.address1 || '',
+      address2: initialPatient?.shippingAddress?.address2 || '',
+      city: initialPatient?.shippingAddress?.city || '',
+      state: initialPatient?.shippingAddress?.state || '',
+      zipCode: initialPatient?.shippingAddress?.zipCode || '',
     },
     wellnessQuestionnaire: {} as Record<string, string>,
     telehealthSignatureKey: '',

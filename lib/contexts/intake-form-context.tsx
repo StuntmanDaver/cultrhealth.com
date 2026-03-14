@@ -50,12 +50,12 @@ const IntakeFormContext = createContext<IntakeFormContextValue | null>(null);
 
 const STORAGE_KEY = 'cultr-intake-simple';
 
-export function IntakeFormProvider({ children }: { children: ReactNode }) {
+export function IntakeFormProvider({ children, initialData }: { children: ReactNode; initialData?: Partial<SimpleFormData> }) {
   const [formData, setFormData] = useState<SimpleFormData>({});
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount; fall back to initialData if localStorage is empty
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -64,11 +64,14 @@ export function IntakeFormProvider({ children }: { children: ReactNode }) {
         setFormData(parsed.formData || {});
         setCurrentStep(parsed.currentStep || 0);
       } catch {
-        // Ignore parse errors
+        // Ignore parse errors -- use initialData if available
+        if (initialData) setFormData(initialData as SimpleFormData);
       }
+    } else if (initialData) {
+      setFormData(initialData as SimpleFormData);
     }
     setIsLoaded(true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Save to localStorage when data changes
   useEffect(() => {
