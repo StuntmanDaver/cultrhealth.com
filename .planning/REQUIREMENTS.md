@@ -37,8 +37,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Document Management
 
-- [ ] **DOCS-01**: Member can view uploaded documents (IDs, consent, prescriptions) via S3 preview URLs
-- [ ] **DOCS-02**: Member can upload new documents from the portal
+- [x] **DOCS-01**: Member can view uploaded documents (IDs, consent, prescriptions) via S3 preview URLs
+- [x] **DOCS-02**: Member can upload new documents from the portal
 
 ### Forms & Renewals
 
@@ -121,8 +121,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROF-02 | Phase 3 | Complete |
 | PROF-03 | Phase 3 | Complete |
 | PROF-04 | Phase 3 | Complete |
-| DOCS-01 | Phase 3 | Pending |
-| DOCS-02 | Phase 3 | Pending |
+| DOCS-01 | Phase 3 | Complete |
+| DOCS-02 | Phase 3 | Complete |
 | FORM-01 | Phase 4 | Pending |
 | FORM-02 | Phase 4 | Pending |
 | FORM-03 | Phase 4 | Pending |
@@ -136,4 +136,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-10*
-*Last updated: 2026-03-11 after Phase 1 completion*
+*Last updated: 2026-03-14 after Phase 3 completion*

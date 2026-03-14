@@ -80,6 +80,10 @@ Recent decisions affecting current work:
 - [03-01]: Address field names mapped between portal convention (state, zipCode) and Asher Med API convention (stateAbbreviation, zipcode).
 - [03-01]: ZIP code validated as exactly 5 digits via regex (US-only service).
 - [03-01]: US_STATES imported from lib/config/asher-med.ts for both API validation and UI dropdown (single source of truth).
+- [03-02]: Documents GET returns 401 (not empty array) when asherPatientId is null, since documents require a patient record to query.
+- [03-02]: Preview URLs generated fresh on each page load, not cached, to avoid S3 presigned URL expiration.
+- [03-02]: Portal upload purposes use portal_ prefix to distinguish from intake-created documents.
+- [03-02]: Mock mode records in DB even for fake uploads so document list works on staging.
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T22:25:00Z
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-profile-documents/03-02-PLAN.md
+Last session: 2026-03-14T22:25:21Z
+Stopped at: Completed 03-02-PLAN.md (Phase 3 complete)
+Resume file: .planning/phases/04-forms-renewals/04-01-PLAN.md
