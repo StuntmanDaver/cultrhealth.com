@@ -35,12 +35,6 @@ export const WavyBackground = ({
   waveOpacity?: number;
   [key: string]: unknown;
 }) => {
-  const [isMobile, setIsMobile] = useState(true); // default true = no canvas until client confirms desktop
-
-  useEffect(() => {
-    setIsMobile(window.matchMedia('(max-width: 767px)').matches);
-  }, []);
-
   const noise = createNoise3D();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationIdRef = useRef<number>(0);
@@ -92,7 +86,7 @@ export const WavyBackground = ({
       window.removeEventListener("resize", onResize);
       cancelAnimationFrame(animationIdRef.current);
     };
-  }, [blur, speed, waveOpacity, backgroundFill, isMobile]);
+  }, [blur, speed, waveOpacity, backgroundFill]);
 
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
@@ -102,16 +96,6 @@ export const WavyBackground = ({
         !navigator.userAgent.includes("Chrome")
     );
   }, []);
-
-  if (isMobile) {
-    return (
-      <div className={cn("relative flex flex-col items-center justify-center bg-brand-cream", containerClassName)}>
-        <div className={cn("relative z-10", className)} {...props}>
-          {children}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className={cn("relative flex flex-col items-center justify-center overflow-hidden", containerClassName)}>
