@@ -1,3 +1,49 @@
+## [2026-03-15] - Site-Wide Visual Consistency: WavyBackground + TrustMarquee
+
+### Summary
+Added WavyBackground canvas animation and TrustMarquee trust logo band to all marketing pages for visual consistency. Removed sticky category filter on science page. Enabled WavyBackground canvas on mobile (previously disabled).
+
+### Changes
+- **`app/science/page.tsx`** — Removed `sticky top-16 z-40` from category filter. Added WavyBackground "Rebrand yourself" CTA break between articles and newsletter. Added TrustMarquee after CTA break.
+- **`app/faq/page.tsx`** — Wrapped FAQ accordion section in WavyBackground. Added TrustMarquee between FAQ and "Still have questions".
+- **`app/how-it-works/page.tsx`** — Wrapped "Four steps to transformation" section in WavyBackground. Added TrustMarquee between "What's Included" and FAQ.
+- **`app/pricing/page.tsx`** — Wrapped comparison table section in WavyBackground.
+- **`components/ui/WavyBackground.tsx`** — Removed `isMobile` guard entirely; canvas animation now runs on all devices (mobile + desktop). Simplified component, removed mobile static fallback.
+
+### Result
+TrustMarquee (dark forest band, scrolling logos) now appears on `/science`, `/faq`, `/how-it-works` in addition to existing `/` and `/pricing`. WavyBackground animated waves visible on all screen sizes across all five pages.
+
+---
+
+## [2026-03-15] - SiPhox Health Integration: Phase 1 Foundation
+
+### Summary
+Built the complete server-side foundation for SiPhox Health blood test kit integration. API client library with Zod-validated responses, database migration with 3 tables, data access layer, and biomarker mapping config. Phase 2 context captured for checkout integration.
+
+### New Files
+- `lib/siphox/client.ts` — Typed API client with Bearer auth, generic request wrapper, Zod validation on all responses
+- `lib/siphox/schemas.ts` — 6 Zod schemas for SiPhox API responses (customers, orders, kits, reports, biomarkers, credits) with `.passthrough()` safety
+- `lib/siphox/types.ts` — TypeScript types inferred from Zod schemas via `z.infer`
+- `lib/siphox/errors.ts` — `SiphoxApiError` class for structured error handling
+- `lib/siphox/db.ts` — 9 database functions for CRUD on siphox_customers, siphox_kit_orders, siphox_reports tables
+- `lib/siphox/index.ts` — Barrel export for all SiPhox modules
+- `lib/config/siphox-biomarkers.ts` — 53 biomarker mappings across 7 categories (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended)
+- `migrations/020_siphox_tables.sql` — 3 tables (siphox_customers, siphox_kit_orders, siphox_reports) with 6 indexes and foreign keys
+
+### Modified Files
+- `lib/resend.ts` — Added `sendLowCreditAlert(balance, threshold)` for admin notification when SiPhox credits < 5
+- `tests/setup.ts` — Added SIPHOX_API_KEY and SIPHOX_API_URL test env vars
+
+### Tests
+- 81 new tests (14 client, 23 schema, 14 biomarker, 30 DB)
+- 409 total tests, zero regressions
+
+### Planning Artifacts
+- `.planning/phases/01-foundation/` — CONTEXT, RESEARCH, VALIDATION, 2 PLANs, 2 SUMMARYs, VERIFICATION (all passed)
+- `.planning/phases/02-checkout-integration/02-CONTEXT.md` — Phase 2 decisions captured (address resolution, retry logic, refund handling, cron design)
+
+---
+
 ## [2026-03-15] - UI Improvements: Testimonials, Marquee, Trust Badges, TextShimmer
 
 ### Summary
