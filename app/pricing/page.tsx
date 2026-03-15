@@ -22,8 +22,6 @@ import {
 import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: 'Pricing — CULTR Health',
   description: 'Choose your CULTR Health membership. Plans from $199-$1,099/month with comprehensive labs, provider access, and peptide protocols.',

@@ -8,8 +8,6 @@ import Button from '@/components/ui/Button';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { brandify } from '@/lib/utils';
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: 'FAQ — CULTR Health',
   description: 'Find answers to frequently asked questions about CULTR Health memberships, telehealth services, and protocols.',

@@ -29,23 +29,23 @@ const nextConfig = {
   // Headers for caching
   async headers() {
     return [
-      // Marketing pages: 1hr edge cache + 24hr stale-while-revalidate
+      // Marketing pages: 5min edge cache, 1min stale window
       {
-        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz|therapies)',
+        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz|therapies|tools)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400',
+            value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=60',
           },
         ],
       },
-      // Homepage: 5min edge cache (changes more often)
+      // Homepage: 5min edge cache, 1min stale window
       {
         source: '/',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600',
+            value: 'public, max-age=0, s-maxage=300, stale-while-revalidate=60',
           },
         ],
       },
@@ -69,16 +69,17 @@ const nextConfig = {
           },
         ],
       },
-      // Static assets (images, fonts) — long cache with immutable
+      // Public images — browser revalidates, CDN caches (purged on deploy)
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: 'public, max-age=0, s-maxage=604800, must-revalidate',
           },
         ],
       },
+      // Fonts — long cache (filenames rarely change, content never does)
       {
         source: '/:all*(woff|woff2|ttf|otf)',
         headers: [

@@ -13,8 +13,6 @@ import { ArrowLeft, ArrowRight, Clock, Calendar, User, Tag, AlertCircle, BookOpe
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 
-export const revalidate = 3600;
-
 // Configure DOMPurify for server-side use
 const { window } = new JSDOM('');
 const purify = DOMPurify(window);

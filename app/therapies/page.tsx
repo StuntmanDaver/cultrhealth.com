@@ -7,7 +7,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import { ArrowRight, Shield, Stethoscope } from 'lucide-react';
 
-export const revalidate = 3600;
+
 
 export const metadata: Metadata = {
   title: 'Core Therapies — CULTR Health',

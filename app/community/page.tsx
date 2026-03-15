@@ -10,7 +10,7 @@ const TrustMarquee = dynamic(
   { loading: () => <div className="h-14" /> }
 );
 
-export const revalidate = 3600;
+
 
 export const metadata: Metadata = {
   title: 'Community',

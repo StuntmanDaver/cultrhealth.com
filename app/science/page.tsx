@@ -6,8 +6,6 @@ import TrustMarquee from '@/components/site/TrustMarquee';
 import { getAllBlogPosts, BLOG_CATEGORIES, type BlogPostMeta } from '@/lib/blog-content';
 import { ArrowRight, BookOpen, Clock, Calendar } from 'lucide-react';
 
-export const revalidate = 3600;
-
 export const metadata: Metadata = {
   title: 'Science Blog — CULTR Health',
   description: 'Evidence-based articles on peptides, longevity science, metabolic health, and hormone optimization. Learn the science behind health optimization.',

@@ -46,8 +46,6 @@ const TestimonialsSection = dynamic(() => import('@/components/site/Testimonials
 });
 
 
-export const revalidate = 3600;
-
 const BADGE_ICONS: Record<string, React.ElementType> = {
   Shield, Stethoscope, Building, CreditCard,
 };
