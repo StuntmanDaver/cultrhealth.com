@@ -44,6 +44,11 @@ const TestimonialsSection = dynamic(() => import('@/components/site/Testimonials
   loading: () => <div className="h-[740px] grad-dark animate-pulse" />,
 });
 
+const WavyBackground = dynamic(
+  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
+  { ssr: false, loading: () => <div className="py-16 md:py-20 grad-light" /> }
+);
+
 export const revalidate = 3600;
 
 const BADGE_ICONS: Record<string, React.ElementType> = {
@@ -222,10 +227,8 @@ export default function HomePage() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
-        {/* Radial glow — center mint */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 50% at 50% 50%, rgba(215,243,220,0.3) 0%, transparent 100%)' }} />
-        <div className="max-w-7xl mx-auto relative z-10">
+      <WavyBackground containerClassName="py-16 md:py-20 px-6" waveOpacity={0.35} speed="slow">
+        <div className="max-w-7xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest">
               Three steps to <span className="italic">rebrand</span> yourself.
@@ -275,7 +278,7 @@ export default function HomePage() {
             </Link>
           </ScrollReveal>
         </div>
-      </section>
+      </WavyBackground>
 
 
       {/* ─── Comparison Table ─── */}
