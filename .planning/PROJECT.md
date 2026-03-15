@@ -1,98 +1,103 @@
-# CULTR Health — Asher Med Members Portal Integration
+# SiPhox Health Integration
 
 ## What This Is
 
-A seamless members portal for CULTR Health that connects authenticated patients directly to their Asher Med EHR/EMR data. Members log in with phone + OTP (Twilio), see their live order status, health profile, documents, and can start intake/renewal flows — all through a CULTR-branded experience backed by the Asher Med Partner Portal API. Providers get a lightweight patient lookup view that links out to Asher Med's portal for clinical workflows.
+Integration of SiPhox Health's at-home blood test kit platform into the CULTR Health Members area. Members receive blood test kits, register them in the portal, send samples back, and view comprehensive biomarker results in a dedicated labs dashboard section — powered by real data from SiPhox's API.
 
 ## Core Value
 
-Members can log in and immediately see the status of their treatment — orders, profile, documents — without calling support or checking email. One authenticated view of their complete care journey.
+Members can see their real biomarker data — organized, visual, and actionable — directly in their CULTR Health dashboard, closing the loop between treatment protocols and measurable health outcomes.
 
 ## Requirements
 
 ### Validated
 
-<!-- Existing capabilities already built and working -->
-
-- ✓ Asher Med API client covering all 15 Partner Portal endpoints — `lib/asher-med-api.ts`
-- ✓ Intake form components (12 form steps) — `components/intake/`
-- ✓ Renewal flow — `app/renewal/`
-- ✓ File upload via S3 presigned URLs — integrated with Asher Med upload API
-- ✓ JWT authentication infrastructure — `lib/auth.ts` (sign, verify, middleware)
-- ✓ Database with `asher_patient_id` columns across membership/order tables — `lib/db.ts`
-- ✓ Asher Med config with medication options, intake steps, state validation — `lib/config/asher-med.ts`
-- ✓ Admin dashboard with order management — `app/admin/`
-- ✓ Stripe payment integration — checkout, subscriptions, webhooks
+- ✓ Member authentication via portal OTP (phone-based JWT) — existing
+- ✓ Member dashboard at `/dashboard` — existing
+- ✓ BiologicalAgeCard and BiomarkerTrends components in `components/dashboard/` — existing (placeholder)
+- ✓ Stripe subscription checkout with add-on support — existing
+- ✓ Stripe webhook handler for subscription events — existing
+- ✓ Membership tier configuration (Club, Core, Catalyst+, Concierge) — existing
 
 ### Active
 
-<!-- Current scope: building the authenticated portal experience -->
-
-- [ ] Phone + OTP member authentication via Twilio SMS
-- [ ] Member session management (JWT with phone-verified identity)
-- [ ] Patient identity linking (phone lookup → cache `asher_patient_id` in DB)
-- [ ] Status-first member dashboard (prominent order status card, then secondary sections)
-- [ ] Member profile view (personal info, address, physical measurements from Asher Med)
-- [ ] Member profile editing (update info, synced back to Asher Med via `updatePatient`)
-- [ ] Order history with live status from Asher Med (Pending → Approved → Completed)
-- [ ] Order detail view (medication, status, dates, doctor assignment)
-- [ ] Document viewer (uploaded IDs, consent forms, prescriptions via `getPreviewUrl`)
-- [ ] Document upload from member portal (new files via presigned URL flow)
-- [ ] Inline intake form launch from dashboard (pre-filled from existing patient data)
-- [ ] Inline renewal form launch from dashboard (pre-filled, simplified flow)
-- [ ] Separate provider login page (`/provider`)
-- [ ] Provider patient search/lookup view (lightweight, searches via Asher Med API)
-- [ ] Provider patient detail view (read-only, key info + order summary)
-- [ ] Provider link-out to Asher Med portal for clinical actions
+- [ ] SiPhox API client library with all endpoint coverage
+- [ ] Customer sync between CULTR members and SiPhox customers
+- [ ] Auto-order kit on Catalyst+/Concierge subscription checkout
+- [ ] $135 optional add-on for Core tier at checkout
+- [ ] Kit registration UI in member portal
+- [ ] Biomarker results fetching and caching from SiPhox reports
+- [ ] Labs dashboard section with categorized biomarker display
+- [ ] BiologicalAgeCard powered by real SiPhox data
+- [ ] BiomarkerTrends powered by real SiPhox data
+- [ ] N/A display for biomarkers with no data returned
+- [ ] ~150+ biomarkers organized by category (Metabolic, Nutritional, Heart, Hormonal, Inflammation, Thyroid, plus extended panel)
 
 ### Out of Scope
 
-- Full clinical provider dashboard inside CULTR — providers use Asher Med's own portal for clinical workflows
-- Real-time notifications/push alerts — v2 feature
-- In-app messaging between members and providers — use existing support channels
-- Member-to-member social features — handled by Community page
-- Password-based authentication — using phone OTP instead
-- Multi-factor authentication beyond phone OTP — phone verification is sufficient for HIPAA with TLS
+- Recurring/subscription blood tests — one-time kit per checkout only
+- Club tier access — blood testing not available for free tier
+- In-app sample collection instructions — SiPhox handles this via their kit materials
+- Direct payment to SiPhox — CULTR uses credits-based ordering via API
+- Custom biomarker reference ranges — use SiPhox-provided ranges
 
 ## Context
 
-**Brownfield project.** CULTR Health is a live telehealth platform on staging (staging.cultrhealth.com). The Asher Med API client and intake forms are fully built. The gap is the authenticated member experience — currently login is just a phone lookup with no session, and the dashboard is a stub component.
+**SiPhox Health API:** REST API at `connect.siphoxhealth.com/api/v1/` with Bearer token auth. Covers customers, orders, kits, reports, biomarkers, and credits.
 
-**Asher Med API (15 endpoints):**
-- **Patients:** List, get by ID, get by phone, update patient
-- **Orders:** List, get detail, create new order, create renewal, update approval status
-- **Intake Questions:** Get new intake questions, get renewal questions
-- **File Upload:** Get presigned upload URL, get preview URL
-- **Partners:** Get partner by ID, update partner profile
+**API Endpoints:**
+| Group | Endpoints |
+|---|---|
+| Customers | `POST /customer`, `GET /customers`, `GET /customers/:id`, `POST /customer/add_data`, `GET /customer/add_data/jobs/:id` |
+| Orders | `POST /orders`, `GET /orders`, `GET /orders/:id` |
+| Kits | `GET /kits`, `GET /kits/:kitID/validate`, `POST /kits/:kitID/register` |
+| Reports | `GET /customers/:id/reports/:reportID` |
+| Biomarkers | `GET /biomarkers` |
+| Credits | `GET /credits` |
 
-All endpoints authenticate via `X-API-KEY` header. API is HIPAA-compliant with PHI data handling.
+**Key Schemas:**
+- CreateOrderRequest: `recipient` (first_name*, last_name*, email*, phone, external_id, address*), `kit_types*` [{kitType, quantity}], `purchase_with_attached_payment` (bool), `is_notify_receiver` (bool), `is_test_order` (bool)
+- Address: street1, street2, city, state, zip, country
+- ProductOffering: id*, type (enum: "product"), name*, longDescription*, shortDescription, keywords, imageUrl, productUrl, biomarkers[]
+- Suggestion: _id, text, link, category, settings [{biomarker, value}]
 
-**Current auth system:** JWT-based (`jose` library, HS256). Magic link flow exists for member login but doesn't create persistent patient-linked sessions. Creator portal has separate JWT auth. The new phone OTP flow needs to coexist with both.
+**Tier Integration:**
+- Catalyst+ ($499/mo): Kit included in price (auto-order on checkout)
+- Concierge ($1,099/mo): Kit included in price (auto-order on checkout)
+- Core ($199/mo): Optional $135 add-on at checkout
+- Club ($0/mo): Not eligible
 
-**Key technical notes:**
-- Database already has `asher_patient_id` (number) in memberships, orders, and other tables
-- `getPatientByPhone()` exists in the API client — returns patient or null
-- Existing intake form context (`IntakeFormContext`) manages multi-step form state
-- Staging auth bypass auto-provisions team emails — new OTP flow should respect this
+**Biomarker Categories (Longevity Essentials Program):**
+- Metabolic Health: A1C, Albumin, C-Peptide, eAG, Trig:HDL Ratio, Cortisol
+- Nutritional: 25-(OH) Vitamin D, Ferritin
+- Heart Health: ApoB:ApoA1 Ratio, ApoA1, ApoB, Total Cholesterol, HDL, LDL, LDL-C:ApoB Ratio, LDL-C:HDL-C Ratio, Total Chol:HDL Ratio, Triglycerides, VLDL, VLDL (Calc)
+- Hormonal Health: Cortisol:DHEA-S Ratio, DHEA-S, Estradiol, FSH, LH:FSH Ratio, LH, SHBG, Free Testosterone, Total Testosterone, Testosterone:Cortisol Ratio
+- Inflammation: hsCRP
+- Thyroid Health: TSH
+
+**Extended Panel:** ~150+ additional biomarkers across CBC, CMP, liver function, kidney function, urinalysis, heavy metals, and more. Full list provided by user.
+
+**Existing Dashboard Components:**
+- `components/dashboard/BiologicalAgeCard.tsx` — currently placeholder, will be powered by SiPhox
+- `components/dashboard/BiomarkerTrends.tsx` — currently placeholder, will be powered by SiPhox
 
 ## Constraints
 
-- **SMS Provider**: Twilio — must be HIPAA-eligible BAA option. Environment variables: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`
-- **HIPAA**: No PHI in logs, all API calls over HTTPS/TLS 1.2+, OTP codes must expire (5 min), rate limit OTP requests
-- **Tech Stack**: Next.js 14 App Router, TypeScript, Tailwind CSS — must follow existing patterns (server/client split, `*Client.tsx` naming)
-- **Auth Coexistence**: New phone OTP auth must work alongside existing JWT magic link (members), creator JWT (creators), and admin JWT (admins)
-- **API Proxy**: All Asher Med API calls must go through CULTR backend routes (never expose API key to client)
-- **Design System**: Use existing brand tokens (forest, cream, sage), Fraunces/Inter fonts, Button component variants, rounded-full buttons
+- **Auth:** SiPhox API uses Bearer token authentication — need `SIPHOX_API_KEY` env var
+- **Credits:** Orders use SiPhox credit system — CULTR pre-purchases credits, API deducts on order
+- **HIPAA:** Biomarker data is PHI — must follow existing HIPAA patterns (no logging, secure transport)
+- **Existing stack:** Must use Next.js 14 App Router, TypeScript, Tailwind CSS, existing auth system
+- **Brownfield:** Integration into existing codebase — follow established patterns (lib/ client, app/api/ routes, *Client.tsx components)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Phone + OTP via Twilio (not magic link) | Members know their phone number; matches Asher Med's phone-based patient lookup. Lower friction than email. | — Pending |
-| Lightweight provider view + link-out | Providers already use Asher Med portal for clinical work. Rebuilding it adds complexity without clear value. | — Pending |
-| Status-first dashboard layout | Members check order status most often. Big status card reduces "where's my medication?" support tickets. | — Pending |
-| Phone lookup → cache asher_patient_id | First login resolves phone → Asher patient ID. Cache in DB for fast future lookups. Survives phone changes after initial link. | — Pending |
-| OTP codes via SMS (not email) | Matches the phone-based identity model. Email OTP would require a different lookup strategy. | — Pending |
+| SiPhox customer sync via external_id | Map CULTR member ID to SiPhox customer for reliable lookup | — Pending |
+| Credits-based ordering (not attached payment) | CULTR pre-buys credits, avoids per-order payment complexity | — Pending |
+| One-time kit per checkout | Simpler MVP, recurring tests can be added later | — Pending |
+| Categorized biomarker display | Longevity Essentials categories for clean organization, extended panel for comprehensive view | — Pending |
+| N/A for missing biomarkers | Show all possible biomarkers with N/A when no data, so members know what's available | — Pending |
 
 ---
-*Last updated: 2026-03-10 after initialization*
+*Last updated: 2026-03-14 after initialization*
