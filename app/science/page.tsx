@@ -1,16 +1,10 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import TrustMarquee from '@/components/site/TrustMarquee';
 import { getAllBlogPosts, BLOG_CATEGORIES, type BlogPostMeta } from '@/lib/blog-content';
 import { ArrowRight, BookOpen, Clock, Calendar } from 'lucide-react';
-
-const WavyBackground = dynamic(
-  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
-  { ssr: false, loading: () => <div className="py-16 md:py-20 grad-light" /> }
-);
 
 export const revalidate = 3600;
 
@@ -216,7 +210,7 @@ export default async function SciencePage({
       </section>
 
       {/* Brand CTA Break */}
-      <WavyBackground containerClassName="py-16 px-6" waveOpacity={0.35} speed="slow">
+      <section className="py-16 px-6">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
             <p className="text-cultr-textMuted text-lg mb-2">Change the CULTR.</p>
@@ -231,7 +225,7 @@ export default async function SciencePage({
             </Link>
           </ScrollReveal>
         </div>
-      </WavyBackground>
+      </section>
 
       {/* Trust Logo Marquee */}
       <TrustMarquee />

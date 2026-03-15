@@ -1,17 +1,11 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import dynamic from 'next/dynamic';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import TrustMarquee from '@/components/site/TrustMarquee';
-
-const WavyBackground = dynamic(
-  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
-  { ssr: false, loading: () => <div className="py-16 md:py-20 grad-light" /> }
-);
 import {
   Check,
   ArrowRight,
@@ -190,7 +184,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Steps - Detailed (Four Steps to Transformation) */}
-      <WavyBackground containerClassName="py-16 md:py-20 px-6" waveOpacity={0.35} speed="slow">
+      <section className="py-16 md:py-20 px-6">
         <div className="max-w-5xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -251,7 +245,7 @@ export default function HowItWorksPage() {
             ))}
           </div>
         </div>
-      </WavyBackground>
+      </section>
 
       {/* What's Included */}
       <section className="py-16 md:py-20 px-6 grad-white">
