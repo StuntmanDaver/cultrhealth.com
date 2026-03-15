@@ -1,3 +1,40 @@
+## [2026-03-15] - MeshGradient Shader Background
+
+### Summary
+Replaced the CSS aurora animation background with an animated MeshGradient WebGL shader using CULTR brand colors. All existing page content and layout is unchanged.
+
+### Changes
+- Installed `@paper-design/shaders-react` ^0.0.71
+- Created `components/ui/MeshBackground.tsx` — `'use client'` component rendering `MeshGradient` with brand colors (`#FDFBF7` cream, `#B7E4C7` sage, `#2A4542` forest, `#D8F3DC` mint, `#3A5956` forest-light), speed 0.2, fixed full-screen z-index -1
+- Created `components/ui/MeshBackgroundDynamic.tsx` — `next/dynamic` wrapper with `ssr: false` for SSR compatibility
+- Updated `app/layout.tsx` to use `MeshBackgroundDynamic` instead of `.aurora-layer` div
+
+### Modified (3 files)
+- `app/layout.tsx`, `components/ui/MeshBackground.tsx`, `components/ui/MeshBackgroundDynamic.tsx`
+
+---
+
+## [2026-03-14] - Intake MedicationSelector: Image Hover Expansion + Descriptions
+
+### Summary
+Enhanced the intake form medication selector with inline descriptions for all 10 medications and image preview on hover (desktop) / tap (mobile) for better product visibility.
+
+### Medication Descriptions
+- Added concise, patient-facing descriptions to all 10 medications (Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2)
+- Descriptions rendered inline below dosage text (`text-xs text-forest-muted/80`)
+
+### Image Hover Expansion
+- **Desktop:** Hovering over product thumbnail shows 176px enlarged preview via Tailwind named group (`group/image`) with `animate-fade-in`
+- **Mobile:** Tapping thumbnail toggles enlarged preview via `expandedImageId` state; tap again to dismiss
+- Thumbnails bumped to `w-14 h-14` on mobile for better touch visibility
+- `pointer-events-none` on overlays to prevent click interference
+- `cursor-zoom-in` on desktop thumbnails
+
+### Modified (1 file)
+- `components/intake/MedicationSelector.tsx`
+
+---
+
 ## [2026-03-11] - Join Page: Address Fields, Signup Type, Creator Coupon Attribution, UI Polish
 
 ### Summary
