@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { Check, Info } from 'lucide-react';
 
@@ -7,25 +8,27 @@ interface Medication {
   id: string;
   name: string;
   dosage: string;
+  description: string;
   tag?: string;
   image?: string;
 }
 
 const MEDICATIONS: Medication[] = [
-  { id: 'semaglutide', name: 'Semaglutide', dosage: '5 MG | 3 ML', tag: 'GLP-1', image: '/images/products/semaglutide-glp1.png' },
-  { id: 'tirzepatide', name: 'Tirzepatide', dosage: '20 MG | 3 ML', tag: 'GLP-1', image: '/images/products/tirzepatide-glp1-gip.png' },
-  { id: 'r3ta', name: 'R3TA', dosage: '20 MG | 3 ML', tag: 'GLP-1/GIP/GCG', image: '/images/products/r3ta-glp1-gip-gcg.png' },
-  { id: 'ghk-cu', name: 'GHK-CU', dosage: '100 MG | 3 ML', image: '/images/products/ghk-cu.png' },
-  { id: 'tesa-ipa', name: 'TESA/IPA', dosage: '12/6 MG | 3 ML', image: '/images/products/tesa-ipa.png' },
-  { id: 'cjc1295-ipa', name: 'CJC1295/IPA', dosage: '10/10 MG | 3 ML', image: '/images/products/cjc1295-ipa.png' },
-  { id: 'nad-plus', name: 'NAD+', dosage: '1000 MG | 10 ML', image: '/images/products/nad-plus.png' },
-  { id: 'semax-selank', name: 'Semax/Selank', dosage: '5/5 MG | 3 ML', image: '/images/products/semax-selank.png' },
-  { id: 'bpc157-tb500', name: 'BPC157/TB500', dosage: '10/10 MG | 3 ML', image: '/images/products/bpc157-tb500.png' },
-  { id: 'melanotan-2', name: 'Melanotan 2 (MT2)', dosage: '10 MG | 3 ML', image: '/images/products/melanotan2-mt2.png' },
+  { id: 'semaglutide', name: 'Semaglutide', dosage: '5 MG | 3 ML', tag: 'GLP-1', image: '/images/products/semaglutide-glp1.png', description: 'GLP-1 receptor agonist for appetite suppression, blood sugar regulation, and sustainable weight loss.' },
+  { id: 'tirzepatide', name: 'Tirzepatide', dosage: '20 MG | 3 ML', tag: 'GLP-1', image: '/images/products/tirzepatide-glp1-gip.png', description: 'Dual GIP/GLP-1 receptor agonist for powerful appetite suppression and blood sugar regulation.' },
+  { id: 'r3ta', name: 'R3TA', dosage: '20 MG | 3 ML', tag: 'GLP-1/GIP/GCG', image: '/images/products/r3ta-glp1-gip-gcg.png', description: 'Triple-agonist GIP/GLP-1/glucagon receptor peptide for advanced metabolic support and significant weight management.' },
+  { id: 'ghk-cu', name: 'GHK-CU', dosage: '100 MG | 3 ML', image: '/images/products/ghk-cu.png', description: 'Copper peptide that stimulates collagen synthesis, accelerates wound healing, and promotes skin rejuvenation.' },
+  { id: 'tesa-ipa', name: 'TESA/IPA', dosage: '12/6 MG | 3 ML', image: '/images/products/tesa-ipa.png', description: 'Powerful GH combination targeting visceral fat reduction with clean growth hormone amplification.' },
+  { id: 'cjc1295-ipa', name: 'CJC1295/IPA', dosage: '10/10 MG | 3 ML', image: '/images/products/cjc1295-ipa.png', description: 'Gold-standard GH stack combining GHRH and GHRP pathways for amplified growth hormone release.' },
+  { id: 'nad-plus', name: 'NAD+', dosage: '1000 MG | 10 ML', image: '/images/products/nad-plus.png', description: 'Essential coenzyme that supports cellular energy production, DNA repair, and healthy aging.' },
+  { id: 'semax-selank', name: 'Semax/Selank', dosage: '5/5 MG | 3 ML', image: '/images/products/semax-selank.png', description: 'Nootropic blend combining anxiolytic and cognitive-enhancing neuropeptides for focus and stress resilience.' },
+  { id: 'bpc157-tb500', name: 'BPC157/TB500', dosage: '10/10 MG | 3 ML', image: '/images/products/bpc157-tb500.png', description: 'Synergistic repair blend combining tissue healing and anti-inflammatory action for accelerated recovery.' },
+  { id: 'melanotan-2', name: 'Melanotan 2 (MT2)', dosage: '10 MG | 3 ML', image: '/images/products/melanotan2-mt2.png', description: 'Melanocortin agonist that promotes tanning, may reduce appetite, and supports libido enhancement.' },
 ];
 
 export function MedicationSelector() {
   const { formData, updateFormData } = useIntakeForm();
+  const [expandedImageId, setExpandedImageId] = useState<string | null>(null);
 
   const selectedMedications = formData.selectedMedications || [];
 
@@ -76,13 +79,41 @@ export function MedicationSelector() {
               </div>
 
               {med.image ? (
-                <img
-                  src={med.image}
-                  alt={med.name}
-                  className="w-12 h-12 object-contain flex-shrink-0 rounded"
-                />
+                <div className="relative group/image flex-shrink-0">
+                  <img
+                    src={med.image}
+                    alt={med.name}
+                    className="w-14 h-14 md:w-12 md:h-12 object-contain rounded md:cursor-zoom-in"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedImageId(expandedImageId === med.id ? null : med.id);
+                    }}
+                  />
+                  {/* Desktop hover preview */}
+                  <div className="hidden md:group-hover/image:block absolute left-0 bottom-0 z-30 pointer-events-none animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-lg border p-2">
+                      <img
+                        src={med.image}
+                        alt={med.name}
+                        className="w-44 h-44 object-contain"
+                      />
+                    </div>
+                  </div>
+                  {/* Mobile tap preview */}
+                  {expandedImageId === med.id && (
+                    <div className="md:hidden absolute left-0 bottom-0 z-30 pointer-events-none animate-fade-in">
+                      <div className="bg-white rounded-xl shadow-lg border p-2">
+                        <img
+                          src={med.image}
+                          alt={med.name}
+                          className="w-44 h-44 object-contain"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <div className="w-12 h-12 bg-cream-dark rounded flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 md:w-12 md:h-12 bg-cream-dark rounded flex items-center justify-center flex-shrink-0">
                   <span className="text-xs text-forest-muted font-medium">RX</span>
                 </div>
               )}
@@ -97,6 +128,7 @@ export function MedicationSelector() {
                   )}
                 </div>
                 <span className="text-sm text-forest-muted">{med.dosage}</span>
+                <p className="text-xs text-forest-muted/80 mt-1 leading-relaxed">{med.description}</p>
               </div>
 
               {selected && (
