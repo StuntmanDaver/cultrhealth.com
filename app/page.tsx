@@ -124,16 +124,19 @@ export default function HomePage() {
           </ScrollReveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Image 1 - Smiling Man */}
+            {/* Video 1 - Smiling Man */}
             <ScrollReveal delay={100} direction="up" className="group">
               <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
-                <Image
-                  src="/images/lifestyle-man-smiling.webp"
-                  alt="Confident member after optimization"
-                  fill
-                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
+                  poster="/images/lifestyle-man-smiling.webp"
+                >
+                  <source src="/images/lifestyle-man-smiling.mp4" type="video/mp4" />
+                </video>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
