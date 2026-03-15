@@ -1,139 +1,104 @@
-# Requirements: CULTR Health Members Portal
+# Requirements: SiPhox Health Integration
 
-**Defined:** 2026-03-10
-**Core Value:** Members can log in and immediately see the status of their treatment — orders, profile, documents — without calling support or checking email.
+**Defined:** 2026-03-14
+**Core Value:** Members can see their real biomarker data — organized, visual, and actionable — directly in their CULTR Health dashboard.
 
 ## v1 Requirements
 
 Requirements for initial release. Each maps to roadmap phases.
 
-### Authentication & Identity
+### API Foundation
 
-- [x] **AUTH-01**: Member can log in with phone number + OTP via Twilio SMS
-- [x] **AUTH-02**: OTP input auto-fills from SMS notification (`autocomplete='one-time-code'`)
-- [x] **AUTH-03**: Member session persists across browser refresh (7-day JWT in httpOnly cookie)
-- [x] **AUTH-04**: Member session times out after 15 minutes of inactivity with auto-logout
-- [x] **AUTH-05**: Member can securely log out from any portal page
-- [x] **AUTH-06**: Phone OTP auth coexists with existing magic link, creator, and admin JWT flows
-- [x] **AUTH-07**: First login resolves phone to Asher Med patient ID and caches in local DB
-- [x] **AUTH-08**: OTP requests are rate-limited to prevent SMS bombing
-- [x] **AUTH-09**: Phone number input displays with US formatting mask
-- [x] **AUTH-10**: OTP flow shows loading states and clear error messages for invalid/expired codes
+- [ ] **API-01**: SiPhox API client library with typed request/response for all endpoints (customers, orders, kits, reports, biomarkers, credits)
+- [ ] **API-02**: Zod schemas for all SiPhox API responses with runtime validation
+- [ ] **API-03**: SiPhox customer creation from CULTR member data with external_id mapping
+- [ ] **API-04**: SiPhox customer lookup by external_id for existing member resolution
+- [ ] **API-05**: Credit balance check before order placement with low-balance alerting
 
-### Order Status Tracking
+### Database
 
-- [x] **ORDR-01**: Member can view list of orders with live status from Asher Med
-- [x] **ORDR-02**: Dashboard shows status-first layout with prominent hero card for active order
-- [x] **ORDR-03**: Member can view order details (medication, status, dates, doctor assignment)
-- [x] **ORDR-04**: Order statuses display plain-language explanations
-- [x] **ORDR-05**: New members with no orders see empty state with CTA to start intake
+- [ ] **DB-01**: Database table for SiPhox customer mapping (member_id ↔ siphox_customer_id)
+- [ ] **DB-02**: Database table for SiPhox kit orders (order_id, status, kit_type, tracking)
+- [ ] **DB-03**: Database table for cached biomarker reports (JSONB storage, immutable after fetch)
+- [ ] **DB-04**: Biomarker mapping config (~150+ entries: SiPhox name → display name, category, unit)
 
-### Patient Profile
+### Checkout Integration
 
-- [x] **PROF-01**: Member can view personal info (name, DOB, phone, email, gender)
-- [x] **PROF-02**: Member can view shipping address on file
-- [x] **PROF-03**: Member can edit shipping address (synced back to Asher Med)
-- [x] **PROF-04**: Member can view physical measurements (height, weight, BMI)
+- [ ] **CHK-01**: Auto-order SiPhox kit on Catalyst+/Concierge subscription checkout via Stripe webhook
+- [ ] **CHK-02**: $135 optional blood test add-on line item for Core tier at checkout
+- [ ] **CHK-03**: Deferred order fulfillment pattern for address resolution from checkout data
+- [ ] **CHK-04**: Non-fatal SiPhox order failure handling (email support, don't block subscription)
 
-### Document Management
+### Kit Management
 
-- [x] **DOCS-01**: Member can view uploaded documents (IDs, consent, prescriptions) via S3 preview URLs
-- [x] **DOCS-02**: Member can upload new documents from the portal
+- [ ] **KIT-01**: Kit registration page where member enters kit ID from physical kit
+- [ ] **KIT-02**: Kit ID validation via SiPhox API before registration with clear error messages
+- [ ] **KIT-03**: Kit registration submission linking kit to member's SiPhox customer
+- [ ] **KIT-04**: 7-state order/kit status timeline (No Kit → Ordered → Shipped → Registered → Sample Mailed → Processing → Results Ready)
+- [ ] **KIT-05**: Smart empty states with distinct messaging and CTAs per status
 
-### Forms & Renewals
+### Results Display
 
-- [x] **FORM-01**: Intake form pre-fills from existing Asher Med patient data
-- [x] **FORM-02**: Renewal form pre-fills from last order and patient data
-- [x] **FORM-03**: Member can launch intake form inline from dashboard
-- [x] **FORM-04**: Member can launch renewal form inline from dashboard
-- [x] **FORM-05**: Dashboard shows proactive renewal prompt when medication supply is running low
+- [ ] **RES-01**: Fetch and cache biomarker reports from SiPhox API
+- [ ] **RES-02**: Categorized biomarker display organized by body system (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended)
+- [ ] **RES-03**: Reference range visualization bar for each biomarker (low/optimal/high color-coded)
+- [ ] **RES-04**: N/A display for biomarkers not included in member's test panel
+- [ ] **RES-05**: Biomarker detail drill-down (description, range context, value interpretation)
+- [ ] **RES-06**: HIPAA-compliant data handling (no PHI in logs, analytics exclusion on labs routes)
+
+### Dashboard
+
+- [ ] **DSH-01**: Dedicated labs section/tab on member dashboard
+- [ ] **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data
+- [ ] **DSH-03**: BiomarkerTrends component wired to SiPhox report data
+- [ ] **DSH-04**: Category health scores (aggregate per body system)
+- [ ] **DSH-05**: SiPhox suggestions displayed as actionable insight cards
+- [ ] **DSH-06**: Dashboard summary widgets (optimal count, needs attention, improving)
+- [ ] **DSH-07**: Tier-gated messaging (Club: upgrade CTA, Core: add-on CTA, Catalyst+/Concierge: included)
+
+### Notifications
+
+- [ ] **NTF-01**: Email notification when biomarker results are ready (via Resend)
 
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
 
-### Provider Features
+### Longitudinal Intelligence
 
-- **PROV-01**: Separate provider login page (`/provider`)
-- **PROV-02**: Provider patient search/lookup via Asher Med API
-- **PROV-03**: Provider patient detail view (read-only summary)
-- **PROV-04**: Provider link-out to Asher Med portal for clinical actions
+- **LNG-01**: Biomarker trend visualization across multiple test reports
+- **LNG-02**: Treatment correlation view (biomarker changes overlaid with medication start dates from Asher Med)
+- **LNG-03**: PDF lab report download with CULTR branding
 
-### Billing & Account
+### Extended Features
 
-- **BILL-01**: Subscription management quick link (Stripe Customer Portal button)
-
-### UX Polish
-
-- **UX-01**: Branded order timeline (visual step-by-step: Submitted → Review → Approved → Shipped)
-- **UX-02**: Resend OTP with cooldown timer ("Didn't receive it? Resend in 28s")
-- **UX-03**: Phone number change flow (self-service with OTP to new number)
-- **UX-04**: HSA/FSA document center (prominent LMN access)
-- **UX-05**: Medication info cards linked to library content
-- **UX-06**: Mobile-optimized touch targets (dedicated mobile pass)
-- **UX-07**: Edit phone number with re-verification
+- **EXT-01**: Recurring/subscription blood test ordering
+- **EXT-02**: Reorder kit from dashboard without new checkout
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
-| Full clinical provider dashboard | Providers use Asher Med's own portal for clinical workflows |
-| Real-time notifications / push alerts | v2 feature — order status changes are infrequent |
-| In-app messaging between members and providers | Use existing support channels |
-| Password-based authentication | Phone OTP matches Asher Med's phone-based identity model |
-| Multi-factor auth beyond phone OTP | Phone verification sufficient for HIPAA with TLS |
-| Member-to-member social features | Handled by existing Community page |
-| Video visit scheduling / telehealth calls | Asher Med handles clinical encounters |
-| Lab results viewer | No Asher Med API support for lab data |
-| Prescription/Rx history | Requires pharmacy integration beyond current scope |
-| Progress photos upload/gallery | High HIPAA sensitivity, unclear clinical integration |
-| Weight/BMI progress tracking | Asher Med stores only current measurements, no history |
-| Quick re-order flow | Compliance risk around skipping intake steps |
-| Social login (Google, Apple) | Doesn't match phone-based identity model |
-| Email OTP as fallback | Two OTP channels doubles complexity |
-| Biometric login | Requires native app or WebAuthn |
-| Multi-language support | US-only service, defer i18n |
+| Medical interpretation of results | Malpractice liability — use SiPhox reference ranges, frame as "optimization" |
+| Custom reference ranges | Requires clinical team validation — use SiPhox-provided ranges exclusively |
+| Camera barcode scanner for kit registration | Unreliable on web — manual text input with validation is simpler and more reliable |
+| Wearable data integration | Scope creep — SiPhox's own app handles this |
+| AI chatbot for biomarker Q&A | Liability risk — surface SiPhox suggestions instead |
+| Third-party lab result uploads | Multi-month PDF parsing project — use SiPhox BiomarkerAI for outside labs |
+| Club tier access | $0 tier has no revenue to offset kit cost |
+| Real-time sample GPS tracking | No courier provides this — use status-based tracking only |
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Complete |
-| AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Complete |
-| AUTH-04 | Phase 1 | Complete |
-| AUTH-05 | Phase 1 | Complete |
-| AUTH-06 | Phase 1 | Complete |
-| AUTH-07 | Phase 1 | Complete |
-| AUTH-08 | Phase 1 | Complete |
-| AUTH-09 | Phase 1 | Complete |
-| AUTH-10 | Phase 1 | Complete |
-| ORDR-01 | Phase 2 | Complete |
-| ORDR-02 | Phase 2 | Complete |
-| ORDR-03 | Phase 2 | Complete |
-| ORDR-04 | Phase 2 | Complete |
-| ORDR-05 | Phase 2 | Complete |
-| PROF-01 | Phase 3 | Complete |
-| PROF-02 | Phase 3 | Complete |
-| PROF-03 | Phase 3 | Complete |
-| PROF-04 | Phase 3 | Complete |
-| DOCS-01 | Phase 3 | Complete |
-| DOCS-02 | Phase 3 | Complete |
-| FORM-01 | Phase 4 | Complete |
-| FORM-02 | Phase 4 | Complete |
-| FORM-03 | Phase 4 | Complete |
-| FORM-04 | Phase 4 | Complete |
-| FORM-05 | Phase 4 | Complete |
+| *(Populated during roadmap creation)* | | |
 
 **Coverage:**
-- v1 requirements: 25 total
-- Mapped to phases: 25
-- Unmapped: 0
+- v1 requirements: 30 total
+- Mapped to phases: 0
+- Unmapped: 30 ⚠️
 
 ---
-*Requirements defined: 2026-03-10*
-*Last updated: 2026-03-14 after Phase 3 completion*
+*Requirements defined: 2026-03-14*
+*Last updated: 2026-03-14 after initial definition*
