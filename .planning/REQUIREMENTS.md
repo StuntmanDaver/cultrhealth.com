@@ -9,18 +9,18 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### API Foundation
 
-- [ ] **API-01**: SiPhox API client library with typed request/response for all endpoints (customers, orders, kits, reports, biomarkers, credits)
-- [ ] **API-02**: Zod schemas for all SiPhox API responses with runtime validation
-- [ ] **API-03**: SiPhox customer creation from CULTR member data with external_id mapping
-- [ ] **API-04**: SiPhox customer lookup by external_id for existing member resolution
-- [ ] **API-05**: Credit balance check before order placement with low-balance alerting
+- [x] **API-01**: SiPhox API client library with typed request/response for all endpoints (customers, orders, kits, reports, biomarkers, credits)
+- [x] **API-02**: Zod schemas for all SiPhox API responses with runtime validation
+- [x] **API-03**: SiPhox customer creation from CULTR member data with external_id mapping
+- [x] **API-04**: SiPhox customer lookup by external_id for existing member resolution
+- [x] **API-05**: Credit balance check before order placement with low-balance alerting
 
 ### Database
 
 - [ ] **DB-01**: Database table for SiPhox customer mapping (member_id ↔ siphox_customer_id)
 - [ ] **DB-02**: Database table for SiPhox kit orders (order_id, status, kit_type, tracking)
 - [ ] **DB-03**: Database table for cached biomarker reports (JSONB storage, immutable after fetch)
-- [ ] **DB-04**: Biomarker mapping config (~150+ entries: SiPhox name → display name, category, unit)
+- [x] **DB-04**: Biomarker mapping config (~150+ entries: SiPhox name → display name, category, unit)
 
 ### Checkout Integration
 
@@ -92,15 +92,15 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| API-01 | Phase 1 | Pending |
-| API-02 | Phase 1 | Pending |
-| API-03 | Phase 1 | Pending |
-| API-04 | Phase 1 | Pending |
-| API-05 | Phase 1 | Pending |
+| API-01 | Phase 1 | Complete |
+| API-02 | Phase 1 | Complete |
+| API-03 | Phase 1 | Complete |
+| API-04 | Phase 1 | Complete |
+| API-05 | Phase 1 | Complete |
 | DB-01 | Phase 1 | Pending |
 | DB-02 | Phase 1 | Pending |
 | DB-03 | Phase 1 | Pending |
-| DB-04 | Phase 1 | Pending |
+| DB-04 | Phase 1 | Complete |
 | CHK-01 | Phase 2 | Pending |
 | CHK-02 | Phase 2 | Pending |
 | CHK-03 | Phase 2 | Pending |
@@ -132,4 +132,4 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 after roadmap creation*
+*Last updated: 2026-03-15 after plan 01-01 completion*

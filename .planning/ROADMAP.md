@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
+- [x] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
 - [ ] 01-02-PLAN.md — Database migration (3 tables) and data access layer
 
 ### Phase 2: Checkout Integration
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Planning complete | - |
+| 1. Foundation | 1/2 | In progress | - |
 | 2. Checkout Integration | 0/2 | Not started | - |
 | 3. Kit Registration | 0/2 | Not started | - |
 | 4. Labs Dashboard | 0/3 | Not started | - |
