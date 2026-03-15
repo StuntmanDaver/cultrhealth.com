@@ -17,7 +17,7 @@ const addressSchema = z.object({
   state: z
     .string()
     .length(2, 'State must be a 2-letter abbreviation')
-    .refine((val) => validStateCodes.includes(val), {
+    .refine((val) => (validStateCodes as string[]).includes(val), {
       message: 'Invalid US state abbreviation',
     }),
   zipCode: z
