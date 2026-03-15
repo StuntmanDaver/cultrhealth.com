@@ -48,11 +48,25 @@ export async function POST(request: Request) {
     // 4. Convert phone to E.164
     const phoneE164 = formatPhoneNumber(phone)
 
-    // 5. Staging bypass: accept code 123456 without Twilio
+    // 5. Staging / local dev bypass: accept code 123456 without Twilio
     const isStaging = (process.env.NEXT_PUBLIC_SITE_URL || '').includes('staging')
-    const isStagingBypass = isStaging && code === '123456'
+    const isLocalDev = process.env.NODE_ENV === 'development'
+    const isDevBypass = (isStaging || isLocalDev) && code === '123456'
 
-    if (!isStagingBypass) {
+    // Local dev only: skip everything after OTP and go straight to dashboard
+    if (isLocalDev && isDevBypass) {
+      const accessToken = await createPortalAccessToken(phoneE164, null)
+      const refreshToken = await createPortalRefreshToken(phoneE164, null)
+      await setPortalCookies(accessToken, refreshToken)
+      return NextResponse.json({
+        success: true,
+        hasPatient: true,
+        knownPhone: true,
+        redirect: '/portal/dashboard',
+      })
+    }
+
+    if (!isDevBypass) {
       // 6. Verify OTP via Twilio
       try {
         const client = twilio(

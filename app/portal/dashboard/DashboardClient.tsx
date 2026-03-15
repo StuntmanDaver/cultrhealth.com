@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
+import { TextShimmer } from '@/components/ui/TextShimmer'
 import { LINKS } from '@/lib/config/links'
 import { getStatusDisplay, isActiveStatus } from '@/lib/portal-orders'
 import type { PortalOrder } from '@/lib/portal-orders'
@@ -33,6 +34,7 @@ export default function DashboardClient() {
   // Renewal prompt state
   const [supplyData, setSupplyData] = useState<{ daysRemaining: number; isLow: boolean } | null>(null)
   const [renewalEligible, setRenewalEligible] = useState(false)
+  const [patientFirstName, setPatientFirstName] = useState<string | null>(null)
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true)
@@ -92,6 +94,8 @@ export default function DashboardClient() {
         if (data.success && data.prefill) {
           setSupplyData(data.prefill.supply)
           setRenewalEligible(data.prefill.renewalEligible)
+          const firstName = data.prefill.renewal?.firstName || data.prefill.intake?.firstName
+          if (firstName) setPatientFirstName(firstName)
         }
       })
       .catch(() => {
@@ -168,8 +172,14 @@ export default function DashboardClient() {
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl md:text-3xl font-display font-bold text-brand-primary">
-          Your Dashboard
+        <h1 className="text-2xl md:text-3xl font-display font-bold">
+          {patientFirstName ? (
+            <TextShimmer duration={3} spread={3}>
+              {`Welcome back, ${patientFirstName}`}
+            </TextShimmer>
+          ) : (
+            <span className="text-brand-primary">Your Dashboard</span>
+          )}
         </h1>
         <Button
           variant="ghost"

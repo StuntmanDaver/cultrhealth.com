@@ -38,9 +38,11 @@ export async function POST(request: Request) {
       return rateLimitResponse(phoneResult)
     }
 
-    // 5. Staging bypass — skip Twilio, accept any phone
-    const isStaging = (process.env.NEXT_PUBLIC_SITE_URL || '').includes('staging')
-    if (isStaging) {
+    // 5. Staging / local dev bypass — skip Twilio, accept any phone
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+    const isStaging = siteUrl.includes('staging')
+    const isLocalDev = process.env.NODE_ENV === 'development'
+    if (isStaging || isLocalDev) {
       return NextResponse.json({ success: true, phone: phoneE164 })
     }
 

@@ -17,6 +17,7 @@ import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
 import { MilestoneBadges } from '@/components/creators/Milestones'
 import { AnalyticsCharts } from '@/components/creators/AnalyticsCharts'
+import { TextShimmer } from '@/components/ui/TextShimmer'
 
 function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
@@ -259,8 +260,16 @@ export default function CreatorDashboardPage() {
   return (
     <div className="space-y-8 max-w-6xl">
       <div>
-        <h1 className="text-2xl font-display font-bold text-cultr-forest">
-          Welcome back{creator?.full_name ? `, ${creator.full_name.split(' ')[0]}` : ''}
+        <h1 className="text-2xl font-display font-bold">
+          {creator?.full_name ? (
+            <TextShimmer duration={3} spread={3}>
+              {`Welcome back, ${creator.full_name.split(' ')[0]}`}
+            </TextShimmer>
+          ) : (
+            <TextShimmer duration={3} spread={3}>
+              Welcome back
+            </TextShimmer>
+          )}
         </h1>
         <p className="text-sm text-cultr-textMuted mt-1">
           Here&apos;s how you&apos;re doing this month.
