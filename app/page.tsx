@@ -200,7 +200,7 @@ export default function HomePage() {
                   muted
                   playsInline
                   preload="none"
-                  className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                   poster="/images/lifestyle-girl-running.webp"
                 >
                   <source src="/images/lifestyle-girl-running.mp4" type="video/mp4" />
