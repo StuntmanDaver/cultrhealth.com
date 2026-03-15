@@ -145,6 +145,7 @@ export default function HomePage() {
                   loop
                   muted
                   playsInline
+                  preload="none"
                   className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   poster="/images/lifestyle-man-smiling.webp"
                 >
@@ -171,6 +172,7 @@ export default function HomePage() {
                   loop
                   muted
                   playsInline
+                  preload="none"
                   className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   poster="/images/lifestyle-woman-running-new.webp"
                 >
@@ -197,6 +199,7 @@ export default function HomePage() {
                   loop
                   muted
                   playsInline
+                  preload="none"
                   className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
                   poster="/images/lifestyle-girl-running.webp"
                 >
@@ -442,7 +445,7 @@ export default function HomePage() {
                 <div className="text-center p-8 rounded-2xl glass-card border-gradient glow-card">
                   <div className="w-36 h-36 mx-auto rounded-full mb-4 overflow-hidden">
                     {provider.image ? (
-                      <img src={provider.image} alt={provider.name} className="w-full h-full object-cover object-top" />
+                      <img src={provider.image} alt={provider.name} loading="lazy" className="w-full h-full object-cover object-top" />
                     ) : (
                       <div className="w-full h-full grad-mint flex items-center justify-center">
                         <Stethoscope className="w-8 h-8 text-cultr-forest" />
