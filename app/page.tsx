@@ -7,6 +7,7 @@ import { CTASection } from '@/components/site/CTASection';
 import { PLANS } from '@/lib/config/plans';
 import { PROVIDERS, TRUST_BADGES } from '@/lib/config/social-proof';
 import { brandify } from '@/lib/utils';
+import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import {
   ArrowRight,
   FlaskConical,
@@ -299,19 +300,29 @@ export default function HomePage() {
                 <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold">CULTR</span></div>
               </div>
               {[
-                ['Comprehensive lab panels', '5-10 markers', '50+ markers'],
-                ['Wait time for appointments', '2-4 weeks', '24-48 hours'],
-                ['Provider messaging', 'Limited', 'Unlimited'],
-                ['Peptide protocols', 'Not available', 'Full access'],
-                ['Protocol customization', 'Generic', 'Personalized'],
-                ['Cost per year', '$3,000+', 'From $2,388'],
-              ].map(([feature, standard, cultr], i) => (
+                { cells: ['Comprehensive lab panels', '5-10 markers', '50+ markers'], hasBiomarkerLink: true },
+                { cells: ['Wait time for appointments', '2-4 weeks', '24-48 hours'] },
+                { cells: ['Provider messaging', 'Limited', 'Unlimited'] },
+                { cells: ['Peptide protocols', 'Not available', 'Full access'] },
+                { cells: ['Protocol customization', 'Generic', 'Personalized'] },
+                { cells: ['Cost per year', '$3,000+', 'From $2,388'] },
+              ].map((row, i) => {
+                const [feature, standard, cultr] = row.cells;
+                return (
                 <div key={i} className="grid grid-cols-3 border-t border-cultr-sage">
-                  <div className="p-4 text-cultr-text text-sm">{feature}</div>
+                  <div className="p-4 text-cultr-text text-sm">
+                    {feature}
+                    {row.hasBiomarkerLink && (
+                      <div className="mt-0.5">
+                        <BiomarkerExplainerLink label="See what we test ›" />
+                      </div>
+                    )}
+                  </div>
                   <div className="p-4 text-center text-cultr-textMuted text-sm">{standard}</div>
                   <div className="p-4 text-center text-cultr-forest font-medium text-sm bg-cultr-mint/50">{cultr}</div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </ScrollReveal>
         </div>

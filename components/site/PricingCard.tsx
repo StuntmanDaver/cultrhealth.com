@@ -4,6 +4,7 @@ import { Check } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { BNPLBadge } from '@/components/payments/BNPLBadge';
+import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
 
 interface PlanProps {
@@ -68,16 +69,30 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
         )}
 
         <ul className="space-y-4">
-          {plan.features.map((feature, i) => (
-            <li 
-              key={i} 
-              className={`flex items-start gap-3 text-sm transition-all duration-300 ${plan.isFeatured ? 'text-white/90' : 'text-cultr-textMuted'}`}
-              style={{ transitionDelay: `${i * 30}ms` }}
-            >
-              <Check className={`w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${plan.isFeatured ? 'text-cultr-sage' : 'text-cultr-forest'}`} />
-              <span>{feature}</span>
-            </li>
-          ))}
+          {plan.features.map((feature, i) => {
+            const isLabFeature = /lab test/i.test(feature);
+            return (
+              <li
+                key={i}
+                className={`flex items-start gap-3 text-sm transition-all duration-300 ${plan.isFeatured ? 'text-white/90' : 'text-cultr-textMuted'}`}
+                style={{ transitionDelay: `${i * 30}ms` }}
+              >
+                <Check className={`w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${plan.isFeatured ? 'text-cultr-sage' : 'text-cultr-forest'}`} />
+                <span>
+                  {feature}
+                  {isLabFeature && (
+                    <>
+                      {' '}
+                      <BiomarkerExplainerLink
+                        label="See what we test ›"
+                        className={plan.isFeatured ? '!text-cultr-sage hover:!text-white !decoration-cultr-sage/50' : ''}
+                      />
+                    </>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 

@@ -20,6 +20,7 @@ import {
   Shield,
   Sparkles,
 } from 'lucide-react';
+import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
 
 export const revalidate = 3600;
@@ -265,6 +266,7 @@ export default function HowItWorksPage() {
                 icon: FlaskConical,
                 title: 'Comprehensive Lab Testing',
                 desc: 'Full metabolic panels, hormone testing, inflammation markers, and 28 biomarkers per test (upgradeable up to 59), provided by SiPho Health.',
+                hasBiomarkerLink: true,
               },
               {
                 icon: Dna,
@@ -299,6 +301,9 @@ export default function HowItWorksPage() {
                   </div>
                   <h3 className="text-lg font-display font-bold text-cultr-text mb-2">{feature.title}</h3>
                   <p className="text-cultr-textMuted text-sm">{feature.desc}</p>
+                  {'hasBiomarkerLink' in feature && feature.hasBiomarkerLink && (
+                    <BiomarkerExplainerLink label="See what we test ›" className="mt-2" />
+                  )}
                 </div>
               </ScrollReveal>
             ))}

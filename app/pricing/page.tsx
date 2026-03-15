@@ -19,6 +19,7 @@ import {
   Dna,
   Users,
 } from 'lucide-react';
+import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
 
 export const revalidate = 3600;
@@ -175,7 +176,7 @@ export default function PricingPage() {
                 <tbody className="text-sm">
                   {[
                     { feature: 'Monthly Price', values: ['$199', '$499', '$1,099'] },
-                    { feature: 'At Home Lab Test', values: ['$135', '$135', '$135'] },
+                    { feature: 'At Home Lab Test', values: ['$135', '$135', '$135'], hasBiomarkerLink: true },
                     { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 6 months', 'Every 6 months'] },
                     { feature: 'CORE Therapies', values: ['1', '1', '2'] },
                     { feature: 'Enhancement Therapies', values: ['—', '2', 'Up to 4'] },
@@ -184,7 +185,14 @@ export default function PricingPage() {
                     { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">
-                      <td className="py-4 px-4 text-cultr-text">{row.feature}</td>
+                      <td className="py-4 px-4 text-cultr-text">
+                        {row.feature}
+                        {row.hasBiomarkerLink && (
+                          <div className="mt-0.5">
+                            <BiomarkerExplainerLink label="See what we test ›" />
+                          </div>
+                        )}
+                      </td>
                       {row.values.map((value, j) => (
                         <td key={j} className={`py-4 px-3 text-center ${j === 1 ? 'bg-cultr-mint/50' : ''}`}>
                           {typeof value === 'boolean' ? (
@@ -229,6 +237,7 @@ export default function PricingPage() {
               {
                 title: 'Comprehensive Lab Panels',
                 desc: '28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — analyzed with provider interpretation and recommendations.',
+                hasBiomarkerLink: true,
               },
               {
                 title: 'Provider Messaging',
@@ -251,6 +260,9 @@ export default function PricingPage() {
                   <div>
                     <h4 className="font-display font-bold text-cultr-text mb-1">{item.title}</h4>
                     <p className="text-sm text-cultr-textMuted">{item.desc}</p>
+                    {'hasBiomarkerLink' in item && item.hasBiomarkerLink && (
+                      <BiomarkerExplainerLink label="See what we test ›" className="mt-1" />
+                    )}
                   </div>
                 </div>
               </ScrollReveal>

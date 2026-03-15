@@ -854,6 +854,21 @@ LINKS = {
 - `WebSearch` — enabled globally
 - `Bash` for: `npx tsc`, `npx next dev`, `xargs kill`, `git status`, `vercel` (all subcommands), `git add`, `git commit`, `git push`
 
+### PostToolUse Hooks (`.claude/hooks/`)
+Three hooks run automatically after every `Write` or `Edit` tool call on `.ts`/`.tsx` files:
+
+| Hook | Script | Timeout | What it does |
+|---|---|---|---|
+| **Test** | `run-tests.sh` | 120s | Runs `npx vitest run` — blocks Claude (exit 2) if tests fail |
+| **Simulation** | `type-check.sh` | 60s | Runs `npx tsc --noEmit` — blocks Claude if type errors found in changed file |
+| **Code Audit** | `code-audit.sh` | 60s | ESLint + console.log detection + HIPAA PHI logging check + hardcoded secrets scan + TODO/FIXME markers — blocks on lint errors, PHI risks, or secrets |
+
+**Hook behavior:**
+- Hooks only trigger for `.ts`/`.tsx` files (skip configs, markdown, images)
+- Test hook skips test files themselves (prevents infinite loops)
+- Exit code `0` = pass (Claude continues), exit code `2` = block (Claude must fix before proceeding)
+- Configured in `.claude/settings.local.json` under `hooks.PostToolUse`
+
 ### MCP Server Configuration (`.cursor/mcp.json`)
 Currently empty (`"mcpServers": {}`). MCP servers can be configured here for Cursor IDE integration.
 
@@ -879,9 +894,19 @@ Never fetch full details without filtering first. 10x token savings.
 | Skill | Trigger | Description |
 |---|---|---|
 | `keybindings-help` | User asks about keyboard shortcuts, rebinding keys | Customize `~/.claude/keybindings.json` |
+| `codex` | "Use codex to...", "codex exec", "codex resume" | Delegate code analysis, refactoring, or automated editing to OpenAI Codex CLI |
 | `claude-mem:do` | "Execute this plan" | Execute an implementation plan using subagents |
 | `claude-mem:make-plan` | "Make a plan for..." | Create an implementation plan with documentation discovery |
 | `claude-mem:mem-search` | "Did we already solve this?", "How did we do X last time?" | Search persistent cross-session memory database |
+
+### Codex CLI Skill (`~/.claude/skills/codex/`)
+**Prerequisite:** OpenAI Codex CLI installed globally (`npm install -g @openai/codex`)
+- **Models:** `gpt-5.3-codex-spark` (default/fast), `gpt-5.3-codex` (balanced), `gpt-5.2` (legacy)
+- **Reasoning effort:** `xhigh`, `high`, `medium`, `low`
+- **Sandbox modes:** `read-only` (analysis), `workspace-write` (local edits), `danger-full-access` (unrestricted)
+- **Resume sessions:** `echo "prompt" | codex exec --skip-git-repo-check resume --last 2>/dev/null`
+- **Always uses:** `--skip-git-repo-check`, `--full-auto`, `2>/dev/null` (suppress thinking tokens)
+- **Critical:** Treat Codex output as colleague feedback, not authority — verify against your own knowledge
 
 ### IDE Diagnostics (MCP)
 | Tool | Purpose |

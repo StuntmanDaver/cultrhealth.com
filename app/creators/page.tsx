@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import Button from '@/components/ui/Button';
@@ -12,6 +13,11 @@ import {
   Shield,
   Megaphone,
 } from 'lucide-react';
+
+const TrustMarquee = dynamic(
+  () => import('@/components/site/TrustMarquee'),
+  { loading: () => <div className="h-14" /> }
+);
 
 export const revalidate = 3600;
 
@@ -57,6 +63,12 @@ export default function CreatorsPage() {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* Trust Marquee */}
+      <TrustMarquee />
+
+      {/* Bridge */}
+      <div className="hidden md:block h-28 bridge-dark-to-light" />
 
       {/* How It Works */}
       <section className="py-16 md:py-20 px-6 grad-white">
@@ -165,7 +177,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* Commission Tiers */}
-      <section className="py-16 md:py-20 px-6 grad-white">
+      <section className="py-16 md:py-20 px-6 grad-white border-t border-cultr-sage/20">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -208,6 +220,9 @@ export default function CreatorsPage() {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* Bridge */}
+      <div className="hidden md:block h-28 bridge-light-to-dark" />
 
       {/* Apply CTA */}
       <section id="apply" className="py-16 md:py-20 px-6 grad-dark text-white">

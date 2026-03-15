@@ -1,3 +1,36 @@
+## [2026-03-15] - Therapies Page Redesign + Site-Wide Brand Consistency
+
+### Summary
+Redesigned the `/therapies` page from text-only cards to a premium interactive product showcase with vial images, hover-to-expand interactions, and brand-consistent design. Updated Tools, Creators, Community, and Library Login pages to match the established brand pattern across all marketing pages.
+
+### Therapies Page (`app/therapies/page.tsx`)
+- **New data model:** Replaced `THERAPY_SECTIONS` (2 sections, 15 therapies) with flat `THERAPY_PRODUCTS` array (10 core products with specs, tags, short + long descriptions)
+- **New component:** `components/site/TherapiesGrid.tsx` — client component with expandable cards, image hover zoom (`scale-110`), `glass-card`/`border-gradient`/`glow-card` styling, staggered ScrollReveal animations
+- **Layout:** Hero → TrustMarquee → bridge → Product Grid → bridge → CTA → Medical Disclaimer → CTASection
+- **Removed:** "Physician use only" badges, "60+ therapies" banner, `Flame`/`Zap`/`Lock` icons, old section-based grid
+- **Image:** Replaced `semax-selank.png` with clean CULTR-branded vial photo
+
+### Brand Consistency Updates
+- **Tools page** (`app/tools/page.tsx`) — Rewrote hero from flat `bg-brand-primary` to `grad-dark-glow` with badge pill, ScrollReveal, TrustMarquee, bridge, `glass-card` tool cards, CTASection footer
+- **Creators page** (`app/creators/page.tsx`) — Added TrustMarquee after hero, bridges between section transitions
+- **Community page** (`app/community/page.tsx`) — Added TrustMarquee after hero, bridge before feed section
+- **Library Login** (`app/library/LibraryLogin.tsx`) — Updated hero from `grad-dark` to `grad-dark-glow`, added badge pill + ScrollReveal
+
+### Brand Pattern (now consistent across all marketing pages)
+Hero (`grad-dark-glow`) → Badge pill → TrustMarquee → Bridges → Content sections → CTASection
+
+### Files
+- `lib/config/therapies.ts` — Complete rewrite (new `TherapyProduct` interface)
+- `components/site/TherapiesGrid.tsx` — New client component
+- `app/therapies/page.tsx` — Restructured layout
+- `app/tools/page.tsx` — Brand consistency rewrite
+- `app/creators/page.tsx` — Added TrustMarquee + bridges
+- `app/community/page.tsx` — Added TrustMarquee + bridge
+- `app/library/LibraryLogin.tsx` — Updated hero styling
+- `public/images/products/semax-selank.png` — Replaced with clean vial image
+
+---
+
 ## [2026-03-15] - Site-Wide Visual Consistency: WavyBackground + TrustMarquee
 
 ### Summary

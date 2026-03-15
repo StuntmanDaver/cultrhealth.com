@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
+import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { Mail, AlertCircle, CheckCircle, Lock, Shield } from 'lucide-react'
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -56,17 +57,22 @@ export function LibraryLogin({ error }: { error?: string }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero Section */}
-      <section className="py-24 px-6 grad-dark text-white">
+      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 grad-dark-glow text-white">
         <div className="max-w-md mx-auto text-center">
-          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-8 h-8 text-cultr-sage" />
-          </div>
-          <h1 className="text-4xl font-display font-bold mb-4">
-            Member Library
-          </h1>
-          <p className="text-white/80">
-            Access your peptide reference library with detailed protocols, mechanisms, and safety information.
-          </p>
+          <ScrollReveal direction="none" duration={800}>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
+              <Lock className="w-4 h-4 text-cultr-sage" />
+              <span className="text-sm">Members Only</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 leading-tight">
+              Member Library
+            </h1>
+          </ScrollReveal>
+          <ScrollReveal delay={200} direction="none" duration={800}>
+            <p className="text-lg text-white/80">
+              Access your peptide reference library with detailed protocols, mechanisms, and safety information.
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 

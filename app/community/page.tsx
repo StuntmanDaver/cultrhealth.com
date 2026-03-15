@@ -1,8 +1,14 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { Instagram } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { CommunityFeed } from '@/components/site/CommunityFeed';
+
+const TrustMarquee = dynamic(
+  () => import('@/components/site/TrustMarquee'),
+  { loading: () => <div className="h-14" /> }
+);
 
 export const revalidate = 3600;
 
@@ -77,6 +83,12 @@ export default function CommunityPage() {
           </ScrollReveal>
         </div>
       </section>
+
+      {/* Trust Marquee */}
+      <TrustMarquee />
+
+      {/* Bridge */}
+      <div className="hidden md:block h-28 bridge-dark-to-light" />
 
       {/* Feed Section */}
       <section className="relative py-12 md:py-16 px-6 grad-light overflow-hidden">

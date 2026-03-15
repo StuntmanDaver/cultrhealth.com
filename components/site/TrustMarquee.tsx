@@ -11,6 +11,9 @@ const TRUST_LOGOS = [
   { src: "/images/trust-logos/prenuvo.svg", alt: "Prenuvo", width: 130, height: 32 },
   { src: "/images/trust-logos/path.svg", alt: "Path", width: 120, height: 36 },
   { src: "/images/trust-logos/spio-health.svg", alt: "Spio Health", width: 160, height: 24 },
+  { src: "/images/trust-logos/vitaminlab.svg", alt: "VitaminLab", width: 160, height: 32 },
+  { src: "/images/trust-logos/prohealth-longevity.svg", alt: "ProHealth Longevity", width: 170, height: 40 },
+  { src: "/images/trust-logos/lvlup-health.svg", alt: "LVLUP Health", width: 160, height: 36 },
 ];
 
 export default function TrustMarquee() {
