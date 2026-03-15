@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-15T04:11:04Z"
-last_activity: 2026-03-15 -- Completed plan 01-01 (SiPhox API client & biomarker config)
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-15T04:17:59Z"
+last_activity: 2026-03-15 -- Completed plan 01-02 (SiPhox database migration & data access layer)
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 9
-  completed_plans: 1
-  percent: 11
+  completed_plans: 2
+  percent: 22
 ---
 
 # Project State
@@ -25,29 +25,29 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-03-15 -- Completed plan 01-01 (SiPhox API client & biomarker config)
+Phase: 1 of 4 (Foundation) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: Phase 1 Complete
+Last activity: 2026-03-15 -- Completed plan 01-02 (SiPhox database migration & data access layer)
 
-Progress: [#.........] 11%
+Progress: [##........] 22%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 6 min
-- Total execution time: 0.1 hours
+- Total plans completed: 2
+- Average duration: 4.5 min
+- Total execution time: 0.15 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Foundation | 1/2 | 6 min | 6 min |
+| 1. Foundation | 2/2 | 9 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m)
-- Trend: Starting
+- Last 5 plans: 01-01 (6m), 01-02 (3m)
+- Trend: Accelerating
 
 *Updated after each plan completion*
 
@@ -64,6 +64,9 @@ Recent decisions affecting current work:
 - 01-01: All Zod schemas use .passthrough() since API response shapes are inferred, not confirmed
 - 01-01: 53 biomarkers mapped across 7 categories from CSV data + PROJECT.md definitions
 - 01-01: checkCreditBalance uses dynamic import for sendLowCreditAlert to avoid circular deps
+- 01-02: Reports are immutable (insert-only, no update function) for biomarker data integrity
+- 01-02: Customer upsert uses COALESCE to preserve existing non-null values on phone_e164 conflict
+- 01-02: JSONB columns use JSON.stringify in sql template for proper PostgreSQL serialization
 
 ### Pending Todos
 
@@ -77,6 +80,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T04:11:04Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-foundation/01-02-PLAN.md
+Last session: 2026-03-15T04:17:59Z
+Stopped at: Completed 01-02-PLAN.md (Phase 1 complete)
+Resume file: .planning/phases/02-checkout-integration/ (next phase)

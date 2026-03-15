@@ -12,7 +12,7 @@ This integration adds at-home blood testing to the CULTR Health platform by conn
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer
+- [x] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer (completed 2026-03-15)
 - [ ] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook
 - [ ] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking
 - [ ] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification
@@ -28,7 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. An existing SiPhox customer can be looked up by CULTR member external_id without creating a duplicate
   3. SiPhox credit balance can be checked and a low-balance condition is detected and logged
   4. All SiPhox API responses are validated through Zod schemas before touching the database
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/2 | In progress | - |
+| 1. Foundation | 2/2 | Complete   | 2026-03-15 |
 | 2. Checkout Integration | 0/2 | Not started | - |
 | 3. Kit Registration | 0/2 | Not started | - |
 | 4. Labs Dashboard | 0/3 | Not started | - |

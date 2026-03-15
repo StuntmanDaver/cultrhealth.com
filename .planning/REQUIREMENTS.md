@@ -17,9 +17,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Database
 
-- [ ] **DB-01**: Database table for SiPhox customer mapping (member_id ↔ siphox_customer_id)
-- [ ] **DB-02**: Database table for SiPhox kit orders (order_id, status, kit_type, tracking)
-- [ ] **DB-03**: Database table for cached biomarker reports (JSONB storage, immutable after fetch)
+- [x] **DB-01**: Database table for SiPhox customer mapping (member_id ↔ siphox_customer_id)
+- [x] **DB-02**: Database table for SiPhox kit orders (order_id, status, kit_type, tracking)
+- [x] **DB-03**: Database table for cached biomarker reports (JSONB storage, immutable after fetch)
 - [x] **DB-04**: Biomarker mapping config (~150+ entries: SiPhox name → display name, category, unit)
 
 ### Checkout Integration
@@ -97,9 +97,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | API-03 | Phase 1 | Complete |
 | API-04 | Phase 1 | Complete |
 | API-05 | Phase 1 | Complete |
-| DB-01 | Phase 1 | Pending |
-| DB-02 | Phase 1 | Pending |
-| DB-03 | Phase 1 | Pending |
+| DB-01 | Phase 1 | Complete |
+| DB-02 | Phase 1 | Complete |
+| DB-03 | Phase 1 | Complete |
 | DB-04 | Phase 1 | Complete |
 | CHK-01 | Phase 2 | Pending |
 | CHK-02 | Phase 2 | Pending |
