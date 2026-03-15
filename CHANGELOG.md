@@ -1,3 +1,41 @@
+## [2026-03-15] - UI Improvements: Testimonials, Marquee, Trust Badges, TextShimmer
+
+### Summary
+Replaced static testimonials grid with an animated scrolling column layout, added a trust logo marquee, a trust badges bar, and a TextShimmer welcome greeting on member and creator dashboards. All components are mobile-optimized.
+
+### New Components
+- `components/ui/TextShimmer.tsx` — Animated shimmer text with brand colors (forest base, sage highlight). Motion components defined at module level to prevent remount. Used as personalized welcome on dashboards.
+- `components/ui/Marquee.tsx` — Reusable CSS keyframe marquee (left/right/up/down, pause-on-hover, fade edges)
+- `components/site/TrustMarquee.tsx` — Trust logo marquee on dark forest background with 7 cream SVG logos
+- `components/site/TestimonialsSection.tsx` — 3-column animated scrolling testimonials (framer-motion, per-column speeds 15/19/17s, spring hover lift, initials avatars, sage star ratings)
+- `public/images/trust-logos/` — 8 cream SVG logos (CLIA, CAP, LegitScript, Trustpilot, Prenuvo, Path, Spio Health, CULTR Health)
+
+### Homepage Changes (`app/page.tsx`)
+- Replaced static testimonials grid with `TestimonialsSection`
+- Added trust badges bar (HIPAA Compliant, 256-bit Encryption, Licensed Providers, Licensed Pharmacy) between newsletter and testimonials
+- `TrustMarquee` placed above CULTR Creator CTA section
+
+### Pricing Page (`app/pricing/page.tsx`)
+- `TrustMarquee` added below pricing packages, above Creator CTA
+
+### Portal Dashboards
+- Member dashboard: shows `Welcome back, {firstName}` shimmer once prefill resolves; falls back to plain "Your Dashboard"
+- Creator dashboard: `Welcome back, {firstName}` shimmer using `useCreator` context name
+- Local dev OTP bypass: any phone + code `123456` skips Twilio + Asher Med, sets valid session, redirects to dashboard
+
+### Mobile Optimizations
+- Testimonial cards: `p-5 md:p-8`, `w-[85vw] max-w-xs md:w-full`
+- Column height capped: `max-h-[480px] md:max-h-[740px]`
+- Trust marquee logo spacing: `mx-6 md:mx-12`
+- Trust badges bar: `gap-x-8 gap-y-3 md:gap-x-12` for clean wrapping
+
+### Modified Files
+- `app/page.tsx`, `app/pricing/page.tsx`, `app/portal/dashboard/DashboardClient.tsx`
+- `app/creators/portal/dashboard/page.tsx`
+- `app/api/portal/send-otp/route.ts`, `app/api/portal/verify-otp/route.ts`
+
+---
+
 ## [2026-03-15] - MeshGradient Shader Background
 
 ### Summary

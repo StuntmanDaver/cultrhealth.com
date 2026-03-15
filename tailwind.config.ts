@@ -61,6 +61,7 @@ const config: Config = {
         sans: ['var(--font-body)', 'Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
+        'aurora': 'aurora 60s linear infinite',
         'fade-in': 'fadeIn 0.6s ease-out forwards',
         'slide-up': 'slideUp 0.6s ease-out forwards',
         'pulse-slow': 'pulse 4s ease-in-out infinite',
@@ -104,6 +105,10 @@ const config: Config = {
         glowPulse: {
           '0%, 100%': { boxShadow: '0 0 20px rgba(42, 69, 66, 0.15)' },
           '50%': { boxShadow: '0 0 40px rgba(42, 69, 66, 0.25)' },
+        },
+        aurora: {
+          from: { backgroundPosition: '50% 50%, 50% 50%' },
+          to: { backgroundPosition: '350% 50%, 350% 50%' },
         },
       },
     },

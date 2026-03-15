@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { NavDock } from '@/components/ui/NavDock';
 
 const navLinks = [
   { href: '/pricing', label: 'Pricing', hasDropdown: false },
@@ -113,7 +113,7 @@ export function Header() {
                 </div>
               </Link>
 
-              <nav className="hidden lg:flex items-center gap-0.5 ml-4">
+              <div className="hidden lg:flex items-center gap-0.5 ml-4">
                 <Link
                   href="/quiz"
                   className={`
@@ -127,48 +127,12 @@ export function Header() {
                 >
                   Get Started
                 </Link>
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`
-                      flex items-center gap-1 font-body font-medium
-                      rounded-lg whitespace-nowrap tracking-[0.01em]
-                      transition-all duration-200 ease-out hover:bg-brand-primary/[0.07]
-                      ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.08]' : 'text-brand-primary'}
-                      ${scrolled ? 'text-[13px] py-1.5 px-3' : 'text-sm py-[7px] px-[15px]'}
-                    `}
-                  >
-                    {link.label}
-                    {link.hasDropdown && (
-                      <ChevronDown className="w-[13px] h-[13px] opacity-45 transition-transform duration-250 group-hover:rotate-180 group-hover:opacity-80" />
-                    )}
-                  </Link>
-                ))}
-              </nav>
+                <NavDock links={navLinks} isActive={isActive} scrolled={scrolled} />
+              </div>
             </div>
 
             {/* Right Nav + CTA */}
-            <div className="hidden lg:flex items-center gap-1.5">
-              {rightNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`
-                    flex items-center gap-1 font-body font-medium
-                    rounded-lg whitespace-nowrap tracking-[0.01em]
-                    transition-all duration-200 ease-out hover:bg-brand-primary/[0.07]
-                    ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.08]' : 'text-brand-primary'}
-                    ${scrolled ? 'text-[13px] py-1.5 px-3' : 'text-sm py-[7px] px-[15px]'}
-                  `}
-                >
-                  {link.label}
-                  {link.hasDropdown && (
-                    <ChevronDown className="w-[13px] h-[13px] opacity-45 transition-transform duration-250" />
-                  )}
-                </Link>
-              ))}
-            </div>
+            <NavDock links={rightNavLinks} isActive={isActive} scrolled={scrolled} className="hidden lg:flex" />
 
             {/* Mobile Toggle — animated 3-bar hamburger */}
             <button

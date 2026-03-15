@@ -10,12 +10,14 @@
 
   html {
     scroll-behavior: smooth;
+    background: #FCFBF7;
   }
 
   body {
     @apply antialiased font-body text-brand-primary;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background: linear-gradient(180deg, #FCFBF7 0%, #FFFFFF 50%, #FCFBF7 100%);
+    background: transparent;
+    isolation: isolate;
   }
 
   h1, h2, h3, h4, h5, h6, th {
@@ -532,6 +534,66 @@
   .float-delay-1 { animation-delay: 1s; }
   .float-delay-2 { animation-delay: 2s; }
   .float-delay-3 { animation-delay: 3s; }
+}
+
+@keyframes aurora {
+  from { background-position: 50% 50%, 50% 50%; }
+  to   { background-position: 350% 50%, 350% 50%; }
+}
+
+.aurora-layer {
+  position: fixed;
+  inset: -10px;
+  z-index: -1;
+  pointer-events: none;
+  will-change: background-position;
+
+  --cream:        #FCFBF7;
+  --transparent:  transparent;
+  --sage:         #B7E4C7;
+  --mint:         #D7F3DC;
+  --forest:       #2B4542;
+  --forest-light: #3D5E5B;
+  --sage-mid:     #9CCFB0;
+
+  background-image:
+    repeating-linear-gradient(
+      100deg,
+      var(--cream)       0%,
+      var(--cream)       7%,
+      var(--transparent) 10%,
+      var(--transparent) 12%,
+      var(--cream)       16%
+    ),
+    repeating-linear-gradient(
+      100deg,
+      var(--sage)         10%,
+      var(--forest-light) 15%,
+      var(--mint)         20%,
+      var(--forest)       25%,
+      var(--sage-mid)     30%
+    );
+
+  background-size: 300%, 200%;
+  background-position: 50% 50%, 50% 50%;
+  filter: blur(10px);
+  opacity: 0.45;
+  animation: aurora 60s linear infinite;
+
+  mask-image: radial-gradient(ellipse at 80% 0%, black 20%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 80% 0%, black 20%, transparent 75%);
+}
+
+@media (max-width: 767px) {
+  .aurora-layer {
+    mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 80%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 80%);
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-layer { animation: none; }
 }
 
 /* Mobile: transparent light sections for continuous flow */
