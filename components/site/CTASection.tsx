@@ -89,6 +89,7 @@ export function CTASection({
           <img
             src="/cultr-logo-cream-health.svg"
             alt="CULTR Health"
+            loading="lazy"
             className="h-10 md:h-12 w-auto shrink-0"
           />
         </div>

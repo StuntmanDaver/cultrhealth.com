@@ -365,7 +365,7 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
         <div className="group/tip relative flex-shrink-0">
           <div className="w-12 h-12 rounded-lg bg-brand-cream border border-brand-primary/5 flex items-center justify-center overflow-hidden">
             {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
+              <img src={product.imageUrl} alt={product.name} loading="lazy" className="w-full h-full object-contain" />
             ) : (
               <Package className="w-5 h-5 text-brand-primary/20" />
             )}
@@ -439,7 +439,7 @@ function QuickOrderRow({ product }: { product: ShopProduct }) {
           {/* Thumbnail */}
           <div className="w-14 h-14 rounded-lg bg-brand-cream border border-brand-primary/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
             {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
+              <img src={product.imageUrl} alt={product.name} loading="lazy" className="w-full h-full object-contain" />
             ) : (
               <Package className="w-5 h-5 text-brand-primary/20" />
             )}

@@ -56,6 +56,7 @@ export function Footer() {
               <img
                 src="/cultr-logo-cream-health.svg"
                 alt="CULTR Health"
+                loading="lazy"
                 className="h-8 w-auto"
               />
             </Link>
