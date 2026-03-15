@@ -53,9 +53,11 @@ export function Footer() {
           {/* CULTR Wordmark */}
           <div className="mb-12">
             <Link href="/" className="inline-block">
-              <span className="font-display font-bold text-2xl text-white" style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}>
-                CULTR
-              </span>
+              <img
+                src="/cultr-logo-cream-health.svg"
+                alt="CULTR Health"
+                className="h-8 w-auto"
+              />
             </Link>
             <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold">CULTR</span>, rebrand yourself.</p>
           </div>

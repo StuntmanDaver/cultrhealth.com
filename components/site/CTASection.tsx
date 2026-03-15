@@ -59,7 +59,7 @@ export function CTASection({
                 Thanks for joining the <span className="font-display font-bold">CULTR</span>.
               </div>
             ) : (
-              <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
+              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <label htmlFor="cta-newsletter-email" className="sr-only">Email address</label>
                 <input
                   id="cta-newsletter-email"
@@ -69,12 +69,12 @@ export function CTASection({
                   placeholder="Enter your email"
                   required
                   disabled={status === 'loading'}
-                  className="w-56 md:w-64 px-4 py-2.5 border border-white/20 bg-white/8 backdrop-blur-sm rounded-lg text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 focus:bg-white/12 transition-all disabled:opacity-50"
+                  className="w-full sm:w-56 md:w-64 px-4 py-2.5 border border-white/20 bg-white/8 backdrop-blur-sm rounded-lg text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 focus:bg-white/12 transition-all disabled:opacity-50"
                 />
                 <button
                   type="submit"
                   disabled={status === 'loading'}
-                  className="px-5 py-2.5 grad-white text-cultr-forest text-sm font-medium rounded-full hover:bg-white/90 transition-all whitespace-nowrap disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-2.5 grad-white text-cultr-forest text-sm font-medium rounded-full hover:bg-white/90 transition-all whitespace-nowrap disabled:opacity-50"
                 >
                   {status === 'loading' ? 'Joining...' : 'Subscribe'}
                 </button>
@@ -86,9 +86,11 @@ export function CTASection({
           </div>
 
           {/* Right - CULTR Logo */}
-          <span className="text-4xl md:text-5xl font-display font-bold text-white shrink-0">
-            CULTR
-          </span>
+          <img
+            src="/cultr-logo-cream-health.svg"
+            alt="CULTR Health"
+            className="h-10 md:h-12 w-auto shrink-0"
+          />
         </div>
       </div>
     </section>
