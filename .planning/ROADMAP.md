@@ -28,11 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. An existing SiPhox customer can be looked up by CULTR member external_id without creating a duplicate
   3. SiPhox credit balance can be checked and a low-balance condition is detected and logged
   4. All SiPhox API responses are validated through Zod schemas before touching the database
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 01-01: SiPhox API client and Zod schemas
-- [ ] 01-02: Database migration and data access layer
+- [ ] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
+- [ ] 01-02-PLAN.md — Database migration (3 tables) and data access layer
 
 ### Phase 2: Checkout Integration
 **Goal**: When a member completes a Catalyst+, Concierge, or Core+add-on checkout, a SiPhox kit order is created automatically without manual intervention
@@ -88,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/2 | Not started | - |
+| 1. Foundation | 0/2 | Planning complete | - |
 | 2. Checkout Integration | 0/2 | Not started | - |
 | 3. Kit Registration | 0/2 | Not started | - |
 | 4. Labs Dashboard | 0/3 | Not started | - |
