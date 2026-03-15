@@ -1,8 +1,8 @@
-# Roadmap: CULTR Health Members Portal
+# Roadmap: SiPhox Health Integration
 
 ## Overview
 
-Build an authenticated members portal that lets CULTR Health patients log in with their phone number, see live order status from Asher Med, manage their profile and documents, and launch intake/renewal forms -- all without calling support or checking email. Four phases: establish phone OTP authentication, deliver the status-first dashboard with order tracking, add profile management and document access, then wire up inline forms and renewal prompts. Each phase produces a deployable, testable increment.
+This integration adds at-home blood testing to the CULTR Health platform by connecting the SiPhox Health API. The work moves through four phases: building the API client and database foundation, wiring automated kit ordering into the Stripe checkout flow, creating the member-facing kit registration experience, and delivering the full labs dashboard with categorized biomarker results. Each phase delivers a verifiable capability and unblocks the next. The existing BiologicalAgeCard and BiomarkerTrends components need wiring to real data, not rebuilding.
 
 ## Phases
 
@@ -12,73 +12,74 @@ Build an authenticated members portal that lets CULTR Health patients log in wit
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Phone OTP Authentication** - Twilio-based phone login with session management and patient identity linking
-- [x] **Phase 2: Dashboard & Order Tracking** - Status-first dashboard with live order data from Asher Med
-- [x] **Phase 3: Profile & Documents** - Patient profile view/edit and document viewer/uploader
-- [x] **Phase 4: Forms & Renewals** - Inline intake and renewal flows with pre-fill and proactive prompts (completed 2026-03-14)
+- [ ] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer
+- [ ] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook
+- [ ] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking
+- [ ] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification
 
 ## Phase Details
 
-### Phase 1: Phone OTP Authentication
-**Goal**: Members can securely authenticate with their phone number and maintain a persistent session linked to their Asher Med patient identity
+### Phase 1: Foundation
+**Goal**: The SiPhox API can be called reliably from server-side code, all responses are validated, and member-to-SiPhox customer mapping is persisted
 **Depends on**: Nothing (first phase)
-**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06, AUTH-07, AUTH-08, AUTH-09, AUTH-10
+**Requirements**: API-01, API-02, API-03, API-04, API-05, DB-01, DB-02, DB-03, DB-04
 **Success Criteria** (what must be TRUE):
-  1. Member can enter a US phone number, receive an SMS OTP, and land on the portal dashboard after entering the correct code
-  2. Member can close the browser, reopen it, and still be logged in (up to 7 days) -- but gets logged out after 15 minutes of inactivity
-  3. Member can log out from any portal page and is redirected to the login screen
-  4. Entering a wrong or expired OTP shows a clear error message; spamming OTP requests gets rate-limited
-  5. Existing magic link login, creator login, and admin login all continue to work unchanged
-**Plans**: 3 plans
+  1. A CULTR member can be created as a SiPhox customer via the API client and the mapping is stored in the database
+  2. An existing SiPhox customer can be looked up by CULTR member external_id without creating a duplicate
+  3. SiPhox credit balance can be checked and a low-balance condition is detected and logged
+  4. All SiPhox API responses are validated through Zod schemas before touching the database
+**Plans**: TBD
 
 Plans:
-- [x] 01-01-PLAN.md -- Portal auth foundation: dual-token JWT library, DB migration, DB helpers
-- [x] 01-02-PLAN.md -- Portal API routes: send-otp, verify-otp, refresh, logout
-- [x] 01-03-PLAN.md -- Portal login UI, portal layout with auth guard, site integration
+- [ ] 01-01: SiPhox API client and Zod schemas
+- [ ] 01-02: Database migration and data access layer
 
-### Phase 2: Dashboard & Order Tracking
-**Goal**: Members can see live order status from Asher Med the moment they log in, with the most important information front and center
+### Phase 2: Checkout Integration
+**Goal**: When a member completes a Catalyst+, Concierge, or Core+add-on checkout, a SiPhox kit order is created automatically without manual intervention
 **Depends on**: Phase 1
-**Requirements**: ORDR-01, ORDR-02, ORDR-03, ORDR-04, ORDR-05
+**Requirements**: CHK-01, CHK-02, CHK-03, CHK-04
 **Success Criteria** (what must be TRUE):
-  1. Logged-in member sees a prominent status card for their most recent active order immediately upon reaching the dashboard
-  2. Member can view a list of all their orders with current status pulled live from Asher Med
-  3. Member can tap an order to see full details including medication name, status, dates, and assigned doctor
-  4. A new member with no orders sees an empty state with a clear call-to-action to start their intake
-**Plans**: 2 plans
+  1. Catalyst+ or Concierge subscription checkout triggers an automatic SiPhox kit order using the member's shipping address
+  2. Core tier checkout offers a $135 blood test add-on and, when selected, triggers a kit order
+  3. If the SiPhox API is down or credits are exhausted, the subscription still activates and support is notified via email
+  4. A refunded order cancels the pending SiPhox kit order before credits are consumed
+**Plans**: TBD
 
 Plans:
-- [x] 02-01-PLAN.md -- Status mapping utility, portal orders API routes (list + detail), and tests
-- [x] 02-02-PLAN.md -- Dashboard client UI: hero card, order list, slide-over panel, empty state, quick links
+- [ ] 02-01: Stripe webhook extension and deferred fulfillment
+- [ ] 02-02: Core tier checkout add-on
 
-### Phase 3: Profile & Documents
-**Goal**: Members can view and manage their personal information and access their uploaded documents without contacting support
+### Phase 3: Kit Registration
+**Goal**: A member who has received a physical blood test kit can register it in their portal and track its status through the lab lifecycle
 **Depends on**: Phase 2
-**Requirements**: PROF-01, PROF-02, PROF-03, PROF-04, DOCS-01, DOCS-02
+**Requirements**: KIT-01, KIT-02, KIT-03, KIT-04, KIT-05
 **Success Criteria** (what must be TRUE):
-  1. Member can view their personal info (name, DOB, phone, email, gender) and physical measurements (height, weight, BMI) on a profile page
-  2. Member can view and edit their shipping address, with changes synced back to Asher Med
-  3. Member can view previously uploaded documents (IDs, consent forms, prescriptions) rendered from S3 preview URLs
-  4. Member can upload a new document from the portal and see it appear in their document list
-**Plans**: 2 plans
+  1. Member can enter a kit ID from their physical kit and see immediate validation feedback (valid, not found, already registered, expired)
+  2. After successful registration, the kit status updates to "Registered" in a visual 7-state timeline
+  3. Members with no kit order see a distinct empty state explaining how to get a kit (with upgrade or add-on CTA based on tier)
+  4. Members at each lifecycle stage (ordered, shipped, registered, processing, results ready) see stage-appropriate messaging and next-step CTAs
+**Plans**: TBD
 
 Plans:
-- [x] 03-01-PLAN.md -- Profile API route (GET/PUT) with tests, profile client page with personal info display and address editing
-- [x] 03-02-PLAN.md -- Documents DB migration, API route (GET/POST) with tests, documents client page with list and upload UI
+- [ ] 03-01: Kit registration API routes and UI
+- [ ] 03-02: Status timeline and smart empty states
 
-### Phase 4: Forms & Renewals
-**Goal**: Members can start or continue intake and renewal flows directly from their dashboard, with forms pre-filled from their existing data
+### Phase 4: Labs Dashboard
+**Goal**: Members can view their complete biomarker results organized by body system, with reference ranges, health scores, and actionable insights directly in their CULTR dashboard
 **Depends on**: Phase 3
-**Requirements**: FORM-01, FORM-02, FORM-03, FORM-04, FORM-05
+**Requirements**: RES-01, RES-02, RES-03, RES-04, RES-05, RES-06, DSH-01, DSH-02, DSH-03, DSH-04, DSH-05, DSH-06, DSH-07, NTF-01
 **Success Criteria** (what must be TRUE):
-  1. Member can launch the intake form from the dashboard and see fields pre-filled with their existing Asher Med patient data
-  2. Member can launch the renewal form from the dashboard and see it pre-filled from their last order and patient data
-  3. Member whose medication supply is running low sees a proactive renewal prompt on the dashboard
-**Plans**: 2 plans
+  1. Member with completed lab results sees biomarkers organized by category (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended) with color-coded reference range bars
+  2. BiologicalAgeCard displays the member's real biological age from SiPhox data (not placeholder values)
+  3. BiomarkerTrends shows real trend data and summary stats (optimal count, needs attention, improving)
+  4. Biomarkers not included in the member's panel show "N/A" rather than being hidden, so members know what is available
+  5. Club tier members see an upgrade CTA instead of lab results; Core members without the add-on see an add-on CTA
+**Plans**: TBD
 
 Plans:
-- [x] 04-01-PLAN.md -- Prefill data layer: mapping utilities, supply estimation, and prefill API route with tests
-- [ ] 04-02-PLAN.md -- Portal intake/renewal wrapper pages, IntakeFormProvider/RenewalFormClient enhancements, dashboard renewal prompt
+- [ ] 04-01: Biomarker mapping config and report fetching
+- [ ] 04-02: Labs dashboard UI and results display
+- [ ] 04-03: Dashboard widgets, tier gating, and results notification email
 
 ## Progress
 
@@ -87,7 +88,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Phone OTP Authentication | 3/3 | Complete | 2026-03-11 |
-| 2. Dashboard & Order Tracking | 2/2 | Complete | 2026-03-11 |
-| 3. Profile & Documents | 2/2 | Complete | 2026-03-14 |
-| 4. Forms & Renewals | 2/2 | Complete   | 2026-03-14 |
+| 1. Foundation | 0/2 | Not started | - |
+| 2. Checkout Integration | 0/2 | Not started | - |
+| 3. Kit Registration | 0/2 | Not started | - |
+| 4. Labs Dashboard | 0/3 | Not started | - |

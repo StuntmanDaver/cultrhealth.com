@@ -92,13 +92,44 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(Populated during roadmap creation)* | | |
+| API-01 | Phase 1 | Pending |
+| API-02 | Phase 1 | Pending |
+| API-03 | Phase 1 | Pending |
+| API-04 | Phase 1 | Pending |
+| API-05 | Phase 1 | Pending |
+| DB-01 | Phase 1 | Pending |
+| DB-02 | Phase 1 | Pending |
+| DB-03 | Phase 1 | Pending |
+| DB-04 | Phase 1 | Pending |
+| CHK-01 | Phase 2 | Pending |
+| CHK-02 | Phase 2 | Pending |
+| CHK-03 | Phase 2 | Pending |
+| CHK-04 | Phase 2 | Pending |
+| KIT-01 | Phase 3 | Pending |
+| KIT-02 | Phase 3 | Pending |
+| KIT-03 | Phase 3 | Pending |
+| KIT-04 | Phase 3 | Pending |
+| KIT-05 | Phase 3 | Pending |
+| RES-01 | Phase 4 | Pending |
+| RES-02 | Phase 4 | Pending |
+| RES-03 | Phase 4 | Pending |
+| RES-04 | Phase 4 | Pending |
+| RES-05 | Phase 4 | Pending |
+| RES-06 | Phase 4 | Pending |
+| DSH-01 | Phase 4 | Pending |
+| DSH-02 | Phase 4 | Pending |
+| DSH-03 | Phase 4 | Pending |
+| DSH-04 | Phase 4 | Pending |
+| DSH-05 | Phase 4 | Pending |
+| DSH-06 | Phase 4 | Pending |
+| DSH-07 | Phase 4 | Pending |
+| NTF-01 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30 ⚠️
+- Mapped to phases: 30
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-14 after initial definition*
+*Last updated: 2026-03-14 after roadmap creation*
