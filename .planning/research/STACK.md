@@ -1,188 +1,255 @@
 # Technology Stack
 
-**Project:** CULTR Health Members Portal (Phone OTP Auth + Patient Dashboard)
-**Researched:** 2026-03-10
+**Project:** SiPhox Health Blood Test Kit Integration
+**Researched:** 2026-03-14
 
 ## Recommended Stack
 
-### Phone OTP Authentication
+### SiPhox API Client
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| `twilio` | ^5.12.0 | Twilio Verify V2 SMS OTP delivery and verification | HIPAA-eligible with signed BAA. Verify V2 is the current API (Authy deprecated). Handles OTP generation, delivery, rate limiting, and verification server-side -- no custom OTP storage needed. $0.05/verification + $0.0083/SMS (US). |
-| `libphonenumber-js` | ^1.12.0 | Phone number parsing, validation, and E.164 formatting | 145KB (vs Google's 550KB). Already aligns with Asher Med's `formatPhoneNumber()` in `lib/asher-med-api.ts`. Validates before sending to Twilio to avoid wasted API calls. |
+| Native `fetch` (Node 18+) | Built-in | HTTP client for SiPhox REST API | The codebase already uses native `fetch` for Asher Med API (`lib/asher-med-api.ts`). Follow the same `asherRequest<T>()` pattern -- typed wrapper function with Bearer token auth, error handling, and query param serialization. No new HTTP library needed. |
+| `zod` | ^3.23.0 (existing) | Runtime validation of SiPhox API responses | Already in the codebase (`lib/validation.ts`). SiPhox is an external API returning health data -- every response MUST be validated at runtime before touching DB or UI. Define Zod schemas for all SiPhox response shapes and `safeParse()` before passing data downstream. TypeScript types alone are insufficient for external API data. |
 
-**Confidence: HIGH** -- Twilio Verify V2 is the standard for SMS OTP in healthcare. The `twilio` npm package is at v5.12.2 (verified via npm). Twilio SMS is explicitly HIPAA-eligible per their docs.
+**Confidence: HIGH** -- The `asherRequest<T>()` pattern in `lib/asher-med-api.ts` (lines 250-320) is proven. It handles auth headers, query params, content type detection, and error extraction. The SiPhox client should be structurally identical: `siphoxRequest<T>(endpoint, options)` with Bearer token instead of X-API-KEY header.
 
-### OTP Input UI
+**Do NOT use axios, got, ky, or any HTTP client library.** Native `fetch` is available in Node 18+ and is already the codebase standard. Adding a new HTTP library for one integration creates an inconsistency.
+
+### SiPhox Response Validation Pattern
+
+```typescript
+// lib/siphox/schemas.ts
+import { z } from 'zod'
+
+const SiPhoxBiomarkerSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  unit: z.string().optional(),
+  value: z.number().nullable(),
+  referenceRange: z.object({
+    low: z.number().optional(),
+    high: z.number().optional(),
+  }).optional(),
+})
+
+const SiPhoxReportSchema = z.object({
+  _id: z.string(),
+  biomarkers: z.array(SiPhoxBiomarkerSchema),
+  createdAt: z.string(),
+  status: z.string(),
+})
+
+// Usage in API client
+export async function getReport(customerId: string, reportId: string) {
+  const raw = await siphoxRequest(`/customers/${customerId}/reports/${reportId}`)
+  const result = SiPhoxReportSchema.safeParse(raw)
+  if (!result.success) {
+    throw new SiPhoxApiError(`Invalid report response: ${result.error.message}`)
+  }
+  return result.data
+}
+```
+
+**Confidence: HIGH** -- Zod `safeParse()` is the standard pattern for external API validation. This catches schema drift (SiPhox changes their API) before bad data enters the system.
+
+### Data Visualization
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| `input-otp` | ^1.4.2 | Accessible, unstyled 6-digit OTP input component | Used by shadcn/ui. Single invisible input with `autocomplete='one-time-code'` enables auto-fill from SMS on iOS/Android. Detects password managers. Fully accessible with screen readers. Unstyled = works with existing Tailwind/brand design system without fighting a component library. |
+| `recharts` | ^3.7.0 (existing, update to ^3.8.0) | Biomarker trend charts, range visualization | Already in the codebase for creator analytics (`components/creators/AnalyticsCharts.tsx`). Recharts 3.x supports `ReferenceArea` for optimal/acceptable range bands, `LineChart` for biomarker trends over time, `RadialBarChart` for score gauges. No new charting library needed. |
+| Custom SVG components | -- | Gauge arcs, sparklines, range bars | Already in the codebase. `BiologicalAgeCard.tsx` has a custom SVG gauge. `BiomarkerTrends.tsx` has custom SVG sparklines. Continue this pattern for simple visualizations. Use Recharts only when you need axes, tooltips, or responsive containers. |
 
-**Confidence: HIGH** -- Verified on GitHub (guilhermerodz/input-otp). The "unstyled" approach matches CULTR's pattern of Tailwind-first styling without component libraries like shadcn/ui. React 18 compatible.
+**Confidence: HIGH** -- Recharts 3.8.0 (released March 6, 2025) is the latest stable. The project is on ^3.7.0 which will auto-resolve to 3.8.0 on next `npm install`. Key Recharts features for this integration:
 
-### Session Management (Extend Existing)
+- **`ReferenceArea`** -- Draws colored bands on charts for optimal/acceptable/suboptimal ranges. Perfect for showing where a biomarker value falls relative to reference ranges.
+- **`LineChart` + `Area`** -- Biomarker value trends over multiple reports.
+- **`RadialBarChart`** -- Overall health score gauge (alternative to the custom SVG gauge already in BiologicalAgeCard).
+- **`ResponsiveContainer`** -- Built into v3 charts, handles mobile/desktop resizing.
+
+**Do NOT add nivo, tremor, visx, Chart.js, or ApexCharts.** Recharts is already a dependency, is actively maintained (5 days since last release), covers all required chart types, and adding a second charting library creates bundle bloat and inconsistent styling.
+
+### Biomarker Range Visualization (Recharts ReferenceArea)
+
+```typescript
+// Example: Biomarker value chart with optimal range band
+<LineChart data={biomarkerHistory}>
+  <CartesianGrid strokeDasharray="3 3" />
+  <XAxis dataKey="date" />
+  <YAxis domain={['auto', 'auto']} />
+  {/* Optimal range band (green) */}
+  <ReferenceArea y1={optimalLow} y2={optimalHigh} fill="#10B981" fillOpacity={0.1} />
+  {/* Acceptable range band (yellow) */}
+  <ReferenceArea y1={acceptableLow} y2={acceptableHigh} fill="#F59E0B" fillOpacity={0.05} />
+  <Line type="monotone" dataKey="value" stroke="#2A4542" strokeWidth={2} />
+  <Tooltip />
+</LineChart>
+```
+
+### Biomarker Range Bar (Custom Tailwind Component)
+
+For individual biomarker cards, the range bar visualization does NOT need Recharts. Use a custom Tailwind component (the existing `BiomarkerTrends.tsx` pattern of inline SVG + Tailwind divs is the right approach):
+
+```typescript
+// Horizontal range bar showing value position within reference range
+function RangeBar({ value, low, high, optimalLow, optimalHigh }) {
+  // Calculate percentage position of value within full range
+  // Render as stacked Tailwind divs with colored segments
+  // No chart library needed for this
+}
+```
+
+**Confidence: HIGH** -- The existing codebase already does this. `BiologicalAgeCard.tsx` line 98 has a gradient range bar. `BiomarkerTrends.tsx` line 69 has SVG sparklines. This is the right pattern for small inline visualizations.
+
+### Database & Caching
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| `jose` | ^6.1.3 (existing) | JWT creation/verification for phone-authenticated sessions | Already in use (`lib/auth.ts`). Extend `createSessionToken()` to accept phone number as identity instead of email. No new dependency needed. |
-| `@vercel/postgres` | ^0.10.0 (existing) | OTP attempt tracking, phone-to-patient-id cache | Already in use. Store phone verification records and cached `asher_patient_id` lookups. No new dependency. |
+| `@vercel/postgres` | ^0.10.0 (existing) | Store SiPhox customer mappings, cached biomarker data, kit status | Already the database layer. Add tables for `siphox_customers` (member-to-SiPhox ID mapping), `siphox_kits` (kit registration and status), `siphox_reports` (cached report data). |
+| Next.js `fetch` cache | Built-in | Cache SiPhox API responses on server | Use `next: { revalidate: 3600 }` on `fetch()` calls for biomarker reference data (changes rarely). For patient-specific report data, use `no-store` and cache in DB instead. |
+| DB-level caching | -- | Store parsed biomarker results in PostgreSQL | SiPhox report data should be fetched once, parsed, and stored in local DB. Subsequent dashboard loads read from DB, not SiPhox API. Refresh when user explicitly requests or webhook fires. |
 
-**Confidence: HIGH** -- These are already in the codebase and proven. The session system in `lib/auth.ts` uses `jose` for HS256 JWTs with 7-day expiry, httpOnly cookies. Extending it is lower risk than introducing a new auth library.
+**Confidence: HIGH** -- The DB-caching-over-API-caching approach is correct for health data because:
+1. SiPhox API has rate limits (undocumented but assumed for partner APIs)
+2. Report data is immutable after lab processing (no reason to re-fetch)
+3. Dashboard page loads should never depend on a third-party API being available
+4. Cached data enables offline-first dashboard rendering
 
-### Phone Number Input UI
+**Do NOT use Redis/Upstash for SiPhox data caching.** The project has optional Upstash Redis for rate limiting, but biomarker data belongs in PostgreSQL alongside the patient record. Redis is wrong for structured health data that needs querying by category, date range, and biomarker type.
+
+**Do NOT use `unstable_cache`.** It is experimental in Next.js 14 and being replaced by `use cache` in Next.js 15. Stick with DB-level caching for durability and the built-in `fetch` cache for transient API responses.
+
+### Caching Strategy Detail
+
+| Data Type | Cache Location | TTL | Invalidation |
+|-----------|---------------|-----|--------------|
+| SiPhox customer ID mapping | PostgreSQL `siphox_customers` | Permanent | Never (1:1 mapping doesn't change) |
+| Kit registration status | PostgreSQL `siphox_kits` | Permanent, refreshed on status change | Poll SiPhox `/kits` endpoint daily via cron, or on user dashboard load if status != 'completed' |
+| Biomarker report results | PostgreSQL `siphox_reports` + JSONB column | Permanent once processed | Fetched once when report status = 'completed', never re-fetched |
+| Biomarker reference list | Next.js `fetch` cache | 24 hours (`revalidate: 86400`) | `GET /biomarkers` returns static catalog, changes rarely |
+| SiPhox credit balance | No cache | N/A | Always fetch fresh from `GET /credits` before ordering |
+
+### HIPAA Data Handling
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| No new library | -- | Phone number input on login form | Use a native `<input type="tel">` with Tailwind styling matching existing `Input.tsx` component. US-only phone numbers (matches Asher Med's US telehealth service). `libphonenumber-js` handles formatting on submit. Adding `react-phone-number-input` (with country dropdown, flag icons) is overkill for a US-only service. |
+| Existing HIPAA patterns | -- | PHI handling for biomarker data | Biomarker results are PHI. Follow existing patterns: no console.log of values, no client-side error messages with data, `private, no-cache` response headers on authenticated routes (already configured in `next.config.js`). |
+| `@vercel/postgres` | ^0.10.0 (existing) | Encrypted at rest via Neon PostgreSQL | Neon provides encryption at rest (AES-256) and in transit (TLS). No additional encryption layer needed for biomarker storage. |
 
-**Confidence: HIGH** -- Asher Med only operates in US states. A country selector adds complexity without value. The existing `isValidPhoneNumber()` in `asher-med-api.ts` already validates 10-15 digit numbers.
+**Confidence: HIGH** -- The codebase already handles PHI from Asher Med (patient data, intake forms, orders). Biomarker data follows the same classification and handling rules.
 
-### Rate Limiting (Extend Existing)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Existing `lib/rate-limit.ts` | -- | OTP request rate limiting (IP + phone-based) | Already supports in-memory (dev) and Upstash Redis (production) backends. Add a new preconfigured `otpLimiter` alongside existing `apiLimiter`, `formLimiter`, `strictLimiter`. |
-| Twilio Verify built-in limits | -- | Server-side rate limiting on OTP delivery | Twilio enforces 5 verification attempts per phone per 10 minutes automatically. This is defense-in-depth. |
-
-**Confidence: HIGH** -- Dual rate limiting (app-level + Twilio-level) is standard practice. The existing `rateLimit()` factory function supports custom window/limit configs.
-
-### HIPAA Session Configuration
+### Stripe Integration (Extend Existing)
 
 | Technology | Version | Purpose | Why |
 |------------|---------|---------|-----|
-| `jose` (existing) | ^6.1.3 | Short-lived session tokens for ePHI access | Current 7-day session is too long for HIPAA ePHI access. Phone-auth sessions should use 1-hour access token + sliding refresh. See Architecture section for details. |
+| `stripe` | ^20.2.0 (existing) | Add $135 blood test kit add-on to Core tier checkout | Extend existing checkout flow in `app/api/checkout/route.ts`. Add a line item for the SiPhox kit when Core tier + add-on selected. Catalyst+ and Concierge auto-include it (modify checkout to always add the line item for those tiers). |
 
-**Confidence: MEDIUM** -- HIPAA's automatic logoff is an "addressable" safeguard (not a specific minute requirement), but 15 minutes of inactivity is the widely accepted maximum for web apps accessing ePHI. The existing 7-day session works for the marketing site/library but needs tighter controls for the patient portal.
+**Confidence: HIGH** -- The existing Stripe checkout already supports multiple line items, subscription + product bundles, and coupon codes. Adding a kit line item is a configuration change, not an architectural one.
 
-## No New Auth Framework
+### API Error Handling & Resilience
 
-**Do NOT introduce NextAuth.js, Auth.js, Clerk, or Supertokens.**
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| Existing `lib/resilience.ts` patterns | -- | Retry logic for SiPhox API calls | The codebase has retry and circuit breaker patterns. Apply to SiPhox API calls, especially for order creation (must succeed) and report fetching (can gracefully degrade). |
+| Custom `SiPhoxApiError` class | -- | Typed error handling | Follow `AsherMedApiError` pattern from `lib/asher-med-api.ts` line 239. Include `statusCode`, `response`, and `endpoint` for debugging. |
 
-Rationale:
-1. The existing JWT auth in `lib/auth.ts` is simple, working, and well-understood (200 lines of code)
-2. NextAuth/Auth.js would require restructuring the entire auth flow including creator and admin auth
-3. Phone OTP is a single flow: send code, verify code, issue JWT. This does not warrant a framework
-4. Clerk/Supertokens add SaaS dependency and monthly costs for a feature that's 50 lines of Twilio API calls
-5. The codebase has 3 coexisting auth types (member, creator, admin) -- bolting on a framework risks breaking the other two
-6. HIPAA compliance is better controlled when you own the auth code (no black-box token storage)
+**Confidence: HIGH** -- The pattern is established. The SiPhox client should mirror the Asher Med client's error handling exactly.
+
+### SiPhox API Client Architecture
+
+```
+lib/siphox/
+  api.ts           # Core API client (siphoxRequest<T>, auth, error handling)
+  schemas.ts       # Zod schemas for all SiPhox API responses
+  types.ts         # TypeScript types (inferred from Zod schemas)
+  customers.ts     # Customer CRUD operations
+  orders.ts        # Kit order operations
+  kits.ts          # Kit validation and registration
+  reports.ts       # Report fetching and parsing
+  biomarkers.ts    # Biomarker catalog and reference data
+  credits.ts       # Credit balance checking
+```
+
+This mirrors the structure of existing integrations (`lib/asher-med-api.ts` is monolithic but the SiPhox client benefits from splitting by endpoint group due to the larger surface area).
 
 ## Alternatives Considered
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| SMS Provider | Twilio Verify V2 | AWS SNS, Vonage, Sinch | Twilio offers HIPAA BAA. Verify handles OTP lifecycle (no custom code storage). AWS SNS requires building OTP logic yourself. Vonage/Sinch have smaller ecosystems. |
-| SMS Provider | Twilio Verify V2 | Firebase Auth (phone) | Firebase Phone Auth is free but not HIPAA-eligible. No BAA available from Google for Firebase Auth. |
-| OTP Input | `input-otp` | `react-otp-input` v3.1.1 | Last published 2 years ago. `input-otp` is more actively maintained, better accessibility (single invisible input vs multiple inputs), and has `autocomplete='one-time-code'` for SMS auto-fill. |
-| OTP Input | `input-otp` | Custom 6-input implementation | Reinventing paste handling, focus management, screen reader support, and password manager detection is unnecessary when `input-otp` solves all of these. |
-| Phone Input | Native `<input type="tel">` | `react-phone-number-input` | Country dropdown is unnecessary for US-only service. Adds 50KB+ for flag SVGs. |
-| Auth Framework | Extend existing `jose` JWT | NextAuth.js / Auth.js | Would require restructuring 3 existing auth flows. Phone OTP is too simple to warrant a framework. Risk of breaking creator and admin auth. |
-| Auth Framework | Extend existing `jose` JWT | Clerk | SaaS dependency ($25+/mo at scale), black-box token management, harder to HIPAA-audit. |
-| Session Store | JWT in httpOnly cookie | Server-side sessions (Redis) | JWT approach is already working. Server-side sessions would require Redis for every request, adding infrastructure. The existing pattern of stateless JWTs is adequate for this scale. |
-| Phone Validation | `libphonenumber-js` | Existing `isValidPhoneNumber()` | The existing function in `asher-med-api.ts` does basic digit-count validation. `libphonenumber-js` adds proper US number format validation, carrier type detection, and formatting -- worth the 65KB code cost for a phone-first auth system. |
+| HTTP Client | Native `fetch` | `axios` | Adds 29KB, the codebase uses `fetch` everywhere. Axios offers interceptors but `siphoxRequest<T>()` handles auth/error centrally without them. |
+| HTTP Client | Native `fetch` | `ky` | Cleaner API than fetch but adds a dependency for no real benefit when the wrapper function handles everything. |
+| Response Validation | `zod` (existing) | `io-ts`, `yup`, `typebox` | Zod is already in the project. Adding a second validation library creates confusion about which to use where. |
+| Charting | `recharts` (existing) | `nivo` | Nivo has more chart types but adds ~150KB. Recharts covers LineChart, AreaChart, RadialBarChart, and ReferenceArea -- all we need. Already in the bundle. |
+| Charting | `recharts` (existing) | `tremor` | Tremor is built on Recharts anyway. It provides higher-level dashboard components but fights with the existing Tailwind design system. |
+| Charting | `recharts` (existing) | `visx` (Airbnb) | Lower-level D3 wrapper requiring more custom code. Overkill when Recharts already handles the chart types needed. |
+| Charting | Custom SVG + Tailwind | `react-gauge-chart` | Adding a library for one gauge component is wasteful. The existing `BiologicalAgeCard.tsx` already has a custom gauge that can be adapted. |
+| Data Caching | PostgreSQL DB cache | Redis (Upstash) | Biomarker data is structured, queryable, and persistent. Redis is for ephemeral cache (rate limits, sessions). Wrong tool for health records. |
+| Data Caching | PostgreSQL DB cache | `unstable_cache` | Experimental API being deprecated in Next.js 15. DB caching is durable and portable. |
+| State Management | React Context (existing) | Zustand, Jotai, Redux | The codebase uses React Context for all shared state. Biomarker data flows server->client via props or context. No state library needed. |
 
 ## New Dependencies to Install
 
 ```bash
-# Production dependencies
-npm install twilio@^5.12.0 input-otp@^1.4.2 libphonenumber-js@^1.12.0
+# No new production dependencies needed
+# All required libraries are already in the project:
+#   - zod (validation)
+#   - recharts (charts)
+#   - @vercel/postgres (database)
+#   - stripe (payments)
+#   - jose (auth)
 
-# No new dev dependencies needed
+# Optional: update recharts to latest
+npm install recharts@^3.8.0
 ```
 
-**Total new dependencies: 3** (twilio, input-otp, libphonenumber-js)
+**Total new dependencies: 0**
+
+This is the ideal outcome. The existing stack covers every requirement for this integration. The work is entirely in new application code (API client, database tables, UI components), not in new library adoption.
 
 ## Environment Variables to Add
 
 ```bash
-# Twilio Verify (required)
-TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_VERIFY_SERVICE_SID=VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-TWILIO_PHONE_NUMBER=+1XXXXXXXXXX  # For caller ID display (optional with Verify)
+# SiPhox Health API (required)
+SIPHOX_API_KEY=sk_xxxxxxxxxxxxxxxxxxxx          # Bearer token for API auth
+SIPHOX_API_URL=https://connect.siphoxhealth.com/api/v1  # Base URL
+
+# SiPhox Configuration (required)
+SIPHOX_KIT_TYPE=longevity_essentials             # Kit type to order (from SiPhox catalog)
+SIPHOX_NOTIFY_RECEIVER=true                      # Email kit recipients
+
+# SiPhox Configuration (optional)
+SIPHOX_IS_TEST_ORDER=false                       # Set true for staging (if SiPhox supports test mode)
 ```
 
-**Twilio Console Setup Required:**
-1. Create a Twilio account and upgrade (free trial cannot send to unverified numbers)
-2. Sign the Business Associate Addendum (BAA) for HIPAA -- requires Security or Enterprise edition
-3. Create a Verify Service in Twilio Console with:
-   - `friendlyName`: "CULTR Health"
-   - `codeLength`: 6
-   - `doNotShareWarningEnabled`: true (adds "Don't share this code" to SMS)
-4. Copy the Service SID (starts with `VA`) to `TWILIO_VERIFY_SERVICE_SID`
+**SiPhox Partner Portal Setup Required:**
+1. Confirm API credentials with SiPhox partner team
+2. Verify available kit types and their IDs
+3. Confirm credit balance and pricing per kit
+4. Request webhook URL configuration (if SiPhox supports webhooks for report completion)
+5. Obtain full API documentation (the public docs are minimal -- partner-level docs are needed)
 
-## Twilio Verify V2 API Usage Pattern
+## Key File Patterns to Follow
 
-```typescript
-// Server-side only (never expose credentials to client)
-import twilio from 'twilio'
-
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-)
-
-// Send OTP
-await client.verify.v2
-  .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-  .verifications.create({
-    channel: 'sms',
-    to: '+15551234567', // E.164 format
-  })
-// Returns { status: 'pending', sid: '...' }
-
-// Verify OTP
-const check = await client.verify.v2
-  .services(process.env.TWILIO_VERIFY_SERVICE_SID!)
-  .verificationChecks.create({
-    code: '123456',
-    to: '+15551234567',
-  })
-// Returns { status: 'approved' | 'pending', valid: true | false }
-```
-
-**Key points:**
-- Twilio stores and validates OTP codes server-side. You never store OTP codes in your database.
-- Default OTP expiration: 10 minutes (configurable in Twilio Console)
-- Built-in rate limit: 5 attempts per phone per 10 minutes
-- `doNotShareWarningEnabled` adds security text to SMS body
-
-## HIPAA-Specific Session Architecture
-
-The existing session system needs two modifications for HIPAA compliance:
-
-### 1. Dual-Token Strategy
-
-| Token | Duration | Purpose | Storage |
-|-------|----------|---------|---------|
-| Access token | 15 minutes | Authorizes API requests to ePHI endpoints | httpOnly cookie (`cultr_portal_session`) |
-| Refresh token | 7 days | Silently refreshes access token when user is active | httpOnly cookie (`cultr_portal_refresh`) |
-
-**Why not keep the existing 7-day session?** The current `cultr_session` cookie (7 days, single token) is fine for the marketing site, library, and creator portal. But patient portal endpoints return ePHI (orders, profile, documents from Asher Med). HIPAA's automatic logoff requirement means sessions accessing ePHI should time out after inactivity. A 15-minute access token that only refreshes on active use achieves this.
-
-### 2. Coexistence with Existing Auth
-
-| Cookie | Auth Type | Used By | Duration |
-|--------|-----------|---------|----------|
-| `cultr_session` (existing) | Email magic link JWT | Library, marketing site, creator portal | 7 days |
-| `cultr_portal_session` (new) | Phone OTP JWT + access token | Patient portal ePHI routes | 15 minutes |
-| `cultr_portal_refresh` (new) | Phone OTP JWT + refresh token | Silent token refresh | 7 days |
-
-The phone-auth session uses separate cookie names to avoid conflicts with existing auth. Portal API routes check `cultr_portal_session` first.
+| Pattern | Existing Example | SiPhox Equivalent |
+|---------|-----------------|-------------------|
+| API client module | `lib/asher-med-api.ts` | `lib/siphox/api.ts` |
+| Config constants | `lib/config/asher-med.ts` | `lib/config/siphox.ts` |
+| Database operations | `lib/creators/db.ts` | `lib/siphox/db.ts` |
+| API route handler | `app/api/intake/submit/route.ts` | `app/api/siphox/*/route.ts` |
+| Client component | `app/intake/IntakeFormClient.tsx` | `app/dashboard/labs/LabsDashboardClient.tsx` |
+| Webhook handler | `app/api/webhook/stripe/route.ts` | `app/api/webhook/siphox/route.ts` (if supported) |
 
 ## Sources
 
-- [Twilio Verify Node.js Quickstart](https://www.twilio.com/docs/verify/quickstarts/node-express)
-- [Twilio Verify API Documentation](https://www.twilio.com/docs/verify/api)
-- [Twilio Verify Developer Best Practices](https://www.twilio.com/docs/verify/developer-best-practices)
-- [Twilio Verify Rate Limits and Timeouts](https://www.twilio.com/docs/verify/api/rate-limits-and-timeouts)
-- [Twilio Verify Service Configuration](https://www.twilio.com/docs/verify/api/service)
-- [Twilio and HIPAA](https://www.twilio.com/en-us/hipaa)
-- [Twilio Verify Pricing](https://www.twilio.com/en-us/verify/pricing)
-- [input-otp GitHub](https://github.com/guilhermerodz/input-otp)
-- [libphonenumber-js npm](https://www.npmjs.com/package/libphonenumber-js)
-- [twilio npm](https://www.npmjs.com/package/twilio) -- v5.12.2 verified
-- [HIPAA Session Timeout Rules (Censinet)](https://censinet.com/perspectives/hipaa-compliance-session-timeout-rules)
-- [HIPAA Automatic Logoff Requirements](https://compliancy-group.com/automatic-logoff-procedures-under-the-hipaa-security-rule/)
-- [HIPAA MFA Requirements 2026 (StrongDM)](https://www.strongdm.com/blog/hipaa-mfa-requirements)
+- [SiPhox Health Partner Program](https://siphoxhealth.com/partner) -- REST API overview, partner capabilities
+- [SiPhox Partner FAQ](https://siphoxhealth.com/partner/faq) -- API implementation timeline, customization options
+- [Recharts GitHub Releases](https://github.com/recharts/recharts/releases) -- v3.8.0 latest (March 2025)
+- [Recharts ReferenceArea API](https://recharts.org/en-US/api/ReferenceArea) -- Range band visualization
+- [Next.js 14 Data Fetching and Caching](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating) -- Server-side fetch caching
+- [Next.js unstable_cache](https://nextjs.org/docs/app/api-reference/functions/unstable_cache) -- Deprecated, use DB caching instead
+- [Zod Documentation](https://zod.dev/) -- Runtime validation for API responses
+- [Fetch Wrapper Best Practices for Next.js](https://dev.to/dmitrevnik/fetch-wrapper-for-nextjs-a-deep-dive-into-best-practices-53dh) -- Typed fetch wrapper patterns
+
+---
+
+*Stack analysis: 2026-03-14*

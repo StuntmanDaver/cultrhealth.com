@@ -1,389 +1,381 @@
 # Domain Pitfalls
 
-**Domain:** Telehealth patient portal with phone OTP auth and EHR integration
-**Researched:** 2026-03-10
-**Confidence:** HIGH (verified against codebase, official docs, enforcement actions)
+**Domain:** SiPhox Health blood test API integration — kit ordering, registration, biomarker results display
+**Researched:** 2026-03-14
+**Confidence:** HIGH (verified against codebase patterns, SiPhox API schemas from PROJECT.md, Stripe docs, HIPAA enforcement actions)
 
 ---
 
 ## Critical Pitfalls
 
-Mistakes that cause security breaches, HIPAA violations, or rewrites.
+Mistakes that cause HIPAA violations, broken checkout flows, lost customer data, or rewrites.
 
 ---
 
-### Pitfall 1: Google Analytics Running on Authenticated Patient Portal Pages
+### Pitfall 1: SiPhox Customer Creation Race Condition on Checkout
 
-**What goes wrong:** The CULTR codebase includes Google Analytics 4 (`NEXT_PUBLIC_GA_MEASUREMENT_ID`) loaded globally in `app/layout.tsx`. When the new patient portal is built under authenticated routes (e.g., `/dashboard`, `/library`, `/intake`), GA4 will fire on pages displaying PHI -- order statuses, medication names, patient profiles. Google does not sign BAAs for Analytics. URL paths alone (e.g., `/dashboard/orders/tirzepatide-renewal`) constitute PHI when linkable to an individual. The OCR has classified this as willful neglect (Tier 4 penalties, $100M+ in settlements 2023-2025 across the industry). Advocate Aurora Health notified 3 million patients after MyChart portal tracking exposed PHI via Google and Meta pixels.
+**What goes wrong:** The Stripe webhook handler (`app/api/webhook/stripe/route.ts`) fires `checkout.session.completed` and needs to create a SiPhox customer + order for Catalyst+/Concierge subscribers. But the webhook fires asynchronously -- the member's CULTR account may not exist in the local DB yet when the webhook arrives. The existing codebase already has this pattern: the webhook tries to look up `asher_patient_id` from `asher_orders` by email, and if the patient hasn't completed intake yet, the lookup fails silently. With SiPhox, the same problem occurs: you cannot create a SiPhox order for a customer who doesn't exist in SiPhox yet, and you cannot create a SiPhox customer without the member's shipping address (required by `CreateOrderRequest`).
 
-**Why it happens:** GA is loaded site-wide for marketing analytics and nobody thinks to exclude authenticated routes. The script runs before any auth check because it is in the root layout.
+**Why it happens:** Stripe webhooks are non-deterministic in timing. The `checkout.session.completed` webhook may arrive before the member's shipping address is stored locally (it comes from intake forms, which happen after checkout). The SiPhox `POST /customer` and `POST /orders` calls are sequential dependencies -- customer must exist before order can reference them.
 
-**Consequences:** HIPAA violation (potentially Tier 4 -- willful neglect), OCR investigation, patient notification requirements, $50K-$1.5M per violation category fines.
+**Consequences:** Member pays for a tier that includes blood tests, but no kit is ever ordered. No error is surfaced to the member. Support gets confused tickets weeks later when kits never arrive. Credits are not consumed, so no financial loss, but the member experience is broken.
 
 **Prevention:**
-1. Move GA4 script loading out of the root `layout.tsx` and into a client component that checks the current route
-2. Create an explicit allowlist of marketing routes where GA4 can fire (homepage, pricing, quiz, science, FAQ, community, how-it-works, creators public pages)
-3. Block GA4 on all authenticated routes: `/dashboard/*`, `/library/*` (when authenticated), `/intake/*`, `/renewal/*`, `/provider/*`, `/admin/*`
-4. Alternatively, use `LayoutShell.tsx` pattern -- the codebase already hides chrome for `/creators/portal` and `/admin`; extend this pattern to conditionally load GA4
+1. **Deferred order pattern:** On `checkout.session.completed`, record the SiPhox order _intent_ in a local `siphox_orders` table with `status: 'pending_address'`. Do NOT call SiPhox API yet.
+2. **Trigger on address availability:** When the member submits their intake form (which includes shipping address), check for pending SiPhox orders and fulfill them at that point. The intake form already collects `ShippingAddressForm` data.
+3. **Fallback cron:** Build a cron job (like the existing `cron/approve-commissions`) that checks for `pending_address` SiPhox orders older than 24 hours and alerts admin.
+4. **For Core add-on ($135):** The address is available at checkout time (Stripe Checkout collects it), so this path can order immediately from the webhook.
 
-**Detection:** Search for `gtag` or `GA_MEASUREMENT_ID` references and verify they cannot execute on authenticated pages. Audit network requests from the portal in browser DevTools to confirm no Google Analytics calls fire.
+**Detection:** Query `siphox_orders WHERE status = 'pending_address' AND created_at < NOW() - INTERVAL '48 hours'`. Any rows mean kits were never ordered.
 
-**Phase:** Must be addressed in Phase 1 (authentication/session setup) before any PHI-displaying pages are built. This is a pre-existing risk that becomes critical the moment authenticated portal pages go live.
+**Phase:** Phase 2 (checkout integration). This is the most architecturally significant pitfall because it determines the entire order flow design.
 
-**Confidence:** HIGH -- Google's own support page states GA4 is not HIPAA-compliant. OCR enforcement actions are public record.
+**Confidence:** HIGH -- the exact same race condition already exists in the codebase between Stripe checkout and Asher Med patient lookup (lines 149-168 of the webhook handler).
 
 ---
 
-### Pitfall 2: Using Twilio Programmable SMS Instead of Twilio Verify for OTP
+### Pitfall 2: SiPhox Credit Balance Exhaustion with No Alerting
 
-**What goes wrong:** Building OTP from scratch with Twilio Programmable SMS means you must: buy a phone number, generate random codes, store codes in your database, manage expiration, build rate limiting per phone number, handle retry logic, implement brute-force lockout, detect toll fraud / SMS pumping, and manage geographic permissions. Every one of these is a security surface area you own. Projects routinely ship OTP with 4 of these 8 protections and get hit by SMS pumping attacks that cost $500-5000/day before anyone notices.
+**What goes wrong:** CULTR pre-purchases SiPhox credits and the API deducts credits on each `POST /orders` call. The `GET /credits` endpoint returns the current balance, but nothing prevents a member from checking out with a blood test add-on when CULTR has zero credits remaining. The SiPhox order call fails, but the member has already paid Stripe. Now you have a paid order with no fulfillment capability and no automated way to know it happened.
 
-**Why it happens:** Developers reach for the more familiar Programmable SMS API because they have used it before, or because they think "we just need to send a text." Twilio Verify is a separate product that handles all of the above automatically.
+**Why it happens:** Credit balances are checked on the SiPhox side, not the CULTR side. The checkout flow has no pre-check for available credits. Unlike payment failures (which Stripe handles), credit exhaustion is a business-logic failure that happens silently in a background webhook handler.
 
-**Consequences:** Toll fraud (SMS pumping can run up bills fast), brute force attacks on OTP codes (a 6-digit code has only 1 million combinations), OTP codes stored insecurely in database (new PHI-adjacent data to protect), and significantly more code to maintain.
+**Consequences:** Paid members don't receive kits. Support must manually reconcile. If multiple orders fail before anyone notices, you have a backlog of unhappy customers. Refund requests and chargebacks. Reputational damage for a health platform.
 
 **Prevention:**
-1. Use **Twilio Verify API** (not Programmable SMS) -- it manages code generation, storage, expiry, rate limits per phone, Fraud Guard (automatic SMS pumping detection), and multi-channel fallback (SMS -> voice -> email)
-2. You do not buy a phone number -- Verify manages its own sending pool
-3. You do not store OTP codes -- Verify handles storage and validation server-side
-4. Enable Verify Fraud Guard in the Twilio console (blocks suspicious SMS patterns automatically)
-5. Set Verify Geographic Permissions to US-only (or US + territories) to prevent international toll fraud
-6. Implement Service Rate Limits on the Verify service: 1 verification per 30 seconds per phone number with exponential backoff
+1. **Credit monitoring:** Build a `GET /api/admin/siphox/credits` route that calls `GET /credits` and caches the result. Display balance on admin dashboard.
+2. **Low-credit alerting:** When credit balance drops below a threshold (e.g., 10 credits), send an admin email via Resend. Check balance after every successful order.
+3. **Pre-order credit check:** Before creating a SiPhox order, call `GET /credits`. If insufficient, set the local order to `status: 'pending_credits'` and alert admin instead of silently failing.
+4. **Graceful degradation:** If credits are exhausted, hide the blood test add-on from the Core checkout UI (or show "Currently Unavailable") rather than accepting payment for an undeliverable product.
+5. **Never fail silently:** The existing webhook handler pattern uses `console.error` + continue (lines 271-274 in the Stripe webhook). For SiPhox failures, this is insufficient -- failed kit orders must be surfaced to admin, not just logged.
 
-**Detection:** If you see `client.messages.create()` in OTP code instead of `client.verify.v2.services(sid).verifications.create()`, you are using the wrong API.
+**Detection:** `siphox_orders WHERE status = 'failed_credits'` count > 0. Also: SiPhox credit balance < 5.
 
-**Phase:** Phase 1 (auth implementation). This is a foundational choice that affects all downstream OTP logic.
+**Phase:** Phase 2 (checkout integration). Must be designed alongside the order flow, not bolted on later.
 
-**Confidence:** HIGH -- Twilio's own migration guide explicitly recommends Verify over Programmable SMS for OTP use cases. Fraud Guard is documented as a built-in Verify feature.
+**Confidence:** HIGH -- the SiPhox API uses `purchase_with_attached_payment: false` (credits model confirmed in PROJECT.md). Every credit-based API system has this failure mode.
 
 ---
 
-### Pitfall 3: OTP Rate Limiting Only by IP, Not by Phone Number
+### Pitfall 3: Storing Raw Biomarker Values as PHI Without Encryption at Rest
 
-**What goes wrong:** The existing `lib/rate-limit.ts` has `strictLimiter` (3 attempts per 15 minutes per IP) and `apiLimiter` (10 per minute per IP). These are IP-based only. An attacker can rotate IPs (trivial with cloud functions or botnets) and: (a) brute-force OTP codes by trying thousands of codes against a single phone number from different IPs, or (b) trigger SMS pumping by requesting OTPs for thousands of different phone numbers from the same IP range, each just under the per-IP limit.
+**What goes wrong:** Biomarker results (blood glucose, testosterone levels, cholesterol values) are individually identifiable health information -- textbook PHI under HIPAA. The existing codebase stores data in Neon PostgreSQL via `@vercel/postgres`, which provides TLS in transit but does NOT automatically encrypt data at rest at the application level. Neon's infrastructure provides encryption at the storage layer, but HIPAA requires you to assess and document this -- not assume it. If you cache biomarker results in a local `biomarker_results` table with raw values and no column-level encryption, and that database is compromised, every member's blood work is exposed in plaintext.
 
-**Why it happens:** The existing rate limiter was built for generic API protection. OTP has different threat models -- the identifier that matters is the phone number, not (just) the IP.
+**Why it happens:** Developers treat the database as a black box ("the cloud provider encrypts it"). The existing codebase already stores some health data (intake forms, physical measurements via Asher Med), but biomarker results are far more sensitive and voluminous (150+ data points per member per test).
 
-**Consequences:** OTP brute force (6-digit code = 1M combinations; at 10 attempts/min/IP from 100 IPs = 1000 attempts/min, cracked in ~17 minutes without phone-based limiting), Twilio bill shock from SMS pumping, account takeover.
+**Consequences:** HIPAA breach notification required (if >500 individuals: notify OCR + media). Fines: $100-$50,000 per violation depending on tier. Loss of trust that is existential for a health platform.
 
 **Prevention:**
-1. Rate limit OTP **send** requests by phone number: max 1 per 30 seconds, max 5 per hour, max 10 per day (Twilio Verify handles this if used, but add your own layer too)
-2. Rate limit OTP **verify** requests by phone number: max 5 attempts per code, then invalidate the code and require a new one
-3. Rate limit by IP as a secondary layer (keep existing `strictLimiter`)
-4. Combine: rate limit by phone + IP pair to catch distributed attacks against a single number
-5. Use Redis (Upstash is already configured in env vars) for rate limiting -- the in-memory `Map` in `lib/rate-limit.ts` resets on every serverless cold start, making it effectively useless on Vercel
+1. **Minimize local storage:** Do NOT cache all 150+ biomarkers in your database. Fetch from SiPhox API on demand and cache in memory (React state) for the session only. Store only the SiPhox `customer_id` and `report_id` locally.
+2. **If you must cache** (for trends/historical display): encrypt biomarker values at the application level before writing to DB. Use AES-256 with a separate encryption key stored in env vars (not the DB). Decrypt only when rendering for the authenticated member.
+3. **Follow existing HIPAA patterns:** The codebase already has a "No PHI logging" pattern (see Stripe webhook handler: "All data stored is PHI-free"). Apply the same discipline. Never `console.log` biomarker values.
+4. **Verify Neon encryption:** Neon Postgres encrypts data at rest with AES-256 at the storage layer. Document this in your HIPAA risk assessment. But do NOT rely on it as your only control -- defense in depth.
+5. **Audit access:** Add a `biomarker_access_log` table that records which member's data was accessed, when, and by whom (member self-service vs. admin).
 
-**Detection:** Monitor Twilio usage dashboard for unexpected spikes. Track OTP conversion rate (codes verified / codes sent) -- a rate below 30% indicates abuse. Alert on any phone number receiving > 10 OTPs in 24 hours.
+**Detection:** Search codebase for `console.log` or `console.error` near biomarker data. Check DB schema for unencrypted health value columns.
 
-**Phase:** Phase 1 (auth implementation). Must be built alongside the OTP flow, not bolted on later.
+**Phase:** Phase 3 (results display). Must be designed before any biomarker data is written to the database.
 
-**Confidence:** HIGH -- The in-memory rate limiter resetting on cold starts is a verified fact based on reading `lib/rate-limit.ts` (it uses `Map` with `setInterval` cleanup, neither of which persists across Vercel function invocations).
+**Confidence:** HIGH -- HIPAA enforcement actions for unencrypted PHI are well-documented. The 2025 HIPAA Security Rule update specifically calls out encryption requirements.
 
 ---
 
-### Pitfall 4: Single Cookie Session Conflicts Between Auth Flows
+### Pitfall 4: Biomarker ID Mismatch Between SiPhox API and Local Resilience Engine
 
-**What goes wrong:** The current codebase uses a single cookie name `cultr_session` for all user types. The `SessionPayload` includes `role: 'member' | 'creator' | 'admin'` but does NOT include a phone number, `asher_patient_id`, or any phone-auth-specific claims. Adding phone OTP auth means the new session token needs to carry phone + `asher_patient_id`. If you overwrite the same `cultr_session` cookie, a user who is both a creator (logged in via email magic link) and a patient (logged in via phone OTP) will lose one session when the other is created. The cookie is set with `path: '/'`, so it applies site-wide.
+**What goes wrong:** The existing `lib/resilience.ts` defines biomarker IDs like `hs-crp`, `hba1c`, `fasting-glucose`, `total-testosterone`, `vitamin-d`, `tsh`, `dhea-s`. The SiPhox API returns biomarkers with its own naming scheme (from the SiPhox biomarkers list: "hsCRP", "A1C", "25-(OH) Vitamin D", "Free Testosterone", "TSH", "DHEA-S"). These are not the same strings. If you feed SiPhox data directly into `calculateResilienceScore()` without mapping, every `valueMap.get(definition.id)` lookup returns `undefined` and the resilience score is 0 with 0% data completeness. The dashboard shows "No Biomarker Data" even though the member has a complete blood panel.
 
-**Why it happens:** The existing auth was built for a single user type at a time. The PROJECT.md explicitly states "New phone OTP flow needs to coexist with both [magic link and creator JWT]." Using one cookie name forces mutual exclusion.
+**Why it happens:** Two independent systems (SiPhox API and the local resilience engine) use different naming conventions for the same biomarkers. Nobody builds the mapping table until integration testing, and by then the UI is built assuming the data flows through.
 
-**Consequences:** Users who are both creators and patients get logged out of one role when logging into the other. Confusing UX. Support tickets. Workaround hacks that create security holes.
-
-**Prevention:**
-1. **Option A (Recommended): Unified session with merged claims.** When a user authenticates via phone OTP, look up whether they also have an existing email-based session. If so, merge claims into a single JWT: `{ email, phone, customerId, asher_patient_id, creatorId, role }`. This requires a "linking" step.
-2. **Option B: Separate cookie names.** Use `cultr_session` for email/magic-link auth and `cultr_patient_session` for phone OTP auth. API routes check the appropriate cookie based on the route prefix. This is simpler but means duplicate auth checks in routes that serve both user types.
-3. **Regardless of approach:** Add `phone` and `asher_patient_id` fields to `SessionPayload` interface. Update `createSessionToken` to accept these new fields. Update `verifyAuth` to return them.
-4. **Do NOT store PHI in the JWT** -- `asher_patient_id` (a numeric ID) is acceptable as it is an internal identifier, not PHI by itself. Do not put patient names, DOB, or medical data in the token.
-
-**Detection:** Test the flow: log in as creator -> log in as patient on same browser -> check if creator session still works. If not, you have this bug.
-
-**Phase:** Phase 1 (auth architecture). The session token structure must be designed before any auth endpoints are built.
-
-**Confidence:** HIGH -- Verified by reading `lib/auth.ts`. The `SessionPayload` interface and `cultr_session` cookie name are confirmed single-purpose.
-
----
-
-### Pitfall 5: Patient Identity Linking Fails on Phone Number Mismatch
-
-**What goes wrong:** The project plan says "First login resolves phone -> Asher patient ID. Cache in DB for fast future lookups." But phone numbers are messy: users enter `(555) 123-4567`, the DB might have `+15551234567`, Asher Med might have `5551234567`. The `formatPhoneNumber()` function in `lib/asher-med-api.ts` normalizes to E.164, but if the phone the user verifies via OTP does not exactly match what is in Asher Med (e.g., user changed phones, used a different number at intake, typo during original registration), `getPatientByPhone()` returns `null`. The user authenticates successfully but sees an empty dashboard with no patient data. They call support. 71% of healthcare organizations report that patient self-registration contributes to duplicate records.
-
-**Why it happens:** Phone number is treated as a reliable unique identifier, but in practice: patients change phones, share phones with family members, use work vs. personal numbers at different times, or their number was entered wrong during initial intake.
-
-**Consequences:** Authenticated user with no data = broken experience. Worse: if you create a new Asher Med patient record as a fallback, you now have duplicate patient records in the EHR, which is a patient safety issue (split medical history, duplicate prescriptions).
+**Consequences:** Dashboard displays empty state or zero scores for members who have real data. Members lose trust in the platform. The existing `BiomarkerTrends` component renders "No Biomarker Data" (line 369-377 of `BiomarkerTrends.tsx`) for every member.
 
 **Prevention:**
-1. **Never auto-create a new Asher Med patient on login failure.** If `getPatientByPhone()` returns null, show a clear "We couldn't find your records" state with instructions (not an error)
-2. **Implement a manual linking flow:** If phone lookup fails, offer email-based verification as a fallback. Use email + DOB + last name to search Asher Med via `getPatients({ search: email })`. If found, link the patient and update their phone number via `updatePatient()`
-3. **Normalize phone numbers before comparison:** Always strip to digits, handle +1 prefix, before calling `getPatientByPhone()`. The existing `formatPhoneNumber()` does this -- make sure the OTP verification phone goes through the same normalization
-4. **Cache the asher_patient_id -> phone mapping bidirectionally** in the local DB so future lookups do not depend on the external API
-5. **Handle the "no Asher Med record yet" case gracefully:** New Club ($0) members who have not completed intake will not have an Asher Med record. Show them a clear CTA to start their intake process instead of an empty/error state
+1. **Build the mapping table first:** Create `lib/config/siphox-biomarker-mapping.ts` that maps every SiPhox biomarker name to the local `resilience.ts` biomarker ID. This is the single most important configuration file for the integration.
+2. **Use the SiPhox `GET /biomarkers` endpoint** to retrieve the canonical list of biomarker names/IDs. Map from SiPhox IDs, not display names (display names can change).
+3. **Handle unmapped biomarkers gracefully:** If SiPhox returns a biomarker that has no local mapping, store it with a `category: 'uncategorized'` flag and display it in an "Additional Results" section, rather than silently dropping it.
+4. **Unit test the mapping:** For every biomarker in `BIOMARKER_DEFINITIONS`, assert that a SiPhox mapping exists. For every biomarker in the SiPhox Longevity Essentials panel (listed in PROJECT.md), assert a local mapping exists. Run this test in CI.
+5. **Category alignment:** The SiPhox categories ("Metabolic Health", "Nutritional", "Heart Health", "Hormonal Health", "Inflammation", "Thyroid Health") do NOT match the `resilience.ts` categories ("inflammation", "metabolic", "hormonal", "longevity", "oxidative", "mitochondrial"). You need a category mapping too, or the `BiomarkerTrends` component groups data incorrectly.
 
-**Detection:** Track the percentage of authenticated users whose `getPatientByPhone()` returns null. If > 10%, investigate data quality. Log (without PHI) the count of failed lookups per day.
+**Detection:** After first real integration test, check if `ResilienceScore.dataCompleteness` is >0%. If it's 0, the mapping is wrong.
 
-**Phase:** Phase 2 (patient identity and dashboard). The linking logic is the core of the portal data flow.
+**Phase:** Phase 3 (results display). Build and test the mapping before building any UI.
 
-**Confidence:** HIGH -- Verified by reading `getPatientByPhone()` in `lib/asher-med-api.ts` and `formatPhoneNumber()`. The 404 handling exists but the "what happens next" UX is unbuilt.
-
----
-
-### Pitfall 6: Missing HIPAA Audit Trail for PHI Access
-
-**What goes wrong:** HIPAA requires logging every access to ePHI: who accessed it, when, what data, from where (IP/device). The current codebase has `admin_actions` table for admin audit logging but no equivalent for member access to their own PHI through the portal. Viewing order details, profile data, documents -- every one of these is an ePHI access event that must be logged. Audit logs must be retained for 6 years.
-
-**Why it happens:** Developers think of audit logging as an admin/security feature, not a per-request requirement. "The patient is viewing their own data, why log that?" Because HIPAA requires it, and because compromised accounts viewing patient data need to be detectable.
-
-**Consequences:** HIPAA Security Rule violation (45 CFR 164.312(b) -- audit controls). Inability to investigate breaches. Inability to detect unauthorized access from compromised patient accounts.
-
-**Prevention:**
-1. Create a `phi_access_log` table: `{ id, user_id, user_type, action, resource_type, resource_id, ip_address, user_agent, timestamp }`
-2. Log every API call that returns PHI: patient profile reads, order list/detail reads, document preview URL generation, profile updates
-3. **Do not log the PHI itself** in the audit trail -- log *that* the access happened, not *what* data was returned
-4. Implement as middleware or wrapper function for all `/api/member/*` and `/api/provider/*` routes
-5. Set up a 6-year retention policy on the audit log table (configure Neon/PostgreSQL accordingly)
-6. Consider writing audit logs to a separate, append-only store that cannot be tampered with
-
-**Detection:** Check: does every API route that returns Asher Med patient data also write an audit log entry? If not, you have a gap.
-
-**Phase:** Phase 2 (patient dashboard) -- must be built alongside the first PHI-displaying API routes, not retrofitted.
-
-**Confidence:** HIGH -- HIPAA Security Rule 45 CFR 164.312(b) is explicit. The current codebase has admin audit logging but no patient-access audit logging (verified by searching for `admin_actions` in the codebase).
+**Confidence:** HIGH -- this is a verified mismatch. The `resilience.ts` IDs and the SiPhox biomarker names from PROJECT.md use different conventions. Already confirmed by reading both files.
 
 ---
 
 ## Moderate Pitfalls
 
-Mistakes that cause significant rework, poor UX, or operational issues.
+Mistakes that cause degraded UX, wasted development time, or data inconsistencies.
 
 ---
 
-### Pitfall 7: Twilio Verify Not Covered Under HIPAA BAA Without Enterprise Edition
+### Pitfall 5: Stripe Payment Links Cannot Support Optional Add-On Items
 
-**What goes wrong:** Twilio offers HIPAA BAAs, but only for customers on Security Edition or Enterprise Edition plans. Standard Twilio accounts do not qualify. Additionally, while Programmable SMS, Voice, Video, and SIP are confirmed HIPAA-eligible, Twilio Verify's HIPAA eligibility as a distinct product is not clearly documented. If CULTR signs a BAA with Twilio but Verify is not a covered service under that BAA, OTP codes sent to patient phone numbers (which are PHI -- phone number + context of healthcare relationship) may not be covered.
+**What goes wrong:** The current checkout flow uses Stripe Payment Links (`plan.paymentLink` in `lib/config/plans.ts`). For Core tier, the blood test is a $135 optional add-on. Stripe Payment Links do NOT support optional items -- they are static, pre-configured URLs. You cannot dynamically add a one-time product to a subscription Payment Link. Attempting to hack around this (e.g., a separate Payment Link for the add-on) creates two separate Stripe transactions that are not linked, complicating fulfillment, refunds, and attribution.
 
-**Why it happens:** Developers assume "Twilio is HIPAA compliant" without checking which specific products are covered under the BAA, or without upgrading to the required plan tier.
+**Why it happens:** The codebase was built with Payment Links for simplicity (the checkout route just returns a redirect URL). Adding optional items requires migrating to Stripe Checkout Sessions (server-side session creation with dynamic line items), which is a different architecture.
+
+**Consequences:** Without migration: you cannot offer the $135 add-on at checkout. With a hacky workaround: you get two unlinked transactions per member, breaking the webhook handler's assumption of one checkout = one membership.
 
 **Prevention:**
-1. Before writing any code, confirm with Twilio sales that Verify is covered under the BAA you sign
-2. If Verify is NOT covered, use Programmable SMS under the BAA (with all the DIY OTP logic that entails) -- this is less ideal but legally sound
-3. Ensure CULTR has a Twilio account at Security Edition or Enterprise Edition tier
-4. The OTP message content must not include health-related context ("Your CULTR Health verification code" is borderline -- "Your verification code" is safer)
-5. Document the BAA coverage in your HIPAA compliance records
+1. **Migrate Core checkout to Stripe Checkout Sessions** for the Core tier. Keep Payment Links for Catalyst+ and Concierge (where the kit is auto-included, no optional item needed).
+2. **Use Stripe's optional items feature** on the Checkout Session: add the blood test as an `optional` line item with `adjustable_quantity: { enabled: true, minimum: 0, maximum: 1 }`.
+3. **Alternatively, use a two-step approach:** Checkout with Payment Link for the subscription, then offer the blood test add-on on the post-checkout success page as a separate one-time purchase. Simpler but worse UX.
+4. **Store the add-on decision in metadata:** Whether the member opted in to the blood test must be in the Stripe session metadata so the webhook handler knows to create a SiPhox order.
+5. **Important constraint:** Stripe Checkout Sessions do not allow mixing recurring and one-time line items in `subscription` mode. The $135 add-on must be a one-time item, which means the session mode should be `subscription` with the recurring plan + an `invoice_creation` for the one-time item, OR use `payment` mode with a one-time charge that covers both (subscription created separately). Test this carefully.
 
-**Detection:** Check your Twilio account tier. Review the BAA appendix for covered services. Search for "Verify" in the BAA document.
+**Detection:** Try to add `?line_items` to a Payment Link URL -- it won't work. Stripe docs confirm Payment Links don't support dynamic items.
 
-**Phase:** Phase 0 (pre-development vendor setup). This is an administrative task that must be resolved before any OTP code is written.
+**Phase:** Phase 2 (checkout integration). This is an architecture decision that must be made early because it determines the entire checkout flow.
 
-**Confidence:** MEDIUM -- Twilio's HIPAA page lists eligible products but does not explicitly name Verify. Multiple third-party sources flag this ambiguity. Direct confirmation from Twilio sales is needed.
+**Confidence:** HIGH -- verified against Stripe documentation. The current codebase uses Payment Links (confirmed in `lib/config/plans.ts`).
 
 ---
 
-### Pitfall 8: Asher Med API Calls From the Client (Exposing the API Key)
+### Pitfall 6: Kit Registration Fails Silently on Invalid or Already-Registered Kit IDs
 
-**What goes wrong:** The project constraint states "All Asher Med API calls must go through CULTR backend routes (never expose API key to client)." But when building React portal components, it is tempting to call Asher Med endpoints directly from `useEffect` or event handlers, especially for real-time data like order status. If the API key leaks to the client (via an API route that proxies but also returns it, or via environment variable misconfiguration), an attacker gets full partner-level access to all patient data across all CULTR patients.
+**What goes wrong:** The SiPhox API has two relevant kit endpoints: `GET /kits/:kitID/validate` and `POST /kits/:kitID/register`. Common failure modes that are easy to miss:
+- **Already registered:** Member enters a kit ID that was already registered (by them or a family member who received the same shipment).
+- **Invalid format:** Kit IDs have a specific format (alphanumeric barcode). Users mistype, OCR fails, or they enter the wrong barcode from the packaging.
+- **Expired kit:** Kits have a shelf life (typically 12 months from manufacture). SiPhox may reject registration for expired kits.
+- **Kit not yet in system:** SiPhox may not have ingested the kit ID into their system yet if the shipment was very recent.
 
-**Why it happens:** `ASHER_MED_API_KEY` is a server-side env var (no `NEXT_PUBLIC_` prefix), so it should be safe. But common mistakes include: accidentally including it in a response body, creating an API route that forwards the raw Asher Med response including internal headers, or using `getServerSideProps` patterns that serialize server state to the client.
+If the registration UI just shows a generic "Something went wrong" error for all of these, the member cannot self-service and files a support ticket.
+
+**Why it happens:** Developers build the happy path (enter ID, register, show confirmation) and handle all errors with a single catch block. The SiPhox validate endpoint returns specific error states that should be surfaced differently.
+
+**Consequences:** High support ticket volume. Members get frustrated with barcode entry. Some members give up and never register their kit, wasting the credit that was used to order it.
 
 **Prevention:**
-1. All Asher Med data flows through `/api/member/*` proxy routes (e.g., `/api/member/orders`, `/api/member/profile`)
-2. Proxy routes must: authenticate the request (verify JWT), authorize (user can only access their own data by `asher_patient_id`), call Asher Med, and return a **sanitized** response (strip internal fields, add only what the UI needs)
-3. Never return raw Asher Med API responses to the client -- always map to a CULTR-specific response type
-4. Add a CI check or linter rule: no imports of `lib/asher-med-api.ts` from files in `app/` client components (only from `route.ts` files)
-5. Verify `ASHER_MED_API_KEY` is NOT in any `NEXT_PUBLIC_*` environment variable
+1. **Call validate before register:** Use `GET /kits/:kitID/validate` first. Parse the response to determine: is the kit ID recognized? Is it already registered? Is it expired? Is it associated with the correct customer?
+2. **Specific error messages:** Map each validation failure to a user-friendly message:
+   - "This kit ID was not found. Please check the barcode on your kit and try again."
+   - "This kit has already been registered. If you believe this is an error, contact support."
+   - "This kit has expired. Please contact support for a replacement."
+3. **Input assistance:** Add input masking or format hints. If SiPhox kit IDs follow a pattern (e.g., `KIT-XXXX-XXXX`), enforce that format client-side.
+4. **Retry guidance:** If the kit was just delivered and isn't in the system yet, tell the member: "Your kit may take up to 24 hours to activate after delivery. Please try again tomorrow."
+5. **Photo scan option (future):** Consider adding barcode scanning via camera as a stretch feature to reduce typos.
 
-**Detection:** Search client-side bundles for "ASHER_MED" or "X-API-KEY" strings. Review API route responses for leaked internal fields.
+**Detection:** Monitor registration API call failure rate. If >10% of registration attempts fail, the UX needs improvement.
 
-**Phase:** Phase 2 (dashboard/portal API routes). Must be enforced as a pattern from the first portal API route.
+**Phase:** Phase 4 (kit registration UI). Build validation flow before the registration form.
 
-**Confidence:** HIGH -- The constraint is already documented in PROJECT.md. The `asherRequest()` function correctly reads from `process.env.ASHER_MED_API_KEY` (server-only). Risk is in implementation mistakes, not architecture.
+**Confidence:** MEDIUM -- specific SiPhox error responses for validation are inferred from the API shape (`GET /kits/:kitID/validate` implies validation logic) and analogous platforms (23andMe, Everlywell). Exact error payloads need to be confirmed with a test API call.
 
 ---
 
-### Pitfall 9: Showing Empty/Error States When Asher Med API Is Down
+### Pitfall 7: Polling for Report Completion Instead of Handling the Full Lifecycle
 
-**What goes wrong:** The Asher Med API is an external dependency. When it is slow (> 5s) or down, every portal page that depends on it shows a loading spinner forever or an error screen. The patient sees "Something went wrong" when they just want to check their order status. If the portal has no caching layer, every page load hits the API -- and Asher Med rate limits or outages cascade into a fully broken portal.
+**What goes wrong:** After a member mails their blood sample, SiPhox processes it and generates a report. The API has `GET /customers/:id/reports/:reportID` to retrieve results, but there is no obvious webhook for "report ready" in the API surface listed in PROJECT.md. Developers tend to solve this with polling: a cron job that calls the reports endpoint every hour for every pending kit. This is wasteful, slow (member waits up to an hour to see results), and scales poorly (100 members = 100 API calls per hour, 2400/day).
 
-**Why it happens:** The existing `asherRequest()` function in `lib/asher-med-api.ts` has no timeout, no caching, and no retry logic. It throws on any non-200 response. The `withRetry()` function exists in `lib/resilience.ts` but is not used by the Asher Med API client.
+**Why it happens:** The SiPhox API surface in PROJECT.md does not list a webhook/callback mechanism. Without webhooks, polling feels like the only option. Developers don't ask SiPhox about webhooks during integration planning and discover this gap after building the polling system.
 
-**Consequences:** Poor user experience during API degradation. High Asher Med API call volume (every page load = API call). No graceful degradation.
+**Consequences:** Wasted API calls. Delayed results visibility (minutes to hours depending on poll interval). Rate limiting risk if CULTR scales. Poor UX compared to competitors who show results "instantly" (because they use webhooks or push notifications).
 
 **Prevention:**
-1. **Cache Asher Med responses in the local database:** Patient profile data changes rarely -- cache it for 1 hour. Order status changes more often -- cache for 5 minutes. Documents almost never change -- cache for 24 hours
-2. **Add timeouts to `asherRequest()`:** Set `AbortController` with 10-second timeout. Return cached data on timeout
-3. **Use `withRetry()` from `lib/resilience.ts`** for transient failures (5xx errors, timeouts). Do not retry 4xx errors
-4. **Design "stale data" UI:** Show cached data with a "Last updated X minutes ago" indicator and a manual refresh button, rather than showing nothing or an error
-5. **Background refresh pattern:** When cached data is served, trigger a background refresh. If it succeeds, update the cache. If it fails, keep serving stale data with a warning
-6. **Health check endpoint:** Create a lightweight `/api/health/asher-med` route that pings the Asher Med API. Use this to show system status to users during outages
+1. **Ask SiPhox about webhooks first:** Before writing any polling code, confirm with SiPhox whether they support webhook notifications for report completion. Many partner APIs have undocumented webhook support for enterprise partners.
+2. **If no webhooks available:** Use smart polling with exponential backoff. Don't poll every pending kit every hour. Instead:
+   - Kits registered < 3 days ago: don't poll (too early for results)
+   - Kits registered 3-10 days ago: poll once every 6 hours
+   - Kits registered 10-14 days ago: poll once every 2 hours (results most likely)
+   - Kits registered > 14 days ago: poll once daily (flag as delayed, alert admin)
+3. **Cache report status locally:** Store last poll time and status in `siphox_orders` table. Don't re-poll if status hasn't changed.
+4. **Member-triggered refresh:** Add a "Check for Results" button in the dashboard that calls the SiPhox API on demand. This reduces polling load and gives the member agency.
+5. **Email notification:** When results are detected via polling, send an email: "Your blood test results are ready! Log in to your CULTR dashboard to view them."
+6. **Consider `POST /customer/add_data` and `GET /customer/add_data/jobs/:id`:** These endpoints suggest SiPhox has async job processing. The `jobs/:id` endpoint implies a polling pattern for data ingestion jobs. Align your polling strategy with their expected processing times.
 
-**Detection:** Monitor Asher Med API response times and error rates from your API routes. Alert on p95 latency > 5 seconds or error rate > 5%.
+**Detection:** Monitor SiPhox API call volume. If >50% of calls are report checks that return "not ready," polling is too aggressive.
 
-**Phase:** Phase 2-3 (dashboard and data display). Caching should be designed in Phase 2 and hardened in Phase 3.
+**Phase:** Phase 3 (results fetching). Design the polling/webhook strategy before building the results display UI.
 
-**Confidence:** HIGH -- Verified by reading `lib/asher-med-api.ts`. No timeouts, no caching, no retry integration exists in the API client.
+**Confidence:** MEDIUM -- the SiPhox API surface from PROJECT.md does not explicitly mention webhooks. This needs to be confirmed directly with SiPhox.
 
 ---
 
-### Pitfall 10: OTP Session Expiry Too Long or Too Short
+### Pitfall 8: Displaying 150+ Biomarkers with Missing/Partial Data Creates a Wall of "N/A"
 
-**What goes wrong:** The existing session cookie is set to 7 days (`maxAge: 60 * 60 * 24 * 7`). For a telehealth portal showing PHI, 7 days without re-authentication is a HIPAA risk -- if a user leaves their browser open on a shared/public device, anyone can see their medical data for a week. Conversely, if the session is too short (e.g., 15 minutes like the magic link token), users will be constantly re-entering OTP codes, which is frustrating for a portal they check multiple times per day.
+**What goes wrong:** PROJECT.md specifies "N/A display for biomarkers with no data returned" and "~150+ biomarkers organized by category." If a member's Longevity Essentials panel returns ~30 biomarkers but you render all 150+ with N/A for the missing 120+, the dashboard becomes an overwhelming wall of grey "N/A" cards. The useful data is buried. The member's first impression is "most of my results are missing" rather than "here are my 30 results."
 
-**Why it happens:** The existing 7-day session was designed for the members library (educational content, not PHI). Reusing the same session duration for a PHI-displaying portal is inappropriate, but developers default to existing patterns.
+**Why it happens:** The design spec says "show all possible biomarkers with N/A when no data" which sounds correct in theory (member knows what's available) but fails in practice because the ratio of N/A to real data is 4:1 or worse.
 
-**Consequences:** Too long: HIPAA compliance risk, unauthorized PHI access from unattended sessions. Too short: user frustration, high Twilio SMS costs from frequent re-authentication.
+**Consequences:** Members perceive the dashboard as broken or incomplete. They don't scroll to find their actual results. They think they paid for 150+ tests but only "got" 30. Support gets "where are my results?" tickets.
 
 **Prevention:**
-1. **Implement tiered session durations:**
-   - Library/content access (non-PHI): 7 days (existing behavior, fine)
-   - Portal/PHI access: 24 hours active, 30-minute idle timeout
-   - Provider access: 8-hour active, 15-minute idle timeout
-2. **Add idle timeout detection:** Track last user activity (mouse/keyboard/touch). After 30 minutes of inactivity on PHI pages, show a "session expiring" modal with a countdown. If no response, clear the session
-3. **Implement "step-up" authentication:** Store a session with two tiers -- a base session (phone verified, long-lived) and a PHI access grant (shorter, requires recent verification). If the PHI grant expires, prompt for OTP again without requiring full re-login
-4. **Auto-logout on tab close is NOT recommended** -- it is too aggressive and causes confusion. Idle timeout is sufficient
+1. **Two-tier display:** Show results-with-data prominently in the main view. Show available-but-no-data biomarkers in a collapsible "Additional Tests Available" section at the bottom.
+2. **Category-first navigation:** Group by SiPhox categories (Metabolic, Heart, Hormonal, etc.). Only show categories that have at least one result. Empty categories go in the "Available in Extended Panel" section.
+3. **Progress indicator:** "Your panel tested 28 of 150+ available biomarkers. Upgrade to the Extended Panel for comprehensive coverage." This reframes N/A as an upsell, not a failure.
+4. **Empty state per category:** If a category has zero results, show a single card: "No [Hormonal Health] markers in your current panel" rather than 12 individual N/A cards.
+5. **The existing `BiomarkerTrends` component already filters:** Line 409 of `BiomarkerTrends.tsx` does `.filter(([_, biomarkers]) => biomarkers.length > 0)` -- it only renders categories with data. Extend this pattern to the full labs dashboard.
 
-**Detection:** Audit session `maxAge` values. Check if idle timeout is implemented on PHI-displaying pages. Test: leave portal open for 1 hour idle -- does it prompt for re-auth?
+**Detection:** User testing. Show a prototype to 3 people and ask "what do you think of your results?" If they say "most of it is N/A," the layout is wrong.
 
-**Phase:** Phase 1 (auth architecture). Session duration strategy must be decided alongside the token structure.
+**Phase:** Phase 4 (labs dashboard UI). This is a UX design decision, not just a data problem.
 
-**Confidence:** MEDIUM -- HIPAA does not specify exact timeout durations, but the Security Rule requires "automatic logoff" (45 CFR 164.312(a)(2)(iii)). Industry standard for healthcare portals is 15-30 minute idle timeout.
+**Confidence:** HIGH -- verified that the existing `BiomarkerTrends.tsx` already handles the empty state pattern, but the spec calls for showing N/A which conflicts with good UX.
 
 ---
 
-### Pitfall 11: Staging Auth Bypass Leaking Into Production
+### Pitfall 9: GA4 Tracking on Labs Dashboard Exposes Biomarker PHI
 
-**What goes wrong:** The codebase has extensive staging bypass logic: `isStaging()` checks, `isStagingBypassEmail()`, `TEAM_EMAILS` hardcoded array, `STAGING_ACCESS_EMAILS` env var, `dev_customer` / `staging_customer` / `staging_creator` magic IDs, and development mode auto-grants admin access. When the new OTP auth flow is built, it will likely get its own staging bypass. If any of these checks are wrong (e.g., `isStaging()` checks `NEXT_PUBLIC_SITE_URL` which could be misconfigured), staging bypass logic could fire in production.
+**What goes wrong:** The existing PITFALLS.md from the portal research (2026-03-10) already identified this: GA4 is loaded globally in `app/layout.tsx` and will fire on authenticated pages. For the labs dashboard specifically, the risk is worse because:
+- URL paths may contain biomarker category names (e.g., `/dashboard/labs/hormonal-health`)
+- Page titles may include result summaries
+- Custom GA4 events (if added for analytics) could contain biomarker values
+- Google does not sign BAAs for Analytics
 
-**Why it happens:** `isStaging()` depends on the `NEXT_PUBLIC_SITE_URL` environment variable containing the string "staging". If production is deployed with the wrong env var value, or if a new deployment target is added that does not include "staging" in its URL but is not production either, bypass logic may activate unexpectedly.
+**Why it happens:** This was already identified as Pitfall 1 in the portal research but bears repeating for this milestone because the labs dashboard introduces the highest-sensitivity PHI in the entire application.
 
-**Consequences:** Anyone with a team email can bypass OTP on production. Magic IDs like `staging_customer` might be accepted as valid customers. Auto-admin access in development mode could leak if `NODE_ENV` is not set correctly on a deployment.
+**Consequences:** HIPAA violation. Same as previous research: OCR investigation, breach notification, fines.
 
 **Prevention:**
-1. Add a dedicated `CULTR_ENVIRONMENT` env var (`production` | `staging` | `development`) rather than inferring from URL strings
-2. Never check `NODE_ENV === 'development'` for security-sensitive bypasses -- only use it for convenience features (logging verbosity, etc.)
-3. The new OTP flow should have a single, clearly documented bypass mechanism for staging, not scattered across multiple files
-4. Add a startup assertion in production: if `NODE_ENV === 'production'`, verify that no staging bypass conditions can evaluate to `true`
-5. Remove hardcoded `TEAM_EMAILS` arrays (duplicated in `lib/auth.ts`, `app/api/auth/magic-link/route.ts`, and `app/api/auth/verify/route.ts`) -- centralize to one location
+1. The portal research already prescribed the fix: exclude GA4 from all authenticated routes.
+2. For the labs dashboard specifically: ensure that no biomarker values, names, or result statuses appear in any analytics event, page title, or URL parameter.
+3. If you need analytics on the labs feature (e.g., "how many members view their results"), use a HIPAA-compliant analytics service or track only anonymized, aggregate metrics server-side.
 
-**Detection:** Search codebase for `isStaging()`, `TEAM_EMAILS`, `dev_customer`, `staging_customer`, `NODE_ENV === 'development'`. Count occurrences. If scattered across > 3 files, centralization is needed.
+**Detection:** Same as portal research: audit network requests from labs pages in DevTools for Google Analytics calls.
 
-**Phase:** Phase 1 (auth architecture). Centralize staging bypass logic before adding new bypass paths for OTP.
+**Phase:** Must be resolved before Phase 4 (labs dashboard). Dependency on Phase 1 of the portal milestone (which should have already addressed this).
 
-**Confidence:** HIGH -- Verified: `isStaging()` and `TEAM_EMAILS` are duplicated in at least 3 files. `getSession()` returns admin access unconditionally in development mode.
+**Confidence:** HIGH -- this is a reiteration of a verified pitfall from prior research.
+
+---
+
+### Pitfall 10: Checkout Add-On Creates Orphaned SiPhox Order When Subscription is Refunded
+
+**What goes wrong:** Member checks out Core ($199/mo) + Blood Test ($135 add-on). Stripe processes both charges. The webhook creates a SiPhox order (consuming a credit). The member requests a refund within 24 hours. Stripe refunds the subscription and the add-on payment. But the SiPhox credit is already consumed -- credits are not refundable via API. You now have: a consumed SiPhox credit, a shipped or shipping kit, no payment from the member, and no automated way to recoup the loss.
+
+**Why it happens:** The existing codebase handles refunds via `charge.refunded` webhook (line 107 in the Stripe webhook handler), which reverses creator commissions. But there is no SiPhox-side reversal because SiPhox credits are consumed on order creation, not on kit shipment.
+
+**Consequences:** Financial loss ($135 in member-facing price + the wholesale credit cost). If this happens frequently (e.g., buyer's remorse within 24 hours), it becomes a significant cost center. The kit is wasted.
+
+**Prevention:**
+1. **Delay SiPhox order creation:** Do not create the SiPhox order immediately on checkout. Wait 24-48 hours (refund window) before consuming the credit. Store as `status: 'pending_fulfillment'` locally.
+2. **On refund webhook:** If the order is still `pending_fulfillment`, mark it as `cancelled` and do NOT create the SiPhox order. No credit consumed, no kit shipped.
+3. **If kit already shipped:** Accept the loss but flag it. Consider a "restocking" policy where the member must return the unopened kit.
+4. **Refund policy clarity:** On the checkout page, state "Blood test kits are non-refundable once shipped" to reduce refund requests.
+5. **Align with existing refund flow:** The `handleChargeRefunded` function already looks up orders by `payment_intent`. Extend this to check for and cancel pending SiPhox orders.
+
+**Detection:** `siphox_orders WHERE status = 'ordered' AND EXISTS (SELECT 1 FROM orders WHERE stripe_payment_intent_id = ... AND status = 'refunded')`. Any rows = credits wasted on refunded orders.
+
+**Phase:** Phase 2 (checkout integration). The delayed fulfillment pattern must be designed into the order flow from the start.
+
+**Confidence:** HIGH -- this is a direct consequence of the credits model and the existing refund handling pattern in the codebase.
 
 ---
 
 ## Minor Pitfalls
 
-Issues that cause friction, tech debt, or suboptimal UX if not addressed.
+Mistakes that cause confusion, tech debt, or minor UX issues.
 
 ---
 
-### Pitfall 12: Phone Number Format Inconsistency Across the Codebase
+### Pitfall 11: SiPhox `external_id` Not Set During Customer Creation
 
-**What goes wrong:** Phone numbers are used in three contexts with different format expectations: (1) Twilio Verify expects E.164 (`+15551234567`), (2) Asher Med API uses E.164 for `getPatientByPhone()` but the patient model stores `phoneNumber` in an unspecified format, (3) the UI displays formatted numbers (`(555) 123-4567`). Without a single normalization layer, comparisons fail silently. The existing `formatPhoneNumber()` and `isValidPhoneNumber()` in `lib/asher-med-api.ts` handle some cases but are not used everywhere.
+**What goes wrong:** The SiPhox `CreateOrderRequest` has an `external_id` field on the `recipient` object. If you don't set this to the CULTR member's internal ID (or portal phone number, or some unique identifier), you lose the ability to look up SiPhox customers by your own identifier. You're stuck querying `GET /customers` with email matching, which is fragile (members change emails, emails have case sensitivity issues).
 
-**Prevention:**
-1. Create a `lib/phone.ts` utility with `normalizePhone()` (always returns E.164), `formatPhoneDisplay()` (returns user-facing format), and `isValidUSPhone()` (validates US numbers)
-2. Normalize at the boundary: immediately on form input and immediately on API response
-3. Store E.164 format in all database columns
-4. Use the same `normalizePhone()` for both OTP send and Asher Med lookup
+**Prevention:** Always set `external_id` to a stable CULTR identifier (e.g., the `portal_sessions.phone_e164` or the `memberships.id`). Use this as the primary lookup key, with email as fallback. Document which identifier is used in the SiPhox mapping.
 
-**Detection:** Search for phone-related regex patterns and `replace(/\D/g, '')` calls scattered across the codebase. All should route through the centralized utility.
+**Phase:** Phase 1 (API client). Set `external_id` from the first API call.
 
-**Phase:** Phase 1 (utility creation before auth endpoints).
+**Confidence:** HIGH -- `external_id` is documented in the SiPhox API schema in PROJECT.md.
 
 ---
 
-### Pitfall 13: Provider View Accidentally Exposing Full Patient Data
+### Pitfall 12: Biomarker Unit Mismatch Between SiPhox and Resilience Engine
 
-**What goes wrong:** The PROJECT.md describes a "lightweight provider view" that shows key patient info and links out to Asher Med for clinical workflows. But if the provider API routes use the same Asher Med endpoints as the patient portal (e.g., `getPatientById()` returns the full patient object), the provider view has access to all patient data even if the UI only shows a subset. An API response returning the full `AsherPatient` object when only name + status + order summary is needed violates the HIPAA minimum necessary standard.
+**What goes wrong:** The `resilience.ts` file defines units like `mg/L`, `mg/dL`, `ng/dL`, `mIU/L`, `ng/mL`, `%`, `μIU/mL`. SiPhox may return the same biomarker in different units (e.g., testosterone in `nmol/L` instead of `ng/dL`). A 500 ng/dL testosterone value is optimal, but if SiPhox returns 17.3 nmol/L (the same value in different units) and the resilience engine interprets it as 17.3 ng/dL, the score says "critical" when the value is actually perfect.
 
 **Prevention:**
-1. Create separate response DTOs for provider views that include only: patient name, status, last order status, date, and a link to Asher Med portal
-2. Do not return full `AsherPatient` objects to the provider UI -- map server-side to a minimal type
-3. Provider search should return results with masked data: `J*** D**` with last 4 of phone, not full PII
-4. Log provider access to the audit trail (same `phi_access_log` table from Pitfall 6)
+1. Include unit information in the biomarker mapping table.
+2. Build unit conversion functions for common lab unit pairs (ng/dL <-> nmol/L, mg/L <-> mg/dL, etc.).
+3. Validate units on every SiPhox response before feeding into the resilience engine.
+4. Log a warning if an unexpected unit is received.
 
-**Detection:** Compare the TypeScript types returned by provider API routes to the minimum data needed by the provider UI. If the route returns more fields than the component consumes, you are over-exposing.
+**Phase:** Phase 3 (results display). Must be handled in the data transformation layer.
 
-**Phase:** Phase 3 (provider view). Apply minimum necessary principle from the start.
+**Confidence:** MEDIUM -- unit conventions vary across lab providers. Need to verify SiPhox's specific unit conventions with a test report.
 
 ---
 
-### Pitfall 14: Not Handling the "New User, No Asher Med Record" State
+### Pitfall 13: `is_test_order` Flag Left Enabled in Production
 
-**What goes wrong:** Club members ($0/mo) sign up without completing medical intake. They have no Asher Med patient record. When they log in via phone OTP, `getPatientByPhone()` returns null. Without explicit handling, they see an empty dashboard or an error, which feels broken even though it is the expected state for their membership tier.
+**What goes wrong:** The SiPhox `CreateOrderRequest` has an `is_test_order: boolean` field. During development, this is set to `true` to avoid consuming real credits. If this flag is not tied to the environment (staging vs. production) via an env var check, test orders will accidentally be created in production (wasting credits) or real orders will be created in staging (also wasting credits, and shipping kits to test addresses).
 
 **Prevention:**
-1. Design a distinct "getting started" dashboard state for users without `asher_patient_id`
-2. Show clear CTAs: "Complete your intake to see your health data" or "Upgrade your plan to access telehealth services"
-3. Do not treat `asher_patient_id = null` as an error -- it is a valid state for Club tier members
-4. Store the phone -> user mapping in local DB even without an Asher Med link, so the user can log in consistently
+1. Derive `is_test_order` from `process.env.SIPHOX_ENVIRONMENT` or `process.env.NODE_ENV`.
+2. Follow the existing pattern from Asher Med: `ASHER_MED_ENVIRONMENT` env var controls sandbox vs. production.
+3. Add a similar `SIPHOX_ENVIRONMENT` env var. Set `is_test_order: SIPHOX_ENVIRONMENT !== 'production'`.
+4. Log the value of `is_test_order` on every order creation (not the credit cost, just the flag) so you can audit.
 
-**Detection:** Test login with a phone number that has no Asher Med record. The experience should be intentional, not broken.
+**Phase:** Phase 1 (API client). Bake environment awareness into the client from day one.
 
-**Phase:** Phase 2 (dashboard design). Must be wireframed before building the dashboard component.
+**Confidence:** HIGH -- the codebase already uses this pattern for Asher Med, Affirm, and Klarna (all have sandbox toggles).
 
 ---
 
-### Pitfall 15: In-Memory Rate Limiter Ineffective on Vercel Serverless
+### Pitfall 14: Member Tier Downgrade After Kit Is Ordered
 
-**What goes wrong:** The existing `lib/rate-limit.ts` defaults to an in-memory `Map` when Redis is not configured. On Vercel, each serverless function invocation may run in a different container. The `Map` is not shared across containers, and cold starts create fresh instances. A determined attacker hitting different containers bypasses the rate limit entirely. The `setInterval` cleanup in the module also does not persist across invocations.
+**What goes wrong:** A Catalyst+ member's subscription includes a blood test kit. The kit is ordered via SiPhox when they check out. The member then downgrades to Core tier (which does NOT include the kit). The kit is already in transit. The member registers the kit, sends the sample, and gets results -- all on a tier that doesn't include blood testing. Meanwhile, no $135 add-on charge was collected because the member was on Catalyst+ when they ordered.
 
 **Prevention:**
-1. Make Redis (Upstash) **required** for OTP rate limiting, not optional
-2. The codebase already has `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` env vars configured -- ensure they are set in both staging and production Vercel environments
-3. For the OTP endpoints specifically, fail closed: if Redis is unavailable, reject the OTP request rather than allowing it through (the current `createRedisRateLimiter` falls back to allowing requests on Redis error -- this is wrong for OTP)
-4. Add a startup check in OTP routes: if Redis is not configured, return 503 instead of proceeding without rate limiting
+1. **Kit is a one-time perk of checkout, not an ongoing entitlement.** Once the kit is ordered, the member keeps it regardless of tier changes. This is the simplest approach.
+2. **Do not gate results display by tier.** If a member has a SiPhox report, show it -- even if they downgraded. The blood was drawn, the credit was consumed, the results exist.
+3. **Future kit orders should check current tier.** If the member wants another kit later, check their current tier at that point. Don't rely on what tier they were on when they first subscribed.
+4. **Document this policy** for support: "Blood test kits are included once per Catalyst+/Concierge enrollment. Downgrading does not affect existing kit orders or results."
 
-**Detection:** Check Vercel env vars for `UPSTASH_REDIS_REST_URL`. Test rate limiting by sending 10 OTP requests in 30 seconds -- if more than 1 succeeds per phone number, the rate limiter is not working.
+**Phase:** Phase 2 (checkout integration) for the ordering logic. Phase 4 (labs dashboard) for the display logic.
 
-**Phase:** Phase 1 (auth infrastructure). Redis must be verified working before OTP endpoints go live.
+**Confidence:** HIGH -- the existing subscription lifecycle in the webhook handler already handles downgrades (`handleSubscriptionUpdated`). The SiPhox integration must be resilient to these events.
 
-**Confidence:** HIGH -- Verified by reading `lib/rate-limit.ts`. The in-memory fallback and the "allow on Redis error" behavior are confirmed in the code (line 156-161).
+---
+
+### Pitfall 15: Duplicate SiPhox Customers from Idempotency Failures
+
+**What goes wrong:** The Stripe webhook handler has idempotency checks (`isStripeEventProcessed` / `recordStripeEvent`). But if the SiPhox customer creation call is inside the webhook handler and the handler succeeds at creating the SiPhox customer but fails _after_ that (e.g., the SiPhox order call fails), Stripe retries the webhook. The retry creates a _second_ SiPhox customer for the same member. Now you have duplicate customers in SiPhox, reports split across two customer IDs, and the member sees incomplete data.
+
+**Prevention:**
+1. **Check for existing SiPhox customer before creating:** Use `GET /customers` with the member's email or `external_id` before calling `POST /customer`. If a customer already exists, use their ID.
+2. **Store SiPhox customer ID locally:** After successful creation, save `siphox_customer_id` in the local `memberships` or `siphox_orders` table. On retry, check local DB first.
+3. **Make customer creation idempotent:** Use `external_id` as a unique key. If SiPhox supports upsert-like behavior (create or return existing), use that pattern.
+4. **Separate customer creation from order creation:** Create the SiPhox customer during intake/registration (not in the webhook). Create the order in the webhook. This way the customer already exists when the webhook fires.
+
+**Phase:** Phase 1 (API client) for idempotent customer creation. Phase 2 (checkout) for the ordering flow.
+
+**Confidence:** HIGH -- the existing codebase explicitly handles Stripe webhook idempotency (lines 72-76 of the webhook handler), proving this is a known concern. SiPhox calls within the webhook inherit the same retry risks.
 
 ---
 
 ## Phase-Specific Warnings
 
 | Phase Topic | Likely Pitfall | Mitigation |
-|---|---|---|
-| Phase 0: Vendor Setup | Twilio BAA does not cover Verify product | Confirm with Twilio sales before writing code (Pitfall 7) |
-| Phase 1: Auth/OTP | OTP rate limiting bypassed on serverless | Require Redis, fail closed (Pitfalls 3, 15) |
-| Phase 1: Auth/OTP | Session cookie conflicts between auth flows | Design unified session payload first (Pitfall 4) |
-| Phase 1: Auth/OTP | Staging bypass leaks to production | Centralize bypass logic, add production assertions (Pitfall 11) |
-| Phase 1: Auth/OTP | Using Programmable SMS instead of Verify | Use Twilio Verify API from day one (Pitfall 2) |
-| Phase 2: Dashboard | GA4 fires on authenticated portal pages | Exclude portal routes from GA4 before shipping (Pitfall 1) |
-| Phase 2: Dashboard | Phone lookup returns null, empty dashboard | Design "no records" state, fallback linking flow (Pitfalls 5, 14) |
-| Phase 2: Dashboard | No HIPAA audit trail for PHI access | Build phi_access_log alongside first PHI route (Pitfall 6) |
-| Phase 2: Dashboard | Asher Med API down = broken portal | Cache responses in local DB, serve stale with warning (Pitfall 9) |
-| Phase 2: Dashboard | Raw Asher Med responses leaked to client | Always map to sanitized CULTR response types (Pitfall 8) |
-| Phase 3: Provider View | Over-exposing patient data to providers | Separate minimal DTOs, enforce minimum necessary (Pitfall 13) |
-| All Phases | Phone number format mismatches | Centralize normalization in lib/phone.ts (Pitfall 12) |
+|-------------|---------------|------------|
+| API client setup | Test orders in production (Pitfall 13) | Environment-aware `is_test_order` flag from day one |
+| API client setup | Missing `external_id` (Pitfall 11) | Set external_id on first customer creation |
+| API client setup | Duplicate customers on retry (Pitfall 15) | Idempotent customer creation with local cache |
+| Checkout integration | Payment Link can't support add-ons (Pitfall 5) | Migrate Core to Checkout Sessions |
+| Checkout integration | Race condition on customer creation (Pitfall 1) | Deferred order pattern with address trigger |
+| Checkout integration | Credit exhaustion (Pitfall 2) | Pre-order credit check + admin alerting |
+| Checkout integration | Refund orphans SiPhox order (Pitfall 10) | Delayed fulfillment with refund window |
+| Checkout integration | Tier downgrade after kit order (Pitfall 14) | Kit is one-time perk, not ongoing entitlement |
+| Results display | Biomarker ID mismatch (Pitfall 4) | Mapping table with unit tests, built before UI |
+| Results display | Unit mismatch (Pitfall 12) | Unit conversion layer in data transform |
+| Results display | PHI in database (Pitfall 3) | Minimal local storage, encrypt if caching |
+| Results display | Report polling overhead (Pitfall 7) | Smart polling with exponential backoff |
+| Labs dashboard UI | Wall of N/A (Pitfall 8) | Two-tier display: results first, available tests collapsed |
+| Labs dashboard UI | GA4 on labs pages (Pitfall 9) | Exclude GA4 from authenticated routes |
+| Kit registration | Silent registration failures (Pitfall 6) | Validate before register, specific error messages |
 
 ---
 
 ## Sources
 
-### Official Documentation and Enforcement
-- [Twilio Verify Developer Best Practices](https://www.twilio.com/docs/verify/developer-best-practices) -- rate limits, implementation patterns
-- [Twilio Preventing Toll Fraud in Verify](https://www.twilio.com/docs/verify/preventing-toll-fraud) -- Fraud Guard, geographic permissions
-- [Twilio HIPAA Eligible Services](https://www.twilio.com/en-us/hipaa) -- BAA requirements, covered products
-- [HHS OCR Online Tracking Technologies Guidance](https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/hipaa-online-tracking/index.html) -- tracking pixels on patient portals
-- [Google Analytics HIPAA Guidance](https://support.google.com/analytics/answer/13297105?hl=en) -- Google does not sign BAAs for Analytics
-- [HIPAA Security Rule 45 CFR 164.312](https://www.hhs.gov/hipaa/index.html) -- audit controls, automatic logoff, access controls
-
-### Industry Analysis and Incidents
-- [HIPAA Violation Examples: Website Tracking (Feroot)](https://www.feroot.com/blog/hipaa-violation-examples-website-tracking/) -- $100M+ in tracking-related penalties
-- [GA4 HIPAA Compliance Guide 2026 (Feroot)](https://www.feroot.com/blog/google-analytics-4-hipaa-compliance/) -- healthcare CISO guidance
-- [Patient Portal HIPAA Compliance (Buchanan)](https://www.buchanan.com/blog/ensure-patient-portal-hipaa-compliance/) -- portal-specific requirements
-- [Duplicate Patient Records (Medical Economics)](https://www.medicaleconomics.com/view/why-duplicate-and-mismatched-patient-records-are-a-bigger-problem-than-you-think) -- 10-18% duplication rates
-- [SMS OTP Security Vulnerabilities (Authgear)](https://www.authgear.com/post/sms-otp-vulnerabilities-and-alternatives) -- SIM swap, SS7 exploits
-- [Twilio Verify vs Programmable SMS Migration](https://www.twilio.com/blog/migrate-programmable-sms-to-verify) -- why to use Verify
-
-### Codebase Verification (direct reads)
-- `lib/auth.ts` -- Session payload structure, cookie name, dev mode bypass, rate limiting
-- `lib/rate-limit.ts` -- In-memory Map fallback, Redis integration, fail-open on Redis error
-- `lib/asher-med-api.ts` -- Phone number handling, no timeouts, no caching, no retry
-- `app/api/auth/magic-link/route.ts` -- Duplicated team emails, staging bypass logic
-- `app/api/auth/verify/route.ts` -- Session creation, Stripe verification, staging bypass
-- `middleware.ts` -- Current route rewriting (join subdomain only, no auth checks)
-- `lib/resilience.ts` -- withRetry() exists but is not used by Asher Med client
+- Stripe Checkout optional items documentation: [Configure optional items](https://docs.stripe.com/payments/checkout/optional-items)
+- HIPAA encryption requirements: [HIPAA Encryption Requirements 2025](https://www.keragon.com/hipaa/hipaa-explained/hipaa-encryption-requirements), [PHI Database Encryption Guide](https://www.hipaavault.com/resources/phi-database-encryption-implementation-guide/)
+- HIPAA compliance for APIs: [HIPAA Compliance for APIs Guide](https://intuitionlabs.ai/articles/hipaa-compliant-api-guide)
+- Webhook race conditions: [Billing Webhook Race Condition Solution Guide](https://excessivecoding.com/blog/billing-webhook-race-condition-solution-guide), [Stripe Webhooks Race Conditions](https://www.pedroalonso.net/blog/stripe-webhooks-solving-race-conditions/)
+- Webhook ordering: [You Can't Guarantee Webhook Ordering](https://hackernoon.com/you-cant-guarantee-webhook-ordering-heres-why)
+- Kit registration edge cases: [23andMe Registration Trouble](https://customercare.23andme.com/hc/en-us/articles/204632060-23andMe-Registration-Trouble), [Quest Home Collection FAQ](https://www.questhealth.com/faqs/home-collection-kits.html)
+- Lab results partial data: [Junction API Partial Result Notifications](https://docs.junction.com/lab/workflow/partials)
+- SiPhox Health partner info: [Partner With Us](https://siphoxhealth.com/partner)
+- SiPhox API schemas: verified from PROJECT.md (internal documentation)
+- Existing codebase patterns: verified from `app/api/webhook/stripe/route.ts`, `lib/resilience.ts`, `lib/auth.ts`, `lib/asher-med-api.ts`, `components/dashboard/BiomarkerTrends.tsx`
