@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import { PricingCard } from '@/components/site/PricingCard';
 import { ClubBanner } from '@/components/site/ClubBanner';
@@ -8,6 +9,11 @@ import { CTASection } from '@/components/site/CTASection';
 import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
+
+const WavyBackground = dynamic(
+  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
+  { ssr: false, loading: () => <div className="py-16 md:py-20 grad-light" /> }
+);
 import {
   Check,
   X,
@@ -150,8 +156,8 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-16 md:py-20 px-6 grad-light">
-        <div className="max-w-4xl mx-auto">
+      <WavyBackground containerClassName="py-16 md:py-20 px-6" waveOpacity={0.35} speed="slow">
+        <div className="max-w-4xl mx-auto w-full">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
               Compare memberships
@@ -205,7 +211,7 @@ export default function PricingPage() {
             </div>
           </ScrollReveal>
         </div>
-      </section>
+      </WavyBackground>
 
       {/* What's Included */}
       <section className="py-16 md:py-20 px-6 grad-white">

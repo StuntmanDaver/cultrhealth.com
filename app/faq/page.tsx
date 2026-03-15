@@ -1,11 +1,18 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { CTASection } from '@/components/site/CTASection';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
+import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { brandify } from '@/lib/utils';
+
+const WavyBackground = dynamic(
+  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
+  { ssr: false, loading: () => <div className="py-24 grad-white" /> }
+);
 
 export const revalidate = 3600;
 
@@ -46,8 +53,8 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Sections */}
-      <section className="py-24 px-6 grad-white">
-        <div className="max-w-3xl mx-auto space-y-16">
+      <WavyBackground containerClassName="py-24 px-6" waveOpacity={0.35} speed="slow">
+        <div className="max-w-3xl mx-auto space-y-16 w-full">
 
           {/* Membership */}
           <ScrollReveal>
@@ -161,7 +168,10 @@ export default function FAQPage() {
             </div>
           </ScrollReveal>
         </div>
-      </section>
+      </WavyBackground>
+
+      {/* Trust Logo Marquee */}
+      <TrustMarquee />
 
       {/* Still Have Questions */}
       <section className="py-16 px-6 grad-light border-y border-cultr-sage">

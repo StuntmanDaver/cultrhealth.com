@@ -1,9 +1,16 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
+import TrustMarquee from '@/components/site/TrustMarquee';
 import { getAllBlogPosts, BLOG_CATEGORIES, type BlogPostMeta } from '@/lib/blog-content';
 import { ArrowRight, BookOpen, Clock, Calendar } from 'lucide-react';
+
+const WavyBackground = dynamic(
+  () => import('@/components/ui/WavyBackground').then(m => ({ default: m.WavyBackground })),
+  { ssr: false, loading: () => <div className="py-16 md:py-20 grad-light" /> }
+);
 
 export const revalidate = 3600;
 
@@ -142,7 +149,7 @@ export default async function SciencePage({
       </section>
 
       {/* Category Filter */}
-      <section className="py-8 px-6 grad-white border-b border-cultr-sage sticky top-16 z-40">
+      <section className="py-8 px-6 grad-white border-b border-cultr-sage">
         <div className="max-w-5xl mx-auto">
           <CategoryFilter activeCategory={activeCategory} />
         </div>
@@ -207,6 +214,27 @@ export default async function SciencePage({
           )}
         </div>
       </section>
+
+      {/* Brand CTA Break */}
+      <WavyBackground containerClassName="py-16 px-6" waveOpacity={0.35} speed="slow">
+        <div className="max-w-2xl mx-auto text-center">
+          <ScrollReveal>
+            <p className="text-cultr-textMuted text-lg mb-2">Change the CULTR.</p>
+            <h2 className="text-3xl font-display font-bold text-cultr-forest mb-6">
+              Rebrand yourself.
+            </h2>
+            <Link
+              href="/quiz"
+              className="inline-flex items-center px-6 py-3 grad-dark text-white rounded-full font-medium hover:opacity-90 transition-opacity"
+            >
+              Take the Quiz <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </ScrollReveal>
+        </div>
+      </WavyBackground>
+
+      {/* Trust Logo Marquee */}
+      <TrustMarquee />
 
       {/* Newsletter CTA */}
       <section className="py-16 px-6 grad-mint">
