@@ -5,6 +5,7 @@ import { PricingCard } from '@/components/site/PricingCard';
 import { ClubBanner } from '@/components/site/ClubBanner';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
+import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import {
@@ -118,6 +119,9 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
+
+      {/* Trust Logo Marquee */}
+      <TrustMarquee />
 
       {/* CULTR Creator CTA */}
       <section className="py-12 px-6 grad-dark">

@@ -5,16 +5,16 @@ import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { PLANS } from '@/lib/config/plans';
-import { TESTIMONIALS, PROVIDERS, TRUST_METRICS, TRUST_BADGES } from '@/lib/config/social-proof';
+import { PROVIDERS, TRUST_BADGES } from '@/lib/config/social-proof';
 import { brandify } from '@/lib/utils';
 import {
   ArrowRight,
   FlaskConical,
   Stethoscope,
   Shield,
+  Lock,
   Building,
   CreditCard,
-  Star,
   Dna,
   TrendingUp,
   Users,
@@ -34,6 +34,14 @@ const ClubBanner = dynamic(() => import('@/components/site/ClubBanner').then(mod
 
 const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignup').then(mod => ({ default: mod.NewsletterSignup })), {
   loading: () => <div className="h-48 grad-light animate-pulse" />,
+});
+
+const TrustMarquee = dynamic(() => import('@/components/site/TrustMarquee'), {
+  loading: () => <div className="h-24 bg-brand-primary animate-pulse" />,
+});
+
+const TestimonialsSection = dynamic(() => import('@/components/site/TestimonialsSection'), {
+  loading: () => <div className="h-[740px] grad-dark animate-pulse" />,
 });
 
 export const revalidate = 3600;
@@ -307,6 +315,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── Trust Logo Marquee ─── */}
+      <TrustMarquee />
+
       {/* Bridge: light → dark */}
       <div className="hidden md:block h-28 bridge-light-to-dark" />
 
@@ -354,14 +365,14 @@ export default function HomePage() {
             </h2>
           </ScrollReveal>
 
-          <div className="max-w-5xl mx-auto mb-10">
-            <ClubBanner />
-          </div>
-
           <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {PLANS.filter((p) => p.slug !== 'club').map((plan) => (
               <PricingCard key={plan.slug} plan={plan} />
             ))}
+          </div>
+
+          <div className="max-w-5xl mx-auto mb-10 mt-12">
+            <ClubBanner />
           </div>
 
           <div className="text-center mt-12 space-y-4">
@@ -381,54 +392,32 @@ export default function HomePage() {
       {/* Newsletter */}
       <NewsletterSignup />
 
-      {/* ─── Testimonials (expanded) ─── */}
-      <section className="relative py-16 md:py-20 px-6 grad-dark text-white overflow-hidden">
-        {/* Radial glow — top center mint */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.1) 0%, transparent 100%)' }} />
-        {/* Radial glow — bottom center */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(70% 40% at 50% 100%, rgba(215,243,220,0.07) 0%, transparent 100%)' }} />
-        <div className="max-w-7xl mx-auto relative z-10">
-          <ScrollReveal className="text-center mb-12">
-            <h2 className="text-2xl md:text-4xl font-display font-bold mb-4">
-              What members say.
-            </h2>
-            <div className="flex items-center justify-center gap-2 text-white/70">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-cultr-sage text-cultr-sage" />
-                ))}
-              </div>
-              <span>{TRUST_METRICS.avgRating} out of 5 from {TRUST_METRICS.reviewCount} reviews</span>
+      {/* ─── Trust Badges Bar ─── */}
+      <div className="grad-mint border-b border-cultr-sage py-6">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
+            <div className="flex items-center gap-2 text-cultr-forest">
+              <Shield className="w-4 h-4" aria-hidden="true" />
+              <span className="text-xs font-display font-medium tracking-wide">HIPAA Compliant</span>
             </div>
-          </ScrollReveal>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {TESTIMONIALS.slice(0, 6).map((testimonial, i) => (
-              <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="p-6 rounded-2xl h-full flex flex-col glass-card-dark transition-all duration-300 glow-card glow-card-dark">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex">
-                      {[...Array(testimonial.rating)].map((_, j) => (
-                        <Star key={j} className="w-3.5 h-3.5 fill-cultr-sage text-cultr-sage" />
-                      ))}
-                    </div>
-                    {testimonial.highlight && (
-                      <span className="text-xs font-bold bg-cultr-sage/20 text-cultr-sage px-3 py-1 rounded-full">
-                        {testimonial.highlight}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-white/90 mb-6 flex-1">&ldquo;{brandify(testimonial.quote)}&rdquo;</p>
-                  <div>
-                    <p className="font-medium text-white">{testimonial.name}</p>
-                    <p className="text-sm text-white/60">{testimonial.title}</p>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
+            <div className="flex items-center gap-2 text-cultr-forest">
+              <Lock className="w-4 h-4" aria-hidden="true" />
+              <span className="text-xs font-display font-medium tracking-wide">256-bit Encryption</span>
+            </div>
+            <div className="flex items-center gap-2 text-cultr-forest">
+              <Stethoscope className="w-4 h-4" aria-hidden="true" />
+              <span className="text-xs font-display font-medium tracking-wide">Licensed Providers</span>
+            </div>
+            <div className="flex items-center gap-2 text-cultr-forest">
+              <FlaskConical className="w-4 h-4" aria-hidden="true" />
+              <span className="text-xs font-display font-medium tracking-wide">Licensed Pharmacy</span>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* ─── Testimonials ─── */}
+      <TestimonialsSection />
 
       {/* Bridge: dark → light */}
       <div className="hidden md:block h-28 bridge-dark-to-light" />
