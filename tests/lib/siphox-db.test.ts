@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock @vercel/postgres before importing db module
-const mockSql = vi.fn()
+// Use vi.hoisted so mockSql is available inside the hoisted vi.mock factory
+const { mockSql } = vi.hoisted(() => ({
+  mockSql: vi.fn(),
+}))
+
 vi.mock('@vercel/postgres', () => ({
   sql: mockSql,
 }))

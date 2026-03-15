@@ -35,3 +35,22 @@ export type {
 } from './types'
 
 export { SiphoxApiError } from './errors'
+
+export {
+  SiphoxDatabaseError,
+  upsertSiphoxCustomer,
+  getSiphoxCustomerByPhone,
+  getSiphoxCustomerBySiphoxId,
+  insertKitOrder,
+  getKitOrdersByCustomer,
+  updateKitOrderStatus,
+  insertReport,
+  getReportsByCustomer,
+  getReportById,
+} from './db'
+
+export type {
+  SiphoxCustomerRow,
+  SiphoxKitOrderRow,
+  SiphoxReportRow,
+} from './db'
