@@ -147,16 +147,19 @@ export default function HomePage() {
               </div>
             </ScrollReveal>
 
-            {/* Image 2 - Woman Running */}
+            {/* Video 2 - Woman Running */}
             <ScrollReveal delay={200} direction="up" className="group">
               <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
-                <Image
-                  src="/images/lifestyle-woman-running-new.webp"
-                  alt="Athletic woman running"
-                  fill
-                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
+                  poster="/images/lifestyle-woman-running-new.webp"
+                >
+                  <source src="/images/lifestyle-woman-running.mp4" type="video/mp4" />
+                </video>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
@@ -170,16 +173,19 @@ export default function HomePage() {
               </div>
             </ScrollReveal>
 
-            {/* Image 3 - Sunset Freedom */}
+            {/* Video 3 - Freedom */}
             <ScrollReveal delay={300} direction="up" className="group md:col-span-2 lg:col-span-1">
               <div className="relative h-[400px] md:h-[500px] rounded-[28px] overflow-hidden shadow-lux-lg">
-                <Image
-                  src="/images/lifestyle-girl-running.webp"
-                  alt="Woman running outdoors representing freedom and vitality"
-                  fill
-                  className="object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 33vw"
-                />
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
+                  poster="/images/lifestyle-girl-running.webp"
+                >
+                  <source src="/images/lifestyle-girl-running.mp4" type="video/mp4" />
+                </video>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A2E2B]/90 via-[#2B4542]/20 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <div className="flex items-center gap-2 mb-3">
@@ -298,6 +304,40 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Bridge: light → dark */}
+      <div className="hidden md:block h-28 bridge-light-to-dark" />
+
+      {/* ─── CULTR Creator CTA ─── */}
+      <section className="relative py-12 px-6 grad-dark overflow-hidden">
+        {/* Radial glow — left accent */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 70% at 20% 50%, rgba(215,243,220,0.08) 0%, transparent 100%)' }} />
+        <div className="max-w-4xl mx-auto relative z-10">
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="w-16 h-16 rounded-2xl glass-card-dark flex items-center justify-center shrink-0">
+                <Users className="w-8 h-8 text-cultr-sage" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  <span className="">CULTR</span> Creator
+                </h3>
+                <p className="text-white/70 max-w-lg">
+                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                </p>
+              </div>
+              <Link href="/creators" className="shrink-0">
+                <span className="inline-flex items-center px-6 py-3 rounded-full border border-white/30 text-white hover:bg-white/10 transition-colors font-medium">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </span>
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Bridge: dark → light */}
+      <div className="hidden md:block h-28 bridge-dark-to-light" />
+
       {/* ─── Pricing Preview ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
         {/* Radial glow — top left accent */}
@@ -332,37 +372,6 @@ export default function HomePage() {
               </Link>
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Bridge: light → dark */}
-      <div className="hidden md:block h-28 bridge-light-to-dark" />
-
-      {/* ─── CULTR Creator CTA ─── */}
-      <section className="relative py-12 px-6 grad-dark overflow-hidden">
-        {/* Radial glow — left accent */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(50% 70% at 20% 50%, rgba(215,243,220,0.08) 0%, transparent 100%)' }} />
-        <div className="max-w-4xl mx-auto relative z-10">
-          <ScrollReveal>
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              <div className="w-16 h-16 rounded-2xl glass-card-dark flex items-center justify-center shrink-0">
-                <Users className="w-8 h-8 text-cultr-sage" />
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
-                  <span className="">CULTR</span> Creator
-                </h3>
-                <p className="text-white/70 max-w-lg">
-                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
-                </p>
-              </div>
-              <Link href="/creators" className="shrink-0">
-                <Button variant="secondary" size="lg">
-                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
         </div>
       </section>
 
