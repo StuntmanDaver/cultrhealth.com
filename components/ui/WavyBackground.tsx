@@ -105,7 +105,7 @@ export const WavyBackground = ({
 
   if (isMobile) {
     return (
-      <div className={cn("relative flex flex-col items-center justify-center bg-gradient-to-b from-brand-primary to-forest-dark", containerClassName)}>
+      <div className={cn("relative flex flex-col items-center justify-center bg-brand-cream", containerClassName)}>
         <div className={cn("relative z-10", className)} {...props}>
           {children}
         </div>
