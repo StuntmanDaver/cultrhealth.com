@@ -1493,3 +1493,65 @@ export async function sendSubscriptionExpiringEmail(data: SubscriptionExpiringEm
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
+
+// ===========================================
+// SIPHOX LOW CREDIT ALERT
+// ===========================================
+
+export async function sendLowCreditAlert(balance: number, threshold: number): Promise<EmailResult> {
+  const adminEmail = process.env.FOUNDER_EMAIL
+  if (!adminEmail) {
+    console.error('FOUNDER_EMAIL not configured - cannot send low credit alert')
+    return { success: false, error: 'Admin email not configured' }
+  }
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      SiPhox Credit Balance Low
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">
+        The SiPhox Health credit balance has dropped below the minimum threshold.
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; width: 140px;">Current Balance</td>
+          <td style="padding: 8px 0; color: #ff4444; font-weight: bold;">${balance} credits</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Threshold</td>
+          <td style="padding: 8px 0; color: #fff;">${threshold} credits</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Time</td>
+          <td style="padding: 8px 0; color: #fff;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #888; font-size: 13px;">
+      Please purchase additional SiPhox credits to avoid kit order failures.
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: adminEmail,
+      subject: `[ACTION REQUIRED] SiPhox Credit Balance Low - ${balance} credits remaining`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Low credit alert email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send low credit alert:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
