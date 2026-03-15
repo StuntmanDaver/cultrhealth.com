@@ -3,6 +3,7 @@ import { Fraunces, Inter, Playfair_Display } from 'next/font/google'
 import Script from 'next/script'
 import './globals.css'
 import { LayoutShell } from '@/components/site/LayoutShell'
+import { MeshBackgroundDynamic } from '@/components/ui/MeshBackgroundDynamic'
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -98,7 +99,8 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="min-h-screen grad-page text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
+      <body className="min-h-screen text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
+        <MeshBackgroundDynamic />
         <LayoutShell>
           {children}
         </LayoutShell>
