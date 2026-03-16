@@ -19,6 +19,7 @@ export type UnifiedCouponResult = {
 }
 
 export const CLUB_COUPONS: Record<string, ClubCoupon> = {
+  'OWNER':      { discount: 60, label: 'Owner Discount' },
   'CULTRSTAFF': { discount: 30, label: 'Staff Discount' },
   'CULTRFAM':   { discount: 20, label: 'Family Discount' },
   'CULTR10':    { discount: 10, label: 'Promo Code' },
