@@ -1,3 +1,17 @@
+## [2026-03-15] - Biomarker Explainer + OWNER Coupon
+
+### Biomarker Explainer Link
+- **New component:** `components/site/BiomarkerExplainer.tsx` — client component, "See what we test ›" link opens modal with SiPhox Health embedded biomarker iframe
+- **Integrated on:** PricingCard (auto-detects "lab test" features), `/pricing` comparison table + "Comprehensive Lab Panels" card, `/` homepage comparison table, `/how-it-works` "Comprehensive Lab Testing" card
+
+### OWNER Coupon
+- **Code:** `OWNER` — 60% off, label "Owner Discount"
+- **File:** `lib/config/coupons.ts` — added to `CLUB_COUPONS` map
+- **Full coupon list:** OWNER (60%), CULTRSTAFF (30%), CULTRFAM (20%), CULTR10 (10%)
+- **Admin email:** Already shows discounted subtotal, coupon line, tax on discounted amount, and final total — no changes needed
+
+---
+
 ## [2026-03-15] - Therapies Page Redesign + Site-Wide Brand Consistency
 
 ### Summary
