@@ -167,6 +167,47 @@ export async function POST(request: NextRequest) {
       medicationTypeSelection: medications.some(m => m.isGLP1) ? 'GLP1' : 'NonGLP1',
     };
 
+    // Staging bypass: return mock success when Asher Med is not configured
+    const isStaging = !process.env.ASHER_MED_API_KEY;
+    if (isStaging) {
+      const mockPatientId = Date.now();
+
+      // Still update DB if available
+      if (process.env.POSTGRES_URL && body.stripeSessionId) {
+        try {
+          const { sql } = await import('@vercel/postgres');
+          await sql`
+            UPDATE pending_intakes
+            SET intake_status = 'completed', completed_at = NOW(),
+                intake_data = intake_data || ${JSON.stringify({
+                  asher_patient_id: mockPatientId,
+                  submitted_at: new Date().toISOString(),
+                  staging_bypass: true,
+                })}::jsonb
+            WHERE stripe_payment_intent_id = ${body.stripeSessionId}
+              OR intake_data->>'session_id' = ${body.stripeSessionId}
+          `;
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      if (body.phone) {
+        try {
+          const phoneE164 = formatPhoneNumber(body.phone);
+          await updatePortalPatientId(phoneE164, mockPatientId);
+        } catch {
+          // Non-fatal
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Intake form submitted successfully (staging)',
+        patientId: mockPatientId,
+      });
+    }
+
     // Submit to Asher Med
     const result = await createNewOrder(orderRequest);
     const patientId = result.data?.id;
