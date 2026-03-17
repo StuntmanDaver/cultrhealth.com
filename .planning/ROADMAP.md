@@ -46,7 +46,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Fulfillment orchestration: DB migration, fulfillment logic, cron retry, webhook extensions, email templates
+- [x] 02-01-PLAN.md — Fulfillment orchestration: DB migration, fulfillment logic, cron retry, webhook extensions, email templates
 - [ ] 02-02-PLAN.md — Core tier Checkout Session with optional $135 blood test add-on
 
 ### Phase 3: Kit Registration
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-15 |
-| 2. Checkout Integration | 0/2 | Not started | - |
+| 2. Checkout Integration | 1/2 | In progress | - |
 | 3. Kit Registration | 0/2 | Not started | - |
 | 4. Labs Dashboard | 0/3 | Not started | - |

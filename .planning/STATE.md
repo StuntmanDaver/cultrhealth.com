@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-15T05:09:53.093Z"
-last_activity: 2026-03-15 -- Completed plan 01-02 (SiPhox database migration & data access layer)
+status: in-progress
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-17T00:59:00.000Z"
+last_activity: 2026-03-17 -- Completed plan 02-01 (SiPhox fulfillment orchestration)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 22
+  total_plans: 3
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -21,33 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Members can see their real biomarker data -- organized, visual, and actionable -- directly in their CULTR Health dashboard.
-**Current focus:** Phase 1: Foundation
+**Current focus:** Phase 2: Checkout Integration
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation) -- COMPLETE
-Plan: 2 of 2 in current phase -- COMPLETE
-Status: Phase 1 Complete
-Last activity: 2026-03-15 -- Completed plan 01-02 (SiPhox database migration & data access layer)
+Phase: 2 of 4 (Checkout Integration) -- IN PROGRESS
+Plan: 1 of 2 in current phase -- COMPLETE
+Status: Plan 02-01 Complete, Plan 02-02 next
+Last activity: 2026-03-17 -- Completed plan 02-01 (SiPhox fulfillment orchestration)
 
-Progress: [##........] 22%
+Progress: [###.......] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 4.5 min
-- Total execution time: 0.15 hours
+- Total plans completed: 3
+- Average duration: 6.3 min
+- Total execution time: 0.32 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Foundation | 2/2 | 9 min | 4.5 min |
+| 2. Checkout Integration | 1/2 | 10 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-02 (3m)
-- Trend: Accelerating
+- Last 5 plans: 01-01 (6m), 01-02 (3m), 02-01 (10m)
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -67,6 +68,11 @@ Recent decisions affecting current work:
 - 01-02: Reports are immutable (insert-only, no update function) for biomarker data integrity
 - 01-02: Customer upsert uses COALESCE to preserve existing non-null values on phone_e164 conflict
 - 01-02: JSONB columns use JSON.stringify in sql template for proper PostgreSQL serialization
+- 02-01: SiPhox API responses use _id not id -- fulfillment code accesses ._id from Zod-validated responses
+- 02-01: Address resolution queries pending_intakes table by email for latest intake_data
+- 02-01: Refund notification never auto-cancels SiPhox orders -- sends suggested action to support
+- 02-01: Core tier add-on detection uses BLOOD_TEST_STRIPE_PRICE_ID env var
+- 02-01: SiphoxKitOrderRow interface extended with 6 new fulfillment columns
 
 ### Pending Todos
 
@@ -80,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T05:09:53.090Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-checkout-integration/02-CONTEXT.md
+Last session: 2026-03-17T00:59:00.000Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: .planning/phases/02-checkout-integration/02-01-SUMMARY.md
