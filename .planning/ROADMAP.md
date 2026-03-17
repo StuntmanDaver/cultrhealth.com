@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
-- [ ] 01-02-PLAN.md — Database migration (3 tables) and data access layer
+- [x] 01-02-PLAN.md — Database migration (3 tables) and data access layer
 
 ### Phase 2: Checkout Integration
 **Goal**: When a member completes a Catalyst+, Concierge, or Core+add-on checkout, a SiPhox kit order is created automatically without manual intervention
@@ -43,11 +43,11 @@ Plans:
   2. Core tier checkout offers a $135 blood test add-on and, when selected, triggers a kit order
   3. If the SiPhox API is down or credits are exhausted, the subscription still activates and support is notified via email
   4. A refunded order cancels the pending SiPhox kit order before credits are consumed
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: Stripe webhook extension and deferred fulfillment
-- [ ] 02-02: Core tier checkout add-on
+- [ ] 02-01-PLAN.md — Fulfillment orchestration: DB migration, fulfillment logic, cron retry, webhook extensions, email templates
+- [ ] 02-02-PLAN.md — Core tier Checkout Session with optional $135 blood test add-on
 
 ### Phase 3: Kit Registration
 **Goal**: A member who has received a physical blood test kit can register it in their portal and track its status through the lab lifecycle
