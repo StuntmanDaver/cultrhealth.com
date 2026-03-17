@@ -1,3 +1,37 @@
+## [2026-03-16] - Asher Med Integration Audit Fixes
+
+### Summary
+Security, data access, and dashboard display fixes identified through a comprehensive audit of the Asher Med Partner Portal integration.
+
+### Critical Security Fixes
+- **Profile route auth** (`app/api/member/profile/route.ts`): Replaced `JSON.parse(sessionCookie.value)` with proper JWT verification via `verifySessionToken()` in both GET and PUT handlers — raw JSON parse would throw on JWT tokens, breaking auth
+- **Membership query scoping** (`app/api/member/profile/route.ts`): Added `WHERE stripe_customer_id = ${customerId}` filter — previous query returned the most recent membership globally, potentially leaking another user's tier/subscription status
+- **Patient ID vs Order ID** (`app/api/intake/submit/route.ts`): `createNewOrder()` returns a patient ID, not an order ID. Fixed `updateOrderApproval()` to first fetch orders via `getOrders({ patientId })` to resolve the actual order ID before sending the partner note PATCH
+
+### Dashboard Display Fixes
+- **Dashboard page** (`app/dashboard/page.tsx`): Now fetches user profile client-side and passes real `tier`, `email`, and `libraryAccess` to MemberDashboard — was hardcoded as `tier={null} email=""`
+- **Order field alignment** (`components/library/MemberDashboard.tsx`): Changed `Order` interface from `{ orderId, medication }` to `{ orderNumber, medicationName }` matching the actual API response shape
+- **Missing status configs** (`components/library/MemberDashboard.tsx`): Added `approved`, `denied`, `waitingRoom`, `prescribed` to `STATUS_CONFIG` — orders in these Asher Med statuses were all falling back to the pending icon
+
+### HIPAA Compliance
+- Removed debug `console.log` statements from intake submit route (medication mapping logs, DB update confirmations)
+- Replaced `console.error(error)` with `console.error(error.message)` to avoid logging full error objects that could contain PHI
+- Converted Asher Med API catch blocks to empty catches where error details aren't needed
+
+---
+
+## [2026-03-16] - Science Blog Article Images
+
+### Summary
+Replaced green gradient placeholders on the `/science` page with real article images for the 3 featured posts.
+
+### Changes
+- **New images:** `public/blog/nad-longevity.png`, `public/blog/biomarker-basics.png`, `public/blog/glp1-metabolic.png`
+- **BlogCard component** (`app/science/page.tsx`): Replaced `BookOpen` icon placeholder with `next/image` using `fill` + `object-cover`, added hover zoom (`scale-105`), responsive `sizes` attribute, mint/sage gradient fallback for posts without images
+- **Frontmatter:** Updated image extensions from `.jpg` → `.png` in `nad-and-longevity.md`, `biomarker-basics.md`, `glp1-beyond-weight-loss.md`
+
+---
+
 ## [2026-03-15] - Biomarker Explainer + OWNER Coupon
 
 ### Biomarker Explainer Link
