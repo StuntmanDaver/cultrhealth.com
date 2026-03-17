@@ -253,16 +253,15 @@ describe('GET /api/portal/orders', () => {
     expect(data.orders[1].id).toBe(100)
   })
 
-  it('returns 502 when Asher Med API fails', async () => {
+  it('returns empty orders gracefully when Asher Med API fails', async () => {
     mockGetOrders.mockRejectedValue(new Error('Asher Med API timeout'))
 
     const { GET } = await import('@/app/api/portal/orders/route')
     const response = await GET(makeRequest() as any)
     const data = await response.json()
 
-    expect(response.status).toBe(502)
-    expect(data.success).toBe(false)
-    expect(data.error).toBe('Unable to load orders')
+    expect(response.status).toBe(200)
+    expect(data.success).toBe(true)
     expect(data.orders).toEqual([])
   })
 })

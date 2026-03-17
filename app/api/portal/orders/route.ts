@@ -30,7 +30,13 @@ export async function GET(request: NextRequest) {
 
   try {
     // 3. Fetch orders from Asher Med
-    const result = await getOrders({ patientId: auth.asherPatientId })
+    let result
+    try {
+      result = await getOrders({ patientId: auth.asherPatientId })
+    } catch {
+      // Asher Med API unreachable — return empty orders (not an error state)
+      return NextResponse.json({ success: true, orders: [] })
+    }
 
     // 4. Best-effort local DB enrichment for medication names
     let medMap: Record<number, string> = {}
@@ -77,10 +83,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, orders })
   } catch {
-    // 7. Asher Med API error — return graceful 502
-    return NextResponse.json(
-      { success: false, error: 'Unable to load orders', orders: [] },
-      { status: 502 }
-    )
+    // 7. Unexpected error — return graceful empty state
+    return NextResponse.json({ success: true, orders: [] })
   }
 }

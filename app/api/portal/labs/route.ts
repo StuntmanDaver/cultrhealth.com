@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
-import { getSiphoxCustomerByPhone, getKitOrdersByCustomer, updateKitOrderStatus } from '@/lib/siphox/db'
+import { getSiphoxCustomerByPhone, getKitOrdersByCustomer, updateKitOrderStatus, SiphoxDatabaseError } from '@/lib/siphox/db'
 import { registerKit } from '@/lib/siphox/client'
 import { SiphoxApiError } from '@/lib/siphox/errors'
 import { deriveKitLifecycleState } from '@/lib/siphox/kit-lifecycle'
 
+/** Empty labs response — used when DB is unavailable or customer has no data */
+const EMPTY_LABS_RESPONSE = {
+  success: true,
+  kitOrders: [],
+  siphoxCustomerId: null,
+  tier: null,
+}
+
 /**
  * GET /api/portal/labs
- * Returns kit orders with lifecycle state for authenticated member
+ * Returns kit orders with lifecycle state for authenticated member.
+ * Gracefully returns empty state when DB tables are missing or unreachable.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -19,18 +28,36 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const siphoxCustomer = await getSiphoxCustomerByPhone(auth.phone)
-
-    if (!siphoxCustomer) {
-      return NextResponse.json({
-        success: true,
-        kitOrders: [],
-        siphoxCustomerId: null,
-        tier: null,
-      })
+    let siphoxCustomer
+    try {
+      siphoxCustomer = await getSiphoxCustomerByPhone(auth.phone)
+    } catch (dbError) {
+      // DB unavailable or siphox_customers table missing — return empty state
+      if (dbError instanceof SiphoxDatabaseError) {
+        console.warn('Labs DB unavailable, returning empty state:', dbError.message)
+        return NextResponse.json(EMPTY_LABS_RESPONSE)
+      }
+      throw dbError
     }
 
-    const kitOrders = await getKitOrdersByCustomer(siphoxCustomer.siphox_customer_id)
+    if (!siphoxCustomer) {
+      return NextResponse.json(EMPTY_LABS_RESPONSE)
+    }
+
+    let kitOrders
+    try {
+      kitOrders = await getKitOrdersByCustomer(siphoxCustomer.siphox_customer_id)
+    } catch (dbError) {
+      // siphox_kit_orders table missing — return empty state
+      if (dbError instanceof SiphoxDatabaseError) {
+        console.warn('Kit orders DB unavailable, returning empty state:', dbError.message)
+        return NextResponse.json({
+          ...EMPTY_LABS_RESPONSE,
+          siphoxCustomerId: siphoxCustomer.siphox_customer_id,
+        })
+      }
+      throw dbError
+    }
 
     const ordersWithState = kitOrders.map((order) => ({
       ...order,
