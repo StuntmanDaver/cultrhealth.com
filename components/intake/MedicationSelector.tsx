@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useIntakeForm } from '@/lib/contexts/intake-form-context';
 import { Check, Info } from 'lucide-react';
 
@@ -80,32 +81,38 @@ export function MedicationSelector() {
 
               {med.image ? (
                 <div className="relative group/image flex-shrink-0">
-                  <img
+                  <Image
                     src={med.image}
                     alt={med.name}
-                    className="w-14 h-14 md:w-12 md:h-12 object-contain rounded md:cursor-zoom-in"
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-contain rounded md:cursor-zoom-in"
                     onClick={(e) => {
                       e.stopPropagation();
                       setExpandedImageId(expandedImageId === med.id ? null : med.id);
                     }}
                   />
                   {/* Desktop hover preview */}
-                  <div className="hidden md:group-hover/image:block absolute left-0 bottom-0 z-30 pointer-events-none animate-fade-in">
+                  <div className="hidden md:group-hover/image:block absolute left-full top-0 ml-2 z-40 pointer-events-none animate-fade-in">
                     <div className="bg-white rounded-xl shadow-lg border p-2">
-                      <img
+                      <Image
                         src={med.image}
                         alt={med.name}
+                        width={176}
+                        height={176}
                         className="w-44 h-44 object-contain"
                       />
                     </div>
                   </div>
                   {/* Mobile tap preview */}
                   {expandedImageId === med.id && (
-                    <div className="md:hidden absolute left-0 bottom-0 z-30 pointer-events-none animate-fade-in">
+                    <div className="md:hidden absolute left-full top-0 ml-2 z-40 pointer-events-none animate-fade-in">
                       <div className="bg-white rounded-xl shadow-lg border p-2">
-                        <img
+                        <Image
                           src={med.image}
                           alt={med.name}
+                          width={176}
+                          height={176}
                           className="w-44 h-44 object-contain"
                         />
                       </div>
@@ -113,7 +120,7 @@ export function MedicationSelector() {
                   )}
                 </div>
               ) : (
-                <div className="w-14 h-14 md:w-12 md:h-12 bg-cream-dark rounded flex items-center justify-center flex-shrink-0">
+                <div className="w-20 h-20 bg-cream-dark rounded flex items-center justify-center flex-shrink-0">
                   <span className="text-xs text-forest-muted font-medium">RX</span>
                 </div>
               )}
