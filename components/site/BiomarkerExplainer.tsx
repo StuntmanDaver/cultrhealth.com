@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FlaskConical, X } from 'lucide-react';
 
 const SIPHOX_EMBED_URL =
@@ -44,45 +45,63 @@ export default function BiomarkerExplainerLink({
         )}
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-cultr-sage/30">
-              <div className="flex items-center gap-2">
-                <FlaskConical className="w-5 h-5 text-cultr-forest" />
-                <h3 className="font-display font-bold text-cultr-forest text-lg">
-                  Biomarkers We Test
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-cultr-sage/30 flex items-center justify-center transition-colors"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5 text-cultr-text" />
-              </button>
-            </div>
-
-            {/* Iframe */}
-            <div className="w-full" style={{ height: '70vh', maxHeight: '1055px' }}>
-              <iframe
-                src={SIPHOX_EMBED_URL}
-                title="SiPhox Health — Biomarkers We Test"
-                className="w-full h-full"
-                style={{ border: 'none' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {open && <BiomarkerModal onClose={() => setOpen(false)} />}
     </>
+  );
+}
+
+/** Portal-rendered modal so it escapes parent transforms (ScrollReveal, PricingCard scale) */
+function BiomarkerModal({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-cultr-sage/30 shrink-0">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="w-5 h-5 text-cultr-forest" />
+            <h3 className="font-display font-bold text-cultr-forest text-lg">
+              Biomarkers We Test
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full hover:bg-cultr-sage/30 flex items-center justify-center transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5 text-cultr-text" />
+          </button>
+        </div>
+
+        {/* Iframe */}
+        <div className="flex-1 min-h-0">
+          <iframe
+            src={SIPHOX_EMBED_URL}
+            title="SiPhox Health — Biomarkers We Test"
+            className="w-full h-full"
+            style={{ border: 'none', minHeight: '60vh' }}
+          />
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }

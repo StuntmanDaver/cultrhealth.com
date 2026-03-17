@@ -5,7 +5,7 @@ author: "CULTR Health Team"
 date: "2026-01-20"
 readTime: "12 min read"
 excerpt: "NAD+ is essential for cellular energy and healthy aging. Learn how this coenzyme works, why levels decline with age, and strategies to optimize your NAD+ status."
-image: "/blog/nad-longevity.jpg"
+image: "/blog/nad-longevity.png"
 tags: ["longevity", "nad+", "cellular-health", "anti-aging", "mitochondria"]
 featured: true
 ---

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { verifySessionToken } from '@/lib/auth';
 
 /**
  * GET /api/member/profile
@@ -9,9 +9,8 @@ import { cookies } from 'next/headers';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get email from session/cookie
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('cultr_session');
+    // Verify session from cookie (JWT verification, not raw JSON.parse)
+    const sessionCookie = request.cookies.get('cultr_session');
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -20,17 +19,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse session to get email
-    let email: string;
-    try {
-      const session = JSON.parse(sessionCookie.value);
-      email = session.email?.toLowerCase();
-    } catch {
+    const session = await verifySessionToken(sessionCookie.value);
+    if (!session) {
       return NextResponse.json(
         { success: false, error: 'Invalid session' },
         { status: 401 }
       );
     }
+
+    const email = session.email?.toLowerCase();
+    const customerId = session.customerId;
 
     if (!email) {
       return NextResponse.json(
@@ -50,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     const { sql } = await import('@vercel/postgres');
 
-    // Get membership info
+    // Get membership info — filtered by the authenticated user's Stripe customer ID
     const membershipResult = await sql`
       SELECT
         id,
@@ -60,11 +58,7 @@ export async function GET(request: NextRequest) {
         subscription_status,
         created_at
       FROM memberships
-      WHERE lower(stripe_customer_id) IN (
-        SELECT stripe_customer_id FROM memberships WHERE id IN (
-          SELECT MIN(id) FROM memberships GROUP BY stripe_customer_id
-        )
-      )
+      WHERE stripe_customer_id = ${customerId}
       ORDER BY created_at DESC
       LIMIT 1
     `;
@@ -137,9 +131,8 @@ export async function GET(request: NextRequest) {
               } : patient.shippingAddress,
             };
           }
-        } catch (apiError) {
-          console.log('Unable to fetch real-time patient data from Asher Med:', apiError);
-          // Continue with database data
+        } catch {
+          // Non-fatal: continue with database data
         }
       }
     }
@@ -151,7 +144,7 @@ export async function GET(request: NextRequest) {
       membership: membershipResult.rows[0] || null,
     });
   } catch (error) {
-    console.error('Failed to fetch member profile:', error);
+    console.error('Failed to fetch member profile:', error instanceof Error ? error.message : 'Unknown error');
 
     return NextResponse.json(
       { success: false, error: 'Failed to fetch profile' },
@@ -167,9 +160,8 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    // Get email from session/cookie
-    const cookieStore = await cookies();
-    const sessionCookie = cookieStore.get('cultr_session');
+    // Verify session from cookie (JWT verification)
+    const sessionCookie = request.cookies.get('cultr_session');
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -178,16 +170,15 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    let email: string;
-    try {
-      const session = JSON.parse(sessionCookie.value);
-      email = session.email?.toLowerCase();
-    } catch {
+    const session = await verifySessionToken(sessionCookie.value);
+    if (!session) {
       return NextResponse.json(
         { success: false, error: 'Invalid session' },
         { status: 401 }
       );
     }
+
+    const email = session.email?.toLowerCase();
 
     if (!email) {
       return NextResponse.json(
@@ -234,9 +225,8 @@ export async function PUT(request: NextRequest) {
           }
 
           await updatePatient(parseInt(asherPatientId, 10), updateData);
-        } catch (apiError) {
-          console.error('Failed to update Asher Med patient:', apiError);
-          // Continue anyway - we can update locally
+        } catch {
+          // Non-fatal: Asher Med update failed, continue with local response
         }
       }
     }
@@ -246,7 +236,7 @@ export async function PUT(request: NextRequest) {
       message: 'Profile updated successfully',
     });
   } catch (error) {
-    console.error('Failed to update member profile:', error);
+    console.error('Failed to update member profile:', error instanceof Error ? error.message : 'Unknown error');
 
     return NextResponse.json(
       { success: false, error: 'Failed to update profile' },

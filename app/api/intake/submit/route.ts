@@ -67,8 +67,6 @@ export async function POST(request: NextRequest) {
     // Validate medication selection (support both old and new format)
     const selectedMedications = body.selectedMedications || (body.selectedMedication ? [body.selectedMedication] : []);
 
-    console.log('Received medication selection:', { selectedMedications });
-
     if (selectedMedications.length === 0) {
       return NextResponse.json(
         { success: false, error: 'At least one medication must be selected' },
@@ -81,16 +79,11 @@ export async function POST(request: NextRequest) {
       .map((productId: string) => {
         const asherMedId = getAsherMedIdFromProductId(productId);
         const found = asherMedId ? MEDICATION_OPTIONS.find(m => m.id === asherMedId) : null;
-        console.log('Mapping medication:', { productId, asherMedId, found: found?.id });
         return found;
       })
       .filter(Boolean);
 
-    console.log('Available Asher Med IDs:', MEDICATION_OPTIONS.map(m => m.id));
-    console.log('Matched medications:', medications.map(m => m.id));
-
     if (medications.length === 0) {
-      console.error('No matching medications found for:', selectedMedications);
       return NextResponse.json(
         { success: false, error: 'Invalid medication selection. Please try selecting medications again.' },
         { status: 400 }
@@ -176,17 +169,25 @@ export async function POST(request: NextRequest) {
 
     // Submit to Asher Med
     const result = await createNewOrder(orderRequest);
+    const patientId = result.data?.id;
 
     // Send partner note to Asher Med via PATCH (non-fatal)
-    if (result.data?.id && partnerNote) {
+    // createNewOrder returns the patient ID, not the order ID.
+    // We need to fetch orders for this patient to get the actual order ID.
+    if (patientId && partnerNote) {
       try {
-        await updateOrderApproval(result.data.id, {
-          approvalStatus: 'PENDING',
-          partnerNote,
-        });
-        console.log('Partner note sent to Asher Med');
-      } catch (noteError) {
-        console.error('Failed to send partner note to Asher Med:', noteError);
+        const { getOrders } = await import('@/lib/asher-med-api');
+        const ordersResponse = await getOrders({ patientId });
+        // Most recent order for this patient is the one we just created
+        const latestOrder = ordersResponse.data?.[0];
+        if (latestOrder?.id) {
+          await updateOrderApproval(latestOrder.id, {
+            approvalStatus: 'PENDING',
+            partnerNote,
+          });
+        }
+      } catch {
+        // Non-fatal: partner note failed to send
       }
     }
 
@@ -238,9 +239,8 @@ export async function POST(request: NextRequest) {
           )
         `;
 
-        console.log('Database records updated for intake submission');
       } catch (dbError) {
-        console.error('Failed to update database:', dbError);
+        console.error('Failed to update database:', dbError instanceof Error ? dbError.message : 'Unknown error');
         // Don't fail the request - the order was created in Asher Med
       }
     }
@@ -252,10 +252,8 @@ export async function POST(request: NextRequest) {
       try {
         const phoneE164 = formatPhoneNumber(body.phone)
         await updatePortalPatientId(phoneE164, result.data.id)
-        console.log('Portal session auto-linked with Asher Med patient ID')
-      } catch (linkError) {
+      } catch {
         // Non-fatal: portal session link failed, user can still re-login to get linked
-        console.error('Failed to auto-link portal session:', linkError)
       }
     }
 

@@ -36,12 +36,13 @@ interface MemberDashboardProps {
 }
 
 interface Order {
-  orderId: string;
+  id: number;
+  orderNumber: string;
   status: string;
-  medication: string;
+  medicationName: string;
   createdAt: string;
+  updatedAt?: string;
   tracking?: string;
-  shippedAt?: string;
 }
 
 interface LmnRecord {
@@ -55,10 +56,14 @@ interface LmnRecord {
 
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
   pending: { icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-50' },
+  approved: { icon: CheckCircle, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+  waitingRoom: { icon: Clock, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+  prescribed: { icon: Pill, color: 'text-indigo-600', bgColor: 'bg-indigo-50' },
   processing: { icon: RefreshCw, color: 'text-blue-600', bgColor: 'bg-blue-50' },
   shipped: { icon: Truck, color: 'text-purple-600', bgColor: 'bg-purple-50' },
   delivered: { icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
   completed: { icon: CheckCircle, color: 'text-green-600', bgColor: 'bg-green-50' },
+  denied: { icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-50' },
   cancelled: { icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-50' },
 };
 
@@ -272,7 +277,7 @@ export function MemberDashboard({
               const StatusIcon = config.icon;
               return (
                 <div
-                  key={order.orderId}
+                  key={order.orderNumber}
                   className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-stone-300 transition-colors"
                 >
                   <div className="flex items-start gap-4">
@@ -282,7 +287,7 @@ export function MemberDashboard({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className="font-medium text-stone-900 truncate">
-                          {order.medication}
+                          {order.medicationName}
                         </p>
                         <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
                           <StatusIcon className="w-3.5 h-3.5" />
@@ -290,7 +295,7 @@ export function MemberDashboard({
                         </span>
                       </div>
                       <p className="text-sm text-stone-500 mt-1">
-                        Order {order.orderId} &middot;{' '}
+                        Order {order.orderNumber} &middot;{' '}
                         {new Date(order.createdAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',

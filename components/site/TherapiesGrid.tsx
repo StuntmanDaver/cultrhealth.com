@@ -55,10 +55,15 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   )}
                 </div>
 
-                {/* Spec */}
-                <p className="text-xs text-cultr-forest/60 font-medium mb-2">
-                  {product.spec}
-                </p>
+                {/* Spec + Rx badge */}
+                <div className="flex items-center gap-2 mb-2">
+                  <p className="text-xs text-cultr-forest/60 font-medium">
+                    {product.spec}
+                  </p>
+                  <span className="text-[10px] font-semibold text-cultr-forest/50 border border-cultr-forest/20 rounded-full px-2 py-0.5">
+                    Prescription only
+                  </span>
+                </div>
 
                 {/* Short description */}
                 <p className="text-xs text-cultr-textMuted leading-relaxed">

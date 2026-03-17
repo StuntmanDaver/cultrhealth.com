@@ -5,7 +5,7 @@ author: "CULTR Health Team"
 date: "2026-01-22"
 readTime: "13 min read"
 excerpt: "Lab results can be confusing. Learn how to interpret key biomarkers, understand the difference between 'normal' and 'optimal' ranges, and use your data for health optimization."
-image: "/blog/biomarker-basics.jpg"
+image: "/blog/biomarker-basics.png"
 tags: ["labs", "biomarkers", "testing", "optimization", "diagnostics"]
 featured: true
 ---

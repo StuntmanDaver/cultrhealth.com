@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import TrustMarquee from '@/components/site/TrustMarquee';
@@ -40,11 +41,17 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
     <ScrollReveal delay={index * 100} direction="up">
       <Link href={`/science/${post.slug}`} className="group block h-full">
         <article className="h-full bg-white rounded-2xl border border-cultr-sage overflow-hidden hover:border-cultr-forest/40 hover:shadow-lg transition-all duration-300">
-          {/* Image placeholder */}
+          {/* Image */}
           <div className="aspect-[16/9] bg-gradient-to-br from-cultr-mint to-cultr-sage relative overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <BookOpen className="w-12 h-12 text-cultr-forest/30" />
-            </div>
+            {post.image && (
+              <Image
+                src={post.image}
+                alt={post.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            )}
             {/* Category badge */}
             <div className="absolute top-4 left-4">
               <span className="px-3 py-1 grad-dark-glow text-white text-xs font-display font-medium rounded-full">

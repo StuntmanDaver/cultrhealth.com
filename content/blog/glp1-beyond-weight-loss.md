@@ -5,7 +5,7 @@ author: "CULTR Health Team"
 date: "2026-01-25"
 readTime: "11 min read"
 excerpt: "GLP-1 medications like semaglutide and tirzepatide offer benefits beyond the scale. Explore the metabolic, cardiovascular, and neurological effects of these groundbreaking medications."
-image: "/blog/glp1-metabolic.jpg"
+image: "/blog/glp1-metabolic.png"
 tags: ["glp-1", "metabolic-health", "semaglutide", "tirzepatide", "weight-loss"]
 featured: true
 ---
