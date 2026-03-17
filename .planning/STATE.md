@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-17T00:59:00.000Z"
-last_activity: 2026-03-17 -- Completed plan 02-01 (SiPhox fulfillment orchestration)
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-17T01:07:00.000Z"
+last_activity: 2026-03-17 -- Completed plan 02-02 (Core tier Checkout Session with blood test add-on)
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 33
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
+  percent: 44
 ---
 
 # Project State
@@ -21,33 +21,33 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Members can see their real biomarker data -- organized, visual, and actionable -- directly in their CULTR Health dashboard.
-**Current focus:** Phase 2: Checkout Integration
+**Current focus:** Phase 2 Complete, Phase 3 next (Kit Registration)
 
 ## Current Position
 
-Phase: 2 of 4 (Checkout Integration) -- IN PROGRESS
-Plan: 1 of 2 in current phase -- COMPLETE
-Status: Plan 02-01 Complete, Plan 02-02 next
-Last activity: 2026-03-17 -- Completed plan 02-01 (SiPhox fulfillment orchestration)
+Phase: 2 of 4 (Checkout Integration) -- COMPLETE
+Plan: 2 of 2 in current phase -- COMPLETE
+Status: Phase 02 Complete, Phase 03 next
+Last activity: 2026-03-17 -- Completed plan 02-02 (Core tier Checkout Session with blood test add-on)
 
-Progress: [###.......] 33%
+Progress: [####......] 44%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 6.3 min
-- Total execution time: 0.32 hours
+- Total plans completed: 4
+- Average duration: 6 min
+- Total execution time: 0.4 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Foundation | 2/2 | 9 min | 4.5 min |
-| 2. Checkout Integration | 1/2 | 10 min | 10 min |
+| 2. Checkout Integration | 2/2 | 15 min | 7.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-02 (3m), 02-01 (10m)
+- Last 5 plans: 01-01 (6m), 01-02 (3m), 02-01 (10m), 02-02 (5m)
 - Trend: Stable
 
 *Updated after each plan completion*
@@ -73,6 +73,9 @@ Recent decisions affecting current work:
 - 02-01: Refund notification never auto-cancels SiPhox orders -- sends suggested action to support
 - 02-01: Core tier add-on detection uses BLOOD_TEST_STRIPE_PRICE_ID env var
 - 02-01: SiphoxKitOrderRow interface extended with 6 new fulfillment columns
+- 02-02: Core tier uses Stripe Checkout Sessions; Catalyst+ and Concierge keep Payment Links
+- 02-02: Blood test add-on uses optional_items API with adjustable_quantity fallback
+- 02-02: BLOOD_TEST_ADDON stripePriceId sourced from BLOOD_TEST_STRIPE_PRICE_ID env var
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T00:59:00.000Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: .planning/phases/02-checkout-integration/02-01-SUMMARY.md
+Last session: 2026-03-17T01:07:00.000Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: .planning/phases/02-checkout-integration/02-02-SUMMARY.md

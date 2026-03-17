@@ -13,7 +13,7 @@ This integration adds at-home blood testing to the CULTR Health platform by conn
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer (completed 2026-03-15)
-- [ ] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook
+- [x] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook (completed 2026-03-17)
 - [ ] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking
 - [ ] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification
 
@@ -43,11 +43,11 @@ Plans:
   2. Core tier checkout offers a $135 blood test add-on and, when selected, triggers a kit order
   3. If the SiPhox API is down or credits are exhausted, the subscription still activates and support is notified via email
   4. A refunded order triggers a support notification with full SiPhox context so staff can manually cancel if needed
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — Fulfillment orchestration: DB migration, fulfillment logic, cron retry, webhook extensions, email templates
-- [ ] 02-02-PLAN.md — Core tier Checkout Session with optional $135 blood test add-on
+- [x] 02-02-PLAN.md — Core tier Checkout Session with optional $135 blood test add-on
 
 ### Phase 3: Kit Registration
 **Goal**: A member who has received a physical blood test kit can register it in their portal and track its status through the lab lifecycle
@@ -89,6 +89,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-15 |
-| 2. Checkout Integration | 1/2 | In progress | - |
+| 2. Checkout Integration | 2/2 | Complete | 2026-03-17 |
 | 3. Kit Registration | 0/2 | Not started | - |
 | 4. Labs Dashboard | 0/3 | Not started | - |

@@ -25,7 +25,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Checkout Integration
 
 - [x] **CHK-01**: Auto-order SiPhox kit on Catalyst+/Concierge subscription checkout via Stripe webhook
-- [ ] **CHK-02**: $135 optional blood test add-on line item for Core tier at checkout
+- [x] **CHK-02**: $135 optional blood test add-on line item for Core tier at checkout
 - [x] **CHK-03**: Deferred order fulfillment pattern for address resolution from checkout data
 - [x] **CHK-04**: Non-fatal SiPhox order failure handling (email support, don't block subscription)
 
@@ -102,7 +102,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | DB-03 | Phase 1 | Complete |
 | DB-04 | Phase 1 | Complete |
 | CHK-01 | Phase 2 | Complete |
-| CHK-02 | Phase 2 | Pending |
+| CHK-02 | Phase 2 | Complete |
 | CHK-03 | Phase 2 | Complete |
 | CHK-04 | Phase 2 | Complete |
 | KIT-01 | Phase 3 | Pending |
