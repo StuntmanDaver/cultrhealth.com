@@ -191,6 +191,20 @@ export async function validateKit(kitId: string): Promise<SiphoxKitValidation> {
   return siphoxRequest(`/kits/${kitId}/validate`, SiphoxKitValidationSchema)
 }
 
+/**
+ * Register a kit to a SiPhox customer
+ * POST /kits/:kitID/register
+ */
+export async function registerKit(
+  kitId: string,
+  customerId: string
+): Promise<SiphoxKitValidation> {
+  return siphoxRequest(`/kits/${kitId}/register`, SiphoxKitValidationSchema, {
+    method: 'POST',
+    body: { customer_id: customerId },
+  })
+}
+
 // ============================================================
 // REPORT ENDPOINTS
 // ============================================================

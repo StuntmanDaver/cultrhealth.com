@@ -7,12 +7,23 @@ export {
   createOrder,
   getOrder,
   validateKit,
+  registerKit,
   getReports,
   getReport,
   getBiomarkers,
   checkCreditBalance,
   isSiphoxConfigured,
 } from './client'
+
+export {
+  deriveKitLifecycleState,
+  KIT_LIFECYCLE_STAGES,
+} from './kit-lifecycle'
+
+export type {
+  KitLifecycleState,
+  KitLifecycleStage,
+} from './kit-lifecycle'
 
 export {
   SiphoxCustomerSchema,

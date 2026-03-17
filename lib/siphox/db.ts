@@ -179,8 +179,7 @@ export async function getKitOrdersByCustomer(
 ): Promise<SiphoxKitOrderRow[]> {
   try {
     const result = await sql`
-      SELECT id, siphox_customer_id, siphox_order_id, kit_type, quantity, status,
-             tracking_number, stripe_subscription_id, is_test_order, created_at, updated_at
+      SELECT *
       FROM siphox_kit_orders
       WHERE siphox_customer_id = ${siphoxCustomerId}
       ORDER BY created_at DESC
