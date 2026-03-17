@@ -42,7 +42,7 @@ Plans:
   1. Catalyst+ or Concierge subscription checkout triggers an automatic SiPhox kit order using the member's shipping address
   2. Core tier checkout offers a $135 blood test add-on and, when selected, triggers a kit order
   3. If the SiPhox API is down or credits are exhausted, the subscription still activates and support is notified via email
-  4. A refunded order cancels the pending SiPhox kit order before credits are consumed
+  4. A refunded order triggers a support notification with full SiPhox context so staff can manually cancel if needed
 **Plans:** 2 plans
 
 Plans:
