@@ -45,6 +45,18 @@ export const MEMBERSHIP_DISCLAIMER =
   'All prescriptions and treatments are subject to medical eligibility and provider approval. ' +
   'Membership does not guarantee any specific treatment or prescription.';
 
+/**
+ * Blood Test Add-On for Core Tier
+ * Optional $135 at-home blood test kit offered during Core checkout.
+ * Stripe Price ID must be created in Stripe dashboard and set as env var.
+ */
+export const BLOOD_TEST_ADDON = {
+  name: 'At-Home Blood Test Kit',
+  description: 'Comprehensive biomarker panel with at-home collection. Results in 5-7 business days.',
+  price: 135,
+  stripePriceId: process.env.BLOOD_TEST_STRIPE_PRICE_ID || '',
+}
+
 export const STRIPE_CONFIG = {
   // Customer Portal
   customerPortalId: 'bpc_1StZxKC1JUIZB7aRXhaSarRI',
