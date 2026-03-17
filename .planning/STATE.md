@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 3 context gathered
-last_updated: "2026-03-17T03:03:59.005Z"
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-17T03:42:28.795Z"
 last_activity: 2026-03-17 -- Completed plan 02-02 (Core tier Checkout Session with blood test add-on)
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
   percent: 44
 ---
 
@@ -51,6 +51,7 @@ Progress: [####......] 44%
 - Trend: Stable
 
 *Updated after each plan completion*
+| Phase 03 P01 | 5min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - 02-02: Core tier uses Stripe Checkout Sessions; Catalyst+ and Concierge keep Payment Links
 - 02-02: Blood test add-on uses optional_items API with adjustable_quantity fallback
 - 02-02: BLOOD_TEST_ADDON stripePriceId sourced from BLOOD_TEST_STRIPE_PRICE_ID env var
+- [Phase 03]: getKitOrdersByCustomer changed to SELECT * for consistency and fulfillment column inclusion
+- [Phase 03]: Portal sidebar uses forest bg with white/20 active state, matching CreatorSidebar pattern
+- [Phase 03]: Kit registration updates most recent order to registered status (non-fatal DB update)
 
 ### Pending Todos
 
@@ -89,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T03:03:59.003Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-kit-registration/03-CONTEXT.md
+Last session: 2026-03-17T03:42:28.793Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: None

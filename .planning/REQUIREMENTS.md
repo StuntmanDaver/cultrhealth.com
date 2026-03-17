@@ -31,11 +31,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Kit Management
 
-- [ ] **KIT-01**: Kit registration page where member enters kit ID from physical kit
-- [ ] **KIT-02**: Kit ID validation via SiPhox API before registration with clear error messages
-- [ ] **KIT-03**: Kit registration submission linking kit to member's SiPhox customer
-- [ ] **KIT-04**: 7-state order/kit status timeline (No Kit → Ordered → Shipped → Registered → Sample Mailed → Processing → Results Ready)
-- [ ] **KIT-05**: Smart empty states with distinct messaging and CTAs per status
+- [x] **KIT-01**: Kit registration page where member enters kit ID from physical kit
+- [x] **KIT-02**: Kit ID validation via SiPhox API before registration with clear error messages
+- [x] **KIT-03**: Kit registration submission linking kit to member's SiPhox customer
+- [x] **KIT-04**: 7-state order/kit status timeline (No Kit → Ordered → Shipped → Registered → Sample Mailed → Processing → Results Ready)
+- [x] **KIT-05**: Smart empty states with distinct messaging and CTAs per status
 
 ### Results Display
 
@@ -105,11 +105,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | CHK-02 | Phase 2 | Complete |
 | CHK-03 | Phase 2 | Complete |
 | CHK-04 | Phase 2 | Complete |
-| KIT-01 | Phase 3 | Pending |
-| KIT-02 | Phase 3 | Pending |
-| KIT-03 | Phase 3 | Pending |
-| KIT-04 | Phase 3 | Pending |
-| KIT-05 | Phase 3 | Pending |
+| KIT-01 | Phase 3 | Complete |
+| KIT-02 | Phase 3 | Complete |
+| KIT-03 | Phase 3 | Complete |
+| KIT-04 | Phase 3 | Complete |
+| KIT-05 | Phase 3 | Complete |
 | RES-01 | Phase 4 | Pending |
 | RES-02 | Phase 4 | Pending |
 | RES-03 | Phase 4 | Pending |

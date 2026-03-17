@@ -58,7 +58,7 @@ Plans:
   2. After successful registration, the kit status updates to "Registered" in a visual 7-state timeline
   3. Members with no kit order see a distinct empty state explaining how to get a kit (with upgrade or add-on CTA based on tier)
   4. Members at each lifecycle stage (ordered, shipped, registered, processing, results ready) see stage-appropriate messaging and next-step CTAs
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] 03-01-PLAN.md — Kit lifecycle module, registerKit client, DB fix, API routes, portal sidebar
@@ -90,5 +90,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-15 |
 | 2. Checkout Integration | 2/2 | Complete | 2026-03-17 |
-| 3. Kit Registration | 0/2 | Not started | - |
+| 3. Kit Registration | 1/2 | In Progress|  |
 | 4. Labs Dashboard | 0/3 | Not started | - |
