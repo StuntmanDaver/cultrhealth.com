@@ -167,7 +167,7 @@ export default function HomePage() {
                   muted
                   playsInline
                   preload="metadata"
-                  className="absolute inset-0 w-full h-full object-cover object-top md:object-center transition-transform duration-700 group-hover:scale-105"
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                 >
                   <source src="/images/lifestyle-woman-running.mp4" type="video/mp4" />
                 </video>
