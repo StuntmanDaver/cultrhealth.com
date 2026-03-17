@@ -19,6 +19,8 @@ import {
   Clock,
   RefreshCw,
   AlertCircle,
+  TestTube2,
+  ChevronRight,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -30,6 +32,10 @@ export default function DashboardClient() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
   const [detailOrder, setDetailOrder] = useState<PortalOrder | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+
+  // Kit status state
+  const [kitStatusMessage, setKitStatusMessage] = useState<string | null>(null)
+  const [kitStatusLoading, setKitStatusLoading] = useState(true)
 
   // Renewal prompt state
   const [supplyData, setSupplyData] = useState<{ daysRemaining: number; isLow: boolean } | null>(null)
@@ -100,6 +106,39 @@ export default function DashboardClient() {
       })
       .catch(() => {
         // Fail silently -- renewal prompt is a nice-to-have
+      })
+    return () => { cancelled = true }
+  }, [])
+
+  // Kit status fetch
+  useEffect(() => {
+    let cancelled = false
+    const KIT_STATUS_MESSAGES: Record<string, string> = {
+      no_kit: 'Get started with biomarker testing',
+      ordered: 'Kit ordered -- preparing to ship',
+      shipped: 'Kit shipped -- register when it arrives',
+      registered: 'Kit registered -- collect your sample',
+      sample_mailed: 'Sample in transit to lab',
+      processing: 'Lab processing your sample',
+      results_ready: 'Results ready -- view your biomarkers',
+    }
+    fetch('/api/portal/labs')
+      .then(async (res) => {
+        if (cancelled || !res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        if (data.kitOrders && data.kitOrders.length > 0) {
+          const state = data.kitOrders[0].lifecycleState || 'no_kit'
+          setKitStatusMessage(KIT_STATUS_MESSAGES[state] || KIT_STATUS_MESSAGES.no_kit)
+        } else {
+          setKitStatusMessage(KIT_STATUS_MESSAGES.no_kit)
+        }
+      })
+      .catch(() => {
+        // Fail silently -- kit card is non-blocking
+      })
+      .finally(() => {
+        if (!cancelled) setKitStatusLoading(false)
       })
     return () => { cancelled = true }
   }, [])
@@ -191,6 +230,38 @@ export default function DashboardClient() {
           Log Out
         </Button>
       </div>
+
+      {/* Kit Status Summary Card */}
+      {kitStatusLoading && (
+        <div className="rounded-2xl border border-brand-primary/10 bg-white p-5 mb-6 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-brand-primary/10" />
+            <div className="flex-1">
+              <div className="h-4 bg-brand-primary/10 rounded w-1/3 mb-2" />
+              <div className="h-3 bg-brand-primary/10 rounded w-1/2" />
+            </div>
+          </div>
+        </div>
+      )}
+      {!kitStatusLoading && kitStatusMessage && (
+        <Link
+          href="/portal/labs"
+          className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-sage/30 flex items-center justify-center">
+                <TestTube2 className="w-5 h-5 text-brand-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-brand-primary">Blood Test Kit</p>
+                <p className="text-xs text-brand-primary/60">{kitStatusMessage}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-brand-primary/40" />
+          </div>
+        </Link>
+      )}
 
       {/* Loading State */}
       {isLoading && (
