@@ -5,5 +5,11 @@
       "main": false,
       "master": false
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/siphox-fulfillment",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }

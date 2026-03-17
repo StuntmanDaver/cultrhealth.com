@@ -298,6 +298,36 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.error('Failed to send welcome email:', emailError);
     }
   }
+
+  // SiPhox kit fulfillment (non-fatal -- subscription activates regardless)
+  try {
+    const { triggerSiphoxFulfillment } = await import('@/lib/siphox/fulfillment')
+    const planTier = session.metadata?.plan_tier || 'unknown'
+
+    // For Core tier, check if blood test add-on was selected
+    // by examining the session line items for the blood test price
+    let hasBloodTestAddon = false
+    if (planTier === 'core') {
+      const stripeClient = getStripe()
+      const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id)
+      hasBloodTestAddon = lineItems.data.some(item =>
+        item.price?.id === process.env.BLOOD_TEST_STRIPE_PRICE_ID
+      )
+    }
+
+    // Only trigger for eligible tiers
+    const isEligible = planTier === 'catalyst' || planTier === 'concierge' || (planTier === 'core' && hasBloodTestAddon)
+    if (isEligible) {
+      await triggerSiphoxFulfillment({
+        customerEmail: session.customer_details?.email || '',
+        planTier,
+        stripeCheckoutSessionId: session.id,
+        stripeSubscriptionId: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
+      })
+    }
+  } catch (siphoxError) {
+    console.error('SiPhox fulfillment failed (non-fatal):', siphoxError)
+  }
 }
 
 /**
@@ -813,5 +843,27 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   } catch (error) {
     console.error('Failed to reverse commissions on refund:', error);
     // Don't fail the webhook
+  }
+
+  // SiPhox refund notification (non-fatal)
+  try {
+    const { notifySiphoxRefund } = await import('@/lib/siphox/fulfillment')
+    // Find the checkout session that originated this charge
+    // The charge -> payment_intent -> checkout_session linkage
+    const stripeClient = getStripe()
+    const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+    if (paymentIntentId) {
+      const sessions = await stripeClient.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 })
+      if (sessions.data[0]) {
+        await notifySiphoxRefund({
+          stripeCheckoutSessionId: sessions.data[0].id,
+          refundAmount: (charge.amount_refunded || 0) / 100,
+          customerEmail: charge.billing_details?.email || undefined,
+          customerName: charge.billing_details?.name || undefined,
+        })
+      }
+    }
+  } catch (siphoxRefundError) {
+    console.error('SiPhox refund notification failed (non-fatal):', siphoxRefundError)
   }
 }
