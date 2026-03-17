@@ -1,5 +1,5 @@
 ---
-phase: 3
+phase: 03
 slug: kit-registration
 status: draft
 nyquist_compliant: false
@@ -7,7 +7,7 @@ wave_0_complete: false
 created: 2026-03-16
 ---
 
-# Phase 3 — Validation Strategy
+# Phase 03 — Validation Strategy
 
 > Per-phase validation contract for feedback sampling during execution.
 
@@ -38,12 +38,14 @@ created: 2026-03-16
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 03-01-01 | 01 | 1 | KIT-01 | component | `npx vitest run tests/components/LabsClient.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-01-02 | 01 | 1 | KIT-02 | unit | `npx vitest run tests/api/portal-labs-validate.test.ts` | ❌ W0 | ⬜ pending |
-| 03-01-03 | 01 | 1 | KIT-03 | unit | `npx vitest run tests/api/portal-labs-register.test.ts` | ❌ W0 | ⬜ pending |
-| 03-02-01 | 02 | 1 | KIT-04 | component | `npx vitest run tests/components/KitTimeline.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-02-02 | 02 | 1 | KIT-05 | component | `npx vitest run tests/components/KitEmptyState.test.tsx` | ❌ W0 | ⬜ pending |
-| 03-01-04 | 01 | 1 | KIT-04 | unit | `npx vitest run tests/lib/kit-lifecycle.test.ts` | ❌ W0 | ⬜ pending |
+| 03-01-01 | 01 | 1 | KIT-04 | unit | `npx vitest run tests/lib/kit-lifecycle.test.ts -x` | ❌ W0 | ⬜ pending |
+| 03-01-01 | 01 | 1 | KIT-01 | unit | `npx vitest run tests/api/portal-labs.test.ts -x` | ❌ W0 | ⬜ pending |
+| 03-01-01 | 01 | 1 | KIT-02 | unit | `npx vitest run tests/api/portal-labs-validate.test.ts -x` | ❌ W0 | ⬜ pending |
+| 03-01-01 | 01 | 1 | KIT-03 | unit | `npx vitest run tests/api/portal-labs-register.test.ts -x` | ❌ W0 | ⬜ pending |
+| 03-02-01 | 02 | 2 | KIT-04 | component | `npx vitest run tests/components/KitTimeline.test.tsx -x` | ❌ W0 | ⬜ pending |
+| 03-02-01 | 02 | 2 | KIT-05 | component | `npx vitest run tests/components/KitEmptyState.test.tsx -x` | ❌ W0 | ⬜ pending |
+| 03-02-01 | 02 | 2 | KIT-02 | component | `npx vitest run tests/components/KitRegistrationForm.test.tsx -x` | ❌ W0 | ⬜ pending |
+| 03-02-01 | 02 | 2 | KIT-01 | component | `npx vitest run tests/components/LabsClient.test.tsx -x` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,12 +53,14 @@ created: 2026-03-16
 
 ## Wave 0 Requirements
 
-- [ ] `tests/components/LabsClient.test.tsx` — stubs for KIT-01 (registration form rendering)
-- [ ] `tests/api/portal-labs-validate.test.ts` — stubs for KIT-02 (validation API)
-- [ ] `tests/api/portal-labs-register.test.ts` — stubs for KIT-03 (registration API)
-- [ ] `tests/components/KitTimeline.test.tsx` — stubs for KIT-04 (timeline states)
-- [ ] `tests/components/KitEmptyState.test.tsx` — stubs for KIT-05 (tier empty states)
-- [ ] `tests/lib/kit-lifecycle.test.ts` — stubs for status derivation logic
+- [ ] `tests/lib/kit-lifecycle.test.ts` — stubs for deriveKitLifecycleState (KIT-04)
+- [ ] `tests/api/portal-labs.test.ts` — stubs for GET /api/portal/labs (KIT-01)
+- [ ] `tests/api/portal-labs-validate.test.ts` — stubs for POST /api/portal/labs/validate (KIT-02)
+- [ ] `tests/api/portal-labs-register.test.ts` — stubs for POST /api/portal/labs registration (KIT-03)
+- [ ] `tests/components/KitTimeline.test.tsx` — stubs for timeline rendering (KIT-04)
+- [ ] `tests/components/KitEmptyState.test.tsx` — stubs for tier-based empty states (KIT-05)
+- [ ] `tests/components/KitRegistrationForm.test.tsx` — stubs for validation error messages (KIT-02)
+- [ ] `tests/components/LabsClient.test.tsx` — stubs for registration form visibility logic (KIT-01)
 
 ---
 
@@ -64,9 +68,9 @@ created: 2026-03-16
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Horizontal stepper responsive collapse to vertical | KIT-04 | Visual layout responsive behavior | Resize browser below md breakpoint, verify timeline switches to vertical |
-| Forest sidebar desktop + mobile drawer | KIT-01 | Layout integration visual check | View /portal/labs on desktop (sidebar visible) and mobile (hamburger drawer) |
-| Dashboard summary card link to /portal/labs | KIT-05 | Navigation + visual integration | Click "View Labs" on dashboard summary card, verify navigation |
+| Horizontal stepper collapses to vertical on mobile | KIT-04 | Responsive layout testing requires browser viewport | Resize below md breakpoint, verify vertical timeline |
+| Portal sidebar renders with forest theme | KIT-01 | Visual design verification | Check sidebar has forest bg, white text, active state |
+| Dashboard summary card links to labs | KIT-05 | Navigation integration | Click card on dashboard, verify navigation to /portal/labs |
 
 ---
 
