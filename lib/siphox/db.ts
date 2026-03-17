@@ -207,6 +207,167 @@ export async function updateKitOrderStatus(
 }
 
 // ============================================================
+// FULFILLMENT OPERATIONS
+// ============================================================
+
+export type FulfillmentStatus =
+  | 'pending_intake'
+  | 'pending_fulfillment'
+  | 'processing'
+  | 'fulfilled'
+  | 'failed'
+  | 'needs_credits'
+
+/**
+ * Insert a kit order row with fulfillment columns populated.
+ * Used by triggerSiphoxFulfillment when a checkout triggers a kit order.
+ * siphoxCustomerId defaults to 'pending' if customer not yet created.
+ * siphoxOrderId defaults to 'pending-{checkoutSessionId}' if order not yet placed.
+ */
+export async function insertFulfillmentOrder(params: {
+  siphoxCustomerId?: string
+  siphoxOrderId?: string
+  kitType: string
+  stripeCheckoutSessionId: string
+  customerEmail: string
+  planTier: string
+  fulfillmentStatus: FulfillmentStatus
+  stripeSubscriptionId?: string
+  isTestOrder?: boolean
+}): Promise<SiphoxKitOrderRow> {
+  const siphoxCustomerId = params.siphoxCustomerId || 'pending'
+  const siphoxOrderId = params.siphoxOrderId || `pending-${params.stripeCheckoutSessionId}`
+  const stripeSubscriptionId = params.stripeSubscriptionId ?? null
+  const isTestOrder = params.isTestOrder ?? false
+
+  try {
+    const result = await sql`
+      INSERT INTO siphox_kit_orders (
+        siphox_customer_id, siphox_order_id, kit_type, quantity,
+        fulfillment_status, stripe_checkout_session_id, customer_email, plan_tier,
+        stripe_subscription_id, is_test_order
+      )
+      VALUES (
+        ${siphoxCustomerId}, ${siphoxOrderId}, ${params.kitType}, 1,
+        ${params.fulfillmentStatus}, ${params.stripeCheckoutSessionId}, ${params.customerEmail}, ${params.planTier},
+        ${stripeSubscriptionId}, ${isTestOrder}
+      )
+      RETURNING *
+    `
+    return result.rows[0] as SiphoxKitOrderRow
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to insert fulfillment order', error)
+  }
+}
+
+/**
+ * Look up a kit order by Stripe checkout session ID.
+ * Used for idempotency checks (prevent duplicate orders for same checkout).
+ */
+export async function getOrderByCheckoutSession(
+  stripeCheckoutSessionId: string
+): Promise<SiphoxKitOrderRow | null> {
+  try {
+    const result = await sql`
+      SELECT *
+      FROM siphox_kit_orders
+      WHERE stripe_checkout_session_id = ${stripeCheckoutSessionId}
+      LIMIT 1
+    `
+    if (result.rows.length === 0) return null
+    return result.rows[0] as SiphoxKitOrderRow
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get order by checkout session', error)
+  }
+}
+
+/**
+ * Get all orders with pending_fulfillment status and retry_count < 3.
+ * Used by the cron job to retry failed SiPhox API calls.
+ */
+export async function getPendingFulfillmentOrders(): Promise<SiphoxKitOrderRow[]> {
+  try {
+    const result = await sql`
+      SELECT *
+      FROM siphox_kit_orders
+      WHERE fulfillment_status = 'pending_fulfillment'
+        AND retry_count < 3
+      ORDER BY created_at ASC
+    `
+    return result.rows as SiphoxKitOrderRow[]
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get pending fulfillment orders', error)
+  }
+}
+
+/**
+ * Get all orders with pending_intake status.
+ * Used by the cron job to check if intake data is now available.
+ */
+export async function getDeferredIntakeOrders(): Promise<SiphoxKitOrderRow[]> {
+  try {
+    const result = await sql`
+      SELECT *
+      FROM siphox_kit_orders
+      WHERE fulfillment_status = 'pending_intake'
+      ORDER BY created_at ASC
+    `
+    return result.rows as SiphoxKitOrderRow[]
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get deferred intake orders', error)
+  }
+}
+
+/**
+ * Update fulfillment status and optionally siphox_customer_id, siphox_order_id, last_error.
+ * Sets updated_at = NOW().
+ */
+export async function updateFulfillmentStatus(
+  kitOrderId: string,
+  status: FulfillmentStatus,
+  opts?: {
+    siphoxCustomerId?: string
+    siphoxOrderId?: string
+    lastError?: string
+  }
+): Promise<void> {
+  try {
+    await sql`
+      UPDATE siphox_kit_orders
+      SET fulfillment_status = ${status},
+          siphox_customer_id = COALESCE(${opts?.siphoxCustomerId || null}, siphox_customer_id),
+          siphox_order_id = COALESCE(${opts?.siphoxOrderId || null}, siphox_order_id),
+          last_error = COALESCE(${opts?.lastError || null}, last_error),
+          updated_at = NOW()
+      WHERE id = ${kitOrderId}
+    `
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to update fulfillment status', error)
+  }
+}
+
+/**
+ * Increment retry count and record the last error.
+ * Sets updated_at = NOW().
+ */
+export async function incrementRetryCount(
+  kitOrderId: string,
+  lastError: string
+): Promise<void> {
+  try {
+    await sql`
+      UPDATE siphox_kit_orders
+      SET retry_count = retry_count + 1,
+          last_error = ${lastError},
+          updated_at = NOW()
+      WHERE id = ${kitOrderId}
+    `
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to increment retry count', error)
+  }
+}
+
+// ============================================================
 // REPORT OPERATIONS (immutable -- insert only, no updates)
 // ============================================================
 

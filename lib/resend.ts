@@ -1555,3 +1555,222 @@ export async function sendLowCreditAlert(balance: number, threshold: number): Pr
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
+
+// ===========================================
+// SIPHOX KIT FULFILLMENT EMAILS
+// ===========================================
+
+/**
+ * Send kit fulfillment confirmation to the member.
+ * Triggered when a SiPhox kit order is successfully placed.
+ */
+export async function sendKitFulfillmentEmail(params: {
+  name: string
+  email: string
+  address: { street1: string; city: string; state: string; zip: string }
+}): Promise<EmailResult> {
+  const { name, email, address } = params
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+
+  const formattedAddress = `${address.street1}, ${address.city}, ${address.state} ${address.zip}`
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Your blood test kit is on its way!
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        Hi ${name},
+      </p>
+      <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        Your at-home blood test kit has been ordered and will ship to:
+      </p>
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0; padding: 12px; background-color: #1a1a1a; border-radius: 4px;">
+        ${formattedAddress}
+      </p>
+      <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        You'll receive tracking info once it ships. In the meantime, check out our
+        <a href="${siteUrl}/library" style="color: #B7E4C7; text-decoration: underline;">labs guide in the member library</a>.
+      </p>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: "Your blood test kit is on its way!",
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Kit fulfillment email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send kit fulfillment email:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+/**
+ * Send refund alert to support when a refund occurs on a checkout with an associated SiPhox kit order.
+ * Provides full context so support can decide whether to cancel the SiPhox order.
+ */
+export async function sendSiphoxRefundAlert(params: {
+  customerName?: string
+  customerEmail?: string
+  planTier: string
+  siphoxOrderId: string
+  kitStatus: string
+  refundAmount: number
+  suggestedAction: string
+}): Promise<EmailResult> {
+  const supportEmail = process.env.FROM_EMAIL || 'admin@cultrhealth.com'
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Refund with Pending SiPhox Kit
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff8800;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        A refund was processed for a member who has an associated SiPhox blood test kit order.
+        Please review and take action if needed.
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; width: 160px;">Customer Name</td>
+          <td style="padding: 8px 0; color: #fff;">${params.customerName || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Customer Email</td>
+          <td style="padding: 8px 0; color: #fff;">${params.customerEmail || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Plan Tier</td>
+          <td style="padding: 8px 0; color: #fff;">${params.planTier}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">SiPhox Order ID</td>
+          <td style="padding: 8px 0; color: #fff;">${params.siphoxOrderId}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Kit Status</td>
+          <td style="padding: 8px 0; color: #fff; font-weight: bold;">${params.kitStatus}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Refund Amount</td>
+          <td style="padding: 8px 0; color: #ff4444; font-weight: bold;">$${params.refundAmount.toFixed(2)}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="background-color: #1a1a00; border-radius: 8px; padding: 16px; margin-bottom: 24px; border-left: 3px solid #ff8800;">
+      <p style="color: #ffcc00; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Suggested Action:</p>
+      <p style="color: #ccc; font-size: 13px; margin: 0;">${params.suggestedAction}</p>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: supportEmail,
+      subject: `[ACTION REQUIRED] Refund with pending SiPhox kit - ${params.customerEmail || 'unknown'}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('SiPhox refund alert email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send SiPhox refund alert:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+/**
+ * Send failure alert to support when a SiPhox kit order has exhausted all retries.
+ * Provides full context so support can manually place the order or contact the member.
+ */
+export async function sendSiphoxFailureAlert(params: {
+  customerEmail: string
+  planTier: string
+  siphoxOrderId: string
+  lastError: string
+  retryCount: number
+}): Promise<EmailResult> {
+  const supportEmail = process.env.FROM_EMAIL || 'admin@cultrhealth.com'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      SiPhox Kit Order Failed
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        A SiPhox blood test kit order has failed after ${params.retryCount} retries.
+        Manual intervention is required.
+      </p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 8px 0; color: #888; width: 160px;">Customer Email</td>
+          <td style="padding: 8px 0; color: #fff;">${params.customerEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Plan Tier</td>
+          <td style="padding: 8px 0; color: #fff;">${params.planTier}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">SiPhox Order ID</td>
+          <td style="padding: 8px 0; color: #fff;">${params.siphoxOrderId}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Retry Count</td>
+          <td style="padding: 8px 0; color: #ff4444; font-weight: bold;">${params.retryCount}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Last Error</td>
+          <td style="padding: 8px 0; color: #ff8888;">${params.lastError}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #888;">Time</td>
+          <td style="padding: 8px 0; color: #fff;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</td>
+        </tr>
+      </table>
+    </div>
+
+    <p style="color: #888; font-size: 13px;">
+      <a href="${siteUrl}/admin" style="color: #B7E4C7; text-decoration: underline;">Go to Admin Dashboard</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: supportEmail,
+      subject: `[ACTION REQUIRED] SiPhox kit order failed after ${params.retryCount} retries - ${params.customerEmail}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('SiPhox failure alert email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send SiPhox failure alert:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
