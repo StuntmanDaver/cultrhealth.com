@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { Menu } from 'lucide-react'
 import { Spinner } from '@/components/ui/Spinner'
+import { PortalSidebar } from '@/components/portal/PortalSidebar'
 
 // ===========================================
 // CONSTANTS
@@ -39,6 +41,7 @@ function AuthGuard({ children }: { children: ReactNode }) {
   const router = useRouter()
   const [isAuthed, setIsAuthed] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Refs for activity-based refresh
   const activityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -159,7 +162,21 @@ function AuthGuard({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-brand-cream">
-      {children}
+      <PortalSidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* Mobile header with menu toggle */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-brand-primary/10">
+        <button onClick={() => setSidebarOpen(true)} className="p-1 text-brand-primary">
+          <Menu className="w-6 h-6" />
+        </button>
+        <span className="text-lg font-bold text-brand-primary" style={{ fontFamily: 'var(--font-fraunces)' }}>
+          CULTR Health
+        </span>
+        <div className="w-6" />
+      </div>
+      {/* Content area offset by sidebar width on desktop */}
+      <main className="md:pl-60">
+        {children}
+      </main>
     </div>
   )
 }
