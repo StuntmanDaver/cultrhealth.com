@@ -58,11 +58,11 @@ Plans:
   2. After successful registration, the kit status updates to "Registered" in a visual 7-state timeline
   3. Members with no kit order see a distinct empty state explaining how to get a kit (with upgrade or add-on CTA based on tier)
   4. Members at each lifecycle stage (ordered, shipped, registered, processing, results ready) see stage-appropriate messaging and next-step CTAs
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03-01: Kit registration API routes and UI
-- [ ] 03-02: Status timeline and smart empty states
+- [ ] 03-01-PLAN.md — Kit lifecycle module, registerKit client, DB fix, API routes, portal sidebar
+- [ ] 03-02-PLAN.md — Labs page UI (registration form, timeline, empty states), dashboard summary card
 
 ### Phase 4: Labs Dashboard
 **Goal**: Members can view their complete biomarker results organized by body system, with reference ranges, health scores, and actionable insights directly in their CULTR dashboard
