@@ -70,7 +70,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
 
         <ul className="space-y-4">
           {plan.features.map((feature, i) => {
-            const isLabFeature = /lab test/i.test(feature);
+            const isLabFeature = /lab test|blood test/i.test(feature);
             return (
               <li
                 key={i}

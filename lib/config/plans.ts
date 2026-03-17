@@ -109,8 +109,8 @@ export const PLANS: Plan[] = [
     bestFor: 'GLP-1 or TRT focused',
     features: [
       'One CORE Therapy included',
-      'At home lab test $135, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 6 months'
+      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
+      "Doctor's consultation for $75 — first-time mandatory fee"
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -136,8 +136,8 @@ export const PLANS: Plan[] = [
     bestFor: 'Peptide stacking & optimization',
     features: [
       'One Core Therapy included + Two Enhancements',
-      'At home lab test $135, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 3 months'
+      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
+      "Doctor's consultation for $75 — first-time mandatory fee"
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -163,8 +163,8 @@ export const PLANS: Plan[] = [
     bestFor: 'Regenerative & executive care',
     features: [
       'Two CORE Therapy included + up to 4 enhancements',
-      'At home lab test $135, recommended every 3 months (additional fee)',
-      'Complimentary physician follow up every 1 month'
+      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
+      "Doctor's consultation for $75 — first-time mandatory fee"
     ],
     libraryAccess: {
       masterIndex: 'full',
