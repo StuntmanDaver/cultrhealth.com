@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
-import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
+import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 
 const DEFAULT_ACCESS: LibraryAccess = {
   masterIndex: 'titles_only',
@@ -30,8 +30,10 @@ export default function DashboardPage() {
             const planTier = data.membership?.plan_tier as PlanTier | null
             setTier(planTier)
             if (planTier) {
-              const { getLibraryAccess } = await import('@/lib/auth')
-              setLibraryAccess(getLibraryAccess(planTier))
+              const plan = PLANS.find(p => p.slug === planTier)
+              if (plan?.libraryAccess) {
+                setLibraryAccess(plan.libraryAccess as LibraryAccess)
+              }
             }
           }
         }
