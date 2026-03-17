@@ -47,10 +47,25 @@ export {
   insertReport,
   getReportsByCustomer,
   getReportById,
+  // Fulfillment operations (migration 021)
+  insertFulfillmentOrder,
+  getOrderByCheckoutSession,
+  getPendingFulfillmentOrders,
+  getDeferredIntakeOrders,
+  updateFulfillmentStatus,
+  incrementRetryCount,
 } from './db'
 
 export type {
   SiphoxCustomerRow,
   SiphoxKitOrderRow,
   SiphoxReportRow,
+  FulfillmentStatus,
 } from './db'
+
+export {
+  triggerSiphoxFulfillment,
+  processDeferredOrders,
+  retryFailedOrders,
+  notifySiphoxRefund,
+} from './fulfillment'

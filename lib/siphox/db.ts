@@ -30,6 +30,13 @@ export interface SiphoxKitOrderRow {
   tracking_number: string | null
   stripe_subscription_id: string | null
   is_test_order: boolean
+  // Fulfillment columns (migration 021)
+  fulfillment_status: string
+  retry_count: number
+  last_error: string | null
+  stripe_checkout_session_id: string | null
+  customer_email: string | null
+  plan_tier: string | null
   created_at: Date
   updated_at: Date
 }
