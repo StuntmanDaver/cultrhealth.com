@@ -73,7 +73,7 @@ export function KitRegistrationForm({ onSuccess }: KitRegistrationFormProps) {
 
       setSuccess(true)
       setKitId('')
-      onSuccess()
+      setTimeout(() => onSuccess(), 1500)
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {

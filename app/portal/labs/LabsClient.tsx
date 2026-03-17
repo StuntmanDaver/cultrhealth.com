@@ -29,7 +29,7 @@ export default function LabsClient() {
     try {
       setError(null)
       const res = await fetch('/api/portal/labs')
-      if (res.status === 401) return
+      if (res.status === 401) { setIsLoading(false); return }
       if (!res.ok) throw new Error('Failed to load kit data')
       const json = await res.json()
       setData({
@@ -86,8 +86,7 @@ export default function LabsClient() {
   }
 
   const hasKitOrders = data && data.kitOrders.length > 0
-  const showEmptyState =
-    !hasKitOrders && (!data?.siphoxCustomerId || !hasKitOrders)
+  const showEmptyState = !hasKitOrders
 
   // Empty state
   if (showEmptyState) {

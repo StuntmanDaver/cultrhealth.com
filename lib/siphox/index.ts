@@ -80,3 +80,31 @@ export {
   retryFailedOrders,
   notifySiphoxRefund,
 } from './fulfillment'
+
+// Biomarker catalog (Phase 4)
+export {
+  SIPHOX_BIOMARKER_CATALOG,
+  BIOMARKER_CATEGORIES,
+  findBiomarker,
+  getBiomarkersByCategory,
+  getOrderedCategories,
+} from './biomarkers'
+
+export type {
+  BiomarkerCategory,
+  BiomarkerDefinition,
+} from './biomarkers'
+
+// Report processing (Phase 4)
+export {
+  fetchAndCacheReports,
+  processReport,
+  getLatestProcessedReport,
+} from './reports'
+
+export type {
+  BiomarkerStatus,
+  ProcessedBiomarker,
+  ProcessedCategory,
+  ProcessedReport,
+} from './reports'

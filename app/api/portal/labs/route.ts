@@ -106,7 +106,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const siphoxCustomer = await getSiphoxCustomerByPhone(auth.phone)
+    let siphoxCustomer
+    try {
+      siphoxCustomer = await getSiphoxCustomerByPhone(auth.phone)
+    } catch (dbError) {
+      if (dbError instanceof SiphoxDatabaseError) {
+        return NextResponse.json(
+          { success: false, error: 'Lab services temporarily unavailable. Please try again later.' },
+          { status: 503 }
+        )
+      }
+      throw dbError
+    }
 
     if (!siphoxCustomer) {
       return NextResponse.json(
@@ -123,7 +134,7 @@ export async function POST(request: NextRequest) {
         // Find the kit order that matches and update its status
         const kitOrders = await getKitOrdersByCustomer(siphoxCustomer.siphox_customer_id)
         if (kitOrders.length > 0) {
-          // Update the most recent order's status to registered
+          // TODO: v2 — match by kitId instead of updating most-recent order (fine for v1, users typically have 1 kit)
           await updateKitOrderStatus(kitOrders[0].siphox_order_id, 'registered')
         }
       } catch (updateError) {

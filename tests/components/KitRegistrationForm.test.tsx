@@ -80,7 +80,10 @@ describe('KitRegistrationForm', () => {
     await waitFor(() => {
       expect(screen.getByText('Kit registered successfully!')).toBeTruthy()
     })
-    expect(mockOnSuccess).toHaveBeenCalledOnce()
+    // onSuccess is called after a 1.5s delay so the success message is visible
+    await waitFor(() => {
+      expect(mockOnSuccess).toHaveBeenCalledOnce()
+    }, { timeout: 2000 })
   })
 
   it('shows client-side error for empty input', async () => {
