@@ -168,7 +168,7 @@ export default function HomePage() {
                   playsInline
                   preload="metadata"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  style={{ objectPosition: 'center 40%' }}
+                  style={{ objectPosition: 'center 30%' }}
                 >
                   <source src="/images/lifestyle-woman-running.mp4" type="video/mp4" />
                 </video>
