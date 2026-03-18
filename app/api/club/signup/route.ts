@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
+import { escapeHtml } from '@/lib/resend'
 
 export async function POST(request: Request) {
   try {
@@ -92,33 +93,32 @@ async function sendClubWelcomeEmail(firstName: string, email: string) {
   const { Resend } = await import('resend')
   const resend = new Resend(process.env.RESEND_API_KEY)
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
-
   await resend.emails.send({
     from: fromEmail,
     to: email,
     subject: 'Welcome to CULTR Club!',
     html: `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
       <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #2A4542;">CULTR</span>
     </div>
-    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 16px;">Welcome to CULTR Club, ${firstName}!</h1>
-    <p style="text-align: center; color: #2A4542; opacity: 0.7; margin-bottom: 32px;">
+    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 16px; color: #2A4542;">Welcome to CULTR Club, ${escapeHtml(firstName)}!</h1>
+    <p style="text-align: center; color: #697B78; margin-bottom: 32px;">
       You now have access to browse our physician-supervised therapies and build your personalized wellness order.
     </p>
-    <div style="background: #D8F3DC; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 32px;">
-      <p style="margin: 0; font-weight: 600;">Browse & Order Therapies</p>
-      <p style="margin: 8px 0 0; font-size: 14px; opacity: 0.7;">Visit join.cultrhealth.com to start shopping</p>
+    <div style="background: #D8F3DC; border-radius: 12px; padding: 28px 20px; text-align: center; margin-bottom: 32px;">
+      <p style="margin: 0 0 16px; font-weight: 600; color: #2A4542;">Browse &amp; Order Therapies</p>
+      <a href="https://join.cultrhealth.com" style="display: inline-block; background-color: #2A4542; color: #FFFFFF; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">Browse Therapies</a>
     </div>
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #2A454215;">
-      <p style="color: #2A454260; font-size: 12px; text-align: center; margin: 0;">
-        CULTR Health — Personalized Longevity Medicine
+    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #DDDFDB;">
+      <p style="color: #7E8D8A; font-size: 12px; text-align: center; margin: 0;">
+        CULTR Health &mdash; Personalized Longevity Medicine
       </p>
-      <p style="color: #2A454240; font-size: 11px; text-align: center; margin-top: 12px;">
+      <p style="color: #A8B2AE; font-size: 11px; text-align: center; margin-top: 12px;">
         Questions? Contact support@cultrhealth.com
       </p>
     </div>

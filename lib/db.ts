@@ -739,6 +739,57 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
   }
 }
 
+// ===========================================
+// CREATOR COMMISSION STATS (Admin Dashboard)
+// ===========================================
+
+export interface CreatorCommissionStats {
+  activeCreatorsWithCommissions: number
+  totalPending: number
+  totalApproved: number
+  totalPaid: number
+  totalLifetime: number
+  creatorsByStatus: Record<string, number>
+}
+
+export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommissionStats> {
+  try {
+    const [commissionResult, statusResult] = await Promise.all([
+      sql`
+        SELECT
+          COUNT(DISTINCT cl.beneficiary_creator_id)::int as active_creators,
+          COALESCE(SUM(CASE WHEN cl.status = 'pending' THEN cl.commission_amount ELSE 0 END), 0) as total_pending,
+          COALESCE(SUM(CASE WHEN cl.status = 'approved' THEN cl.commission_amount ELSE 0 END), 0) as total_approved,
+          COALESCE(SUM(CASE WHEN cl.status = 'paid' THEN cl.commission_amount ELSE 0 END), 0) as total_paid,
+          COALESCE(SUM(CASE WHEN cl.status != 'reversed' THEN cl.commission_amount ELSE 0 END), 0) as total_lifetime
+        FROM commission_ledger cl
+        WHERE cl.created_at >= NOW() - INTERVAL '1 day' * ${days}
+      `,
+      sql`
+        SELECT status, COUNT(*)::int as count FROM creators GROUP BY status
+      `,
+    ])
+
+    const row = commissionResult.rows[0]
+    const creatorsByStatus: Record<string, number> = {}
+    statusResult.rows.forEach(r => {
+      creatorsByStatus[r.status] = parseInt(r.count, 10)
+    })
+
+    return {
+      activeCreatorsWithCommissions: parseInt(row?.active_creators || '0', 10),
+      totalPending: parseFloat(row?.total_pending || '0'),
+      totalApproved: parseFloat(row?.total_approved || '0'),
+      totalPaid: parseFloat(row?.total_paid || '0'),
+      totalLifetime: parseFloat(row?.total_lifetime || '0'),
+      creatorsByStatus,
+    }
+  } catch (error) {
+    console.error('Database error fetching creator commission stats:', error)
+    throw new DatabaseError('Failed to fetch creator commission stats', error)
+  }
+}
+
 export async function getWaitlistStats(): Promise<{ total: number; bySource: Record<string, number>; recent: WaitlistEntry[] }> {
   try {
     const totalResult = await sql`SELECT COUNT(*) as count FROM waitlist`
@@ -1514,5 +1565,162 @@ export async function getCohortAnalytics(): Promise<CohortAnalytics> {
   } catch (error) {
     console.error('Database error fetching cohort analytics:', error)
     throw new DatabaseError('Failed to fetch cohort analytics', error)
+  }
+}
+
+// ===========================================
+// QR SCAN ANALYTICS
+// ===========================================
+
+export interface QrScanStats {
+  totalScans: number
+  uniqueVisitors: number
+  byDestination: Record<string, number>
+  bySource: Record<string, number>
+  byDevice: Record<string, number>
+  byOs: Record<string, number>
+  byBrowser: Record<string, number>
+  byCity: { city: string; region: string; country: string; count: number }[]
+  scansByDay: { date: string; count: number }[]
+  recentScans: {
+    scan_id: string
+    source: string
+    destination: string
+    device_type: string
+    os: string
+    browser: string
+    city: string | null
+    region: string | null
+    country: string | null
+    created_at: string
+  }[]
+}
+
+export async function getQrScanStats(days: number = 30): Promise<QrScanStats> {
+  try {
+    const [
+      totalsResult,
+      byDestResult,
+      bySourceResult,
+      byDeviceResult,
+      byOsResult,
+      byBrowserResult,
+      byCityResult,
+      byDayResult,
+      recentResult,
+    ] = await Promise.all([
+      // Total scans + unique visitors
+      sql`
+        SELECT
+          COUNT(*) as total_scans,
+          COUNT(DISTINCT ip_hash) as unique_visitors
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+      `,
+      // By destination
+      sql`
+        SELECT destination, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY destination ORDER BY count DESC
+      `,
+      // By source
+      sql`
+        SELECT source, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY source ORDER BY count DESC
+      `,
+      // By device type
+      sql`
+        SELECT device_type, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY device_type ORDER BY count DESC
+      `,
+      // By OS
+      sql`
+        SELECT os, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY os ORDER BY count DESC
+      `,
+      // By browser
+      sql`
+        SELECT browser, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY browser ORDER BY count DESC
+      `,
+      // Top cities
+      sql`
+        SELECT city, region, country, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+          AND city IS NOT NULL AND city != ''
+        GROUP BY city, region, country
+        ORDER BY count DESC
+        LIMIT 10
+      `,
+      // Scans by day (for chart)
+      sql`
+        SELECT DATE(created_at) as date, COUNT(*) as count
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+      `,
+      // Recent scans
+      sql`
+        SELECT scan_id, source, destination, device_type, os, browser, city, region, country, created_at
+        FROM qr_scans
+        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        ORDER BY created_at DESC
+        LIMIT 20
+      `,
+    ])
+
+    const toRecord = (rows: { [key: string]: string | number }[], keyField: string): Record<string, number> => {
+      const result: Record<string, number> = {}
+      for (const row of rows) {
+        result[String(row[keyField])] = Number(row.count)
+      }
+      return result
+    }
+
+    return {
+      totalScans: parseInt(totalsResult.rows[0]?.total_scans || '0', 10),
+      uniqueVisitors: parseInt(totalsResult.rows[0]?.unique_visitors || '0', 10),
+      byDestination: toRecord(byDestResult.rows, 'destination'),
+      bySource: toRecord(bySourceResult.rows, 'source'),
+      byDevice: toRecord(byDeviceResult.rows, 'device_type'),
+      byOs: toRecord(byOsResult.rows, 'os'),
+      byBrowser: toRecord(byBrowserResult.rows, 'browser'),
+      byCity: byCityResult.rows.map(r => ({
+        city: String(r.city),
+        region: String(r.region || ''),
+        country: String(r.country || ''),
+        count: Number(r.count),
+      })),
+      scansByDay: byDayResult.rows.map(r => ({
+        date: String(r.date),
+        count: Number(r.count),
+      })),
+      recentScans: recentResult.rows.map(r => ({
+        scan_id: String(r.scan_id),
+        source: String(r.source),
+        destination: String(r.destination),
+        device_type: String(r.device_type),
+        os: String(r.os),
+        browser: String(r.browser),
+        city: r.city ? String(r.city) : null,
+        region: r.region ? String(r.region) : null,
+        country: r.country ? String(r.country) : null,
+        created_at: String(r.created_at),
+      })),
+    }
+  } catch (error) {
+    console.error('Database error fetching QR scan stats:', error)
+    throw new DatabaseError('Failed to fetch QR scan stats', error)
   }
 }

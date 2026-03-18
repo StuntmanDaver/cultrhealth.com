@@ -55,11 +55,46 @@ interface CouponStats {
   totalDiscountGiven: number
 }
 
+interface CreatorStats {
+  activeCreatorsWithCommissions: number
+  totalPending: number
+  totalApproved: number
+  totalPaid: number
+  totalLifetime: number
+  creatorsByStatus: Record<string, number>
+}
+
+interface QrScanStats {
+  totalScans: number
+  uniqueVisitors: number
+  byDestination: Record<string, number>
+  bySource: Record<string, number>
+  byDevice: Record<string, number>
+  byOs: Record<string, number>
+  byBrowser: Record<string, number>
+  byCity: { city: string; region: string; country: string; count: number }[]
+  scansByDay: { date: string; count: number }[]
+  recentScans: {
+    scan_id: string
+    source: string
+    destination: string
+    device_type: string
+    os: string
+    browser: string
+    city: string | null
+    region: string | null
+    country: string | null
+    created_at: string
+  }[]
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
   memberships: MembershipStats
   coupons: CouponStats
+  creators: CreatorStats
+  qrScans: QrScanStats
   periodDays: number
   generatedAt: string
 }
@@ -437,6 +472,43 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               </div>
             )}
 
+            {/* Creator Program */}
+            {data.creators && (data.creators.totalLifetime > 0 || Object.keys(data.creators.creatorsByStatus).length > 0) && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Creator Program</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-yellow-50 rounded-lg p-4">
+                    <div className="text-sm text-yellow-700 mb-1">Pending</div>
+                    <div className="text-2xl font-display text-yellow-800">{formatCurrency(data.creators.totalPending)}</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="text-sm text-green-700 mb-1">Approved</div>
+                    <div className="text-2xl font-display text-green-800">{formatCurrency(data.creators.totalApproved)}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="text-sm text-blue-700 mb-1">Paid</div>
+                    <div className="text-2xl font-display text-blue-800">{formatCurrency(data.creators.totalPaid)}</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="text-sm text-purple-700 mb-1">Active Creators</div>
+                    <div className="text-2xl font-display text-purple-800">{data.creators.activeCreatorsWithCommissions}</div>
+                  </div>
+                </div>
+                {Object.keys(data.creators.creatorsByStatus).length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {Object.entries(data.creators.creatorsByStatus).map(([status, count]) => (
+                      <span
+                        key={status}
+                        className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(status)}`}
+                      >
+                        {status}: {count}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Waitlist Sources */}
             {Object.keys(data.waitlist.bySource).length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
@@ -451,6 +523,145 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* QR Code Scan Analytics */}
+            {data.qrScans && data.qrScans.totalScans > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">QR Code Scans</h2>
+
+                {/* Key metrics */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-brand-primary">{data.qrScans.totalScans}</div>
+                    <div className="text-xs text-brand-primary/60 mt-1">Total Scans</div>
+                  </div>
+                  <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-brand-primary">{data.qrScans.uniqueVisitors}</div>
+                    <div className="text-xs text-brand-primary/60 mt-1">Unique Visitors</div>
+                  </div>
+                  <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-brand-primary">
+                      {data.qrScans.totalScans > 0 ? Math.round((data.qrScans.uniqueVisitors / data.qrScans.totalScans) * 100) : 0}%
+                    </div>
+                    <div className="text-xs text-brand-primary/60 mt-1">Unique Rate</div>
+                  </div>
+                  <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-brand-primary">
+                      {Object.keys(data.qrScans.byDevice).length > 0
+                        ? Object.entries(data.qrScans.byDevice).sort((a, b) => b[1] - a[1])[0]?.[0] || '—'
+                        : '—'}
+                    </div>
+                    <div className="text-xs text-brand-primary/60 mt-1">Top Device</div>
+                  </div>
+                </div>
+
+                {/* Breakdowns row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* By Destination */}
+                  {Object.keys(data.qrScans.byDestination).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-brand-primary/70 mb-2">By Destination</h3>
+                      <div className="space-y-1">
+                        {Object.entries(data.qrScans.byDestination).map(([dest, count]) => (
+                          <div key={dest} className="flex justify-between text-sm">
+                            <span className="text-brand-primary capitalize">{dest}</span>
+                            <span className="text-brand-primary/60 font-mono">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* By OS */}
+                  {Object.keys(data.qrScans.byOs).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-brand-primary/70 mb-2">By OS</h3>
+                      <div className="space-y-1">
+                        {Object.entries(data.qrScans.byOs).map(([os, count]) => (
+                          <div key={os} className="flex justify-between text-sm">
+                            <span className="text-brand-primary">{os}</span>
+                            <span className="text-brand-primary/60 font-mono">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* By Browser */}
+                  {Object.keys(data.qrScans.byBrowser).length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-brand-primary/70 mb-2">By Browser</h3>
+                      <div className="space-y-1">
+                        {Object.entries(data.qrScans.byBrowser).map(([browser, count]) => (
+                          <div key={browser} className="flex justify-between text-sm">
+                            <span className="text-brand-primary">{browser}</span>
+                            <span className="text-brand-primary/60 font-mono">{count}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Top Cities */}
+                {data.qrScans.byCity.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-brand-primary/70 mb-2">Top Locations</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {data.qrScans.byCity.map((loc) => (
+                        <span
+                          key={`${loc.city}-${loc.region}`}
+                          className="px-3 py-1.5 bg-brand-cream rounded-full text-xs font-medium text-brand-primary"
+                        >
+                          {loc.city}{loc.region ? `, ${loc.region}` : ''} ({loc.count})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recent Scans Table */}
+                {data.qrScans.recentScans.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-brand-primary/70 mb-2">Recent Scans</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-brand-primary/10">
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Destination</th>
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Source</th>
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Device</th>
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">OS / Browser</th>
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Location</th>
+                            <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Time</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.qrScans.recentScans.slice(0, 10).map((scan, index) => (
+                            <tr key={scan.scan_id} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                              <td className="py-2 px-3 text-brand-primary text-sm capitalize">{scan.destination}</td>
+                              <td className="py-2 px-3 text-brand-primary/60 text-sm">{scan.source.replace(/_/g, ' ')}</td>
+                              <td className="py-2 px-3 text-sm">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  scan.device_type === 'mobile' ? 'bg-blue-100 text-blue-800' :
+                                  scan.device_type === 'tablet' ? 'bg-purple-100 text-purple-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {scan.device_type}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-brand-primary/60 text-xs">{scan.os} / {scan.browser}</td>
+                              <td className="py-2 px-3 text-brand-primary/60 text-xs">
+                                {scan.city ? `${scan.city}${scan.region ? `, ${scan.region}` : ''}` : '—'}
+                              </td>
+                              <td className="py-2 px-3 text-brand-primary/60 text-xs">{formatDate(scan.created_at)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

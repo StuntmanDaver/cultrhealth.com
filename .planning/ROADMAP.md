@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer (completed 2026-03-15)
 - [x] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook (completed 2026-03-17)
-- [ ] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking
-- [ ] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification
+- [x] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking (completed 2026-03-17)
+- [x] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification (completed 2026-03-17)
 
 ## Phase Details
 
@@ -58,11 +58,11 @@ Plans:
   2. After successful registration, the kit status updates to "Registered" in a visual 7-state timeline
   3. Members with no kit order see a distinct empty state explaining how to get a kit (with upgrade or add-on CTA based on tier)
   4. Members at each lifecycle stage (ordered, shipped, registered, processing, results ready) see stage-appropriate messaging and next-step CTAs
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 03-01-PLAN.md — Kit lifecycle module, registerKit client, DB fix, API routes, portal sidebar
-- [ ] 03-02-PLAN.md — Labs page UI (registration form, timeline, empty states), dashboard summary card
+- [x] 03-01-PLAN.md — Kit lifecycle module, registerKit client, DB fix, API routes, portal sidebar
+- [x] 03-02-PLAN.md — Labs page UI (registration form, timeline, empty states), dashboard summary card
 
 ### Phase 4: Labs Dashboard
 **Goal**: Members can view their complete biomarker results organized by body system, with reference ranges, health scores, and actionable insights directly in their CULTR dashboard
@@ -70,16 +70,17 @@ Plans:
 **Requirements**: RES-01, RES-02, RES-03, RES-04, RES-05, RES-06, DSH-01, DSH-02, DSH-03, DSH-04, DSH-05, DSH-06, DSH-07, NTF-01
 **Success Criteria** (what must be TRUE):
   1. Member with completed lab results sees biomarkers organized by category (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended) with color-coded reference range bars
-  2. BiologicalAgeCard displays the member's real biological age from SiPhox data (not placeholder values)
-  3. BiomarkerTrends shows real trend data and summary stats (optimal count, needs attention, improving)
+  2. ~~BiologicalAgeCard displays the member's real biological age from SiPhox data~~ *(deferred to v2 — requires LNG-01)*
+  3. ~~BiomarkerTrends shows real trend data~~ *(deferred to v2 — requires LNG-01)*; dashboard summary stats (optimal count, needs attention) shown on kit card
   4. Biomarkers not included in the member's panel show "N/A" rather than being hidden, so members know what is available
   5. Club tier members see an upgrade CTA instead of lab results; Core members without the add-on see an add-on CTA
-**Plans**: TBD
+  6. Members receive an email notification when results are ready (cron-based, deduped)
+**Plans**: 3/3 plans complete
 
 Plans:
-- [ ] 04-01: Biomarker mapping config and report fetching
-- [ ] 04-02: Labs dashboard UI and results display
-- [ ] 04-03: Dashboard widgets, tier gating, and results notification email
+- [x] 04-01-PLAN.md — Biomarker mapping config and report fetching (completed 2026-03-17)
+- [x] 04-02-PLAN.md — Labs dashboard UI and results display (completed 2026-03-17)
+- [x] 04-03-PLAN.md — Dashboard widgets, tier gating, and results notification email (completed 2026-03-17)
 
 ## Progress
 
@@ -90,5 +91,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete   | 2026-03-15 |
 | 2. Checkout Integration | 2/2 | Complete | 2026-03-17 |
-| 3. Kit Registration | 1/2 | In Progress|  |
-| 4. Labs Dashboard | 0/3 | Not started | - |
+| 3. Kit Registration | 2/2 | Complete | 2026-03-17 |
+| 4. Labs Dashboard | 3/3 | Complete | 2026-03-17 |

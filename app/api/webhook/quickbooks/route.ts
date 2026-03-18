@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
+import { escapeHtml } from '@/lib/resend'
 
 /**
  * QuickBooks Webhook Handler
@@ -233,9 +234,9 @@ async function sendPaymentReceivedNotification(data: {
       <strong>✅ Payment Confirmed</strong> — Invoice fully paid in QuickBooks
     </div>
 
-    <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${data.orderNumber}</h2>
+    <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${escapeHtml(data.orderNumber)}</h2>
     <p style="color: #666; font-size: 14px; margin-bottom: 24px;">
-      <strong>Customer:</strong> ${data.customerName} &lt;${data.customerEmail}&gt;
+      <strong>Customer:</strong> ${escapeHtml(data.customerName)} &lt;${escapeHtml(data.customerEmail)}&gt;
     </p>
 
     <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
@@ -244,7 +245,7 @@ async function sendPaymentReceivedNotification(data: {
     </div>
 
     <div style="background: #f5f5f5; border-radius: 8px; padding: 12px 16px; font-size: 12px; margin-bottom: 24px; word-break: break-all;">
-      <strong>QB Invoice ID:</strong><br/>${data.qbInvoiceId}
+      <strong>QB Invoice ID:</strong><br/>${escapeHtml(data.qbInvoiceId)}
     </div>
 
     <p style="color: #666; font-size: 13px;">

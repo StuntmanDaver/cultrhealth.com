@@ -39,26 +39,26 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Results Display
 
-- [ ] **RES-01**: Fetch and cache biomarker reports from SiPhox API
-- [ ] **RES-02**: Categorized biomarker display organized by body system (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended)
-- [ ] **RES-03**: Reference range visualization bar for each biomarker (low/optimal/high color-coded)
-- [ ] **RES-04**: N/A display for biomarkers not included in member's test panel
-- [ ] **RES-05**: Biomarker detail drill-down (description, range context, value interpretation)
-- [ ] **RES-06**: HIPAA-compliant data handling (no PHI in logs, analytics exclusion on labs routes)
+- [x] **RES-01**: Fetch and cache biomarker reports from SiPhox API
+- [x] **RES-02**: Categorized biomarker display organized by body system (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended)
+- [x] **RES-03**: Reference range visualization bar for each biomarker (low/optimal/high color-coded)
+- [x] **RES-04**: N/A display for biomarkers not included in member's test panel
+- [x] **RES-05**: Biomarker detail drill-down (description, range context, value interpretation)
+- [x] **RES-06**: HIPAA-compliant data handling (no PHI in logs, analytics exclusion on labs routes)
 
 ### Dashboard
 
-- [ ] **DSH-01**: Dedicated labs section/tab on member dashboard
-- [ ] **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data
-- [ ] **DSH-03**: BiomarkerTrends component wired to SiPhox report data
-- [ ] **DSH-04**: Category health scores (aggregate per body system)
-- [ ] **DSH-05**: SiPhox suggestions displayed as actionable insight cards
-- [ ] **DSH-06**: Dashboard summary widgets (optimal count, needs attention, improving)
-- [ ] **DSH-07**: Tier-gated messaging (Club: upgrade CTA, Core: add-on CTA, Catalyst+/Concierge: included)
+- [x] **DSH-01**: Dedicated labs section/tab on member dashboard
+- [ ] **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data *(deferred to v2 — requires LNG-01)*
+- [ ] **DSH-03**: BiomarkerTrends component wired to SiPhox report data *(deferred to v2 — requires LNG-01)*
+- [x] **DSH-04**: Category health scores (aggregate per body system)
+- [x] **DSH-05**: SiPhox suggestions displayed as actionable insight cards
+- [x] **DSH-06**: Dashboard summary widgets (optimal count, needs attention, improving)
+- [x] **DSH-07**: Tier-gated messaging (Club: upgrade CTA, Core: add-on CTA, Catalyst+/Concierge: included)
 
 ### Notifications
 
-- [ ] **NTF-01**: Email notification when biomarker results are ready (via Resend)
+- [x] **NTF-01**: Email notification when biomarker results are ready (via Resend)
 
 ## v2 Requirements
 
@@ -69,6 +69,11 @@ Deferred to future release. Tracked but not in current roadmap.
 - **LNG-01**: Biomarker trend visualization across multiple test reports
 - **LNG-02**: Treatment correlation view (biomarker changes overlaid with medication start dates from Asher Med)
 - **LNG-03**: PDF lab report download with CULTR branding
+
+### Dashboard (deferred from v1)
+
+- **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data *(requires LNG-01 — needs longitudinal data and biological age computation)*
+- **DSH-03**: BiomarkerTrends component wired to SiPhox report data *(requires LNG-01 — needs multiple reports over time)*
 
 ### Extended Features
 
@@ -110,26 +115,27 @@ Deferred to future release. Tracked but not in current roadmap.
 | KIT-03 | Phase 3 | Complete |
 | KIT-04 | Phase 3 | Complete |
 | KIT-05 | Phase 3 | Complete |
-| RES-01 | Phase 4 | Pending |
-| RES-02 | Phase 4 | Pending |
-| RES-03 | Phase 4 | Pending |
-| RES-04 | Phase 4 | Pending |
-| RES-05 | Phase 4 | Pending |
-| RES-06 | Phase 4 | Pending |
-| DSH-01 | Phase 4 | Pending |
-| DSH-02 | Phase 4 | Pending |
-| DSH-03 | Phase 4 | Pending |
-| DSH-04 | Phase 4 | Pending |
-| DSH-05 | Phase 4 | Pending |
-| DSH-06 | Phase 4 | Pending |
-| DSH-07 | Phase 4 | Pending |
-| NTF-01 | Phase 4 | Pending |
+| RES-01 | Phase 4 | Complete |
+| RES-02 | Phase 4 | Complete |
+| RES-03 | Phase 4 | Complete |
+| RES-04 | Phase 4 | Complete |
+| RES-05 | Phase 4 | Complete |
+| RES-06 | Phase 4 | Complete |
+| DSH-01 | Phase 4 | Complete |
+| DSH-02 | v2 | Deferred (LNG-01) |
+| DSH-03 | v2 | Deferred (LNG-01) |
+| DSH-04 | Phase 4 | Complete |
+| DSH-05 | Phase 4 | Complete |
+| DSH-06 | Phase 4 | Complete |
+| DSH-07 | Phase 4 | Complete |
+| NTF-01 | Phase 4 | Complete |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 30
+- v1 requirements: 30 total (2 deferred to v2)
+- Mapped to phases: 28
+- Deferred: 2 (DSH-02, DSH-03 → v2/LNG-01)
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-14*
-*Last updated: 2026-03-15 after plan 01-01 completion*
+*Last updated: 2026-03-17 after plan 04-03 completion*

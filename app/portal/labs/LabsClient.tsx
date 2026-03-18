@@ -5,6 +5,8 @@ import { KitTimeline } from '@/components/portal/KitTimeline'
 import { KitDetailCard } from '@/components/portal/KitDetailCard'
 import { KitRegistrationForm } from '@/components/portal/KitRegistrationForm'
 import { KitEmptyState } from '@/components/portal/KitEmptyState'
+import { LabsResultsView } from '@/components/portal/LabsResultsView'
+import { TestTube2 } from 'lucide-react'
 import type { KitLifecycleState } from '@/lib/siphox/kit-lifecycle'
 
 interface KitOrderWithLifecycle {
@@ -103,15 +105,47 @@ export default function LabsClient() {
     )
   }
 
+  // Tier gating: Club members can't access results (DSH-07)
+  const tier = data?.tier || null
+  const isClubTier = tier === 'club'
+
+  if (isClubTier) {
+    return (
+      <div className="p-6 md:p-8 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-display font-bold text-brand-primary mb-6">
+          Blood Test Kit
+        </h1>
+        <div className="rounded-2xl border border-brand-primary/10 bg-white p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-sage/30 flex items-center justify-center mx-auto mb-4">
+            <TestTube2 className="w-7 h-7 text-brand-primary" />
+          </div>
+          <h2 className="text-lg font-semibold text-brand-primary mb-2">
+            Upgrade to Unlock Lab Testing
+          </h2>
+          <p className="text-sm text-brand-primary/60 mb-6 max-w-sm mx-auto">
+            Comprehensive biomarker testing is included with Catalyst+ and Concierge memberships, or available as a $135 add-on with Core.
+          </p>
+          <a
+            href="/pricing"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
+          >
+            View Plans
+          </a>
+        </div>
+      </div>
+    )
+  }
+
   // Has kit orders -- show latest
   const latestOrder = data!.kitOrders[0]
   const lifecycleState = latestOrder.lifecycleState
   const showRegistrationForm = lifecycleState === 'shipped'
+  const showResults = lifecycleState === 'results_ready'
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto">
+    <div className="p-6 md:p-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-display font-bold text-brand-primary mb-6">
-        Blood Test Kit
+        {showResults ? 'Your Lab Results' : 'Blood Test Kit'}
       </h1>
 
       <KitTimeline
@@ -119,13 +153,21 @@ export default function LabsClient() {
         trackingNumber={latestOrder.tracking_number}
       />
 
-      <KitDetailCard
-        currentState={lifecycleState}
-        trackingNumber={latestOrder.tracking_number}
-      />
+      {!showResults && (
+        <KitDetailCard
+          currentState={lifecycleState}
+          trackingNumber={latestOrder.tracking_number}
+        />
+      )}
 
       {showRegistrationForm && (
         <KitRegistrationForm onSuccess={loadKitData} />
+      )}
+
+      {showResults && (
+        <div className="mt-6">
+          <LabsResultsView />
+        </div>
       )}
     </div>
   )

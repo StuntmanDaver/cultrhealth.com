@@ -20,6 +20,17 @@ interface EmailResult {
   error?: string
 }
 
+// HTML-escape user-supplied values to prevent injection in email templates
+export function escapeHtml(text: string | null | undefined): string {
+  if (!text) return ''
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 // Get configured from email
 function getFromEmail(): string {
   return process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
@@ -1613,6 +1624,78 @@ export async function sendKitFulfillmentEmail(params: {
     return { success: true }
   } catch (err) {
     console.error('Failed to send kit fulfillment email:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+/**
+ * Send results-ready notification to a member when their biomarker results arrive.
+ * Triggered by the siphox-results cron job.
+ */
+export async function sendResultsReadyEmail(params: {
+  name: string
+  email: string
+  summary: { totalBiomarkers: number; optimalCount: number; needsAttentionCount: number }
+}): Promise<EmailResult> {
+  const { name, email, summary } = params
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const safeName = escapeHtml(name)
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+      Your blood test results are ready
+    </h1>
+
+    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
+        Hi ${safeName},
+      </p>
+      <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+        Your biomarker results have been processed and are ready for review.
+      </p>
+
+      <!-- Stats Row -->
+      <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+        <div style="flex: 1; text-align: center; padding: 12px; background-color: #1a1a1a; border-radius: 6px;">
+          <div style="font-size: 24px; font-weight: 700; color: #fff;">${summary.totalBiomarkers}</div>
+          <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Tested</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 12px; background-color: #1a1a1a; border-radius: 6px;">
+          <div style="font-size: 24px; font-weight: 700; color: #4ade80;">${summary.optimalCount}</div>
+          <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Optimal</div>
+        </div>
+        <div style="flex: 1; text-align: center; padding: 12px; background-color: #1a1a1a; border-radius: 6px;">
+          <div style="font-size: 24px; font-weight: 700; color: ${summary.needsAttentionCount > 0 ? '#fbbf24' : '#4ade80'};">${summary.needsAttentionCount}</div>
+          <div style="font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Attention</div>
+        </div>
+      </div>
+
+      <!-- CTA Button -->
+      <div style="text-align: center;">
+        <a href="${siteUrl}/portal/labs" style="display: inline-block; background-color: #2A4542; color: #fff; padding: 12px 32px; border-radius: 24px; text-decoration: none; font-size: 14px; font-weight: 600;">
+          View Your Results
+        </a>
+      </div>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: email,
+      subject: "Your blood test results are ready",
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Results ready email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send results ready email:', err)
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }

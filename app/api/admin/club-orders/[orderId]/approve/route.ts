@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
 import { TAX_RATE_LABEL } from '@/lib/config/tax'
+import { escapeHtml } from '@/lib/resend'
 
 interface OrderItem {
   therapyId: string
@@ -166,10 +167,10 @@ async function sendApprovalConfirmationToAdmin(data: {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${item.note ? `${item.name} — ${item.note}` : item.name}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #eee;">${item.note ? `${escapeHtml(item.name)} &mdash; ${escapeHtml(item.note)}` : escapeHtml(item.name)}</td>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
           <td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">
-            ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : (item.pricingNote || 'TBD')}
+            ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : escapeHtml(item.pricingNote || 'TBD')}
           </td>
         </tr>`
     )
@@ -181,18 +182,18 @@ async function sendApprovalConfirmationToAdmin(data: {
     subject: `[PROCESSED] Order Approved — ${data.orderNumber}`,
     html: `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
 
     <div style="background: #e8f5e9; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #2A4542;">
-      <strong>Order approved.</strong> Confirmation email has been sent to <strong>${data.email}</strong>.
+      <strong>Order approved.</strong> Confirmation email has been sent to <strong>${escapeHtml(data.email)}</strong>.
     </div>
 
-    <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${data.orderNumber}</h2>
+    <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${escapeHtml(data.orderNumber)}</h2>
     <p style="color: #666; font-size: 14px; margin-bottom: 24px;">
-      <strong>Customer:</strong> ${data.name} &lt;${data.email}&gt;
+      <strong>Customer:</strong> ${escapeHtml(data.name)} &lt;${escapeHtml(data.email)}&gt;
     </p>
 
     <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 16px;">
@@ -256,10 +257,10 @@ async function sendApprovalEmailToCustomer(data: {
     .map(
       (item) =>
         `<tr>
-          <td style="padding: 8px 0; border-bottom: 1px solid #2A454210;">${item.note ? `${item.name} — ${item.note}` : item.name}</td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #2A454210; text-align: center;">${item.quantity}</td>
-          <td style="padding: 8px 0; border-bottom: 1px solid #2A454210; text-align: right;">
-            ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : (item.pricingNote || 'TBD')}
+          <td style="padding: 8px 0; border-bottom: 1px solid #D4DBD9;">${item.note ? `${escapeHtml(item.name)} &mdash; ${escapeHtml(item.note)}` : escapeHtml(item.name)}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #D4DBD9; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px 0; border-bottom: 1px solid #D4DBD9; text-align: right;">
+            ${item.price ? `$${(item.price * item.quantity).toFixed(2)}` : escapeHtml(item.pricingNote || 'TBD')}
           </td>
         </tr>`
     )
@@ -271,23 +272,23 @@ async function sendApprovalEmailToCustomer(data: {
     subject: `Your Order is Confirmed — ${data.orderNumber}`,
     html: `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="text-align: center; margin-bottom: 40px;">
       <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #2A4542;">CULTR</span>
     </div>
     <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 8px;">Order Confirmed!</h1>
-    <p style="text-align: center; color: #2A454280; font-size: 14px; margin-bottom: 32px;">Order #${data.orderNumber}</p>
-    <p style="margin-bottom: 24px;">Hi ${data.name.split(' ')[0]},</p>
-    <p style="margin-bottom: 24px; color: #2A4542CC;">
+    <p style="text-align: center; color: #7E8D8A; font-size: 14px; margin-bottom: 32px;">Order #${escapeHtml(data.orderNumber)}</p>
+    <p style="margin-bottom: 24px;">Hi ${escapeHtml(data.name.split(' ')[0])},</p>
+    <p style="margin-bottom: 24px; color: #546E6B;">
       Great news — your order has been reviewed and confirmed by our medical team.
     </p>
-    <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #2A454210; margin-bottom: 24px;">
+    <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #D4DBD9; margin-bottom: 24px;">
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <thead>
-          <tr style="border-bottom: 2px solid #2A454215;">
+          <tr style="border-bottom: 2px solid #DDDFDB;">
             <th style="text-align: left; padding: 8px 0; font-weight: 600;">Therapy / Dosage</th>
             <th style="text-align: center; padding: 8px 0; font-weight: 600;">Qty</th>
             <th style="text-align: right; padding: 8px 0; font-weight: 600;">Price</th>
@@ -296,12 +297,12 @@ async function sendApprovalEmailToCustomer(data: {
         <tbody>${itemRows}</tbody>
       </table>
       ${data.subtotal > 0 ? `
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #2A454215;">
+      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #DDDFDB;">
         ${data.taxAmount > 0 ? `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
           <span>Subtotal</span><span>$${data.subtotal.toFixed(2)}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A454280; margin-bottom: 4px;">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
           <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
         </div>
         ` : ''}
@@ -313,22 +314,22 @@ async function sendApprovalEmailToCustomer(data: {
     </div>
     <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 32px;">
       <p style="margin: 0; font-weight: 600; font-size: 14px;">Status: Confirmed by Medical Team</p>
-      <p style="margin: 8px 0 0; font-size: 13px; opacity: 0.7;">Your order is approved and ready for payment processing.</p>
+      <p style="margin: 8px 0 0; font-size: 13px; color: #697B78;">Your order is approved and ready for payment processing.</p>
     </div>
 
     <div style="background: #f5f0e8; border-radius: 12px; padding: 20px; margin-bottom: 32px; border-left: 4px solid #2A4542;">
       <p style="margin: 0 0 12px; font-weight: 600; font-size: 14px; color: #2A4542;">Next Step: Payment</p>
-      <p style="margin: 0 0 12px; font-size: 14px; color: #2A4542CC;">
+      <p style="margin: 0 0 12px; font-size: 14px; color: #546E6B;">
         Our team will send you a payment link within 1-2 business days. You can reference your order number below when following up.
       </p>
-      <p style="margin: 0; font-size: 13px; color: #2A454280;">
-        <strong>Your Order Number:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 600;">${data.orderNumber}</code>
+      <p style="margin: 0; font-size: 13px; color: #7E8D8A;">
+        <strong>Your Order Number:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 600;">${escapeHtml(data.orderNumber)}</code>
       </p>
     </div>
 
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #2A454215;">
-      <p style="color: #2A454260; font-size: 12px; text-align: center; margin: 0;">CULTR Health — Personalized Longevity Medicine</p>
-      <p style="color: #2A454240; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com or reply to this email.</p>
+    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #DDDFDB;">
+      <p style="color: #7E8D8A; font-size: 12px; text-align: center; margin: 0;">CULTR Health &mdash; Personalized Longevity Medicine</p>
+      <p style="color: #A8B2AE; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com or reply to this email.</p>
     </div>
   </div>
 </body>

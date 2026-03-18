@@ -16,6 +16,8 @@ export interface SiphoxCustomerRow {
   first_name: string | null
   last_name: string | null
   email: string | null
+  last_notified_report_id: string | null
+  results_notified_at: Date | null
   created_at: Date
   updated_at: Date
 }
@@ -440,5 +442,77 @@ export async function getReportById(
     return result.rows[0] as SiphoxReportRow
   } catch (error) {
     throw new SiphoxDatabaseError('Failed to get report by ID', error)
+  }
+}
+
+// ============================================================
+// RESULTS NOTIFICATION OPERATIONS
+// ============================================================
+
+export interface UnnotifiedCustomer {
+  siphox_customer_id: string
+  first_name: string | null
+  last_name: string | null
+  email: string
+  latest_report_id: string
+  report_data: unknown
+  suggestions: unknown
+}
+
+/**
+ * Get customers who have a report that hasn't been notified about yet.
+ * Joins siphox_customers with siphox_reports via lateral subquery for latest report.
+ * Only returns customers with a non-null email.
+ * Batch-limited to prevent runaway email sends.
+ */
+export async function getCustomersWithUnnotifiedReports(
+  limit = 50
+): Promise<UnnotifiedCustomer[]> {
+  try {
+    const result = await sql`
+      SELECT
+        c.siphox_customer_id,
+        c.first_name,
+        c.last_name,
+        c.email,
+        r.siphox_report_id AS latest_report_id,
+        r.report_data,
+        r.suggestions
+      FROM siphox_customers c
+      INNER JOIN LATERAL (
+        SELECT siphox_report_id, report_data, suggestions
+        FROM siphox_reports
+        WHERE siphox_customer_id = c.siphox_customer_id
+        ORDER BY fetched_at DESC
+        LIMIT 1
+      ) r ON true
+      WHERE c.email IS NOT NULL
+        AND (c.last_notified_report_id IS NULL OR c.last_notified_report_id != r.siphox_report_id)
+      LIMIT ${limit}
+    `
+    return result.rows as UnnotifiedCustomer[]
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get customers with unnotified reports', error)
+  }
+}
+
+/**
+ * Mark a customer as notified about a specific report.
+ * Updates last_notified_report_id and results_notified_at.
+ */
+export async function markResultsNotified(
+  siphoxCustomerId: string,
+  reportId: string
+): Promise<void> {
+  try {
+    await sql`
+      UPDATE siphox_customers
+      SET last_notified_report_id = ${reportId},
+          results_notified_at = NOW(),
+          updated_at = NOW()
+      WHERE siphox_customer_id = ${siphoxCustomerId}
+    `
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to mark results notified', error)
   }
 }

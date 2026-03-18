@@ -3,6 +3,7 @@ import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode } from '@/lib/creators/db'
 import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
+import { escapeHtml } from '@/lib/resend'
 
 const AUTO_APPROVE_EMAILS = [
   'alex@cultrhealth.com',
@@ -140,7 +141,7 @@ export async function POST(request: NextRequest) {
         email,
         'Welcome to CULTR Creator Program — You\'re Approved!',
         creatorEmailTemplate(`
-          <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${full_name},</p>
+          <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${escapeHtml(full_name)},</p>
           <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Your creator account has been approved! Click below to access your Creator Portal where you can find your tracking link, coupon code, and start earning commissions.</p>
           <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Open Creator Portal</a>
           <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7;">cultrhealth.com/creators/login</a>.</p>
@@ -167,7 +168,7 @@ export async function POST(request: NextRequest) {
       email,
       'Verify Your CULTR Creator Application',
       creatorEmailTemplate(`
-        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${full_name},</p>
+        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${escapeHtml(full_name)},</p>
         <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Thanks for applying to the CULTR Creator Program! Please verify your email address by clicking the button below.</p>
         <a href="${verifyLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Verify Email</a>
         <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin-top: 24px;">Once verified, our team will review your application within 48 hours. You'll receive an email when approved with your tracking link and coupon code.</p>

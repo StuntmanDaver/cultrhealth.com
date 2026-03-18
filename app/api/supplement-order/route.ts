@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
+import { escapeHtml } from '@/lib/resend'
 
 interface SupplementOrderItem {
   sku: string
@@ -86,9 +87,9 @@ export async function POST(request: NextRequest) {
         if (founderEmail) {
           const itemRows = items.map(item =>
             `<tr>
-              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #1a3c34;">${item.name}</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #1a3c34;">${escapeHtml(item.name)}</td>
               <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #1a3c34; text-align: center;">${item.quantity}</td>
-              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">${item.sku}</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">${escapeHtml(item.sku)}</td>
             </tr>`
           ).join('')
 
@@ -109,17 +110,17 @@ export async function POST(request: NextRequest) {
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 140px;">Order Reference</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${orderRef}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${escapeHtml(orderRef)}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Member Email</td>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-            <a href="mailto:${email}" style="color: #059669; text-decoration: none;">${email}</a>
+            <a href="mailto:${encodeURIComponent(email)}" style="color: #059669; text-decoration: none;">${escapeHtml(email)}</a>
           </td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Membership Tier</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; text-transform: capitalize;">${tier || 'None'}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; text-transform: capitalize;">${escapeHtml(tier || 'None')}</td>
         </tr>
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280;">Total Items</td>
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
     ${notes ? `
     <div style="background-color: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
       <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #059669;">Patient Notes</h2>
-      <p style="margin: 0; color: #374151; white-space: pre-wrap;">${notes}</p>
+      <p style="margin: 0; color: #374151; white-space: pre-wrap;">${escapeHtml(notes)}</p>
     </div>
     ` : ''}
     <div style="background-color: #fef3c7; border-radius: 8px; padding: 16px; text-align: center;">

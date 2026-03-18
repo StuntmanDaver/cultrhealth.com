@@ -6,7 +6,6 @@ import { Marquee } from "@/components/ui/Marquee";
 const TRUST_LOGOS = [
   { src: "/images/trust-logos/clia-certified.svg", alt: "CLIA Certified", width: 130, height: 40 },
   { src: "/images/trust-logos/cap-accredited.svg", alt: "CAP Accredited", width: 140, height: 40 },
-  { src: "/images/trust-logos/legitscript-certified.svg", alt: "LegitScript Certified", width: 160, height: 44 },
   { src: "/images/trust-logos/trustpilot.svg", alt: "Trustpilot", width: 140, height: 36 },
   { src: "/images/trust-logos/prenuvo.svg", alt: "Prenuvo", width: 130, height: 32 },
   { src: "/images/trust-logos/path.svg", alt: "Path", width: 120, height: 36 },

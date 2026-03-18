@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/auth';
+import { escapeHtml } from '@/lib/resend';
 
 /**
  * POST /api/member/consult-request
@@ -90,11 +91,11 @@ export async function POST(request: NextRequest) {
     <h1 style="font-size: 24px; font-weight: 300; color: #fff; margin-bottom: 24px;">New Consultation Request</h1>
     <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
       <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Member</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${email}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${preferredDate}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${preferredTime}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Reason</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${reason}</td></tr>
-        ${notes ? `<tr><td style="padding: 12px 0; color: #888;">Notes</td><td style="padding: 12px 0; color: #fff;">${notes}</td></tr>` : ''}
+        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Member</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(email)}</td></tr>
+        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredDate)}</td></tr>
+        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredTime)}</td></tr>
+        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Reason</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(reason)}</td></tr>
+        ${notes ? `<tr><td style="padding: 12px 0; color: #888;">Notes</td><td style="padding: 12px 0; color: #fff;">${escapeHtml(notes)}</td></tr>` : ''}
       </table>
     </div>
     <div style="background-color: #0a0a0a; border-radius: 8px; padding: 16px; border: 1px solid #222;">
@@ -127,8 +128,8 @@ export async function POST(request: NextRequest) {
     <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${new Date(preferredDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${preferredTime}</td></tr>
-        <tr><td style="padding: 12px 0; color: #888;">Reason</td><td style="padding: 12px 0; color: #fff;">${reason}</td></tr>
+        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredTime)}</td></tr>
+        <tr><td style="padding: 12px 0; color: #888;">Reason</td><td style="padding: 12px 0; color: #fff;">${escapeHtml(reason)}</td></tr>
       </table>
     </div>
     <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">

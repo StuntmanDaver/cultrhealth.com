@@ -21,6 +21,8 @@ import {
   AlertCircle,
   TestTube2,
   ChevronRight,
+  CheckCircle,
+  AlertTriangle,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -36,6 +38,11 @@ export default function DashboardClient() {
   // Kit status state
   const [kitStatusMessage, setKitStatusMessage] = useState<string | null>(null)
   const [kitStatusLoading, setKitStatusLoading] = useState(true)
+  const [resultsSummary, setResultsSummary] = useState<{
+    totalBiomarkers: number
+    optimalCount: number
+    needsAttentionCount: number
+  } | null>(null)
 
   // Renewal prompt state
   const [supplyData, setSupplyData] = useState<{ daysRemaining: number; isLow: boolean } | null>(null)
@@ -127,9 +134,36 @@ export default function DashboardClient() {
         if (cancelled || !res.ok) return
         const data = await res.json()
         if (cancelled) return
+
+        // DSH-07: Club tier override message
+        if (data.tier === 'club') {
+          setKitStatusMessage('Upgrade your plan to unlock blood testing')
+          return
+        }
+
         if (data.kitOrders && data.kitOrders.length > 0) {
           const state = data.kitOrders[0].lifecycleState || 'no_kit'
           setKitStatusMessage(KIT_STATUS_MESSAGES[state] || KIT_STATUS_MESSAGES.no_kit)
+
+          // DSH-01/DSH-06: Fetch results summary when results are ready
+          if (state === 'results_ready') {
+            fetch('/api/portal/results')
+              .then(async (rRes) => {
+                if (cancelled || !rRes.ok) return
+                const rData = await rRes.json()
+                if (cancelled) return
+                if (rData.report?.summary) {
+                  setResultsSummary({
+                    totalBiomarkers: rData.report.summary.totalBiomarkers,
+                    optimalCount: rData.report.summary.optimalCount,
+                    needsAttentionCount: rData.report.summary.needsAttentionCount,
+                  })
+                }
+              })
+              .catch(() => {
+                // Non-fatal — summary is a nice-to-have enhancement
+              })
+          }
         } else {
           setKitStatusMessage(KIT_STATUS_MESSAGES.no_kit)
         }
@@ -260,6 +294,23 @@ export default function DashboardClient() {
             </div>
             <ChevronRight className="w-4 h-4 text-brand-primary/40" />
           </div>
+          {resultsSummary && (
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-primary/5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/5 px-2.5 py-1 text-xs font-medium text-brand-primary">
+                {resultsSummary.totalBiomarkers} Tested
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+                <CheckCircle className="w-3 h-3" />
+                {resultsSummary.optimalCount} Optimal
+              </span>
+              {resultsSummary.needsAttentionCount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                  <AlertTriangle className="w-3 h-3" />
+                  {resultsSummary.needsAttentionCount} Attention
+                </span>
+              )}
+            </div>
+          )}
         </Link>
       )}
 

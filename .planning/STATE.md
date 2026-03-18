@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 03-02-PLAN.md (awaiting visual verification checkpoint)
-last_updated: "2026-03-17T03:49:01Z"
-last_activity: 2026-03-17 -- Completed plan 03-02 (Labs page UI with kit registration)
+status: complete
+stopped_at: Completed 04-03-PLAN.md (Dashboard widgets, tier gating, results notification email)
+last_updated: "2026-03-17T20:30:00Z"
+last_activity: 2026-03-17 -- Completed plan 04-03 (Dashboard widgets + results notification)
 progress:
   total_phases: 4
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 44
+  completed_phases: 4
+  total_plans: 9
+  completed_plans: 9
+  percent: 100
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** Members can see their real biomarker data -- organized, visual, and actionable -- directly in their CULTR Health dashboard.
-**Current focus:** Phase 3 Complete (Kit Registration), Phase 4 next (Results Dashboard)
+**Current focus:** All phases complete. DSH-02/DSH-03 deferred to v2 (requires LNG-01 longitudinal data).
 
 ## Current Position
 
-Phase: 3 of 4 (Kit Registration) -- COMPLETE
-Plan: 2 of 2 in current phase -- COMPLETE (awaiting visual verification)
-Status: Phase 03 Complete, Phase 04 next
-Last activity: 2026-03-17 -- Completed plan 03-02 (Labs page UI with kit registration)
+Phase: 4 of 4 (Labs Dashboard) -- COMPLETE
+Plan: 3 of 3 in current phase -- 04-03 COMPLETE
+Status: All 4 phases complete, all 9 plans complete
+Last activity: 2026-03-17 -- Completed plan 04-03 (Dashboard widgets + results notification)
 
 Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 6 min
-- Total execution time: 0.4 hours
+- Total plans completed: 9
+- Average duration: 7 min
+- Total execution time: ~1 hour
 
 **By Phase:**
 
@@ -45,14 +45,14 @@ Progress: [██████████] 100%
 |-------|-------|-------|----------|
 | 1. Foundation | 2/2 | 9 min | 4.5 min |
 | 2. Checkout Integration | 2/2 | 15 min | 7.5 min |
+| 3. Kit Registration | 2/2 | 10 min | 5 min |
+| 4. Labs Dashboard | 3/3 | 30 min | 10 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6m), 01-02 (3m), 02-01 (10m), 02-02 (5m)
+- Last 5 plans: 03-01 (5m), 03-02 (5m), 04-01 (15m), 04-02 (10m), 04-03 (5m)
 - Trend: Stable
 
 *Updated after each plan completion*
-| Phase 03 P01 | 5min | 2 tasks | 12 files |
-| Phase 03 P02 | 5min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -77,17 +77,19 @@ Recent decisions affecting current work:
 - 02-01: SiphoxKitOrderRow interface extended with 6 new fulfillment columns
 - 02-02: Core tier uses Stripe Checkout Sessions; Catalyst+ and Concierge keep Payment Links
 - 02-02: Blood test add-on uses optional_items API with adjustable_quantity fallback
-- 02-02: BLOOD_TEST_ADDON stripePriceId sourced from BLOOD_TEST_STRIPE_PRICE_ID env var
 - [Phase 03]: getKitOrdersByCustomer changed to SELECT * for consistency and fulfillment column inclusion
 - [Phase 03]: Portal sidebar uses forest bg with white/20 active state, matching CreatorSidebar pattern
 - [Phase 03]: Kit registration updates most recent order to registered status (non-fatal DB update)
 - [Phase 03-02]: Registration form only shown at shipped state, hidden for ordered and registered+
 - [Phase 03-02]: Timeline filters out no_kit, showing 6 active states with responsive layout
 - [Phase 03-02]: Dashboard kit card fails silently on error to avoid breaking main dashboard
+- [Phase 04-03]: DSH-02/DSH-03 deferred to v2 -- requires longitudinal data (LNG-01) and biological age computation
+- [Phase 04-03]: Results notification uses cron + dedup via last_notified_report_id column (no webhooks)
+- [Phase 04-03]: Club tier dashboard shows "Upgrade your plan" instead of generic kit message
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -97,6 +99,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-17T03:49:01Z
-Stopped at: Completed 03-02-PLAN.md (awaiting visual verification checkpoint)
+Last session: 2026-03-17T20:30:00Z
+Stopped at: Completed 04-03-PLAN.md -- all phases complete
 Resume file: None
+Next: SiPhox integration v1 complete. v2 work (LNG-01, DSH-02, DSH-03) tracked in REQUIREMENTS.md.

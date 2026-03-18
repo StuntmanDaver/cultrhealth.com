@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats } from '@/lib/db'
+import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
 export async function GET(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30', 10)
 
     // Fetch all analytics data
-    const [salesStats, waitlistStats, membershipStats, couponStats] = await Promise.all([
+    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats] = await Promise.all([
       getSalesStats(days).catch(() => ({
         totalOrders: 0,
         totalRevenue: 0,
@@ -57,6 +57,26 @@ export async function GET(request: NextRequest) {
         totalCouponRevenue: 0,
         totalDiscountGiven: 0,
       })),
+      getCreatorCommissionStats(days).catch(() => ({
+        activeCreatorsWithCommissions: 0,
+        totalPending: 0,
+        totalApproved: 0,
+        totalPaid: 0,
+        totalLifetime: 0,
+        creatorsByStatus: {},
+      })),
+      getQrScanStats(days).catch(() => ({
+        totalScans: 0,
+        uniqueVisitors: 0,
+        byDestination: {},
+        bySource: {},
+        byDevice: {},
+        byOs: {},
+        byBrowser: {},
+        byCity: [],
+        scansByDay: [],
+        recentScans: [],
+      })),
     ])
 
     return NextResponse.json({
@@ -66,6 +86,8 @@ export async function GET(request: NextRequest) {
         waitlist: waitlistStats,
         memberships: membershipStats,
         coupons: couponStats,
+        creators: creatorStats,
+        qrScans: qrScanStats,
         periodDays: days,
         generatedAt: new Date().toISOString(),
       },
