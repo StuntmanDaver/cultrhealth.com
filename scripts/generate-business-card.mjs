@@ -1,10 +1,30 @@
 // Generate CULTR Health Business Card PDF with tracking QR code
 // Usage: node scripts/generate-business-card.mjs
 // Output: cultr_business_card.pdf
+// Fonts: Playfair Display (headings), Inter (body) — brand fonts
 
 import React from 'react'
-import { Document, Page, View, Text, Image, StyleSheet, renderToFile } from '@react-pdf/renderer'
+import { Document, Page, View, Text, Image, Font, StyleSheet, renderToFile } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// ── Register Brand Fonts ──
+Font.register({
+  family: 'Playfair Display',
+  fonts: [
+    { src: join(__dirname, 'fonts/PlayfairDisplay-Bold.ttf'), fontWeight: 700 },
+    { src: join(__dirname, 'fonts/PlayfairDisplay-BoldItalic.ttf'), fontWeight: 700, fontStyle: 'italic' },
+  ],
+})
+
+Font.register({
+  family: 'Inter',
+  src: join(__dirname, 'fonts/Inter-Regular.ttf'),
+  fontWeight: 400,
+})
 
 // ── Brand Colors ──
 const FOREST = '#2A4542'
@@ -26,6 +46,7 @@ const styles = StyleSheet.create({
     width: PAGE_W,
     height: PAGE_H,
   },
+
   // ── Front Side ──
   front: {
     width: PAGE_W,
@@ -45,17 +66,18 @@ const styles = StyleSheet.create({
     width: CARD_W * 0.85,
     height: 1.5,
     backgroundColor: SAGE,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   cultrText: {
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
     fontSize: 30,
     color: CREAM,
     letterSpacing: 10,
     textAlign: 'center',
   },
   healthText: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Inter',
     fontSize: 9,
     color: SAGE,
     letterSpacing: 6,
@@ -70,8 +92,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sloganLine1: {
-    fontFamily: 'Times-Bold',
-    fontSize: 13,
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
+    fontSize: 14,
     color: CREAM,
     textAlign: 'center',
   },
@@ -81,17 +104,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   rebrand: {
-    fontFamily: 'Times-Italic',
-    fontSize: 13,
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
+    fontStyle: 'italic',
+    fontSize: 14,
     color: SAGE,
   },
   yourself: {
-    fontFamily: 'Times-Bold',
-    fontSize: 13,
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
+    fontSize: 14,
     color: CREAM,
   },
   urlText: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Inter',
     fontSize: 6,
     color: SAGE,
     textAlign: 'center',
@@ -102,22 +128,10 @@ const styles = StyleSheet.create({
     width: CARD_W * 0.85,
     height: 1.5,
     backgroundColor: SAGE,
-    marginTop: 18,
+    marginTop: 16,
   },
 
   // ── Back Side ──
-  back: {
-    width: PAGE_W,
-    height: PAGE_H,
-    backgroundColor: CREAM,
-    padding: BLEED,
-  },
-  backContent: {
-    width: CARD_W,
-    height: CARD_H,
-    flexDirection: 'row',
-  },
-  // Top/bottom forest bars
   topBar: {
     position: 'absolute',
     top: 0,
@@ -134,6 +148,11 @@ const styles = StyleSheet.create({
     height: BLEED + 6,
     backgroundColor: FOREST,
   },
+  backContent: {
+    width: CARD_W,
+    height: CARD_H,
+    flexDirection: 'row',
+  },
   leftPanel: {
     flex: 1,
     justifyContent: 'center',
@@ -141,32 +160,33 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   followText: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Inter',
     fontSize: 9,
     color: FOREST,
     opacity: 0.6,
     marginBottom: 3,
   },
   instagramText: {
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
     fontSize: 18,
     color: FOREST,
     marginBottom: 10,
   },
   handleText: {
-    fontFamily: 'Times-Bold',
+    fontFamily: 'Playfair Display',
+    fontWeight: 700,
     fontSize: 10,
     color: FOREST,
     marginTop: 10,
   },
   scanText: {
-    fontFamily: 'Helvetica',
+    fontFamily: 'Inter',
     fontSize: 7,
     color: FOREST,
     opacity: 0.5,
     marginTop: 8,
   },
-  // Vertical divider
   vertDivider: {
     width: 1,
     height: CARD_H * 0.6,
@@ -199,67 +219,47 @@ async function generateCard() {
   const qrDataUrl = await QRCode.toDataURL(QR_URL, {
     width: 400,
     margin: 0,
-    color: {
-      dark: FOREST,
-      light: '#FFFFFF',
-    },
+    color: { dark: FOREST, light: '#FFFFFF' },
     errorCorrectionLevel: 'M',
   })
 
-  const CardDocument = React.createElement(
-    Document,
-    null,
+  const h = React.createElement
+  const CardDocument = h(Document, null,
     // ── Page 1: Front ──
-    React.createElement(
-      Page,
-      { size: [PAGE_W, PAGE_H], style: styles.page },
-      React.createElement(
-        View,
-        { style: styles.front },
-        React.createElement(
-          View,
-          { style: styles.frontContent },
-          React.createElement(View, { style: styles.topLine }),
-          React.createElement(Text, { style: styles.cultrText }, 'C U L T R'),
-          React.createElement(Text, { style: styles.healthText }, 'H E A L T H'),
-          React.createElement(View, { style: styles.divider }),
-          React.createElement(Text, { style: styles.sloganLine1 }, 'Change the CULTR.'),
-          React.createElement(
-            View,
-            { style: styles.sloganLine2 },
-            React.createElement(Text, { style: styles.rebrand }, 'rebrand '),
-            React.createElement(Text, { style: styles.yourself }, 'Yourself.'),
+    h(Page, { size: [PAGE_W, PAGE_H], style: styles.page },
+      h(View, { style: styles.front },
+        h(View, { style: styles.frontContent },
+          h(View, { style: styles.topLine }),
+          h(Text, { style: styles.cultrText }, 'C U L T R'),
+          h(Text, { style: styles.healthText }, 'H E A L T H'),
+          h(View, { style: styles.divider }),
+          h(Text, { style: styles.sloganLine1 }, 'Change the CULTR.'),
+          h(View, { style: styles.sloganLine2 },
+            h(Text, { style: styles.rebrand }, 'rebrand '),
+            h(Text, { style: styles.yourself }, 'Yourself.'),
           ),
-          React.createElement(Text, { style: styles.urlText }, 'cultrhealth.com'),
-          React.createElement(View, { style: styles.bottomLine }),
+          h(Text, { style: styles.urlText }, 'cultrhealth.com'),
+          h(View, { style: styles.bottomLine }),
         ),
       ),
     ),
     // ── Page 2: Back ──
-    React.createElement(
-      Page,
-      { size: [PAGE_W, PAGE_H], style: styles.page },
-      React.createElement(View, { style: styles.topBar }),
-      React.createElement(View, { style: styles.bottomBar }),
-      React.createElement(
-        View,
-        { style: styles.backContent },
-        React.createElement(
-          View,
-          { style: styles.leftPanel },
-          React.createElement(Text, { style: styles.followText }, 'Follow us on'),
-          React.createElement(Text, { style: styles.instagramText }, 'Instagram'),
-          React.createElement(Text, { style: styles.handleText }, '@cultrhealth'),
-          React.createElement(Text, { style: styles.scanText }, 'Scan to follow'),
-        ),
-        React.createElement(View, { style: styles.vertDivider }),
-        React.createElement(
-          View,
-          { style: styles.rightPanel },
-          React.createElement(
-            View,
-            { style: styles.qrContainer },
-            React.createElement(Image, { style: styles.qrImage, src: qrDataUrl }),
+    h(Page, { size: [PAGE_W, PAGE_H], style: styles.page },
+      h(View, { style: styles.topBar }),
+      h(View, { style: styles.bottomBar }),
+      h(View, { style: { width: PAGE_W, height: PAGE_H, backgroundColor: CREAM, padding: BLEED } },
+        h(View, { style: styles.backContent },
+          h(View, { style: styles.leftPanel },
+            h(Text, { style: styles.followText }, 'Follow us on'),
+            h(Text, { style: styles.instagramText }, 'Instagram'),
+            h(Text, { style: styles.handleText }, '@cultrhealth'),
+            h(Text, { style: styles.scanText }, 'Scan to follow'),
+          ),
+          h(View, { style: styles.vertDivider }),
+          h(View, { style: styles.rightPanel },
+            h(View, { style: styles.qrContainer },
+              h(Image, { style: styles.qrImage, src: qrDataUrl }),
+            ),
           ),
         ),
       ),
