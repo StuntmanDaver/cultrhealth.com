@@ -674,6 +674,71 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
   }
 }
 
+export interface CouponStatRow {
+  coupon_code: string
+  discount_percent: number
+  usage_count: number
+  total_revenue: number
+  total_discount: number
+  avg_order_value: number
+  creator_name: string | null
+  attributed_creator_id: string | null
+}
+
+export interface CouponStats {
+  coupons: CouponStatRow[]
+  totalCouponOrders: number
+  totalCouponRevenue: number
+  totalDiscountGiven: number
+}
+
+export async function getCouponStats(days = 30): Promise<CouponStats> {
+  try {
+    const result = await sql`
+      SELECT
+        co.coupon_code,
+        co.discount_percent,
+        co.attributed_creator_id,
+        COUNT(*)::int as usage_count,
+        COALESCE(SUM(co.subtotal_usd), 0) as total_revenue,
+        COALESCE(SUM(
+          CASE WHEN co.discount_percent > 0 AND co.discount_percent < 100
+          THEN co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent)
+          ELSE 0 END
+        ), 0) as total_discount,
+        COALESCE(AVG(co.subtotal_usd), 0) as avg_order_value,
+        c.full_name as creator_name
+      FROM club_orders co
+      LEFT JOIN creators c ON co.attributed_creator_id = c.id
+      WHERE co.coupon_code IS NOT NULL
+        AND co.coupon_code != ''
+        AND co.created_at >= NOW() - INTERVAL '1 day' * ${days}
+      GROUP BY co.coupon_code, co.discount_percent, co.attributed_creator_id, c.full_name
+      ORDER BY usage_count DESC
+    `
+
+    const coupons: CouponStatRow[] = result.rows.map(row => ({
+      coupon_code: row.coupon_code,
+      discount_percent: parseFloat(row.discount_percent || '0'),
+      usage_count: parseInt(row.usage_count, 10),
+      total_revenue: parseFloat(row.total_revenue || '0'),
+      total_discount: parseFloat(row.total_discount || '0'),
+      avg_order_value: parseFloat(row.avg_order_value || '0'),
+      creator_name: row.creator_name || null,
+      attributed_creator_id: row.attributed_creator_id || null,
+    }))
+
+    const totalCouponOrders = coupons.reduce((sum, c) => sum + c.usage_count, 0)
+    const totalCouponRevenue = coupons.reduce((sum, c) => sum + c.total_revenue, 0)
+    const totalDiscountGiven = coupons.reduce((sum, c) => sum + c.total_discount, 0)
+
+    return { coupons, totalCouponOrders, totalCouponRevenue, totalDiscountGiven }
+  } catch (error) {
+    console.error('Database error fetching coupon stats:', error)
+    throw new DatabaseError('Failed to fetch coupon stats', error)
+  }
+}
+
 export async function getWaitlistStats(): Promise<{ total: number; bySource: Record<string, number>; recent: WaitlistEntry[] }> {
   try {
     const totalResult = await sql`SELECT COUNT(*) as count FROM waitlist`

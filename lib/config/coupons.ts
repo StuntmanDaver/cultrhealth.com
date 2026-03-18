@@ -23,6 +23,8 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTRSTAFF': { discount: 30, label: 'Staff Discount' },
   'CULTRFAM':   { discount: 20, label: 'Family Discount' },
   'CULTR10':    { discount: 10, label: 'Promo Code' },
+  'SUMMER20':   { discount: 20, label: 'Summer Promo' },
+  'MARY20':     { discount: 20, label: "Mary's Discount" },
 }
 
 export function validateCoupon(code: string): ClubCoupon | null {

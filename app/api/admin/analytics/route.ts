@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { getSalesStats, getWaitlistStats, getMembershipStats } from '@/lib/db'
+import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
 export async function GET(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30', 10)
 
     // Fetch all analytics data
-    const [salesStats, waitlistStats, membershipStats] = await Promise.all([
+    const [salesStats, waitlistStats, membershipStats, couponStats] = await Promise.all([
       getSalesStats(days).catch(() => ({
         totalOrders: 0,
         totalRevenue: 0,
@@ -51,6 +51,12 @@ export async function GET(request: NextRequest) {
         byTier: {},
         byStatus: {},
       })),
+      getCouponStats(days).catch(() => ({
+        coupons: [],
+        totalCouponOrders: 0,
+        totalCouponRevenue: 0,
+        totalDiscountGiven: 0,
+      })),
     ])
 
     return NextResponse.json({
@@ -59,6 +65,7 @@ export async function GET(request: NextRequest) {
         sales: salesStats,
         waitlist: waitlistStats,
         memberships: membershipStats,
+        coupons: couponStats,
         periodDays: days,
         generatedAt: new Date().toISOString(),
       },

@@ -24,14 +24,18 @@ export async function GET() {
 
     const result = await sql`
       SELECT
-        id, order_number, member_name, member_email, member_phone,
-        items, subtotal_usd, notes, status,
-        created_at, approved_at,
-        qb_invoice_id, qb_invoice_url
-      FROM club_orders
+        co.id, co.order_number, co.member_name, co.member_email, co.member_phone,
+        co.items, co.subtotal_usd, co.notes, co.status,
+        co.created_at, co.approved_at,
+        co.qb_invoice_id, co.qb_invoice_url,
+        co.coupon_code, co.discount_percent,
+        co.attributed_creator_id, co.attribution_method,
+        c.full_name as creator_name
+      FROM club_orders co
+      LEFT JOIN creators c ON co.attributed_creator_id = c.id
       ORDER BY
-        CASE WHEN status = 'pending_approval' THEN 0 ELSE 1 END,
-        created_at DESC
+        CASE WHEN co.status = 'pending_approval' THEN 0 ELSE 1 END,
+        co.created_at DESC
       LIMIT 100
     `
 

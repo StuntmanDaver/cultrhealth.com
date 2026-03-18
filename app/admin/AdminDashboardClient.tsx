@@ -37,12 +37,40 @@ interface MembershipStats {
   byStatus: Record<string, number>
 }
 
+interface CouponStatRow {
+  coupon_code: string
+  discount_percent: number
+  usage_count: number
+  total_revenue: number
+  total_discount: number
+  avg_order_value: number
+  creator_name: string | null
+  attributed_creator_id: string | null
+}
+
+interface CouponStats {
+  coupons: CouponStatRow[]
+  totalCouponOrders: number
+  totalCouponRevenue: number
+  totalDiscountGiven: number
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
   memberships: MembershipStats
+  coupons: CouponStats
   periodDays: number
   generatedAt: string
+}
+
+const INTERNAL_COUPON_LABELS: Record<string, string> = {
+  'OWNER': 'Owner',
+  'CULTRSTAFF': 'Staff',
+  'CULTRFAM': 'Family',
+  'CULTR10': 'Promo',
+  'SUMMER20': 'Promo',
+  'MARY20': 'Promo',
 }
 
 export default function AdminDashboardClient({ userEmail }: { userEmail: string }) {
@@ -287,6 +315,70 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                 )}
               </div>
             </div>
+
+            {/* Coupon Performance */}
+            {data.coupons && data.coupons.coupons.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Coupon Performance</h2>
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <span className="px-4 py-2 bg-brand-cream rounded-full text-sm font-medium text-brand-primary">
+                    Orders with coupons: {data.coupons.totalCouponOrders}
+                  </span>
+                  <span className="px-4 py-2 bg-brand-cream rounded-full text-sm font-medium text-brand-primary">
+                    Revenue: {formatCurrency(data.coupons.totalCouponRevenue)}
+                  </span>
+                  <span className="px-4 py-2 bg-red-50 rounded-full text-sm font-medium text-red-700">
+                    Discounts given: {formatCurrency(data.coupons.totalDiscountGiven)}
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Code</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Type</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Discount</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Uses</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Revenue</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Discount Given</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Avg Order</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.coupons.coupons.map((coupon, index) => {
+                        const internalLabel = INTERNAL_COUPON_LABELS[coupon.coupon_code]
+                        const isCreator = !!coupon.attributed_creator_id
+                        const typeLabel = isCreator
+                          ? `Creator (${coupon.creator_name || 'Unknown'})`
+                          : internalLabel || 'Promo'
+                        const typeBg = isCreator
+                          ? 'bg-purple-100 text-purple-800'
+                          : internalLabel === 'Owner' || internalLabel === 'Staff' || internalLabel === 'Family'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
+                        return (
+                          <tr key={`${coupon.coupon_code}-${index}`} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                            <td className="py-3 px-4 text-brand-primary font-mono text-sm font-medium">
+                              {coupon.coupon_code}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${typeBg}`}>
+                                {typeLabel}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-brand-primary text-right">{coupon.discount_percent}%</td>
+                            <td className="py-3 px-4 text-brand-primary text-right font-medium">{coupon.usage_count}</td>
+                            <td className="py-3 px-4 text-brand-primary text-right">{formatCurrency(coupon.total_revenue)}</td>
+                            <td className="py-3 px-4 text-red-600 text-right">{formatCurrency(coupon.total_discount)}</td>
+                            <td className="py-3 px-4 text-brand-primary/60 text-right">{formatCurrency(coupon.avg_order_value)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Waitlist Sources */}
             {Object.keys(data.waitlist.bySource).length > 0 && (

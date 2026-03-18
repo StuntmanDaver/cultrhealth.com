@@ -1,3 +1,58 @@
+## [2026-03-17] - Admin Coupon Analytics: Bug Fixes & Creator Attribution
+
+### Summary
+Fixed critical bugs in admin dashboard coupon analytics that caused incorrect type classification and broken creator code detection. Added creator name display to club orders admin view.
+
+### Critical Bugfixes
+- **`lib/db.ts` getCouponStats() SQL**: `co.attributed_creator_id` was in GROUP BY but **missing from SELECT** — caused `row.attributed_creator_id` to always be `undefined`, silently breaking creator code detection (all creator codes showed as generic "Promo" instead of "Creator (Name)")
+- **`app/admin/AdminDashboardClient.tsx` type classification**: Hardcoded `staffCodes` array only had 3 of 6 `CLUB_COUPONS` entries (OWNER, CULTRSTAFF, CULTRFAM) — CULTR10, SUMMER20, MARY20 incorrectly showed as "Promo" with no label distinction from unknown codes. Replaced with `INTERNAL_COUPON_LABELS` map covering all 6 codes
+- **`app/admin/AdminDashboardClient.tsx` creator detection**: Used `!!coupon.creator_name` (from LEFT JOIN) as creator signal — if a creator record was deleted, their codes silently lost the "Creator" badge. Now uses `!!coupon.attributed_creator_id` (stored at order time, survives creator deletion)
+
+### Improvements
+- **3-tier badge system**: Purple badges for creator codes, yellow for staff/owner/family codes, green for promo codes (previously all non-creator codes were green)
+- **`app/api/admin/club-orders/route.ts`**: Added `LEFT JOIN creators` to include `creator_name` in club orders API response
+- **`app/admin/club-orders/ClubOrdersClient.tsx`**: Expanded order detail now shows creator name inline: "Creator referral (Mary Smith)" instead of just "Creator referral"
+- **Performance**: Moved `INTERNAL_COUPON_LABELS` constant to module scope (was recreated on every table row render)
+
+### Coupon Amounts Verified (all 6 CLUB_COUPONS)
+| Code | Discount | Admin Badge |
+|------|----------|-------------|
+| OWNER | 60% | Yellow "Owner" |
+| CULTRSTAFF | 30% | Yellow "Staff" |
+| CULTRFAM | 20% | Yellow "Family" |
+| CULTR10 | 10% | Green "Promo" |
+| SUMMER20 | 20% | Green "Promo" |
+| MARY20 | 20% | Green "Promo" |
+| Creator codes | 10% (default) | Purple "Creator (Name)" |
+
+### Files Changed (4 files)
+- `lib/db.ts` — Added `attributed_creator_id` to CouponStatRow interface, SELECT clause, and row mapping
+- `app/admin/AdminDashboardClient.tsx` — Fixed type classification logic, added `attributed_creator_id` to interface, module-level `INTERNAL_COUPON_LABELS`, 3-tier badge colors
+- `app/api/admin/club-orders/route.ts` — LEFT JOIN creators for creator_name
+- `app/admin/club-orders/ClubOrdersClient.tsx` — Added `creator_name` to interface and expanded view display
+
+---
+
+## [2026-03-17] - Phase 04-01: Biomarker Catalog & Report Processing Pipeline
+
+### Summary
+Built the biomarker mapping system and report fetching/processing pipeline for the Labs Dashboard. Also fixed 5 Phase 3 bugs found during audit.
+
+### New Features (Phase 04-01)
+- **Biomarker catalog** (`lib/siphox/biomarkers.ts`): 50 SiPhox biomarkers mapped to 7 body-system categories (heart, metabolic, hormonal, inflammation, thyroid, nutritional, extended) with display names, abbreviations, units, descriptions, and sort orders
+- **Report processing pipeline** (`lib/siphox/reports.ts`): Fetch→cache→process pipeline — fetches from SiPhox API, caches new reports in DB, computes biomarker statuses (optimal/normal/low/high/critical/na), organizes by category with summary stats
+- **Results API endpoint** (`app/api/portal/results/route.ts`): Authenticated GET endpoint with three-tier error handling — DB failures and API failures gracefully degrade to empty state instead of 500s
+- **35 new tests**: Biomarker catalog integrity (16), report processing logic (13), API endpoint behavior (6) — all 538 tests passing
+
+### Phase 3 Bugfixes
+- **LabsClient.tsx line 32**: Fixed 401 response leaving infinite loading spinner — now sets `isLoading(false)` before return
+- **LabsClient.tsx line 90**: Simplified redundant `showEmptyState` condition from `!hasKitOrders && (!data?.siphoxCustomerId || !hasKitOrders)` to `!hasKitOrders`
+- **KitRegistrationForm.tsx line 76**: Added 1.5s delay before `onSuccess()` callback so success message is visible before parent re-renders
+- **POST /api/portal/labs route.ts line 109**: Wrapped `getSiphoxCustomerByPhone` in try-catch for `SiphoxDatabaseError`, returns 503 gracefully
+- **reports.ts computeStatus**: Fixed status mapping — 'normal' and 'acceptable' now correctly map to 'normal' (was incorrectly mapping to 'optimal')
+
+---
+
 ## [2026-03-16] - Asher Med Integration Audit Fixes
 
 ### Summary

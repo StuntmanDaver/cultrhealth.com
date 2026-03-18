@@ -26,6 +26,11 @@ interface ClubOrder {
   approved_at: string | null
   qb_invoice_id: string | null
   qb_invoice_url: string | null
+  coupon_code: string | null
+  discount_percent: number | null
+  attributed_creator_id: string | null
+  attribution_method: string | null
+  creator_name: string | null
 }
 
 const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
@@ -151,6 +156,11 @@ export default function ClubOrdersClient() {
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
                           {statusStyle.label}
                         </span>
+                        {order.coupon_code && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                            {order.coupon_code}
+                          </span>
+                        )}
                       </div>
                       <p className="text-sm font-medium text-gray-900 mt-1">{order.member_name}</p>
                       <p className="text-xs text-gray-500">{order.member_email}</p>
@@ -203,6 +213,18 @@ export default function ClubOrdersClient() {
                       {order.member_phone && (
                         <p className="text-sm text-gray-600 mb-2">
                           <strong>Phone:</strong> {order.member_phone}
+                        </p>
+                      )}
+                      {order.coupon_code && (
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Coupon:</strong>{' '}
+                          <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-xs">{order.coupon_code}</span>
+                          {order.discount_percent ? ` (${order.discount_percent}% off)` : ''}
+                          {order.attributed_creator_id && (
+                            <span className="ml-2 text-purple-600 text-xs font-medium">
+                              Creator referral{order.creator_name ? ` (${order.creator_name})` : ''}
+                            </span>
+                          )}
                         </p>
                       )}
                       {order.notes && (
