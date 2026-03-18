@@ -229,6 +229,63 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               />
             </div>
 
+            {/* Quick Links */}
+            <div className="p-6 bg-brand-primary/5 rounded-xl mb-8">
+              <h2 className="font-display text-xl text-brand-primary mb-4">Quick Links</h2>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/admin/intakes"
+                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
+                >
+                  Intake Submissions
+                </Link>
+                <Link
+                  href="/admin/club-orders"
+                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
+                >
+                  Club Orders
+                </Link>
+                <Link
+                  href="/provider/protocol-builder"
+                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
+                >
+                  Protocol Builder
+                </Link>
+                <a
+                  href="https://prod-api.asherweightloss.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                >
+                  Asher Med Portal →
+                </a>
+                <a
+                  href="https://dashboard.stripe.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                >
+                  Stripe Dashboard →
+                </a>
+                <a
+                  href="https://analytics.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                >
+                  Google Analytics →
+                </a>
+                <a
+                  href="https://search.google.com/search-console"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
+                >
+                  Search Console →
+                </a>
+              </div>
+            </div>
+
             {/* Sales by Status */}
             {Object.keys(data.sales.ordersByStatus).length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
@@ -469,62 +526,6 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               </div>
             )}
 
-            {/* Quick Links */}
-            <div className="mt-8 p-6 bg-brand-primary/5 rounded-xl">
-              <h2 className="font-display text-xl text-brand-primary mb-4">Quick Links</h2>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  href="/admin/intakes"
-                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
-                >
-                  Intake Submissions
-                </Link>
-                <Link
-                  href="/admin/club-orders"
-                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
-                >
-                  Club Orders
-                </Link>
-                <Link
-                  href="/provider/protocol-builder"
-                  className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors"
-                >
-                  Protocol Builder
-                </Link>
-                <a
-                  href="https://prod-api.asherweightloss.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
-                >
-                  Asher Med Portal →
-                </a>
-                <a
-                  href="https://dashboard.stripe.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
-                >
-                  Stripe Dashboard →
-                </a>
-                <a
-                  href="https://analytics.google.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
-                >
-                  Google Analytics →
-                </a>
-                <a
-                  href="https://search.google.com/search-console"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"
-                >
-                  Search Console →
-                </a>
-              </div>
-            </div>
           </>
         )}
       </div>
