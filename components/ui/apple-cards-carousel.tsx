@@ -8,7 +8,7 @@ import React, {
   useContext,
   useCallback,
 } from "react"
-import { ArrowLeft, ArrowRight, X, Plus, Check } from "lucide-react"
+import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useOutsideClick } from "@/hooks/use-outside-click"
@@ -44,24 +44,39 @@ interface CarouselProps {
 export const Carousel = ({ items }: CarouselProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [cardStep, setCardStep] = useState(272) // card width + gap
+  const [cardStep, setCardStep] = useState(272)
+  const [hasNudged, setHasNudged] = useState(false)
+  const [nudgeOffset, setNudgeOffset] = useState(0)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
   const isSwiping = useRef(false)
 
   const total = items.length
 
-  // Measure actual card step on mount and resize
+  // Responsive card step
   useEffect(() => {
     const update = () => {
       const isMobile = window.innerWidth < 768
-      // card width + gap: mobile 260+12=272, desktop 300+16=316
       setCardStep(isMobile ? 272 : 316)
     }
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
   }, [])
+
+  // Swipe hint — nudge cards left then spring back after 1.2s
+  useEffect(() => {
+    if (total > 1 && !hasNudged) {
+      const timer = setTimeout(() => {
+        setNudgeOffset(-50)
+        setTimeout(() => {
+          setNudgeOffset(0)
+          setHasNudged(true)
+        }, 500)
+      }, 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [total, hasNudged])
 
   const goTo = useCallback(
     (index: number) => {
@@ -81,7 +96,7 @@ export const Carousel = ({ items }: CarouselProps) => {
     [goTo, total]
   )
 
-  // Touch handlers — only swipe horizontally, let vertical scroll pass through
+  // Touch handlers
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
@@ -92,7 +107,6 @@ export const Carousel = ({ items }: CarouselProps) => {
     if (!isSwiping.current) {
       const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
       const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
-      // If horizontal movement dominates, prevent vertical scroll
       if (dx > dy && dx > 10) {
         isSwiping.current = true
       }
@@ -113,12 +127,15 @@ export const Carousel = ({ items }: CarouselProps) => {
     [goLeft, goRight]
   )
 
+  // Compute the translateX — active card position + nudge offset
+  const translateX = -(activeIndex * cardStep) + nudgeOffset
+
   return (
     <CarouselContext.Provider
       value={{ onCardClose: handleCardClose, currentIndex }}
     >
       <div className="relative w-full">
-        {/* Stationary viewport — no scroll, cards move via transform */}
+        {/* Stationary viewport */}
         <div
           className="overflow-hidden py-5 md:py-8 touch-pan-y"
           onTouchStart={onTouchStart}
@@ -126,30 +143,36 @@ export const Carousel = ({ items }: CarouselProps) => {
           onTouchEnd={onTouchEnd}
         >
           <div
-            className="flex gap-3 md:gap-4 transition-transform duration-400 ease-out pl-4 md:pl-6"
+            className="flex gap-3 md:gap-4 pl-4 md:pl-6"
             style={{
-              transform: `translateX(-${activeIndex * cardStep}px)`,
-              transition: "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",
+              transform: `translateX(${translateX}px)`,
+              transition: "transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)",
             }}
           >
-            {items.map((item, index) => (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  transition: {
-                    duration: 0.5,
-                    delay: 0.1 * index,
-                    ease: "easeOut",
-                  },
-                }}
-                key={"card" + index}
-                className="shrink-0"
-              >
-                {item}
-              </motion.div>
-            ))}
+            {items.map((item, index) => {
+              const distance = Math.abs(index - activeIndex)
+              const isActive = index === activeIndex
+
+              return (
+                <motion.div
+                  key={"card" + index}
+                  className="shrink-0"
+                  initial={{ opacity: 0, y: 30, scale: 0.92 }}
+                  animate={{
+                    opacity: isActive ? 1 : Math.max(0.4, 1 - distance * 0.3),
+                    y: 0,
+                    scale: isActive ? 1 : Math.max(0.88, 1 - distance * 0.06),
+                  }}
+                  transition={{
+                    opacity: { duration: 0.4 },
+                    scale: { type: "spring", stiffness: 300, damping: 30 },
+                    y: { duration: 0.5, delay: 0.08 * index, ease: "easeOut" },
+                  }}
+                >
+                  {item}
+                </motion.div>
+              )
+            })}
           </div>
         </div>
 
@@ -174,6 +197,16 @@ export const Carousel = ({ items }: CarouselProps) => {
               {activeIndex + 1}/{total}
             </span>
           </div>
+
+          {/* Swipe hint text (fades out after nudge) */}
+          <motion.span
+            className="text-[10px] text-brand-secondary/40 font-medium flex items-center gap-0.5 md:hidden"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: hasNudged ? 0 : 1 }}
+            transition={{ duration: 0.5, delay: hasNudged ? 0 : 0 }}
+          >
+            swipe <ChevronRight className="w-3 h-3" />
+          </motion.span>
 
           {/* Desktop arrows */}
           <div className="hidden md:flex items-center gap-2">
@@ -274,7 +307,10 @@ export const Card = ({
 
               {/* Product image */}
               <div className="w-full aspect-[4/3] bg-gradient-to-br from-brand-cream via-cream-dark to-brand-cream rounded-2xl flex items-center justify-center my-4">
-                <img
+                <motion.img
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
                   src={card.src}
                   alt={card.title}
                   className="max-h-[200px] object-contain drop-shadow-lg"
@@ -342,17 +378,26 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
           "h-[340px] w-[260px] md:h-[420px] md:w-[300px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
-          "shadow-lg hover:shadow-xl transition-shadow duration-300",
+          "shadow-lg transition-shadow duration-300",
           "group cursor-pointer"
         )}
       >
+        {/* Animated glow ring on active */}
+        <div className="absolute inset-0 rounded-3xl ring-1 ring-white/[0.08] group-hover:ring-white/[0.15] transition-all duration-500 pointer-events-none" />
+
         {/* Ambient light effects */}
         <div className="absolute top-0 right-0 w-48 h-48 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-sage/[0.06] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none" />
+        <motion.div
+          className="absolute bottom-0 left-0 w-32 h-32 bg-sage/[0.08] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.12, 0.08] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        />
 
         {/* Top: Category + Title */}
         <div className="relative z-10 p-5 pb-0">
@@ -377,14 +422,21 @@ export const Card = ({
           )}
         </div>
 
-        {/* Center: Product Image */}
+        {/* Center: Floating Product Image */}
         <div className="flex-1 relative z-10 flex items-center justify-center px-8 py-2">
-          <img
+          <motion.img
             src={card.src}
             alt={card.title}
-            className="max-h-[130px] md:max-h-[160px] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)] group-hover:scale-105 transition-transform duration-500 ease-out"
+            className="max-h-[130px] md:max-h-[160px] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
             loading="lazy"
             decoding="async"
+            animate={{ y: [0, -6, 0] }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: index * 0.4,
+            }}
           />
         </div>
 
