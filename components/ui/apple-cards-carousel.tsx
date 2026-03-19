@@ -22,6 +22,7 @@ export type CarouselCard = {
   content: React.ReactNode
   price?: string
   note?: string
+  description?: string
 }
 
 // ─── Context ────────────────────────────────────────────────
@@ -34,7 +35,7 @@ export const CarouselContext = createContext<{
   currentIndex: 0,
 })
 
-// ─── Carousel (stationary screen, swipe to change card) ────
+// ─── Carousel (routes to mobile or desktop) ─────────────────
 
 interface CarouselProps {
   items: JSX.Element[]
@@ -42,9 +43,25 @@ interface CarouselProps {
 }
 
 export const Carousel = ({ items }: CarouselProps) => {
+  const [isMobile, setIsMobile] = useState(true)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener("resize", check)
+    return () => window.removeEventListener("resize", check)
+  }, [])
+
+  return isMobile
+    ? <MobileCarousel items={items} />
+    : <DesktopCarousel items={items} />
+}
+
+// ─── Mobile: Stationary swipe carousel ──────────────────────
+
+function MobileCarousel({ items }: { items: JSX.Element[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [cardStep, setCardStep] = useState(272)
   const [hasNudged, setHasNudged] = useState(false)
   const [nudgeOffset, setNudgeOffset] = useState(0)
   const touchStartX = useRef(0)
@@ -52,19 +69,9 @@ export const Carousel = ({ items }: CarouselProps) => {
   const isSwiping = useRef(false)
 
   const total = items.length
+  const cardStep = 272 // 260px card + 12px gap
 
-  // Responsive card step
-  useEffect(() => {
-    const update = () => {
-      const isMobile = window.innerWidth < 768
-      setCardStep(isMobile ? 272 : 316)
-    }
-    update()
-    window.addEventListener("resize", update)
-    return () => window.removeEventListener("resize", update)
-  }, [])
-
-  // Swipe hint — nudge cards left then spring back after 1.2s
+  // Swipe hint nudge
   useEffect(() => {
     if (total > 1 && !hasNudged) {
       const timer = setTimeout(() => {
@@ -79,12 +86,9 @@ export const Carousel = ({ items }: CarouselProps) => {
   }, [total, hasNudged])
 
   const goTo = useCallback(
-    (index: number) => {
-      setActiveIndex(Math.max(0, Math.min(index, total - 1)))
-    },
+    (i: number) => setActiveIndex(Math.max(0, Math.min(i, total - 1))),
     [total]
   )
-
   const goLeft = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
   const goRight = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
 
@@ -96,29 +100,21 @@ export const Carousel = ({ items }: CarouselProps) => {
     [goTo, total]
   )
 
-  // Touch handlers — block multi-touch (prevents pinch zoom on carousel)
   const onTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length > 1) return // ignore pinch
+    if (e.touches.length > 1) return
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
     isSwiping.current = false
   }, [])
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length > 1) {
-      e.preventDefault() // block pinch zoom inside carousel
-      return
-    }
+    if (e.touches.length > 1) { e.preventDefault(); return }
     if (!isSwiping.current) {
       const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
       const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
-      if (dx > dy && dx > 10) {
-        isSwiping.current = true
-      }
+      if (dx > dy && dx > 10) isSwiping.current = true
     }
-    if (isSwiping.current) {
-      e.preventDefault()
-    }
+    if (isSwiping.current) e.preventDefault()
   }, [])
 
   const onTouchEnd = useCallback(
@@ -133,24 +129,20 @@ export const Carousel = ({ items }: CarouselProps) => {
     [goLeft, goRight]
   )
 
-  // Compute the translateX — active card position + nudge offset
   const translateX = -(activeIndex * cardStep) + nudgeOffset
 
   return (
-    <CarouselContext.Provider
-      value={{ onCardClose: handleCardClose, currentIndex }}
-    >
+    <CarouselContext.Provider value={{ onCardClose: handleCardClose, currentIndex }}>
       <div className="relative w-full">
-        {/* Stationary viewport */}
         <div
-          className="overflow-hidden py-5 md:py-8 touch-pan-y select-none"
+          className="overflow-hidden py-5 touch-pan-y select-none"
           style={{ overscrollBehavior: "none" }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
           <div
-            className="flex gap-3 md:gap-4 pl-4 md:pl-6"
+            className="flex gap-3 pl-4"
             style={{
               transform: `translateX(${translateX}px)`,
               transition: "transform 0.5s cubic-bezier(0.32, 0.72, 0, 1)",
@@ -159,7 +151,6 @@ export const Carousel = ({ items }: CarouselProps) => {
             {items.map((item, index) => {
               const distance = Math.abs(index - activeIndex)
               const isActive = index === activeIndex
-
               return (
                 <motion.div
                   key={"card" + index}
@@ -183,9 +174,8 @@ export const Carousel = ({ items }: CarouselProps) => {
           </div>
         </div>
 
-        {/* Indicators + Arrows */}
-        <div className="flex items-center justify-between px-4 md:px-6">
-          {/* Dot indicators */}
+        {/* Dots + swipe hint */}
+        <div className="flex items-center justify-between px-4">
           <div className="flex items-center gap-1.5">
             {items.map((_, i) => (
               <button
@@ -195,7 +185,7 @@ export const Carousel = ({ items }: CarouselProps) => {
                   "rounded-full transition-all duration-300",
                   i === activeIndex
                     ? "h-2 w-6 bg-brand-primary"
-                    : "h-2 w-2 bg-brand-secondary/15 hover:bg-brand-secondary/30"
+                    : "h-2 w-2 bg-brand-secondary/15"
                 )}
                 aria-label={`Go to slide ${i + 1}`}
               />
@@ -204,36 +194,110 @@ export const Carousel = ({ items }: CarouselProps) => {
               {activeIndex + 1}/{total}
             </span>
           </div>
-
-          {/* Swipe hint text (fades out after nudge) */}
           <motion.span
-            className="text-[10px] text-brand-secondary/40 font-medium flex items-center gap-0.5 md:hidden"
+            className="text-[10px] text-brand-secondary/40 font-medium flex items-center gap-0.5"
             initial={{ opacity: 1 }}
             animate={{ opacity: hasNudged ? 0 : 1 }}
-            transition={{ duration: 0.5, delay: hasNudged ? 0 : 0 }}
+            transition={{ duration: 0.5 }}
           >
             swipe <ChevronRight className="w-3 h-3" />
           </motion.span>
+        </div>
+      </div>
+    </CarouselContext.Provider>
+  )
+}
 
-          {/* Desktop arrows */}
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-              onClick={goLeft}
-              disabled={activeIndex === 0}
-              aria-label="Previous"
-            >
-              <ArrowLeft className="h-4 w-4 text-brand-primary" />
-            </button>
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-              onClick={goRight}
-              disabled={activeIndex === total - 1}
-              aria-label="Next"
-            >
-              <ArrowRight className="h-4 w-4 text-brand-primary" />
-            </button>
+// ─── Desktop: Horizontal scroll (Aceternity style) ──────────
+
+function DesktopCarousel({ items }: { items: JSX.Element[] }) {
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    checkScrollability()
+  }, [])
+
+  const checkScrollability = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+      setCanScrollLeft(scrollLeft > 0)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }
+
+  const scrollLeftFn = () => {
+    carouselRef.current?.scrollBy({ left: -320, behavior: "smooth" })
+  }
+
+  const scrollRightFn = () => {
+    carouselRef.current?.scrollBy({ left: 320, behavior: "smooth" })
+  }
+
+  const handleCardClose = useCallback(
+    (index: number) => {
+      if (carouselRef.current) {
+        carouselRef.current.scrollTo({ left: 320 * (index + 1), behavior: "smooth" })
+        setCurrentIndex(index)
+      }
+    },
+    []
+  )
+
+  return (
+    <CarouselContext.Provider value={{ onCardClose: handleCardClose, currentIndex }}>
+      <div className="relative w-full">
+        {/* Scrollable track */}
+        <div
+          className={cn(
+            "flex w-full overflow-x-scroll overscroll-x-auto scroll-smooth py-8",
+            "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          )}
+          ref={carouselRef}
+          onScroll={checkScrollability}
+        >
+          <div className="flex flex-row justify-start gap-4 pl-6">
+            {items.map((item, index) => (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  transition: {
+                    duration: 0.5,
+                    delay: 0.1 * index,
+                    ease: "easeOut",
+                  },
+                }}
+                key={"card" + index}
+                className="last:pr-[33%]"
+              >
+                {item}
+              </motion.div>
+            ))}
           </div>
+        </div>
+
+        {/* Arrow controls */}
+        <div className="flex justify-end gap-2 px-6">
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={scrollLeftFn}
+            disabled={!canScrollLeft}
+            aria-label="Previous"
+          >
+            <ArrowLeft className="h-5 w-5 text-brand-primary" />
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={scrollRightFn}
+            disabled={!canScrollRight}
+            aria-label="Next"
+          >
+            <ArrowRight className="h-5 w-5 text-brand-primary" />
+          </button>
         </div>
       </div>
     </CarouselContext.Provider>
@@ -337,9 +401,7 @@ export const Card = ({
                 {card.title}
               </motion.h3>
               {card.note && (
-                <p className="text-sm text-brand-secondary/50 mt-1">
-                  {card.note}
-                </p>
+                <p className="text-sm text-brand-secondary/50 mt-1">{card.note}</p>
               )}
 
               <div className="py-6">{card.content}</div>
@@ -353,10 +415,7 @@ export const Card = ({
                 )}
                 {onAdd && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onAdd()
-                    }}
+                    onClick={(e) => { e.stopPropagation(); onAdd() }}
                     className={cn(
                       "flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all",
                       inCart
@@ -365,13 +424,9 @@ export const Card = ({
                     )}
                   >
                     {inCart ? (
-                      <>
-                        <Check className="w-4 h-4" /> Added ({cartQty})
-                      </>
+                      <><Check className="w-4 h-4" /> Added ({cartQty})</>
                     ) : (
-                      <>
-                        <Plus className="w-4 h-4" /> Add to Cart
-                      </>
+                      <><Plus className="w-4 h-4" /> Add to Cart</>
                     )}
                   </button>
                 )}
@@ -395,7 +450,7 @@ export const Card = ({
           "group cursor-pointer"
         )}
       >
-        {/* Animated glow ring on active */}
+        {/* Glow ring */}
         <div className="absolute inset-0 rounded-3xl ring-1 ring-white/[0.08] group-hover:ring-white/[0.15] transition-all duration-500 pointer-events-none" />
 
         {/* Ambient light effects */}
@@ -409,9 +464,7 @@ export const Card = ({
         {/* Top: Category + Title */}
         <div className="relative z-10 p-5 pb-0">
           <motion.span
-            layoutId={
-              layout ? `category-${card.category}-${index}` : undefined
-            }
+            layoutId={layout ? `category-${card.category}-${index}` : undefined}
             className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold"
           >
             {card.category}
@@ -450,20 +503,13 @@ export const Card = ({
         {/* Bottom: Price + Quick Add */}
         <div className="relative z-10 px-5 pb-5 flex items-end justify-between">
           {card.price ? (
-            <span className="text-xl font-display font-bold text-white">
-              {card.price}
-            </span>
+            <span className="text-xl font-display font-bold text-white">{card.price}</span>
           ) : (
-            <span className="text-xs text-white/40 font-medium">
-              Consultation
-            </span>
+            <span className="text-xs text-white/40 font-medium">Consultation</span>
           )}
           {onAdd && (
             <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onAdd()
-              }}
+              onClick={(e) => { e.stopPropagation(); onAdd() }}
               className={cn(
                 "flex items-center gap-1.5 rounded-full text-xs font-bold transition-all duration-200",
                 inCart
@@ -472,13 +518,9 @@ export const Card = ({
               )}
             >
               {inCart ? (
-                <>
-                  <Check className="w-3 h-3" /> {cartQty}
-                </>
+                <><Check className="w-3 h-3" /> {cartQty}</>
               ) : (
-                <>
-                  <Plus className="w-3 h-3" /> Add
-                </>
+                <><Plus className="w-3 h-3" /> Add</>
               )}
             </button>
           )}
