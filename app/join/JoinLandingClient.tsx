@@ -4,11 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
-  Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info, Tag,
+  Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
-import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { Carousel, Card } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
@@ -561,11 +560,7 @@ function MobileCarouselSection({ therapies }: { therapies: JoinTherapy[] }) {
 }
 
 // =============================================
-// MOBILE THERAPY ROW — compact card for iPhone
-// =============================================
-
-// =============================================
-// THERAPY CARD — desktop grid (matches therapies page card + shop add-to-cart)
+// THERAPY CARD — desktop grid
 // =============================================
 
 function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
