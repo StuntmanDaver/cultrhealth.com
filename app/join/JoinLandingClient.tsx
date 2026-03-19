@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
@@ -9,6 +9,7 @@ import {
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
+import { Carousel, Card } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
 // MAIN WRAPPER
@@ -495,61 +496,20 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // =============================================
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
-  const [active, setActive] = useState(0)
-  const startX = useRef(0)
-  const total = section.therapies.length
-
-  const go = useCallback((i: number) => setActive(Math.max(0, Math.min(i, total - 1))), [total])
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    startX.current = e.touches[0].clientX
-  }, [])
-
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const diff = startX.current - e.changedTouches[0].clientX
-    if (Math.abs(diff) > 40) go(diff > 0 ? active + 1 : active - 1)
-  }, [active, go])
-
   return (
     <div className="pb-4">
-      <div className="flex items-center gap-2.5 mb-3 px-4 md:px-8">
+      <div className="flex items-center gap-2.5 mb-1 px-4 md:px-8">
         <div className="w-7 h-7 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
           <Icon className="w-3.5 h-3.5 text-brand-primary" />
         </div>
         <h2 className="text-base md:text-xl font-display font-bold text-brand-primary">
           {section.title}
         </h2>
-        {/* Counter */}
-        <span className="md:hidden ml-auto text-[10px] text-brand-secondary/40 font-medium">{active + 1}/{total}</span>
       </div>
 
-      {/* Mobile — locked carousel */}
-      <div
-        className="md:hidden overflow-hidden touch-pan-y px-4"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-      >
-        <div
-          className="flex transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(-${active * 100}%)` }}
-        >
-          {section.therapies.map((therapy) => (
-            <div key={therapy.id} className="w-full shrink-0">
-              <MobileTherapyCard therapy={therapy} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Dots */}
-      <div className="md:hidden flex justify-center gap-1.5 mt-2.5">
-        {section.therapies.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => go(i)}
-            className={`h-1.5 rounded-full transition-all ${i === active ? 'w-5 bg-brand-primary' : 'w-1.5 bg-brand-secondary/15'}`}
-          />
-        ))}
+      {/* Mobile — Apple Cards Carousel */}
+      <div className="md:hidden">
+        <MobileCarouselSection therapies={section.therapies} />
       </div>
 
       {/* Desktop grid */}
@@ -564,79 +524,48 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
   )
 }
 
+function MobileCarouselSection({ therapies }: { therapies: JoinTherapy[] }) {
+  const cart = useJoinCart()
+
+  const cards = therapies.map((therapy, index) => {
+    const inCart = cart.isInCart(therapy.id)
+    const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
+
+    const handleAdd = () => {
+      if (inCart && cartItem) {
+        cart.updateQuantity(therapy.id, cartItem.quantity + 1)
+      } else {
+        cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
+      }
+    }
+
+    return (
+      <Card
+        key={therapy.id}
+        card={{
+          src: therapy.image || '',
+          title: therapy.name,
+          category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
+          price: therapy.price !== null ? `$${therapy.price.toFixed(0)}` : therapy.pricingNote || 'TBD',
+          note: therapy.note,
+        }}
+        index={index}
+        onAdd={handleAdd}
+        inCart={inCart}
+        cartQty={cartItem?.quantity}
+      />
+    )
+  })
+
+  return <Carousel items={cards} />
+}
+
 // =============================================
 // MOBILE THERAPY ROW — compact card for iPhone
 // =============================================
 
-function MobileTherapyCard({ therapy }: { therapy: JoinTherapy }) {
-  const cart = useJoinCart()
-  const inCart = cart.isInCart(therapy.id)
-  const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
-
-  function handleAdd() {
-    if (inCart && cartItem) {
-      cart.updateQuantity(therapy.id, cartItem.quantity + 1)
-    } else {
-      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
-    }
-  }
-
-  return (
-    <div className="bg-white rounded-2xl border border-brand-secondary/8 shadow-sm overflow-hidden">
-      {/* Image — large, centered */}
-      <div className="w-full bg-brand-cream flex items-center justify-center py-8 px-6">
-        {therapy.image && (
-          <Image
-            src={therapy.image}
-            alt={therapy.name}
-            width={240}
-            height={240}
-            className="object-contain"
-            loading="lazy"
-            quality={85}
-          />
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-lg font-display font-bold text-brand-primary">{therapy.name}</h3>
-            {therapy.note && (
-              <p className="text-xs text-brand-secondary/45 mt-0.5">{therapy.note}</p>
-            )}
-          </div>
-          {therapy.price !== null ? (
-            <span className="text-xl font-display font-bold text-brand-primary shrink-0">${therapy.price.toFixed(0)}</span>
-          ) : (
-            <span className="text-xs text-brand-secondary/50 shrink-0">{therapy.pricingNote || 'TBD'}</span>
-          )}
-        </div>
-
-        <p className="text-sm text-brand-secondary/55 leading-relaxed mt-2 line-clamp-2">{therapy.description}</p>
-
-        {/* Add to cart */}
-        <div className="mt-4">
-          {inCart && cartItem ? (
-            <button onClick={handleAdd} className="w-full py-3 bg-brand-primary text-white text-sm font-semibold rounded-full flex items-center justify-center gap-2">
-              <Check className="w-4 h-4" />
-              In Cart ({cartItem.quantity}) — Tap to Add More
-            </button>
-          ) : (
-            <button onClick={handleAdd} className="w-full py-3 bg-brand-primary text-white text-sm font-semibold rounded-full flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add to Cart
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 // =============================================
-// THERAPY CARD (matches therapies page card + shop add-to-cart)
+// THERAPY CARD — desktop grid (matches therapies page card + shop add-to-cart)
 // =============================================
 
 function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
