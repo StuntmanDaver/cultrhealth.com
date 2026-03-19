@@ -167,7 +167,7 @@ function JoinLandingInner() {
       )}
 
       {/* Hero Banner — Media kit style with overlay text */}
-      <section className="relative aspect-[3/2] md:aspect-auto md:h-[42vh] md:min-h-[320px] overflow-hidden bg-gray-200">
+      <section className="relative aspect-[3/2] md:aspect-auto md:h-[60vh] md:min-h-[450px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
