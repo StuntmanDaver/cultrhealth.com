@@ -1,3 +1,31 @@
+## [2026-03-18] - Creator Commission Admin Dashboard + Logout Buttons
+
+### Summary
+Added creator commission metrics to admin dashboard, admin layout with auth guard and logout, and creator portal logout button. Deep audit fixed SQL logic bug in active creator counting, missing status colors, and enhanced attribution error logging.
+
+### New Features
+- **`lib/db.ts`**: `getCreatorCommissionStats(days)` — aggregates `commission_ledger` by status (pending/approved/paid/lifetime) + counts creators by status. Active creator count excludes reversed-only creators via `COUNT(DISTINCT CASE WHEN status != 'reversed')`.
+- **`app/admin/AdminDashboardClient.tsx`**: Creator Program section with 4 colored summary cards (Pending, Approved, Paid, Active Creators), creator status pills with proper colors, "Manage Creators" link to `/admin/creators`
+- **`app/admin/layout.tsx`**: Server-side admin auth guard with redirect to `/login?redirect=/admin`
+- **`app/admin/AdminTopBar.tsx`**: Top bar showing admin email + logout button
+- **`components/creators/CreatorSidebar.tsx`**: Logout button with loading state in creator portal sidebar
+
+### Bug Fixes
+- **`getStatusColor` missing creator statuses**: `paused` → yellow, `rejected` → red (both previously fell through to neutral gray, making them indistinguishable)
+- **`active_creators` SQL logic**: `COUNT(DISTINCT cl.beneficiary_creator_id)` counted creators with ONLY reversed commissions as "active". Fixed to `COUNT(DISTINCT CASE WHEN cl.status != 'reversed' THEN cl.beneficiary_creator_id END)`
+- **Attribution error logging**: Enhanced with `codeType` and `customerEmail` fields for complete manual recovery from Vercel logs when `processOrderAttribution()` fails
+
+### Files Changed (6 files)
+- `lib/db.ts` — New `getCreatorCommissionStats()` + `CreatorCommissionStats` interface
+- `app/api/admin/analytics/route.ts` — Wired creator stats into Promise.all
+- `app/admin/AdminDashboardClient.tsx` — Creator Program section, `getStatusColor` fix, Manage Creators link
+- `app/api/club/orders/route.ts` — Structured attribution error logging
+- `app/admin/layout.tsx` — New: admin layout with auth guard
+- `app/admin/AdminTopBar.tsx` — New: admin top bar with logout
+- `components/creators/CreatorSidebar.tsx` — Logout button
+
+---
+
 ## [2026-03-18] - QR Code Scan Tracking & Business Card
 
 ### Summary
@@ -6,17 +34,38 @@ Added QR code scan tracking infrastructure for physical business cards. Scans ro
 ### New Features
 - **QR redirect handler** (`app/go/[destination]/route.ts`): Routes scans through tracking API before redirecting to destination
 - **Scan tracking API** (`app/api/track/qr-scan/route.ts`): Captures device type, browser, OS, geo location (via Vercel headers), and hashed IP for privacy-safe analytics
-- **Admin dashboard analytics** (`app/admin/AdminDashboardClient.tsx`): QR scan metrics section with total scans, device breakdown, and recent scans table
-- **Business card generator** (`scripts/generate-business-card.mjs`): PDF generator using brand fonts (Playfair Display + Inter) with Instagram QR code
-- **Migration 023** (`migrations/023_qr_scans.sql`): `qr_scans` table for scan event storage
+- **Admin dashboard analytics** (`app/admin/AdminDashboardClient.tsx`): QR scan metrics section with 4 metric cards, breakdowns by destination/OS/browser, top locations, recent scans table
+- **Migration 023** (`migrations/023_qr_scans.sql`): `qr_scans` table with 5 indexes (executed on staging DB)
+- **Destination map**: instagram, tiktok, youtube, website, quiz, pricing — extensible via `QR_DESTINATIONS`
 
-### Files Changed (6 files)
-- `app/go/[destination]/route.ts` — New redirect handler
-- `app/api/track/qr-scan/route.ts` — New tracking API endpoint
-- `app/admin/AdminDashboardClient.tsx` — QR analytics section added
-- `migrations/023_qr_scans.sql` — New table
-- `scripts/generate-business-card.mjs` — PDF generator with brand fonts
-- `cultr_business_card.pdf` — Generated business card
+### Business Card
+- **Print-ready PDF** (`cultr_business_card.pdf`): 3.5" × 2" with 0.125" bleed
+- **Generation script** (`scripts/generate-business-card.mjs`): @react-pdf/renderer + sharp + qrcode
+- **Brand logo**: Actual CULTR SVG letterform paths rendered via sharp for pixel-perfect output
+- **HEALTH subtitle**: Font-size 10, Helvetica, natural spacing, positioned below CULTR under the R
+- **QR code**: Forest green on white, links to `staging.cultrhealth.com/go/instagram?source=business_card`
+- **Brand fonts**: Playfair Display (headings) + Inter (body) — TTF files in `scripts/fonts/`
+
+### Brand Fixes
+- **Logo SVGs** (`cultr-logo-*-health.svg`): Changed HEALTH text font-family from `Georgia, serif` to `Inter, -apple-system, sans-serif` (3 files)
+- **Email fixes**: `mailto:` encoding fix in supplement-order, opacity→color fix in creator-apply email header
+
+### Files Changed (12 files)
+- `app/go/[destination]/route.ts` — New: QR redirect handler
+- `app/api/track/qr-scan/route.ts` — New: scan tracking + device parsing
+- `migrations/023_qr_scans.sql` — New: qr_scans table + indexes
+- `lib/db.ts` — Added `getQrScanStats()` + `QrScanStats` interface
+- `app/api/admin/analytics/route.ts` — QR scan stats in analytics payload
+- `app/admin/AdminDashboardClient.tsx` — QR scan analytics dashboard section
+- `cultr_business_card.pdf` — Regenerated with tracking QR + brand logo
+- `scripts/generate-business-card.mjs` — PDF generator (sharp + @react-pdf/renderer)
+- `scripts/fonts/` — Playfair Display + Inter TTF files
+- `public/cultr-logo-*-health.svg` — Inter font for HEALTH text (3 files)
+- `app/api/creators/apply/route.ts` — Email template color fix
+- `app/api/supplement-order/route.ts` — mailto: link encoding fix
+
+### Dev Dependencies Added
+- `qrcode` ^1.5.4, `sharp` (SVG→PNG conversion)
 
 ---
 
