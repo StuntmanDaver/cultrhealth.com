@@ -173,23 +173,15 @@ function JoinLandingInner() {
           alt="CULTR — Diverse women in athletic wear"
           className="w-full h-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-brand-primary/30" />
-        <div className="absolute inset-0 hidden md:flex flex-col items-center justify-end pb-8 px-4 text-center">
-          <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
-            Change the <span className="font-display">CULTR</span>. <span className="italic">rebrand</span> Yourself.
-          </h1>
-          <p className="mt-2 text-sm text-white/80 max-w-2xl">
-            HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
-          </p>
-        </div>
       </section>
 
-      {/* Mobile hero text — below the fold */}
-      <section className="md:hidden px-6 py-6 bg-brand-cream text-center">
-        <h1 className="font-body text-2xl text-brand-primary font-bold tracking-tight">
-          Change the <span className="font-display">CULTR</span>. <span className="italic">rebrand</span> Yourself.
+      {/* Slogan banner — below the fold */}
+      <section className="bg-brand-primary px-6 py-8 md:py-10 text-center">
+        <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight leading-tight">
+          Change the <span className="font-display">CULTR</span>.<br />
+          <span className="italic text-sage">rebrand</span> Yourself.
         </h1>
-        <p className="mt-2 text-xs text-brand-primary/60 max-w-md mx-auto">
+        <p className="mt-3 text-xs md:text-sm text-white/60 max-w-2xl mx-auto">
           HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
         </p>
       </section>
