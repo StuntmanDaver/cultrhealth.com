@@ -34,102 +34,103 @@ export const CarouselContext = createContext<{
   currentIndex: 0,
 })
 
-// ─── Carousel ───────────────────────────────────────────────
+// ─── Carousel (stationary screen, swipe to change card) ────
 
 interface CarouselProps {
   items: JSX.Element[]
   initialScroll?: number
 }
 
-export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(true)
-  const [currentIndex, setCurrentIndex] = useState(0)
+export const Carousel = ({ items }: CarouselProps) => {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [cardStep, setCardStep] = useState(272) // card width + gap
+  const touchStartX = useRef(0)
+  const touchStartY = useRef(0)
+  const isSwiping = useRef(false)
 
+  const total = items.length
+
+  // Measure actual card step on mount and resize
   useEffect(() => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft = initialScroll
-      checkScrollability()
+    const update = () => {
+      const isMobile = window.innerWidth < 768
+      // card width + gap: mobile 260+12=272, desktop 300+16=316
+      setCardStep(isMobile ? 272 : 316)
     }
-  }, [initialScroll])
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
 
-  const checkScrollability = () => {
-    if (carouselRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
-      setCanScrollLeft(scrollLeft > 0)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
-    }
-  }
+  const goTo = useCallback(
+    (index: number) => {
+      setActiveIndex(Math.max(0, Math.min(index, total - 1)))
+    },
+    [total]
+  )
 
-  const isMobile = () => typeof window !== "undefined" && window.innerWidth < 768
+  const goLeft = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
+  const goRight = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
 
-  const getCardWidth = useCallback(() => (isMobile() ? 272 : 320), [])
-
-  const updateActiveIndex = useCallback(() => {
-    if (carouselRef.current) {
-      const scrollLeft = carouselRef.current.scrollLeft
-      const cardWidth = getCardWidth()
-      const index = Math.round(scrollLeft / cardWidth)
-      setActiveIndex(Math.min(Math.max(index, 0), items.length - 1))
-    }
-  }, [items.length, getCardWidth])
-
-  const scrollToLeft = () => {
-    carouselRef.current?.scrollBy({ left: -300, behavior: "smooth" })
-  }
-
-  const scrollToRight = () => {
-    carouselRef.current?.scrollBy({ left: 300, behavior: "smooth" })
-  }
-
-  const scrollToCard = (index: number) => {
-    const cardWidth = getCardWidth()
-    carouselRef.current?.scrollTo({
-      left: cardWidth * index,
-      behavior: "smooth",
-    })
-  }
-
-  const handleCardClose = (index: number) => {
-    if (carouselRef.current) {
-      const cardWidth = getCardWidth()
-      const scrollPosition = cardWidth * (index + 1)
-      carouselRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: "smooth",
-      })
+  const handleCardClose = useCallback(
+    (index: number) => {
+      goTo(Math.min(index + 1, total - 1))
       setCurrentIndex(index)
+    },
+    [goTo, total]
+  )
+
+  // Touch handlers — only swipe horizontally, let vertical scroll pass through
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+    touchStartY.current = e.touches[0].clientY
+    isSwiping.current = false
+  }, [])
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isSwiping.current) {
+      const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
+      const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
+      // If horizontal movement dominates, prevent vertical scroll
+      if (dx > dy && dx > 10) {
+        isSwiping.current = true
+      }
     }
-  }
+    if (isSwiping.current) {
+      e.preventDefault()
+    }
+  }, [])
+
+  const onTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const diff = touchStartX.current - e.changedTouches[0].clientX
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) goRight()
+        else goLeft()
+      }
+    },
+    [goLeft, goRight]
+  )
 
   return (
     <CarouselContext.Provider
       value={{ onCardClose: handleCardClose, currentIndex }}
     >
       <div className="relative w-full">
-        {/* Scrollable track */}
+        {/* Stationary viewport — no scroll, cards move via transform */}
         <div
-          className={cn(
-            "flex w-full overflow-x-scroll overscroll-x-auto py-5 md:py-8",
-            "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          )}
-          ref={carouselRef}
-          onScroll={() => {
-            checkScrollability()
-            updateActiveIndex()
-          }}
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-          }}
+          className="overflow-hidden py-5 md:py-8 touch-pan-y"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
           <div
-            className={cn(
-              "flex flex-row justify-start gap-3 pl-4",
-              "md:gap-4 md:pl-6"
-            )}
+            className="flex gap-3 md:gap-4 transition-transform duration-400 ease-out pl-4 md:pl-6"
+            style={{
+              transform: `translateX(-${activeIndex * cardStep}px)`,
+              transition: "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",
+            }}
           >
             {items.map((item, index) => (
               <motion.div
@@ -144,8 +145,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
                   },
                 }}
                 key={"card" + index}
-                className="last:pr-4 md:last:pr-[33%]"
-                style={{ scrollSnapAlign: "start" }}
+                className="shrink-0"
               >
                 {item}
               </motion.div>
@@ -160,7 +160,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
             {items.map((_, i) => (
               <button
                 key={i}
-                onClick={() => scrollToCard(i)}
+                onClick={() => goTo(i)}
                 className={cn(
                   "rounded-full transition-all duration-300",
                   i === activeIndex
@@ -171,7 +171,7 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
               />
             ))}
             <span className="text-[10px] text-brand-secondary/30 ml-2.5 font-medium tabular-nums">
-              {activeIndex + 1}/{items.length}
+              {activeIndex + 1}/{total}
             </span>
           </div>
 
@@ -179,16 +179,16 @@ export const Carousel = ({ items, initialScroll = 0 }: CarouselProps) => {
           <div className="hidden md:flex items-center gap-2">
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-              onClick={scrollToLeft}
-              disabled={!canScrollLeft}
+              onClick={goLeft}
+              disabled={activeIndex === 0}
               aria-label="Previous"
             >
               <ArrowLeft className="h-4 w-4 text-brand-primary" />
             </button>
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-              onClick={scrollToRight}
-              disabled={!canScrollRight}
+              onClick={goRight}
+              disabled={activeIndex === total - 1}
               aria-label="Next"
             >
               <ArrowRight className="h-4 w-4 text-brand-primary" />
