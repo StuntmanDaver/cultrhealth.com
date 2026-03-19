@@ -582,42 +582,51 @@ function MobileTherapyCard({ therapy }: { therapy: JoinTherapy }) {
   }
 
   return (
-    <div className="h-full bg-white rounded-xl border border-brand-secondary/8 shadow-sm overflow-hidden flex flex-col">
-      {/* Image */}
-      <div className="w-full aspect-square bg-brand-cream flex items-center justify-center p-3">
+    <div className="bg-white rounded-2xl border border-brand-secondary/8 shadow-sm overflow-hidden">
+      {/* Image — large, centered */}
+      <div className="w-full bg-brand-cream flex items-center justify-center py-8 px-6">
         {therapy.image && (
           <Image
             src={therapy.image}
             alt={therapy.name}
-            width={100}
-            height={100}
+            width={240}
+            height={240}
             className="object-contain"
             loading="lazy"
-            quality={80}
+            quality={85}
           />
         )}
       </div>
 
       {/* Info */}
-      <div className="p-2.5 flex flex-col flex-1">
-        <h3 className="text-[11px] font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
-        {therapy.note && (
-          <p className="text-[9px] text-brand-secondary/40 mt-0.5 leading-tight">{therapy.note}</p>
-        )}
-
-        <div className="flex items-center justify-between mt-auto pt-2">
+      <div className="px-5 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-display font-bold text-brand-primary">{therapy.name}</h3>
+            {therapy.note && (
+              <p className="text-xs text-brand-secondary/45 mt-0.5">{therapy.note}</p>
+            )}
+          </div>
           {therapy.price !== null ? (
-            <span className="text-xs font-display font-bold text-brand-primary">${therapy.price.toFixed(0)}</span>
+            <span className="text-xl font-display font-bold text-brand-primary shrink-0">${therapy.price.toFixed(0)}</span>
           ) : (
-            <span className="text-[9px] text-brand-secondary/50">{therapy.pricingNote || 'TBD'}</span>
+            <span className="text-xs text-brand-secondary/50 shrink-0">{therapy.pricingNote || 'TBD'}</span>
           )}
+        </div>
+
+        <p className="text-sm text-brand-secondary/55 leading-relaxed mt-2 line-clamp-2">{therapy.description}</p>
+
+        {/* Add to cart */}
+        <div className="mt-4">
           {inCart && cartItem ? (
-            <button onClick={handleAdd} className="w-7 h-7 flex items-center justify-center bg-brand-primary text-white rounded-full text-[10px] font-bold">
-              {cartItem.quantity}+
+            <button onClick={handleAdd} className="w-full py-3 bg-brand-primary text-white text-sm font-semibold rounded-full flex items-center justify-center gap-2">
+              <Check className="w-4 h-4" />
+              In Cart ({cartItem.quantity}) — Tap to Add More
             </button>
           ) : (
-            <button onClick={handleAdd} className="w-7 h-7 flex items-center justify-center bg-brand-primary text-white rounded-full">
-              <Plus className="w-3.5 h-3.5" />
+            <button onClick={handleAdd} className="w-full py-3 bg-brand-primary text-white text-sm font-semibold rounded-full flex items-center justify-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add to Cart
             </button>
           )}
         </div>
