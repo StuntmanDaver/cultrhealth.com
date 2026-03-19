@@ -171,7 +171,7 @@ function JoinLandingInner() {
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-[center_20%]"
         />
       </section>
 
