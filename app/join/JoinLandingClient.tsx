@@ -130,6 +130,15 @@ function JoinLandingInner() {
     localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
 
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('cultr_club_member')
+    document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
+    setMember(null)
+    setShowSignup(true)
+    setOrderSubmitted(false)
+    cart.clearCart()
+  }, [cart])
+
   return (
     <div className="flex flex-col min-h-screen bg-brand-cream">
       {/* Login Modal for Returning Members */}
@@ -158,16 +167,16 @@ function JoinLandingInner() {
       )}
 
       {/* Hero Banner — Media kit style with overlay text */}
-      <section className="relative aspect-[16/9] md:aspect-auto md:h-[42vh] md:min-h-[320px] overflow-hidden bg-gray-200">
+      <section className="relative aspect-[3/2] md:aspect-auto md:h-[55vh] md:min-h-[400px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-[center_35%]"
+          className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-brand-primary/30" />
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-10 px-4 text-center">
-          <h1 className="font-display text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
-            Change the CULTR. Rebrand Yourself.
+          <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
+            Change the <span className="font-display">CULTR</span>. <span className="italic">rebrand</span> Yourself.
           </h1>
           <p className="mt-2 text-xs md:text-sm text-white/80 max-w-2xl">
             HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
@@ -191,6 +200,13 @@ function JoinLandingInner() {
             {member && (
               <p className="mt-3 text-sm text-brand-secondary/50 font-medium">
                 Welcome, {member.firstName}
+                <span className="mx-2">·</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-brand-secondary/40 hover:text-red-500 transition-colors underline underline-offset-2"
+                >
+                  Log out
+                </button>
               </p>
             )}
           </ScrollReveal>
