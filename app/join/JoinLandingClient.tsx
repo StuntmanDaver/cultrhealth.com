@@ -51,6 +51,27 @@ function JoinLandingInner() {
   const cart = useJoinCart()
   const hasItems = cart.getItemCount() > 0
 
+  // Prevent ALL zoom: trackpad pinch (Safari gesturestart), Ctrl+scroll, double-tap
+  useEffect(() => {
+    // Safari trackpad pinch zoom
+    const onGestureStart = (e: Event) => e.preventDefault()
+    const onGestureChange = (e: Event) => e.preventDefault()
+    // Ctrl+scroll zoom (Chrome/Firefox/Edge)
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) e.preventDefault()
+    }
+
+    document.addEventListener('gesturestart', onGestureStart, { passive: false })
+    document.addEventListener('gesturechange', onGestureChange, { passive: false })
+    document.addEventListener('wheel', onWheel, { passive: false })
+
+    return () => {
+      document.removeEventListener('gesturestart', onGestureStart)
+      document.removeEventListener('gesturechange', onGestureChange)
+      document.removeEventListener('wheel', onWheel)
+    }
+  }, [])
+
   useEffect(() => {
     try {
       if (window.location.hostname === 'localhost') {
@@ -126,7 +147,7 @@ function JoinLandingInner() {
   }, [cart])
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-cream">
+    <div className="flex flex-col min-h-screen bg-brand-cream overflow-x-hidden" style={{ touchAction: 'manipulation' }}>
       {/* Login Modal for Returning Members */}
       {showLogin && !member && <LoginModal onComplete={handleSignupComplete} onSignUpInstead={() => { setShowLogin(false); setShowSignup(true) }} />}
 
