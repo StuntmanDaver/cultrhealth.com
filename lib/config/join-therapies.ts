@@ -24,6 +24,8 @@ export interface JoinTherapy {
   catalogSku?: string
   /** Product image URL */
   image?: string
+  /** ID of a product this bundles with for a discount */
+  bundleWith?: string
 }
 
 export interface JoinTherapySection {
@@ -94,6 +96,19 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'GHKCU-100MG-3ML',
         image: '/images/products/ghk-cu.png',
+        bundleWith: 'glutathione',
+      },
+      {
+        id: 'glutathione',
+        name: 'Glutathione',
+        badge: '',
+        description:
+          'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
+        price: null,
+        pricingNote: 'TBD',
+        category: 'peptide',
+        image: '/images/products/glutathione.png',
+        bundleWith: 'ghk-cu',
       },
       {
         id: 'tesa-ipa',
@@ -162,16 +177,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 110,
         category: 'peptide',
         image: '/images/products/melanotan2-mt2.png',
-      },
-      {
-        id: 'glutathione',
-        name: 'Glutathione',
-        badge: '',
-        description:
-          'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
-        price: null,
-        pricingNote: 'TBD',
-        category: 'peptide',
       },
     ],
   },
