@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
   Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
 } from 'lucide-react'
-import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
+import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
-import { Carousel, Card } from '@/components/ui/apple-cards-carousel'
+import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
 // MAIN WRAPPER
@@ -54,13 +53,11 @@ function JoinLandingInner() {
 
   useEffect(() => {
     try {
-      // Dev bypass: skip signup on localhost
       if (window.location.hostname === 'localhost') {
         setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products' })
         setShowSignup(false)
         return
       }
-      // Check localStorage first (most reliable), then cookie as fallback
       const lsData = localStorage.getItem('cultr_club_member')
       if (lsData) {
         const data = JSON.parse(lsData)
@@ -69,7 +66,7 @@ function JoinLandingInner() {
           setShowSignup(false)
           return
         }
-        localStorage.removeItem('cultr_club_member') // clear old/invalid format
+        localStorage.removeItem('cultr_club_member')
       }
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
@@ -77,27 +74,23 @@ function JoinLandingInner() {
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
           setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
-          // Sync to localStorage for future visits
           localStorage.setItem('cultr_club_member', JSON.stringify(data))
           return
         }
-        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax' // clear old/invalid format
+        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
       }
-      // Check if this is a returning member (logged out after placing an order)
       const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
       if (hasOrdered) {
         setShowLogin(true)
         setShowSignup(false)
         return
       }
-      // New user — showSignup stays true (already the default)
     } catch {
-      // showSignup stays true (already the default)
+      // showSignup stays true
     }
   }, [])
 
   const handleSignupComplete = useCallback((data: ClubMember) => {
-    // Persist to localStorage (primary) and cookie (backup)
     localStorage.setItem('cultr_club_member', JSON.stringify(data))
     const cookieData = encodeURIComponent(JSON.stringify(data))
     document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
@@ -106,27 +99,20 @@ function JoinLandingInner() {
     setShowLogin(false)
   }, [])
 
-  // Prevent body scroll when modals are open
   useEffect(() => {
     if (showSignup || showLogin || showMobileCart) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [showSignup, showLogin, showMobileCart])
 
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
     setShowMobileCart(false)
-
-    // Auto-logout: clear auth but keep success banner visible
     localStorage.removeItem('cultr_club_member')
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
-
-    // Set persistent flag so returning members trigger login gate
     localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
 
@@ -147,7 +133,7 @@ function JoinLandingInner() {
       {/* Signup Modal */}
       {showSignup && !member && <SignupModal onComplete={handleSignupComplete} />}
 
-      {/* Order Success Banner — Reserve space to prevent layout shift on mobile */}
+      {/* Order Success Banner */}
       {orderSubmitted && (
         <div className="py-8 px-6 bg-green-50 border-b-2 border-green-200">
           <div className="max-w-5xl mx-auto flex flex-col items-center justify-center gap-3">
@@ -166,13 +152,15 @@ function JoinLandingInner() {
         </div>
       )}
 
-      {/* Hero Banner */}
-      <section className="relative aspect-[4/3] md:aspect-[3/1] overflow-hidden bg-gray-200">
+      {/* Hero Banner — tighter aspect for mobile so carousel is visible above fold */}
+      <section className="relative aspect-[16/9] md:aspect-[3/1] overflow-hidden">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-[center_40%]"
+          className="w-full h-full object-cover object-[center_30%]"
         />
+        {/* Gradient fade into slogan bar */}
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-brand-primary/70 to-transparent pointer-events-none" />
       </section>
 
       {/* Slogan banner */}
@@ -186,20 +174,22 @@ function JoinLandingInner() {
         </p>
       </section>
 
-      {/* Section header + welcome */}
-      <section className="px-6 py-5 md:px-8 md:py-10 bg-brand-cream border-b border-brand-secondary/8">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-[10px] md:text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-1">Browse & Build Your Stack</p>
+      {/* Welcome + Browse */}
+      <section className="px-6 py-5 md:px-8 md:py-8 bg-brand-cream border-b border-brand-secondary/8">
+        <div className="max-w-7xl mx-auto">
+          <p className="text-[10px] md:text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-1">
+            Browse &amp; Build Your Stack
+          </p>
           <h2 className="text-2xl md:text-4xl font-display font-bold text-brand-primary mb-1">
-            Core Therapies
+            Therapies
           </h2>
           <p className="text-sm md:text-base text-brand-secondary/60">
-            Add therapies to your cart and submit your order for <span className="font-display">CULTR</span> team review.
+            Tap a card to learn more. Add therapies and submit your order for <span className="font-display">CULTR</span> team review.
           </p>
           {member && (
             <p className="mt-2 text-sm text-brand-secondary/50 font-medium">
               Welcome, {member.firstName}
-              <span className="mx-2">·</span>
+              <span className="mx-2">&middot;</span>
               <button
                 onClick={handleLogout}
                 className="text-brand-secondary/40 hover:text-red-500 transition-colors underline underline-offset-2"
@@ -211,22 +201,22 @@ function JoinLandingInner() {
         </div>
       </section>
 
-      {/* Main Content — two-column layout matching cart page */}
-      <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-0 md:px-6 py-2 md:py-16">
-          <div className={`grid gap-2 md:gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
+      {/* Main Content */}
+      <main className="flex-1 pb-24 lg:pb-8">
+        <div className="max-w-7xl mx-auto md:px-6 py-4 md:py-10">
+          <div className={`grid gap-4 md:gap-10 ${hasItems ? 'lg:grid-cols-5' : ''}`}>
 
-            {/* Left Column — Therapy Sections */}
-            <div className={hasItems ? 'lg:col-span-3 space-y-2 md:space-y-10' : 'space-y-2 md:space-y-10'}>
+            {/* Left Column — Therapy Carousels */}
+            <div className={hasItems ? 'lg:col-span-3' : ''}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx]
                 return (
-                  <TherapySectionBlock key={section.title} section={section} Icon={Icon} sectionIdx={sectionIdx} />
+                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} />
                 )
               })}
 
               {/* Medical Disclaimer */}
-              <div className="flex items-start gap-3 py-6 border-t border-brand-secondary/10">
+              <div className="flex items-start gap-3 px-4 md:px-6 py-6 border-t border-brand-secondary/10">
                 <Shield className="w-5 h-5 text-brand-secondary/60 shrink-0 mt-0.5" />
                 <p className="text-xs text-brand-secondary/70 leading-relaxed">
                   <span className="font-semibold text-brand-primary">Medical Disclaimer:</span>{' '}
@@ -237,7 +227,7 @@ function JoinLandingInner() {
               </div>
             </div>
 
-            {/* Right Column — Sticky Cart Summary, only visible when items in cart */}
+            {/* Right Column — Sticky Cart Summary (desktop only) */}
             {hasItems && (
               <div className="lg:col-span-2 hidden lg:block">
                 <div className="sticky top-8">
@@ -251,7 +241,7 @@ function JoinLandingInner() {
 
       {/* Mobile Cart Bar — fixed bottom */}
       {cart.getItemCount() > 0 && !showMobileCart && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-brand-primary border-t border-white/10 px-4 py-3 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-brand-primary/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 safe-area-bottom">
           <button
             onClick={() => setShowMobileCart(true)}
             className="w-full flex items-center justify-between"
@@ -271,6 +261,80 @@ function JoinLandingInner() {
       {showMobileCart && (
         <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} />
       )}
+    </div>
+  )
+}
+
+// =============================================
+// THERAPY CAROUSEL SECTION
+// =============================================
+
+function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection; Icon: typeof Flame }) {
+  const cart = useJoinCart()
+
+  const cards = section.therapies.map((therapy, index) => {
+    const inCart = cart.isInCart(therapy.id)
+    const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
+
+    const handleAdd = () => {
+      if (inCart && cartItem) {
+        cart.updateQuantity(therapy.id, cartItem.quantity + 1)
+      } else {
+        cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
+      }
+    }
+
+    const cardData: CarouselCard = {
+      src: therapy.image || '',
+      title: therapy.name,
+      category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
+      price: therapy.price !== null ? `$${therapy.price.toFixed(0)}` : therapy.pricingNote || 'TBD',
+      note: therapy.note,
+      content: (
+        <div className="space-y-3">
+          <p className="text-sm text-brand-secondary/70 leading-relaxed">{therapy.description}</p>
+          {therapy.bundleWith && (() => {
+            const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
+            return partner ? (
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-forest bg-sage/30 px-3 py-1.5 rounded-full">
+                <Tag className="w-3.5 h-3.5" />
+                10% off when bundled with {partner.name}
+              </div>
+            ) : null
+          })()}
+        </div>
+      ),
+    }
+
+    return (
+      <Card
+        key={therapy.id}
+        card={cardData}
+        index={index}
+        onAdd={handleAdd}
+        inCart={inCart}
+        cartQty={cartItem?.quantity}
+      />
+    )
+  })
+
+  return (
+    <div className="py-2 md:py-4">
+      {/* Section header */}
+      <div className="flex items-center gap-2.5 px-4 md:px-6 mb-1">
+        <div className="w-7 h-7 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
+          <Icon className="w-3.5 h-3.5 text-brand-primary" />
+        </div>
+        <div>
+          <h2 className="text-lg md:text-xl font-display font-bold text-brand-primary leading-tight">
+            {section.title}
+          </h2>
+          <p className="text-[11px] md:text-xs text-brand-secondary/40">{section.subtitle}</p>
+        </div>
+      </div>
+
+      {/* Apple Cards Carousel */}
+      <Carousel items={cards} />
     </div>
   )
 }
@@ -443,7 +507,6 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
         setLoading(false)
         return
       }
-      // Clear the "has ordered" flag on successful re-auth
       localStorage.removeItem('cultr_club_has_ordered')
       onComplete(data)
     } catch {
@@ -455,7 +518,6 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: 'rgba(42,69,66,0.6)', backdropFilter: 'blur(12px)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-brand-secondary/10">
-        {/* Logo */}
         <div className="pt-10 pb-5 grad-dark-glow flex flex-col items-center justify-center relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #FCFBF7 0%, transparent 70%)' }} />
           <div className="flex flex-col items-end leading-none relative z-10">
@@ -494,163 +556,8 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
   )
 }
 
-
 // =============================================
-// THERAPY SECTION (matches therapies page exactly)
-// =============================================
-
-function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
-  return (
-    <div className="pb-1 md:pb-4">
-      <div className="flex items-center gap-2 mb-0.5 px-4 md:px-8">
-        <div className="w-6 h-6 rounded-md bg-brand-primary/[0.06] flex items-center justify-center">
-          <Icon className="w-3 h-3 text-brand-primary" />
-        </div>
-        <h2 className="text-sm md:text-xl font-display font-bold text-brand-primary">
-          {section.title}
-        </h2>
-      </div>
-
-      {/* Mobile — Apple Cards Carousel */}
-      <div className="md:hidden">
-        <MobileCarouselSection therapies={section.therapies} />
-      </div>
-
-      {/* Desktop grid */}
-      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 px-8">
-        {section.therapies.map((therapy) => (
-          <div key={therapy.id}>
-            <TherapyCard therapy={therapy} />
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function MobileCarouselSection({ therapies }: { therapies: JoinTherapy[] }) {
-  const cart = useJoinCart()
-
-  const cards = therapies.map((therapy, index) => {
-    const inCart = cart.isInCart(therapy.id)
-    const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
-
-    const handleAdd = () => {
-      if (inCart && cartItem) {
-        cart.updateQuantity(therapy.id, cartItem.quantity + 1)
-      } else {
-        cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
-      }
-    }
-
-    return (
-      <Card
-        key={therapy.id}
-        card={{
-          src: therapy.image || '',
-          title: therapy.name,
-          category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
-          price: therapy.price !== null ? `$${therapy.price.toFixed(0)}` : therapy.pricingNote || 'TBD',
-          note: therapy.note,
-        }}
-        index={index}
-        onAdd={handleAdd}
-        inCart={inCart}
-        cartQty={cartItem?.quantity}
-      />
-    )
-  })
-
-  return <Carousel items={cards} />
-}
-
-// =============================================
-// THERAPY CARD — desktop grid
-// =============================================
-
-function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
-  const cart = useJoinCart()
-  const inCart = cart.isInCart(therapy.id)
-  const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
-
-  function handleAdd() {
-    if (inCart && cartItem) {
-      cart.updateQuantity(therapy.id, cartItem.quantity + 1)
-    } else {
-      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
-    }
-  }
-
-  const showImage = !!therapy.image
-
-  return (
-    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white shadow-sm overflow-hidden flex flex-col">
-      {/* Image */}
-      <div className="w-full aspect-[4/3] bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center p-6">
-        {showImage && (
-          <Image
-            src={therapy.image}
-            alt={therapy.name}
-            width={200}
-            height={200}
-            className="object-contain max-h-full"
-            loading="lazy"
-            quality={85}
-          />
-        )}
-      </div>
-
-      {/* Details */}
-      <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-base font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
-
-        {therapy.note && (
-          <p className="text-[11px] text-brand-secondary/45 font-medium mt-1">{therapy.note}</p>
-        )}
-
-        <p className="text-xs text-brand-secondary/55 leading-relaxed mt-2 line-clamp-3 flex-1">{therapy.description}</p>
-
-        {therapy.bundleWith && (() => {
-          const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
-          return partner ? (
-            <div className="inline-flex items-center gap-1 text-[10px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mt-2 self-start">
-              <Tag className="w-3 h-3" />
-              10% off w/ {partner.name}
-            </div>
-          ) : null
-        })()}
-
-        {/* Price + Add */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-brand-secondary/8">
-          {therapy.price !== null ? (
-            <span className="text-lg font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
-          ) : (
-            <span className="text-xs font-medium text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
-          )}
-          {inCart && cartItem ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-brand-primary/60 flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" />
-                In cart ({cartItem.quantity})
-              </span>
-              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors">
-              <Plus className="w-4 h-4" />
-              Add
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// =============================================
-// CART SUMMARY PANEL (matches CartClient right column)
+// CART SUMMARY PANEL
 // =============================================
 
 function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | null; onOrderSubmitted: () => void }) {
@@ -766,7 +673,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
                   <div className="flex items-center gap-2 text-sm text-green-700">
                     <Tag className="w-3.5 h-3.5" />
                     <span className="font-medium">{appliedCoupon.code}</span>
-                    <span className="text-green-600">— {appliedCoupon.discount}% off</span>
+                    <span className="text-green-600">&mdash; {appliedCoupon.discount}% off</span>
                   </div>
                   <button onClick={handleRemoveCoupon} className="text-green-500 hover:text-green-700 transition-colors">
                     <X className="w-3.5 h-3.5" />
@@ -813,7 +720,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
                   </div>
                   <div className="flex justify-between text-sm text-green-600">
                     <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
-                    <span>−${discountAmt.toFixed(2)}</span>
+                    <span>&minus;${discountAmt.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-brand-secondary/60">
                     <span>Sales Tax (7.5%)</span>
