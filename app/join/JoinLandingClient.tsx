@@ -166,8 +166,8 @@ function JoinLandingInner() {
         </div>
       )}
 
-      {/* Hero Banner — Media kit style with overlay text */}
-      <section className="relative aspect-[2/1] md:aspect-[3/1] overflow-hidden bg-gray-200">
+      {/* Hero Banner */}
+      <section className="relative aspect-[4/3] md:aspect-[3/1] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
@@ -175,43 +175,39 @@ function JoinLandingInner() {
         />
       </section>
 
-      {/* Slogan banner — below the fold */}
-      <section className="bg-brand-primary px-6 py-5 md:py-7 text-center">
-        <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight leading-tight">
+      {/* Slogan banner */}
+      <section className="bg-brand-primary px-6 py-6 md:py-8 text-center">
+        <h1 className="font-body text-xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight leading-tight">
           Change the <span className="font-display">CULTR</span>.<br />
           <span className="italic text-sage">rebrand</span> Yourself.
         </h1>
-        <p className="mt-3 text-xs md:text-sm text-white/60 max-w-2xl mx-auto">
-          HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
+        <p className="mt-2 text-[11px] md:text-sm text-white/50 max-w-2xl mx-auto">
+          HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization.
         </p>
       </section>
 
-      {/* Hero Copy Section — Text in dedicated white section below banner */}
-      <section className="px-6 py-8 md:px-8 md:py-12 bg-brand-cream border-b border-brand-secondary/8">
+      {/* Section header + welcome */}
+      <section className="px-6 py-5 md:px-8 md:py-10 bg-brand-cream border-b border-brand-secondary/8">
         <div className="max-w-3xl mx-auto">
-          <ScrollReveal direction="none" duration={800}>
-            <p className="text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-3">Browse & Build Your Stack</p>
-            <h1 className="text-3xl md:text-5xl font-display font-bold leading-tight text-brand-primary mb-3">
-              Core Therapies
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-base md:text-lg text-brand-secondary/75 leading-relaxed">
-              Add therapies to your cart and submit your order for CULTR team review.
+          <p className="text-[10px] md:text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-1">Browse & Build Your Stack</p>
+          <h2 className="text-2xl md:text-4xl font-display font-bold text-brand-primary mb-1">
+            Core Therapies
+          </h2>
+          <p className="text-sm md:text-base text-brand-secondary/60">
+            Add therapies to your cart and submit your order for <span className="font-display">CULTR</span> team review.
+          </p>
+          {member && (
+            <p className="mt-2 text-sm text-brand-secondary/50 font-medium">
+              Welcome, {member.firstName}
+              <span className="mx-2">·</span>
+              <button
+                onClick={handleLogout}
+                className="text-brand-secondary/40 hover:text-red-500 transition-colors underline underline-offset-2"
+              >
+                Log out
+              </button>
             </p>
-            {member && (
-              <p className="mt-3 text-sm text-brand-secondary/50 font-medium">
-                Welcome, {member.firstName}
-                <span className="mx-2">·</span>
-                <button
-                  onClick={handleLogout}
-                  className="text-brand-secondary/40 hover:text-red-500 transition-colors underline underline-offset-2"
-                >
-                  Log out
-                </button>
-              </p>
-            )}
-          </ScrollReveal>
+          )}
         </div>
       </section>
 
@@ -613,67 +609,66 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const showImage = !!therapy.image
 
   return (
-    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white p-4 flex flex-col shadow-sm">
-      {/* Image */}
-      <div className="w-full aspect-square rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center mb-3">
+    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white shadow-sm overflow-hidden flex flex-row md:flex-col">
+      {/* Image — left on mobile, top on desktop */}
+      <div className="w-28 shrink-0 md:w-full md:aspect-square bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center p-3 md:p-6">
         {showImage && (
           <Image
             src={therapy.image}
             alt={therapy.name}
-            width={220}
-            height={220}
-            className="object-contain max-w-full h-auto"
+            width={200}
+            height={200}
+            className="object-contain w-full h-full"
             loading="lazy"
             quality={85}
           />
         )}
       </div>
 
-      {/* Name */}
-      <h3 className="text-sm font-display font-bold text-brand-primary mb-1">{therapy.name}</h3>
+      {/* Details — right on mobile, bottom on desktop */}
+      <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
+        <h3 className="text-sm font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
 
-      {/* Dosage note */}
-      {therapy.note && (
-        <p className="text-[10px] text-brand-secondary/50 font-medium mb-2">{therapy.note}</p>
-      )}
-
-      {/* Description */}
-      <p className="text-[11px] text-brand-secondary/60 leading-relaxed mb-3 flex-1 line-clamp-3">{therapy.description}</p>
-
-      {/* Bundle badge */}
-      {therapy.bundleWith && (() => {
-        const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
-        return partner ? (
-          <div className="inline-flex items-center gap-1 text-[10px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mb-3">
-            <Tag className="w-3 h-3" />
-            10% off with {partner.name}
-          </div>
-        ) : null
-      })()}
-
-      {/* Price + Add */}
-      <div className="flex items-center justify-between mt-auto pt-2 border-t border-brand-secondary/8">
-        {therapy.price !== null ? (
-          <span className="text-base font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
-        ) : (
-          <span className="text-xs font-medium text-brand-secondary/60">{therapy.pricingNote || 'Consult'}</span>
+        {therapy.note && (
+          <p className="text-[10px] text-brand-secondary/45 font-medium mt-0.5">{therapy.note}</p>
         )}
-        {inCart && cartItem ? (
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-brand-primary/60 flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              ({cartItem.quantity})
-            </span>
-            <button onClick={handleAdd} className="p-1.5 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+
+        <p className="text-[11px] text-brand-secondary/55 leading-relaxed mt-1.5 line-clamp-2 md:line-clamp-3 flex-1">{therapy.description}</p>
+
+        {therapy.bundleWith && (() => {
+          const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
+          return partner ? (
+            <div className="inline-flex items-center gap-1 text-[9px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mt-1.5 self-start">
+              <Tag className="w-2.5 h-2.5" />
+              10% off w/ {partner.name}
+            </div>
+          ) : null
+        })()}
+
+        {/* Price + Add */}
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-brand-secondary/8">
+          {therapy.price !== null ? (
+            <span className="text-base font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+          ) : (
+            <span className="text-[11px] font-medium text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
+          )}
+          {inCart && cartItem ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-brand-primary/60 flex items-center gap-1">
+                <Check className="w-3 h-3" />
+                ({cartItem.quantity})
+              </span>
+              <button onClick={handleAdd} className="p-1.5 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleAdd} className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white text-xs rounded-full hover:bg-brand-primaryHover transition-colors">
               <Plus className="w-3.5 h-3.5" />
+              Add
             </button>
-          </div>
-        ) : (
-          <button onClick={handleAdd} className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white text-xs rounded-full hover:bg-brand-primaryHover transition-colors">
-            <Plus className="w-3.5 h-3.5" />
-            {therapy.price !== null ? 'Add' : 'Request'}
-          </button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )
