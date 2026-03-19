@@ -171,7 +171,7 @@ function JoinLandingInner() {
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-[center_5%]"
+          className="w-full h-full object-cover object-[center_30%]"
         />
       </section>
 
@@ -624,7 +624,17 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
             </div>
           )}
 
-          <p className="text-xs text-brand-secondary/70 leading-relaxed mb-4 flex-1">{therapy.description}</p>
+          <p className="text-xs text-brand-secondary/70 leading-relaxed mb-3 flex-1">{therapy.description}</p>
+
+          {therapy.bundleWith && (() => {
+            const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
+            return partner ? (
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-forest bg-sage/30 px-2.5 py-1 rounded-full mb-3">
+                <Tag className="w-3 h-3" />
+                10% off with {partner.name}
+              </div>
+            ) : null
+          })()}
 
           {/* Hover tooltip — hidden on touch/mobile */}
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20 hidden md:block">
