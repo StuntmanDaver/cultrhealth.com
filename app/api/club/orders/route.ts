@@ -97,7 +97,7 @@ export async function POST(request: Request) {
               ${name.trim()},
               ${normalizedEmail},
               ${phone?.trim() || null},
-              ${JSON.stringify({ items, bundleDiscount: bundleDiscountAmount })},
+              ${JSON.stringify(items)},
               ${subtotal > 0 ? subtotal : null},
               ${notes || null},
               'pending_approval',

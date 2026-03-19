@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react'
 import { calculateBundleDiscount } from '@/lib/config/join-therapies'
 
 // =============================================
