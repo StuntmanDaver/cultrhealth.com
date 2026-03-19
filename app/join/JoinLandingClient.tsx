@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
@@ -495,6 +495,21 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // =============================================
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
+  const [active, setActive] = useState(0)
+  const startX = useRef(0)
+  const total = section.therapies.length
+
+  const go = useCallback((i: number) => setActive(Math.max(0, Math.min(i, total - 1))), [total])
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX
+  }, [])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const diff = startX.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) go(diff > 0 ? active + 1 : active - 1)
+  }, [active, go])
+
   return (
     <div className="pb-4">
       <div className="flex items-center gap-2.5 mb-3 px-5 md:px-8">
@@ -504,14 +519,36 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
         <h2 className="text-base md:text-xl font-display font-bold text-brand-primary">
           {section.title}
         </h2>
+        {/* Counter */}
+        <span className="md:hidden ml-auto text-[10px] text-brand-secondary/40 font-medium">{active + 1}/{total}</span>
       </div>
 
-      {/* Mobile — horizontal carousel */}
-      <div className="md:hidden flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2 snap-x snap-mandatory">
-        {section.therapies.map((therapy) => (
-          <div key={therapy.id} className="snap-start shrink-0 w-[140px]">
-            <MobileTherapyCard therapy={therapy} />
-          </div>
+      {/* Mobile — locked carousel */}
+      <div
+        className="md:hidden overflow-hidden touch-pan-y mx-5"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="flex transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${active * 100}%)` }}
+        >
+          {section.therapies.map((therapy) => (
+            <div key={therapy.id} className="w-full shrink-0 px-2">
+              <MobileTherapyCard therapy={therapy} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dots */}
+      <div className="md:hidden flex justify-center gap-1.5 mt-2.5">
+        {section.therapies.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => go(i)}
+            className={`h-1.5 rounded-full transition-all ${i === active ? 'w-5 bg-brand-primary' : 'w-1.5 bg-brand-secondary/15'}`}
+          />
         ))}
       </div>
 
