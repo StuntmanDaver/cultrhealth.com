@@ -506,10 +506,12 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
         </h2>
       </div>
 
-      {/* Mobile — compact list */}
-      <div className="md:hidden space-y-2 px-4">
+      {/* Mobile — horizontal carousel */}
+      <div className="md:hidden flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-2 snap-x snap-mandatory">
         {section.therapies.map((therapy) => (
-          <MobileTherapyRow key={therapy.id} therapy={therapy} />
+          <div key={therapy.id} className="snap-start shrink-0 w-[140px]">
+            <MobileTherapyCard therapy={therapy} />
+          </div>
         ))}
       </div>
 
@@ -529,7 +531,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
 // MOBILE THERAPY ROW — compact card for iPhone
 // =============================================
 
-function MobileTherapyRow({ therapy }: { therapy: JoinTherapy }) {
+function MobileTherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const cart = useJoinCart()
   const inCart = cart.isInCart(therapy.id)
   const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
@@ -543,15 +545,15 @@ function MobileTherapyRow({ therapy }: { therapy: JoinTherapy }) {
   }
 
   return (
-    <div className="flex items-center gap-3 bg-white rounded-xl border border-brand-secondary/8 p-3 shadow-sm">
-      {/* Thumbnail */}
-      <div className="w-16 h-16 shrink-0 rounded-lg bg-brand-cream flex items-center justify-center overflow-hidden">
+    <div className="h-full bg-white rounded-xl border border-brand-secondary/8 shadow-sm overflow-hidden flex flex-col">
+      {/* Image */}
+      <div className="w-full aspect-square bg-brand-cream flex items-center justify-center p-3">
         {therapy.image && (
           <Image
             src={therapy.image}
             alt={therapy.name}
-            width={56}
-            height={56}
+            width={100}
+            height={100}
             className="object-contain"
             loading="lazy"
             quality={80}
@@ -560,36 +562,29 @@ function MobileTherapyRow({ therapy }: { therapy: JoinTherapy }) {
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-display font-bold text-brand-primary leading-tight truncate">{therapy.name}</h3>
+      <div className="p-2.5 flex flex-col flex-1">
+        <h3 className="text-[11px] font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
         {therapy.note && (
-          <p className="text-[10px] text-brand-secondary/40 mt-0.5 truncate">{therapy.note}</p>
+          <p className="text-[9px] text-brand-secondary/40 mt-0.5 leading-tight">{therapy.note}</p>
         )}
-        <div className="flex items-center gap-2 mt-1">
+
+        <div className="flex items-center justify-between mt-auto pt-2">
           {therapy.price !== null ? (
-            <span className="text-sm font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+            <span className="text-xs font-display font-bold text-brand-primary">${therapy.price.toFixed(0)}</span>
           ) : (
-            <span className="text-[11px] text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
+            <span className="text-[9px] text-brand-secondary/50">{therapy.pricingNote || 'TBD'}</span>
           )}
-          {therapy.bundleWith && (
-            <span className="text-[9px] text-forest bg-sage/30 px-1.5 py-0.5 rounded-full font-medium">Bundle</span>
+          {inCart && cartItem ? (
+            <button onClick={handleAdd} className="w-7 h-7 flex items-center justify-center bg-brand-primary text-white rounded-full text-[10px] font-bold">
+              {cartItem.quantity}+
+            </button>
+          ) : (
+            <button onClick={handleAdd} className="w-7 h-7 flex items-center justify-center bg-brand-primary text-white rounded-full">
+              <Plus className="w-3.5 h-3.5" />
+            </button>
           )}
         </div>
       </div>
-
-      {/* Add button */}
-      {inCart && cartItem ? (
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[10px] text-brand-primary/50">({cartItem.quantity})</span>
-          <button onClick={handleAdd} className="w-9 h-9 flex items-center justify-center bg-brand-primary text-white rounded-full">
-            <Plus className="w-4 h-4" />
-          </button>
-        </div>
-      ) : (
-        <button onClick={handleAdd} className="w-9 h-9 flex items-center justify-center bg-brand-primary text-white rounded-full shrink-0">
-          <Plus className="w-4 h-4" />
-        </button>
-      )}
     </div>
   )
 }
