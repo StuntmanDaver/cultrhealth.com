@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import {
-  ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, ChevronLeft, Check,
+  ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
   Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
@@ -495,86 +495,22 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // =============================================
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
-  const [activeIndex, setActiveIndex] = useState(0)
-  const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
-  const total = section.therapies.length
-
-  const goTo = useCallback((idx: number) => {
-    setActiveIndex(Math.max(0, Math.min(idx, total - 1)))
-  }, [total])
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX
-  }, [])
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    touchEndX.current = e.changedTouches[0].clientX
-    const diff = touchStartX.current - touchEndX.current
-    if (Math.abs(diff) > 50) {
-      goTo(diff > 0 ? activeIndex + 1 : activeIndex - 1)
-    }
-  }, [activeIndex, goTo])
-
   return (
-    <div className="pb-6">
-      <ScrollReveal className="mb-4 px-6 md:px-8">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
-            <Icon className="w-4 h-4 text-brand-primary" />
-          </div>
-          <h2 className="text-lg md:text-xl font-display font-bold text-brand-primary">
-            {section.title}
-          </h2>
+    <div className="pb-4">
+      <div className="flex items-center gap-2.5 mb-3 px-5 md:px-8">
+        <div className="w-7 h-7 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
+          <Icon className="w-3.5 h-3.5 text-brand-primary" />
         </div>
-        <p className="text-xs text-brand-secondary/60 ml-11">{section.subtitle}</p>
-      </ScrollReveal>
+        <h2 className="text-base md:text-xl font-display font-bold text-brand-primary">
+          {section.title}
+        </h2>
+      </div>
 
-      {/* Mobile carousel */}
-      <div className="md:hidden">
-        <div
-          className="relative overflow-hidden mx-6"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div
-            className="flex transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-          >
-            {section.therapies.map((therapy) => (
-              <div key={therapy.id} className="w-full shrink-0 px-1">
-                <TherapyCard therapy={therapy} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Nav arrows + dots */}
-        <div className="flex items-center justify-center gap-4 mt-3 px-6">
-          <button
-            onClick={() => goTo(activeIndex - 1)}
-            disabled={activeIndex === 0}
-            className="p-1.5 rounded-full border border-brand-secondary/15 text-brand-primary disabled:opacity-20 disabled:cursor-default"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex gap-1.5">
-            {section.therapies.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                className={`w-2 h-2 rounded-full transition-colors ${i === activeIndex ? 'bg-brand-primary' : 'bg-brand-secondary/20'}`}
-              />
-            ))}
-          </div>
-          <button
-            onClick={() => goTo(activeIndex + 1)}
-            disabled={activeIndex === total - 1}
-            className="p-1.5 rounded-full border border-brand-secondary/15 text-brand-primary disabled:opacity-20 disabled:cursor-default"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+      {/* Mobile — compact list */}
+      <div className="md:hidden space-y-2 px-4">
+        {section.therapies.map((therapy) => (
+          <MobileTherapyRow key={therapy.id} therapy={therapy} />
+        ))}
       </div>
 
       {/* Desktop grid */}
@@ -585,6 +521,75 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// =============================================
+// MOBILE THERAPY ROW — compact card for iPhone
+// =============================================
+
+function MobileTherapyRow({ therapy }: { therapy: JoinTherapy }) {
+  const cart = useJoinCart()
+  const inCart = cart.isInCart(therapy.id)
+  const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
+
+  function handleAdd() {
+    if (inCart && cartItem) {
+      cart.updateQuantity(therapy.id, cartItem.quantity + 1)
+    } else {
+      cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-3 bg-white rounded-xl border border-brand-secondary/8 p-3 shadow-sm">
+      {/* Thumbnail */}
+      <div className="w-16 h-16 shrink-0 rounded-lg bg-brand-cream flex items-center justify-center overflow-hidden">
+        {therapy.image && (
+          <Image
+            src={therapy.image}
+            alt={therapy.name}
+            width={56}
+            height={56}
+            className="object-contain"
+            loading="lazy"
+            quality={80}
+          />
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-display font-bold text-brand-primary leading-tight truncate">{therapy.name}</h3>
+        {therapy.note && (
+          <p className="text-[10px] text-brand-secondary/40 mt-0.5 truncate">{therapy.note}</p>
+        )}
+        <div className="flex items-center gap-2 mt-1">
+          {therapy.price !== null ? (
+            <span className="text-sm font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+          ) : (
+            <span className="text-[11px] text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
+          )}
+          {therapy.bundleWith && (
+            <span className="text-[9px] text-forest bg-sage/30 px-1.5 py-0.5 rounded-full font-medium">Bundle</span>
+          )}
+        </div>
+      </div>
+
+      {/* Add button */}
+      {inCart && cartItem ? (
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-[10px] text-brand-primary/50">({cartItem.quantity})</span>
+          <button onClick={handleAdd} className="w-9 h-9 flex items-center justify-center bg-brand-primary text-white rounded-full">
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      ) : (
+        <button onClick={handleAdd} className="w-9 h-9 flex items-center justify-center bg-brand-primary text-white rounded-full shrink-0">
+          <Plus className="w-4 h-4" />
+        </button>
+      )}
     </div>
   )
 }
