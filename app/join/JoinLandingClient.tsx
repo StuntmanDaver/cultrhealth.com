@@ -213,11 +213,11 @@ function JoinLandingInner() {
 
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-0 md:px-6 py-4 md:py-16">
-          <div className={`grid gap-6 md:gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
+        <div className="max-w-7xl mx-auto px-0 md:px-6 py-2 md:py-16">
+          <div className={`grid gap-2 md:gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
 
             {/* Left Column — Therapy Sections */}
-            <div className={hasItems ? 'lg:col-span-3 space-y-6' : 'space-y-6'}>
+            <div className={hasItems ? 'lg:col-span-3 space-y-2 md:space-y-10' : 'space-y-2 md:space-y-10'}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx]
                 return (
@@ -496,12 +496,12 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
   return (
-    <div className="pb-4">
-      <div className="flex items-center gap-2.5 mb-1 px-4 md:px-8">
-        <div className="w-7 h-7 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
-          <Icon className="w-3.5 h-3.5 text-brand-primary" />
+    <div className="pb-1 md:pb-4">
+      <div className="flex items-center gap-2 mb-0.5 px-4 md:px-8">
+        <div className="w-6 h-6 rounded-md bg-brand-primary/[0.06] flex items-center justify-center">
+          <Icon className="w-3 h-3 text-brand-primary" />
         </div>
-        <h2 className="text-base md:text-xl font-display font-bold text-brand-primary">
+        <h2 className="text-sm md:text-xl font-display font-bold text-brand-primary">
           {section.title}
         </h2>
       </div>
