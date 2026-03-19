@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import {
-  ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
+  ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, ChevronLeft, Check,
   Loader2, Stethoscope, Flame, Zap, Shield, Package, ArrowRight, Info, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart, type JoinCartItem } from '@/lib/contexts/JoinCartContext'
@@ -499,6 +499,27 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // =============================================
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
+  const total = section.therapies.length
+
+  const goTo = useCallback((idx: number) => {
+    setActiveIndex(Math.max(0, Math.min(idx, total - 1)))
+  }, [total])
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.changedTouches[0].clientX
+    const diff = touchStartX.current - touchEndX.current
+    if (Math.abs(diff) > 50) {
+      goTo(diff > 0 ? activeIndex + 1 : activeIndex - 1)
+    }
+  }, [activeIndex, goTo])
+
   return (
     <div className="pb-6">
       <ScrollReveal className="mb-4 px-6 md:px-8">
@@ -513,9 +534,57 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
         <p className="text-xs text-brand-secondary/60 ml-11">{section.subtitle}</p>
       </ScrollReveal>
 
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-6 md:px-8 pb-2 snap-x snap-mandatory">
-        {section.therapies.map((therapy, i) => (
-          <div key={therapy.id} className="snap-start shrink-0 w-[260px] md:w-[280px]">
+      {/* Mobile carousel */}
+      <div className="md:hidden">
+        <div
+          className="relative overflow-hidden mx-6"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            className="flex transition-transform duration-300 ease-out"
+            style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+          >
+            {section.therapies.map((therapy) => (
+              <div key={therapy.id} className="w-full shrink-0 px-1">
+                <TherapyCard therapy={therapy} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Nav arrows + dots */}
+        <div className="flex items-center justify-center gap-4 mt-3 px-6">
+          <button
+            onClick={() => goTo(activeIndex - 1)}
+            disabled={activeIndex === 0}
+            className="p-1.5 rounded-full border border-brand-secondary/15 text-brand-primary disabled:opacity-20 disabled:cursor-default"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <div className="flex gap-1.5">
+            {section.therapies.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => goTo(i)}
+                className={`w-2 h-2 rounded-full transition-colors ${i === activeIndex ? 'bg-brand-primary' : 'bg-brand-secondary/20'}`}
+              />
+            ))}
+          </div>
+          <button
+            onClick={() => goTo(activeIndex + 1)}
+            disabled={activeIndex === total - 1}
+            className="p-1.5 rounded-full border border-brand-secondary/15 text-brand-primary disabled:opacity-20 disabled:cursor-default"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Desktop grid */}
+      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 gap-4 px-8">
+        {section.therapies.map((therapy) => (
+          <div key={therapy.id}>
             <TherapyCard therapy={therapy} />
           </div>
         ))}
