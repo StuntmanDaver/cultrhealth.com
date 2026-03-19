@@ -97,7 +97,7 @@ export async function POST(request: Request) {
               ${name.trim()},
               ${normalizedEmail},
               ${phone?.trim() || null},
-              ${JSON.stringify(items)},
+              ${JSON.stringify({ items, bundleDiscount: bundleDiscountAmount })},
               ${subtotal > 0 ? subtotal : null},
               ${notes || null},
               'pending_approval',
@@ -302,12 +302,19 @@ async function sendOrderConfirmationToCustomer(data: {
       </table>
       ${data.subtotalBeforeDiscount > 0 ? `
       <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #DDDFDB;">
-        ${data.discountAmount > 0 ? `
+        ${(data.bundleDiscountAmount > 0 || data.discountAmount > 0) ? `
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
           <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
         </div>
+        ` : ''}
+        ${data.bundleDiscountAmount > 0 ? `
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #16a34a; margin-bottom: 4px;">
-          <span>Discount (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span>−$${data.discountAmount.toFixed(2)}</span>
+          <span>Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%)</span><span>−$${data.bundleDiscountAmount.toFixed(2)}</span>
+        </div>
+        ` : ''}
+        ${data.discountAmount > 0 ? `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #16a34a; margin-bottom: 4px;">
+          <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span>−$${data.discountAmount.toFixed(2)}</span>
         </div>
         ` : ''}
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
@@ -346,6 +353,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   orderId: string
   items: OrderItem[]
   subtotalBeforeDiscount: number
+  bundleDiscountAmount: number
   discountAmount: number
   subtotal: number
   taxAmount: number
@@ -416,8 +424,13 @@ async function sendOrderApprovalRequestToAdmin(data: {
 
     ${data.subtotalBeforeDiscount > 0 ? `
     <div style="margin-bottom: 24px;">
-      ${data.discountAmount > 0 ? `
+      ${(data.bundleDiscountAmount > 0 || data.discountAmount > 0) ? `
       <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
+      ` : ''}
+      ${data.bundleDiscountAmount > 0 ? `
+      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%): &minus;$${data.bundleDiscountAmount.toFixed(2)}</p>
+      ` : ''}
+      ${data.discountAmount > 0 ? `
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.discountAmount.toFixed(2)}</p>
       ` : ''}
       <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
