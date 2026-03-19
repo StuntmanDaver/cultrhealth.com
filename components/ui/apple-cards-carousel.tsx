@@ -23,6 +23,7 @@ export type CarouselCard = {
   price?: string
   note?: string
   description?: string
+  badge?: React.ReactNode
 }
 
 // ─── Context ────────────────────────────────────────────────
@@ -92,12 +93,12 @@ function MobileCarousel({ items }: { items: JSX.Element[] }) {
   const goLeft = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo])
   const goRight = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo])
 
+  // Don't auto-advance on modal close — keep user on same card
   const handleCardClose = useCallback(
     (index: number) => {
-      goTo(Math.min(index + 1, total - 1))
       setCurrentIndex(index)
     },
-    [goTo, total]
+    []
   )
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
@@ -236,12 +237,10 @@ function DesktopCarousel({ items }: { items: JSX.Element[] }) {
     carouselRef.current?.scrollBy({ left: 320, behavior: "smooth" })
   }
 
+  // Keep scroll position when modal closes — don't jump
   const handleCardClose = useCallback(
     (index: number) => {
-      if (carouselRef.current) {
-        carouselRef.current.scrollTo({ left: 320 * (index + 1), behavior: "smooth" })
-        setCurrentIndex(index)
-      }
+      setCurrentIndex(index)
     },
     []
   )
@@ -323,37 +322,45 @@ export const Card = ({
 }) => {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
   const { onCardClose } = useContext(CarouselContext)
 
+  const handleClose = useCallback(() => {
+    setOpen(false)
+    onCardClose(index)
+  }, [onCardClose, index])
+
+  // Only register keydown + manage overflow when modal is open
   useEffect(() => {
+    if (!open) return
+
+    document.body.style.overflow = "hidden"
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") handleClose()
     }
-
-    if (open) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = "auto"
-    }
-
     window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [open])
 
-  useOutsideClick(containerRef, () => handleClose())
+    // Focus close button for keyboard accessibility
+    requestAnimationFrame(() => closeButtonRef.current?.focus())
+
+    return () => {
+      document.body.style.overflow = ""
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [open, handleClose])
+
+  // Only listen for outside clicks when modal is open (deferred to avoid race condition)
+  useOutsideClick(containerRef, handleClose, open)
 
   const handleOpen = () => setOpen(true)
-  const handleClose = () => {
-    setOpen(false)
-    onCardClose(index)
-  }
 
   return (
     <>
       {/* ── Expanded Modal ── */}
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-50 h-screen overflow-auto">
+          <div className="fixed inset-0 z-50 h-screen overflow-auto" role="dialog" aria-modal="true" aria-label={card.title}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -370,8 +377,10 @@ export const Card = ({
               className="relative z-[60] mx-4 my-10 h-fit max-w-lg rounded-3xl bg-white p-6 md:p-8 shadow-2xl md:mx-auto"
             >
               <button
-                className="sticky top-0 z-10 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary/10 hover:bg-brand-primary/20 transition-colors"
+                ref={closeButtonRef}
+                className="sticky top-0 z-10 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary/10 hover:bg-brand-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                 onClick={handleClose}
+                aria-label="Close"
               >
                 <X className="h-4 w-4 text-brand-primary" />
               </button>
@@ -389,7 +398,7 @@ export const Card = ({
               </div>
 
               <motion.p
-                layoutId={layout ? `category-${card.title}` : undefined}
+                layoutId={layout ? `category-${card.category}-${index}` : undefined}
                 className="text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold"
               >
                 {card.category}
@@ -441,10 +450,11 @@ export const Card = ({
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
         whileHover={{ scale: 1.03 }}
+        aria-label={`View details for ${card.title}`}
         whileTap={{ scale: 0.97 }}
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
-          "h-[340px] w-[260px] md:h-[420px] md:w-[300px]",
+          "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
           "shadow-lg transition-shadow duration-300",
           "group cursor-pointer"
@@ -480,14 +490,17 @@ export const Card = ({
               {card.note}
             </span>
           )}
+          {card.badge && (
+            <div className="mt-2">{card.badge}</div>
+          )}
         </div>
 
         {/* Center: Floating Product Image */}
-        <div className="flex-1 relative z-10 flex items-center justify-center px-8 py-2">
+        <div className="flex-1 relative z-10 flex items-center justify-center px-6 py-2">
           <motion.img
             src={card.src}
             alt={card.title}
-            className="max-h-[130px] md:max-h-[160px] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+            className="max-h-[170px] md:max-h-[220px] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
             loading="lazy"
             decoding="async"
             animate={{ y: [0, -6, 0] }}
@@ -499,6 +512,24 @@ export const Card = ({
             }}
           />
         </div>
+
+        {/* Hover Description Overlay (desktop only) */}
+        {card.description && (
+          <div className="absolute inset-0 z-20 rounded-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
+              {card.category}
+            </p>
+            <h4 className="text-lg font-display font-bold text-white mb-2 leading-tight">
+              {card.title}
+            </h4>
+            <p className="text-[13px] text-white/80 leading-relaxed line-clamp-5">
+              {card.description}
+            </p>
+            <span className="mt-3 text-[11px] text-white/40 font-medium">
+              Tap to view details
+            </span>
+          </div>
+        )}
 
         {/* Bottom: Price + Quick Add */}
         <div className="relative z-10 px-5 pb-5 flex items-end justify-between">

@@ -6,7 +6,7 @@ import {
   Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
-import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
 import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
@@ -202,14 +202,14 @@ function JoinLandingInner() {
       </section>
 
       {/* Main Content */}
-      <main className="flex-1 pb-24 lg:pb-8">
+      <main className="flex-1 pb-28 lg:pb-8">
         <div className="max-w-7xl mx-auto md:px-6 py-4 md:py-10">
           <div className={`grid gap-4 md:gap-10 ${hasItems ? 'lg:grid-cols-5' : ''}`}>
 
             {/* Left Column — Therapy Carousels */}
             <div className={hasItems ? 'lg:col-span-3' : ''}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
-                const Icon = SECTION_ICONS[sectionIdx]
+                const Icon = SECTION_ICONS[sectionIdx] || Flame
                 return (
                   <TherapyCarouselSection key={section.title} section={section} Icon={Icon} />
                 )
@@ -290,6 +290,13 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
       category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
       price: therapy.price !== null ? `$${therapy.price.toFixed(0)}` : therapy.pricingNote || 'TBD',
       note: therapy.note,
+      description: therapy.description,
+      badge: therapy.bundleWith ? (
+        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/80 bg-white/[0.12] backdrop-blur-sm px-2.5 py-1 rounded-full">
+          <Tag className="w-3 h-3" />
+          Bundle &amp; save {Math.round(BUNDLE_DISCOUNT_RATE * 100)}%
+        </span>
+      ) : undefined,
       content: (
         <div className="space-y-3">
           <p className="text-sm text-brand-secondary/70 leading-relaxed">{therapy.description}</p>
