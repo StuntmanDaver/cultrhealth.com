@@ -213,11 +213,11 @@ function JoinLandingInner() {
 
       {/* Main Content — two-column layout matching cart page */}
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-16">
-          <div className={`grid gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
+        <div className="max-w-7xl mx-auto px-0 md:px-6 py-4 md:py-16">
+          <div className={`grid gap-6 md:gap-12 ${hasItems ? 'lg:grid-cols-5' : 'lg:grid-cols-1 max-w-4xl mx-auto'}`}>
 
             {/* Left Column — Therapy Sections */}
-            <div className={hasItems ? 'lg:col-span-3 space-y-10' : 'space-y-10'}>
+            <div className={hasItems ? 'lg:col-span-3 space-y-6' : 'space-y-6'}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx]
                 return (
@@ -512,7 +512,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
 
   return (
     <div className="pb-4">
-      <div className="flex items-center gap-2.5 mb-3 px-5 md:px-8">
+      <div className="flex items-center gap-2.5 mb-3 px-4 md:px-8">
         <div className="w-7 h-7 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
           <Icon className="w-3.5 h-3.5 text-brand-primary" />
         </div>
@@ -525,7 +525,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
 
       {/* Mobile — locked carousel */}
       <div
-        className="md:hidden overflow-hidden touch-pan-y mx-5"
+        className="md:hidden overflow-hidden touch-pan-y px-4"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -534,7 +534,7 @@ function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinThera
           style={{ transform: `translateX(-${active * 100}%)` }}
         >
           {section.therapies.map((therapy) => (
-            <div key={therapy.id} className="w-full shrink-0 px-2">
+            <div key={therapy.id} className="w-full shrink-0">
               <MobileTherapyCard therapy={therapy} />
             </div>
           ))}
