@@ -319,14 +319,18 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
         </span>
       ) : undefined,
       content: (
-        <div className="space-y-3">
-          <p className="text-sm text-brand-secondary/70 leading-relaxed">{therapy.description}</p>
+        <div className="space-y-4">
+          <p className="text-[15px] md:text-base text-brand-secondary/80 leading-relaxed">
+            {therapy.description}
+          </p>
           {therapy.bundleWith && (() => {
             const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
             return partner ? (
-              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-forest bg-sage/30 px-3 py-1.5 rounded-full">
-                <Tag className="w-3.5 h-3.5" />
-                10% off when bundled with {partner.name}
+              <div className="flex items-center gap-2 bg-sage/20 border border-sage/30 rounded-xl px-4 py-3">
+                <Tag className="w-4 h-4 text-forest shrink-0" />
+                <span className="text-sm text-forest font-medium">
+                  Save {Math.round(BUNDLE_DISCOUNT_RATE * 100)}% when bundled with {partner.name}
+                </span>
               </div>
             ) : null
           })()}

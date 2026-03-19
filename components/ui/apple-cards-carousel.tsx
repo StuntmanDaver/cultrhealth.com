@@ -357,7 +357,7 @@ export const Card = ({
 
   return (
     <>
-      {/* ── Expanded Modal ── */}
+      {/* ── Expanded Product Detail Modal ── */}
       <AnimatePresence>
         {open && (
           <div className="fixed inset-0 z-50 h-screen overflow-auto" role="dialog" aria-modal="true" aria-label={card.title}>
@@ -368,77 +368,95 @@ export const Card = ({
               className="fixed inset-0 h-full w-full bg-black/60 backdrop-blur-lg"
             />
             <motion.div
-              initial={{ opacity: 0, y: 60 }}
+              initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 60 }}
+              exit={{ opacity: 0, y: 100 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               ref={containerRef}
               layoutId={layout ? `card-${card.title}` : undefined}
-              className="relative z-[60] mx-4 my-10 h-fit max-w-lg rounded-3xl bg-white p-6 md:p-8 shadow-2xl md:mx-auto"
+              className="relative z-[60] mx-3 mt-16 mb-6 h-fit max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden md:mx-auto md:mt-20"
             >
+              {/* Close button — floats over image */}
               <button
                 ref={closeButtonRef}
-                className="sticky top-0 z-10 ml-auto flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary/10 hover:bg-brand-primary/20 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
+                className="absolute top-4 right-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-sm hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary/30"
                 onClick={handleClose}
                 aria-label="Close"
               >
                 <X className="h-4 w-4 text-brand-primary" />
               </button>
 
-              {/* Product image */}
-              <div className="w-full aspect-[4/3] bg-gradient-to-br from-brand-cream via-cream-dark to-brand-cream rounded-2xl flex items-center justify-center my-4">
+              {/* Product image — compact, centered on gradient */}
+              <div className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6 flex items-center justify-center">
                 <motion.img
-                  initial={{ scale: 0.8, opacity: 0 }}
+                  initial={{ scale: 0.85, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
                   src={card.src}
                   alt={card.title}
-                  className="max-h-[200px] object-contain drop-shadow-lg"
+                  className="h-[140px] md:h-[180px] object-contain drop-shadow-lg"
                 />
               </div>
 
-              <motion.p
-                layoutId={layout ? `category-${card.category}-${index}` : undefined}
-                className="text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold"
-              >
-                {card.category}
-              </motion.p>
-              <motion.h3
-                layoutId={layout ? `title-${card.title}` : undefined}
-                className="text-2xl font-display font-bold text-brand-primary mt-1"
-              >
-                {card.title}
-              </motion.h3>
-              {card.note && (
-                <p className="text-sm text-brand-secondary/50 mt-1">{card.note}</p>
-              )}
+              {/* Text content — padded for readability */}
+              <div className="px-6 pt-5 pb-6 md:px-8 md:pt-6 md:pb-8">
+                {/* Category */}
+                <motion.p
+                  layoutId={layout ? `category-${card.category}-${index}` : undefined}
+                  className="text-[11px] uppercase tracking-widest text-brand-secondary/50 font-semibold"
+                >
+                  {card.category}
+                </motion.p>
 
-              <div className="py-6">{card.content}</div>
+                {/* Title */}
+                <motion.h3
+                  layoutId={layout ? `title-${card.title}` : undefined}
+                  className="text-xl md:text-2xl font-display font-bold text-brand-primary mt-1.5"
+                >
+                  {card.title}
+                </motion.h3>
 
-              {/* Price + Add to Cart */}
-              <div className="flex items-center justify-between pt-4 border-t border-brand-secondary/10">
-                {card.price && (
-                  <span className="text-3xl font-display font-bold text-brand-primary">
-                    {card.price}
-                  </span>
+                {/* Dosage / Note pill */}
+                {card.note && (
+                  <p className="inline-block text-xs text-brand-secondary/60 bg-brand-cream rounded-full px-3 py-1 mt-2 font-medium">
+                    {card.note}
+                  </p>
                 )}
-                {onAdd && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onAdd() }}
-                    className={cn(
-                      "flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all",
-                      inCart
-                        ? "bg-sage/30 text-brand-primary"
-                        : "bg-brand-primary text-white hover:bg-brand-primaryHover active:scale-95"
-                    )}
-                  >
-                    {inCart ? (
-                      <><Check className="w-4 h-4" /> Added ({cartQty})</>
+
+                {/* Description — larger text for readability */}
+                <div className="mt-4 border-t border-brand-secondary/8 pt-4">
+                  {card.content}
+                </div>
+
+                {/* Price + Add to Cart — sticky bottom feel */}
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-brand-secondary/10">
+                  <div>
+                    {card.price ? (
+                      <span className="text-2xl md:text-3xl font-display font-bold text-brand-primary">
+                        {card.price}
+                      </span>
                     ) : (
-                      <><Plus className="w-4 h-4" /> Add to Cart</>
+                      <span className="text-sm text-brand-secondary/50 font-medium">Consultation pricing</span>
                     )}
-                  </button>
-                )}
+                  </div>
+                  {onAdd && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAdd() }}
+                      className={cn(
+                        "flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all",
+                        inCart
+                          ? "bg-sage/30 text-brand-primary"
+                          : "bg-brand-primary text-white hover:bg-brand-primaryHover active:scale-95"
+                      )}
+                    >
+                      {inCart ? (
+                        <><Check className="w-4 h-4" /> Added ({cartQty})</>
+                      ) : (
+                        <><Plus className="w-4 h-4" /> Add to Cart</>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
