@@ -167,18 +167,18 @@ function JoinLandingInner() {
       )}
 
       {/* Hero Banner — Media kit style with overlay text */}
-      <section className="relative aspect-[3/2] md:aspect-auto md:h-[55vh] md:min-h-[400px] overflow-hidden bg-gray-200">
+      <section className="relative aspect-[3/2] md:aspect-auto md:h-[35vh] md:min-h-[250px] overflow-hidden bg-gray-200">
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-brand-primary/30" />
-        <div className="absolute inset-0 hidden md:flex flex-col items-center justify-end pb-6 px-4 text-center">
-          <h1 className="font-body text-xl lg:text-2xl text-white font-semibold tracking-tight">
+        <div className="absolute inset-0 hidden md:flex flex-col items-center justify-end pb-8 px-4 text-center">
+          <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
             Change the CULTR. <span className="italic">rebrand</span> Yourself.
           </h1>
-          <p className="mt-1.5 text-xs text-white/70 max-w-xl">
+          <p className="mt-2 text-sm text-white/80 max-w-2xl">
             HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
           </p>
         </div>
