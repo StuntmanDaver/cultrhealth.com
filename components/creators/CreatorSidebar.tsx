@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   Share2,
@@ -13,6 +14,7 @@ import {
   Settings,
   X,
   Megaphone,
+  LogOut,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -59,6 +61,18 @@ interface CreatorSidebarProps {
 
 export function CreatorSidebar({ mobileOpen, onClose }: CreatorSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } catch {
+      // Best-effort
+    }
+    router.replace('/creators/login')
+  }
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -105,13 +119,21 @@ export function CreatorSidebar({ mobileOpen, onClose }: CreatorSidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-stone-200">
+      <div className="p-4 border-t border-stone-200 space-y-3">
         <Link
           href="/"
-          className="text-xs text-cultr-textMuted hover:text-cultr-forest transition-colors"
+          className="block text-xs text-cultr-textMuted hover:text-cultr-forest transition-colors"
         >
           Back to <span className="font-display font-bold">CULTR</span> Health
         </Link>
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="flex items-center gap-2 text-xs text-cultr-textMuted hover:text-red-600 transition-colors disabled:opacity-50"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          {loggingOut ? 'Logging out...' : 'Log Out'}
+        </button>
       </div>
     </div>
   )
