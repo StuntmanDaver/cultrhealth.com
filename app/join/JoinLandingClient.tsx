@@ -174,14 +174,24 @@ function JoinLandingInner() {
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-brand-primary/30" />
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-8 md:pb-10 px-4 text-center">
-          <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight">
-            Change the <span className="font-display">CULTR</span>. <span className="italic">rebrand</span> Yourself.
+        <div className="absolute inset-0 hidden md:flex flex-col items-center justify-end pb-6 px-4 text-center">
+          <h1 className="font-body text-xl lg:text-2xl text-white font-semibold tracking-tight">
+            Change the CULTR. <span className="italic">rebrand</span> Yourself.
           </h1>
-          <p className="mt-2 text-xs md:text-sm text-white/80 max-w-2xl">
+          <p className="mt-1.5 text-xs text-white/70 max-w-xl">
             HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
           </p>
         </div>
+      </section>
+
+      {/* Mobile hero text — below the fold */}
+      <section className="md:hidden px-6 py-6 bg-brand-cream text-center">
+        <h1 className="font-body text-2xl text-brand-primary font-bold tracking-tight">
+          Change the CULTR. <span className="italic">rebrand</span> Yourself.
+        </h1>
+        <p className="mt-2 text-xs text-brand-primary/60 max-w-md mx-auto">
+          HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization — across all states.
+        </p>
       </section>
 
       {/* Hero Copy Section — Text in dedicated white section below banner */}
