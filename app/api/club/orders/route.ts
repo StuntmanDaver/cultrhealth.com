@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
+import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies'
 import { escapeHtml } from '@/lib/resend'
 
 interface OrderItem {
@@ -42,11 +43,15 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase()
 
     // Calculate subtotal (only items with prices)
-    const subtotalBeforeDiscount = items.reduce((sum, item) => {
+    const rawSubtotal = items.reduce((sum, item) => {
       return item.price ? sum + item.price * item.quantity : sum
     }, 0)
-    const discountAmount = discountPercent > 0 ? Math.round(subtotalBeforeDiscount * discountPercent) / 100 : 0
-    const subtotal = subtotalBeforeDiscount - discountAmount
+    // Bundle discount: 10% off items whose bundleWith partner is in the cart
+    const bundleDiscountAmount = calculateBundleDiscount(items)
+    const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
+    // Coupon discount applied after bundle discount
+    const couponDiscountAmount = discountPercent > 0 ? Math.round(subtotalAfterBundle * discountPercent) / 100 : 0
+    const subtotal = subtotalAfterBundle - couponDiscountAmount
     const taxAmount = subtotal > 0 ? calculateTaxDollars(subtotal) : 0
     const total = subtotal + taxAmount
 
@@ -164,8 +169,9 @@ export async function POST(request: Request) {
         email: normalizedEmail,
         orderNumber,
         items,
-        subtotalBeforeDiscount,
-        discountAmount,
+        subtotalBeforeDiscount: rawSubtotal,
+        bundleDiscountAmount,
+        discountAmount: couponDiscountAmount,
         subtotal,
         taxAmount,
         total,
@@ -186,8 +192,9 @@ export async function POST(request: Request) {
         orderNumber,
         orderId: orderId || orderNumber,
         items,
-        subtotalBeforeDiscount,
-        discountAmount,
+        subtotalBeforeDiscount: rawSubtotal,
+        bundleDiscountAmount,
+        discountAmount: couponDiscountAmount,
         subtotal,
         taxAmount,
         total,
@@ -234,6 +241,7 @@ async function sendOrderConfirmationToCustomer(data: {
   orderNumber: string
   items: OrderItem[]
   subtotalBeforeDiscount: number
+  bundleDiscountAmount: number
   discountAmount: number
   subtotal: number
   taxAmount: number

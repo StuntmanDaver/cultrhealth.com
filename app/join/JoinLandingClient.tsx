@@ -649,10 +649,14 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
           <div className="space-y-3 pb-4 border-b border-brand-secondary/10">
             {cart.items.map((item) => {
               const therapy = getAllJoinTherapies().find((t) => t.id === item.therapyId)
+              const isBundleActive = therapy?.bundleWith && cart.isInCart(therapy.bundleWith)
               return (
               <div key={item.therapyId} className="flex justify-between text-sm group/cart relative">
                 <div className="flex items-center gap-2 truncate pr-4">
                   <span className="text-brand-primary/70 truncate cursor-help">{item.name} &times; {item.quantity}</span>
+                  {isBundleActive && (
+                    <span className="text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded shrink-0">Bundle</span>
+                  )}
                   <button onClick={() => cart.removeItem(item.therapyId)} className="text-brand-secondary/30 hover:text-red-500 transition-colors shrink-0">
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -714,21 +718,35 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
 
           {/* Total */}
           <div className="pt-2 pb-4">
-            {appliedCoupon && cart.getCartTotal() > 0 && (() => {
-              const discountAmt = Math.round(cart.getCartTotal() * appliedCoupon.discount) / 100
-              const discountedTotal = cart.getCartTotal() - discountAmt
-              const taxAmt = Math.round(discountedTotal * 0.075 * 100) / 100
-              const finalTotal = discountedTotal + taxAmt
-              return (
+            {(() => {
+              const rawSubtotal = cart.getCartTotal()
+              const bundleDisc = cart.getBundleDiscount()
+              const subtotalAfterBundle = rawSubtotal - bundleDisc
+              const couponAmt = appliedCoupon && subtotalAfterBundle > 0
+                ? Math.round(subtotalAfterBundle * appliedCoupon.discount) / 100
+                : 0
+              const afterCoupon = subtotalAfterBundle - couponAmt
+              const taxAmt = afterCoupon > 0 ? Math.round(afterCoupon * 0.075 * 100) / 100 : 0
+              const finalTotal = afterCoupon + taxAmt
+
+              return rawSubtotal > 0 ? (
                 <div className="space-y-1 mb-1">
                   <div className="flex justify-between text-sm text-brand-secondary/60">
                     <span>Subtotal</span>
-                    <span>${cart.getCartTotal().toFixed(2)}</span>
+                    <span>${rawSubtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-green-600">
-                    <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
-                    <span>&minus;${discountAmt.toFixed(2)}</span>
-                  </div>
+                  {bundleDisc > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Bundle Discount ({Math.round(BUNDLE_DISCOUNT_RATE * 100)}%)</span>
+                      <span>&minus;${bundleDisc.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && couponAmt > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
+                      <span>&minus;${couponAmt.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm text-brand-secondary/60">
                     <span>Sales Tax (7.5%)</span>
                     <span>${taxAmt.toFixed(2)}</span>
@@ -738,30 +756,13 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
                     <span className="text-2xl font-display font-bold text-brand-primary">${finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
-              )
-            })()}
-            {!appliedCoupon && (
-              <div className="space-y-1">
-                {cart.getCartTotal() > 0 && (
-                  <>
-                    <div className="flex justify-between text-sm text-brand-secondary/60">
-                      <span>Subtotal</span>
-                      <span>${cart.getCartTotal().toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-brand-secondary/60">
-                      <span>Sales Tax (7.5%)</span>
-                      <span>${(Math.round(cart.getCartTotal() * 0.075 * 100) / 100).toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
+              ) : (
                 <div className="flex justify-between items-baseline pt-1 border-t border-brand-secondary/10">
                   <span className="text-brand-secondary/70 text-sm font-medium">Total</span>
-                  <span className="text-2xl font-display font-bold text-brand-primary">
-                    {cart.getCartTotal() > 0 ? `$${(cart.getCartTotal() + Math.round(cart.getCartTotal() * 0.075 * 100) / 100).toFixed(2)}` : 'Quote Request'}
-                  </span>
+                  <span className="text-2xl font-display font-bold text-brand-primary">Quote Request</span>
                 </div>
-              </div>
-            )}
+              )
+            })()}
             {cart.hasConsultationItems() && (
               <p className="text-xs text-brand-secondary/50 mt-1">
                 * Some items require consultation pricing. Final total after review.

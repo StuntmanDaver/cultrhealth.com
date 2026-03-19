@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useCallback, useMemo, type ReactNode } from 'react'
+import { calculateBundleDiscount } from '@/lib/config/join-therapies'
 
 // =============================================
 // TYPES
@@ -39,6 +40,8 @@ interface JoinCartContextValue {
   getItemCount: () => number
   isInCart: (therapyId: string) => boolean
   getCartTotal: () => number
+  getBundleDiscount: () => number
+  getSubtotalAfterBundle: () => number
   hasConsultationItems: () => boolean
 }
 
@@ -166,6 +169,14 @@ export function JoinCartProvider({ children }: { children: ReactNode }) {
     return state.items.some((i) => i.price === null)
   }, [state.items])
 
+  const getBundleDiscount = useCallback(() => {
+    return calculateBundleDiscount(state.items)
+  }, [state.items])
+
+  const getSubtotalAfterBundle = useCallback(() => {
+    return getCartTotal() - getBundleDiscount()
+  }, [getCartTotal, getBundleDiscount])
+
   return (
     <JoinCartContext.Provider
       value={{
@@ -178,6 +189,8 @@ export function JoinCartProvider({ children }: { children: ReactNode }) {
         getItemCount,
         isInCart,
         getCartTotal,
+        getBundleDiscount,
+        getSubtotalAfterBundle,
         hasConsultationItems,
       }}
     >

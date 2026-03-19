@@ -182,6 +182,34 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
   },
 ]
 
+/** Bundle discount rate applied when both items in a bundleWith pair are in cart */
+export const BUNDLE_DISCOUNT_RATE = 0.10
+
+/**
+ * Calculate total bundle discount for a set of cart items.
+ * For each item whose bundleWith partner is also in the cart,
+ * applies BUNDLE_DISCOUNT_RATE to that item's (price × quantity).
+ * Only applies to items with non-null prices.
+ * Pure function — works on client and server.
+ */
+export function calculateBundleDiscount(
+  items: Array<{ therapyId: string; price: number | null; quantity: number }>
+): number {
+  const allTherapies = getAllJoinTherapies()
+  const cartIds = new Set(items.map((i) => i.therapyId))
+
+  let discount = 0
+  for (const item of items) {
+    if (item.price === null) continue
+    const therapy = allTherapies.find((t) => t.id === item.therapyId)
+    if (!therapy?.bundleWith) continue
+    if (!cartIds.has(therapy.bundleWith)) continue
+    discount += item.price * item.quantity * BUNDLE_DISCOUNT_RATE
+  }
+
+  return Math.round(discount * 100) / 100
+}
+
 /** Get all therapies as a flat array */
 export function getAllJoinTherapies(): JoinTherapy[] {
   return JOIN_THERAPY_SECTIONS.flatMap((section) => section.therapies)
