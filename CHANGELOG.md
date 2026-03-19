@@ -1,3 +1,85 @@
+## [2026-03-18] - QR Code Scan Tracking & Business Card
+
+### Summary
+Added QR code scan tracking infrastructure for physical business cards. Scans route through `/go/[destination]` → `/api/track/qr-scan` which captures device, browser, OS, geo location, and hashed IP before redirecting. Analytics integrated into admin dashboard with metrics, breakdowns, and recent scans table.
+
+### New Features
+- **QR redirect handler** (`app/go/[destination]/route.ts`): Routes scans through tracking API before redirecting to destination
+- **Scan tracking API** (`app/api/track/qr-scan/route.ts`): Captures device type, browser, OS, geo location (via Vercel headers), and hashed IP for privacy-safe analytics
+- **Admin dashboard analytics** (`app/admin/AdminDashboardClient.tsx`): QR scan metrics section with total scans, device breakdown, and recent scans table
+- **Business card generator** (`scripts/generate-business-card.mjs`): PDF generator using brand fonts (Playfair Display + Inter) with Instagram QR code
+- **Migration 023** (`migrations/023_qr_scans.sql`): `qr_scans` table for scan event storage
+
+### Files Changed (6 files)
+- `app/go/[destination]/route.ts` — New redirect handler
+- `app/api/track/qr-scan/route.ts` — New tracking API endpoint
+- `app/admin/AdminDashboardClient.tsx` — QR analytics section added
+- `migrations/023_qr_scans.sql` — New table
+- `scripts/generate-business-card.mjs` — PDF generator with brand fonts
+- `cultr_business_card.pdf` — Generated business card
+
+---
+
+## [2026-03-18] - Email Security: XSS Prevention in All Email Templates
+
+### Summary
+Added centralized `escapeHtml()` utility to `lib/resend.ts` and applied it across all 7 email-sending API routes. All user-controlled data (names, addresses, item names, coupon codes, phone numbers) is now sanitized before injection into HTML email templates.
+
+### Security Fix
+- **`lib/resend.ts`**: Added `escapeHtml()` function that handles `&`, `<`, `>`, `"`, `'` characters
+- **7 API routes patched**: `club/signup`, `club/orders`, `admin/club-orders/approve`, `creators/apply`, `creators/support/tickets`, `member/consult-request`, `supplement-order`, `webhook/quickbooks`
+
+### Also Added
+- Email client compatibility improvements: `lang` attribute, `color-scheme` meta tags, RGBA → solid hex border colors
+- `sendResultsReadyEmail()` function in `lib/resend.ts` for SiPhox results notification
+
+### Files Changed (8 files)
+- `lib/resend.ts` — `escapeHtml()` utility + `sendResultsReadyEmail()`
+- `app/api/club/signup/route.ts` — Welcome email escaped
+- `app/api/club/orders/route.ts` — Customer + admin emails escaped
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` — Approval email escaped
+- `app/api/creators/apply/route.ts` — Application emails escaped
+- `app/api/creators/support/tickets/route.ts` — Ticket emails escaped
+- `app/api/member/consult-request/route.ts` — Consult emails escaped
+- `app/api/supplement-order/route.ts` — Order emails escaped
+- `app/api/webhook/quickbooks/route.ts` — Payment emails escaped
+
+---
+
+## [2026-03-18] - Phase 04-02 & 04-03: Labs Results UI, Dashboard Widgets & Notification Cron
+
+### Summary
+Completed and deployed SiPhox Labs Dashboard Phases 04-02 (results UI) and 04-03 (dashboard widgets + results notification cron). Members can now view biomarker results organized by body system with color-coded reference ranges, and receive automatic email notifications when new results are processed.
+
+### Phase 04-02: Labs Results UI
+- **`components/portal/LabsResultsView.tsx`**: Full results display with category tabs, biomarker counts, and drill-down navigation
+- **`components/portal/BiomarkerCategoryCard.tsx`**: Category cards showing optimal/attention counts with expandable biomarker lists
+- **`components/portal/BiomarkerDetailModal.tsx`**: Detailed biomarker view with value, status, reference range, and description
+- **`components/portal/ReferenceRangeBar.tsx`**: Color-coded range visualization (green=optimal, yellow=normal, red=high/low)
+- **`app/portal/labs/LabsClient.tsx`**: Integrated results view into labs page
+
+### Phase 04-03: Dashboard Widgets + Notifications
+- **`app/portal/dashboard/DashboardClient.tsx`**: Kit card shows biomarker summary stats (total tested, optimal count, needs attention count) when results are ready; Club tier members see "Upgrade your plan to unlock blood testing" message
+- **`app/api/cron/siphox-results/route.ts`**: Hourly cron job that finds customers with unnotified reports and sends results-ready emails, batch limit 50, CRON_SECRET auth
+- **`lib/siphox/db.ts`**: `getCustomersWithUnnotifiedReports()` and `markResultsNotified()` for dedup tracking
+- **`lib/resend.ts`**: `sendResultsReadyEmail()` with dark theme, biomarker stats row, CTA button
+- **`vercel.json`**: Added cron schedule `0 * * * *`
+- **`migrations/022_siphox_results_notification.sql`**: Adds `last_notified_report_id` + `results_notified_at` columns to `siphox_customers`
+
+### Tests
+- 3 new test files: `BiomarkerCategoryCard.test.tsx`, `BiomarkerDetailModal.test.tsx`, `LabsResultsView.test.tsx`
+- All 570+ tests passing
+
+### Coupon Analytics (also in this deploy)
+- `lib/db.ts`: `getCouponStats()` function for admin analytics
+- `app/api/admin/analytics/route.ts`: Wired coupon stats into analytics API
+- `app/admin/AdminDashboardClient.tsx`: Coupon performance metrics with creator attribution display
+
+### Files Changed (31 files)
+- 21 modified, 10 new files — see commit `551a603` for full diff
+
+---
+
 ## [2026-03-17] - Admin Coupon Analytics: Bug Fixes & Creator Attribution
 
 ### Summary
