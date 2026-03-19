@@ -609,62 +609,62 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const showImage = !!therapy.image
 
   return (
-    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white shadow-sm overflow-hidden flex flex-row md:flex-col">
-      {/* Image — left on mobile, top on desktop */}
-      <div className="w-28 shrink-0 md:w-full md:aspect-square bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center p-3 md:p-6">
+    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white shadow-sm overflow-hidden flex flex-col">
+      {/* Image */}
+      <div className="w-full aspect-[4/3] bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center p-6">
         {showImage && (
           <Image
             src={therapy.image}
             alt={therapy.name}
             width={200}
             height={200}
-            className="object-contain w-full h-full"
+            className="object-contain max-h-full"
             loading="lazy"
             quality={85}
           />
         )}
       </div>
 
-      {/* Details — right on mobile, bottom on desktop */}
-      <div className="flex-1 p-3 md:p-4 flex flex-col min-w-0">
-        <h3 className="text-sm font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
+      {/* Details */}
+      <div className="p-4 flex flex-col flex-1">
+        <h3 className="text-base font-display font-bold text-brand-primary leading-tight">{therapy.name}</h3>
 
         {therapy.note && (
-          <p className="text-[10px] text-brand-secondary/45 font-medium mt-0.5">{therapy.note}</p>
+          <p className="text-[11px] text-brand-secondary/45 font-medium mt-1">{therapy.note}</p>
         )}
 
-        <p className="text-[11px] text-brand-secondary/55 leading-relaxed mt-1.5 line-clamp-2 md:line-clamp-3 flex-1">{therapy.description}</p>
+        <p className="text-xs text-brand-secondary/55 leading-relaxed mt-2 line-clamp-3 flex-1">{therapy.description}</p>
 
         {therapy.bundleWith && (() => {
           const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
           return partner ? (
-            <div className="inline-flex items-center gap-1 text-[9px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mt-1.5 self-start">
-              <Tag className="w-2.5 h-2.5" />
+            <div className="inline-flex items-center gap-1 text-[10px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mt-2 self-start">
+              <Tag className="w-3 h-3" />
               10% off w/ {partner.name}
             </div>
           ) : null
         })()}
 
         {/* Price + Add */}
-        <div className="flex items-center justify-between mt-2 pt-2 border-t border-brand-secondary/8">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-brand-secondary/8">
           {therapy.price !== null ? (
-            <span className="text-base font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+            <span className="text-lg font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
           ) : (
-            <span className="text-[11px] font-medium text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
+            <span className="text-xs font-medium text-brand-secondary/50">{therapy.pricingNote || 'Consult'}</span>
           )}
           {inCart && cartItem ? (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-brand-primary/60 flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                ({cartItem.quantity})
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-brand-primary/60 flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" />
+                In cart ({cartItem.quantity})
               </span>
-              <button onClick={handleAdd} className="p-1.5 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
-                <Plus className="w-3.5 h-3.5" />
+              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+                <Plus className="w-4 h-4" />
               </button>
             </div>
           ) : (
-            <button onClick={handleAdd} className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white text-xs rounded-full hover:bg-brand-primaryHover transition-colors">
-              <Plus className="w-3.5 h-3.5" />
+            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors">
+              <Plus className="w-4 h-4" />
               Add
             </button>
           )}
