@@ -249,18 +249,23 @@ function JoinLandingInner() {
         </div>
       </main>
 
-      {/* Mobile Cart FAB — Reserve space even when not visible to prevent layout shift */}
-      <div className="fixed bottom-6 right-6 lg:hidden z-40 h-[52px] flex items-center">
-        {cart.getItemCount() > 0 && !showMobileCart && (
+      {/* Mobile Cart Bar — fixed bottom */}
+      {cart.getItemCount() > 0 && !showMobileCart && (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-brand-primary border-t border-white/10 px-4 py-3 safe-area-bottom">
           <button
             onClick={() => setShowMobileCart(true)}
-            className="flex items-center gap-2.5 px-5 py-3.5 bg-brand-primary text-white rounded-full shadow-lg hover:bg-brand-primaryHover transition-all hover:scale-[1.02] border border-white/10"
+            className="w-full flex items-center justify-between"
           >
-            <ShoppingCart className="w-5 h-5" />
-            <span className="font-bold text-sm">{cart.getItemCount()} items</span>
+            <div className="flex items-center gap-2.5">
+              <ShoppingCart className="w-5 h-5 text-white" />
+              <span className="font-bold text-sm text-white">{cart.getItemCount()} {cart.getItemCount() === 1 ? 'item' : 'items'} in cart</span>
+            </div>
+            <span className="bg-white text-brand-primary font-bold text-sm px-4 py-2 rounded-full">
+              Checkout
+            </span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Mobile Cart Full-Screen Overlay */}
       {showMobileCart && (

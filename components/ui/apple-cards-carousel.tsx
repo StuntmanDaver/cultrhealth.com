@@ -42,8 +42,8 @@ export function Carousel({ items }: CarouselProps) {
         </div>
       </div>
 
-      {/* Dots */}
-      <div className="flex justify-center gap-1 mt-1.5">
+      {/* Dots + swipe hint */}
+      <div className="flex items-center justify-center gap-1 mt-1.5">
         {items.map((_, i) => (
           <button
             key={i}
@@ -54,6 +54,7 @@ export function Carousel({ items }: CarouselProps) {
             )}
           />
         ))}
+        <span className="text-[9px] text-brand-secondary/30 ml-2">{active + 1}/{total} — swipe</span>
       </div>
     </div>
   )
