@@ -1,48 +1,59 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
+import React, { useState, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
 
 interface CarouselProps {
   items: React.ReactNode[]
-  initialScroll?: number
 }
 
-export function Carousel({ items, initialScroll = 0 }: CarouselProps) {
-  const carouselRef = useRef<HTMLDivElement>(null)
+export function Carousel({ items }: CarouselProps) {
+  const [active, setActive] = useState(0)
+  const startX = useRef(0)
+  const total = items.length
 
-  useEffect(() => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollLeft = initialScroll
-    }
-  }, [initialScroll])
+  const go = useCallback((i: number) => setActive(Math.max(0, Math.min(i, total - 1))), [total])
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX
+  }, [])
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const diff = startX.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) go(diff > 0 ? active + 1 : active - 1)
+  }, [active, go])
 
   return (
-    <div className="relative w-full">
+    <div>
       <div
-        className="flex w-full overflow-x-scroll overscroll-x-auto scroll-smooth py-2 scrollbar-hide"
-        ref={carouselRef}
+        className="overflow-hidden touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
-        <div className="flex flex-row justify-start gap-2.5 pl-4 pr-6">
+        <div
+          className="flex transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${active * 100}%)` }}
+        >
           {items.map((item, index) => (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{
-                opacity: 1,
-                x: 0,
-                transition: {
-                  duration: 0.4,
-                  delay: 0.06 * index,
-                  ease: "easeOut",
-                },
-              }}
-              key={"card" + index}
-            >
+            <div key={index} className="w-full shrink-0 px-1">
               {item}
-            </motion.div>
+            </div>
           ))}
         </div>
+      </div>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-1 mt-1.5">
+        {items.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => go(i)}
+            className={cn(
+              "h-1 rounded-full transition-all",
+              i === active ? "w-4 bg-brand-primary" : "w-1 bg-brand-secondary/15"
+            )}
+          />
+        ))}
       </div>
     </div>
   )
@@ -64,9 +75,9 @@ interface CardProps {
 
 export function Card({ card, index, onAdd, inCart, cartQty }: CardProps) {
   return (
-    <div className="rounded-xl bg-white border border-brand-secondary/10 shadow-sm w-[280px] overflow-hidden shrink-0 flex flex-row h-[110px]">
-      {/* Image — left side */}
-      <div className="w-[100px] shrink-0 bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center p-2.5">
+    <div className="rounded-xl bg-white border border-brand-secondary/10 shadow-sm overflow-hidden flex flex-row items-center gap-3 p-2.5">
+      {/* Image */}
+      <div className="w-20 h-20 shrink-0 rounded-lg bg-brand-cream flex items-center justify-center p-1.5">
         <img
           src={card.src}
           alt={card.title}
@@ -75,21 +86,15 @@ export function Card({ card, index, onAdd, inCart, cartQty }: CardProps) {
         />
       </div>
 
-      {/* Content — right side */}
-      <div className="p-2.5 flex flex-col flex-1 min-w-0 justify-between">
-        <div>
-          <p className="text-[8px] uppercase tracking-widest text-brand-secondary/35 font-semibold">
-            {card.category}
-          </p>
-          <h3 className="text-xs font-display font-bold text-brand-primary leading-tight mt-0.5 truncate">
-            {card.title}
-          </h3>
-          {card.note && (
-            <p className="text-[9px] text-brand-secondary/35 mt-0.5 truncate">{card.note}</p>
-          )}
-        </div>
-
-        <div className="flex items-center justify-between">
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <h3 className="text-sm font-display font-bold text-brand-primary leading-tight truncate">
+          {card.title}
+        </h3>
+        {card.note && (
+          <p className="text-[9px] text-brand-secondary/35 mt-0.5 truncate">{card.note}</p>
+        )}
+        <div className="flex items-center justify-between mt-1.5">
           {card.price && (
             <span className="text-sm font-display font-bold text-brand-primary">{card.price}</span>
           )}
@@ -99,11 +104,11 @@ export function Card({ card, index, onAdd, inCart, cartQty }: CardProps) {
               className={cn(
                 "px-3 py-1 rounded-full text-[11px] font-semibold transition-colors",
                 inCart
-                  ? "bg-brand-primary text-white"
+                  ? "bg-sage/40 text-brand-primary"
                   : "bg-brand-primary text-white hover:bg-brand-primaryHover"
               )}
             >
-              {inCart ? `${cartQty}x` : "Add"}
+              {inCart ? `Added (${cartQty})` : "Add"}
             </button>
           )}
         </div>
