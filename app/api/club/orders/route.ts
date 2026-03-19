@@ -130,7 +130,9 @@ export async function POST(request: Request) {
                 orderId,
                 creatorId: couponResult.creatorId,
                 codeId: couponResult.codeId,
+                codeType: couponResult.codeType,
                 netRevenue: subtotal,
+                customerEmail: normalizedEmail,
                 error: attrError instanceof Error ? attrError.message : attrError,
               })
             }

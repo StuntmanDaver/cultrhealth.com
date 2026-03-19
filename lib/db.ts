@@ -757,7 +757,7 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
     const [commissionResult, statusResult] = await Promise.all([
       sql`
         SELECT
-          COUNT(DISTINCT cl.beneficiary_creator_id)::int as active_creators,
+          COUNT(DISTINCT CASE WHEN cl.status != 'reversed' THEN cl.beneficiary_creator_id END)::int as active_creators,
           COALESCE(SUM(CASE WHEN cl.status = 'pending' THEN cl.commission_amount ELSE 0 END), 0) as total_pending,
           COALESCE(SUM(CASE WHEN cl.status = 'approved' THEN cl.commission_amount ELSE 0 END), 0) as total_approved,
           COALESCE(SUM(CASE WHEN cl.status = 'paid' THEN cl.commission_amount ELSE 0 END), 0) as total_paid,

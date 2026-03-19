@@ -163,9 +163,11 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
         return 'bg-green-100 text-green-800'
       case 'pending':
       case 'trialing':
+      case 'paused':
         return 'bg-yellow-100 text-yellow-800'
       case 'cancelled':
       case 'canceled':
+      case 'rejected':
         return 'bg-red-100 text-red-800'
       case 'refunded':
         return 'bg-gray-100 text-gray-800'
@@ -475,7 +477,15 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* Creator Program */}
             {data.creators && (data.creators.totalLifetime > 0 || Object.keys(data.creators.creatorsByStatus).length > 0) && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <h2 className="font-display text-xl text-brand-primary mb-4">Creator Program</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">Creator Program</h2>
+                  <Link
+                    href="/admin/creators"
+                    className="text-sm text-brand-primary/60 hover:text-brand-primary underline transition-colors"
+                  >
+                    Manage Creators
+                  </Link>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-yellow-50 rounded-lg p-4">
                     <div className="text-sm text-yellow-700 mb-1">Pending</div>
