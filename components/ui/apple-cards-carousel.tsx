@@ -96,14 +96,19 @@ export const Carousel = ({ items }: CarouselProps) => {
     [goTo, total]
   )
 
-  // Touch handlers
+  // Touch handlers — block multi-touch (prevents pinch zoom on carousel)
   const onTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length > 1) return // ignore pinch
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
     isSwiping.current = false
   }, [])
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length > 1) {
+      e.preventDefault() // block pinch zoom inside carousel
+      return
+    }
     if (!isSwiping.current) {
       const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
       const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
@@ -118,6 +123,7 @@ export const Carousel = ({ items }: CarouselProps) => {
 
   const onTouchEnd = useCallback(
     (e: React.TouchEvent) => {
+      if (e.changedTouches.length === 0) return
       const diff = touchStartX.current - e.changedTouches[0].clientX
       if (Math.abs(diff) > 50) {
         if (diff > 0) goRight()
@@ -137,7 +143,8 @@ export const Carousel = ({ items }: CarouselProps) => {
       <div className="relative w-full">
         {/* Stationary viewport */}
         <div
-          className="overflow-hidden py-5 md:py-8 touch-pan-y"
+          className="overflow-hidden py-5 md:py-8 touch-pan-y select-none"
+          style={{ overscrollBehavior: "none" }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
