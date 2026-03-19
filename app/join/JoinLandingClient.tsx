@@ -500,27 +500,24 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 
 function TherapySectionBlock({ section, Icon, sectionIdx }: { section: JoinTherapySection; Icon: typeof Flame; sectionIdx: number }) {
   return (
-    <div className="md:rounded-2xl md:border md:border-brand-secondary/10 md:bg-white md:p-8 pb-8 border-b border-brand-secondary/8 md:border-b-0">
-      <ScrollReveal className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-brand-primary/[0.06] flex items-center justify-center">
+    <div className="pb-6">
+      <ScrollReveal className="mb-4 px-6 md:px-8">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-8 h-8 rounded-lg bg-brand-primary/[0.06] flex items-center justify-center">
             <Icon className="w-4 h-4 text-brand-primary" />
           </div>
-          <div>
-            <h2 className="text-xl md:text-2xl font-display font-bold text-brand-primary">
-              {section.title}
-            </h2>
-            <p className="text-[11px] uppercase tracking-widest text-brand-secondary/50 font-medium">{section.subtitle}</p>
-          </div>
+          <h2 className="text-lg md:text-xl font-display font-bold text-brand-primary">
+            {section.title}
+          </h2>
         </div>
-        <p className="text-sm text-brand-secondary/80 max-w-2xl ml-0 md:ml-24 leading-relaxed">{section.description}</p>
+        <p className="text-xs text-brand-secondary/60 ml-11">{section.subtitle}</p>
       </ScrollReveal>
 
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-6 md:px-8 pb-2 snap-x snap-mandatory">
         {section.therapies.map((therapy, i) => (
-          <ScrollReveal key={therapy.id} delay={i * 60} direction="up" className={therapy.featured ? 'sm:col-span-2' : ''}>
+          <div key={therapy.id} className="snap-start shrink-0 w-[260px] md:w-[280px]">
             <TherapyCard therapy={therapy} />
-          </ScrollReveal>
+          </div>
         ))}
       </div>
     </div>
@@ -547,130 +544,68 @@ function TherapyCard({ therapy }: { therapy: JoinTherapy }) {
   const showImage = !!therapy.image
 
   return (
-    <div className={`h-full rounded-xl border transition-all duration-200 flex group relative ${therapy.featured ? 'bg-brand-primary text-white border-brand-primary px-6 py-5 md:px-8 md:py-6 flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-6 shadow-sm' : 'bg-white md:bg-brand-cream border-brand-secondary/8 md:border-brand-secondary/12 hover:border-brand-secondary/25 hover:shadow-sm p-4 md:p-5 shadow-sm md:shadow-none flex-col'}`}>
-      {therapy.featured ? (
-        <>
-          {/* Image container — full-width on mobile, fixed square on desktop */}
-          <div className="w-full aspect-square md:aspect-auto md:w-44 md:h-44 md:flex-shrink-0 relative rounded-lg overflow-hidden">
-            {showImage && (
-              <Image
-                src={therapy.image}
-                alt={therapy.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100%, 176px"
-                loading="lazy"
-                quality={85}
-                unoptimized
-              />
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-            <div className="flex items-center gap-3">
-              <span className="shrink-0 text-[9px] font-semibold uppercase tracking-widest bg-white/15 text-white/90 px-2.5 py-1 rounded-full border border-white/10">Flagship</span>
-              {therapy.note && (
-                <span className="text-[11px] text-white/45 font-medium">{therapy.note}</span>
-              )}
-            </div>
-            <h3 className="text-xl md:text-2xl font-display font-bold text-white">{therapy.name}</h3>
-            <p className="text-sm text-white/60 leading-relaxed max-w-md">{therapy.description}</p>
-          </div>
-          <div className="flex flex-col items-start md:items-end gap-3 shrink-0">
-            <span className="text-2xl font-display font-bold text-white">${therapy.price?.toFixed(2)}</span>
-            {inCart && cartItem ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-white/80 flex items-center gap-1.5">
-                  <Check className="w-4 h-4" />
-                  In cart ({cartItem.quantity})
-                </span>
-                <button onClick={handleAdd} className="p-2.5 bg-white text-brand-primary rounded-full hover:bg-white/90 transition-colors">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <button onClick={handleAdd} className="flex items-center gap-2 px-5 py-2.5 bg-white text-brand-primary font-semibold text-sm rounded-full hover:bg-white/90 transition-colors shadow-sm">
-                <Plus className="w-4 h-4" />
-                Add to Cart
-              </button>
-            )}
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Non-featured card image — reserved aspect ratio prevents layout shift */}
-          <div className="w-full mb-3 -mx-4 -mt-4 -mr-4 rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center py-10 sm:py-16 aspect-[4/3] sm:aspect-square">
-            {showImage && (
-              <Image
-                src={therapy.image}
-                alt={therapy.name}
-                width={280}
-                height={280}
-                className="object-contain max-w-full h-auto rounded-lg"
-                loading="lazy"
-                quality={85}
-              />
-            )}
-          </div>
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="text-base font-display font-bold text-brand-primary">{therapy.name}</h3>
-            <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wider text-brand-secondary/70 bg-brand-primary/[0.05] px-2 py-0.5 rounded-full">
-              {therapy.badge}
-            </span>
-          </div>
+    <div className="h-full rounded-xl border border-brand-secondary/10 bg-white p-4 flex flex-col shadow-sm">
+      {/* Image */}
+      <div className="w-full aspect-square rounded-lg overflow-hidden bg-gradient-to-b from-brand-cream to-brand-creamDark flex items-center justify-center mb-3">
+        {showImage && (
+          <Image
+            src={therapy.image}
+            alt={therapy.name}
+            width={220}
+            height={220}
+            className="object-contain max-w-full h-auto"
+            loading="lazy"
+            quality={85}
+          />
+        )}
+      </div>
 
-          {therapy.note && (
-            <div className="inline-block text-[11px] text-brand-secondary/60 font-medium bg-brand-primary/[0.04] px-2.5 py-0.5 rounded-full mb-2.5 self-start">
-              {therapy.note}
-            </div>
-          )}
+      {/* Name */}
+      <h3 className="text-sm font-display font-bold text-brand-primary mb-1">{therapy.name}</h3>
 
-          <p className="text-xs text-brand-secondary/70 leading-relaxed mb-3 flex-1">{therapy.description}</p>
-
-          {therapy.bundleWith && (() => {
-            const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
-            return partner ? (
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-medium text-forest bg-sage/30 px-2.5 py-1 rounded-full mb-3">
-                <Tag className="w-3 h-3" />
-                10% off with {partner.name}
-              </div>
-            ) : null
-          })()}
-
-          {/* Hover tooltip — hidden on touch/mobile */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-brand-primary text-white text-xs leading-relaxed rounded-xl shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-20 hidden md:block">
-            <p className="font-semibold mb-1">{therapy.name}</p>
-            <p className="text-white/80">{therapy.description}</p>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-brand-primary" />
-          </div>
-
-          {/* Price */}
-          <div className="mb-3">
-            {therapy.price !== null ? (
-              <span className="text-lg font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
-            ) : (
-              <span className="text-xs font-medium text-brand-secondary">{therapy.pricingNote || 'Consultation pricing'}</span>
-            )}
-          </div>
-
-          {/* Add to Cart */}
-          {inCart && cartItem ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-brand-primary/70 flex items-center gap-1">
-                <Check className="w-3 h-3" />
-                In cart ({cartItem.quantity})
-              </span>
-              <button onClick={handleAdd} className="p-2 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <button onClick={handleAdd} className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white text-sm rounded-full hover:bg-brand-primaryHover transition-colors self-start">
-              <Plus className="w-4 h-4" />
-              {therapy.price !== null ? 'Add' : 'Request'}
-            </button>
-          )}
-        </>
+      {/* Dosage note */}
+      {therapy.note && (
+        <p className="text-[10px] text-brand-secondary/50 font-medium mb-2">{therapy.note}</p>
       )}
+
+      {/* Description */}
+      <p className="text-[11px] text-brand-secondary/60 leading-relaxed mb-3 flex-1 line-clamp-3">{therapy.description}</p>
+
+      {/* Bundle badge */}
+      {therapy.bundleWith && (() => {
+        const partner = getAllJoinTherapies().find(t => t.id === therapy.bundleWith)
+        return partner ? (
+          <div className="inline-flex items-center gap-1 text-[10px] font-medium text-forest bg-sage/30 px-2 py-0.5 rounded-full mb-3">
+            <Tag className="w-3 h-3" />
+            10% off with {partner.name}
+          </div>
+        ) : null
+      })()}
+
+      {/* Price + Add */}
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-brand-secondary/8">
+        {therapy.price !== null ? (
+          <span className="text-base font-display font-bold text-brand-primary">${therapy.price.toFixed(2)}</span>
+        ) : (
+          <span className="text-xs font-medium text-brand-secondary/60">{therapy.pricingNote || 'Consult'}</span>
+        )}
+        {inCart && cartItem ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-brand-primary/60 flex items-center gap-1">
+              <Check className="w-3 h-3" />
+              ({cartItem.quantity})
+            </span>
+            <button onClick={handleAdd} className="p-1.5 bg-brand-primary text-white rounded-full hover:bg-brand-primaryHover transition-colors">
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={handleAdd} className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-primary text-white text-xs rounded-full hover:bg-brand-primaryHover transition-colors">
+            <Plus className="w-3.5 h-3.5" />
+            {therapy.price !== null ? 'Add' : 'Request'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
