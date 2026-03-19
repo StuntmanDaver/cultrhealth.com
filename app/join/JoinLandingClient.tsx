@@ -171,12 +171,12 @@ function JoinLandingInner() {
         <img
           src="/images/hero-cultr-join.png"
           alt="CULTR — Diverse women in athletic wear"
-          className="w-full h-full object-cover object-[center_20%]"
+          className="w-full h-full object-cover object-[center_5%]"
         />
       </section>
 
       {/* Slogan banner — below the fold */}
-      <section className="bg-brand-primary px-6 py-8 md:py-10 text-center">
+      <section className="bg-brand-primary px-6 py-5 md:py-7 text-center">
         <h1 className="font-body text-2xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight leading-tight">
           Change the <span className="font-display">CULTR</span>.<br />
           <span className="italic text-sage">rebrand</span> Yourself.
