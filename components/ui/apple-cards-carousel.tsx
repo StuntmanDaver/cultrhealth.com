@@ -113,7 +113,8 @@ function MobileCarousel({ items }: { items: JSX.Element[] }) {
     if (!isSwiping.current) {
       const dx = Math.abs(e.touches[0].clientX - touchStartX.current)
       const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
-      if (dx > dy && dx > 10) isSwiping.current = true
+      // Higher threshold (20px) to avoid misclassifying taps as swipes
+      if (dx > dy && dx > 20) isSwiping.current = true
     }
     if (isSwiping.current) e.preventDefault()
   }, [])
@@ -121,8 +122,10 @@ function MobileCarousel({ items }: { items: JSX.Element[] }) {
   const onTouchEnd = useCallback(
     (e: React.TouchEvent) => {
       if (e.changedTouches.length === 0) return
+      // Only navigate on intentional swipes — don't block taps
+      if (!isSwiping.current) return
       const diff = touchStartX.current - e.changedTouches[0].clientX
-      if (Math.abs(diff) > 50) {
+      if (Math.abs(diff) > 40) {
         if (diff > 0) goRight()
         else goLeft()
       }
@@ -321,9 +324,15 @@ export const Card = ({
   cartQty?: number
 }) => {
   const [open, setOpen] = useState(false)
+  const [isTouch, setIsTouch] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const { onCardClose } = useContext(CarouselContext)
+
+  // Detect touch device to disable whileHover (prevents iOS sticky hover)
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  }, [])
 
   const handleClose = useCallback(() => {
     setOpen(false)
@@ -467,9 +476,9 @@ export const Card = ({
       <motion.button
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
-        whileHover={{ scale: 1.03 }}
+        whileHover={isTouch ? undefined : { scale: 1.03 }}
         aria-label={`View details for ${card.title}`}
-        whileTap={{ scale: 0.97 }}
+        whileTap={isTouch ? undefined : { scale: 0.97 }}
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
           "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
