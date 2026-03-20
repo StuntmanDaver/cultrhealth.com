@@ -533,7 +533,7 @@ export const Card = ({
 
         {/* Hover Description Overlay (desktop only) */}
         {card.description && (
-          <div className="absolute inset-0 z-20 rounded-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5">
+          <div className="absolute inset-x-0 top-0 bottom-[60px] z-20 rounded-t-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5">
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
               {card.category}
             </p>
@@ -544,7 +544,7 @@ export const Card = ({
               {card.description}
             </p>
             <span className="mt-3 text-[11px] text-white/40 font-medium">
-              Tap to view details
+              Click to view details
             </span>
           </div>
         )}
