@@ -9,6 +9,7 @@ import React, {
   useCallback,
 } from "react"
 import { createPortal } from "react-dom"
+import Image from "next/image"
 import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
@@ -397,16 +398,24 @@ export const Card = ({
                 </button>
 
                 {/* Product image — compact, centered on gradient */}
-                <div className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6 flex items-center justify-center">
-                  <motion.img
+                {card.src && (
+                  <motion.div
                     initial={{ scale: 0.85, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
-                    src={card.src}
-                    alt={card.title}
-                    className="h-[140px] md:h-[180px] object-contain drop-shadow-lg"
-                  />
-                </div>
+                    className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6 flex items-center justify-center"
+                  >
+                    <div className="relative w-full h-[140px] md:h-[180px] drop-shadow-lg">
+                      <Image
+                        src={card.src}
+                        alt={card.title}
+                        fill
+                        sizes="(max-width: 768px) 300px, 400px"
+                        className="object-contain"
+                      />
+                    </div>
+                  </motion.div>
+                )}
 
                 {/* Text content — padded for readability */}
                 <div className="px-6 pt-5 pb-6 md:px-8 md:pt-6 md:pb-8">
@@ -521,20 +530,27 @@ export const Card = ({
 
         {/* Center: Floating Product Image */}
         <div className="flex-1 relative z-10 flex items-center justify-center px-6 py-2">
-          <motion.img
-            src={card.src}
-            alt={card.title}
-            className="max-h-[170px] md:max-h-[220px] object-contain drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
-            loading="lazy"
-            decoding="async"
-            animate={{ y: [0, -6, 0] }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: index * 0.4,
-            }}
-          />
+          {card.src && (
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: index * 0.4,
+              }}
+              className="relative w-full h-[170px] md:h-[220px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+            >
+              <Image
+                src={card.src}
+                alt={card.title}
+                fill
+                sizes="(max-width: 768px) 200px, 260px"
+                className="object-contain"
+                priority={index === 0}
+              />
+            </motion.div>
+          )}
         </div>
 
         {/* Hover Description Overlay (desktop only) */}
