@@ -41,15 +41,24 @@ function getFromEmail(): string {
 // ===========================================
 
 /**
- * Branded email header block — CULTR HEALTH logo with tagline and green accent lines.
- * Uses web-safe font stacks that approximate Playfair Display and Inter.
+ * Google Fonts import for email — must be in <head> for email clients that support it.
+ * Gmail, Apple Mail, iOS Mail, Outlook (Mac) all support @import in <style> blocks.
+ */
+export const EMAIL_FONT_IMPORT = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" type="text/css"><!--[if mso]><style>* { font-family: Georgia, 'Times New Roman', serif !important; }</style><![endif]-->`
+
+/**
+ * Branded email header block — matches staging site navbar layout.
+ * CULTR stacked above HEALTH, tagline below, green accent lines.
  * @param variant 'dark' (forest bg, cream text) or 'light' (cream bg, forest text)
  */
 export function brandedEmailHeader(variant: 'dark' | 'light' = 'dark'): string {
   const bg = variant === 'dark' ? '#2A4542' : '#FDFBF7'
   const textColor = variant === 'dark' ? '#FDFBF7' : '#2A4542'
-  const mutedColor = variant === 'dark' ? 'rgba(253,251,247,0.7)' : 'rgba(42,69,66,0.6)'
   const accentGreen = '#B7E4C7'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const logoSrc = variant === 'dark'
+    ? `${siteUrl}/images/email-logo-cream.png`
+    : `${siteUrl}/cultr-logo-black-health.svg`
 
   return `
     <div style="background: ${bg}; border-radius: 16px 16px 0 0; padding: 32px 24px 24px; text-align: center;">
@@ -59,16 +68,15 @@ export function brandedEmailHeader(variant: 'dark' | 'light' = 'dark'): string {
         <div style="height: 1.3px; background: ${accentGreen}; margin-bottom: 4px;"></div>
         <div style="height: 0.8px; background: ${accentGreen};"></div>
       </div>
-      <!-- CULTR HEALTH -->
-      <div style="margin-bottom: 8px;">
-        <span style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 700; letter-spacing: 2px; color: ${textColor};">CULTR</span>
-        <span style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 400; color: ${mutedColor}; vertical-align: baseline; margin-left: 4px; letter-spacing: 1.5px;">HEALTH</span>
+      <!-- CULTR HEALTH logo (image — renders Playfair Display in all email clients) -->
+      <div style="margin: 0 auto 12px;">
+        <img src="${logoSrc}" alt="CULTR Health" width="160" height="50" style="display: block; margin: 0 auto; width: 160px; height: auto;" />
       </div>
       <!-- Tagline -->
-      <p style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 13px; font-weight: 400; color: ${textColor}; margin: 0 0 4px; letter-spacing: 0.3px;">
+      <p style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 13px; font-weight: 400; color: ${textColor}; margin: 0 0 6px; letter-spacing: 0.3px;">
         Change the CULTR. <em style="font-style: italic;">rebrand</em> yourself.
       </p>
-      <!-- URL -->
+      <!-- URL (plain text, not a link) -->
       <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 400; color: ${accentGreen}; margin: 0; letter-spacing: 1px;">
         cultrhealth.com
       </p>
@@ -106,6 +114,7 @@ function baseEmailTemplate(content: string, footerText?: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  ${EMAIL_FONT_IMPORT}
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
