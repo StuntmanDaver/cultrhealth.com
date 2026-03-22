@@ -336,10 +336,10 @@ export function generateCreatorCodes(fullName: string): { membershipCode: string
 
 export const LINK_DESTINATIONS = [
   { label: 'Homepage', path: '/' },
-  { label: 'Pricing', path: '/pricing' },
-  { label: 'GLP-1 Info', path: '/how-it-works' },
-  { label: 'Quiz', path: '/quiz' },
-  { label: 'FAQ', path: '/faq' },
+  { label: 'Core Membership', path: '/join/core' },
+  { label: 'Catalyst+ Membership', path: '/join/catalyst' },
+  { label: 'Concierge Membership', path: '/join/concierge' },
+  { label: 'CULTR Club (Free)', path: '/join/club' },
 ] as const
 
 // ===========================================
