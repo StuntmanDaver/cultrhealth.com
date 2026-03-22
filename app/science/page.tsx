@@ -299,7 +299,7 @@ export default async function SciencePage({
       </section>
 
       {/* Brand CTA Break */}
-      <section className="py-16 px-6 grad-white">
+      <section className="py-16 px-6 section-veil">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
             <p className="text-cultr-textMuted text-lg mb-2">Change the CULTR.</p>

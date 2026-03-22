@@ -22,7 +22,7 @@ export default function MedicalDisclaimerPage() {
       </section>
 
       {/* Content */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
           <div className="prose prose-cultr max-w-none">
             {/* Emergency Warning */}

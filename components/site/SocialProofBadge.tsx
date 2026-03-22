@@ -19,7 +19,7 @@ export function SocialProofBadge({ variant = 'pill', className }: SocialProofBad
         <span className="hidden sm:inline text-cultr-sage">|</span>
         <span className="flex items-center gap-1.5">
           <Users className="w-4 h-4 text-cultr-forest" />
-          <span>{TRUST_METRICS.memberCount} members</span>
+          <span>{TRUST_METRICS.memberCount} customers</span>
         </span>
       </div>
     );
@@ -35,7 +35,7 @@ export function SocialProofBadge({ variant = 'pill', className }: SocialProofBad
         <span className="font-medium">{TRUST_METRICS.avgRating}</span>
       </span>
       <span className="w-px h-3.5 bg-current opacity-30" />
-      <span>{TRUST_METRICS.memberCount} members</span>
+      <span>{TRUST_METRICS.memberCount} customers</span>
       <span className="w-px h-3.5 bg-current opacity-30" />
       <span>{TRUST_METRICS.reviewCount}+ reviews</span>
     </div>

@@ -45,7 +45,7 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Sections */}
-      <section className="py-24 px-6 grad-white">
+      <section className="py-24 px-6 section-veil">
         <div className="max-w-3xl mx-auto space-y-16 w-full">
 
           {/* Membership */}

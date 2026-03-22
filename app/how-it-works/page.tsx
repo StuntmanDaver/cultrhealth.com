@@ -114,7 +114,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Five Steps — Your Journey */}
-      <section className="py-16 md:py-20 px-6 grad-white">
+      <section className="py-16 md:py-20 px-6 section-veil">
         <div className="max-w-5xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">

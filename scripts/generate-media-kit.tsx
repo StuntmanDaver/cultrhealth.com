@@ -160,7 +160,7 @@ function MediaKitDocument() {
         {/* ═══ KEY METRICS ═══ */}
         <View style={{ flexDirection: 'row', marginBottom: 10 }}>
           {[
-            { value: '2,500+', label: 'Members' },
+            { value: '100+', label: 'Customers' },
             { value: '48', label: 'States' },
             { value: '4.9', label: 'Avg Rating' },
             { value: '15K+', label: 'Labs Processed' },

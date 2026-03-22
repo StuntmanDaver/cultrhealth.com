@@ -39,7 +39,7 @@ export default async function PublicStackingGuidesPage() {
       </section>
 
       {/* Content */}
-      <section className="py-12 px-6">
+      <section className="py-12 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
           <div className="library-content prose prose-lg max-w-none">
             <div

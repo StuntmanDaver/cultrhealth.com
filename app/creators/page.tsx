@@ -127,7 +127,7 @@ export default function CreatorsPage() {
       </section>
 
       {/* ─── Bonus Window Callout ─── */}
-      <section className="px-6 pb-16">
+      <section className="px-6 pb-16 section-veil">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
             <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cultr-forest to-forest-dark p-8 md:p-10 text-white">

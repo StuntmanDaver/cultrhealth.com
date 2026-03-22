@@ -433,7 +433,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       </section>
 
       {/* Main Content */}
-      <section className="py-12 px-6">
+      <section className="py-12 px-6 section-veil">
         <div className="max-w-2xl mx-auto">
           {/* Plan Card */}
           <div className="bg-white border border-cultr-sage rounded-2xl p-8 md:p-10 shadow-sm mb-8">

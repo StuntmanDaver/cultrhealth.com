@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
 import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies'
-import { escapeHtml } from '@/lib/resend'
+import { escapeHtml, brandedEmailHeader, brandedEmailFooter } from '@/lib/resend'
 
 interface OrderItem {
   therapyId: string
@@ -293,62 +293,64 @@ async function sendOrderConfirmationToCustomer(data: {
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
-  <div style="max-width: 600px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #2A4542;">CULTR</span>
-    </div>
-    <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; text-align: center; margin-bottom: 8px;">Order Received</h1>
-    <p style="text-align: center; color: #7E8D8A; font-size: 14px; margin-bottom: 32px;">Order #${escapeHtml(data.orderNumber)}</p>
-    <p style="margin-bottom: 24px;">Hi ${escapeHtml(data.name.split(' ')[0])},</p>
-    <p style="margin-bottom: 24px; color: #546E6B;">
-      We've received your order request. Our medical team will review it and send you an invoice once approved.
-    </p>
-    <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #D4DBD9; margin-bottom: 24px;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-        <thead>
-          <tr style="border-bottom: 2px solid #DDDFDB;">
-            <th style="text-align: left; padding: 8px 0; font-weight: 600;">Therapy</th>
-            <th style="text-align: center; padding: 8px 0; font-weight: 600;">Qty</th>
-            <th style="text-align: right; padding: 8px 0; font-weight: 600;">Price</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-      ${data.subtotalBeforeDiscount > 0 ? `
-      <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #DDDFDB;">
-        ${(data.bundleDiscountAmount > 0 || data.discountAmount > 0) ? `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
-          <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #F5F0E8; color: #2A4542; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 600px; margin: 0 auto; background: #FDFBF7; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(42,69,66,0.08);">
+    ${brandedEmailHeader('dark')}
+
+    <div style="padding: 32px 24px;">
+      <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 22px; text-align: center; margin: 0 0 4px; color: #2A4542;">Order Received</h1>
+      <p style="text-align: center; color: #7E8D8A; font-size: 13px; margin: 0 0 28px;">Order #${escapeHtml(data.orderNumber)}</p>
+
+      <p style="margin: 0 0 16px; font-size: 15px; color: #2A4542;">Hi ${escapeHtml(data.name.split(' ')[0])},</p>
+      <p style="margin: 0 0 24px; font-size: 14px; color: #546E6B; line-height: 1.6;">
+        We've received your order request. Our medical team will review it and send you an invoice once approved.
+      </p>
+
+      <div style="background: #FDFBF7; border-radius: 12px; padding: 20px; border: 1px solid #D4DBD9; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <thead>
+            <tr style="border-bottom: 2px solid #B7E4C7;">
+              <th style="text-align: left; padding: 8px 0; font-weight: 600; color: #2A4542;">Therapy</th>
+              <th style="text-align: center; padding: 8px 0; font-weight: 600; color: #2A4542;">Qty</th>
+              <th style="text-align: right; padding: 8px 0; font-weight: 600; color: #2A4542;">Price</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        ${data.subtotalBeforeDiscount > 0 ? `
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #B7E4C7;">
+          ${(data.bundleDiscountAmount > 0 || data.discountAmount > 0) ? `
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
+            <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
+          </div>
+          ` : ''}
+          ${data.bundleDiscountAmount > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A4542; margin-bottom: 4px;">
+            <span>Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%)</span><span style="color: #16a34a;">−$${data.bundleDiscountAmount.toFixed(2)}</span>
+          </div>
+          ` : ''}
+          ${data.discountAmount > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A4542; margin-bottom: 4px;">
+            <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span style="color: #16a34a;">−$${data.discountAmount.toFixed(2)}</span>
+          </div>
+          ` : ''}
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
+            <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
+          </div>
+          <div style="text-align: right; margin-top: 8px;">
+            <span style="font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 18px; color: #2A4542;">Total: $${data.total.toFixed(2)}</span>
+          </div>
         </div>
         ` : ''}
-        ${data.bundleDiscountAmount > 0 ? `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #16a34a; margin-bottom: 4px;">
-          <span>Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%)</span><span>−$${data.bundleDiscountAmount.toFixed(2)}</span>
-        </div>
-        ` : ''}
-        ${data.discountAmount > 0 ? `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #16a34a; margin-bottom: 4px;">
-          <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span>−$${data.discountAmount.toFixed(2)}</span>
-        </div>
-        ` : ''}
-        <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
-          <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
-        </div>
-        <div style="text-align: right;">
-          <span style="font-weight: 700; font-size: 16px;">Total: $${data.total.toFixed(2)}</span>
-        </div>
       </div>
-      ` : ''}
+
+      <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 8px;">
+        <p style="margin: 0; font-weight: 600; font-size: 14px; color: #2A4542;">Status: Awaiting Review</p>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #3A5956;">You'll receive an email with payment details once approved.</p>
+      </div>
     </div>
-    <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 32px;">
-      <p style="margin: 0; font-weight: 600; font-size: 14px;">Status: Awaiting Review</p>
-      <p style="margin: 8px 0 0; font-size: 13px; color: #697B78;">You'll receive an email with payment details once approved.</p>
-    </div>
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #DDDFDB;">
-      <p style="color: #7E8D8A; font-size: 12px; text-align: center; margin: 0;">CULTR Health &mdash; Personalized Longevity Medicine</p>
-      <p style="color: #A8B2AE; font-size: 11px; text-align: center; margin-top: 12px;">Questions? Contact support@cultrhealth.com</p>
-    </div>
+
+    ${brandedEmailFooter()}
   </div>
 </body>
 </html>`,

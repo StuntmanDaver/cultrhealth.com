@@ -703,7 +703,7 @@ export function CalorieCalculatorClient({ email, backHref = '/library' }: { emai
       </section>
 
       {/* Calculator */}
-      <section className="py-10 px-6">
+      <section className="py-10 px-6 section-veil">
         <div className="max-w-5xl mx-auto">
           <div className="grid lg:grid-cols-5 gap-6 lg:gap-8">
             {/* Inputs — 3 columns */}

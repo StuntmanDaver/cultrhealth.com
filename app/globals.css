@@ -230,6 +230,13 @@
       linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 50%, #FCFBF7 100%);
   }
 
+  /* Semi-transparent veil — lets mesh gradient show through subtly */
+  .section-veil {
+    background: rgba(253, 251, 247, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
   /* ─── Section Bridges — seamless dark↔light transitions ─── */
   .bridge-dark-to-light {
     background: linear-gradient(180deg,

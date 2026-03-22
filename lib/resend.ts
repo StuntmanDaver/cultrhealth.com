@@ -37,6 +37,65 @@ function getFromEmail(): string {
 }
 
 // ===========================================
+// BRANDED EMAIL COMPONENTS
+// ===========================================
+
+/**
+ * Branded email header block — CULTR HEALTH logo with tagline and green accent lines.
+ * Uses web-safe font stacks that approximate Playfair Display and Inter.
+ * @param variant 'dark' (forest bg, cream text) or 'light' (cream bg, forest text)
+ */
+export function brandedEmailHeader(variant: 'dark' | 'light' = 'dark'): string {
+  const bg = variant === 'dark' ? '#2A4542' : '#FDFBF7'
+  const textColor = variant === 'dark' ? '#FDFBF7' : '#2A4542'
+  const mutedColor = variant === 'dark' ? 'rgba(253,251,247,0.7)' : 'rgba(42,69,66,0.6)'
+  const accentGreen = '#B7E4C7'
+
+  return `
+    <div style="background: ${bg}; border-radius: 16px 16px 0 0; padding: 32px 24px 24px; text-align: center;">
+      <!-- Three accent lines -->
+      <div style="margin: 0 auto 16px; width: 48px;">
+        <div style="height: 1px; background: ${accentGreen}; margin-bottom: 4px;"></div>
+        <div style="height: 1.3px; background: ${accentGreen}; margin-bottom: 4px;"></div>
+        <div style="height: 0.8px; background: ${accentGreen};"></div>
+      </div>
+      <!-- CULTR HEALTH -->
+      <div style="margin-bottom: 8px;">
+        <span style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 32px; font-weight: 700; letter-spacing: 2px; color: ${textColor};">CULTR</span>
+        <span style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 10px; font-weight: 400; color: ${mutedColor}; vertical-align: baseline; margin-left: 4px; letter-spacing: 1.5px;">HEALTH</span>
+      </div>
+      <!-- Tagline -->
+      <p style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 13px; font-weight: 400; color: ${textColor}; margin: 0 0 4px; letter-spacing: 0.3px;">
+        Change the CULTR. <em style="font-style: italic;">rebrand</em> yourself.
+      </p>
+      <!-- URL -->
+      <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 400; color: ${accentGreen}; margin: 0; letter-spacing: 1px;">
+        cultrhealth.com
+      </p>
+    </div>`
+}
+
+/**
+ * Branded email footer with green accent lines and support link.
+ */
+export function brandedEmailFooter(): string {
+  return `
+    <div style="margin-top: 32px; padding: 24px; text-align: center; background: #2A4542; border-radius: 0 0 16px 16px;">
+      <div style="margin: 0 auto 12px; width: 48px;">
+        <div style="height: 1px; background: #B7E4C7; margin-bottom: 4px;"></div>
+        <div style="height: 1.3px; background: #B7E4C7; margin-bottom: 4px;"></div>
+        <div style="height: 0.8px; background: #B7E4C7;"></div>
+      </div>
+      <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: rgba(253,251,247,0.6); font-size: 11px; margin: 0 0 8px;">
+        CULTR Health &mdash; Personalized Longevity Medicine
+      </p>
+      <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: rgba(253,251,247,0.4); font-size: 10px; margin: 0;">
+        Questions? Contact <a href="mailto:support@cultrhealth.com" style="color: #B7E4C7; text-decoration: none;">support@cultrhealth.com</a>
+      </p>
+    </div>`
+}
+
+// ===========================================
 // EMAIL BASE TEMPLATE
 // ===========================================
 
@@ -50,22 +109,13 @@ function baseEmailTemplate(content: string, footerText?: string): string {
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <!-- Logo -->
-    <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 700; letter-spacing: 0; color: #fff;">CULTR</span>
-    </div>
-    
+    ${brandedEmailHeader('dark')}
+
+    <div style="padding: 24px;">
     ${content}
-    
-    <!-- Footer -->
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #222;">
-      <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">
-        ${footerText || 'CULTR Health — Personalized Longevity Medicine'}
-      </p>
-      <p style="color: #444; font-size: 11px; text-align: center; margin-top: 12px;">
-        Questions? Reply to this email or contact support@cultrhealth.com
-      </p>
     </div>
+
+    ${brandedEmailFooter()}
   </div>
 </body>
 </html>

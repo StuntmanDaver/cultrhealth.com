@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       </section>
 
       {/* Content */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
           <p className="text-sm text-cultr-textMuted mb-8">Last updated: {new Date().toLocaleDateString()}</p>
 

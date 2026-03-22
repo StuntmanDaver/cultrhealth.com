@@ -306,7 +306,7 @@ export function DosingCalculatorClient({ email, backHref = '/library' }: { email
       </section>
 
       {/* Calculator Content */}
-      <section className="py-10 px-6">
+      <section className="py-10 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Inputs Panel */}

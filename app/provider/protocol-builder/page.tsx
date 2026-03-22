@@ -21,7 +21,7 @@ export default async function ProtocolBuilderPage() {
             </p>
           </div>
         </section>
-        <section className="py-12 px-6">
+        <section className="py-12 px-6 section-veil">
           <div className="max-w-3xl mx-auto text-center">
             <div className="rounded-2xl border border-cultr-sage grad-light p-8">
               <p className="text-cultr-text font-medium mb-4">

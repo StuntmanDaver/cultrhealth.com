@@ -89,10 +89,10 @@ export const PROVIDERS: Provider[] = [
 ];
 
 export const TRUST_METRICS = {
-  memberCount: "2,500+",
+  memberCount: "100+",
   statesCovered: 48,
   avgRating: 4.9,
-  reviewCount: 847,
+  reviewCount: 50,
   labsProcessed: "15,000+",
   providerResponseTime: "< 24hrs",
 };
