@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
       description: 'Select a plan that fits your health goals. All memberships include telehealth consultations, lab reviews, and platform access.',
       icon: UserPlus,
       features: [
-        'Multiple tiers from $99-$499/month',
+        'Paid memberships start at $199/month',
         'HSA/FSA eligible payments',
         'No long-term contracts required',
         'Cancel or change plans anytime',
@@ -167,7 +167,7 @@ export default function HowItWorksPage() {
                       'HIPAA-compliant platform',
                       'Board-certified providers',
                       'Licensed pharmacies only',
-                      '24/7 emergency guidance',
+                      'Clear support guidance for urgent issues and side effects',
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
                         <Check className="w-5 h-5 text-cultr-forest" />

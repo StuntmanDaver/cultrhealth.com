@@ -1,3 +1,43 @@
+## [2026-03-22] - Website Overhaul V1: Data Fixes, Shared Components, Creators Page Revamp
+
+### Summary
+V1 of the marketing site overhaul based on two strategy documents (Route-by-Route Implementation Checklist + College Town Expansion Playbook). Fixed data inconsistencies, created 6 reusable marketing components, and fully rewrote the /creators page to reflect the complete creator program.
+
+### Data Fixes
+- **Pricing bug**: How-It-Works page showed `$99-$499/month` — corrected to `$199/month`
+- **Provider placeholder**: Removed "New Provider Coming Soon" from `social-proof.ts`
+- **Safety claim**: Replaced inaccurate "24/7 emergency guidance" with defensible copy
+- **Badge logic**: Set CULTR Club `isRecommended: false` (was incorrectly recommended over paid plans)
+- **Footer links**: "Partner" now links to `/creators` (was `/pricing`), "Manage Account" to `/portal/login` (was `/login`)
+
+### New Shared Components (6 files)
+- **`SocialProofBadge.tsx`**: Compact badge showing member count + rating (pill/inline variants)
+- **`TrustStrip.tsx`**: Horizontal 5-item trust icons strip (light/dark variants)
+- **`MarketingHero.tsx`**: Reusable hero with badge, title, subtitle, proof line, CTAs
+- **`TherapyGoalFilter.tsx`**: Goal-based filter chips with `filterByGoal()` utility
+- **`HowItWorksSteps.tsx`**: 3-step and 5-step process component
+- **`LeadCapturePrompt.tsx`**: Email capture with 3 variants (results/save/next-steps)
+
+### Creators Page Full Rewrite
+- **Fixed wrong override rates**: Was hardcoded 2%/4%/6%/8%, now pulls from `TIER_CONFIGS` (actual: 5%/10%/15%/20%)
+- All commission data sourced from `COMMISSION_CONFIG` and `TIER_CONFIGS` — rates can never drift
+- 10 sections: Hero, 3 Commission Streams, 6-Month Bonus Window, How It Works, Tier Progression, What You Get (8 features), Payout Details, Creator Tracks, FTC Compliance, Apply CTA
+
+### Files Changed (11 files)
+- `app/creators/page.tsx` — Full rewrite (264 → 430+ lines)
+- `app/how-it-works/page.tsx` — Pricing + safety claim fixes
+- `components/site/Footer.tsx` — Link fixes
+- `lib/config/plans.ts` — Club isRecommended fix
+- `lib/config/social-proof.ts` — Provider placeholder removed
+- `components/site/SocialProofBadge.tsx` — New
+- `components/site/TrustStrip.tsx` — New
+- `components/site/MarketingHero.tsx` — New
+- `components/site/TherapyGoalFilter.tsx` — New
+- `components/site/HowItWorksSteps.tsx` — New
+- `components/site/LeadCapturePrompt.tsx` — New
+
+---
+
 ## [2026-03-18] - Creator Commission Admin Dashboard + Logout Buttons
 
 ### Summary

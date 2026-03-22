@@ -86,13 +86,6 @@ export const PROVIDERS: Provider[] = [
     image: "/images/provider-ali-saberi.jpg",
     bio: "A former Doctors Without Borders clinician with over 20 years of experience across primary care, hospital medicine, wound care, hyperbaric medicine, and integrative regenerative care. At Cultr Health, he guides a modern longevity model integrating evidence-based care with advanced nutrition, hormonal optimization, peptide therapeutics, and mind-body strategies.",
   },
-  {
-    name: "New Provider Coming Soon",
-    specialty: "Expanding Our Care Team",
-    credentials: "",
-    yearsExperience: 0,
-    bio: "We're growing! A new licensed provider will be joining the CULTR Health care team soon. Stay tuned.",
-  },
 ];
 
 export const TRUST_METRICS = {

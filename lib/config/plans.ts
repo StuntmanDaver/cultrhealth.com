@@ -96,7 +96,7 @@ export const PLANS: Plan[] = [
     stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy',
     paymentLink: '',
     isFeatured: false,
-    isRecommended: true,
+    isRecommended: false,
     ctaLabel: 'Join Free',
     bnplEnabled: false,
   },

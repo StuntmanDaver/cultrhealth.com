@@ -15,10 +15,10 @@ const learnLinks = [
 ];
 
 const contactLinks = [
-  { href: '/pricing', label: 'Partner' },
+  { href: '/creators', label: 'Creators' },
   { href: '/creators', label: 'Creator Program' },
   { href: 'mailto:support@cultrhealth.com', label: 'Contact Us' },
-  { href: '/login', label: 'Manage Account' },
+  { href: '/portal/login', label: 'Manage Account' },
 ];
 
 const trustBadges = [
