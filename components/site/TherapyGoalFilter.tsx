@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils';
 export const GOAL_CATEGORIES = [
   { id: 'all', label: 'All Therapies' },
   { id: 'weight-management', label: 'Weight Management', tags: ['GLP-1', 'GLP-1/GIP/GCG'] },
-  { id: 'recovery', label: 'Recovery & Repair', tags: ['Repair', 'Copper Peptide'] },
+  { id: 'recovery', label: 'Recovery & Repair', tags: ['Repair', 'Copper Peptide', 'Antioxidant'] },
   { id: 'performance', label: 'Performance & Growth', tags: ['Growth Hormone'] },
   { id: 'cognitive', label: 'Cognitive & Focus', tags: ['Neuropeptide'] },
-  { id: 'longevity', label: 'Longevity & Baseline', tags: ['Longevity'] },
+  { id: 'longevity', label: 'Longevity & Baseline', tags: ['Longevity', 'Antioxidant'] },
   { id: 'aesthetics', label: 'Skin & Aesthetics', tags: ['Melanocortin', 'Copper Peptide'] },
 ] as const;
 

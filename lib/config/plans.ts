@@ -46,15 +46,22 @@ export const MEMBERSHIP_DISCLAIMER =
   'Membership does not guarantee any specific treatment or prescription.';
 
 /**
- * Blood Test Add-On for Core Tier
- * Optional $135 at-home blood test kit offered during Core checkout.
- * Stripe Price ID must be created in Stripe dashboard and set as env var.
+ * One-Time Add-Ons (charged at first checkout, not recurring)
+ * Both are optional — customer can toggle quantity to 0 in Stripe checkout.
+ * Stripe Price IDs must be created as one-time prices in Stripe dashboard.
  */
 export const BLOOD_TEST_ADDON = {
   name: 'At-Home Blood Test Kit',
   description: 'Comprehensive biomarker panel with at-home collection. Results in 5-7 business days.',
   price: 135,
   stripePriceId: process.env.BLOOD_TEST_STRIPE_PRICE_ID || '',
+}
+
+export const DOCTOR_CONSULTATION_ADDON = {
+  name: "Doctor's Consultation (First Visit)",
+  description: 'Initial consultation with a board-certified provider. One-time fee.',
+  price: 75,
+  stripePriceId: process.env.DOCTOR_CONSULTATION_STRIPE_PRICE_ID || '',
 }
 
 export const STRIPE_CONFIG = {
@@ -109,8 +116,8 @@ export const PLANS: Plan[] = [
     bestFor: 'GLP-1 or TRT focused',
     features: [
       'One CORE Therapy included',
-      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
-      "Doctor's consultation for $75 — first-time mandatory fee"
+      'At-home blood test kit — $135 (included at checkout, one-time)',
+      "Doctor's consultation — $75 (included at checkout, first visit only)"
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -136,8 +143,8 @@ export const PLANS: Plan[] = [
     bestFor: 'Peptide stacking & optimization',
     features: [
       'One Core Therapy included + Two Enhancements',
-      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
-      "Doctor's consultation for $75 — first-time mandatory fee"
+      'At-home blood test kit — $135 (included at checkout, one-time)',
+      "Doctor's consultation — $75 (included at checkout, first visit only)"
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -163,8 +170,8 @@ export const PLANS: Plan[] = [
     bestFor: 'Regenerative & executive care',
     features: [
       'Two CORE Therapy included + up to 4 enhancements',
-      'At-home blood test required for $135. Follow-up test recommended every 3 months for an additional fee',
-      "Doctor's consultation for $75 — first-time mandatory fee"
+      'At-home blood test kit — $135 (included at checkout, one-time)',
+      "Doctor's consultation — $75 (included at checkout, first visit only)"
     ],
     libraryAccess: {
       masterIndex: 'full',

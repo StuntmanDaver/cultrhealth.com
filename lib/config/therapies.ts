@@ -6,6 +6,7 @@ export interface TherapyProduct {
   image: string;
   shortDescription: string;
   longDescription: string;
+  bundleWith?: string;
 }
 
 export const THERAPY_PRODUCTS: TherapyProduct[] = [
@@ -52,6 +53,19 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
       'Copper peptide that stimulates collagen synthesis, accelerates wound healing, and promotes skin rejuvenation.',
     longDescription:
       'GHK-Cu is a naturally occurring copper-binding peptide that declines with age. It activates over 4,000 genes involved in tissue remodeling, anti-inflammatory response, and antioxidant defense. Benefits include improved skin elasticity, accelerated wound healing, and reduced fine lines.',
+    bundleWith: 'glutathione',
+  },
+  {
+    id: 'glutathione',
+    name: 'Glutathione',
+    spec: 'Injectable',
+    tag: 'Antioxidant',
+    image: '/images/products/glutathione.png',
+    shortDescription:
+      'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
+    longDescription:
+      'Glutathione is the body\'s most abundant endogenous antioxidant, essential for Phase II liver detoxification, immune cell activation, and neutralizing reactive oxygen species. Injectable delivery bypasses digestive breakdown for superior bioavailability, supporting skin clarity, heavy metal chelation, and systemic cellular protection.',
+    bundleWith: 'ghk-cu',
   },
   {
     id: 'tesa-ipa',

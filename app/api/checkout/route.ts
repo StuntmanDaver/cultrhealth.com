@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { PLANS, BLOOD_TEST_ADDON } from '@/lib/config/plans';
+import { PLANS, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON } from '@/lib/config/plans';
 import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 function getStripe() {
@@ -12,8 +12,12 @@ function getStripe() {
 /**
  * Subscription Checkout
  *
- * For Core tier: Creates a Stripe Checkout Session with optional blood test add-on.
- * For all other tiers: Redirects to the pre-configured Stripe Payment Link.
+ * Creates a Stripe Checkout Session for all paid tiers with:
+ * - The subscription (recurring monthly price)
+ * - Blood test add-on ($135, one-time, optional — quantity 0-1)
+ * - Doctor consultation add-on ($75, one-time, optional — quantity 0-1)
+ *
+ * Falls back to Payment Link if plan has no stripePriceId.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -45,11 +49,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Core tier: use Stripe Checkout Session with optional blood test add-on
-    if (planSlug === 'core') {
+    // Club tier is free — no checkout needed
+    if (plan.price === 0) {
+      return NextResponse.json(
+        { error: 'Free tier does not require checkout' },
+        { status: 400 }
+      );
+    }
+
+    // All paid tiers: create Stripe Checkout Session with one-time add-ons
+    if (plan.stripePriceId) {
       if (!email || typeof email !== 'string') {
         return NextResponse.json(
-          { error: 'Email is required for Core tier checkout' },
+          { error: 'Email is required for checkout' },
           { status: 400 }
         );
       }
@@ -60,7 +72,34 @@ export async function POST(request: NextRequest) {
       // Read attribution cookie
       const attributionCookie = request.cookies.get('cultr_attribution')?.value;
 
-      const baseConfig: Stripe.Checkout.SessionCreateParams = {
+      // Build one-time add-on line items
+      const addonLineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+
+      if (BLOOD_TEST_ADDON.stripePriceId) {
+        addonLineItems.push({
+          price: BLOOD_TEST_ADDON.stripePriceId,
+          quantity: 1,
+          adjustable_quantity: {
+            enabled: true,
+            minimum: 0,
+            maximum: 1,
+          },
+        });
+      }
+
+      if (DOCTOR_CONSULTATION_ADDON.stripePriceId) {
+        addonLineItems.push({
+          price: DOCTOR_CONSULTATION_ADDON.stripePriceId,
+          quantity: 1,
+          adjustable_quantity: {
+            enabled: true,
+            minimum: 0,
+            maximum: 1,
+          },
+        });
+      }
+
+      const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         customer_email: email,
         line_items: [
@@ -68,52 +107,14 @@ export async function POST(request: NextRequest) {
             price: plan.stripePriceId,
             quantity: 1,
           },
+          ...addonLineItems,
         ],
-        metadata: { plan_tier: 'core' },
+        metadata: { plan_tier: plan.slug },
         client_reference_id: attributionCookie ? `attr_${attributionCookie}` : undefined,
         success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/pricing`,
         allow_promotion_codes: true,
-      };
-
-      let session: Stripe.Checkout.Session;
-
-      if (BLOOD_TEST_ADDON.stripePriceId) {
-        try {
-          session = await stripe.checkout.sessions.create({
-            ...baseConfig,
-            optional_items: [
-              {
-                price: BLOOD_TEST_ADDON.stripePriceId,
-                quantity: 1,
-                adjustable_quantity: { enabled: true, minimum: 0, maximum: 1 },
-              },
-            ],
-          } as Stripe.Checkout.SessionCreateParams);
-        } catch {
-          // Fallback: add blood test as a regular line item with adjustable quantity (min 0)
-          session = await stripe.checkout.sessions.create({
-            ...baseConfig,
-            line_items: [
-              {
-                price: plan.stripePriceId,
-                quantity: 1,
-              },
-              {
-                price: BLOOD_TEST_ADDON.stripePriceId,
-                quantity: 1,
-                adjustable_quantity: {
-                  enabled: true,
-                  minimum: 0,
-                  maximum: 1,
-                },
-              },
-            ],
-          });
-        }
-      } else {
-        session = await stripe.checkout.sessions.create(baseConfig);
-      }
+      });
 
       return NextResponse.json({
         success: true,
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // All other tiers: use Payment Link
+    // Fallback: use Payment Link (if no stripePriceId configured)
     if (!plan.paymentLink) {
       return NextResponse.json(
         { error: 'Subscription plan not properly configured' },

@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
+import { PLANS, MEMBERSHIP_DISCLAIMER, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON } from '@/lib/config/plans';
 import Button from '@/components/ui/Button';
 import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
 import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types';
@@ -221,7 +221,13 @@ function CheckoutForm({ plan, onSuccess, onError }: {
             Processing...
           </>
         ) : (
-          `Join ${plan.name} - $${plan.price}/${plan.interval}`
+          (() => {
+            const addons = (BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0);
+            const total = plan.price + addons;
+            return addons > 0
+              ? `Join ${plan.name} - $${total} today, then $${plan.price}/mo`
+              : `Join ${plan.name} - $${plan.price}/${plan.interval}`;
+          })()
         )}
       </Button>
     </form>
@@ -462,6 +468,50 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               <p className="text-cultr-text font-medium">{plan.bestFor}</p>
             </div>
 
+            {/* One-Time Fees Summary */}
+            {plan.price > 0 && (BLOOD_TEST_ADDON.stripePriceId || DOCTOR_CONSULTATION_ADDON.stripePriceId) && (
+              <div className="bg-cultr-offwhite rounded-xl p-6 mb-8 border border-cultr-sage/30">
+                <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase mb-4">
+                  First-Time Fees <span className="font-normal text-cultr-textMuted normal-case">(one-time, not recurring)</span>
+                </p>
+                <div className="space-y-3">
+                  {BLOOD_TEST_ADDON.stripePriceId && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-cultr-forest" />
+                        <span className="text-sm text-cultr-text">{BLOOD_TEST_ADDON.name}</span>
+                      </div>
+                      <span className="text-sm font-medium text-cultr-forest">${BLOOD_TEST_ADDON.price}</span>
+                    </div>
+                  )}
+                  {DOCTOR_CONSULTATION_ADDON.stripePriceId && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-cultr-forest" />
+                        <span className="text-sm text-cultr-text">{DOCTOR_CONSULTATION_ADDON.name}</span>
+                      </div>
+                      <span className="text-sm font-medium text-cultr-forest">${DOCTOR_CONSULTATION_ADDON.price}</span>
+                    </div>
+                  )}
+                  <div className="border-t border-cultr-sage/30 pt-3 mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-cultr-textMuted">Monthly membership</span>
+                      <span className="text-sm font-medium text-cultr-forest">${plan.price}/mo</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-cultr-textMuted">+ One-time first visit fees</span>
+                      <span className="text-sm font-medium text-cultr-forest">
+                        ${(BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-cultr-textMuted mt-2">
+                    You can remove these fees at checkout if you&apos;ve already completed them.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Payment Method Selector */}
             <div className="mb-6">
               <PaymentMethodSelector
@@ -497,7 +547,13 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     onTokenReceived={handleAuthorizeNetCheckout}
                     onError={handleCheckoutError}
                     loading={isLoading}
-                    submitText={`Join ${plan.name} - $${plan.price}/${plan.interval}`}
+                    submitText={(() => {
+                      const addons = (BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0);
+                      const total = plan.price + addons;
+                      return addons > 0
+                        ? `Join ${plan.name} - $${total} today, then $${plan.price}/mo`
+                        : `Join ${plan.name} - $${plan.price}/${plan.interval}`;
+                    })()}
                     collectBillingAddress={true}
                   />
                 </div>

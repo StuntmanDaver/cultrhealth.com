@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronDown, ArrowRight } from 'lucide-react';
+import { ChevronDown, ArrowRight, Tag } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import type { TherapyProduct } from '@/lib/config/therapies';
+import { BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies';
 
 interface TherapiesGridProps {
   products: TherapyProduct[];
@@ -54,6 +55,16 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                     </span>
                   )}
                 </div>
+
+                {/* Bundle badge */}
+                {product.bundleWith && (
+                  <div className="flex items-center gap-1 mb-1">
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cultr-forest bg-sage/40 px-2.5 py-1 rounded-full">
+                      <Tag className="w-3 h-3" />
+                      Bundle &amp; save {Math.round(BUNDLE_DISCOUNT_RATE * 100)}%
+                    </span>
+                  </div>
+                )}
 
                 {/* Spec + Rx badge */}
                 <div className="flex items-center gap-2 mb-2">

@@ -306,7 +306,7 @@ describe('POST /api/checkout (non-regression)', () => {
     expect(body.redirectUrl).toContain('checkout.stripe.com')
   })
 
-  it('should return Payment Link URL for Catalyst+ tier', async () => {
+  it('should return Checkout Session URL for Catalyst+ tier', async () => {
     const { POST } = await import('@/app/api/checkout/route')
 
     const request = createCheckoutRequest({ planSlug: 'catalyst', email: 'user@example.com' })
@@ -315,11 +315,11 @@ describe('POST /api/checkout (non-regression)', () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
-    // Catalyst should still use Payment Link (buy.stripe.com)
-    expect(body.redirectUrl).toContain('buy.stripe.com')
+    // All paid tiers now use Stripe Checkout Sessions (with one-time add-ons)
+    expect(body.redirectUrl).toContain('checkout.stripe.com')
   })
 
-  it('should return Payment Link URL for Concierge tier', async () => {
+  it('should return Checkout Session URL for Concierge tier', async () => {
     const { POST } = await import('@/app/api/checkout/route')
 
     const request = createCheckoutRequest({ planSlug: 'concierge', email: 'user@example.com' })
@@ -328,7 +328,7 @@ describe('POST /api/checkout (non-regression)', () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
-    // Concierge should still use Payment Link (buy.stripe.com)
-    expect(body.redirectUrl).toContain('buy.stripe.com')
+    // All paid tiers now use Stripe Checkout Sessions (with one-time add-ons)
+    expect(body.redirectUrl).toContain('checkout.stripe.com')
   })
 })
