@@ -83,12 +83,27 @@ export async function POST(
     // Send approval emails to customer and admin
     const taxAmountUsd = order.tax_amount_usd ? Number(order.tax_amount_usd) : 0
     const subtotal = order.subtotal_usd ? Number(order.subtotal_usd) : 0
+    const discountPercent = order.discount_percent ? Number(order.discount_percent) : 0
+    const couponCode = order.coupon_code || undefined
+
+    // Back-calculate pre-discount subtotal so confirmation email shows the discount breakdown
+    let subtotalBeforeDiscount = subtotal
+    let couponDiscountAmount = 0
+    if (discountPercent > 0 && subtotal > 0) {
+      subtotalBeforeDiscount = Math.round((subtotal / (1 - discountPercent / 100)) * 100) / 100
+      couponDiscountAmount = Math.round((subtotalBeforeDiscount - subtotal) * 100) / 100
+    }
+
     const emailData = {
       name: order.member_name,
       email: order.member_email,
       orderNumber: order.order_number,
       items: order.items as OrderItem[],
       subtotal,
+      subtotalBeforeDiscount,
+      couponDiscountAmount,
+      couponCode,
+      discountPercent,
       taxAmount: taxAmountUsd,
       total: subtotal + taxAmountUsd,
     }
@@ -151,6 +166,10 @@ async function sendApprovalConfirmationToAdmin(data: {
   orderNumber: string
   items: OrderItem[]
   subtotal: number
+  subtotalBeforeDiscount: number
+  couponDiscountAmount: number
+  couponCode?: string
+  discountPercent: number
   taxAmount: number
   total: number
 }) {
@@ -209,8 +228,12 @@ async function sendApprovalConfirmationToAdmin(data: {
 
     ${data.subtotal > 0 ? `
     <div style="margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
+      ${data.couponDiscountAmount > 0 ? `
+      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
+      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.couponDiscountAmount.toFixed(2)}</p>
+      ` : ''}
       ${data.taxAmount > 0 ? `
-      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>
+      ${data.couponDiscountAmount === 0 ? `<p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>` : ''}
       <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
       ` : ''}
       <p style="text-align: right; font-weight: 700; font-size: 15px; margin: 0;">
@@ -241,6 +264,10 @@ async function sendApprovalEmailToCustomer(data: {
   orderNumber: string
   items: OrderItem[]
   subtotal: number
+  subtotalBeforeDiscount: number
+  couponDiscountAmount: number
+  couponCode?: string
+  discountPercent: number
   taxAmount: number
   total: number
 }) {
@@ -299,10 +326,20 @@ async function sendApprovalEmailToCustomer(data: {
         </table>
         ${data.subtotal > 0 ? `
         <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #B7E4C7;">
+          ${data.couponDiscountAmount > 0 ? `
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
+            <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A4542; margin-bottom: 4px;">
+            <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span style="color: #16a34a;">&minus;$${data.couponDiscountAmount.toFixed(2)}</span>
+          </div>
+          ` : ''}
           ${data.taxAmount > 0 ? `
+          ${data.couponDiscountAmount === 0 ? `
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
             <span>Subtotal</span><span>$${data.subtotal.toFixed(2)}</span>
           </div>
+          ` : ''}
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
             <span>${TAX_RATE_LABEL}</span><span>$${data.taxAmount.toFixed(2)}</span>
           </div>
