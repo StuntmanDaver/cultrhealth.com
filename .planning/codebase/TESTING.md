@@ -1,57 +1,46 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-11
+**Analysis Date:** 2026-03-22
 
 ## Test Framework
 
 **Runner:**
 - Vitest ^4.0.18
-- Config: `vitest.config.js` (CommonJS format, `module.exports = defineConfig(...)`)
+- Config: `vitest.config.js` (CommonJS format using `require`)
+- Environment: `jsdom`
 
 **Assertion Library:**
-- Vitest built-in `expect` extended with `@testing-library/jest-dom` matchers
-- Extension happens in `tests/setup.ts`: `expect.extend(matchers)`
+- Vitest's built-in `expect` + `@testing-library/jest-dom` matchers (extended in setup)
 
 **Run Commands:**
 ```bash
-npm test                  # Run all tests once
-npm test -- --watch       # Watch mode
-npm test -- --coverage    # Coverage report (V8 provider)
+npm test                      # Run all tests (vitest run)
+npm test -- --watch           # Watch mode
+npm test -- --coverage        # Coverage report
 ```
 
 ## Test File Organization
 
-**Location:**
-- Separate `tests/` directory at project root (NOT co-located with source)
-- Mirrors the source structure loosely
+**Location:** All tests in `tests/` directory — NOT co-located with source files.
 
-**Naming:**
-- `*.test.ts` for pure logic tests
-- `*.test.tsx` for React component tests
+**Naming:** `*.test.ts` or `*.test.tsx`
 
 **Structure:**
 ```
 tests/
-├── setup.ts                         # Global setup: jest-dom matchers, Next.js mocks, env vars
-├── vitest.d.ts                       # Vitest type declarations
-├── api/                             # API route handler tests
-│   ├── intake-submit.test.ts        # Tests for utility functions used by intake API
-│   ├── portal-logout.test.ts
-│   ├── portal-refresh.test.ts
-│   ├── portal-send-otp.test.ts
-│   ├── portal-verify-otp.test.ts
-│   └── protocol-generate.test.ts   # Tests for POST /api/protocol/generate
-├── components/                      # React component tests
-│   ├── PortalLogin.test.tsx
-│   └── TierGate.test.tsx
+├── setup.ts                        # Global setup (mocks, env vars, cleanup)
+├── vitest.d.ts                     # Vitest type declarations
+├── api/
+│   └── protocol-generate.test.ts   # API route handler tests
+├── components/
+│   └── TierGate.test.tsx           # React component tests
 ├── integration/
-│   └── protocol-engine.test.ts     # Cross-module integration tests
-└── lib/                            # Library/utility unit tests
-    ├── auth.test.ts
-    ├── library-content.test.ts
-    ├── plans.test.ts
-    ├── portal-auth.test.ts
-    └── protocol-templates.test.ts
+│   └── protocol-engine.test.ts     # Multi-module integration tests
+└── lib/
+    ├── auth.test.ts                 # Auth utility tests
+    ├── library-content.test.ts      # Content utility tests
+    ├── plans.test.ts                # Config/data tests
+    └── protocol-templates.test.ts   # Business logic tests
 ```
 
 ## Test Structure
@@ -60,46 +49,58 @@ tests/
 ```typescript
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-describe('Module/Component Name', () => {
-  describe('function or feature', () => {
-    it('describes the expected behavior in plain English', () => {
-      // arrange → act → assert
-      const result = functionUnderTest(input)
-      expect(result).toBe(expectedValue)
+describe('Top-Level Domain', () => {
+  describe('Specific Function/Feature', () => {
+    it('describes expected behavior', () => {
+      // arrange, act, assert
     })
   })
 })
 ```
 
 **Patterns:**
-- Multi-level `describe` nesting: outer = module/component, inner = function or scenario group (e.g., "Access granted", "Access denied", "Edge cases")
-- `beforeEach(() => vi.clearAllMocks())` — standard setup in files that use mocks
-- `afterEach(() => vi.restoreAllMocks())` — used in API tests to restore spies
-- `cleanup()` from `@testing-library/react` called in global `afterEach` via `tests/setup.ts`
-- Helper factory functions defined inside `describe` blocks: `function createRequest(body: object): NextRequest { ... }`
+- `beforeEach(() => { vi.clearAllMocks() })` — reset mocks before each test
+- `afterEach(() => { vi.restoreAllMocks() })` — restore spies after each test
+- React component tests use `afterEach(() => { cleanup() })` via global setup in `tests/setup.ts`
+- Named test descriptions follow: `'returns X when Y'`, `'has correct Z'`, `'denies/grants access when...'`
 
-**Shared test data pattern (matrix testing):**
+**Data Table Pattern (parametrized tests):**
 ```typescript
-// From tests/lib/plans.test.ts
-const accessMatrix = [
-  { tier: 'club', advancedProtocols: false, providerNotes: false },
-  { tier: 'concierge', advancedProtocols: true, providerNotes: true },
+const testCases = [
+  { id: 'anxiety', supplements: ['Magnesium glycinate'], peptide: 'Selank' },
+  { id: 'insomnia', supplements: ['Glycine'], peptide: 'DSIP' },
 ]
 
-for (const expected of accessMatrix) {
-  it(`${expected.tier} tier has correct access`, () => {
-    // ...
+for (const tc of testCases) {
+  it(`${tc.id} has correct interventions`, () => {
+    const protocol = getSymptomProtocol(tc.id)
+    expect(protocol?.peptide).toBe(tc.peptide)
   })
 }
 ```
 
+**Access Matrix Pattern (exhaustive tier testing):**
+```typescript
+const tiers = ['club', 'core', 'catalyst', 'concierge'] as const
+
+it('respects tier ordering for access control', () => {
+  for (let i = 0; i < tiers.length; i++) {
+    for (let j = 0; j <= i; j++) {
+      const { unmount } = render(<TierGate requiredTier={tiers[j]} currentTier={tiers[i]}>...)
+      expect(screen.getByTestId('content')).toBeInTheDocument()
+      unmount()
+    }
+  }
+})
+```
+
 ## Mocking
 
-**Framework:** Vitest `vi` (built-in)
+**Framework:** Vitest's `vi.mock()` and `vi.fn()`
 
-**Module-level mocks (declared before imports):**
+**Module-level mock pattern:**
 ```typescript
-// Mock before importing the module under test
+// Declare mocks before importing the module under test
 vi.mock('@/lib/auth', () => ({
   getSession: vi.fn(),
   isProviderEmail: vi.fn(),
@@ -109,34 +110,15 @@ vi.mock('@vercel/postgres', () => ({
   sql: vi.fn(),
 }))
 
-// Then import
+// Import after mock declarations
 import { POST } from '@/app/api/protocol/generate/route'
 import * as auth from '@/lib/auth'
 ```
 
-**Global mocks (in `tests/setup.ts`):**
-```typescript
-// next/headers mock — always available
-vi.mock('next/headers', () => ({
-  cookies: vi.fn(() => ({
-    get: vi.fn(),
-    set: vi.fn(),
-    delete: vi.fn(),
-  })),
-  headers: vi.fn(() => new Map()),
-}))
-
-// next/navigation mock — throws on redirect/notFound to enable assertions
-vi.mock('next/navigation', () => ({
-  redirect: vi.fn((url: string) => { throw new Error(`NEXT_REDIRECT:${url}`) }),
-  notFound: vi.fn(() => { throw new Error('NEXT_NOT_FOUND') }),
-  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: vi.fn() })),
-}))
-```
-
-**Per-test mock overrides:**
+**Mock implementation in beforeEach:**
 ```typescript
 beforeEach(() => {
+  vi.clearAllMocks()
   vi.mocked(auth.getSession).mockResolvedValue({
     email: 'provider@cultrhealth.com',
     customerId: 'cus_123',
@@ -145,60 +127,46 @@ beforeEach(() => {
 })
 ```
 
-**Mock cookies with per-test return values:**
+**Async mock that throws:**
 ```typescript
-vi.mocked(cookies).mockResolvedValue({
-  get: vi.fn().mockImplementation((name: string) => {
-    if (name === PORTAL_ACCESS_COOKIE) return { value: token }
-    return undefined
-  }),
-  set: mockSet,
-  delete: vi.fn(),
-} as any)
+vi.mocked(asherApi.getPatientById).mockRejectedValue(new Error('Asher Med API error'))
 ```
 
-**NextResponse mock (for node environment tests):**
+**Next.js module mocks (global, in `tests/setup.ts`):**
 ```typescript
-// In portal-send-otp.test.ts — full manual mock of NextResponse
-vi.mock('next/server', () => {
-  class MockNextResponse {
-    body: unknown
-    status: number
-    constructor(body: string | null, init?: { status?: number }) {
-      this.body = body ? JSON.parse(body) : null
-      this.status = init?.status || 200
-    }
-    async json() { return this.body }
-    static json(data: unknown, init?: { status?: number }) {
-      return new MockNextResponse(JSON.stringify(data), init)
-    }
-  }
-  return { NextResponse: MockNextResponse }
-})
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(() => ({ get: vi.fn(), set: vi.fn(), delete: vi.fn() })),
+  headers: vi.fn(() => new Map()),
+}))
+
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn((url: string) => { throw new Error(`NEXT_REDIRECT:${url}`) }),
+  useRouter: vi.fn(() => ({ push: vi.fn(), refresh: vi.fn() })),
+}))
+```
+
+**Next/link mock (per-test-file):**
+```typescript
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
 ```
 
 **What to Mock:**
-- `@vercel/postgres` (`sql`) — never hit real DB in tests
-- `next/headers` (`cookies`, `headers`) — always mocked globally
-- `next/navigation` (`redirect`, `useRouter`) — always mocked globally
-- `next/link` — mocked in component tests as simple `<a href>` wrapper
-- External API clients (`@/lib/auth`, `@/lib/asher-med-api`) when testing API routes
-- `@/lib/rate-limit` — mocked to return `{ success: true }` by default
+- Next.js server modules (`next/headers`, `next/navigation`)
+- External API clients (`@/lib/auth`, `@/lib/asher-med-api`, `@vercel/postgres`)
+- Services that make network requests in unit/API tests
 
 **What NOT to Mock:**
-- Pure utility functions being tested directly (e.g., `buildPartnerNote`, `formatMedicationsList`, `cn()`)
-- Config data modules (e.g., `@/lib/config/plans`) — import and test real data
-- `jose` JWT library — used directly with test secrets to test real token behavior
+- Pure functions with no side effects (config objects, algorithms, utilities)
+- Business logic under test (e.g., `generateProtocol`, `getLibraryAccess` are tested directly, not mocked)
 
 ## Fixtures and Factories
 
-**Test Data:**
+**Request factory (API tests):**
 ```typescript
-// Inline object literals are the norm — no factory files
-const testPhone = '+15551234567'
-const testPatientId = 42
-
-// Request factory function pattern (in API tests)
 function createRequest(body: object): NextRequest {
   return new NextRequest('http://localhost:3000/api/protocol/generate', {
     method: 'POST',
@@ -208,7 +176,23 @@ function createRequest(body: object): NextRequest {
 }
 ```
 
-**Environment variables (set in `tests/setup.ts`):**
+**Inline fixture objects (component tests):**
+```typescript
+const coreAccess: LibraryAccess = {
+  masterIndex: 'titles_only',
+  advancedProtocols: false,
+  dosingCalculators: false,
+  stackingGuides: false,
+  providerNotes: false,
+  customRequests: false,
+}
+```
+
+**Location:** No shared fixture files — test data is defined inline within each test file.
+
+## Environment Variables
+
+Test environment variables are set globally in `tests/setup.ts`:
 ```typescript
 process.env.JWT_SECRET = 'test-jwt-secret'
 process.env.SESSION_SECRET = 'test-session-secret'
@@ -218,135 +202,103 @@ process.env.ASHER_MED_API_URL = 'https://sandbox-api.asherweightloss.com'
 process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS = 'provider@cultrhealth.com,admin@cultrhealth.com'
 ```
 
-**Location:**
-- No separate fixture files — all test data is inline within test files
-- No factory functions in shared files — factories are defined locally per test file
-
 ## Coverage
 
-**Requirements:** No enforced minimum thresholds — coverage is generated but not gated
-
 **Configuration:**
-- Provider: V8 (built into Vitest)
-- Reporters: `text` (console), `json`, `html`
+- Provider: V8
+- Reporters: `text`, `json`, `html`
 - Includes: `lib/**/*.ts`, `app/**/*.ts`, `app/**/*.tsx`
 - Excludes: `**/*.d.ts`, `**/node_modules/**`
+
+**Requirements:** No enforced coverage threshold.
 
 **View Coverage:**
 ```bash
 npm test -- --coverage
-# HTML report generated in coverage/ directory
 ```
 
 ## Test Types
 
 **Unit Tests (`tests/lib/`):**
-- Test individual exported functions in isolation
-- Import the real module, pass test inputs, assert outputs
-- Files: `auth.test.ts`, `plans.test.ts`, `library-content.test.ts`, `portal-auth.test.ts`, `protocol-templates.test.ts`
-
-**API Route Tests (`tests/api/`):**
-- Test HTTP handler functions (`GET`, `POST`) end-to-end within Node
-- Mock all external dependencies (DB, auth, external APIs)
-- Assert HTTP status codes and JSON response shapes
-- Files: `protocol-generate.test.ts`, `portal-send-otp.test.ts`, `portal-verify-otp.test.ts`, etc.
+- Scope: Pure functions, config validation, algorithm correctness
+- No external dependencies — tests run against real implementation
+- Files: `auth.test.ts`, `plans.test.ts`, `protocol-templates.test.ts`, `library-content.test.ts`
 
 **Component Tests (`tests/components/`):**
-- Use `@testing-library/react` `render` + `screen` queries
-- Test user-visible behavior (presence of text, links, button attributes)
-- Files: `TierGate.test.tsx`, `PortalLogin.test.tsx`
+- Scope: React rendering behavior, prop-driven access control
+- Uses `@testing-library/react` with `render`, `screen`, `getByTestId`, `getByRole`
+- Files: `TierGate.test.tsx`
+
+**API Route Tests (`tests/api/`):**
+- Scope: HTTP handler behavior — status codes, response shapes, auth enforcement
+- Mocks all external dependencies (auth, DB, external APIs)
+- Uses real `NextRequest` constructor
+- Files: `protocol-generate.test.ts`
 
 **Integration Tests (`tests/integration/`):**
-- Test interaction between real modules (no mocks of internal code)
-- Example: `protocol-engine.test.ts` tests `getLibraryAccess` → `generateProtocol` → content interpolation flow
-- Only external dependencies (DB, Next.js) are mocked
+- Scope: Multi-module flows — tier access → protocol generation → content gating
+- Tests real implementations without mocks (pure business logic)
+- Files: `protocol-engine.test.ts`
+
+**E2E Tests:** Not used.
 
 ## Common Patterns
 
-**Vitest environment override (for Node-only code):**
-```typescript
-// @vitest-environment node
-// Placed at the very top of test files that must not run in jsdom
-import { describe, it, expect } from 'vitest'
-```
-Used in: `tests/lib/portal-auth.test.ts`, `tests/api/portal-send-otp.test.ts`
-
 **Async Testing:**
 ```typescript
-it('round-trips a valid access token', async () => {
-  const token = await createPortalAccessToken(testPhone, testPatientId)
-  const session = await verifyPortalAccessToken(token)
-  expect(session).not.toBeNull()
-  expect(session!.phone).toBe(testPhone)
+it('returns 401 when no session exists', async () => {
+  vi.mocked(auth.getSession).mockResolvedValue(null)
+
+  const request = createRequest({ templateId: 'glp1-standard', patientId: '123' })
+  const response = await POST(request)
+  const data = await response.json()
+
+  expect(response.status).toBe(401)
+  expect(data.error).toBe('Unauthorized')
 })
 ```
 
-**Null/undefined edge case testing:**
-```typescript
-it('defaults to Club access for null tier', () => {
-  const access = getLibraryAccess(null)
-  expect(access.advancedProtocols).toBe(false)
-})
-
-it('handles null currentTier as Club (most restrictive)', () => {
-  render(<TierGate requiredTier="core" currentTier={null} upgradeMessage="Upgrade">
-    <div data-testid="content">Content</div>
-  </TierGate>)
-  expect(screen.getByText('Upgrade')).toBeInTheDocument()
-})
-```
-
-**Error/rejection testing:**
+**Error Testing:**
 ```typescript
 it('handles API errors gracefully', async () => {
   vi.mocked(asherApi.getPatientById).mockRejectedValue(new Error('Asher Med API error'))
+
   const response = await POST(request)
   const data = await response.json()
+
   expect(response.status).toBe(500)
   expect(data.error).toBe('Asher Med API error')
 })
 ```
 
-**Token expiry testing (using `jose` directly to craft expired tokens):**
+**Null/undefined edge cases (always test explicitly):**
 ```typescript
-it('access token becomes invalid after expiry', async () => {
-  const secret = new TextEncoder().encode(process.env.SESSION_SECRET)
-  const token = await new SignJWT({ phone: testPhone, type: 'portal_access' })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('0s') // already expired
-    .sign(secret)
-  const session = await verifyPortalAccessToken(token)
-  expect(session).toBeNull()
+it('handles null currentTier as Club (most restrictive)', () => {
+  render(<TierGate requiredTier="core" currentTier={null} upgradeMessage="Upgrade">...)
+  expect(screen.getByText('Upgrade')).toBeInTheDocument()
 })
 ```
 
-**Component render + query pattern:**
+**Negative assertions:**
 ```typescript
-it('renders children when user tier meets required tier', () => {
-  render(
-    <TierGate requiredTier="catalyst" currentTier="catalyst" upgradeMessage="Upgrade to access">
-      <div data-testid="protected-content">Protected Content</div>
-    </TierGate>
-  )
-  expect(screen.getByTestId('protected-content')).toBeInTheDocument()
-  expect(screen.queryByText('Upgrade to access')).not.toBeInTheDocument()
-})
+expect(screen.queryByText('Upgrade to access')).not.toBeInTheDocument()
+expect(slugs).not.toContain('index')
 ```
 
-**Loop-based exhaustive testing (tier hierarchy):**
-```typescript
-const tiers = ['club', 'core', 'catalyst', 'concierge'] as const
-it('respects tier ordering', () => {
-  for (let i = 0; i < tiers.length; i++) {
-    for (let j = 0; j <= i; j++) {
-      const { unmount } = render(<TierGate requiredTier={tiers[j]} currentTier={tiers[i]} ...>)
-      expect(screen.getByTestId('content')).toBeInTheDocument()
-      unmount()
-    }
-  }
-})
-```
+## Current Test Coverage Summary
+
+| File | What It Tests |
+|------|---------------|
+| `tests/lib/auth.test.ts` | `getLibraryAccess`, `hasFeatureAccess`, `isProviderEmail` |
+| `tests/lib/plans.test.ts` | `PLANS` array structure, `STRIPE_CONFIG`, tier access matrix |
+| `tests/lib/protocol-templates.test.ts` | `PROTOCOL_TEMPLATES`, `generateProtocol`, `SYMPTOM_PROTOCOLS` (100+ entries), symptom search/combine |
+| `tests/lib/library-content.test.ts` | `CATEGORY_META`, `getCategories`, content filtering logic |
+| `tests/components/TierGate.test.tsx` | Tier-based content gating component (access grant/deny, hierarchy) |
+| `tests/api/protocol-generate.test.ts` | `/api/protocol/generate` route (auth, validation, error handling) |
+| `tests/integration/protocol-engine.test.ts` | Tier → access → protocol generation full flow |
+
+**Not covered:** Checkout flows, intake form submission, creator portal API routes, webhook handlers, admin routes, most database functions, payment providers.
 
 ---
 
-*Testing analysis: 2026-03-11*
+*Testing analysis: 2026-03-22*

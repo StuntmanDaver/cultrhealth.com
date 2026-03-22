@@ -1,185 +1,197 @@
 # Architecture
 
-**Analysis Date:** 2026-03-11
+**Analysis Date:** 2026-03-22
 
 ## Pattern Overview
 
-**Overall:** Multi-domain monolith with a Next.js 14 App Router monorepo serving six distinct sub-applications from a single codebase.
+**Overall:** Multi-tenant Next.js 14 App Router monolith with domain-segmented API surface, React Context state management, and external service delegation for medical/payment operations.
 
 **Key Characteristics:**
-- Server Components by default; interactive pages extract their interactivity into `*Client.tsx` co-located files
-- Route handlers (API) co-located under `app/api/` — no separate Express/Fastify server
-- Business logic isolated in `lib/` — API routes call lib functions, never implement logic inline
-- External integrations (Asher Med, Stripe, QuickBooks, Resend) each wrapped in dedicated `lib/*.ts` client files
-- Three separate auth systems sharing the same JWT library: magic-link sessions (`cultr_session`), portal OTP sessions (`cultr_portal_access`/`cultr_portal_refresh`), creator sessions (embedded in `cultr_session` via `creatorId` claim)
+- Server Components by default; interactive pages extracted to `*Client.tsx` files co-located with their page
+- Three distinct authenticated portals (member `/portal`, creator `/creators/portal`, admin `/admin`) each with separate auth strategies and layouts
+- Backend logic lives in `lib/` (pure utility functions, API clients, DB helpers); API routes in `app/api/` thin-orchestrate those utilities
+- External services (Asher Med, Stripe, Resend, QuickBooks, SiPhox) are wrapped in dedicated `lib/` modules; API routes never call external SDKs directly
+- Static marketing pages are edge-cached; authenticated/HIPAA pages are `private, no-cache`
 
 ## Layers
 
 **Configuration Layer:**
-- Purpose: Centralized constants, plan definitions, feature flags, product catalog
+- Purpose: Centralized business constants — plans, products, affiliate rates, social proof, coupons, therapies
 - Location: `lib/config/`
-- Contains: `plans.ts`, `affiliate.ts`, `product-catalog.ts`, `asher-med.ts`, `social-proof.ts`, `payments.ts`, `links.ts`, `quiz.ts`, `products.ts`, `product-to-asher-mapping.ts`, `tax.ts`
-- Depends on: Nothing (no imports from other `lib/` files)
-- Used by: All other layers
+- Contains: TypeScript constants and type definitions, no runtime side effects
+- Depends on: Nothing (no imports from other layers)
+- Used by: API routes, pages, components throughout
 
-**Infrastructure / Client Layer:**
-- Purpose: Database access, external API clients, JWT auth, email, payments
-- Location: `lib/*.ts` (top-level lib files)
-- Contains: `db.ts`, `auth.ts`, `portal-auth.ts`, `portal-db.ts`, `asher-med-api.ts`, `resend.ts`, `quickbooks.ts`, `turnstile.ts`, `rate-limit.ts`, `validation.ts`, `utils.ts`, `analytics.ts`, `data-normalization.ts`
-- Depends on: `lib/config/`
-- Used by: API routes, server components
+**Data Access Layer:**
+- Purpose: All SQL queries and database operations
+- Location: `lib/db.ts` (core entities), `lib/creators/db.ts` (affiliate tables), `lib/portal-db.ts` (portal sessions), `lib/siphox/db.ts` (lab results)
+- Contains: Typed query functions using `@vercel/postgres` `sql` tagged template
+- Depends on: `lib/config/` for types
+- Used by: API routes only (never from components)
 
-**Domain Logic Layer:**
-- Purpose: Business logic isolated per domain (commissions, attribution, invoicing, LMN generation, peptide scoring)
-- Location: `lib/creators/`, `lib/invoice/`, `lib/lmn/`, `lib/payments/`
-- Contains: `lib/creators/commission.ts`, `lib/creators/attribution.ts`, `lib/creators/db.ts`, `lib/invoice/`, `lib/lmn/`, `lib/payments/`
-- Depends on: `lib/config/`, `lib/*.ts`
-- Used by: API routes
+**External Service Layer:**
+- Purpose: HIPAA-safe wrappers around third-party APIs
+- Location: `lib/asher-med-api.ts`, `lib/quickbooks.ts`, `lib/resend.ts`, `lib/payments/`, `lib/siphox/client.ts`
+- Contains: Typed API clients, auth header injection, error normalization
+- Depends on: `lib/config/`, environment variables
+- Used by: API routes only
 
-**API Layer:**
-- Purpose: HTTP request handling, input validation, auth gating, response shaping
-- Location: `app/api/`
-- Contains: 80+ `route.ts` files organized by domain
-- Depends on: `lib/` (all layers)
-- Used by: Client components (via `fetch`), webhooks, cron
+**Business Logic Layer:**
+- Purpose: Domain calculations and orchestration logic independent of HTTP
+- Location: `lib/creators/commission.ts`, `lib/creators/attribution.ts`, `lib/resilience.ts`, `lib/calorie-calculator.ts`, `lib/peptide-calculator.ts`, `lib/lmn/`, `lib/invoice/`
+- Contains: Pure functions, scoring engines, PDF generators
+- Depends on: `lib/config/`, may call data access layer
+- Used by: API routes, occasionally imported in server components
 
-**UI Component Layer:**
-- Purpose: Reusable primitives and domain-specific components
-- Location: `components/ui/`, `components/site/`, `components/intake/`, `components/creators/`, `components/library/`, `components/payments/`, `components/dashboard/`
-- Depends on: `lib/config/`, `lib/utils.ts`, `lib/contexts/`
-- Used by: Pages
+**API Route Layer:**
+- Purpose: HTTP handlers — validate inputs, call lib functions, return JSON
+- Location: `app/api/` (80+ `route.ts` files, named `GET`/`POST` exports)
+- Contains: Thin orchestration: auth check → validate → call lib → respond
+- Depends on: All lib layers
+- Used by: Client components via `fetch()`
 
-**Page Layer:**
-- Purpose: Routing, server-side data loading, rendering orchestration
-- Location: `app/` (all `page.tsx` files)
-- Contains: Server components that load data and render layouts; interactive sections extracted to `*Client.tsx` siblings
-- Depends on: Components, `lib/` (auth/db for server-side data loading)
-- Used by: Nothing (leaf layer)
+**Auth Layer:**
+- Purpose: JWT creation/verification, session cookies, role checks
+- Location: `lib/auth.ts` (member/creator/admin), `lib/portal-auth.ts` (phone OTP portal)
+- Contains: `verifyAuth()`, `verifyCreatorAuth()`, `verifyAdminAuth()`, `getMembershipTier()`
+- Depends on: `jose`, `lib/db.ts`, `lib/creators/db.ts`
+- Used by: All API routes and portal layouts
 
-**Context Layer:**
-- Purpose: Client-side state shared across subtree
-- Location: `lib/contexts/`, `lib/cart-context.tsx`
-- Contains: `CreatorContext.tsx`, `intake-form-context.tsx`, `cart-context.tsx`
-- Depends on: `lib/config/affiliate`
-- Used by: `*Client.tsx` components
+**UI Layer:**
+- Purpose: React components — pages, layouts, and shared UI primitives
+- Location: `app/` (pages/layouts), `components/` (reusable components)
+- Contains: Server components (pages), Client components (`*Client.tsx`), UI primitives (`components/ui/`)
+- Depends on: `lib/config/` for constants, fetches `app/api/` for data
+- Used by: End users via browser
 
 ## Data Flow
 
-**Subscription Checkout Flow:**
+**New Member Checkout (Core/Catalyst/Concierge):**
+1. User visits `app/join/[tier]/page.tsx`
+2. `JoinClient.tsx` (client) calls `POST /api/checkout/subscription` with `planSlug` + `email`
+3. Route calls `lib/rate-limit.ts` → creates Stripe Checkout Session via `stripe` SDK
+4. Browser redirects to Stripe-hosted checkout; on success redirects to `/success`
+5. Stripe fires `checkout.session.completed` webhook to `POST /api/webhook/stripe/route.ts`
+6. Webhook handler writes membership record to DB via `lib/db.ts`, triggers Resend welcome email via `lib/resend.ts`
 
-1. User selects plan on `/pricing` or `/join/[tier]`
-2. Client POSTs to `/api/checkout/route.ts` with `planSlug`
-3. Route reads plan config from `lib/config/plans.ts`, returns Stripe payment link URL
-4. User redirected to Stripe-hosted checkout page
-5. Stripe fires `checkout.session.completed` webhook to `/api/webhook/stripe/route.ts`
-6. Webhook verifies signature, checks idempotency via `lib/db.ts:isStripeEventProcessed`, creates membership record
-7. Attribution cookies resolved via `lib/creators/attribution.ts`, commissions recorded via `lib/creators/commission.ts`
+**CULTR Club Free Signup:**
+1. User visits `app/join/page.tsx` (or `join.cultrhealth.com` via middleware rewrite)
+2. Signup modal submits `POST /api/club/signup`
+3. Route inserts `club_members` row, validates coupon via `lib/config/coupons.ts`, sends confirmation email via `lib/resend.ts`
+4. Cookie `cultr_attribution` set for affiliate tracking
 
-**Medical Intake Flow:**
+**Medical Intake Submission:**
+1. Authenticated member completes `app/intake/IntakeFormClient.tsx` (12-step multi-form)
+2. ID + consent uploads go to `POST /api/intake/upload` → calls `lib/asher-med-api.ts` for presigned S3 URLs
+3. Form submits to `POST /api/intake/submit` → calls `lib/asher-med-api.ts` to create patient + order in Asher Med portal
+4. `lib/intake-utils.ts` builds `partnerNote` payload, sent via `updateOrderApproval()` PATCH call
 
-1. Authenticated user visits `/intake` (must have active subscription)
-2. `IntakeFormClient.tsx` mounts with `IntakeFormProvider` (12-step wizard state in context)
-3. ID document and consent: client POSTs to `/api/intake/upload/route.ts` which calls Asher Med presigned URL API
-4. On final step, client POSTs all form data to `/api/intake/submit/route.ts`
-5. Route calls `lib/asher-med-api.ts:createNewOrder()` to create patient+order in Asher Med
-6. PATCH call via `updateOrderApproval()` sends partner notes to Asher Med (non-fatal try/catch)
-7. Form data enriched and stored in `pending_intakes` table via `lib/db.ts`
-8. Portal session patient ID updated via `lib/portal-db.ts:updatePortalPatientId()`
+**Creator Affiliate Attribution:**
+1. Visitor clicks affiliate link → `app/r/[slug]/route.ts` fires `POST /api/track/click`
+2. Route records `click_events` row, sets `cultr_attribution` cookie (30-day expiry)
+3. On checkout completion, webhook reads attribution cookie, writes `order_attributions` row
+4. Cron job at `app/api/cron/approve-commissions/route.ts` runs daily, approves commissions after 30-day refund window
 
-**Creator Attribution Flow:**
-
-1. Visitor clicks creator link `/r/[slug]` → `app/r/[slug]/route.ts` handler
-2. Handler resolves link via `lib/creators/db.ts:getTrackingLinkBySlug()`, records click event, sets `cultr_attribution` cookie (30-day, base64-encoded JSON)
-3. At checkout completion, Stripe webhook resolves cookie via `lib/creators/attribution.ts:resolveAttribution()`
-4. Commission calculated in `lib/creators/commission.ts:processOrderAttribution()` (10% direct, 2–8% tiered override, 25% cap during 6-month bonus window)
-
-**Portal (Phone OTP) Auth Flow:**
-
-1. User visits `/portal/login`, enters phone number
-2. Client POSTs to `/api/portal/send-otp/route.ts` — sends Twilio OTP (staging: skips Twilio)
-3. Client submits 6-digit code to `/api/portal/verify-otp/route.ts`
-4. Route verifies via `lib/portal-auth.ts`, creates dual JWT tokens (15-min access + 7-day refresh), sets `cultr_portal_access` and `cultr_portal_refresh` cookies
-5. Lookup determines outcome: Case A (patient found → dashboard), Case B (known phone → `/intake`), Case C (new → support message)
+**Member Portal Auth (Phone OTP):**
+1. Member enters phone at `app/portal/login/page.tsx`
+2. `POST /api/portal/send-otp` sends OTP via Twilio (or returns `123456` on staging)
+3. `POST /api/portal/verify-otp` validates OTP, issues short-lived access token (15 min) + refresh token (7 days) via `lib/portal-auth.ts`
+4. `app/portal/layout.tsx` (client) polls `POST /api/portal/refresh` every 12 min of activity
 
 **State Management:**
-
-- Server state: PostgreSQL (Neon) via `lib/db.ts` using `@vercel/postgres` tagged template literals (`sql\`...\``)
-- Client state: React Context API for multi-step flows (intake form, creator portal) and shopping cart
-- URL state: `useSearchParams` for step navigation in intake and quiz
-- Cookie state: Attribution tracking, session tokens, portal auth tokens
+- **Server state:** Fetched in Server Components where possible; Client Components `fetch()` API routes
+- **UI state:** React `useState`/`useReducer` local to each component
+- **Cross-component state:** React Context API — `CreatorContext` (creator portal), `CartContext` (shop cart), `IntakeFormContext` (multi-step intake form)
+- **Cart persistence:** `localStorage` via `CartContext` reducer
+- **Attribution persistence:** `cultr_attribution` cookie (30-day)
 
 ## Key Abstractions
 
-**Plan Tier (`PlanTier`):**
-- Purpose: Drives access control across library content, checkout, and API gates
-- Examples: `lib/config/plans.ts`, `lib/auth.ts:getMembershipTier()`, `components/library/TierGate.tsx`
-- Pattern: `'club' | 'core' | 'catalyst' | 'concierge'` — passed through JWT sessions and checked against `libraryAccess` config object per plan
+**`cn()` Utility:**
+- Purpose: Merge Tailwind classes safely without conflicts
+- Examples: `lib/utils.ts`
+- Pattern: `clsx` + `tailwind-merge` combined; used in every component for conditional classes
 
-**API Route Pattern:**
-- Purpose: Consistent request handling across 80+ endpoints
-- Examples: Any `app/api/*/route.ts`
-- Pattern: Named exports `GET`/`POST` accepting `NextRequest`, calling `verifyAuth()`/`verifyCreatorAuth()`/`verifyAdminAuth()` from `lib/auth.ts`, then delegating to lib functions, returning `NextResponse.json()`
+**Plan Tiers (`PlanTier`):**
+- Purpose: Typed union controlling feature access, pricing, and content gating
+- Examples: `lib/config/plans.ts`, `lib/auth.ts` `getMembershipTier()`, `components/library/TierGate.tsx`
+- Pattern: `'club' | 'core' | 'catalyst' | 'concierge'` — evaluated in `getLibraryAccess()` to return `LibraryAccess` object
 
-**Server/Client Split:**
-- Purpose: Keep pages as server components for SEO/performance while enabling interactivity
-- Examples: `app/intake/page.tsx` + `app/intake/IntakeFormClient.tsx`, `app/quiz/page.tsx` + `app/quiz/QuizClient.tsx`
-- Pattern: `page.tsx` is `async` server component, imports `*Client.tsx` which has `'use client'` directive
+**Auth Result Pattern:**
+- Purpose: Consistent return shape from all auth verification functions
+- Examples: `lib/auth.ts` — `verifyAuth()`, `verifyCreatorAuth()`, `verifyAdminAuth()`
+- Pattern: `{ authenticated: boolean, email: string | null, customerId: string | null, role?: string | null }`
 
-**External API Client:**
-- Purpose: Isolate all Asher Med, Stripe, QuickBooks, Resend calls behind typed wrappers
-- Examples: `lib/asher-med-api.ts`, `lib/resend.ts`, `lib/quickbooks.ts`
-- Pattern: Module-level functions accepting typed inputs, returning typed outputs, throwing on HTTP errors
+**`*Client.tsx` Server/Client Split:**
+- Purpose: Keep pages as Server Components (SEO, zero client JS) while extracting interactive parts
+- Examples: `app/quiz/QuizClient.tsx`, `app/intake/IntakeFormClient.tsx`, `app/library/shop/ShopClient.tsx`
+- Pattern: `page.tsx` = server component with metadata, imports and renders `*Client.tsx` which is `'use client'`
+
+**External API Wrapper Pattern:**
+- Purpose: Isolate third-party SDK details from API routes
+- Examples: `lib/asher-med-api.ts`, `lib/quickbooks.ts`, `lib/siphox/client.ts`
+- Pattern: Module exports typed async functions; auth headers injected internally; errors normalized to `Error` objects
+
+**Resilience Utilities:**
+- Purpose: Retry logic + transient error detection for external API calls
+- Examples: `lib/resilience.ts` — `withRetry()`, `isTransientDbError()`
+- Pattern: `await withRetry(() => externalCall(), { maxAttempts: 3, delayMs: 1000 })`
 
 ## Entry Points
 
-**Web Application Root:**
+**Root Layout:**
 - Location: `app/layout.tsx`
-- Triggers: All page requests
-- Responsibilities: Font loading, Google Analytics script injection, renders `LayoutShell`
+- Triggers: Every page request
+- Responsibilities: Font CSS variables, GA script injection, `LayoutShell` wrapper (conditionally shows Header/Footer), `MeshBackgroundDynamic` global background
 
-**LayoutShell:**
-- Location: `components/site/LayoutShell.tsx` + `components/site/LayoutShellClient.tsx`
-- Triggers: Every page render
-- Responsibilities: Conditionally shows/hides `Header` and `Footer` based on path prefixes (`/creators/portal`, `/admin`, `/join-club`, `/portal`)
+**Edge Middleware:**
+- Location: `middleware.ts`
+- Triggers: All requests matching `/((?!_next/static|_next/image|favicon.ico).*)`
+- Responsibilities: Rewrites `join.cultrhealth.com` → `/join` (subdomain aliasing); passes all other requests through unchanged
 
-**Middleware:**
-- Location: `middleware.ts` (project root)
-- Triggers: All non-static requests
-- Responsibilities: Rewrites `join.cultrhealth.com` hostname to `/join` path prefix; passes everything else through
+**Marketing Homepage:**
+- Location: `app/page.tsx`
+- Triggers: `GET /`
+- Responsibilities: Full-page server render of all marketing sections; lazy-loads below-fold components via `next/dynamic`
 
-**Stripe Webhook:**
-- Location: `app/api/webhook/stripe/route.ts`
-- Triggers: Stripe events (subscription lifecycle)
-- Responsibilities: Signature verification, idempotency check, membership record creation/update, commission attribution
+**API Route Convention:**
+- Location: `app/api/**/*.route.ts`
+- Triggers: HTTP requests from client components or external webhooks
+- Responsibilities: Auth check → input validation → lib function calls → JSON response; follow `export async function GET/POST(request: NextRequest)` pattern
 
 **Cron Jobs:**
-- Location: `app/api/cron/approve-commissions/route.ts`, `app/api/cron/update-tiers/route.ts`
-- Triggers: Scheduled (Vercel Cron, configured in `vercel.json`)
-- Responsibilities: Auto-approve commissions after 30-day refund window; recalculate creator tiers and active member counts
+- Location: `app/api/cron/*/route.ts`
+- Triggers: Vercel Cron schedule (configured in `vercel.json`)
+- Responsibilities: `approve-commissions` (approve 30-day-old pending commissions), `update-tiers` (recalculate creator tiers by recruit count), `siphox-results` (poll SiPhox for new lab results), `siphox-fulfillment` (sync fulfillment status)
 
 ## Error Handling
 
-**Strategy:** Fail-fast with try/catch at API route boundary; external integrations use non-fatal try/catch when side effects are acceptable (e.g., Asher Med PATCH after order create).
+**Strategy:** Fail-fast on invalid input; graceful degradation on external service failures; structured JSON error responses from API routes.
 
 **Patterns:**
-- API routes: Return `NextResponse.json({ error: message }, { status: N })` on validation failure; catch-all returns 500
-- External API calls: `withRetry()` from `lib/resilience.ts` for transient errors (connection resets, timeouts)
-- DB errors: `DatabaseError` custom class in `lib/db.ts`; staging falls through gracefully if `POSTGRES_URL` absent
-- Email sends: Independent try/catch per recipient (customer + admin isolated) — response includes `{ customerEmailSent, adminEmailSent }` flags
-- HIPAA note: No PHI logged; console outputs contain only IDs, event types, timestamps
+- API routes return `NextResponse.json({ error: '...' }, { status: 4xx/5xx })` on failure
+- External service calls wrapped in `try/catch`; failures logged (PHI-free), HTTP 500 returned
+- Auth failures return 401 with `{ error: 'Unauthorized' }`; portal layouts redirect to login
+- DB unavailability falls through to Stripe lookup for membership tier (cascading fallback in `lib/auth.ts` `getMembershipTier()`)
+- Stripe webhook signature failures return 400 immediately (no processing)
+- Individual email sends (customer + admin) have independent `try/catch` blocks; response includes `{ customerEmailSent, adminEmailSent }` flags
 
 ## Cross-Cutting Concerns
 
-**Logging:** `console.log`/`console.error` inline in routes; `removeConsole` compiler option strips all logs in production builds. Structured JSON logging used in `lib/resilience.ts:logCheckoutEvent()`.
+**Logging:** `console.log` (production `removeConsole` strips it via `next.config.js`); structured JSON for checkout events via `lib/resilience.ts` `logCheckoutEvent()`; HIPAA rule: never log PHI fields
 
-**Validation:** Zod schemas in `lib/validation.ts` used at API boundaries; manual required-field checks with early returns for simpler endpoints.
+**Validation:** Zod schemas in `lib/validation.ts`; API routes validate request bodies before any DB/service call; `DOMPurify` sanitizes all rendered markdown content
 
-**Authentication:** Three auth paths all share `jose` JWT library — `verifyAuth()` for members/admins, `verifyCreatorAuth()` for creator portal, `verifyPortalSession()` in `lib/portal-auth.ts` for phone-OTP portal. Development mode auto-grants admin access. Staging bypasses magic link emails.
+**Authentication:**
+- Member/creator/admin sessions: JWT (HS256) in `cultr_session` cookie via `lib/auth.ts`; 7-day expiry
+- Member portal (phone OTP): Dual-token (15-min access + 7-day refresh) via `lib/portal-auth.ts`
+- Creator portal layout: Client-side auth check via `fetch('/api/creators/profile')` on mount
+- Development bypass: `lib/auth.ts` `getSession()` returns a hardcoded admin session when `NODE_ENV === 'development'`
 
-**Rate Limiting:** `lib/rate-limit.ts` provides `apiLimiter.check()` used at checkout and other sensitive endpoints. Falls back gracefully if Upstash Redis is not configured.
+**Rate Limiting:** `lib/rate-limit.ts` — in-memory store for development, Upstash Redis for production; applied at API route level via `apiLimiter.check(ip)`
 
-**HIPAA Compliance:** No PHI in logs; presigned URLs for file uploads (S3 via Asher Med); `private, no-cache` headers on all authenticated routes; Cloudflare Turnstile bot protection on intake and checkout.
+**HIPAA Compliance:** No PHI in logs; presigned S3 URLs for file uploads (expiring); `private, no-cache` headers on all authenticated routes; data encryption delegated to Neon/Vercel infrastructure
 
 ---
 
-*Architecture analysis: 2026-03-11*
+*Architecture analysis: 2026-03-22*

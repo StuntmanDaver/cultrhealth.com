@@ -1,205 +1,224 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-03-11
+**Analysis Date:** 2026-03-22
 
 ## Naming Patterns
 
 **Files:**
-- Page routes: `page.tsx` (Next.js App Router convention)
-- Interactive client components extracted from pages: `*Client.tsx` (e.g., `IntakeFormClient.tsx`, `ShopClient.tsx`, `QuizClient.tsx`)
-- API routes: `route.ts` with named exports (`GET`, `POST`, etc.)
-- Utility libraries: `kebab-case.ts` (e.g., `asher-med-api.ts`, `portal-auth.ts`, `intake-utils.ts`)
-- Config files: `kebab-case.ts` inside `lib/config/` (e.g., `affiliate.ts`, `plans.ts`, `social-proof.ts`)
-- React components: `PascalCase.tsx` (e.g., `TierGate.tsx`, `Button.tsx`, `CreatorHeader.tsx`)
-- Test files: `*.test.ts` / `*.test.tsx` inside `tests/` directory tree
+- React components: PascalCase — `Button.tsx`, `TierGate.tsx`, `Header.tsx`
+- Client-side page components: `*Client.tsx` suffix — `QuizClient.tsx`, `IntakeFormClient.tsx`, `ShopClient.tsx`, `JoinLandingClient.tsx`
+- API routes: `route.ts` (Next.js App Router convention) — `app/api/auth/magic-link/route.ts`
+- Utility/lib files: camelCase — `auth.ts`, `db.ts`, `utils.ts`
+- Config files: kebab-case in lib/config — `plans.ts`, `product-catalog.ts`, `social-proof.ts`
 
 **Functions:**
-- camelCase for all functions: `getLibraryAccess`, `buildPartnerNote`, `verifyCreatorAuth`
-- Async functions: standard `async function` or `async () =>` arrow functions
-- React components: PascalCase named function or `forwardRef` (e.g., `const Button = forwardRef<...>(...)`)
-- Utility helpers: verb-first naming: `formatMedicationsList`, `calculateBMI`, `normalizePlanTier`
+- Exported async functions: camelCase — `createMagicLinkToken`, `verifySessionToken`, `getMembershipTier`
+- React components: PascalCase — `Button`, `TierGate`, `Header`
+- Private/internal helpers: camelCase — `isStaging()`, `normalizePlanTier()`, `getTierRank()`
+- Factory/getter functions: `get*` prefix — `getStripe()`, `getResend()`, `getSession()`
+- Validator functions: `is*` / `has*` / `check*` — `isProviderEmail()`, `hasFeatureAccess()`, `checkRateLimit()`
 
 **Variables:**
-- camelCase for local variables and parameters
-- SCREAMING_SNAKE_CASE for module-level constants: `PLANS`, `STRIPE_CONFIG`, `BIOMARKER_DEFINITIONS`, `TIER_ORDER`, `SESSION_COOKIE_NAME`
-- Interfaces: PascalCase with no `I` prefix: `ButtonProps`, `SessionPayload`, `AuthResult`
-- Type aliases: PascalCase: `PlanTier`, `BiomarkerCategory`, `Phenotype`
+- Local variables: camelCase — `normalizedEmail`, `sessionCookie`, `baseConfig`
+- Constants: SCREAMING_SNAKE_CASE — `SESSION_COOKIE_NAME`, `RATE_LIMIT_WINDOW`, `TEAM_EMAILS`, `TIER_ORDER`
+- Config objects: SCREAMING_SNAKE_CASE — `PLANS`, `STRIPE_CONFIG`, `BIOMARKER_DEFINITIONS`
 
-**Types:**
-- Interfaces for object shapes (preferred over `type` for extendable structures)
-- Type unions for discriminated values: `'pending' | 'active' | 'paused' | 'rejected'`
-- Zod schemas suffixed with `Schema`: `waitlistSchema`, `newsletterSchema`
-- Inferred types exported alongside schemas: `export type WaitlistFormData = z.infer<typeof waitlistSchema>`
+**Types and Interfaces:**
+- Interfaces: PascalCase with no `I` prefix — `ButtonProps`, `SessionPayload`, `AuthResult`
+- Type aliases: PascalCase — `PlanTier`, `BiomarkerCategory`, `LibraryAccess`
+- Input types: `*Input` suffix — `CreateWaitlistInput`, `CreateMembershipInput`, `UpdateMembershipInput`
+- Entry/row types: `*Entry` suffix — `WaitlistEntry`, `MembershipEntry`, `OrderEntry`
 
 ## Code Style
 
 **Formatting:**
-- No Prettier or Biome config detected — formatting is manual/editor-enforced
-- Semicolons: inconsistent — API route files use semicolons (`app/api/`), library files often omit them (`lib/`)
-- Single quotes for string literals throughout
-- 2-space indentation
+- No Prettier or explicit formatting config found — formatting is enforced via ESLint (Next.js default config)
+- Single quotes for strings in most files; some files use double quotes inconsistently (no enforced rule)
+- Semicolons: inconsistent across the codebase (some files omit, some include)
+- Trailing commas: present in most multi-line structures
+- 2-space indentation throughout
 
 **Linting:**
-- ESLint 8 via `eslint-config-next` (Next.js default ruleset)
-- No custom `.eslintrc` — uses Next.js defaults only
-- TypeScript: `strict: false` in `tsconfig.json` — loose type checking permitted
+- ESLint via `eslint-config-next` (Next.js defaults)
+- Run: `npm run lint`
+- No custom `.eslintrc` — uses Next.js built-in rules only
+- Hook post-write audit: `code-audit.sh` runs ESLint, checks for `console.log`, PHI logging, hardcoded secrets, TODO/FIXME
 
 ## Import Organization
 
-**Order (observed pattern):**
-1. Next.js framework imports (`next/server`, `next/headers`, `next/navigation`, `next/link`)
-2. External library imports (`jose`, `zod`, `stripe`)
-3. Internal `@/lib/*` imports (utilities, config, DB)
-4. Internal `@/components/*` imports
-5. Type-only imports last: `import type { PlanTier } from '@/lib/config/plans'`
+**Order:**
+1. React/Next.js framework imports — `import { useState, useEffect } from 'react'`, `import Link from 'next/link'`
+2. External library imports — `import Stripe from 'stripe'`, `import { Resend } from 'resend'`
+3. Internal imports with `@/` alias — `import { cn } from '@/lib/utils'`, `import Button from '@/components/ui/Button'`
 
 **Path Aliases:**
-- `@/` maps to project root (defined in both `tsconfig.json` and `vitest.config.js`)
-- Use `@/lib/...`, `@/components/...`, `@/app/...` — never relative paths for cross-directory imports
+- `@/*` maps to project root — use `@/lib/auth`, `@/components/ui/Button`, `@/app/api/...`
+- Defined in both `tsconfig.json` and `vitest.config.js`
 
 **Example:**
 ```typescript
 import { NextRequest, NextResponse } from 'next/server'
-import { SignJWT, jwtVerify } from 'jose'
-import { PLANS, type LibraryAccess, type PlanTier } from '@/lib/config/plans'
-import { getMembershipByCustomerId } from '@/lib/db'
-import type { ReactNode } from 'react'
+import Stripe from 'stripe'
+import { PLANS, BLOOD_TEST_ADDON } from '@/lib/config/plans'
+import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+```
+
+## Server vs. Client Boundary
+
+**'use client' directive:** Always first line of file for client components — before any imports.
+
+**Pattern:** Pages are server components by default. Interactive logic is extracted to `*Client.tsx` files:
+- `app/quiz/page.tsx` (server) → imports `QuizClient.tsx` (client)
+- `app/library/shop/page.tsx` (server) → imports `ShopClient.tsx` (client)
+- `app/join/JoinLandingClient.tsx` (client, full landing page)
+
+**Lazy loading below-fold components:**
+```typescript
+const PricingCard = dynamic(() => import('@/components/site/PricingCard'), {
+  loading: () => <div className="skeleton-loader" />,
+})
 ```
 
 ## Error Handling
 
-**API Routes:**
-- All route handlers wrapped in a single top-level `try/catch`
-- Errors returned as `NextResponse.json({ error: errorMessage }, { status: NNN })`
-- Error message extraction pattern: `const errorMessage = error instanceof Error ? error.message : 'Fallback message'`
-- Non-fatal external calls wrapped in their own nested try/catch with silent failure
-
-**Example pattern from `app/api/checkout/route.ts`:**
+**API routes:** Wrap all logic in `try/catch`. Return `NextResponse.json({ error: '...' }, { status: N })` on failure:
 ```typescript
 export async function POST(request: NextRequest) {
   try {
     // ... logic
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Operation error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Operation failed'
-    return NextResponse.json({ error: errorMessage }, { status: 400 })
+    console.error('Descriptive prefix:', error)
+    return NextResponse.json({ error: 'An error occurred.' }, { status: 500 })
   }
 }
 ```
 
-**Library functions:**
-- Return `null` for "not found" or invalid input instead of throwing
-- Throw only for unrecoverable errors
-- JWT verify functions always return `null` on failure (never throw to caller)
-
+**Library functions:** Throw custom `DatabaseError` for DB failures (`lib/db.ts`):
 ```typescript
-export async function verifyMagicLinkToken(token: string): Promise<{ email: string } | null> {
-  try {
-    const { payload } = await jwtVerify(token, MAGIC_LINK_SECRET)
-    if (payload.type !== 'magic_link' || typeof payload.email !== 'string') return null
-    return { email: payload.email }
-  } catch {
-    return null
+export class DatabaseError extends Error {
+  constructor(message: string, public originalError?: unknown) {
+    super(message)
+    this.name = 'DatabaseError'
   }
 }
 ```
 
-**External API resilience:**
-- `lib/resilience.ts` exports `withRetry<T>()` with exponential backoff for wrapping external calls
-- `isTransientDbError()` helper identifies retryable DB errors
-- Pattern: non-fatal try/catch around Asher Med API calls after primary DB write succeeds
+**JWT/Auth:** Return `null` on verification failure (never throw):
+```typescript
+try {
+  const { payload } = await jwtVerify(token, secret)
+  // ...
+  return result
+} catch {
+  return null
+}
+```
+
+**External API failures:** Silently catch and fall through to fallback:
+```typescript
+try {
+  const membership = await getMembershipByCustomerId(customerId)
+  if (fromDb) return fromDb
+} catch {
+  // DB unavailable — fall through to Stripe or return null
+}
+```
+
+**Lazy initialization pattern for external clients** (avoid build-time errors):
+```typescript
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2026-02-25.clover',
+  })
+}
+```
 
 ## Logging
 
-**Framework:** `console` (native)
+**Framework:** `console.log` / `console.error` (no structured logging library)
 
 **Patterns:**
-- `console.error()` for caught errors in API routes (282 occurrences across 69 API files)
-- `console.log()` for operational events (rate limit hits, checkout events)
-- Structured logging via `logCheckoutEvent()` in `lib/resilience.ts` for payment flows (JSON format with timestamp)
-- No PHI in logs (HIPAA requirement — patient names, emails, health data must not appear in log output)
-- `removeConsole` in production builds (configured in `next.config.js`)
+- Info events: `console.log('Event description:', { key: value, timestamp: new Date().toISOString() })`
+- Errors: `console.error('Descriptive prefix:', error)` — always with context
+- Structured JSON for checkout events via `logCheckoutEvent()` in `lib/resilience.ts`
+- HIPAA rule: never log PHI (email in logs is acceptable; health data is not)
+- `console.log` statements are flagged by `code-audit.sh` hook — use sparingly
 
 ## Comments
 
 **When to Comment:**
-- JSDoc block comments on exported functions: `/** Verify authentication for API routes */`
-- Section dividers with `=== SECTION NAME ===` in large utility files (pattern in `lib/resilience.ts`, `lib/auth.ts`)
-- Inline comments on non-obvious logic (cookie expiry values, HIPAA notes, API quirks)
-- Route files: leading JSDoc block explaining the endpoint's purpose and what it accepts
+- JSDoc blocks on exported utility functions — `/** ... */` style used in `lib/auth.ts`, `lib/resilience.ts`
+- Inline comments for non-obvious business logic (HIPAA rules, staging bypasses, rate limiting)
+- Section dividers with `// === SECTION NAME ===` in large files (`lib/db.ts`, `lib/auth.ts`, `lib/resilience.ts`)
+- TODO comments are flagged by `code-audit.sh` and should be avoided
 
 **JSDoc pattern:**
 ```typescript
 /**
- * POST /api/intake/submit
- *
- * Submits completed intake form to Asher Med to create a new order.
- * This is called after the user completes the multi-step intake form.
+ * Verify authentication for API routes
+ * Reads session from cookie or Authorization header
  */
-export async function POST(request: NextRequest) {
+export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
 ```
 
 ## Function Design
 
-**Size:** Functions are generally focused and single-purpose. Large orchestration functions (e.g., `calculateResilienceScore`) are split into helper functions called within.
+**Size:** Functions are generally kept focused; large files (`lib/protocol-templates.ts` at 4074 lines, `lib/db.ts` at 1792 lines) contain many small, single-purpose functions.
 
-**Parameters:** Prefer plain object params for functions with 3+ args. Simple functions use positional params.
+**Parameters:** Use typed objects for multi-param functions (`CreateWaitlistInput`, `RetryOptions`); primitives for simple functions.
 
-**Return Values:**
-- `null` for "not found" or unauthenticated states
-- Plain objects for success data
-- `{ authenticated: boolean, email: string | null, ... }` for auth result structs
+**Return Values:** Functions return typed values or `null` (never `undefined`) for optional results. Async functions return `Promise<T | null>` for fallible lookups.
+
+**Async/await:** Used consistently — no raw Promise chains.
 
 ## Module Design
 
 **Exports:**
-- Named exports preferred throughout (no default exports except React components)
-- React components: `export default Button` (default) but `export function TierGate` (named) — inconsistent, both patterns exist
-- `components/intake/index.ts` barrel file — the only barrel file detected; other component directories do not use barrels
+- Named exports for utility functions — `export async function createWaitlistEntry(...)`
+- Named exports for types/interfaces — `export interface SessionPayload {`
+- Default export for React components — `export default Button`
+- Named export for non-default components — `export function TierGate(...)`
+- Both patterns exist; components in `components/ui/` use default, domain components use named
 
 **Barrel Files:**
-- Only `components/intake/index.ts` uses barrel exports
-- All other modules export directly from their files
-- Do NOT create barrel files in new component directories
+- `components/intake/index.ts` — barrel export for all intake components
+- Other directories expose individual files directly (no barrels)
 
-## React Component Conventions
+## Button Component Usage
 
-**Server vs Client Split:**
-- Pages (`page.tsx`) are server components by default
-- Interactive parts extracted to `*Client.tsx` suffix: `IntakeFormClient.tsx`, `PortalLoginClient.tsx`, `ShopClient.tsx`
-- Client components always start with `'use client'` directive as first line
-
-**Component Pattern:**
+Always use `Button` from `@/components/ui/Button`. Do NOT use CVA — variants are managed via plain object lookup + `cn()`:
 ```typescript
-'use client'
-
-import { useState } from 'react'
 import Button from '@/components/ui/Button'
-import type { PlanTier } from '@/lib/config/plans'
-
-interface ComponentProps {
-  // typed props
-}
-
-export function ComponentName({ prop1, prop2 }: ComponentProps) {
-  // hooks first
-  const [state, setState] = useState(false)
-  // render
-  return (...)
-}
+// Variants: 'primary' | 'secondary' | 'ghost'
+// Sizes: 'sm' | 'md' | 'lg'
+// All variants use rounded-full
+<Button variant="secondary" size="sm" isLoading={loading}>Submit</Button>
 ```
 
-**Styling:**
-- Tailwind utility classes only — no CSS modules, no styled-components
-- `cn()` from `lib/utils.ts` for conditional/merged class strings: `cn(baseStyles, variants[variant], sizes[size], className)`
-- `class-variance-authority` (CVA) is NOT used despite being in `package.json`
-- All Button variants use manual variant objects + `cn()` instead of CVA
+## cn() Utility
 
-**Dynamic Imports:**
-- Use `next/dynamic` for below-fold / heavy components with a loading skeleton prop
-- Pattern: `const PricingCard = dynamic(() => import('@/components/site/PricingCard'), { loading: () => <Skeleton /> })`
+Always use `cn()` from `@/lib/utils` for conditional class merging — never raw string concatenation:
+```typescript
+import { cn } from '@/lib/utils'
+className={cn('base-class', condition && 'conditional-class', className)}
+```
+
+## Tailwind CSS
+
+- Use brand color tokens, not raw hex: `text-brand-primary`, `bg-brand-cream`, `text-cultr-sage`
+- Use `font-fraunces` or `font-display` for CULTR brand name and headings
+- Use `font-body` / `font-sans` (Inter) for body text
+- Custom animations defined in `tailwind.config.ts`: `animate-fade-in`, `animate-slide-up`, `animate-shimmer`
+
+## TypeScript Configuration Notes
+
+- `strict: false` — loose type checking; `any` casts (`as any`) are present in test files
+- `allowJs: true` — JS files are permitted
+- `skipLibCheck: true` — library type errors suppressed
+- `moduleResolution: "node"` — legacy resolution (not `bundler`)
+- Path alias `@/*` → project root; use consistently in new code
 
 ---
 
-*Convention analysis: 2026-03-11*
+*Convention analysis: 2026-03-22*

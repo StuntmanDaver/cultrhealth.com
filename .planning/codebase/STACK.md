@@ -1,21 +1,21 @@
 # Technology Stack
 
-**Analysis Date:** 2026-03-11
+**Analysis Date:** 2026-03-22
 
 ## Languages
 
 **Primary:**
-- TypeScript ^5.4.0 — All application code (strict: false, allowJs: true)
-- JavaScript — Config files (next.config.js, vitest.config.js, postcss.config.js)
+- TypeScript ^5.4.0 — All application code (`.ts`, `.tsx`). `strict: false`, `allowJs: true`, `moduleResolution: "node"` (legacy)
 
 **Secondary:**
-- SQL — Database migrations in `migrations/` (11 files)
+- JavaScript — `next.config.js`, `vitest.config.js`, `postcss.config.js` (CommonJS modules)
+- SQL — Database migrations in `migrations/*.sql`
 - Markdown — Content files in `content/blog/` and `content/library/`
 
 ## Runtime
 
 **Environment:**
-- Node.js 18+ (required by Next.js 14 and @vercel/postgres)
+- Node.js 18+
 
 **Package Manager:**
 - npm
@@ -24,147 +24,112 @@
 ## Frameworks
 
 **Core:**
-- Next.js ^14.2.0 (App Router) — Full-stack React framework, SSR/SSG, API routes
-- React ^18.2.0 — UI component library
-- React DOM ^18.2.0 — DOM rendering
-
-**Styling:**
-- Tailwind CSS ^3.4.3 — Utility-first CSS, configured at `tailwind.config.ts`
-- @tailwindcss/typography ^0.5.19 — Prose styling for rendered markdown
-- PostCSS ^8.4.38 — CSS processing pipeline, configured at `postcss.config.js`
-- Autoprefixer ^10.4.19 — CSS vendor prefixing
+- Next.js ^14.2.0 (App Router) — Full-stack framework; server components by default, `*Client.tsx` suffix for interactive client components
+- React ^18.2.0 — UI rendering; functional components + hooks exclusively
+- React DOM ^18.2.0 — DOM bindings
 
 **Testing:**
-- Vitest ^4.0.18 — Test runner, configured at `vitest.config.js`
-- @testing-library/react ^16.3.2 — React component testing
-- @testing-library/jest-dom ^6.9.1 — DOM assertion matchers
-- jsdom ^27.4.0 — Browser environment simulation for tests
+- Vitest ^4.0.18 — Test runner (jsdom environment)
+- @testing-library/react ^16.3.2 — Component testing
+- @testing-library/jest-dom ^6.9.1 — DOM assertions
+- jsdom ^27.4.0 — DOM simulation for tests
 
 **Build/Dev:**
-- @next/bundle-analyzer ^16.1.6 — Bundle size analysis (triggered by `ANALYZE=true`)
-- ts-node ^10.9.2 — TypeScript execution for scripts (e.g., `scripts/setup-stripe.ts`)
+- TypeScript compiler (`npx tsc --noEmit`) — Type checking
+- ESLint ^8.57.0 + eslint-config-next ^14.2.0 — Linting
+- PostCSS ^8.4.38 + autoprefixer ^10.4.19 — CSS processing
+- @next/bundle-analyzer ^16.1.6 — Bundle size analysis (`npm run analyze`)
+- ts-node ^10.9.2 — Script execution (`scripts/setup-stripe.ts`)
+- sharp ^0.34.5 — Image processing (QR code + business card PDFs)
+- qrcode ^1.5.4 — QR code generation
 
 ## Key Dependencies
 
-**Authentication & Security:**
-- jose ^6.1.3 — JWT signing and verification (HS256 algorithm); magic link tokens (15 min) + session tokens (7 days) + portal tokens
-- @marsidev/react-turnstile ^1.0.2 — Cloudflare Turnstile bot protection UI component
-- uuid ^13.0.0 — UUID generation for IDs
+**Critical:**
+- `@vercel/postgres` ^0.10.0 — Neon PostgreSQL client via Vercel Postgres SDK; all DB access goes through `lib/db.ts` and feature-specific db files using `sql` tagged template literal
+- `stripe` ^20.2.0 — Subscriptions, checkout sessions, webhook verification; client also used server-side in `lib/auth.ts` for membership lookup fallback
+- `jose` ^6.1.3 — JWT creation and verification (HS256); powers all auth in `lib/auth.ts` and `lib/portal-auth.ts`
+- `zod` ^3.23.0 — Runtime schema validation for API inputs (`lib/validation.ts`) and SiPhox API responses (`lib/siphox/schemas.ts`)
+- `resend` ^4.0.0 — Transactional email delivery via `lib/resend.ts`
+- `ai` ^6.0.59 + `@ai-sdk/openai` ^3.0.21 — AI SDK v6 powering protocol generation (`app/api/protocol/generate/route.ts`) and meal plans (`app/api/meal-plan/route.ts`)
+- `twilio` ^5.12.2 — SMS OTP delivery for portal phone authentication (`app/api/portal/send-otp/`)
+- `dotenv` ^17.2.3 — Environment variable loading
 
-**Database:**
-- @vercel/postgres ^0.10.0 — SQL client for Neon PostgreSQL (`sql` tagged template literal)
-
-**Payments:**
-- stripe ^20.2.0 — Stripe server SDK (subscriptions, webhooks, checkout)
-- @stripe/react-stripe-js ^5.6.0 — Stripe React components
-- @stripe/stripe-js ^8.7.0 — Stripe client-side JS loader
-
-**Email:**
-- resend ^4.0.0 — Transactional email service client
-
-**AI/LLM:**
-- ai ^6.0.59 — Vercel AI SDK core (streaming, tool calls)
-- @ai-sdk/openai ^3.0.21 — OpenAI provider for AI SDK (protocol generation, meal plans)
-- @ai-sdk/react ^3.0.61 — React hooks for AI SDK streaming
+**UI/Styling:**
+- Tailwind CSS ^3.4.3 — Utility-first CSS; config at `tailwind.config.ts`
+- @tailwindcss/typography ^0.5.19 — Prose styles for rendered markdown content
+- `clsx` ^2.1.1 + `tailwind-merge` ^3.4.0 — Combined via `cn()` in `lib/utils.ts`
+- `lucide-react` ^0.563.0 — Icon library (import-optimized in `next.config.js`)
+- `framer-motion` ^12.36.0 + `motion` ^12.36.0 — Animation library (both packages present)
+- `@paper-design/shaders-react` ^0.0.71 — WebGL mesh gradient background (`components/ui/MeshBackground.tsx`)
+- `recharts` ^3.7.0 — Charts; used only in `components/creators/AnalyticsCharts.tsx`
+- `three` ^0.183.2 — 3D/WebGL (present in `package.json`; verify active usage)
+- `simplex-noise` ^4.0.3 — Noise generation (likely for shader/animation effects)
 
 **Content:**
-- gray-matter ^4.0.3 — Frontmatter parsing for markdown files in `content/`
-- marked ^17.0.1 — Markdown-to-HTML rendering
-- dompurify ^3.3.1 — HTML sanitization for rendered markdown (XSS protection)
+- `gray-matter` ^4.0.3 — Frontmatter parsing for `.md` files in `content/`
+- `marked` ^17.0.1 — Markdown rendering
+- `dompurify` ^3.3.1 — XSS sanitization of rendered HTML
+- `@react-pdf/renderer` ^4.3.2 — PDF generation for invoices (`lib/invoice/`) and LMN documents (`lib/lmn/`)
 
-**PDF Generation:**
-- @react-pdf/renderer ^4.3.2 — PDF generation for invoices (`lib/invoice/`) and LMN documents (`lib/lmn/`)
-
-**Telephony:**
-- twilio ^5.12.2 — SMS OTP for portal authentication (`app/api/portal/`)
-
-**UI Utilities:**
-- clsx ^2.1.1 — Conditional CSS class construction
-- tailwind-merge ^3.4.0 — Merge conflicting Tailwind classes
-- lucide-react ^0.563.0 — Icon library (optimized via `optimizePackageImports` in next.config.js)
-- recharts ^3.7.0 — Chart library (used only in `components/creators/AnalyticsCharts.tsx`)
-- input-otp ^1.4.2 — OTP input component for portal login
-- dotenv ^17.2.3 — Environment variable loading for scripts
-
-**Validation:**
-- zod ^3.23.0 — Schema validation for API inputs and form data (`lib/validation.ts`)
+**Forms:**
+- `input-otp` ^1.4.2 — OTP input component for portal phone authentication (`app/portal/login/`)
+- `uuid` ^13.0.0 — UUID generation
 
 **Unused (listed in package.json but not imported):**
-- class-variance-authority ^0.7.1 — NOT used; Button variants use manual objects + `cn()` instead
+- `class-variance-authority` ^0.7.1 — Never imported; components use manual variant objects with `cn()`
 
 ## Configuration
 
 **TypeScript (`tsconfig.json`):**
-- `strict: false` — Not in strict mode; allows implicit any
-- `allowJs: true` — JavaScript files allowed
-- `moduleResolution: "node"` — Legacy Node resolution (not modern `bundler`)
-- `skipLibCheck: true` — Skip type-checking of declaration files
-- `baseUrl: "."` with `paths: { "@/*": ["./*"] }` — Path alias for project root
-- `incremental: true` — Faster rebuilds via `.tsbuildinfo`
-- Tests excluded from compilation via `"exclude": ["tests"]`
-
-**ESLint:**
-- Config: ESLint ^8.57.0 + eslint-config-next ^14.2.0 (standard Next.js rules)
-- No custom `.eslintrc` file observed — uses Next.js defaults
+- `strict: false` — Not in strict mode; loose type checking
+- `moduleResolution: "node"` — Legacy Node resolution (not `bundler`)
+- `allowJs: true`, `skipLibCheck: true`
+- `incremental: true` — Faster rebuilds via `tsconfig.tsbuildinfo`
+- Path alias: `@/*` maps to project root
+- Excludes: `node_modules`, `tests`
 
 **Build (`next.config.js`):**
 - `reactStrictMode: true`
-- `compiler.removeConsole` in production
-- `experimental.optimizePackageImports: ['lucide-react', 'recharts', 'zod']`
-- Image formats: AVIF + WebP
-- Redirects: `/products` and `/products/*` → `/pricing` (301 permanent)
-- Caching headers per route pattern (HIPAA: authenticated routes `private, no-cache`)
-- Bundle analyzer: wrapped with `withBundleAnalyzer` (enabled when `ANALYZE=true`)
+- `removeConsole: true` in production
+- `optimizePackageImports: ['lucide-react', 'recharts', 'zod']`
+- Image formats: AVIF + WebP; device sizes configured for full responsive range
+- Caching: differentiated headers per route group (public marketing vs. private authenticated vs. assets)
+- Redirects: `/products` → `/pricing` (301)
+- Bundle analyzer: `ANALYZE=true npm run build`
 
-**Fonts:**
-- Loaded via `next/font/google` in `app/layout.tsx`
-- Fraunces (display/serif): weights 400, 500, 600, 700; CSS var `--font-fraunces`
-- Playfair Display (headings): weights 400, 500, 600, 700; CSS var `--font-display`
-- Inter (body): weights 400, 500, 600; CSS var `--font-body`
+**Deployment (`vercel.json`):**
+- `main` and `master` branches: deploy disabled
+- Vercel Cron jobs:
+  - `/api/cron/siphox-fulfillment` — every 15 minutes
+  - `/api/cron/siphox-results` — every hour
 
 **Environment:**
-- Template: `env.example` in project root
-- Environment-specific vars managed in Vercel dashboard
-- Development: `NEXT_PUBLIC_SITE_URL=http://localhost:3000`
-- Staging: `NEXT_PUBLIC_SITE_URL` contains "staging" (triggers staging bypass behavior)
+- Template: `env.example` at project root
+- Required vars: `STRIPE_SECRET_KEY`, `POSTGRES_URL`, `JWT_SECRET`, `SESSION_SECRET`, `ASHER_MED_API_KEY`, `NEXT_PUBLIC_SITE_URL`
+- SiPhox vars (not in `env.example`): `SIPHOX_API_KEY`, `SIPHOX_API_URL`
+- Twilio (for portal OTP): `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`
+- Feature flags (BNPL): `NEXT_PUBLIC_ENABLE_KLARNA`, `NEXT_PUBLIC_ENABLE_AFFIRM`, `NEXT_PUBLIC_ENABLE_AUTHORIZE_NET`
 
-**Middleware (`middleware.ts`):**
-- Rewrites `join.cultrhealth.com` → `/join` route internally
-- Passes through `/api`, `/join`, `/_next`, `/images`, static assets unchanged
-- Matcher: all paths except `_next/static`, `_next/image`, `favicon.ico`
+**Linting/Formatting:**
+- ESLint with `eslint-config-next` — `npm run lint`
+- No Prettier config detected; formatting enforced via `code-audit.sh` post-tool hook
+- PostCSS + autoprefixer via `postcss.config.js`
 
 ## Platform Requirements
 
 **Development:**
 - Node.js 18+
-- npm (install with `npm install`)
-- Run dev server: `npm run dev` (http://localhost:3000)
-- Run tests: `npm test`
-- Run migration: `node scripts/run-migration.mjs`
+- npm (lockfile must be respected)
+- Development server: `npm run dev` → http://localhost:3000
+- Dev mode: auth is auto-bypassed (`getSession()` returns mock admin session)
 
 **Production:**
-- Hosting: Vercel (automatic deployments from `staging` and `production` branches)
-- Database: Neon PostgreSQL (accessed via `@vercel/postgres` SDK)
-- Environment variables configured per environment in Vercel dashboard
-- `staging` branch → staging.cultrhealth.com + join.cultrhealth.com
-- `production` branch → cultrhealth.com
-
-## Test Configuration
-
-- Runner: Vitest, config at `vitest.config.js`
-- Environment: `jsdom` (browser simulation)
-- Setup file: `tests/setup.ts`
-- Test files: `tests/**/*.test.{ts,tsx}` (8 test files in `tests/`)
-- Coverage: V8 provider, includes `lib/**/*.ts` and `app/**/*.{ts,tsx}`
-- Path alias: `@` → project root (`__dirname`)
-- Run commands:
-  ```bash
-  npm test                         # Run all tests
-  npm test -- --watch              # Watch mode
-  npm test -- --coverage           # Generate coverage report
-  npm run analyze                  # Bundle analysis (ANALYZE=true next build)
-  ```
+- Vercel (automatic deploys from `staging` and `production` branches; `main` deploy disabled per `vercel.json`)
+- Database: Neon PostgreSQL (accessed via `@vercel/postgres` SDK, connection string: `POSTGRES_URL`)
+- Migrations: manual via `node scripts/run-migration.mjs`
+- Current migration count: 24 files (`002` through `024`)
 
 ---
 
-*Stack analysis: 2026-03-11*
+*Stack analysis: 2026-03-22*
