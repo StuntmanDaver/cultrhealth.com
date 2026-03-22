@@ -5,6 +5,8 @@ import { PricingCard } from '@/components/site/PricingCard';
 import { ClubBanner } from '@/components/site/ClubBanner';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
+import { MarketingHero } from '@/components/site/MarketingHero';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
@@ -18,6 +20,7 @@ import {
   FlaskConical,
   Dna,
   Users,
+  HelpCircle,
 } from 'lucide-react';
 import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
@@ -33,36 +36,22 @@ export default function PricingPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-20 md:py-28 px-6 grad-dark-glow text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal direction="none" duration={800}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Sparkles className="w-4 h-4 text-cultr-sage" />
-              <span className="text-sm">HSA/FSA Eligible</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Invest in your future self
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Membership-based longevity and optimization designed for sustainable results. No hidden fees, no surprises.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={400} direction="up" duration={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="#plans">
-                <Button size="lg">View Plans</Button>
-              </Link>
-              <Link href="/how-it-works">
-                <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                  How It Works <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      <MarketingHero
+        badge={{ icon: Sparkles, label: 'HSA/FSA Eligible' }}
+        title="Choose the level of support that fits your goals."
+        subtitle="Clinician-guided programs for body composition, performance, recovery, confidence, and long-term optimization. Transparent membership pricing."
+        proofLine="HSA/FSA eligible. Pay with your Health Savings Account or Flexible Spending Account."
+        ctas={[
+          { label: 'View Plans', href: '#plans' },
+          { label: 'How It Works', href: '/how-it-works', variant: 'ghost' },
+        ]}
+      >
+        <ScrollReveal delay={500} direction="none" duration={800}>
+          <div className="mt-4">
+            <SocialProofBadge variant="pill" className="text-white/80" />
+          </div>
+        </ScrollReveal>
+      </MarketingHero>
 
       {/* Value Props */}
       <section className="py-16 px-6 grad-mint border-b border-cultr-sage">
@@ -149,7 +138,7 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison Table */}
-      <section className="py-16 md:py-20 px-6">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-4xl mx-auto w-full">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
@@ -201,6 +190,85 @@ export default function PricingPage() {
                             )
                           ) : (
                             <span className={j === 1 ? 'text-cultr-forest font-medium' : 'text-cultr-textMuted'}>{value}</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Glossary — CORE vs Enhancement */}
+      <section className="py-12 px-6 grad-mint border-b border-cultr-sage">
+        <div className="max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <ScrollReveal direction="up">
+              <div className="flex items-start gap-3">
+                <HelpCircle className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-display font-bold text-cultr-forest text-sm mb-1">What&apos;s a CORE therapy?</h4>
+                  <p className="text-xs text-cultr-textMuted">Your primary protocol or anchor therapy — the main treatment your provider prescribes based on your goals and labs.</p>
+                </div>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={100} direction="up">
+              <div className="flex items-start gap-3">
+                <HelpCircle className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-display font-bold text-cultr-forest text-sm mb-1">What&apos;s an enhancement?</h4>
+                  <p className="text-xs text-cultr-textMuted">An add-on therapy or support protocol layered onto your core plan to address additional goals like recovery, cognition, or longevity.</p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Therapy Unlock Matrix */}
+      <section className="py-16 md:py-20 px-6 grad-white">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-3">
+              Therapy access by plan
+            </h2>
+            <p className="text-cultr-textMuted max-w-2xl mx-auto text-sm">
+              Higher tiers unlock more therapy categories. All therapies require medical eligibility.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cultr-sage">
+                    <th className="text-left py-4 px-4 font-display font-bold text-cultr-text text-sm">Therapy Category</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Curated</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {[
+                    { category: 'GLP-1 / Weight Management', values: [true, true, true] },
+                    { category: 'Recovery Peptides (BPC-157, TB-500)', values: [false, true, true] },
+                    { category: 'NAD+ / Longevity', values: [false, true, true] },
+                    { category: 'Cognitive Support (Semax/Selank)', values: [false, true, true] },
+                    { category: 'Growth Hormone Support', values: [false, true, true] },
+                    { category: 'Multi-therapy stacking', values: [false, true, true] },
+                    { category: 'Concierge customization', values: [false, false, true] },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-cultr-sage/50">
+                      <td className="py-3 px-4 text-cultr-text text-sm">{row.category}</td>
+                      {row.values.map((val, j) => (
+                        <td key={j} className={`py-3 px-3 text-center ${j === 1 ? 'bg-cultr-mint/50' : ''}`}>
+                          {val ? (
+                            <Check className="w-5 h-5 text-cultr-forest mx-auto" />
+                          ) : (
+                            <X className="w-5 h-5 text-cultr-textMuted/40 mx-auto" />
                           )}
                         </td>
                       ))}

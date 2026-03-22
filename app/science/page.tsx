@@ -3,9 +3,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
+import { MarketingHero } from '@/components/site/MarketingHero';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import TrustMarquee from '@/components/site/TrustMarquee';
+import Button from '@/components/ui/Button';
 import { getAllBlogPosts, BLOG_CATEGORIES, type BlogPostMeta } from '@/lib/blog-content';
-import { ArrowRight, BookOpen, Clock, Calendar } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Calendar, Stethoscope, User } from 'lucide-react';
 
 // Only these blog images exist in /public/blog/
 const BLOG_IMAGES = new Set([
@@ -14,8 +17,32 @@ const BLOG_IMAGES = new Set([
   '/blog/glp1-metabolic.png',
 ]);
 
+// Start Here collections — curated entry points
+const START_HERE_COLLECTIONS = [
+  {
+    title: 'New to CULTR?',
+    description: 'Start with biomarkers, GLP-1 basics, and how protocols are personalized.',
+    slugs: ['biomarker-basics', 'glp1-beyond-weight-loss', 'peptide-stacking'],
+  },
+  {
+    title: 'Focused on body composition?',
+    description: 'GLP-1s, fasting, insulin sensitivity, and inflammation.',
+    slugs: ['glp1-beyond-weight-loss', 'fasting-metabolic-health', 'inflammation-markers'],
+  },
+  {
+    title: 'Focused on recovery?',
+    description: 'Sleep, mitochondrial health, BPC-157, and TB-500.',
+    slugs: ['sleep-and-recovery', 'mitochondrial-health', 'understanding-bpc-157', 'tb500-tissue-repair'],
+  },
+  {
+    title: 'Trying to understand labs?',
+    description: 'Biomarker basics, inflammation markers, and hormone health.',
+    slugs: ['biomarker-basics', 'inflammation-markers', 'thyroid-deep-dive', 'testosterone-optimization'],
+  },
+];
+
 export const metadata: Metadata = {
-  title: 'Science Blog — CULTR Health',
+  title: 'Science — CULTR Health',
   description: 'Evidence-based articles on peptides, longevity science, metabolic health, and hormone optimization. Learn the science behind health optimization.',
 };
 
@@ -78,7 +105,7 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
               </div>
             )}
           </div>
-          
+
           {/* Content */}
           <div className="p-6">
             <h3 className="text-xl font-display font-bold text-cultr-text mb-3 group-hover:text-cultr-forest transition-colors line-clamp-2">
@@ -87,7 +114,16 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
             <p className="text-cultr-textMuted text-sm mb-4 line-clamp-3">
               {post.excerpt}
             </p>
-            
+
+            {/* Author attribution */}
+            <div className="flex items-center gap-2 mb-3">
+              <User className="w-3.5 h-3.5 text-cultr-textMuted" />
+              <span className="text-xs text-cultr-textMuted">CULTR Health Editorial Team</span>
+              <span className="text-cultr-sage">·</span>
+              <Stethoscope className="w-3 h-3 text-cultr-textMuted" />
+              <span className="text-xs text-cultr-textMuted">Dr. Ali Saberi, MD</span>
+            </div>
+
             {/* Meta info */}
             <div className="flex items-center gap-4 text-xs text-cultr-textMuted">
               <div className="flex items-center gap-1">
@@ -99,7 +135,7 @@ function BlogCard({ post, index }: { post: BlogPostMeta; index: number }) {
                 <span>{new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
               </div>
             </div>
-            
+
             {/* Read more link */}
             <div className="mt-4 flex items-center text-cultr-forest text-sm font-medium group-hover:gap-2 transition-all">
               <span>Read article</span>
@@ -119,11 +155,9 @@ export default async function SciencePage({
 }) {
   const params = await searchParams;
   const activeCategory = params.category || 'all';
-  
-  // Get all posts
+
   const allPosts = await getAllBlogPosts();
-  
-  // Filter by category if specified
+
   const filteredPosts = activeCategory === 'all'
     ? allPosts
     : allPosts.filter(post => {
@@ -135,28 +169,67 @@ export default async function SciencePage({
           .trim();
         return categorySlug === activeCategory;
       });
-  
-  // Get featured posts for the hero section
+
   const featuredPosts = allPosts.filter(post => post.featured).slice(0, 3);
 
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 grad-dark text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal direction="none" duration={800}>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Evidence-based health education
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Deep dives into peptides, longevity science, metabolic health, and optimization protocols. 
-              Written by experts, backed by research.
-            </p>
-          </ScrollReveal>
+      <MarketingHero
+        title="Science that helps you make smarter health decisions."
+        subtitle="Evidence-based guides on body composition, biomarkers, recovery, hormone health, peptides, and long-term optimization — written to help you understand your options before and during care."
+        ctas={[
+          { label: 'Take the Quiz', href: '/quiz' },
+        ]}
+        size="default"
+      />
+
+      {/* Social Proof */}
+      <div className="py-3 px-6 grad-dark-glow -mt-6">
+        <div className="max-w-4xl mx-auto flex justify-center">
+          <SocialProofBadge variant="pill" className="text-white/80" />
         </div>
-      </section>
+      </div>
+
+      {/* Start Here Collections */}
+      {activeCategory === 'all' && (
+        <section className="py-12 px-6 grad-mint border-b border-cultr-sage">
+          <div className="max-w-5xl mx-auto">
+            <ScrollReveal className="text-center mb-8">
+              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-2">
+                Start here
+              </h2>
+              <p className="text-sm text-cultr-textMuted">Curated reading paths based on your interests.</p>
+            </ScrollReveal>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {START_HERE_COLLECTIONS.map((collection, i) => (
+                <ScrollReveal key={collection.title} delay={i * 80} direction="up">
+                  <div className="p-5 rounded-xl bg-white border border-cultr-sage/40 h-full">
+                    <h3 className="font-display font-bold text-cultr-forest text-sm mb-1">{collection.title}</h3>
+                    <p className="text-xs text-cultr-textMuted mb-3">{collection.description}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {collection.slugs.slice(0, 3).map((slug) => {
+                        const post = allPosts.find(p => p.slug === slug);
+                        if (!post) return null;
+                        return (
+                          <Link
+                            key={slug}
+                            href={`/science/${slug}`}
+                            className="text-[10px] px-2 py-1 bg-cultr-sage/20 text-cultr-forest rounded-full hover:bg-cultr-sage/40 transition-colors truncate max-w-[140px]"
+                          >
+                            {post.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Category Filter */}
       <section className="py-8 px-6 grad-white border-b border-cultr-sage">
@@ -196,7 +269,7 @@ export default async function SciencePage({
               </span>
             </div>
           </ScrollReveal>
-          
+
           {filteredPosts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post, index) => (
@@ -226,7 +299,7 @@ export default async function SciencePage({
       </section>
 
       {/* Brand CTA Break */}
-      <section className="py-16 px-6">
+      <section className="py-16 px-6 grad-white">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
             <p className="text-cultr-textMuted text-lg mb-2">Change the CULTR.</p>
@@ -246,22 +319,20 @@ export default async function SciencePage({
       {/* Trust Logo Marquee */}
       <TrustMarquee />
 
-      {/* Newsletter CTA */}
+      {/* Quiz CTA (replaced newsletter → pricing link) */}
       <section className="py-16 px-6 grad-mint">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
             <h2 className="text-2xl font-display font-bold text-cultr-forest mb-4">
-              Stay informed
+              Want a plan built around your goals and biomarkers?
             </h2>
             <p className="text-cultr-textMuted mb-6">
-              Get the latest articles and research updates delivered to your inbox.
+              Take the 2-minute quiz to get matched with the right protocol for your goals.
             </p>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center px-6 py-3 grad-dark text-white rounded-lg font-medium hover:bg-cultr-forest/90 transition-colors"
-            >
-              Join <span className="font-display font-bold">CULTR</span> Health
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Link href="/quiz">
+              <Button size="lg">
+                Take the Quiz <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </Link>
           </ScrollReveal>
         </div>

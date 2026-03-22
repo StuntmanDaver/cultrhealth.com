@@ -1,3 +1,54 @@
+## [2026-03-22] - Phase 3: Core Marketing Page Rewrites
+
+### Summary
+Integrated shared components (MarketingHero, TrustStrip, SocialProofBadge, TherapyGoalFilter, HowItWorksSteps) into all 5 core marketing pages. Applied strategy doc copy, added new sections, and improved conversion paths.
+
+### Homepage (`app/page.tsx`)
+- Added value prop + proof line to desktop hero
+- Added `TrustStrip` after hero (replaced inline trust badges bar)
+- Added `SocialProofBadge` on mobile
+- Rewritten 3-step copy (Take the Quiz → Meet Your Provider → Your Protocol Arrives)
+- CTA updated: "See Plans" → "Compare Plans"
+
+### Pricing (`app/pricing/page.tsx`)
+- Replaced inline hero with `MarketingHero` (strategy doc copy)
+- Added `SocialProofBadge` below hero
+- Added CORE/Enhancement glossary section
+- Added therapy unlock matrix (7 therapy categories × 3 plan tiers)
+
+### Therapies (`app/therapies/page.tsx`)
+- Replaced inline hero with `MarketingHero`
+- Added "How protocols are chosen" explainer (5 factors)
+- Added `TherapyGoalFilter` for goal-based browsing
+- New `TherapiesClient.tsx` client wrapper for filter state
+- Added "Learn the Science" secondary CTA
+- Title fixed: "Core Therapies" → "Therapies"
+
+### How It Works (`app/how-it-works/page.tsx`)
+- Replaced image hero with `MarketingHero` (consistent dark gradient)
+- Replaced 4-step inline process with 5-step `HowItWorksSteps` component
+- Added state availability + proof line in hero
+- Added `SocialProofBadge`
+
+### Science (`app/science/page.tsx`)
+- Replaced inline hero with `MarketingHero`
+- Added 4 "Start Here" curated collections
+- Added author attribution on all blog cards (Editorial Team + Dr. Ali Saberi, MD)
+- Fixed newsletter CTA: "Join CULTR Health" → quiz CTA
+- Added `SocialProofBadge`
+
+### Files Changed (8 files)
+- `app/page.tsx` — TrustStrip, SocialProofBadge, value prop, step copy
+- `app/pricing/page.tsx` — MarketingHero, glossary, therapy matrix
+- `app/therapies/page.tsx` — MarketingHero, goal filter, protocol explainer
+- `app/therapies/TherapiesClient.tsx` — New client wrapper
+- `app/how-it-works/page.tsx` — MarketingHero, 5-step HowItWorksSteps
+- `app/science/page.tsx` — MarketingHero, Start Here, author attribution
+- `app/faq/page.tsx` — Minor cleanup
+- `app/layout.tsx` — Minor cleanup
+
+---
+
 ## [2026-03-22] - Website Overhaul V1: Data Fixes, Shared Components, Creators Page Revamp
 
 ### Summary

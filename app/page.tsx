@@ -5,7 +5,9 @@ import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
 import { PLANS } from '@/lib/config/plans';
-import { PROVIDERS, TRUST_BADGES } from '@/lib/config/social-proof';
+import { PROVIDERS } from '@/lib/config/social-proof';
+import { TrustStrip } from '@/components/site/TrustStrip';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import { brandify } from '@/lib/utils';
 import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import {
@@ -13,9 +15,6 @@ import {
   FlaskConical,
   Stethoscope,
   Shield,
-  Lock,
-  Building,
-  CreditCard,
   Dna,
   TrendingUp,
   Users,
@@ -46,9 +45,6 @@ const TestimonialsSection = dynamic(() => import('@/components/site/Testimonials
 });
 
 
-const BADGE_ICONS: Record<string, React.ElementType> = {
-  Shield, Stethoscope, Building, CreditCard,
-};
 
 export default function HomePage() {
   return (
@@ -85,22 +81,31 @@ export default function HomePage() {
 
         <div className="absolute inset-0 z-10 flex items-center">
           <div className="text-left absolute left-[32%] -translate-x-1/2">
-            <h1 className="text-6xl lg:text-7xl font-display font-bold mb-5 leading-[1.1] text-white drop-shadow-lg">
+            <h1 className="text-6xl lg:text-7xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
               Change the<br /><span className="">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
             </h1>
+            <p className="text-base text-white/80 mb-3 max-w-md drop-shadow">
+              Physician-supervised optimization with lab testing, personalized protocols, and peptide therapy when appropriate.
+            </p>
+            <p className="text-xs text-cultr-sage font-medium tracking-wide mb-5 drop-shadow">
+              50+ biomarker panel · Licensed providers · Delivered to your door
+            </p>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
                 <Button size="lg" className="border-2 border-transparent">Take the Quiz</Button>
               </Link>
               <Link href="/pricing">
                 <Button variant="ghost" size="lg" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full">
-                  See Plans <ArrowRight className="w-4 h-4 ml-2" />
+                  Compare Plans <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>
           </div>
         </div>
       </section>
+
+      {/* ─── Trust Strip ─── */}
+      <TrustStrip />
 
       {/* ─── Results / Lifestyle ─── */}
       <section className="relative py-16 md:py-20 px-6 grad-light overflow-hidden">
@@ -111,16 +116,22 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Mobile slogan + CTA buttons — moved from hero */}
           <div className="md:hidden mb-12 -mt-10 text-center">
-            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-8 whitespace-nowrap">
+            <h1 className="text-xl font-display font-bold leading-[1.15] text-[#2B4542] mb-3 whitespace-nowrap">
               Change the <span className="">CULTR</span>, <span className="italic">rebrand</span> yourself.
             </h1>
+            <p className="text-xs text-cultr-textMuted mb-4 px-4">
+              Physician-supervised optimization with lab testing and personalized protocols.
+            </p>
+            <div className="mb-4">
+              <SocialProofBadge variant="inline" />
+            </div>
             <div className="flex flex-row items-center justify-center gap-2">
               <Link href="/quiz">
                 <Button size="sm" className="border-2 border-transparent text-sm px-5 py-2">Take the Quiz</Button>
               </Link>
               <Link href="/pricing">
                 <Button variant="ghost" size="sm" className="text-[#2A4542] border-2 border-[#D7F3DC] bg-[#D7F3DC] hover:bg-[#c8edd0] rounded-full text-sm px-5 py-2">
-                  See Plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  Compare Plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                 </Button>
               </Link>
             </div>
@@ -223,7 +234,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── How It Works ─── */}
-      <section className="py-16 md:py-20 px-6">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-7xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest">
@@ -235,20 +246,20 @@ export default function HomePage() {
             {[
               {
                 step: '01',
-                title: 'Take the quiz',
-                desc: '2 minutes. We match you to a plan and protocol.',
+                title: 'Take the Quiz',
+                desc: 'Tell us your goals and we\'ll match you with the right path.',
                 icon: Users,
               },
               {
                 step: '02',
-                title: 'Talk to a provider',
-                desc: 'Licensed clinician reviews your labs, not an algorithm.',
+                title: 'Meet Your Provider',
+                desc: 'A licensed clinician reviews your history, goals, and labs.',
                 icon: Stethoscope,
               },
               {
                 step: '03',
-                title: 'Get treated',
-                desc: 'Peptides ship to your door. Track results in your dashboard.',
+                title: 'Your Protocol Arrives',
+                desc: 'Personalized treatment shipped to your door fast.',
                 icon: TrendingUp,
               },
             ].map((item, i) => (
@@ -402,28 +413,7 @@ export default function HomePage() {
       <NewsletterSignup />
 
       {/* ─── Trust Badges Bar ─── */}
-      <div className="grad-mint border-b border-cultr-sage py-6">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 md:gap-x-12">
-            <div className="flex items-center gap-2 text-cultr-forest">
-              <Shield className="w-4 h-4" aria-hidden="true" />
-              <span className="text-xs font-display font-medium tracking-wide">HIPAA Compliant</span>
-            </div>
-            <div className="flex items-center gap-2 text-cultr-forest">
-              <Lock className="w-4 h-4" aria-hidden="true" />
-              <span className="text-xs font-display font-medium tracking-wide">256-bit Encryption</span>
-            </div>
-            <div className="flex items-center gap-2 text-cultr-forest">
-              <Stethoscope className="w-4 h-4" aria-hidden="true" />
-              <span className="text-xs font-display font-medium tracking-wide">Licensed Providers</span>
-            </div>
-            <div className="flex items-center gap-2 text-cultr-forest">
-              <FlaskConical className="w-4 h-4" aria-hidden="true" />
-              <span className="text-xs font-display font-medium tracking-wide">Licensed Pharmacy</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      <TrustStrip />
 
       {/* ─── Testimonials ─── */}
       <TestimonialsSection />

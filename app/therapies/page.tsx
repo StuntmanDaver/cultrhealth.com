@@ -3,84 +3,117 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { THERAPY_PRODUCTS } from '@/lib/config/therapies';
 import { CTASection } from '@/components/site/CTASection';
+import { MarketingHero } from '@/components/site/MarketingHero';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
-import { ArrowRight, Shield, Stethoscope } from 'lucide-react';
+import {
+  ArrowRight,
+  Shield,
+  Stethoscope,
+  Target,
+  FileText,
+  Pill,
+  FlaskConical,
+  UserCheck,
+} from 'lucide-react';
 
+const TrustMarquee = dynamic(
+  () => import('@/components/site/TrustMarquee'),
+  { loading: () => <div className="h-14" /> }
+);
 
-
-export const metadata: Metadata = {
-  title: 'Core Therapies — CULTR Health',
-  description:
-    'Explore our curated catalog of physician-supervised therapies including GLP-1 weight loss peptides, growth hormone secretagogues, neuropeptides, and regenerative compounds.',
-};
-
-const TherapiesGrid = dynamic(
-  () => import('@/components/site/TherapiesGrid'),
+const TherapiesClient = dynamic(
+  () => import('./TherapiesClient'),
   {
     loading: () => (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-brand-cream/50 animate-pulse h-[420px]"
-          />
+          <div key={i} className="rounded-2xl bg-brand-cream/50 animate-pulse h-[420px]" />
         ))}
       </div>
     ),
   }
 );
 
-const TrustMarquee = dynamic(
-  () => import('@/components/site/TrustMarquee'),
-  {
-    loading: () => <div className="h-14" />,
-  }
-);
+export const metadata: Metadata = {
+  title: 'Therapies — CULTR Health',
+  description:
+    'Explore physician-supervised therapies organized by goal — weight management, recovery, cognitive performance, longevity, and more. Every protocol is personalized by a licensed provider.',
+};
 
 export default function TherapiesPage() {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="pt-16 pb-12 md:pt-20 md:pb-14 px-6 grad-dark-glow text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal direction="none" duration={800}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4">
-              <Stethoscope className="w-4 h-4 text-cultr-sage" />
-              <span className="text-sm">Physician-Supervised</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 leading-tight">
-              Core Therapies
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-lg text-white/80 max-w-2xl mx-auto">
-              Browse our curated catalog of peptide therapies. Every protocol is
-              personalized to your labs, goals, and medical history.
-            </p>
-          </ScrollReveal>
+      <MarketingHero
+        badge={{ icon: Stethoscope, label: 'Physician-Supervised' }}
+        title="Protocols tailored to your goals, not one-size-fits-all prescriptions."
+        subtitle="Every protocol is personalized by a licensed provider based on your history, goals, labs, and medical eligibility."
+        ctas={[
+          { label: 'Take the Quiz', href: '/quiz' },
+          { label: 'Compare Plans', href: '/pricing', variant: 'ghost' },
+        ]}
+        size="compact"
+      />
+
+      {/* Social Proof */}
+      <div className="py-4 px-6 grad-dark-glow -mt-8">
+        <div className="max-w-4xl mx-auto flex justify-center">
+          <SocialProofBadge variant="pill" className="text-white/80" />
         </div>
-      </section>
+      </div>
 
       {/* Trust Marquee */}
       <TrustMarquee />
 
       {/* Bridge */}
-      <div className="hidden md:block h-28 bridge-dark-to-light" />
+      <div className="hidden md:block h-20 bridge-dark-to-light" />
 
-      {/* Product Grid */}
-      <section className="py-10 md:py-14 px-6 grad-light">
-        <div className="max-w-6xl mx-auto">
-          <ScrollReveal className="mb-8 text-center">
-            <h2 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
-              Our Therapies
+      {/* How Protocols Are Chosen */}
+      <section className="py-10 md:py-14 px-6 grad-white">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-3">
+              How protocols are chosen
             </h2>
-            <p className="text-sm text-cultr-textMuted max-w-2xl mx-auto">
-              Tap any card to learn more about the science behind each therapy.
+            <p className="text-sm text-cultr-textMuted max-w-xl mx-auto">
+              Your provider considers multiple factors to build a protocol that fits your unique situation.
             </p>
           </ScrollReveal>
 
-          <TherapiesGrid products={THERAPY_PRODUCTS} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+            {[
+              { icon: Target, label: 'Your goals' },
+              { icon: FileText, label: 'Medical history' },
+              { icon: Pill, label: 'Current medications' },
+              { icon: FlaskConical, label: 'Biomarker data' },
+              { icon: UserCheck, label: 'Provider judgment' },
+            ].map(({ icon: Icon, label }, i) => (
+              <ScrollReveal key={label} delay={i * 80} direction="up">
+                <div className="text-center p-4 rounded-xl grad-mint border border-cultr-sage/30">
+                  <Icon className="w-5 h-5 text-cultr-forest mx-auto mb-2" />
+                  <span className="text-xs font-display font-medium text-cultr-forest">{label}</span>
+                </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Therapy Grid with Goal Filter */}
+      <section className="py-10 md:py-14 px-6 grad-light">
+        <div className="max-w-6xl mx-auto">
+          <ScrollReveal className="mb-6 text-center">
+            <h2 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
+              Compare by goal
+            </h2>
+            <p className="text-sm text-cultr-textMuted max-w-2xl mx-auto mb-6">
+              Filter therapies by what matters most to you. Tap any card to learn more.
+            </p>
+          </ScrollReveal>
+
+          <TherapiesClient products={THERAPY_PRODUCTS} />
         </div>
       </section>
 
@@ -95,14 +128,20 @@ export default function TherapiesPage() {
               Ready to get started?
             </h2>
             <p className="text-white/60 text-sm mb-6 max-w-xl mx-auto">
-              Choose a membership plan and get matched with a physician who will
-              build your personalized protocol.
+              Choose a membership plan and get matched with a physician who will build your personalized protocol.
             </p>
-            <Link href="/pricing">
-              <Button size="lg">
-                View Membership Plans <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/pricing">
+                <Button size="lg">
+                  View Membership Plans <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/science">
+                <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
+                  Learn the Science <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
           </ScrollReveal>
         </div>
       </section>

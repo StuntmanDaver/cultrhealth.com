@@ -4,6 +4,9 @@ import Image from 'next/image';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { CTASection } from '@/components/site/CTASection';
+import { MarketingHero } from '@/components/site/MarketingHero';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
+import { HowItWorksSteps, type Step } from '@/components/site/HowItWorksSteps';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import TrustMarquee from '@/components/site/TrustMarquee';
 import {
@@ -19,9 +22,11 @@ import {
   Clock,
   Shield,
   Sparkles,
+  MapPin,
 } from 'lucide-react';
 import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { brandify } from '@/lib/utils';
+import { TRUST_METRICS } from '@/lib/config/social-proof';
 
 export const metadata: Metadata = {
   title: 'How It Works — CULTR Health',
@@ -29,98 +34,24 @@ export const metadata: Metadata = {
 };
 
 export default function HowItWorksPage() {
-  const steps = [
-    {
-      step: '01',
-      title: 'Choose your membership',
-      description: 'Select a plan that fits your health goals. All memberships include telehealth consultations, lab reviews, and platform access.',
-      icon: UserPlus,
-      features: [
-        'Paid memberships start at $199/month',
-        'HSA/FSA eligible payments',
-        'No long-term contracts required',
-        'Cancel or change plans anytime',
-      ],
-    },
-    {
-      step: '02',
-      title: 'Complete your intake',
-      description: 'Fill out your comprehensive health questionnaire and medical history. This helps your provider understand your unique situation.',
-      icon: FileText,
-      features: [
-        'Secure HIPAA-compliant portal',
-        'Detailed health history review',
-        'Goal setting and prioritization',
-        'Upload existing lab results',
-      ],
-    },
-    {
-      step: '03',
-      title: 'Meet your provider',
-      description: 'Schedule your first telehealth consultation. Your provider will review your history and order comprehensive lab work.',
-      icon: Stethoscope,
-      features: [
-        'Board-certified providers',
-        'Appointments within 24-48 hours',
-        'Video or phone consultations',
-        'Discuss concerns and goals',
-      ],
-    },
-    {
-      step: '04',
-      title: 'Get your personalized protocol',
-      description: 'Receive a customized treatment plan based on your labs and goals. Access our peptide library and provider-reviewed protocol engine for optimization.',
-      icon: Dna,
-      features: [
-        'Custom peptide protocols',
-        'Detailed dosing guidance',
-        'Progress tracking tools',
-        'Ongoing provider support',
-      ],
-    },
-  ];
-
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative min-h-[60vh] md:min-h-[70vh] flex items-center px-6 grad-dark-glow text-white overflow-hidden">
-        <Image
-          src="/images/hero-cultr-office.png"
-          alt="CULTR Health clinic — providers consulting with patients in a modern wellness lounge"
-          fill
-          className="object-cover object-center"
-          priority
-          quality={85}
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1A2E2B]/80 via-[#2B4542]/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.2) 50%, transparent 100%)' }} />
-
-        <div className="max-w-4xl mx-auto text-center relative z-10 py-20 md:py-28">
-          <ScrollReveal direction="none" duration={800}>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight drop-shadow-lg">
-              Your path to optimal health
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/90 mb-10 max-w-2xl mx-auto drop-shadow">
-              From signup to your personalized protocol in days, not weeks. Our streamlined process makes health optimization accessible and effective.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={400} direction="up" duration={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/quiz">
-                <Button size="lg">Take the Quiz</Button>
-              </Link>
-              <Link href="/pricing">
-                <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                  View Pricing <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      <MarketingHero
+        title="From quiz to clinician-guided plan in a few simple steps."
+        subtitle="We use your goals, health history, and biomarker data to build a personalized plan for body composition, performance, recovery, and long-term optimization."
+        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 50+ marker panel · HSA/FSA eligible · Delivered to your door`}
+        ctas={[
+          { label: 'Take the Quiz', href: '/quiz' },
+          { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
+        ]}
+      >
+        <ScrollReveal delay={500} direction="none" duration={800}>
+          <div className="mt-4">
+            <SocialProofBadge variant="pill" className="text-white/80" />
+          </div>
+        </ScrollReveal>
+      </MarketingHero>
 
       {/* Timeline Overview */}
       <section className="py-16 px-6 grad-mint border-b border-cultr-sage">
@@ -182,67 +113,43 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* Steps - Detailed (Four Steps to Transformation) */}
-      <section className="py-16 md:py-20 px-6">
+      {/* Five Steps — Your Journey */}
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-5xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Four steps to transformation
+              Five steps to your personalized plan
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              We&apos;ve simplified the process so you can focus on what matters—your health.
+              From first quiz to ongoing optimization — here&apos;s exactly how it works.
             </p>
           </ScrollReveal>
 
-          <div className="space-y-16">
-            {steps.map((step, i) => (
-              <ScrollReveal key={i} delay={i * 100}>
-                <div className={`flex flex-col ${i % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 lg:gap-16 items-center`}>
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-xs font-display font-bold text-cultr-forest tracking-widest grad-mint px-3 py-1 rounded-full">
-                        STEP {step.step}
-                      </span>
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-text mb-4">
-                      {step.title}
-                    </h3>
-                    <p className="text-cultr-textMuted mb-6 leading-relaxed">
-                      {step.description}
-                    </p>
-                    <ul className="space-y-3">
-                      {step.features.map((feature, j) => (
-                        <li key={j} className="flex items-center gap-3">
-                          <div className="w-5 h-5 rounded-full grad-dark flex items-center justify-center shrink-0">
-                            <Check className="w-3 h-3 text-white" />
-                          </div>
-                          <span className="text-cultr-text text-sm">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Visual */}
-                  <div className="flex-1 w-full max-w-md">
-                    <div className="relative p-8 rounded-2xl bg-white border border-cultr-sage">
-                      <div className="w-16 h-16 rounded-xl grad-dark flex items-center justify-center mx-auto mb-6">
-                        <step.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-4xl font-display font-bold text-cultr-forest mb-2">
-                          {step.step}
-                        </div>
-                        <div className="text-sm text-cultr-textMuted">
-                          {step.title}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
-          </div>
+          <HowItWorksSteps
+            variant="5-step"
+            steps={[
+              {
+                title: 'Take the Quiz',
+                description: 'Tell us your goals and priorities. The quiz takes about 2 minutes and matches you with the right program and provider.',
+              },
+              {
+                title: 'Complete Your Intake',
+                description: 'Share your health history, lifestyle, current medications, and recent labs through our secure HIPAA-compliant portal.',
+              },
+              {
+                title: 'Meet Your Provider',
+                description: 'A licensed clinician reviews your case, discusses your goals, and determines what therapies are medically appropriate.',
+              },
+              {
+                title: 'Review Labs & Receive Your Plan',
+                description: 'If labs are needed, we guide testing and interpret results before finalizing your personalized protocol.',
+              },
+              {
+                title: 'Optimize Over Time',
+                description: 'Use provider messaging, follow-up consultations, and progress tracking to refine your plan as your body responds.',
+              },
+            ]}
+          />
         </div>
       </section>
 
