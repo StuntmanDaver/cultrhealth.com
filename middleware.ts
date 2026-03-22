@@ -11,10 +11,12 @@ export function middleware(request: NextRequest) {
   ) {
     const url = request.nextUrl.clone()
 
-    // Pass through API calls, static assets, and /join paths unchanged
+    // Pass through API calls, static assets, tracking links, creator pages, and /join paths unchanged
     if (
       url.pathname.startsWith('/api') ||
       url.pathname.startsWith('/join') ||
+      url.pathname.startsWith('/r/') ||
+      url.pathname.startsWith('/creators/') ||
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/images') ||
       url.pathname.startsWith('/favicon') ||

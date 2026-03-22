@@ -236,6 +236,9 @@ export async function getAllActiveCreators(limit = 200): Promise<Creator[]> {
 // AFFILIATE CODE CRUD
 // ===========================================
 
+// Reserved code names that cannot be used as affiliate codes (hardcoded in CLUB_COUPONS)
+const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'MARY20'])
+
 export async function createAffiliateCode(
   creatorId: string,
   code: string,
@@ -244,10 +247,14 @@ export async function createAffiliateCode(
   discountValue = 10.00,
   codeType: CodeType = 'general'
 ): Promise<AffiliateCode> {
+  const normalized = code.toUpperCase()
+  if (RESERVED_CODES.has(normalized)) {
+    throw new DatabaseError(`Code "${normalized}" is reserved and cannot be used as an affiliate code`)
+  }
   try {
     const result = await sql`
       INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value, code_type)
-      VALUES (${creatorId}, ${code.toUpperCase()}, ${isPrimary}, ${discountType}, ${discountValue}, ${codeType})
+      VALUES (${creatorId}, ${normalized}, ${isPrimary}, ${discountType}, ${discountValue}, ${codeType})
       RETURNING *
     `
     return result.rows[0] as AffiliateCode
@@ -272,7 +279,11 @@ export async function getAffiliateCodesByCreator(creatorId: string): Promise<Aff
 export async function getAffiliateCodeByCode(code: string): Promise<AffiliateCode | null> {
   try {
     const result = await sql`
-      SELECT * FROM affiliate_codes WHERE lower(code) = ${code.toLowerCase()} AND active = TRUE
+      SELECT * FROM affiliate_codes
+      WHERE lower(code) = ${code.toLowerCase()}
+        AND active = TRUE
+        AND (expires_at IS NULL OR expires_at > NOW())
+        AND (max_uses IS NULL OR use_count < max_uses)
     `
     return (result.rows[0] as AffiliateCode) || null
   } catch (error) {
@@ -294,15 +305,189 @@ export async function incrementCodeUsage(codeId: string, revenue: number): Promi
   }
 }
 
+export async function getAffiliateCodeById(codeId: string): Promise<AffiliateCode | null> {
+  try {
+    const result = await sql`SELECT * FROM affiliate_codes WHERE id = ${codeId}`
+    return (result.rows[0] as AffiliateCode) || null
+  } catch (error) {
+    console.error('Database error fetching affiliate code by ID:', error)
+    throw new DatabaseError('Failed to fetch affiliate code', error)
+  }
+}
+
 export async function deactivateAffiliateCode(codeId: string): Promise<boolean> {
   try {
+    // Deactivate in DB
     const result = await sql`
       UPDATE affiliate_codes SET active = FALSE, updated_at = NOW() WHERE id = ${codeId}
+      RETURNING stripe_promotion_code_id
     `
-    return (result.rowCount ?? 0) > 0
+    if ((result.rowCount ?? 0) === 0) return false
+
+    // Deactivate Stripe promotion code if it exists (non-blocking)
+    const stripePromoId = result.rows[0]?.stripe_promotion_code_id
+    if (stripePromoId && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+        await stripe.promotionCodes.update(stripePromoId, { active: false })
+      } catch (stripeErr) {
+        console.error(`Failed to deactivate Stripe promotion code ${stripePromoId} (non-fatal):`, stripeErr)
+      }
+    }
+
+    return true
   } catch (error) {
     console.error('Database error deactivating affiliate code:', error)
     throw new DatabaseError('Failed to deactivate code', error)
+  }
+}
+
+// ===========================================
+// PRELAUNCH CODE FUNCTIONS
+// ===========================================
+
+export async function createPrelaunchCode(
+  code: string,
+  creatorId?: string | null,
+  discountValue = 20.00,
+  expiryDays = 14
+): Promise<AffiliateCode> {
+  const normalized = code.toUpperCase()
+  if (RESERVED_CODES.has(normalized)) {
+    throw new DatabaseError(`Code "${normalized}" is reserved and cannot be used`)
+  }
+  try {
+    const result = await sql`
+      INSERT INTO affiliate_codes (
+        creator_id, code, is_primary, discount_type, discount_value,
+        code_type, program_type, created_by_admin, expires_at
+      )
+      VALUES (
+        ${creatorId || null},
+        ${code.toUpperCase()},
+        FALSE,
+        'percentage',
+        ${discountValue},
+        'general',
+        'prelaunch',
+        TRUE,
+        NOW() + INTERVAL '1 day' * ${expiryDays}
+      )
+      RETURNING *
+    `
+    return result.rows[0] as AffiliateCode
+  } catch (error) {
+    console.error('Database error creating prelaunch code:', error)
+    throw new DatabaseError('Failed to create prelaunch code', error)
+  }
+}
+
+export interface PrelaunchCodeWithStats {
+  id: string
+  code: string
+  creator_id: string | null
+  creator_name: string | null
+  discount_value: number
+  use_count: number
+  total_revenue: number
+  active: boolean
+  expires_at: string | null
+  program_type: string
+  created_at: string
+  actual_usage_count: number
+  actual_total_revenue: number
+  actual_total_discount: number
+  actual_avg_order_value: number
+}
+
+export async function getPrelaunchCodes(): Promise<PrelaunchCodeWithStats[]> {
+  try {
+    const result = await sql`
+      SELECT
+        ac.id, ac.code, ac.creator_id, ac.discount_value, ac.use_count,
+        ac.total_revenue, ac.active, ac.expires_at, ac.program_type, ac.created_at,
+        c.full_name as creator_name,
+        COALESCE(stats.usage_count, 0)::int as actual_usage_count,
+        COALESCE(stats.total_revenue, 0) as actual_total_revenue,
+        COALESCE(stats.total_discount, 0) as actual_total_discount,
+        COALESCE(stats.avg_order_value, 0) as actual_avg_order_value
+      FROM affiliate_codes ac
+      LEFT JOIN creators c ON ac.creator_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*)::int as usage_count,
+          COALESCE(SUM(co.subtotal_usd), 0) as total_revenue,
+          COALESCE(SUM(
+            CASE WHEN co.discount_percent > 0 AND co.discount_percent < 100
+            THEN co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent)
+            ELSE 0 END
+          ), 0) as total_discount,
+          COALESCE(AVG(co.subtotal_usd), 0) as avg_order_value
+        FROM club_orders co
+        WHERE UPPER(co.coupon_code) = UPPER(ac.code)
+      ) stats ON TRUE
+      WHERE ac.program_type = 'prelaunch'
+      ORDER BY ac.created_at DESC
+    `
+    return result.rows.map(row => ({
+      id: row.id,
+      code: row.code,
+      creator_id: row.creator_id,
+      creator_name: row.creator_name || null,
+      discount_value: parseFloat(row.discount_value || '0'),
+      use_count: parseInt(row.use_count, 10) || 0,
+      total_revenue: parseFloat(row.total_revenue || '0'),
+      active: row.active,
+      expires_at: row.expires_at || null,
+      program_type: row.program_type,
+      created_at: row.created_at,
+      actual_usage_count: parseInt(row.actual_usage_count, 10) || 0,
+      actual_total_revenue: parseFloat(row.actual_total_revenue || '0'),
+      actual_total_discount: parseFloat(row.actual_total_discount || '0'),
+      actual_avg_order_value: parseFloat(row.actual_avg_order_value || '0'),
+    })) as PrelaunchCodeWithStats[]
+  } catch (error) {
+    console.error('Database error fetching prelaunch codes:', error)
+    throw new DatabaseError('Failed to fetch prelaunch codes', error)
+  }
+}
+
+export interface PrelaunchRedemption {
+  member_name: string
+  member_email: string
+  member_phone: string | null
+  order_number: string
+  subtotal_usd: number
+  discount_percent: number
+  status: string
+  created_at: string
+}
+
+export async function getPrelaunchCodeRedemptions(codeString: string): Promise<PrelaunchRedemption[]> {
+  try {
+    const result = await sql`
+      SELECT
+        member_name, member_email, member_phone,
+        order_number, subtotal_usd, discount_percent,
+        status, created_at
+      FROM club_orders
+      WHERE UPPER(coupon_code) = ${codeString.toUpperCase()}
+      ORDER BY created_at DESC
+    `
+    return result.rows.map(row => ({
+      member_name: row.member_name,
+      member_email: row.member_email,
+      member_phone: row.member_phone || null,
+      order_number: row.order_number,
+      subtotal_usd: parseFloat(row.subtotal_usd || '0'),
+      discount_percent: parseFloat(row.discount_percent || '0'),
+      status: row.status,
+      created_at: row.created_at,
+    })) as PrelaunchRedemption[]
+  } catch (error) {
+    console.error('Database error fetching prelaunch redemptions:', error)
+    throw new DatabaseError('Failed to fetch prelaunch redemptions', error)
   }
 }
 
@@ -753,9 +938,10 @@ export async function getApprovedCommissionsForPayout(
   }
 }
 
-export async function approveEligibleCommissions(): Promise<number> {
+export async function approveEligibleCommissions(): Promise<{ approved: number; selfReferralsReverted: number }> {
   try {
-    const result = await sql`
+    // Approve eligible non-self-referral commissions past 30-day window
+    const approvedResult = await sql`
       UPDATE commission_ledger cl
       SET status = 'approved', updated_at = NOW()
       FROM order_attributions oa
@@ -764,7 +950,23 @@ export async function approveEligibleCommissions(): Promise<number> {
         AND oa.is_self_referral = FALSE
         AND oa.created_at < NOW() - INTERVAL '30 days'
     `
-    return result.rowCount ?? 0
+
+    // Revert self-referral commissions that have been pending past the 30-day window
+    // instead of leaving them pending forever
+    const selfRefResult = await sql`
+      UPDATE commission_ledger cl
+      SET status = 'reversed', updated_at = NOW()
+      FROM order_attributions oa
+      WHERE cl.order_attribution_id = oa.id
+        AND cl.status = 'pending'
+        AND oa.is_self_referral = TRUE
+        AND oa.created_at < NOW() - INTERVAL '30 days'
+    `
+
+    return {
+      approved: approvedResult.rowCount ?? 0,
+      selfReferralsReverted: selfRefResult.rowCount ?? 0,
+    }
   } catch (error) {
     console.error('Database error approving commissions:', error)
     throw new DatabaseError('Failed to approve commissions', error)
@@ -1123,10 +1325,10 @@ export async function getCreatorDashboardStats(creatorId: string): Promise<{
       SELECT
         (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId}) as total_clicks,
         (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId} AND clicked_at >= ${monthStartStr}) as month_clicks,
-        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId}) as total_orders,
-        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND created_at >= ${monthStartStr}) as month_orders,
-        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId}) as total_revenue,
-        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND created_at >= ${monthStartStr}) as month_revenue,
+        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_orders,
+        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= ${monthStartStr}) as month_orders,
+        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_revenue,
+        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= ${monthStartStr}) as month_revenue,
         (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed') as total_commission,
         (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status = 'pending') as pending_commission,
         (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed' AND created_at >= ${monthStartStr}) as month_commission

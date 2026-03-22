@@ -44,13 +44,15 @@ export async function GET(
       )
     }
 
-    // Set/refresh session ID cookie
+    // Set/refresh session ID cookie (same domain as attribution cookie for cross-subdomain sharing)
+    const cookieOpts = getAttributionCookieOptions()
     response.cookies.set('cultr_session_id', result.sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: cookieOpts.secure,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30,
       path: '/',
+      ...(cookieOpts.domain ? { domain: cookieOpts.domain } : {}),
     })
 
     return response

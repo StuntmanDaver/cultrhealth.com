@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { PLANS, type LibraryAccess, type PlanTier } from '@/lib/config/plans'
 import { getMembershipByCustomerId } from '@/lib/db'
+import { getCookieDomain } from '@/lib/utils'
 
 const SESSION_COOKIE_NAME = 'cultr_session'
 const MAGIC_LINK_SECRET = new TextEncoder().encode(
@@ -83,12 +84,14 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
 // Cookie-based session management
 export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies()
+  const domain = getCookieDomain()
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
+    ...(domain ? { domain } : {}),
   })
 }
 

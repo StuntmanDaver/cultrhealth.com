@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { getCookieDomain } from '@/lib/utils'
 
 const TEAM_EMAILS = [
   'alex@cultrhealth.com',
@@ -23,12 +24,14 @@ function isStagingEmail(email: string): boolean {
 }
 
 function setCookieOnResponse(response: NextResponse, token: string) {
+  const domain = getCookieDomain()
   response.cookies.set('cultr_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
+    ...(domain ? { domain } : {}),
   })
 }
 

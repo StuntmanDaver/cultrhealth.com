@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { getCookieDomain } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,12 +35,14 @@ function isStagingBypassEmail(email: string): boolean {
 }
 
 function setSessionOnResponse(response: NextResponse, token: string) {
+  const domain = getCookieDomain()
   response.cookies.set('cultr_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
+    ...(domain ? { domain } : {}),
   })
 }
 

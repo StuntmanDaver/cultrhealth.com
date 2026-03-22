@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { getCookieDomain } from '@/lib/utils'
 
 export async function POST(request: Request) {
   try {
@@ -75,12 +76,14 @@ export async function POST(request: Request) {
 
       // Set visitor cookie (7 days)
       const cookieData = encodeURIComponent(JSON.stringify(memberData))
+      const domain = getCookieDomain()
       response.cookies.set('cultr_club_visitor', cookieData, {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/',
+        ...(domain ? { domain } : {}),
       })
 
       return response

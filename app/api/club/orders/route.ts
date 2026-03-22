@@ -117,6 +117,10 @@ export async function POST(request: Request) {
           if (couponResult?.isCreatorCode && orderId && subtotal > 0) {
             try {
               const { processOrderAttribution } = await import('@/lib/creators/commission')
+              const { getCreatorById } = await import('@/lib/creators/db')
+              // Detect self-referral: creator using their own code
+              const attrCreator = await getCreatorById(couponResult.creatorId!)
+              const isSelfReferral = attrCreator?.email?.toLowerCase() === normalizedEmail
               await processOrderAttribution({
                 orderId,
                 netRevenue: subtotal,
@@ -126,7 +130,7 @@ export async function POST(request: Request) {
                   method: 'coupon_code',
                   codeId: couponResult.codeId,
                   codeType: couponResult.codeType,
-                  isSelfReferral: false,
+                  isSelfReferral,
                 },
                 isSubscription: false,
               })
@@ -140,6 +144,17 @@ export async function POST(request: Request) {
                 customerEmail: normalizedEmail,
                 error: attrError instanceof Error ? attrError.message : attrError,
               })
+            }
+          }
+
+          // Increment usage for company-owned DB codes (prelaunch codes without a creator)
+          // Creator-owned codes are already incremented inside processOrderAttribution
+          if (couponResult?.codeId && !couponResult.isCreatorCode) {
+            try {
+              const { incrementCodeUsage } = await import('@/lib/creators/db')
+              await incrementCodeUsage(couponResult.codeId, subtotal > 0 ? subtotal : 0)
+            } catch (err) {
+              console.error('[club/orders] Code usage increment failed (non-fatal):', err)
             }
           }
         }

@@ -5,6 +5,7 @@ import {
   getRecruitsByCreatorId,
   getCommissionsByCreator,
   getPortfolioByCreator,
+  getAffiliateCodesByCreator,
 } from '@/lib/creators/db'
 import { getNextTierRequirement, getTierName } from '@/lib/config/affiliate'
 import { redactEmail } from '@/lib/creators/attribution'
@@ -21,10 +22,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
     }
 
-    const [recruits, portfolio] = await Promise.all([
+    const [recruits, portfolio, codes] = await Promise.all([
       getRecruitsByCreatorId(auth.creatorId),
       getPortfolioByCreator(auth.creatorId),
+      getAffiliateCodesByCreator(auth.creatorId),
     ])
+
+    // Find the creator's primary (membership) code for the invite link ref param
+    const primaryCode = codes.find(c => c.is_primary && c.active)
+    const inviteRef = primaryCode?.code || creator.id
 
     // Get override commissions (use large limit to get all for summing)
     const overrideCommissions = await getCommissionsByCreator(auth.creatorId, undefined, 10000)
@@ -44,6 +50,7 @@ export async function GET(request: NextRequest) {
         overrideRate: Number(creator.override_rate),
         recruitCount: creator.recruit_count,
         nextTierAt: getNextTierRequirement(creator.tier),
+        inviteRef,
       },
       recruits: recruits.map((r) => ({
         id: r.id,

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
+import { db } from '@vercel/postgres'
 import { verifyAdminAuth } from '@/lib/auth'
 import {
   getCreatorById,
-  updateCreatorStatus,
-  createTrackingLink,
-  createAffiliateCode,
   createAdminAction,
-  checkAffiliateCodeExists,
   updateAffiliateCodeStripeIds,
+  updateCreatorRecruitCount,
+  updateCreatorTier,
 } from '@/lib/creators/db'
-import { generateCreatorCodes } from '@/lib/config/affiliate'
+import { generateCreatorCodes, getTierForRecruitCount } from '@/lib/config/affiliate'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -24,7 +23,6 @@ async function createStripePromotionCode(
   percentOff: number
 ): Promise<{ couponId: string; promotionCodeId: string } | null> {
   try {
-    // Create a Stripe coupon named after the code
     const coupon = await stripe.coupons.create({
       percent_off: percentOff,
       duration: 'once',
@@ -32,7 +30,6 @@ async function createStripePromotionCode(
       metadata: { source: 'cultr_affiliate', code },
     })
 
-    // Create a promotion code customers can enter at checkout
     const promotionCode = await stripe.promotionCodes.create({
       promotion: { type: 'coupon', coupon: coupon.id },
       code: code,
@@ -70,40 +67,100 @@ export async function POST(
     const body = await request.json().catch(() => ({}))
     const { reason } = body as { reason?: string }
 
-    // Approve the creator
-    await updateCreatorStatus(id, 'active', auth.email)
-
     // Generate default slug from name
     const defaultSlug = creator.full_name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '')
       .slice(0, 20) + Math.floor(Math.random() * 1000)
 
-    // Create default tracking link
-    await createTrackingLink(id, defaultSlug, '/', true)
-
     // Generate dual coupon codes from last name
-    let { membershipCode, productCode } = generateCreatorCodes(creator.full_name)
-
-    // Handle naming collisions — append number suffix if either code already exists
-    let suffix = 1
     const baseName = generateCreatorCodes(creator.full_name).membershipCode
-    while (
-      await checkAffiliateCodeExists(membershipCode) ||
-      await checkAffiliateCodeExists(productCode)
-    ) {
-      membershipCode = `${baseName}${suffix}`
-      productCode = `${baseName}${suffix}10`
-      suffix++
+
+    // Atomic transaction: status + tracking link + both affiliate codes
+    // Collision handling is inside the transaction to prevent race conditions
+    const client = await db.connect()
+    let membershipCode = baseName
+    let productCode = `${baseName}10`
+    let membershipCodeId: string
+    let productCodeId: string
+    const maxRetries = 10
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await client.query('BEGIN')
+
+        // Activate creator
+        const now = new Date().toISOString()
+        await client.query(
+          `UPDATE creators SET
+            status = 'active',
+            approved_at = $1,
+            creator_start_date = CASE WHEN creator_start_date IS NULL THEN $1::timestamptz ELSE creator_start_date END,
+            approved_by = $2,
+            updated_at = NOW()
+          WHERE id = $3`,
+          [now, auth.email, id]
+        )
+
+        // Create default tracking link (ON CONFLICT ignore if slug already exists)
+        await client.query(
+          `INSERT INTO tracking_links (creator_id, slug, destination_path, is_default)
+           VALUES ($1, $2, '/', TRUE)
+           ON CONFLICT (slug) DO NOTHING`,
+          [id, defaultSlug.toLowerCase()]
+        )
+
+        // Create membership code
+        const memberResult = await client.query(
+          `INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value, code_type)
+           VALUES ($1, $2, TRUE, 'percentage', 10.00, 'membership') RETURNING id`,
+          [id, membershipCode.toUpperCase()]
+        )
+        membershipCodeId = memberResult.rows[0].id
+
+        // Create product code
+        const productResult = await client.query(
+          `INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value, code_type)
+           VALUES ($1, $2, FALSE, 'percentage', 10.00, 'product') RETURNING id`,
+          [id, productCode.toUpperCase()]
+        )
+        productCodeId = productResult.rows[0].id
+
+        await client.query('COMMIT')
+        break // Success — exit retry loop
+      } catch (error) {
+        await client.query('ROLLBACK')
+
+        // Check if this is a unique constraint violation on affiliate_codes
+        const isCodeCollision = error instanceof Error &&
+          error.message.includes('idx_affiliate_codes_code')
+        if (isCodeCollision && attempt < maxRetries - 1) {
+          // Retry with incremented suffix
+          const suffix = attempt + 1
+          membershipCode = `${baseName}${suffix}`
+          productCode = `${baseName}${suffix}10`
+          continue
+        }
+
+        console.error('Creator approval transaction failed:', error)
+        client.release()
+        return NextResponse.json({ error: 'Failed to approve creator — rolled back' }, { status: 500 })
+      }
+    }
+    client.release()
+
+    // Update recruiter's tier if this creator has one (non-blocking)
+    if (creator.recruiter_id) {
+      try {
+        const newCount = await updateCreatorRecruitCount(creator.recruiter_id)
+        const tierConfig = getTierForRecruitCount(newCount)
+        await updateCreatorTier(creator.recruiter_id, tierConfig.tier, tierConfig.overrideRate)
+      } catch (err) {
+        console.error('Failed to update recruiter tier (non-fatal):', err)
+      }
     }
 
-    // Create membership code (e.g., SMITH)
-    const membershipAffCode = await createAffiliateCode(id, membershipCode, true, 'percentage', 10.00, 'membership')
-
-    // Create product code (e.g., SMITH10)
-    const productAffCode = await createAffiliateCode(id, productCode, false, 'percentage', 10.00, 'product')
-
-    // Sync codes to Stripe as promotion codes (non-blocking — approval succeeds even if Stripe sync fails)
+    // Stripe sync (non-blocking — approval already committed)
     if (process.env.STRIPE_SECRET_KEY) {
       const stripe = getStripe()
 
@@ -112,10 +169,9 @@ export async function POST(
         createStripePromotionCode(stripe, productCode, 10),
       ])
 
-      // Store Stripe IDs for future management (deactivation, etc.)
       if (membershipStripe) {
         await updateAffiliateCodeStripeIds(
-          membershipAffCode.id,
+          membershipCodeId,
           membershipStripe.couponId,
           membershipStripe.promotionCodeId
         ).catch((err) => console.error('Failed to store membership Stripe IDs:', err))
@@ -123,7 +179,7 @@ export async function POST(
 
       if (productStripe) {
         await updateAffiliateCodeStripeIds(
-          productAffCode.id,
+          productCodeId,
           productStripe.couponId,
           productStripe.promotionCodeId
         ).catch((err) => console.error('Failed to store product Stripe IDs:', err))

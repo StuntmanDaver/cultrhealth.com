@@ -39,9 +39,11 @@ export interface Creator {
   updated_at: string
 }
 
+export type ProgramType = 'creator' | 'prelaunch'
+
 export interface AffiliateCode {
   id: string
-  creator_id: string
+  creator_id: string | null
   code: string
   code_type: CodeType
   is_primary: boolean
@@ -50,6 +52,10 @@ export interface AffiliateCode {
   use_count: number
   total_revenue: number
   active: boolean
+  expires_at?: string | null
+  program_type: ProgramType
+  max_uses?: number | null
+  created_by_admin: boolean
   stripe_coupon_id?: string | null
   stripe_promotion_code_id?: string | null
   created_at: string
@@ -209,6 +215,7 @@ export interface NetworkSummary {
   overrideRate: number
   recruitCount: number
   nextTierAt: number
+  inviteRef?: string
 }
 
 // ===========================================
@@ -242,6 +249,15 @@ export const COMMISSION_CONFIG = {
 
   // Commission approval delay (30-day refund window)
   approvalDelayDays: 30,
+} as const
+
+// ===========================================
+// PRELAUNCH PROGRAM CONFIGURATION
+// ===========================================
+
+export const PRELAUNCH_CONFIG = {
+  discountPercent: 20,
+  expiryDays: 14,
 } as const
 
 // ===========================================

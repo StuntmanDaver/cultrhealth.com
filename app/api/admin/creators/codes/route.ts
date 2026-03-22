@@ -4,6 +4,8 @@ import {
   createAffiliateCode,
   deactivateAffiliateCode,
   getAffiliateCodesByCreator,
+  getAllActiveCreators,
+  updateAffiliateCodeStripeIds,
   createAdminAction,
 } from '@/lib/creators/db'
 
@@ -15,6 +17,15 @@ export async function GET(request: NextRequest) {
 
   try {
     const { searchParams } = new URL(request.url)
+
+    // Support listing active creators for dropdowns
+    if (searchParams.get('list_active') === 'true') {
+      const creators = await getAllActiveCreators()
+      return NextResponse.json({
+        creators: creators.map(c => ({ id: c.id, full_name: c.full_name })),
+      })
+    }
+
     const creatorId = searchParams.get('creator_id')
 
     if (!creatorId) {
@@ -50,6 +61,38 @@ export async function POST(request: NextRequest) {
       discount_type || 'percentage',
       discount_value || 10.00
     )
+
+    // Sync to Stripe (non-blocking)
+    if (process.env.STRIPE_SECRET_KEY) {
+      try {
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+        const effectiveType = discount_type || 'percentage'
+        const effectiveValue = discount_value || 10
+
+        const couponParams: Record<string, unknown> = {
+          duration: 'once',
+          name: code.toUpperCase(),
+          metadata: { source: 'cultr_affiliate_manual', code: code.toUpperCase() },
+        }
+        if (effectiveType === 'percentage') {
+          couponParams.percent_off = effectiveValue
+        } else {
+          couponParams.amount_off = Math.round(effectiveValue * 100) // Stripe uses cents
+          couponParams.currency = 'usd'
+        }
+
+        const coupon = await stripe.coupons.create(couponParams)
+        const promo = await stripe.promotionCodes.create({
+          promotion: { type: 'coupon', coupon: coupon.id },
+          code: code.toUpperCase(),
+          metadata: { source: 'cultr_affiliate_manual' },
+        })
+        await updateAffiliateCodeStripeIds(newCode.id, coupon.id, promo.id)
+      } catch (stripeErr) {
+        console.error('Stripe sync for manual code failed (non-fatal):', stripeErr)
+      }
+    }
 
     await createAdminAction({
       admin_email: auth.email,

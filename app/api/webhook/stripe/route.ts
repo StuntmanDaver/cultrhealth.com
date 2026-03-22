@@ -158,11 +158,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         `;
         if (asherResult.rows[0]?.asher_patient_id) {
           asherPatientId = asherResult.rows[0].asher_patient_id;
-          console.log('Asher Med patient found:', { email: customerEmail, asherPatientId });
+          // Patient lookup succeeded
         }
       }
     } catch (lookupError) {
-      console.error('Failed to look up Asher Med patient:', lookupError);
+      console.error('Partner lookup failed (non-fatal)');
       // Non-fatal — patient may not have completed intake yet
     }
   }
@@ -686,9 +686,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     try {
       const { updatePatient } = await import('@/lib/asher-med-api');
       await updatePatient(membership.asher_patient_id, { status: 'INACTIVE' });
-      console.log('Asher Med patient deactivated:', membership.asher_patient_id);
+      console.log('Partner record deactivated for cancelled subscription');
     } catch (asherError) {
-      console.error('Failed to deactivate Asher Med patient:', asherError);
+      console.error('Failed to deactivate partner record:', asherError instanceof Error ? asherError.message : 'unknown');
     }
   }
 }
@@ -736,9 +736,13 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     if (netRevenue <= 0) return;
 
     // Re-resolve attribution from the portfolio entry's creator
-    const { getCreatorById } = await import('@/lib/creators/db');
+    const { getCreatorById, getAffiliateCodesByCreator } = await import('@/lib/creators/db');
     const creator = await getCreatorById(portfolio.creator_id);
     if (!creator || creator.status !== 'active') return;
+
+    // Look up the creator's primary code for accurate usage tracking
+    const creatorCodes = await getAffiliateCodesByCreator(portfolio.creator_id);
+    const primaryCode = creatorCodes.find(c => c.is_primary && c.active);
 
     // Process commission for recurring payment
     const orderId = `INV-${invoice.id.slice(-12)}-${Date.now()}`;
@@ -750,6 +754,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       attribution: {
         creatorId: portfolio.creator_id,
         method: 'coupon_code',
+        codeId: primaryCode?.id,
         isSelfReferral: creator.email.toLowerCase() === customerEmail.toLowerCase(),
       },
       isSubscription: true,

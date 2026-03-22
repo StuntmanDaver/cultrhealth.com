@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { escapeHtml } from '@/lib/resend'
+import { getCookieDomain } from '@/lib/utils'
 
 export async function POST(request: Request) {
   try {
@@ -67,12 +68,14 @@ export async function POST(request: Request) {
       memberId,
     })
 
+    const domain = getCookieDomain()
     response.cookies.set('cultr_club_visitor', encodeURIComponent(cookieData), {
       httpOnly: false, // Client-side readable for personalization
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
+      ...(domain ? { domain } : {}),
     })
 
     // Send welcome email (fire-and-forget)

@@ -33,7 +33,9 @@ export default function NetworkPage() {
   }, [])
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cultrhealth.com'
-  const recruitLink = `${baseUrl}/creators/apply`
+  const recruitLink = network?.inviteRef
+    ? `${baseUrl}/creators/apply?ref=${encodeURIComponent(network.inviteRef)}`
+    : `${baseUrl}/creators/apply`
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(recruitLink)

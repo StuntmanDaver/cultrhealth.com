@@ -411,8 +411,8 @@ export default function ShareEarnPage() {
             <SocialShareCard
               key={platform.platform}
               {...platform}
-              defaultLink={links.length > 0 ? `${baseUrl}/r/${links[0].slug}` : `${baseUrl}/r/your-link`}
-              defaultCode={codes.length > 0 ? codes[0].code : 'YOURCODE'}
+              defaultLink={`${baseUrl}/r/${(links.find(l => l.is_default) || links[0])?.slug || 'your-link'}`}
+              defaultCode={(codes.find(c => c.is_primary && c.active) || codes[0])?.code || 'YOURCODE'}
             />
           ))}
         </div>

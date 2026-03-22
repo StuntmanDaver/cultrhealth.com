@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
+import { getCookieDomain } from '@/lib/utils'
 
 // ===========================================
 // CONSTANTS
@@ -152,12 +153,15 @@ export async function setPortalCookies(
   const cookieStore = await cookies()
   const isProduction = process.env.NODE_ENV === 'production'
 
+  const domain = getCookieDomain()
+
   cookieStore.set(PORTAL_ACCESS_COOKIE, accessToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
     maxAge: ACCESS_COOKIE_MAX_AGE,
     path: '/',
+    ...(domain ? { domain } : {}),
   })
 
   cookieStore.set(PORTAL_REFRESH_COOKIE, refreshToken, {
@@ -166,6 +170,7 @@ export async function setPortalCookies(
     sameSite: 'lax',
     maxAge: REFRESH_COOKIE_MAX_AGE,
     path: '/api/portal/refresh',
+    ...(domain ? { domain } : {}),
   })
 }
 

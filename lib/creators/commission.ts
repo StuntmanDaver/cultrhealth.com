@@ -1,11 +1,7 @@
+import { db } from '@vercel/postgres'
 import { COMMISSION_CONFIG, isInBonusWindow } from '@/lib/config/affiliate'
 import {
-  createOrderAttribution,
-  createCommissionEntry,
   getCreatorById,
-  incrementCodeUsage,
-  incrementLinkConversionCount,
-  markClickConverted,
   getOrderAttributionByOrderId,
   reverseCommissionsForAttribution,
   updateOrderAttributionStatus,
@@ -19,7 +15,7 @@ import { getTierForRecruitCount } from '@/lib/config/affiliate'
 import type { ResolvedAttribution } from '@/lib/creators/attribution'
 
 // ===========================================
-// COMMISSION CALCULATION
+// COMMISSION CALCULATION (Transactional)
 // ===========================================
 
 export interface CommissionResult {
@@ -48,7 +44,6 @@ export async function processOrderAttribution(params: {
   if (isSubscription) {
     const portfolio = await getPortfolioEntry(attribution.creatorId, customerEmail)
     if (portfolio && !portfolio.attribution_active) {
-      // Re-signup — no commission
       console.log(`Attribution blocked: re-signup for ${customerEmail} (creator ${attribution.creatorId})`)
       return null
     }
@@ -58,94 +53,123 @@ export async function processOrderAttribution(params: {
   const directRate = COMMISSION_CONFIG.directRate
   const directAmount = Math.round((netRevenue * directRate) / 100 * 100) / 100
 
-  // 2. Create order attribution record
-  const orderAttribution = await createOrderAttribution({
-    order_id: orderId,
-    creator_id: attribution.creatorId,
-    attribution_method: attribution.method,
-    link_id: attribution.linkId,
-    code_id: attribution.codeId,
-    click_event_id: attribution.clickEventId,
-    customer_email: customerEmail,
-    net_revenue: netRevenue,
-    direct_commission_rate: directRate,
-    direct_commission_amount: directAmount,
-    is_self_referral: attribution.isSelfReferral,
-    is_subscription: isSubscription || false,
-    subscription_payment_number: subscriptionPaymentNumber,
-  })
-
-  if (!orderAttribution) return null
-
-  // 3. Create direct commission ledger entry
-  await createCommissionEntry({
-    order_attribution_id: orderAttribution.id,
-    beneficiary_creator_id: attribution.creatorId,
-    commission_type: 'direct',
-    base_amount: netRevenue,
-    commission_rate: directRate,
-    commission_amount: directAmount,
-  })
-
-  // 4. Update code/link stats
-  if (attribution.codeId) {
-    await incrementCodeUsage(attribution.codeId, netRevenue)
-  }
-  if (attribution.linkId) {
-    await incrementLinkConversionCount(attribution.linkId)
-  }
-  if (attribution.clickEventId) {
-    await markClickConverted(attribution.clickEventId, orderId)
-  }
-
-  // 5. Calculate recruitment override commission
+  // 2. Pre-calculate override commission (needs creator lookups before transaction)
   let overrideAmount = 0
+  let overrideRate = 0
   let recruiterId: string | undefined
+  let recruiterTier = 0
   const creator = await getCreatorById(attribution.creatorId)
 
   if (creator?.recruiter_id) {
     const recruiter = await getCreatorById(creator.recruiter_id)
     if (recruiter && recruiter.status === 'active') {
       recruiterId = recruiter.id
+      recruiterTier = recruiter.tier
 
-      // Determine override rate based on recruiter's bonus window
-      let overrideRate: number
       if (isInBonusWindow(recruiter.creator_start_date)) {
-        // Within bonus window: use tiered rate from recruiter's override_rate
         overrideRate = recruiter.override_rate
       } else {
-        // Past bonus window: flat 10% (no stacking benefit since direct is also 10%)
         overrideRate = COMMISSION_CONFIG.postBonusRate
       }
 
-      // Apply total cap per sale: 25% during bonus window, 10% after (making override effectively 0%)
       const capRate = isInBonusWindow(recruiter.creator_start_date)
-        ? COMMISSION_CONFIG.totalCapRate    // 25%
-        : COMMISSION_CONFIG.postBonusRate   // 10% — direct already consumes this, so override = 0
+        ? COMMISSION_CONFIG.totalCapRate
+        : COMMISSION_CONFIG.postBonusRate
       const maxTotal = (netRevenue * capRate) / 100
       const remainingCap = maxTotal - directAmount
       overrideAmount = Math.min(
         Math.round((netRevenue * overrideRate) / 100 * 100) / 100,
         Math.max(0, Math.round(remainingCap * 100) / 100)
       )
-
-      if (overrideAmount > 0) {
-        await createCommissionEntry({
-          order_attribution_id: orderAttribution.id,
-          beneficiary_creator_id: recruiter.id,
-          commission_type: 'override',
-          source_creator_id: attribution.creatorId,
-          base_amount: netRevenue,
-          commission_rate: overrideRate,
-          commission_amount: overrideAmount,
-          tier_level: recruiter.tier,
-        })
-      }
     }
   }
 
+  // 3. Execute all writes in a single transaction
+  const client = await db.connect()
+  let attributionId: string
+
+  try {
+    await client.query('BEGIN')
+
+    // Insert order attribution
+    const attrResult = await client.query(
+      `INSERT INTO order_attributions (
+        order_id, creator_id, attribution_method, link_id, code_id, click_event_id,
+        customer_email, net_revenue, direct_commission_rate, direct_commission_amount,
+        is_self_referral, is_subscription, subscription_payment_number
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+      ON CONFLICT (order_id) DO NOTHING
+      RETURNING id`,
+      [
+        orderId, attribution.creatorId, attribution.method,
+        attribution.linkId || null, attribution.codeId || null, attribution.clickEventId || null,
+        customerEmail, netRevenue, directRate, directAmount,
+        attribution.isSelfReferral || false, isSubscription || false,
+        subscriptionPaymentNumber ?? null,
+      ]
+    )
+
+    if (!attrResult.rows[0]) {
+      await client.query('ROLLBACK')
+      return null
+    }
+    attributionId = attrResult.rows[0].id
+
+    // Insert direct commission ledger entry
+    await client.query(
+      `INSERT INTO commission_ledger (
+        order_attribution_id, beneficiary_creator_id, commission_type,
+        base_amount, commission_rate, commission_amount, tier_level
+      ) VALUES ($1,$2,'direct',$3,$4,$5,0)`,
+      [attributionId, attribution.creatorId, netRevenue, directRate, directAmount]
+    )
+
+    // Update code usage stats
+    if (attribution.codeId) {
+      await client.query(
+        `UPDATE affiliate_codes SET use_count = use_count + 1, total_revenue = total_revenue + $1, updated_at = NOW() WHERE id = $2`,
+        [netRevenue, attribution.codeId]
+      )
+    }
+
+    // Update link conversion count
+    if (attribution.linkId) {
+      await client.query(
+        `UPDATE tracking_links SET conversion_count = conversion_count + 1, updated_at = NOW() WHERE id = $1`,
+        [attribution.linkId]
+      )
+    }
+
+    // Mark click converted
+    if (attribution.clickEventId) {
+      await client.query(
+        `UPDATE click_events SET converted = TRUE, order_id = $1 WHERE id = $2`,
+        [orderId, attribution.clickEventId]
+      )
+    }
+
+    // Insert override commission if applicable
+    if (recruiterId && overrideAmount > 0) {
+      await client.query(
+        `INSERT INTO commission_ledger (
+          order_attribution_id, beneficiary_creator_id, commission_type,
+          source_creator_id, base_amount, commission_rate, commission_amount, tier_level
+        ) VALUES ($1,$2,'override',$3,$4,$5,$6,$7)`,
+        [attributionId, recruiterId, attribution.creatorId, netRevenue, overrideRate, overrideAmount, recruiterTier]
+      )
+    }
+
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('Transaction failed in processOrderAttribution:', error)
+    throw error
+  } finally {
+    client.release()
+  }
+
   return {
-    attributionId: orderAttribution.id,
+    attributionId,
     directCommission: directAmount,
     overrideCommission: overrideAmount,
     totalCommission: directAmount + overrideAmount,
@@ -184,13 +208,9 @@ export async function recalculateAllTiers(): Promise<{
   let portfolioUpdated = 0
 
   for (const creator of creators) {
-    // Update recruit count from DB
     const newCount = await updateCreatorRecruitCount(creator.id)
-
-    // Calculate tier based on recruited creator count
     const tierConfig = getTierForRecruitCount(newCount)
 
-    // Update tier if changed
     if (tierConfig.tier !== creator.tier || tierConfig.overrideRate !== Number(creator.override_rate)) {
       await updateCreatorTier(creator.id, tierConfig.tier, tierConfig.overrideRate)
       updated++
@@ -200,7 +220,6 @@ export async function recalculateAllTiers(): Promise<{
       )
     }
 
-    // Update active member count from portfolio
     const newMemberCount = await updateCreatorActiveMemberCount(creator.id)
     if (newMemberCount !== creator.active_member_count) {
       portfolioUpdated++

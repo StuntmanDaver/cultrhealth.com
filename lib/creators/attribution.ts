@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'crypto'
 import { COMMISSION_CONFIG } from '@/lib/config/affiliate'
+import { getCookieDomain } from '@/lib/utils'
 import {
   getTrackingLinkBySlug,
   incrementLinkClickCount,
@@ -53,12 +54,14 @@ export function parseAttributionCookie(value: string): AttributionCookieData | n
 }
 
 export function getAttributionCookieOptions() {
+  const domain = getCookieDomain()
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
     maxAge: Math.floor(COMMISSION_CONFIG.attributionWindowMs / 1000),
     path: '/',
+    ...(domain ? { domain } : {}),
   }
 }
 

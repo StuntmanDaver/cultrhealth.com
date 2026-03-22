@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getCookieDomain } from '@/lib/utils'
 import {
   verifyPortalRefreshToken,
   createPortalAccessToken,
@@ -39,12 +40,14 @@ export async function POST(request: NextRequest) {
   // 4. Set access token cookie on response
   const response = NextResponse.json({ success: true })
 
+  const domain = getCookieDomain()
   response.cookies.set(PORTAL_ACCESS_COOKIE, newAccessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 900, // 15 minutes
     path: '/',
+    ...(domain ? { domain } : {}),
   })
 
   return response

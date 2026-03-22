@@ -683,6 +683,7 @@ export interface CouponStatRow {
   avg_order_value: number
   creator_name: string | null
   attributed_creator_id: string | null
+  program_type: string | null
 }
 
 export interface CouponStats {
@@ -707,13 +708,21 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
           ELSE 0 END
         ), 0) as total_discount,
         COALESCE(AVG(co.subtotal_usd), 0) as avg_order_value,
-        c.full_name as creator_name
+        c.full_name as creator_name,
+        ac_match.program_type
       FROM club_orders co
       LEFT JOIN creators c ON co.attributed_creator_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT program_type FROM affiliate_codes
+        WHERE UPPER(code) = UPPER(co.coupon_code)
+        ORDER BY active DESC, created_at DESC
+        LIMIT 1
+      ) ac_match ON TRUE
       WHERE co.coupon_code IS NOT NULL
         AND co.coupon_code != ''
         AND co.created_at >= NOW() - INTERVAL '1 day' * ${days}
-      GROUP BY co.coupon_code, co.discount_percent, co.attributed_creator_id, c.full_name
+        AND (ac_match.program_type IS NULL OR ac_match.program_type != 'prelaunch')
+      GROUP BY co.coupon_code, co.discount_percent, co.attributed_creator_id, c.full_name, ac_match.program_type
       ORDER BY usage_count DESC
     `
 
@@ -726,6 +735,7 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
       avg_order_value: parseFloat(row.avg_order_value || '0'),
       creator_name: row.creator_name || null,
       attributed_creator_id: row.attributed_creator_id || null,
+      program_type: row.program_type || null,
     }))
 
     const totalCouponOrders = coupons.reduce((sum, c) => sum + c.usage_count, 0)
@@ -736,6 +746,62 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
   } catch (error) {
     console.error('Database error fetching coupon stats:', error)
     throw new DatabaseError('Failed to fetch coupon stats', error)
+  }
+}
+
+// ===========================================
+// PRELAUNCH PROGRAM STATS (Admin Dashboard)
+// ===========================================
+
+export interface PrelaunchStats {
+  totalCodes: number
+  activeCodes: number
+  expiredCodes: number
+  totalRedemptions: number
+  totalRevenue: number
+  totalDiscountGiven: number
+}
+
+export async function getPrelaunchStats(): Promise<PrelaunchStats> {
+  try {
+    const codeResult = await sql`
+      SELECT
+        COUNT(*)::int as total_codes,
+        COUNT(*) FILTER (WHERE active = TRUE AND (expires_at IS NULL OR expires_at > NOW()))::int as active_codes,
+        COUNT(*) FILTER (WHERE active = TRUE AND expires_at IS NOT NULL AND expires_at <= NOW())::int as expired_codes
+      FROM affiliate_codes
+      WHERE program_type = 'prelaunch'
+    `
+
+    const redemptionResult = await sql`
+      SELECT
+        COUNT(*)::int as total_redemptions,
+        COALESCE(SUM(co.subtotal_usd), 0) as total_revenue,
+        COALESCE(SUM(
+          CASE WHEN co.discount_percent > 0 AND co.discount_percent < 100
+          THEN co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent)
+          ELSE 0 END
+        ), 0) as total_discount_given
+      FROM club_orders co
+      WHERE UPPER(co.coupon_code) IN (
+        SELECT UPPER(code) FROM affiliate_codes WHERE program_type = 'prelaunch'
+      )
+    `
+
+    const codeRow = codeResult.rows[0] || {}
+    const redemptionRow = redemptionResult.rows[0] || {}
+
+    return {
+      totalCodes: parseInt(codeRow.total_codes, 10) || 0,
+      activeCodes: parseInt(codeRow.active_codes, 10) || 0,
+      expiredCodes: parseInt(codeRow.expired_codes, 10) || 0,
+      totalRedemptions: parseInt(redemptionRow.total_redemptions, 10) || 0,
+      totalRevenue: parseFloat(redemptionRow.total_revenue || '0'),
+      totalDiscountGiven: parseFloat(redemptionRow.total_discount_given || '0'),
+    }
+  } catch (error) {
+    console.error('Database error fetching prelaunch stats:', error)
+    throw new DatabaseError('Failed to fetch prelaunch stats', error)
   }
 }
 

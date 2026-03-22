@@ -14,13 +14,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const approvedCount = await approveEligibleCommissions()
+    const { approved, selfReferralsReverted } = await approveEligibleCommissions()
 
-    console.log(`Cron: Approved ${approvedCount} commissions`)
+    console.log(`Cron: Approved ${approved} commissions, reverted ${selfReferralsReverted} self-referrals`)
 
     return NextResponse.json({
       success: true,
-      approved: approvedCount,
+      approved,
+      selfReferralsReverted,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

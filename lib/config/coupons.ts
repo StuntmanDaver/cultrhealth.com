@@ -42,10 +42,22 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
     return { discount: internal.discount, label: internal.label, isCreatorCode: false }
   }
 
-  // Priority 2: Check creator affiliate codes in DB
+  // Priority 2: Check creator affiliate codes in DB (includes prelaunch codes)
   try {
     const affiliateCode = await getAffiliateCodeByCode(normalized)
     if (affiliateCode) {
+      // Company-owned code (no creator) — valid prelaunch code with no commission
+      if (!affiliateCode.creator_id) {
+        return {
+          discount: affiliateCode.discount_value,
+          label: 'Promo Code',
+          isCreatorCode: false,
+          codeId: affiliateCode.id,
+          codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
+        }
+      }
+
+      // Creator-owned code — validate creator status
       const creator = await getCreatorById(affiliateCode.creator_id)
       if (creator && creator.status === 'active') {
         return {
@@ -54,6 +66,17 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
           isCreatorCode: true,
           creatorId: creator.id,
           creatorName: creator.full_name,
+          codeId: affiliateCode.id,
+          codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
+        }
+      }
+
+      // Creator paused/rejected — still honor the discount but skip commission
+      if (creator && creator.status !== 'active') {
+        return {
+          discount: affiliateCode.discount_value,
+          label: `${creator.full_name}'s Code`,
+          isCreatorCode: false,
           codeId: affiliateCode.id,
           codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
         }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import PrelaunchCodesSection from '@/components/admin/PrelaunchCodesSection'
 
 interface SalesStats {
   totalOrders: number
@@ -46,6 +47,16 @@ interface CouponStatRow {
   avg_order_value: number
   creator_name: string | null
   attributed_creator_id: string | null
+  program_type: string | null
+}
+
+interface PrelaunchStats {
+  totalCodes: number
+  activeCodes: number
+  expiredCodes: number
+  totalRedemptions: number
+  totalRevenue: number
+  totalDiscountGiven: number
 }
 
 interface CouponStats {
@@ -95,6 +106,7 @@ interface AnalyticsData {
   coupons: CouponStats
   creators: CreatorStats
   qrScans: QrScanStats
+  prelaunch: PrelaunchStats
   periodDays: number
   generatedAt: string
 }
@@ -442,14 +454,19 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       {data.coupons.coupons.map((coupon, index) => {
                         const internalLabel = INTERNAL_COUPON_LABELS[coupon.coupon_code]
                         const isCreator = !!coupon.attributed_creator_id
-                        const typeLabel = isCreator
-                          ? `Creator (${coupon.creator_name || 'Unknown'})`
-                          : internalLabel || 'Promo'
-                        const typeBg = isCreator
-                          ? 'bg-purple-100 text-purple-800'
-                          : internalLabel === 'Owner' || internalLabel === 'Staff' || internalLabel === 'Family'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
+                        const isPrelaunch = coupon.program_type === 'prelaunch'
+                        const typeLabel = isPrelaunch
+                          ? 'Prelaunch'
+                          : isCreator
+                            ? `Creator (${coupon.creator_name || 'Unknown'})`
+                            : internalLabel || 'Promo'
+                        const typeBg = isPrelaunch
+                          ? 'bg-blue-100 text-blue-800'
+                          : isCreator
+                            ? 'bg-purple-100 text-purple-800'
+                            : internalLabel === 'Owner' || internalLabel === 'Staff' || internalLabel === 'Family'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-green-100 text-green-800'
                         return (
                           <tr key={`${coupon.coupon_code}-${index}`} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
                             <td className="py-3 px-4 text-brand-primary font-mono text-sm font-medium">
@@ -473,6 +490,13 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                 </div>
               </div>
             )}
+
+            {/* Prelaunch Codes */}
+            <PrelaunchCodesSection
+              stats={data.prelaunch || { totalCodes: 0, activeCodes: 0, expiredCodes: 0, totalRedemptions: 0, totalRevenue: 0, totalDiscountGiven: 0 }}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+            />
 
             {/* Creator Program */}
             {data.creators && (data.creators.totalLifetime > 0 || Object.keys(data.creators.creatorsByStatus).length > 0) && (
