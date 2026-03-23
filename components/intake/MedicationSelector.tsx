@@ -135,6 +135,10 @@ export function MedicationSelector() {
                   )}
                 </div>
                 <span className="text-sm text-forest-muted">{med.dosage}</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-medium text-forest/70 bg-forest/5 px-1.5 py-0.5 rounded">Compounded in the USA</span>
+                  <span className="text-[10px] font-medium text-forest/70 bg-forest/5 px-1.5 py-0.5 rounded">Prescription Only</span>
+                </div>
                 <p className="text-xs text-forest-muted/80 mt-1 leading-relaxed">{med.description}</p>
               </div>
 
