@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       return item.price ? sum + item.price * item.quantity : sum
     }, 0)
     // Bundle discount: 10% off items whose bundleWith partner is in the cart
-    const bundleDiscountAmount = calculateBundleDiscount(items)
+    // OWNER coupon overrides bundle discount (they don't stack)
+    const bundleDiscountAmount = couponCode?.trim().toUpperCase() === 'OWNER' ? 0 : calculateBundleDiscount(items)
     const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
     // Coupon discount applied after bundle discount
     const couponDiscountAmount = discountPercent > 0 ? Math.round(subtotalAfterBundle * discountPercent) / 100 : 0

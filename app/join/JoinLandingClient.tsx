@@ -827,7 +827,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
           <div className="pt-2 pb-4">
             {(() => {
               const rawSubtotal = cart.getCartTotal()
-              const bundleDisc = cart.getBundleDiscount()
+              const bundleDisc = appliedCoupon?.code === 'OWNER' ? 0 : cart.getBundleDiscount()
               const subtotalAfterBundle = rawSubtotal - bundleDisc
               const couponAmt = appliedCoupon && subtotalAfterBundle > 0
                 ? Math.round(subtotalAfterBundle * appliedCoupon.discount) / 100

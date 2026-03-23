@@ -503,13 +503,6 @@ export const Card = ({
         {/* Glow ring */}
         <div className="absolute inset-0 rounded-3xl ring-1 ring-white/[0.08] group-hover:ring-white/[0.15] transition-all duration-500 pointer-events-none" />
 
-        {/* Ambient light effects */}
-        <div className={cn("absolute top-0 right-0 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none", compact ? "w-32 h-32" : "w-48 h-48")} />
-        <motion.div
-          className={cn("absolute bottom-0 left-0 bg-sage/[0.08] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none", compact ? "w-20 h-20" : "w-32 h-32")}
-          animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.12, 0.08] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        />
 
         {/* Top: Category + Title */}
         <div className={cn("relative z-10 pb-0", compact ? "p-3.5" : "p-5")}>
