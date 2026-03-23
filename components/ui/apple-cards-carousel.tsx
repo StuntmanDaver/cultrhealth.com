@@ -493,7 +493,7 @@ export const Card = ({
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
           compact
-            ? "h-[260px] w-full md:h-[400px] md:w-[260px]"
+            ? "h-[300px] w-[180px] md:h-[400px] md:w-[260px]"
             : "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
           "shadow-lg transition-shadow duration-300",
