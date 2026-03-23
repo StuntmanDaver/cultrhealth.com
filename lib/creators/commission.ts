@@ -49,8 +49,11 @@ export async function processOrderAttribution(params: {
     }
   }
 
-  // 1. Calculate direct commission — always 10%
-  const directRate = COMMISSION_CONFIG.directRate
+  // 1. Fetch creator to get their custom commission rate (if set)
+  const creator = await getCreatorById(attribution.creatorId)
+
+  // Use creator's commission_rate if set, otherwise fall back to global default
+  const directRate = creator?.commission_rate ? Number(creator.commission_rate) : COMMISSION_CONFIG.directRate
   const directAmount = Math.round((netRevenue * directRate) / 100 * 100) / 100
 
   // 2. Pre-calculate override commission (needs creator lookups before transaction)
@@ -58,7 +61,6 @@ export async function processOrderAttribution(params: {
   let overrideRate = 0
   let recruiterId: string | undefined
   let recruiterTier = 0
-  const creator = await getCreatorById(attribution.creatorId)
 
   if (creator?.recruiter_id) {
     const recruiter = await getCreatorById(creator.recruiter_id)
