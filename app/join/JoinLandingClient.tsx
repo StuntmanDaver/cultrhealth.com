@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
-  Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
+  Loader2, Flame, Zap, Shield, Package, ArrowRight, ArrowLeft, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
@@ -292,8 +292,9 @@ function JoinLandingInner() {
 
 function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection; Icon: typeof Flame }) {
   const cart = useJoinCart()
+  const isTwoRow = section.therapies.length > 5
 
-  const cards = section.therapies.map((therapy, index) => {
+  const buildCard = (therapy: JoinTherapy, index: number) => {
     const inCart = cart.isInCart(therapy.id)
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
 
@@ -346,9 +347,12 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
         onAdd={handleAdd}
         inCart={inCart}
         cartQty={cartItem?.quantity}
+        compact={isTwoRow}
       />
     )
-  })
+  }
+
+  const cards = section.therapies.map(buildCard)
 
   return (
     <div className="py-2 md:py-4">
@@ -365,9 +369,87 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
         </div>
       </div>
 
-      {/* Apple Cards Carousel */}
-      <Carousel items={cards} />
+      {isTwoRow ? (
+        <TwoRowGrid items={cards} />
+      ) : (
+        <Carousel items={cards} />
+      )}
     </div>
+  )
+}
+
+// =============================================
+// TWO-ROW GRID (for sections with many items)
+// =============================================
+
+function TwoRowGrid({ items }: { items: JSX.Element[] }) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+
+  const checkScroll = useCallback(() => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
+      setCanScrollLeft(scrollLeft > 0)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+    }
+  }, [])
+
+  useEffect(() => { checkScroll() }, [checkScroll])
+
+  const scroll = (dir: number) => {
+    scrollRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
+  }
+
+  return (
+    <>
+      {/* Mobile: 2-column wrapping grid — all items visible */}
+      <div className="md:hidden px-4 py-4">
+        <div className="grid grid-cols-2 gap-3">
+          {items.map((item, i) => (
+            <div key={i}>{item}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop: 2-row horizontal scroll */}
+      <div className="hidden md:block relative">
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="overflow-x-auto py-6 px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div
+            className="grid grid-rows-2 grid-flow-col gap-4"
+            style={{ gridAutoColumns: '260px' }}
+          >
+            {items.map((item, i) => (
+              <div key={i}>{item}</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll arrows */}
+        <div className="flex justify-end gap-2 px-6 mt-1">
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={() => scroll(-1)}
+            disabled={!canScrollLeft}
+            aria-label="Scroll left"
+          >
+            <ArrowLeft className="h-5 w-5 text-brand-primary" />
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={() => scroll(1)}
+            disabled={!canScrollRight}
+            aria-label="Scroll right"
+          >
+            <ArrowRight className="h-5 w-5 text-brand-primary" />
+          </button>
+        </div>
+      </div>
+    </>
   )
 }
 

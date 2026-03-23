@@ -114,9 +114,14 @@ export function ProductDetailClient({ product, peptideDetails, email }: ProductD
             )}
 
             <div className="flex-1">
-              <span className="inline-block text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest mb-2">
-                {getCategoryDisplayName(product.category)}
-              </span>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="inline-block text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest">
+                  {getCategoryDisplayName(product.category)}
+                </span>
+                <span className="inline-block text-[10px] font-semibold px-2 py-0.5 bg-mint/40 rounded-full text-cultr-forest/70">
+                  Compounded in the USA
+                </span>
+              </div>
               <h1 className="text-2xl md:text-3xl font-display font-bold text-cultr-text">
                 {product.name}
               </h1>

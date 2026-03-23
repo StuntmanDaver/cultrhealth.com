@@ -317,6 +317,7 @@ export const Card = ({
   onAdd,
   inCart,
   cartQty,
+  compact = false,
 }: {
   card: CarouselCard
   index: number
@@ -324,6 +325,7 @@ export const Card = ({
   onAdd?: () => void
   inCart?: boolean
   cartQty?: number
+  compact?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
@@ -479,15 +481,20 @@ export const Card = ({
       )}
 
       {/* ── Card Face ── */}
-      <motion.button
+      <motion.div
+        role="button"
+        tabIndex={0}
         layoutId={layout ? `card-${card.title}` : undefined}
         onClick={handleOpen}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen() } }}
         whileHover={isTouch ? undefined : { scale: 1.03 }}
         aria-label={`View details for ${card.title}`}
         whileTap={isTouch ? undefined : { scale: 0.97 }}
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
-          "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
+          compact
+            ? "h-[260px] w-full md:h-[400px] md:w-[260px]"
+            : "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
           "shadow-lg transition-shadow duration-300",
           "group cursor-pointer"
@@ -497,39 +504,42 @@ export const Card = ({
         <div className="absolute inset-0 rounded-3xl ring-1 ring-white/[0.08] group-hover:ring-white/[0.15] transition-all duration-500 pointer-events-none" />
 
         {/* Ambient light effects */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+        <div className={cn("absolute top-0 right-0 bg-white/[0.04] rounded-full -translate-y-1/3 translate-x-1/3 pointer-events-none", compact ? "w-32 h-32" : "w-48 h-48")} />
         <motion.div
-          className="absolute bottom-0 left-0 w-32 h-32 bg-sage/[0.08] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none"
+          className={cn("absolute bottom-0 left-0 bg-sage/[0.08] rounded-full translate-y-1/3 -translate-x-1/3 pointer-events-none", compact ? "w-20 h-20" : "w-32 h-32")}
           animate={{ scale: [1, 1.2, 1], opacity: [0.08, 0.12, 0.08] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
         {/* Top: Category + Title */}
-        <div className="relative z-10 p-5 pb-0">
+        <div className={cn("relative z-10 pb-0", compact ? "p-3.5" : "p-5")}>
           <motion.span
             layoutId={layout ? `category-${card.category}-${index}` : undefined}
-            className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold"
+            className={cn("uppercase tracking-[0.18em] text-white/40 font-semibold", compact ? "text-[9px]" : "text-[10px]")}
           >
             {card.category}
           </motion.span>
           <motion.h3
             layoutId={layout ? `title-${card.title}` : undefined}
-            className="text-[17px] md:text-lg font-display font-bold text-white mt-1 leading-tight"
+            className={cn("font-display font-bold text-white mt-1 leading-tight", compact ? "text-[14px] md:text-base" : "text-[17px] md:text-lg")}
           >
             {card.title}
           </motion.h3>
           {card.note && (
-            <span className="text-[10px] text-white/30 mt-0.5 block font-medium">
+            <span className={cn("text-white/30 mt-0.5 block font-medium", compact ? "text-[9px]" : "text-[10px]")}>
               {card.note}
             </span>
           )}
+          <span className={cn("inline-block text-white/50 font-semibold mt-1", compact ? "text-[8px]" : "text-[9px]")}>
+            Compounded in the USA
+          </span>
           {card.badge && (
-            <div className="mt-2">{card.badge}</div>
+            <div className="mt-1.5">{card.badge}</div>
           )}
         </div>
 
         {/* Center: Floating Product Image */}
-        <div className="flex-1 relative z-10 flex items-center justify-center px-6 py-2">
+        <div className={cn("flex-1 relative z-10 flex items-center justify-center", compact ? "px-4 py-1" : "px-6 py-2")}>
           {card.src && (
             <motion.div
               animate={{ y: [0, -6, 0] }}
@@ -539,13 +549,16 @@ export const Card = ({
                 ease: "easeInOut",
                 delay: index * 0.4,
               }}
-              className="relative w-full h-[170px] md:h-[220px] drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+              className={cn(
+                "relative w-full drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
+                compact ? "h-[100px] md:h-[160px]" : "h-[170px] md:h-[220px]"
+              )}
             >
               <Image
                 src={card.src}
                 alt={card.title}
                 fill
-                sizes="(max-width: 768px) 200px, 260px"
+                sizes={compact ? "(max-width: 768px) 140px, 200px" : "(max-width: 768px) 200px, 260px"}
                 className="object-contain"
                 priority={index === 0}
               />
@@ -555,14 +568,17 @@ export const Card = ({
 
         {/* Hover Description Overlay (desktop only) */}
         {card.description && (
-          <div className="absolute inset-x-0 top-0 bottom-[60px] z-20 rounded-t-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5">
+          <div className={cn(
+            "absolute inset-x-0 top-0 z-20 rounded-t-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5",
+            compact ? "bottom-[50px]" : "bottom-[60px]"
+          )}>
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
               {card.category}
             </p>
-            <h4 className="text-lg font-display font-bold text-white mb-2 leading-tight">
+            <h4 className={cn("font-display font-bold text-white mb-2 leading-tight", compact ? "text-base" : "text-lg")}>
               {card.title}
             </h4>
-            <p className="text-[13px] text-white/80 leading-relaxed line-clamp-5">
+            <p className={cn("text-white/80 leading-relaxed", compact ? "text-[12px] line-clamp-4" : "text-[13px] line-clamp-5")}>
               {card.description}
             </p>
             <span className="mt-3 text-[11px] text-white/40 font-medium">
@@ -572,9 +588,9 @@ export const Card = ({
         )}
 
         {/* Bottom: Price + Quick Add */}
-        <div className="relative z-10 px-5 pb-5 flex items-end justify-between">
+        <div className={cn("relative z-10 flex items-end justify-between", compact ? "px-3.5 pb-3.5" : "px-5 pb-5")}>
           {card.price ? (
-            <span className="text-xl font-display font-bold text-white">{card.price}</span>
+            <span className={cn("font-display font-bold text-white", compact ? "text-lg" : "text-xl")}>{card.price}</span>
           ) : (
             <span className="text-xs text-white/40 font-medium">Consultation</span>
           )}
@@ -596,7 +612,7 @@ export const Card = ({
             </button>
           )}
         </div>
-      </motion.button>
+      </motion.div>
     </>
   )
 }

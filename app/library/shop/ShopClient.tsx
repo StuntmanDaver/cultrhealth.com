@@ -86,9 +86,14 @@ function ProductCard({ product }: ProductCardProps) {
               {product.volumeMl > 0 ? `${product.volumeMl}ml vial` : ''}
             </p>
           </div>
-          <span className="text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest">
-            {getCategoryDisplayName(product.category)}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-xs px-2 py-1 grad-mint rounded-full text-cultr-forest">
+              {getCategoryDisplayName(product.category)}
+            </span>
+            <span className="text-[10px] font-semibold text-cultr-forest/60 bg-mint/30 rounded-full px-2 py-0.5">
+              Compounded in the USA
+            </span>
+          </div>
         </div>
 
         {/* Description preview for wellness supplements */}

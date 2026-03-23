@@ -115,6 +115,9 @@ export function ProductCatalog() {
                     <span className="px-3 py-1 bg-stone-100 text-stone-600 text-xs font-semibold rounded-full uppercase tracking-wider">
                       {getCategoryDisplayName(product.category)}
                     </span>
+                    <span className="px-2 py-0.5 bg-mint/40 text-cultr-forest/70 text-[10px] font-semibold rounded-full">
+                      Compounded in the USA
+                    </span>
                   </div>
                   
                   <h3 className="text-lg font-bold text-stone-900 mb-2 group-hover:text-cultr-forest transition-colors">

@@ -76,6 +76,9 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   <span className="text-[10px] font-semibold text-cultr-forest/50 border border-cultr-forest/20 rounded-full px-2 py-0.5">
                     Prescription only
                   </span>
+                  <span className="text-[10px] font-semibold text-cultr-forest/70 bg-mint/40 rounded-full px-2 py-0.5">
+                    Compounded in the USA
+                  </span>
                 </div>
 
                 {/* Short description */}

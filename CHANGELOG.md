@@ -1,3 +1,33 @@
+## [2026-03-22] - Join Page Two-Row Grid + "Compounded in the USA" Badges
+
+### Enhancement Section — Two-Row Layout
+- Enhancement section (8 products) on join.cultrhealth.com now renders in a two-row grid instead of a single-row carousel
+- **Mobile:** 2-column wrapping grid — all 8 products visible by scrolling the page, no horizontal carousel friction
+- **Desktop:** 2-row horizontally scrollable grid with arrow controls, items flow column-first
+- Card `compact` mode: smaller dimensions for grid layout (260px tall mobile, 400×260px desktop)
+- Cut section (3 items) retains the existing carousel
+
+### Card Hydration Fix
+- Changed card face from `motion.button` to `motion.div` with `role="button"` — fixes HTML nesting violation (`<button>` inside `<button>`) that caused React hydration error
+
+### "Compounded in the USA" Badge
+- Added "Compounded in the USA" badge across all product views:
+  - Join page carousel cards (apple-cards-carousel.tsx)
+  - Therapies grid (TherapiesGrid.tsx)
+  - Members shop product cards (ShopClient.tsx)
+  - Product detail pages (ProductDetailClient.tsx)
+  - Product catalog (ProductCatalog.tsx)
+
+### Files Changed
+- `app/join/JoinLandingClient.tsx` — TwoRowGrid component, compact card flag for Enhancement section
+- `components/ui/apple-cards-carousel.tsx` — `compact` prop on Card, `motion.div` fix, "Compounded in the USA" label
+- `components/site/TherapiesGrid.tsx` — Compounded badge
+- `app/library/shop/ShopClient.tsx` — Compounded badge
+- `app/library/shop/[sku]/ProductDetailClient.tsx` — Compounded badge
+- `components/library/ProductCatalog.tsx` — Compounded badge
+
+---
+
 ## [2026-03-22] - Creator Portal Production Readiness: Tracking Links + E2E Test
 
 ### Creator Portal — Tracking Links Fix
