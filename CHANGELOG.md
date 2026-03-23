@@ -1,3 +1,87 @@
+## [2026-03-23] - Admin Dashboard Operational Intelligence
+
+### Operational Health Metrics
+- Added conditional Operational Health row: intake completion rate, refund rate, BNPL payment method breakdown
+- Cards only render when underlying data exists (graceful handling of missing tables)
+
+### Invoice Aging
+- New section showing all pending club orders with days-waiting color-coded badges (green <=3d, yellow 3-7d, red >7d)
+- Summary badges: total pending, oldest wait, average wait
+
+### Revenue by Tier + Creator ROI
+- Revenue by Tier: per-membership-plan revenue cards (auto-activates when memberships table exists)
+- Creator ROI table: discount given vs commission earned per creator, net profit/cost color-coded
+
+### Creator Portal Enhancements
+- Link Performance table in creator dashboard: per-link conversion rates (slug, destination, clicks, conversions, rate)
+- Earnings trend indicator on commission card: up/down arrow comparing this month vs last month
+
+### Files Changed
+- `lib/db.ts` — 6 new query functions (getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel)
+- `lib/creators/db.ts` — getCreatorLinkStats, getCreatorEarningsTrend
+- `app/api/admin/analytics/route.ts` — Extended with 6 new data sources
+- `app/admin/AdminDashboardClient.tsx` — 4 new sections + conditional rendering
+- `app/api/creators/dashboard/route.ts` — Returns linkStats + earningsTrend with .catch() fallbacks
+- `lib/contexts/CreatorContext.tsx` — Added linkStats + earningsTrend to context
+- `app/creators/portal/dashboard/page.tsx` — Link Performance table + earnings trend indicator
+
+---
+
+## [2026-03-22] - Admin Dashboard Complete Overhaul
+
+### New Metric Cards
+- Total Customers, Pending Invoices, Active Creators (3 new cards, 7 total)
+
+### New Data View Sections
+- **Creator Network** — searchable table of all creators (name, email, status, tier, commission rate, recruits, codes, revenue)
+- **All Tracking Links** — table with summary badges (slug, creator, destination, clicks, conversions, conv. rate)
+- **All Coupon Codes** — table with type badges (code, creator, type, discount, uses, revenue, Stripe synced, active)
+- **Customer Master List** — searchable table of all club members (name, email, phone, location, type, source, orders, total spent)
+
+### Files Changed
+- `lib/db.ts` — 5 new query functions (getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts)
+- `app/api/admin/analytics/route.ts` — Extended with 5 new data sources
+- `app/admin/AdminDashboardClient.tsx` — 4 new searchable table sections + 3 new metric cards
+
+---
+
+## [2026-03-22] - Creator Provisioning + Coupon System Critical Fix
+
+### Creator: Jon Collins
+- Provisioned `teamjoncollins21@gmail.com` as active creator
+- Custom coupon code `JON21` (20% off) — single code for all orders
+- Custom commission rate: 20% (vs default 10%)
+- Tracking links: `/r/joncollins441` (default) + `/r/jon21`
+
+### Creator: Stewart — 20% Upgrade
+- Updated `stewart@cultrhealth.com` to 20% discount on codes `STEWART1`/`STEWART110` and 20% commission
+- Deactivated typo account `stewart@cultrheath.com` codes (`STEWART`/`STEWART10` at 10%) to prevent confusion
+
+### Critical Bug Fix — Migration 024
+- `affiliate_codes` table was missing `expires_at`, `max_uses`, `program_type`, `created_by_admin` columns
+- This caused ALL creator coupon codes to silently fail validation (getAffiliateCodeByCode threw DB error, caught by try/catch)
+- Fix: Ran migration 024 to add missing columns
+
+### Commission Engine — Per-Creator Rates
+- Commission engine now uses per-creator `commission_rate` from DB instead of hardcoded 10%
+- Null-safe check: `creator?.commission_rate != null` (handles hypothetical 0% rate)
+- All other creators remain at 10% via DB column default
+
+### Approval Email Fix
+- Order confirmation emails (customer + admin) now show coupon discount breakdown
+- Back-calculates pre-discount subtotal from stored discount_percent
+
+### E2E Test
+- 24-test suite covering full Jon Collins creator pipeline: coupon validation, click tracking, order attribution, commission calculation, dashboard/earnings APIs, admin analytics
+
+### Files Changed
+- `lib/creators/commission.ts` — Per-creator commission rate
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` — Coupon discount in approval emails
+- `lib/config/coupons.ts` — validateCouponUnified (already existed, now works with migration 024)
+- `tests/integration/creator-e2e-jon-collins.test.ts` — New 24-test E2E suite
+
+---
+
 ## [2026-03-22] - Intake Medication Badges
 
 ### Medication Selector — Compliance Badges
