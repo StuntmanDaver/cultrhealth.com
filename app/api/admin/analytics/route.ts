@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats } from '@/lib/db'
+import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
 export async function GET(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30', 10)
 
     // Fetch all analytics data
-    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats] = await Promise.all([
+    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats, allCreators, allTrackingLinks, allCouponCodes, allCustomers, dashboardCounts] = await Promise.all([
       getSalesStats(days).catch(() => ({
         totalOrders: 0,
         totalRevenue: 0,
@@ -85,6 +85,11 @@ export async function GET(request: NextRequest) {
         totalRevenue: 0,
         totalDiscountGiven: 0,
       })),
+      getAllCreatorsForAdmin().catch(() => []),
+      getAllTrackingLinksForAdmin().catch(() => []),
+      getAllAffiliateCodesForAdmin().catch(() => []),
+      getAllCustomersForAdmin().catch(() => []),
+      getAdminDashboardCounts().catch(() => ({ totalCustomers: 0, pendingInvoices: 0 })),
     ])
 
     return NextResponse.json({
@@ -97,6 +102,11 @@ export async function GET(request: NextRequest) {
         creators: creatorStats,
         qrScans: qrScanStats,
         prelaunch: prelaunchStats,
+        allCreators,
+        allTrackingLinks,
+        allCouponCodes,
+        allCustomers,
+        dashboardCounts,
         periodDays: days,
         generatedAt: new Date().toISOString(),
       },

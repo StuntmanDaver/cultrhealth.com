@@ -927,6 +927,96 @@ export async function getMembershipStats(): Promise<{ total: number; byTier: Rec
 }
 
 // ===========================================
+// ADMIN DASHBOARD — FULL DATA VIEWS
+// ===========================================
+
+export async function getAllCreatorsForAdmin() {
+  try {
+    const result = await sql`
+      SELECT
+        c.*,
+        (SELECT COUNT(*)::int FROM affiliate_codes ac WHERE ac.creator_id = c.id AND ac.active = TRUE) as code_count,
+        (SELECT COALESCE(SUM(ac.total_revenue), 0) FROM affiliate_codes ac WHERE ac.creator_id = c.id) as total_code_revenue
+      FROM creators c
+      ORDER BY c.created_at DESC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching all creators:', error)
+    throw new DatabaseError('Failed to fetch all creators', error)
+  }
+}
+
+export async function getAllTrackingLinksForAdmin() {
+  try {
+    const result = await sql`
+      SELECT
+        tl.*,
+        c.full_name as creator_name,
+        c.status as creator_status
+      FROM tracking_links tl
+      LEFT JOIN creators c ON tl.creator_id = c.id
+      ORDER BY tl.click_count DESC, tl.created_at DESC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching all tracking links:', error)
+    throw new DatabaseError('Failed to fetch all tracking links', error)
+  }
+}
+
+export async function getAllAffiliateCodesForAdmin() {
+  try {
+    const result = await sql`
+      SELECT
+        ac.*,
+        c.full_name as creator_name,
+        c.status as creator_status
+      FROM affiliate_codes ac
+      LEFT JOIN creators c ON ac.creator_id = c.id
+      ORDER BY ac.use_count DESC, ac.created_at DESC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching all affiliate codes:', error)
+    throw new DatabaseError('Failed to fetch all affiliate codes', error)
+  }
+}
+
+export async function getAllCustomersForAdmin() {
+  try {
+    const result = await sql`
+      SELECT
+        cm.*,
+        (SELECT COUNT(*)::int FROM club_orders co WHERE co.member_id = cm.id) as order_count,
+        (SELECT COALESCE(SUM(co.subtotal_usd), 0) FROM club_orders co WHERE co.member_id = cm.id) as total_spent
+      FROM club_members cm
+      ORDER BY cm.created_at DESC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching all customers:', error)
+    throw new DatabaseError('Failed to fetch all customers', error)
+  }
+}
+
+export async function getAdminDashboardCounts() {
+  try {
+    const [customersResult, invoicesResult] = await Promise.all([
+      sql`SELECT COUNT(*)::int as total FROM club_members`,
+      sql`SELECT COUNT(*)::int as total FROM club_orders WHERE status = 'pending_approval'`,
+    ])
+    return {
+      totalCustomers: customersResult.rows[0]?.total || 0,
+      pendingInvoices: invoicesResult.rows[0]?.total || 0,
+    }
+  } catch (error) {
+    console.error('Database error fetching dashboard counts:', error)
+    throw new DatabaseError('Failed to fetch dashboard counts', error)
+  }
+}
+
+// ===========================================
 // DATABASE CONNECTION TEST
 // ===========================================
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import PrelaunchCodesSection from '@/components/admin/PrelaunchCodesSection'
+import { getTierName } from '@/lib/config/affiliate'
 
 interface SalesStats {
   totalOrders: number
@@ -99,6 +100,69 @@ interface QrScanStats {
   }[]
 }
 
+interface CreatorAdminRow {
+  id: string
+  email: string
+  full_name: string
+  status: string
+  tier: number
+  commission_rate: number
+  override_rate: number
+  recruit_count: number
+  payout_method: string | null
+  created_at: string
+  code_count: number
+  total_code_revenue: number
+}
+
+interface TrackingLinkAdminRow {
+  id: string
+  slug: string
+  destination_path: string
+  click_count: number
+  conversion_count: number
+  active: boolean
+  created_at: string
+  creator_name: string | null
+  creator_status: string | null
+}
+
+interface AffiliateCodeAdminRow {
+  id: string
+  creator_id: string | null
+  code: string
+  code_type: string
+  discount_type: string
+  discount_value: number
+  use_count: number
+  total_revenue: number
+  active: boolean
+  expires_at: string | null
+  program_type: string
+  stripe_promotion_code_id: string | null
+  created_at: string
+  creator_name: string | null
+}
+
+interface CustomerAdminRow {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  address_city: string | null
+  address_state: string | null
+  signup_type: string | null
+  source: string | null
+  created_at: string
+  order_count: number
+  total_spent: number
+}
+
+interface DashboardCounts {
+  totalCustomers: number
+  pendingInvoices: number
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -107,6 +171,11 @@ interface AnalyticsData {
   creators: CreatorStats
   qrScans: QrScanStats
   prelaunch: PrelaunchStats
+  allCreators: CreatorAdminRow[]
+  allTrackingLinks: TrackingLinkAdminRow[]
+  allCouponCodes: AffiliateCodeAdminRow[]
+  allCustomers: CustomerAdminRow[]
+  dashboardCounts: DashboardCounts
   periodDays: number
   generatedAt: string
 }
@@ -125,6 +194,8 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [periodDays, setPeriodDays] = useState(30)
+  const [creatorSearch, setCreatorSearch] = useState('')
+  const [customerSearch, setCustomerSearch] = useState('')
 
   useEffect(() => {
     fetchAnalytics()
@@ -275,6 +346,24 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                 value={`${periodDays} days`}
                 subtitle={`Updated ${formatDate(data.generatedAt)}`}
                 icon="📅"
+              />
+              <MetricCard
+                title="Total Customers"
+                value={data.dashboardCounts.totalCustomers.toString()}
+                subtitle="Club members"
+                icon="🧑‍🤝‍🧑"
+              />
+              <MetricCard
+                title="Pending Invoices"
+                value={data.dashboardCounts.pendingInvoices.toString()}
+                subtitle="Awaiting approval"
+                icon="📄"
+              />
+              <MetricCard
+                title="Active Creators"
+                value={(data.creators.creatorsByStatus['active'] || 0).toString()}
+                subtitle={`${Object.values(data.creators.creatorsByStatus).reduce((a, b) => a + b, 0)} total`}
+                icon="🎯"
               />
             </div>
 
@@ -540,6 +629,207 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Creator Network */}
+            {data.allCreators.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">Creator Network</h2>
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={creatorSearch}
+                    onChange={(e) => setCreatorSearch(e.target.value)}
+                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                  />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Name</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Email</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Tier</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Commission</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Override</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Recruits</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Codes</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Revenue</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.allCreators
+                        .filter(c => c.full_name.toLowerCase().includes(creatorSearch.toLowerCase()) || c.email.toLowerCase().includes(creatorSearch.toLowerCase()))
+                        .map((c, i) => (
+                        <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                          <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.full_name}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
+                          <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(c.status)}`}>{c.status}</span></td>
+                          <td className="py-3 px-4 text-sm text-brand-primary">{getTierName(c.tier)}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{Number(c.commission_rate)}%</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary/60">{Number(c.override_rate)}%</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.recruit_count}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.code_count}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_code_revenue))}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* All Tracking Links */}
+            {data.allTrackingLinks.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">All Tracking Links</h2>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allTrackingLinks.length}</span>
+                  <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allTrackingLinks.filter(l => l.active).length}</span>
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Clicks: {data.allTrackingLinks.reduce((s, l) => s + l.click_count, 0)}</span>
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Conversions: {data.allTrackingLinks.reduce((s, l) => s + l.conversion_count, 0)}</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Slug</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Destination</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Clicks</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Conversions</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Conv. Rate</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Active</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.allTrackingLinks.map((l, i) => (
+                        <tr key={l.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                          <td className="py-3 px-4 text-sm font-mono text-brand-primary">/r/{l.slug}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary">{l.creator_name || '—'}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{l.destination_path}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{l.click_count}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{l.conversion_count}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{l.click_count > 0 ? ((l.conversion_count / l.click_count) * 100).toFixed(1) : '0.0'}%</td>
+                          <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${l.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{l.active ? 'Yes' : 'No'}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* All Coupon Codes */}
+            {data.allCouponCodes.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">All Coupon Codes</h2>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allCouponCodes.length}</span>
+                  <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allCouponCodes.filter(c => c.active).length}</span>
+                  <span className="px-3 py-1 bg-purple-50 rounded-full text-sm text-purple-700">Creator: {data.allCouponCodes.filter(c => c.program_type === 'creator').length}</span>
+                  <span className="px-3 py-1 bg-blue-50 rounded-full text-sm text-blue-700">Prelaunch: {data.allCouponCodes.filter(c => c.program_type === 'prelaunch').length}</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Code</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Type</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Discount</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Uses</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Revenue</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Stripe</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Active</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Expires</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.allCouponCodes.map((c, i) => {
+                        const typeBadge = c.program_type === 'prelaunch'
+                          ? 'bg-blue-100 text-blue-800'
+                          : c.code_type === 'membership' ? 'bg-purple-100 text-purple-800'
+                          : c.code_type === 'product' ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-600'
+                        return (
+                          <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                            <td className="py-3 px-4 text-sm font-mono font-medium text-brand-primary">{c.code}</td>
+                            <td className="py-3 px-4 text-sm text-brand-primary">{c.creator_name || 'Company'}</td>
+                            <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${typeBadge}`}>{c.code_type}</span></td>
+                            <td className="py-3 px-4 text-sm text-right text-brand-primary">{Number(c.discount_value)}%</td>
+                            <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.use_count}</td>
+                            <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_revenue))}</td>
+                            <td className="py-3 px-4 text-sm text-brand-primary">{c.stripe_promotion_code_id ? '✓' : '—'}</td>
+                            <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{c.active ? 'Yes' : 'No'}</span></td>
+                            <td className="py-3 px-4 text-sm text-brand-primary/60">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Customer Master List */}
+            {data.allCustomers.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">Customer Master List</h2>
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={customerSearch}
+                    onChange={(e) => setCustomerSearch(e.target.value)}
+                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                  />
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Name</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Email</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Phone</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Location</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Type</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Source</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Orders</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Total Spent</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.allCustomers
+                        .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.email.toLowerCase().includes(customerSearch.toLowerCase()))
+                        .map((c, i) => (
+                        <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                          <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.name}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{c.phone || '—'}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{c.address_city && c.address_state ? `${c.address_city}, ${c.address_state}` : '—'}</td>
+                          <td className="py-3 px-4">
+                            {c.signup_type && (
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.signup_type === 'membership' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                                {c.signup_type === 'membership' ? 'Membership' : 'Products'}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{c.source || '—'}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.order_count}</td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_spent))}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
