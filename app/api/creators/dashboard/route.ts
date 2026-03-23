@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyCreatorAuth } from '@/lib/auth'
-import { getCreatorById, getCreatorDashboardStats, getCommissionBreakdownByCreator } from '@/lib/creators/db'
+import { getCreatorById, getCreatorDashboardStats, getCommissionBreakdownByCreator, getCreatorLinkStats, getCreatorEarningsTrend } from '@/lib/creators/db'
 import { getNextTierRequirement, isInBonusWindow, getBonusWindowDaysLeft } from '@/lib/config/affiliate'
 
 export async function GET(request: NextRequest) {
@@ -15,9 +15,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
     }
 
-    const [stats, breakdown] = await Promise.all([
+    const [stats, breakdown, linkStats, earningsTrend] = await Promise.all([
       getCreatorDashboardStats(auth.creatorId),
       getCommissionBreakdownByCreator(auth.creatorId),
+      getCreatorLinkStats(auth.creatorId),
+      getCreatorEarningsTrend(auth.creatorId),
     ])
 
     const conversionRate =
@@ -53,6 +55,8 @@ export async function GET(request: NextRequest) {
         commission_rate: Number(creator.commission_rate ?? 10),
         creator_start_date: creator.creator_start_date,
       },
+      linkStats,
+      earningsTrend,
     })
   } catch (error) {
     console.error('Dashboard fetch error:', error)

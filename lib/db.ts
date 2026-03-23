@@ -927,6 +927,136 @@ export async function getMembershipStats(): Promise<{ total: number; byTier: Rec
 }
 
 // ===========================================
+// ADMIN DASHBOARD — OPERATIONAL INTELLIGENCE
+// ===========================================
+
+export async function getInvoiceAging() {
+  try {
+    const result = await sql`
+      SELECT id, order_number, member_name, member_email, subtotal_usd, created_at,
+        EXTRACT(DAY FROM NOW() - created_at)::int as days_pending
+      FROM club_orders WHERE status = 'pending_approval'
+      ORDER BY created_at ASC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching invoice aging:', error)
+    throw new DatabaseError('Failed to fetch invoice aging', error)
+  }
+}
+
+export async function getRefundStats(days: number) {
+  try {
+    const result = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'refunded')::int as refunded,
+        COUNT(*)::int as total,
+        COALESCE(SUM(CASE WHEN status = 'refunded' THEN total_amount ELSE 0 END), 0) as refunded_amount,
+        COALESCE(SUM(total_amount), 0) as total_amount
+      FROM orders WHERE created_at >= NOW() - make_interval(days => ${days})
+    `
+    const row = result.rows[0]
+    const refunded = parseInt(row?.refunded || '0', 10)
+    const total = parseInt(row?.total || '0', 10)
+    return {
+      refunded,
+      total,
+      refundedAmount: parseFloat(row?.refunded_amount || '0'),
+      totalAmount: parseFloat(row?.total_amount || '0'),
+      refundRate: total > 0 ? Math.round((refunded / total) * 10000) / 100 : 0,
+    }
+  } catch (error) {
+    console.error('Database error fetching refund stats:', error)
+    throw new DatabaseError('Failed to fetch refund stats', error)
+  }
+}
+
+export async function getRevenueByTier(days: number) {
+  try {
+    const result = await sql`
+      SELECT m.plan_tier as tier, COUNT(DISTINCT o.id)::int as orders, COALESCE(SUM(o.total_amount), 0) as revenue
+      FROM orders o
+      JOIN memberships m ON LOWER(o.customer_email) = LOWER(m.email)
+      WHERE o.created_at >= NOW() - make_interval(days => ${days}) AND o.status IN ('paid', 'fulfilled')
+      GROUP BY m.plan_tier ORDER BY revenue DESC
+    `
+    return result.rows.map(r => ({
+      tier: r.tier,
+      orders: parseInt(r.orders || '0', 10),
+      revenue: parseFloat(r.revenue || '0'),
+    }))
+  } catch (error) {
+    console.error('Database error fetching revenue by tier:', error)
+    throw new DatabaseError('Failed to fetch revenue by tier', error)
+  }
+}
+
+export async function getBnplAdoption(days: number) {
+  try {
+    const result = await sql`
+      SELECT COALESCE(payment_provider, 'stripe') as provider, COUNT(*)::int as count
+      FROM orders WHERE created_at >= NOW() - make_interval(days => ${days})
+      GROUP BY COALESCE(payment_provider, 'stripe')
+    `
+    const byProvider: Record<string, number> = {}
+    result.rows.forEach(r => { byProvider[r.provider] = parseInt(r.count || '0', 10) })
+    return byProvider
+  } catch (error) {
+    console.error('Database error fetching BNPL adoption:', error)
+    throw new DatabaseError('Failed to fetch BNPL adoption', error)
+  }
+}
+
+export async function getCreatorROI() {
+  try {
+    const result = await sql`
+      SELECT
+        c.id, c.full_name, c.status,
+        COALESCE(SUM(ac.total_revenue * ac.discount_value / 100), 0) as total_discount_given,
+        (SELECT COALESCE(SUM(cl.commission_amount), 0) FROM commission_ledger cl WHERE cl.beneficiary_creator_id = c.id AND cl.status != 'reversed') as total_commission_earned
+      FROM creators c
+      LEFT JOIN affiliate_codes ac ON ac.creator_id = c.id
+      WHERE c.status = 'active'
+      GROUP BY c.id, c.full_name, c.status
+      ORDER BY total_commission_earned DESC
+    `
+    return result.rows.map(r => ({
+      id: r.id,
+      fullName: r.full_name,
+      totalDiscountGiven: parseFloat(r.total_discount_given || '0'),
+      totalCommissionEarned: parseFloat(r.total_commission_earned || '0'),
+    }))
+  } catch (error) {
+    console.error('Database error fetching creator ROI:', error)
+    throw new DatabaseError('Failed to fetch creator ROI', error)
+  }
+}
+
+export async function getIntakeFunnel(days: number) {
+  try {
+    const result = await sql`
+      SELECT
+        COUNT(*)::int as total_started,
+        COUNT(*) FILTER (WHERE intake_status = 'completed')::int as completed,
+        COUNT(*) FILTER (WHERE intake_status = 'pending')::int as pending
+      FROM pending_intakes WHERE created_at >= NOW() - make_interval(days => ${days})
+    `
+    const row = result.rows[0]
+    const totalStarted = parseInt(row?.total_started || '0', 10)
+    const completed = parseInt(row?.completed || '0', 10)
+    return {
+      totalStarted,
+      completed,
+      pending: parseInt(row?.pending || '0', 10),
+      completionRate: totalStarted > 0 ? Math.round((completed / totalStarted) * 10000) / 100 : 0,
+    }
+  } catch (error) {
+    console.error('Database error fetching intake funnel:', error)
+    throw new DatabaseError('Failed to fetch intake funnel', error)
+  }
+}
+
+// ===========================================
 // ADMIN DASHBOARD — FULL DATA VIEWS
 // ===========================================
 

@@ -163,6 +163,44 @@ interface DashboardCounts {
   pendingInvoices: number
 }
 
+interface InvoiceAgingRow {
+  id: string
+  order_number: string
+  member_name: string
+  member_email: string
+  subtotal_usd: number | null
+  created_at: string
+  days_pending: number
+}
+
+interface RefundStats {
+  refunded: number
+  total: number
+  refundedAmount: number
+  totalAmount: number
+  refundRate: number
+}
+
+interface RevenueByTierRow {
+  tier: string
+  orders: number
+  revenue: number
+}
+
+interface CreatorROIRow {
+  id: string
+  fullName: string
+  totalDiscountGiven: number
+  totalCommissionEarned: number
+}
+
+interface IntakeFunnel {
+  totalStarted: number
+  completed: number
+  pending: number
+  completionRate: number
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -176,6 +214,12 @@ interface AnalyticsData {
   allCouponCodes: AffiliateCodeAdminRow[]
   allCustomers: CustomerAdminRow[]
   dashboardCounts: DashboardCounts
+  invoiceAging: InvoiceAgingRow[]
+  refundStats: RefundStats
+  revenueByTier: RevenueByTierRow[]
+  bnplAdoption: Record<string, number>
+  creatorROI: CreatorROIRow[]
+  intakeFunnel: IntakeFunnel
   periodDays: number
   generatedAt: string
 }
@@ -366,6 +410,76 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                 icon="🎯"
               />
             </div>
+
+            {/* Operational Health */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Intake Completion</h3>
+                <p className={`text-3xl font-bold ${data.intakeFunnel.completionRate >= 70 ? 'text-green-600' : data.intakeFunnel.completionRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {data.intakeFunnel.completionRate}%
+                </p>
+                <p className="text-sm text-brand-primary/60 mt-1">{data.intakeFunnel.completed} of {data.intakeFunnel.totalStarted} completed</p>
+              </div>
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Refund Rate</h3>
+                <p className={`text-3xl font-bold ${data.refundStats.refundRate <= 2 ? 'text-green-600' : data.refundStats.refundRate <= 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {data.refundStats.refundRate}%
+                </p>
+                <p className="text-sm text-brand-primary/60 mt-1">{data.refundStats.refunded} of {data.refundStats.total} orders ({formatCurrency(data.refundStats.refundedAmount)})</p>
+              </div>
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Payment Methods</h3>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Object.entries(data.bnplAdoption).length > 0 ? Object.entries(data.bnplAdoption).map(([provider, count]) => {
+                    const total = Object.values(data.bnplAdoption).reduce((s, c) => s + c, 0)
+                    const pct = total > 0 ? Math.round((count / total) * 100) : 0
+                    return (
+                      <span key={provider} className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">
+                        {provider}: {pct}% ({count})
+                      </span>
+                    )
+                  }) : <span className="text-sm text-brand-primary/40">No orders yet</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Invoice Aging */}
+            {data.invoiceAging.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-2">Invoice Aging</h2>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">{data.invoiceAging.length} pending</span>
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Oldest: {Math.max(...data.invoiceAging.map(i => i.days_pending))} days</span>
+                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Avg: {Math.round(data.invoiceAging.reduce((s, i) => s + i.days_pending, 0) / data.invoiceAging.length)} days</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Days Pending</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.invoiceAging.map((inv, i) => (
+                        <tr key={inv.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                          <td className="py-3 px-4 text-sm font-mono text-brand-primary">{inv.order_number}</td>
+                          <td className="py-3 px-4 text-sm text-brand-primary">{inv.member_name} <span className="text-brand-primary/40">{inv.member_email}</span></td>
+                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{inv.subtotal_usd ? formatCurrency(Number(inv.subtotal_usd)) : 'TBD'}</td>
+                          <td className="py-3 px-4 text-sm text-right">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${inv.days_pending <= 3 ? 'bg-green-100 text-green-800' : inv.days_pending <= 7 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                              {inv.days_pending}d
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Quick Links */}
             <div className="p-6 bg-brand-primary/5 rounded-xl mb-8">
@@ -586,6 +700,56 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               formatCurrency={formatCurrency}
               formatDate={formatDate}
             />
+
+            {/* Revenue by Tier */}
+            {data.revenueByTier.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Revenue by Tier</h2>
+                <div className="flex flex-wrap gap-4">
+                  {data.revenueByTier.map(t => (
+                    <div key={t.tier} className="flex-1 min-w-[140px] bg-brand-cream/50 rounded-lg p-4 text-center">
+                      <p className="text-xs text-brand-primary/60 uppercase tracking-wide mb-1">{t.tier}</p>
+                      <p className="text-xl font-bold text-brand-primary">{formatCurrency(t.revenue)}</p>
+                      <p className="text-xs text-brand-primary/40">{t.orders} orders</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Creator ROI */}
+            {data.creatorROI.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Creator ROI</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Discount Given</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Commission Earned</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Net</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.creatorROI.map((c, i) => {
+                        const net = c.totalCommissionEarned - c.totalDiscountGiven
+                        return (
+                          <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                            <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.fullName}</td>
+                            <td className="py-3 px-4 text-sm text-right text-red-600">{formatCurrency(c.totalDiscountGiven)}</td>
+                            <td className="py-3 px-4 text-sm text-right text-green-600">{formatCurrency(c.totalCommissionEarned)}</td>
+                            <td className="py-3 px-4 text-sm text-right">
+                              <span className={net >= 0 ? 'text-green-600' : 'text-red-600'}>{net >= 0 ? '+' : ''}{formatCurrency(net)}</span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Creator Program */}
             {data.creators && (data.creators.totalLifetime > 0 || Object.keys(data.creators.creatorsByStatus).length > 0) && (

@@ -32,6 +32,8 @@ vi.mock('@/lib/creators/db', () => ({
   updateCreatorActiveMemberCount: vi.fn(),
   getCreatorDashboardStats: vi.fn(),
   getCommissionBreakdownByCreator: vi.fn(),
+  getCreatorLinkStats: vi.fn(),
+  getCreatorEarningsTrend: vi.fn(),
   getCommissionSummaryByCreator: vi.fn(),
   getCreatorOrderStats: vi.fn(),
   getCommissionTotalSince: vi.fn(),
@@ -507,6 +509,15 @@ describe('Jon Collins Creator E2E Integration', () => {
         directProduct: 90,
         override: 0,
       } as never)
+
+      vi.mocked(creatorDb.getCreatorLinkStats).mockResolvedValue([
+        { id: JON_LINK_ID, slug: 'joncollins441', destinationPath: '/', clickCount: 15, conversionCount: 3, conversionRate: 20.0 },
+      ])
+
+      vi.mocked(creatorDb.getCreatorEarningsTrend).mockResolvedValue({
+        thisMonth: 30,
+        lastMonth: 0,
+      })
     })
 
     it('returns correct metrics with commissionRate=20 and conversionRate=20', async () => {

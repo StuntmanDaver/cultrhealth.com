@@ -1301,6 +1301,51 @@ export async function updateAffiliateCodeStripeIds(
 }
 
 // ===========================================
+// CREATOR LINK STATS & EARNINGS TREND
+// ===========================================
+
+export async function getCreatorLinkStats(creatorId: string) {
+  try {
+    const result = await sql`
+      SELECT id, slug, destination_path, click_count, conversion_count,
+        CASE WHEN click_count > 0 THEN ROUND(conversion_count::numeric / click_count * 100, 1) ELSE 0 END as conversion_rate
+      FROM tracking_links WHERE creator_id = ${creatorId} AND active = TRUE
+      ORDER BY click_count DESC
+    `
+    return result.rows.map(r => ({
+      id: r.id,
+      slug: r.slug,
+      destinationPath: r.destination_path,
+      clickCount: parseInt(r.click_count || '0', 10),
+      conversionCount: parseInt(r.conversion_count || '0', 10),
+      conversionRate: parseFloat(r.conversion_rate || '0'),
+    }))
+  } catch (error) {
+    console.error('Database error fetching creator link stats:', error)
+    throw new DatabaseError('Failed to fetch creator link stats', error)
+  }
+}
+
+export async function getCreatorEarningsTrend(creatorId: string) {
+  try {
+    const result = await sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN created_at >= date_trunc('month', NOW()) THEN commission_amount ELSE 0 END), 0) as this_month,
+        COALESCE(SUM(CASE WHEN created_at >= date_trunc('month', NOW() - INTERVAL '1 month') AND created_at < date_trunc('month', NOW()) THEN commission_amount ELSE 0 END), 0) as last_month
+      FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed'
+    `
+    const row = result.rows[0]
+    return {
+      thisMonth: parseFloat(row?.this_month || '0'),
+      lastMonth: parseFloat(row?.last_month || '0'),
+    }
+  } catch (error) {
+    console.error('Database error fetching creator earnings trend:', error)
+    throw new DatabaseError('Failed to fetch creator earnings trend', error)
+  }
+}
+
+// ===========================================
 // DASHBOARD METRICS
 // ===========================================
 

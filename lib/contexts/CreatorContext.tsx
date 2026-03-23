@@ -8,11 +8,27 @@ import type {
   AffiliateCode,
 } from '@/lib/config/affiliate'
 
+interface LinkStatRow {
+  id: string
+  slug: string
+  destinationPath: string
+  clickCount: number
+  conversionCount: number
+  conversionRate: number
+}
+
+interface EarningsTrend {
+  thisMonth: number
+  lastMonth: number
+}
+
 interface CreatorContextType {
   creator: Creator | null
   metrics: CreatorDashboardMetrics | null
   links: TrackingLink[]
   codes: AffiliateCode[]
+  linkStats: LinkStatRow[]
+  earningsTrend: EarningsTrend | null
   loading: boolean
   error: string | null
   refreshAll: () => Promise<void>
@@ -28,6 +44,8 @@ export function CreatorProvider({ children }: { children: ReactNode }) {
   const [metrics, setMetrics] = useState<CreatorDashboardMetrics | null>(null)
   const [links, setLinks] = useState<TrackingLink[]>([])
   const [codes, setCodes] = useState<AffiliateCode[]>([])
+  const [linkStats, setLinkStats] = useState<LinkStatRow[]>([])
+  const [earningsTrend, setEarningsTrend] = useState<EarningsTrend | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -37,6 +55,8 @@ export function CreatorProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json()
         setMetrics(data.metrics)
+        setLinkStats(data.linkStats || [])
+        setEarningsTrend(data.earningsTrend || null)
         if (data.creator) {
           setCreator((prev) => (prev ? { ...prev, ...data.creator } : prev))
         }
@@ -104,6 +124,8 @@ export function CreatorProvider({ children }: { children: ReactNode }) {
         metrics,
         links,
         codes,
+        linkStats,
+        earningsTrend,
         loading,
         error,
         refreshAll,

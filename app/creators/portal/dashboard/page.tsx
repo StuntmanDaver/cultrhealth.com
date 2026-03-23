@@ -237,7 +237,7 @@ function GettingStartedCard({
 }
 
 export default function CreatorDashboardPage() {
-  const { metrics, creator, links, codes, loading } = useCreator()
+  const { metrics, creator, links, codes, linkStats, earningsTrend, loading } = useCreator()
 
   if (loading) {
     return (
@@ -311,7 +311,10 @@ export default function CreatorDashboardPage() {
             label="Commission"
             value={fmt(metrics?.thisMonthCommission ?? 0)}
             icon={DollarSign}
-            subtitle={`${fmt(metrics?.pendingCommission ?? 0)} pending`}
+            subtitle={earningsTrend && earningsTrend.lastMonth > 0
+              ? `${earningsTrend.thisMonth >= earningsTrend.lastMonth ? '↑' : '↓'} vs ${fmt(earningsTrend.lastMonth)} last month`
+              : `${fmt(metrics?.pendingCommission ?? 0)} pending`
+            }
           />
         </div>
 
@@ -330,6 +333,43 @@ export default function CreatorDashboardPage() {
           </div>
         )}
       </section>
+
+      {/* ─── LINK PERFORMANCE ─── */}
+      {linkStats && linkStats.length > 0 && (
+        <section className="mt-6">
+          <SectionLabel icon={MousePointerClick} label="Link Performance" />
+          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-stone-100">
+                    <th className="text-left py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Link</th>
+                    <th className="text-left py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Destination</th>
+                    <th className="text-right py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Clicks</th>
+                    <th className="text-right py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Conversions</th>
+                    <th className="text-right py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Conv. Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {linkStats.map((link, i) => (
+                    <tr key={link.id} className={i % 2 === 0 ? 'bg-stone-50/50' : ''}>
+                      <td className="py-3 px-5 text-sm font-mono text-cultr-forest">/r/{link.slug}</td>
+                      <td className="py-3 px-5 text-sm text-cultr-textMuted">{link.destinationPath}</td>
+                      <td className="py-3 px-5 text-sm text-right text-cultr-forest">{link.clickCount}</td>
+                      <td className="py-3 px-5 text-sm text-right text-cultr-forest">{link.conversionCount}</td>
+                      <td className="py-3 px-5 text-sm text-right">
+                        <span className={`font-medium ${link.conversionRate > 5 ? 'text-emerald-600' : link.conversionRate > 0 ? 'text-amber-600' : 'text-cultr-textMuted'}`}>
+                          {link.conversionRate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── COMMISSIONS ─── */}
       {metrics && (
