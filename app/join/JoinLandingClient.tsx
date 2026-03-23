@@ -408,12 +408,9 @@ function TwoRowGrid({ items }: { items: JSX.Element[] }) {
         onScroll={checkScroll}
         className="overflow-x-auto py-4 md:py-6 px-4 md:px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
-        <div
-          className="grid grid-rows-2 grid-flow-col gap-3 md:gap-4"
-          style={{ gridAutoColumns: 'minmax(180px, 260px)' }}
-        >
+        <div className="flex gap-3 md:gap-4 flex-wrap" style={{ flexDirection: 'column', height: '630px', maxHeight: '630px' }}>
           {items.map((item, i) => (
-            <div key={i}>{item}</div>
+            <div key={i} className="shrink-0 w-[180px] md:w-[260px]">{item}</div>
           ))}
         </div>
       </div>
