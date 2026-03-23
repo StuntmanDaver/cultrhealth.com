@@ -412,36 +412,44 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             </div>
 
             {/* Operational Health */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Intake Completion</h3>
-                <p className={`text-3xl font-bold ${data.intakeFunnel.completionRate >= 70 ? 'text-green-600' : data.intakeFunnel.completionRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {data.intakeFunnel.completionRate}%
-                </p>
-                <p className="text-sm text-brand-primary/60 mt-1">{data.intakeFunnel.completed} of {data.intakeFunnel.totalStarted} completed</p>
+            {(data.intakeFunnel.totalStarted > 0 || data.refundStats.total > 0 || Object.keys(data.bnplAdoption).length > 0) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {data.intakeFunnel.totalStarted > 0 && (
+                  <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                    <h3 className="font-display text-sm text-brand-primary/60 mb-2">Intake Completion</h3>
+                    <p className={`text-3xl font-bold ${data.intakeFunnel.completionRate >= 70 ? 'text-green-600' : data.intakeFunnel.completionRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {data.intakeFunnel.completionRate}%
+                    </p>
+                    <p className="text-sm text-brand-primary/60 mt-1">{data.intakeFunnel.completed} of {data.intakeFunnel.totalStarted} completed</p>
+                  </div>
+                )}
+                {data.refundStats.total > 0 && (
+                  <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                    <h3 className="font-display text-sm text-brand-primary/60 mb-2">Refund Rate</h3>
+                    <p className={`text-3xl font-bold ${data.refundStats.refundRate <= 2 ? 'text-green-600' : data.refundStats.refundRate <= 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {data.refundStats.refundRate}%
+                    </p>
+                    <p className="text-sm text-brand-primary/60 mt-1">{data.refundStats.refunded} of {data.refundStats.total} orders ({formatCurrency(data.refundStats.refundedAmount)})</p>
+                  </div>
+                )}
+                {Object.keys(data.bnplAdoption).length > 0 && (
+                  <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                    <h3 className="font-display text-sm text-brand-primary/60 mb-2">Payment Methods</h3>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {Object.entries(data.bnplAdoption).map(([provider, count]) => {
+                        const total = Object.values(data.bnplAdoption).reduce((s, c) => s + c, 0)
+                        const pct = total > 0 ? Math.round((count / total) * 100) : 0
+                        return (
+                          <span key={provider} className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">
+                            {provider}: {pct}% ({count})
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Refund Rate</h3>
-                <p className={`text-3xl font-bold ${data.refundStats.refundRate <= 2 ? 'text-green-600' : data.refundStats.refundRate <= 5 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {data.refundStats.refundRate}%
-                </p>
-                <p className="text-sm text-brand-primary/60 mt-1">{data.refundStats.refunded} of {data.refundStats.total} orders ({formatCurrency(data.refundStats.refundedAmount)})</p>
-              </div>
-              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-                <h3 className="font-display text-sm text-brand-primary/60 mb-2">Payment Methods</h3>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {Object.entries(data.bnplAdoption).length > 0 ? Object.entries(data.bnplAdoption).map(([provider, count]) => {
-                    const total = Object.values(data.bnplAdoption).reduce((s, c) => s + c, 0)
-                    const pct = total > 0 ? Math.round((count / total) * 100) : 0
-                    return (
-                      <span key={provider} className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">
-                        {provider}: {pct}% ({count})
-                      </span>
-                    )
-                  }) : <span className="text-sm text-brand-primary/40">No orders yet</span>}
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Invoice Aging */}
             {data.invoiceAging.length > 0 && (

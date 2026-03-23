@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     const [stats, breakdown, linkStats, earningsTrend] = await Promise.all([
       getCreatorDashboardStats(auth.creatorId),
       getCommissionBreakdownByCreator(auth.creatorId),
-      getCreatorLinkStats(auth.creatorId),
-      getCreatorEarningsTrend(auth.creatorId),
+      getCreatorLinkStats(auth.creatorId).catch(() => []),
+      getCreatorEarningsTrend(auth.creatorId).catch(() => ({ thisMonth: 0, lastMonth: 0 })),
     ])
 
     const conversionRate =
