@@ -1,11 +1,21 @@
+## [2026-03-22] - Intake Medication Badges
+
+### Medication Selector — Compliance Badges
+- Added "Compounded in the USA" and "Prescription Only" badges to all 10 medication cards in the intake form (Step 3)
+- Subtle pill-style labels below dosage line using `text-[10px]` with forest/5 background
+- File: `components/intake/MedicationSelector.tsx`
+
+---
+
 ## [2026-03-22] - Join Page Two-Row Grid + "Compounded in the USA" Badges
 
 ### Enhancement Section — Two-Row Layout
-- Enhancement section (8 products) on join.cultrhealth.com now renders in a two-row grid instead of a single-row carousel
-- **Mobile:** 2-column wrapping grid — all 8 products visible by scrolling the page, no horizontal carousel friction
-- **Desktop:** 2-row horizontally scrollable grid with arrow controls, items flow column-first
-- Card `compact` mode: smaller dimensions for grid layout (260px tall mobile, 400×260px desktop)
-- Cut section (3 items) retains the existing carousel
+- Enhancement section (8 products) on join.cultrhealth.com now renders in two rows instead of a single-row carousel
+- **Mobile:** Two stacked `Carousel` instances (4 items each) using the existing `MobileCarousel` swipe/translateX mechanism — required because page wrapper has `overflow-x-hidden` which blocks CSS overflow scrolling
+- **Desktop:** 2-row horizontally scrollable grid (paired columns) with arrow controls
+- Card `compact` mode: smaller dimensions (300×180px mobile, 400×260px desktop)
+- Cut section (3 items) retains the existing single carousel
+- Removed decorative ambient light effect blobs (white/sage quarter-circles) from card corners
 
 ### Card Hydration Fix
 - Changed card face from `motion.button` to `motion.div` with `role="button"` — fixes HTML nesting violation (`<button>` inside `<button>`) that caused React hydration error
@@ -19,8 +29,8 @@
   - Product catalog (ProductCatalog.tsx)
 
 ### Files Changed
-- `app/join/JoinLandingClient.tsx` — TwoRowGrid component, compact card flag for Enhancement section
-- `components/ui/apple-cards-carousel.tsx` — `compact` prop on Card, `motion.div` fix, "Compounded in the USA" label
+- `app/join/JoinLandingClient.tsx` — `TwoRowLayout` component (two stacked Carousels on mobile, paired-column scroll on desktop), compact card flag
+- `components/ui/apple-cards-carousel.tsx` — `compact` prop on Card, `motion.div` hydration fix, ambient blobs removed, "Compounded in the USA" label
 - `components/site/TherapiesGrid.tsx` — Compounded badge
 - `app/library/shop/ShopClient.tsx` — Compounded badge
 - `app/library/shop/[sku]/ProductDetailClient.tsx` — Compounded badge
