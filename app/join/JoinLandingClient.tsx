@@ -370,7 +370,7 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
       </div>
 
       {isTwoRow ? (
-        <TwoRowGrid items={cards} />
+        <TwoRowLayout items={cards} />
       ) : (
         <Carousel items={cards} />
       )}
@@ -379,10 +379,16 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
 }
 
 // =============================================
-// TWO-ROW GRID (for sections with many items)
+// TWO-ROW LAYOUT (for sections with many items)
+// Mobile: two stacked Carousels (uses translateX, not overflow-x — works inside overflow-x-hidden parent)
+// Desktop: 2-row horizontal scroll grid with arrow controls
 // =============================================
 
-function TwoRowGrid({ items }: { items: JSX.Element[] }) {
+function TwoRowLayout({ items }: { items: JSX.Element[] }) {
+  const mid = Math.ceil(items.length / 2)
+  const topRow = items.slice(0, mid)
+  const bottomRow = items.slice(mid)
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
@@ -401,58 +407,59 @@ function TwoRowGrid({ items }: { items: JSX.Element[] }) {
     scrollRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
   }
 
-  // Pair items into columns: [0,1], [2,3], [4,5], [6,7]
+  // Pair items into columns for desktop: [0,1], [2,3], [4,5], [6,7]
   const columns: JSX.Element[][] = []
   for (let i = 0; i < items.length; i += 2) {
     columns.push(items.slice(i, i + 2))
   }
 
   return (
-    <div className="relative">
-      <div
-        ref={scrollRef}
-        onScroll={checkScroll}
-        className="overflow-x-scroll py-4 md:py-6 px-4 md:px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        <div className="flex gap-3 md:gap-4">
-          {columns.map((col, ci) => (
-            <div key={ci} className="shrink-0 flex flex-col gap-3 md:gap-4">
-              {col.map((item, ri) => (
-                <div key={ri}>{item}</div>
-              ))}
-            </div>
-          ))}
+    <>
+      {/* Mobile: two stacked carousels */}
+      <div className="md:hidden">
+        <Carousel items={topRow} />
+        <Carousel items={bottomRow} />
+      </div>
+
+      {/* Desktop: 2-row horizontal scroll */}
+      <div className="hidden md:block relative">
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="overflow-x-scroll py-6 px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div className="flex gap-4">
+            {columns.map((col, ci) => (
+              <div key={ci} className="shrink-0 flex flex-col gap-4">
+                {col.map((item, ri) => (
+                  <div key={ri}>{item}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Scroll arrows */}
+        <div className="flex justify-end gap-2 px-6 mt-1">
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={() => scroll(-1)}
+            disabled={!canScrollLeft}
+            aria-label="Scroll left"
+          >
+            <ArrowLeft className="h-5 w-5 text-brand-primary" />
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
+            onClick={() => scroll(1)}
+            disabled={!canScrollRight}
+            aria-label="Scroll right"
+          >
+            <ArrowRight className="h-5 w-5 text-brand-primary" />
+          </button>
         </div>
       </div>
-
-      {/* Scroll arrows (desktop) */}
-      <div className="hidden md:flex justify-end gap-2 px-6 mt-1">
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-          onClick={() => scroll(-1)}
-          disabled={!canScrollLeft}
-          aria-label="Scroll left"
-        >
-          <ArrowLeft className="h-5 w-5 text-brand-primary" />
-        </button>
-        <button
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-          onClick={() => scroll(1)}
-          disabled={!canScrollRight}
-          aria-label="Scroll right"
-        >
-          <ArrowRight className="h-5 w-5 text-brand-primary" />
-        </button>
-      </div>
-
-      {/* Swipe hint (mobile) */}
-      <div className="md:hidden flex justify-end px-4">
-        <span className="text-[10px] text-brand-secondary/40 font-medium flex items-center gap-0.5">
-          swipe <ChevronRight className="w-3 h-3" />
-        </span>
-      </div>
-    </div>
+    </>
   )
 }
 
