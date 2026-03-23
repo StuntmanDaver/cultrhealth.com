@@ -102,10 +102,10 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         id: 'glutathione',
         name: 'Glutathione',
         badge: '',
+        note: '200 MG | 10 ML',
         description:
           'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
-        price: null,
-        pricingNote: 'TBD',
+        price: 125,
         category: 'peptide',
         image: '/images/products/glutathione.png',
         bundleWith: 'ghk-cu',

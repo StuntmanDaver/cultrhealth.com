@@ -23,10 +23,12 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
 
         return (
           <ScrollReveal key={product.id} delay={i * 60} direction="up">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => setExpandedId(isExpanded ? null : product.id)}
-              className="glass-card rounded-2xl border-gradient glow-card w-full text-left transition-all duration-300 overflow-hidden"
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedId(isExpanded ? null : product.id) } }}
+              className="glass-card rounded-2xl border-gradient glow-card w-full text-left transition-all duration-300 overflow-hidden cursor-pointer"
             >
               {/* Image */}
               <div className="overflow-hidden rounded-t-2xl bg-white/50">
@@ -61,7 +63,7 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   <div className="flex items-center gap-1 mb-1">
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-cultr-forest bg-sage/40 px-2.5 py-1 rounded-full">
                       <Tag className="w-3 h-3" />
-                      Bundle &amp; save {Math.round(BUNDLE_DISCOUNT_RATE * 100)}%
+                      Bundle & save {Math.round(BUNDLE_DISCOUNT_RATE * 100)}%
                     </span>
                   </div>
                 )}
@@ -110,7 +112,7 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   </div>
                 </div>
               </div>
-            </button>
+            </div>
           </ScrollReveal>
         );
       })}
