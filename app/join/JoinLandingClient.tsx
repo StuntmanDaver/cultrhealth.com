@@ -401,16 +401,27 @@ function TwoRowGrid({ items }: { items: JSX.Element[] }) {
     scrollRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
   }
 
+  // Pair items into columns: [0,1], [2,3], [4,5], [6,7]
+  const columns: JSX.Element[][] = []
+  for (let i = 0; i < items.length; i += 2) {
+    columns.push(items.slice(i, i + 2))
+  }
+
   return (
     <div className="relative">
       <div
         ref={scrollRef}
         onScroll={checkScroll}
-        className="overflow-x-auto py-4 md:py-6 px-4 md:px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="overflow-x-scroll py-4 md:py-6 px-4 md:px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div className="flex gap-3 md:gap-4 flex-wrap" style={{ flexDirection: 'column', height: '630px', maxHeight: '630px' }}>
-          {items.map((item, i) => (
-            <div key={i} className="shrink-0 w-[180px] md:w-[260px]">{item}</div>
+        <div className="flex gap-3 md:gap-4">
+          {columns.map((col, ci) => (
+            <div key={ci} className="shrink-0 flex flex-col gap-3 md:gap-4">
+              {col.map((item, ri) => (
+                <div key={ri}>{item}</div>
+              ))}
+            </div>
           ))}
         </div>
       </div>
