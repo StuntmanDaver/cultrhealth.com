@@ -1,3 +1,25 @@
+## [2026-03-22] - Creator Portal Production Readiness: Tracking Links + E2E Test
+
+### Creator Portal — Tracking Links Fix
+- Tracking links in creator Share page now display `join.cultrhealth.com/r/{slug}` instead of `staging.cultrhealth.com`
+- Link destinations updated to valid join domain paths (`/join/core`, `/join/catalyst`, `/join/concierge`, `/join/club`)
+- Coupon code descriptions reference `join.cultrhealth.com`
+- Custom URL helper text updated
+
+### Creator Coupon Attribution — Real-DB E2E Test
+- New integration test: `tests/integration/coupon-attribution-e2e.test.ts` (14 tests)
+- Hits real staging Neon database — zero mocks
+- Covers full chain: `validateCouponUnified` → `resolveAttribution` → `processOrderAttribution` → dashboard stats
+- Verifies: 10% direct commission, override commission for recruiter, self-referral detection, paused creator blocking, code usage tracking, dashboard metrics aggregation
+- Test data isolated per run with unique prefix, auto-cleaned in afterAll
+
+### Files Changed
+- `app/creators/portal/share/page.tsx` — baseUrl → `join.cultrhealth.com`, coupon descriptions updated
+- `lib/config/affiliate.ts` — LINK_DESTINATIONS updated to join domain checkout paths
+- `tests/integration/coupon-attribution-e2e.test.ts` — New real-DB E2E test (14 tests)
+
+---
+
 ## [2026-03-22] - Phase 3: Core Marketing Page Rewrites
 
 ### Summary
