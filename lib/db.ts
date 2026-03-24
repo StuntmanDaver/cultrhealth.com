@@ -2044,7 +2044,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
         COALESCE(SUM(subtotal_usd), 0) as revenue,
         COUNT(*)::int as orders
       FROM club_orders
-      WHERE status != 'rejected'
+      WHERE (status IS NULL OR status != 'rejected')
         AND created_at >= NOW() - make_interval(days => ${days})
       GROUP BY date_trunc(${bucket}, created_at)::date
       ORDER BY date ASC
@@ -2215,7 +2215,6 @@ export interface CustomerFullProfile {
     status: string
     total_amount: number
     items: unknown
-    payment_provider: string | null
     created_at: string
   }[]
   membership: {
@@ -2236,26 +2235,27 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
   try {
     const normalizedEmail = email.toLowerCase()
 
-    // Run all queries in parallel
+    // Run queries in parallel — each wrapped in .catch() so one missing table doesn't crash all
+    const emptyResult = { rows: [] }
     const [memberResult, clubOrdersResult, productOrdersResult, membershipResult, intakeResult] = await Promise.all([
       sql`
         SELECT id, name, email, phone, address_line1, address_city, address_state, address_zip, signup_type, source, created_at
         FROM club_members
         WHERE LOWER(email) = ${normalizedEmail}
         LIMIT 1
-      `,
+      `.catch(() => emptyResult),
       sql`
         SELECT id, order_number, status, subtotal_usd, items, coupon_code, created_at
         FROM club_orders
         WHERE LOWER(member_email) = ${normalizedEmail}
         ORDER BY created_at DESC
-      `,
+      `.catch(() => emptyResult),
       sql`
-        SELECT id, order_number, status, total_amount, items, payment_provider, created_at
+        SELECT id, order_number, status, total_amount, items, created_at
         FROM orders
         WHERE LOWER(customer_email) = ${normalizedEmail}
         ORDER BY created_at DESC
-      `,
+      `.catch(() => emptyResult),
       sql`
         SELECT m.plan_tier, m.subscription_status, m.created_at
         FROM memberships m
@@ -2263,14 +2263,14 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
         WHERE LOWER(o.customer_email) = ${normalizedEmail}
         ORDER BY m.created_at DESC
         LIMIT 1
-      `,
+      `.catch(() => emptyResult),
       sql`
         SELECT intake_status, plan_tier, created_at
         FROM pending_intakes
         WHERE LOWER(customer_email) = ${normalizedEmail}
         ORDER BY created_at DESC
         LIMIT 1
-      `,
+      `.catch(() => emptyResult),
     ])
 
     const member = memberResult.rows[0] ? {
@@ -2303,7 +2303,6 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
       status: String(r.status),
       total_amount: parseFloat(r.total_amount) || 0,
       items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
-      payment_provider: r.payment_provider ? String(r.payment_provider) : null,
       created_at: String(r.created_at),
     }))
 
