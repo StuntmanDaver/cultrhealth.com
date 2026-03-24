@@ -2,6 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 import PrelaunchCodesSection from '@/components/admin/PrelaunchCodesSection'
 import { getTierName } from '@/lib/config/affiliate'
 
@@ -217,6 +227,12 @@ interface IntakeFunnel {
   completionRate: number
 }
 
+interface RevenueTimeSeriesPoint {
+  date: string
+  revenue: number
+  orders: number
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -236,6 +252,7 @@ interface AnalyticsData {
   bnplAdoption: Record<string, number>
   creatorROI: CreatorROIRow[]
   intakeFunnel: IntakeFunnel
+  revenueTimeSeries: RevenueTimeSeriesPoint[]
   periodDays: number
   generatedAt: string
 }
@@ -588,6 +605,92 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                 icon="🎯"
               />
             </div>
+
+            {/* Revenue Trend Chart */}
+            {data.revenueTimeSeries && data.revenueTimeSeries.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-display text-xl text-brand-primary">Revenue Trend</h2>
+                    <p className="text-sm text-brand-primary/60 mt-1">
+                      {formatCurrency(data.revenueTimeSeries.reduce((sum, d) => sum + d.revenue, 0))} total
+                      {' / '}
+                      {data.revenueTimeSeries.reduce((sum, d) => sum + d.orders, 0)} orders in period
+                    </p>
+                  </div>
+                  <span className="text-sm text-brand-primary/40">
+                    {periodDays <= 30 ? 'Daily' : periodDays <= 90 ? 'Weekly' : 'Monthly'}
+                  </span>
+                </div>
+                <div style={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={data.revenueTimeSeries} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2A4542" stopOpacity={0.2} />
+                          <stop offset="95%" stopColor="#2A4542" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tickFormatter={(val: string) => {
+                          const d = new Date(val)
+                          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                        }}
+                      />
+                      <YAxis
+                        yAxisId="revenue"
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        tickFormatter={(v: number) => `$${v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v}`}
+                      />
+                      <YAxis
+                        yAxisId="orders"
+                        orientation="right"
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip
+                        contentStyle={{ borderRadius: '12px', border: '1px solid #e5e7eb', fontSize: '12px' }}
+                        formatter={(value: number, name: string) => {
+                          if (name === 'revenue') return [formatCurrency(value), 'Revenue']
+                          return [value, 'Orders']
+                        }}
+                        labelFormatter={(label: string) => {
+                          const d = new Date(label)
+                          return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                        }}
+                      />
+                      <Area
+                        yAxisId="revenue"
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="#2A4542"
+                        strokeWidth={2}
+                        fill="url(#revenueGradient)"
+                      />
+                      <Line
+                        yAxisId="orders"
+                        type="monotone"
+                        dataKey="orders"
+                        stroke="#B7E4C7"
+                        strokeWidth={2}
+                        dot={{ fill: '#B7E4C7', r: 3 }}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center gap-6 mt-3 text-xs text-brand-primary/60">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-3 h-0.5 bg-brand-primary rounded" /> Revenue
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-3 h-0.5 bg-sage rounded" /> Orders
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Operational Health */}
             {(data.intakeFunnel.totalStarted > 0 || data.refundStats.total > 0 || Object.keys(data.bnplAdoption).length > 0) && (

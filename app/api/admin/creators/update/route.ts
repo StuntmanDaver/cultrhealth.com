@@ -39,6 +39,15 @@ export async function PATCH(request: NextRequest) {
 
     const prev = existing.rows[0]
 
+    // Validate combined rate doesn't exceed business cap
+    if (commission_rate !== undefined || override_rate !== undefined) {
+      const effectiveCommission = commission_rate ?? parseFloat(prev.commission_rate || '10')
+      const effectiveOverride = override_rate ?? parseFloat(prev.override_rate || '0')
+      if (effectiveCommission + effectiveOverride > 50) {
+        return NextResponse.json({ error: 'Combined commission + override rate cannot exceed 50%' }, { status: 400 })
+      }
+    }
+
     // Build update
     const updates: string[] = []
     const changes: Record<string, unknown> = {}

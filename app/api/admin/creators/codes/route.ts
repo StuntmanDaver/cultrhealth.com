@@ -54,6 +54,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'code is required' }, { status: 400 })
     }
 
+    // Validate discount value range
+    if (discount_value !== undefined && (discount_value < 1 || discount_value > 100)) {
+      return NextResponse.json({ error: 'Discount value must be between 1 and 100' }, { status: 400 })
+    }
+
+    // Validate code_type if provided
+    const validCodeTypes = ['membership', 'product', 'general']
+    if (code_type && !validCodeTypes.includes(code_type)) {
+      return NextResponse.json({ error: `Invalid code_type. Must be one of: ${validCodeTypes.join(', ')}` }, { status: 400 })
+    }
+
     // For company-owned codes without a creator_id, create directly in DB
     if (!creator_id) {
       const { sql } = await import('@vercel/postgres')

@@ -2022,3 +2022,41 @@ export async function getQrScanStats(days: number = 30): Promise<QrScanStats> {
     throw new DatabaseError('Failed to fetch QR scan stats', error)
   }
 }
+
+// ===========================================
+// REVENUE TIME SERIES
+// ===========================================
+
+export interface RevenueTimeSeriesPoint {
+  date: string
+  revenue: number
+  orders: number
+}
+
+export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeriesPoint[]> {
+  try {
+    // Auto-bucket: <= 30 days = daily, <= 90 = weekly, else monthly
+    const bucket = days <= 30 ? 'day' : days <= 90 ? 'week' : 'month'
+
+    const result = await sql`
+      SELECT
+        date_trunc(${bucket}, created_at)::date as date,
+        COALESCE(SUM(subtotal_usd), 0) as revenue,
+        COUNT(*)::int as orders
+      FROM club_orders
+      WHERE status != 'rejected'
+        AND created_at >= NOW() - make_interval(days => ${days})
+      GROUP BY date_trunc(${bucket}, created_at)::date
+      ORDER BY date ASC
+    `
+
+    return result.rows.map(r => ({
+      date: String(r.date),
+      revenue: parseFloat(r.revenue) || 0,
+      orders: parseInt(r.orders, 10) || 0,
+    }))
+  } catch (error) {
+    console.error('Database error fetching revenue time series:', error)
+    throw new DatabaseError('Failed to fetch revenue time series', error)
+  }
+}
