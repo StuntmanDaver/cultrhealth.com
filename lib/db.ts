@@ -2060,3 +2060,342 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
     throw new DatabaseError('Failed to fetch revenue time series', error)
   }
 }
+
+// ===========================================
+// ORDER SEARCH WITH PAGINATION
+// ===========================================
+
+export interface SearchOrdersParams {
+  query?: string
+  status?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  limit?: number
+}
+
+export interface SearchOrdersResult {
+  orders: {
+    id: string
+    order_number: string
+    customer_email: string
+    status: string
+    total_amount: number
+    created_at: string
+    source: 'orders' | 'club_orders'
+    items: OrderItem[]
+  }[]
+  total: number
+  page: number
+  totalPages: number
+}
+
+export async function searchOrders({
+  query,
+  status,
+  dateFrom,
+  dateTo,
+  page = 1,
+  limit = 20,
+}: SearchOrdersParams): Promise<SearchOrdersResult> {
+  try {
+    const offset = (page - 1) * limit
+    const searchPattern = query ? `%${query}%` : null
+
+    // Build dynamic WHERE conditions for orders table
+    // We use a CTE approach with UNION ALL for both tables
+    const result = await sql`
+      WITH combined AS (
+        SELECT
+          id::text as id,
+          order_number,
+          customer_email,
+          status,
+          COALESCE(total_amount, 0)::numeric as total_amount,
+          created_at,
+          'orders' as source,
+          items::text as items_raw
+        FROM orders
+        WHERE (${searchPattern}::text IS NULL OR (
+          order_number ILIKE ${searchPattern} OR
+          customer_email ILIKE ${searchPattern}
+        ))
+        AND (${status || null}::text IS NULL OR status = ${status})
+        AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
+        AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
+
+        UNION ALL
+
+        SELECT
+          id::text as id,
+          order_number,
+          member_email as customer_email,
+          status,
+          COALESCE(subtotal_usd, 0)::numeric as total_amount,
+          created_at,
+          'club_orders' as source,
+          items::text as items_raw
+        FROM club_orders
+        WHERE (${searchPattern}::text IS NULL OR (
+          order_number ILIKE ${searchPattern} OR
+          member_email ILIKE ${searchPattern}
+        ))
+        AND (${status || null}::text IS NULL OR status = ${status})
+        AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
+        AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
+      )
+      SELECT *, (SELECT COUNT(*) FROM combined) as total_count
+      FROM combined
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+      OFFSET ${offset}
+    `
+
+    const total = parseInt(result.rows[0]?.total_count || '0', 10)
+    const totalPages = Math.ceil(total / limit)
+
+    const orders = result.rows.map(row => {
+      let items: OrderItem[] = []
+      try {
+        const parsed = typeof row.items_raw === 'string' ? JSON.parse(row.items_raw) : row.items_raw
+        if (Array.isArray(parsed)) items = parsed
+      } catch {
+        // items may not be valid JSON for some rows
+      }
+
+      return {
+        id: row.id,
+        order_number: row.order_number,
+        customer_email: row.customer_email,
+        status: row.status,
+        total_amount: parseFloat(row.total_amount) || 0,
+        created_at: String(row.created_at),
+        source: row.source as 'orders' | 'club_orders',
+        items,
+      }
+    })
+
+    return { orders, total, page, totalPages }
+  } catch (error) {
+    console.error('Database error searching orders:', error)
+    throw new DatabaseError('Failed to search orders', error)
+  }
+}
+
+// ===========================================
+// CUSTOMER FULL PROFILE
+// ===========================================
+
+export interface CustomerFullProfile {
+  member: {
+    id: string
+    name: string
+    email: string
+    phone: string | null
+    address_line1: string | null
+    address_city: string | null
+    address_state: string | null
+    address_zip: string | null
+    signup_type: string | null
+    source: string | null
+    created_at: string
+  } | null
+  clubOrders: {
+    id: string
+    order_number: string
+    status: string
+    subtotal_usd: number | null
+    items: unknown
+    coupon_code: string | null
+    created_at: string
+  }[]
+  productOrders: {
+    id: string
+    order_number: string
+    status: string
+    total_amount: number
+    items: unknown
+    payment_provider: string | null
+    created_at: string
+  }[]
+  membership: {
+    plan_tier: string
+    subscription_status: string
+    created_at: string
+  } | null
+  intakeStatus: {
+    intake_status: string
+    plan_tier: string
+    created_at: string
+  } | null
+  lifetimeValue: number
+  totalOrders: number
+}
+
+export async function getCustomerFullProfile(email: string): Promise<CustomerFullProfile> {
+  try {
+    const normalizedEmail = email.toLowerCase()
+
+    // Run all queries in parallel
+    const [memberResult, clubOrdersResult, productOrdersResult, membershipResult, intakeResult] = await Promise.all([
+      sql`
+        SELECT id, name, email, phone, address_line1, address_city, address_state, address_zip, signup_type, source, created_at
+        FROM club_members
+        WHERE LOWER(email) = ${normalizedEmail}
+        LIMIT 1
+      `,
+      sql`
+        SELECT id, order_number, status, subtotal_usd, items, coupon_code, created_at
+        FROM club_orders
+        WHERE LOWER(member_email) = ${normalizedEmail}
+        ORDER BY created_at DESC
+      `,
+      sql`
+        SELECT id, order_number, status, total_amount, items, payment_provider, created_at
+        FROM orders
+        WHERE LOWER(customer_email) = ${normalizedEmail}
+        ORDER BY created_at DESC
+      `,
+      sql`
+        SELECT m.plan_tier, m.subscription_status, m.created_at
+        FROM memberships m
+        INNER JOIN orders o ON m.stripe_customer_id = o.stripe_customer_id
+        WHERE LOWER(o.customer_email) = ${normalizedEmail}
+        ORDER BY m.created_at DESC
+        LIMIT 1
+      `,
+      sql`
+        SELECT intake_status, plan_tier, created_at
+        FROM pending_intakes
+        WHERE LOWER(customer_email) = ${normalizedEmail}
+        ORDER BY created_at DESC
+        LIMIT 1
+      `,
+    ])
+
+    const member = memberResult.rows[0] ? {
+      id: String(memberResult.rows[0].id),
+      name: String(memberResult.rows[0].name),
+      email: String(memberResult.rows[0].email),
+      phone: memberResult.rows[0].phone ? String(memberResult.rows[0].phone) : null,
+      address_line1: memberResult.rows[0].address_line1 ? String(memberResult.rows[0].address_line1) : null,
+      address_city: memberResult.rows[0].address_city ? String(memberResult.rows[0].address_city) : null,
+      address_state: memberResult.rows[0].address_state ? String(memberResult.rows[0].address_state) : null,
+      address_zip: memberResult.rows[0].address_zip ? String(memberResult.rows[0].address_zip) : null,
+      signup_type: memberResult.rows[0].signup_type ? String(memberResult.rows[0].signup_type) : null,
+      source: memberResult.rows[0].source ? String(memberResult.rows[0].source) : null,
+      created_at: String(memberResult.rows[0].created_at),
+    } : null
+
+    const clubOrders = clubOrdersResult.rows.map(r => ({
+      id: String(r.id),
+      order_number: String(r.order_number),
+      status: String(r.status),
+      subtotal_usd: r.subtotal_usd ? parseFloat(r.subtotal_usd) : null,
+      items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+      coupon_code: r.coupon_code ? String(r.coupon_code) : null,
+      created_at: String(r.created_at),
+    }))
+
+    const productOrders = productOrdersResult.rows.map(r => ({
+      id: String(r.id),
+      order_number: String(r.order_number),
+      status: String(r.status),
+      total_amount: parseFloat(r.total_amount) || 0,
+      items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+      payment_provider: r.payment_provider ? String(r.payment_provider) : null,
+      created_at: String(r.created_at),
+    }))
+
+    const membership = membershipResult.rows[0] ? {
+      plan_tier: String(membershipResult.rows[0].plan_tier),
+      subscription_status: String(membershipResult.rows[0].subscription_status),
+      created_at: String(membershipResult.rows[0].created_at),
+    } : null
+
+    const intakeStatus = intakeResult.rows[0] ? {
+      intake_status: String(intakeResult.rows[0].intake_status),
+      plan_tier: String(intakeResult.rows[0].plan_tier),
+      created_at: String(intakeResult.rows[0].created_at),
+    } : null
+
+    // Calculate lifetime value from all orders
+    const clubTotal = clubOrders.reduce((sum, o) => sum + (o.subtotal_usd || 0), 0)
+    const productTotal = productOrders.reduce((sum, o) => sum + o.total_amount, 0)
+
+    return {
+      member,
+      clubOrders,
+      productOrders,
+      membership,
+      intakeStatus,
+      lifetimeValue: clubTotal + productTotal,
+      totalOrders: clubOrders.length + productOrders.length,
+    }
+  } catch (error) {
+    console.error('Database error fetching customer full profile:', error)
+    throw new DatabaseError('Failed to fetch customer profile', error)
+  }
+}
+
+// ===========================================
+// MEMBER LIFECYCLE MANAGEMENT
+// ===========================================
+
+export interface MemberDetailRow {
+  id: string
+  stripe_customer_id: string
+  stripe_subscription_id: string
+  plan_tier: string
+  subscription_status: string
+  created_at: string
+  updated_at: string
+  cancelled_at: string | null
+  cancellation_reason: string | null
+}
+
+/**
+ * Get full member details by Stripe customer ID.
+ */
+export async function getMemberDetails(customerId: string): Promise<MemberDetailRow | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM memberships
+      WHERE stripe_customer_id = ${customerId}
+      ORDER BY created_at DESC
+      LIMIT 1
+    `
+    return (result.rows[0] as MemberDetailRow) || null
+  } catch (error) {
+    console.error('Database error fetching member details:', error)
+    throw new DatabaseError('Failed to fetch member details', error)
+  }
+}
+
+/**
+ * Log an admin action to the admin_actions audit table.
+ * Non-throwing: audit logging should never break the calling flow.
+ */
+export async function logAdminAction(
+  action: string,
+  targetId: string,
+  details: Record<string, unknown>,
+  adminEmail: string
+): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+      VALUES (
+        ${adminEmail},
+        ${action},
+        ${'membership'},
+        ${targetId},
+        ${(details.reason as string) || null},
+        ${JSON.stringify(details)}
+      )
+    `
+  } catch (error) {
+    console.error('Database error logging admin action:', error)
+    // Don't throw - audit logging shouldn't break flows
+  }
+}
