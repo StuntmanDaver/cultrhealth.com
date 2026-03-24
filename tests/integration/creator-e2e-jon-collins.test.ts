@@ -105,7 +105,7 @@ const JON_CODE = {
   code: 'JON21',
   code_type: 'membership' as const,
   discount_type: 'percentage' as const,
-  discount_value: 20,
+  discount_value: 10,
   is_primary: true,
   use_count: 0,
   total_revenue: 0,
@@ -177,11 +177,11 @@ describe('Jon Collins Creator E2E Integration', () => {
       setupCreatorMock()
     })
 
-    it('validates JON21 with 20% discount and correct creator metadata', async () => {
+    it('validates JON21 with 10% discount and correct creator metadata', async () => {
       const result = await validateCouponUnified('JON21')
 
       expect(result).not.toBeNull()
-      expect(result!.discount).toBe(20)
+      expect(result!.discount).toBe(10)
       expect(result!.label).toBe("Jon Collins's Code")
       expect(result!.isCreatorCode).toBe(true)
       expect(result!.creatorId).toBe(JON_CREATOR_ID)
@@ -219,7 +219,7 @@ describe('Jon Collins Creator E2E Integration', () => {
       const result = await validateCouponUnified('jon21')
 
       expect(result).not.toBeNull()
-      expect(result!.discount).toBe(20)
+      expect(result!.discount).toBe(10)
       expect(result!.isCreatorCode).toBe(true)
       expect(result!.creatorId).toBe(JON_CREATOR_ID)
     })
@@ -228,7 +228,7 @@ describe('Jon Collins Creator E2E Integration', () => {
       const result = await validateCouponUnified('Jon21')
 
       expect(result).not.toBeNull()
-      expect(result!.discount).toBe(20)
+      expect(result!.discount).toBe(10)
       expect(result!.isCreatorCode).toBe(true)
       expect(result!.creatorId).toBe(JON_CREATOR_ID)
     })
@@ -698,7 +698,7 @@ describe('Jon Collins Creator E2E Integration', () => {
       vi.mocked(creatorDb.getAffiliateCodesByCreator).mockResolvedValue([JON_CODE] as never)
     })
 
-    it('returns JON21 with discount_value=20', async () => {
+    it('returns JON21 with discount_value=10', async () => {
       const { GET } = await import('@/app/api/creators/codes/route')
       const request = new NextRequest('http://localhost:3000/api/creators/codes')
       const response = await GET(request)
@@ -706,7 +706,7 @@ describe('Jon Collins Creator E2E Integration', () => {
 
       expect(json.codes).toHaveLength(1)
       expect(json.codes[0].code).toBe('JON21')
-      expect(json.codes[0].discount_value).toBe(20)
+      expect(json.codes[0].discount_value).toBe(10)
       expect(json.codes[0].code_type).toBe('membership')
       expect(json.codes[0].is_primary).toBe(true)
     })
