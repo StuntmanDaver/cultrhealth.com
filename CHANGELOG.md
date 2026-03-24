@@ -1,3 +1,26 @@
+## [2026-03-23] - Creator Coupon Rate Changes + Admin Dashboard Audit
+
+### Creator Coupon Updates
+- **Jon Collins (JON21):** Customer discount reduced from 20% → 10%. Commission rate remains 20%. Migration 025.
+- **Stewart (STEWART1):** Customer discount reduced from 20% → 10%, code_type changed to `general` (works for all order types). STEWART110 deactivated (consolidated into STEWART1). Commission rate remains 20%. Migration 026.
+
+### Admin Dashboard Bugfix
+- **Creator ROI discount formula** — Fixed `getCreatorROI()` in `lib/db.ts` to correctly back-calculate discount amounts from post-discount revenue. Was: `revenue * rate / 100` (understated). Now: `revenue * rate / (100 - rate)` (correct).
+
+### Admin Dashboard Audit
+- Comprehensive audit confirmed 35+ working features across main page and 5 sub-pages
+- All CRUD operations verified: creator edit, coupon create/toggle, order fulfillment, prelaunch codes
+- All CSV exports working: creators, customers, orders, coupons, tracking links
+- Identified top 10 missing features for future implementation (revenue charts, date filters, member lifecycle, customer detail views, order search)
+
+### Files Changed
+- `migrations/025_jon21_discount_10.sql` — JON21 discount_value 20 → 10
+- `migrations/026_stewart1_discount_consolidation.sql` — STEWART1 discount 20 → 10, type → general; STEWART110 deactivated
+- `lib/db.ts` — Creator ROI discount formula fix
+- `tests/integration/creator-e2e-jon-collins.test.ts` — Updated fixture to match new 10% discount
+
+---
+
 ## [2026-03-23] - Asher Med API Compatibility Fixes
 
 ### Critical Fixes
