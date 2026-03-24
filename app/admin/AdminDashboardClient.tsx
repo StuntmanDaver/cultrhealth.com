@@ -392,6 +392,8 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   // Pause modal
   const [pauseTarget, setPauseTarget] = useState<{ customerId: string; email: string; name: string } | null>(null)
   const [pauseResumeDate, setPauseResumeDate] = useState('')
+  // Invoice dismiss
+  const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
   // Cancel modal
   const [cancelTarget, setCancelTarget] = useState<{ customerId: string; email: string; name: string } | null>(null)
   const [cancelReason, setCancelReason] = useState('')
@@ -506,6 +508,22 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
       fetchCustomerDetail(selectedCustomerEmail)
     }
   }, [selectedCustomerEmail])
+
+  // --------------- Invoice Dismiss ---------------
+  async function handleDismissInvoice(orderId: string) {
+    if (!confirm('Dismiss this invoice? It will be removed from the pending list.')) return
+    setDismissingInvoice(orderId)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/dismiss`, { method: 'POST' })
+      if (res.ok && data) {
+        setData({ ...data, invoiceAging: data.invoiceAging.filter(inv => inv.id !== orderId) })
+      }
+    } catch {
+      // silent
+    } finally {
+      setDismissingInvoice(null)
+    }
+  }
 
   // --------------- Export Handlers ---------------
   const exportCustomers = useCallback(() => {
@@ -1031,6 +1049,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                         <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
                         <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
                         <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Days Pending</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm w-20"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1043,6 +1062,16 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${inv.days_pending <= 3 ? 'bg-green-100 text-green-800' : inv.days_pending <= 7 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
                               {inv.days_pending}d
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right">
+                            <button
+                              onClick={() => handleDismissInvoice(inv.id)}
+                              disabled={dismissingInvoice === inv.id}
+                              className="text-brand-primary/40 hover:text-red-600 transition-colors disabled:opacity-50"
+                              title="Dismiss invoice"
+                            >
+                              {dismissingInvoice === inv.id ? '...' : '✕'}
+                            </button>
                           </td>
                         </tr>
                       ))}

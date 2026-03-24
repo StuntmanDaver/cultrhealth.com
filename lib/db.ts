@@ -2035,34 +2035,72 @@ export interface RevenueTimeSeriesPoint {
 
 export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeriesPoint[]> {
   try {
-    // date_trunc requires a literal string — can't use parameterized query
-    // Use separate queries based on bucket size
-    const queryDaily = sql`
-      SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
-      FROM club_orders
-      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
-      GROUP BY created_at::date ORDER BY date ASC
-    `
-    const queryWeekly = sql`
-      SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
-      FROM club_orders
-      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
-      GROUP BY date_trunc('week', created_at)::date ORDER BY date ASC
-    `
-    const queryMonthly = sql`
-      SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
-      FROM club_orders
-      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
-      GROUP BY date_trunc('month', created_at)::date ORDER BY date ASC
-    `
+    // Query both tables in parallel (no UNION ALL — @vercel/postgres compatibility)
+    // date_trunc requires a literal string — separate queries per bucket size
+    let clubQuery, ordersQuery
 
-    const result = await (days <= 30 ? queryDaily : days <= 90 ? queryWeekly : queryMonthly)
+    if (days <= 30) {
+      clubQuery = sql`
+        SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
+        FROM club_orders
+        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY created_at::date
+      `
+      ordersQuery = sql`
+        SELECT created_at::date as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*)::int as orders
+        FROM orders
+        WHERE status IS DISTINCT FROM 'cancelled' AND status IS DISTINCT FROM 'refunded'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY created_at::date
+      `
+    } else if (days <= 90) {
+      clubQuery = sql`
+        SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
+        FROM club_orders
+        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY date_trunc('week', created_at)::date
+      `
+      ordersQuery = sql`
+        SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*)::int as orders
+        FROM orders
+        WHERE status IS DISTINCT FROM 'cancelled' AND status IS DISTINCT FROM 'refunded'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY date_trunc('week', created_at)::date
+      `
+    } else {
+      clubQuery = sql`
+        SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
+        FROM club_orders
+        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY date_trunc('month', created_at)::date
+      `
+      ordersQuery = sql`
+        SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*)::int as orders
+        FROM orders
+        WHERE status IS DISTINCT FROM 'cancelled' AND status IS DISTINCT FROM 'refunded'
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY date_trunc('month', created_at)::date
+      `
+    }
 
-    return result.rows.map(r => ({
-      date: String(r.date),
-      revenue: parseFloat(r.revenue) || 0,
-      orders: parseInt(r.orders, 10) || 0,
-    }))
+    const [clubResult, ordersResult] = await Promise.all([clubQuery, ordersQuery.catch(() => ({ rows: [] }))])
+
+    // Merge both result sets by date bucket
+    const merged = new Map<string, { revenue: number; orders: number }>()
+    for (const r of [...clubResult.rows, ...ordersResult.rows]) {
+      const key = String(r.date)
+      const existing = merged.get(key) || { revenue: 0, orders: 0 }
+      existing.revenue += parseFloat(r.revenue) || 0
+      existing.orders += parseInt(r.orders, 10) || 0
+      merged.set(key, existing)
+    }
+
+    return Array.from(merged.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, data]) => ({ date, revenue: data.revenue, orders: data.orders }))
   } catch (error) {
     console.error('Database error fetching revenue time series:', error)
     throw new DatabaseError('Failed to fetch revenue time series', error)
