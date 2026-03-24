@@ -2342,6 +2342,45 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
 // MEMBER LIFECYCLE MANAGEMENT
 // ===========================================
 
+export interface MembershipAdminRow {
+  id: string
+  stripe_customer_id: string
+  stripe_subscription_id: string
+  plan_tier: string
+  subscription_status: string
+  created_at: string
+  updated_at: string
+  cancelled_at: string | null
+  cancellation_reason: string | null
+}
+
+/**
+ * Get all memberships for admin management.
+ * Returns all rows from the memberships table, ordered by most recent first.
+ */
+export async function getAllMembershipsForAdmin(): Promise<MembershipAdminRow[]> {
+  try {
+    const result = await sql`
+      SELECT
+        id,
+        stripe_customer_id,
+        stripe_subscription_id,
+        plan_tier,
+        subscription_status,
+        created_at,
+        updated_at,
+        cancelled_at,
+        cancellation_reason
+      FROM memberships
+      ORDER BY created_at DESC
+    `
+    return result.rows as MembershipAdminRow[]
+  } catch (error) {
+    console.error('Database error fetching all memberships:', error)
+    throw new DatabaseError('Failed to fetch memberships for admin', error)
+  }
+}
+
 export interface MemberDetailRow {
   id: string
   stripe_customer_id: string
