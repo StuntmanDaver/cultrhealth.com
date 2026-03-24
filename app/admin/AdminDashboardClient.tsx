@@ -690,7 +690,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   Protocol Builder
                 </Link>
                 <a
-                  href="https://prod-api.asherweightloss.com"
+                  href="https://partners.joinasher.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 grad-white text-brand-primary border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors"

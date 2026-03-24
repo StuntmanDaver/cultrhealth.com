@@ -780,10 +780,7 @@ export async function uploadFile(
  * Check if Asher Med API is configured
  */
 export function isAsherMedConfigured(): boolean {
-  return !!(
-    process.env.ASHER_MED_API_KEY &&
-    process.env.ASHER_MED_API_URL
-  );
+  return !!process.env.ASHER_MED_API_KEY;
 }
 
 /**

@@ -154,7 +154,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       if (customerEmail) {
         const { sql } = await import('@vercel/postgres');
         const asherResult = await sql`
-          SELECT asher_patient_id FROM asher_orders WHERE patient_email = ${customerEmail} ORDER BY created_at DESC LIMIT 1
+          SELECT asher_patient_id FROM asher_orders WHERE customer_email = ${customerEmail} ORDER BY created_at DESC LIMIT 1
         `;
         if (asherResult.rows[0]?.asher_patient_id) {
           asherPatientId = asherResult.rows[0].asher_patient_id;
