@@ -1,3 +1,49 @@
+## [2026-03-23] - SiPhox Integration Health Check + Asher Med Compatibility
+
+### SiPhox Critical Fixes
+- **FK constraint violation (silent data loss)** — `siphox_kit_orders.siphox_customer_id` FK caused INSERT to silently fail when customer doesn't exist yet (pending state). Migration 027 drops FK constraint. Confirmed via Neon SQL console.
+- **Missing isSiphoxConfigured() guards** — Function existed but was never called. Without `SIPHOX_API_KEY`, fulfillment attempts threw unhandled errors. Added guards to `triggerSiphoxFulfillment()`, `processDeferredOrders()`, `retryFailedOrders()`.
+- **Undocumented env vars** — `SIPHOX_API_KEY`, `SIPHOX_API_URL`, `CRON_SECRET`, `BLOOD_TEST_STRIPE_PRICE_ID` added to `.env.example` and `docs/env-vars-go-live.md`.
+
+### Asher Med API Compatibility (included in same deploy)
+- ID type handling fixes, HIPAA patient filtering safety net, createNewOrder response parsing
+- See previous changelog entry for full Asher Med details
+
+### Admin Improvements
+- **Creator update API** — New `PATCH /api/admin/creators/update` endpoint for commission_rate, override_rate, status changes with audit logging
+- **Coupon code management** — Admin dashboard improvements for creator code management
+
+### Deployment Incident & Recovery
+- **Incident:** `vercel --prod` CLI accidentally deployed staging (full app) to production (waitlist-only site cultrhealth.com)
+- **Root cause:** Vercel CLI deploys local directory, not git branch. Was on `staging` branch when `--prod` was run.
+- **Recovery:** Promoted previous waitlist deployment back to production within minutes. No lasting impact.
+- **Prevention:** Production deploys must go through git push to `production` branch or Vercel Dashboard promotion — never via `vercel --prod` CLI.
+
+### Database
+- Migration 027 (`siphox_relax_fk.sql`) — Drops FK constraints on `siphox_kit_orders` and `siphox_reports`
+- Migrations 020-022 confirmed present (siphox_customers, siphox_kit_orders, siphox_reports tables)
+
+### Env Vars Confirmed Set in Vercel
+- `SIPHOX_API_KEY` — Set
+- `CRON_SECRET` — Set
+
+### Files Changed (23 files)
+- `migrations/027_siphox_relax_fk.sql` (new)
+- `lib/siphox/fulfillment.ts` — isSiphoxConfigured() guards
+- `app/api/admin/creators/update/route.ts` (new) — Creator update endpoint
+- `app/api/admin/creators/codes/route.ts` — Coupon management improvements
+- `app/admin/AdminDashboardClient.tsx` — Portal link + coupon UI improvements
+- `lib/asher-med-api.ts`, `lib/portal-auth.ts`, `lib/portal-db.ts`, `lib/portal-orders.ts` — ID/type fixes
+- `app/api/intake/submit/route.ts`, `app/api/member/orders/route.ts`, `app/api/member/profile/route.ts` — Defensive ID handling
+- `app/api/member/medical-records/route.ts`, `app/api/portal/orders/route.ts`, `app/api/portal/orders/[id]/route.ts` — Patient filtering
+- `app/api/admin/orders/[orderNumber]/fulfill/route.ts`, `app/api/webhook/stripe/route.ts` — Type consistency
+- `app/portal/dashboard/DashboardClient.tsx` — useState type fix
+- `lib/db.ts` — ID handling
+- `.env.example`, `docs/env-vars-go-live.md` — Env var documentation
+- `tests/lib/siphox-fulfillment.test.ts` — Test updates
+
+---
+
 ## [2026-03-23] - Creator Coupon Rate Changes + Admin Dashboard Audit
 
 ### Creator Coupon Updates
