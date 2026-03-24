@@ -728,7 +728,7 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
       ) ac_match ON TRUE
       WHERE co.coupon_code IS NOT NULL
         AND co.coupon_code != ''
-        AND co.created_at >= NOW() - INTERVAL '1 day' * ${days}
+        AND co.created_at >= NOW() - make_interval(days => ${days})
         AND (ac_match.program_type IS NULL OR ac_match.program_type != 'prelaunch')
       GROUP BY co.coupon_code, co.discount_percent, co.attributed_creator_id, c.full_name, ac_match.program_type
       ORDER BY usage_count DESC
@@ -837,7 +837,7 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
           COALESCE(SUM(CASE WHEN cl.status = 'paid' THEN cl.commission_amount ELSE 0 END), 0) as total_paid,
           COALESCE(SUM(CASE WHEN cl.status != 'reversed' THEN cl.commission_amount ELSE 0 END), 0) as total_lifetime
         FROM commission_ledger cl
-        WHERE cl.created_at >= NOW() - INTERVAL '1 day' * ${days}
+        WHERE cl.created_at >= NOW() - make_interval(days => ${days})
       `,
       sql`
         SELECT status, COUNT(*)::int as count FROM creators GROUP BY status
@@ -1913,48 +1913,48 @@ export async function getQrScanStats(days: number = 30): Promise<QrScanStats> {
           COUNT(*) as total_scans,
           COUNT(DISTINCT ip_hash) as unique_visitors
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
       `,
       // By destination
       sql`
         SELECT destination, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY destination ORDER BY count DESC
       `,
       // By source
       sql`
         SELECT source, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY source ORDER BY count DESC
       `,
       // By device type
       sql`
         SELECT device_type, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY device_type ORDER BY count DESC
       `,
       // By OS
       sql`
         SELECT os, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY os ORDER BY count DESC
       `,
       // By browser
       sql`
         SELECT browser, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY browser ORDER BY count DESC
       `,
       // Top cities
       sql`
         SELECT city, region, country, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
           AND city IS NOT NULL AND city != ''
         GROUP BY city, region, country
         ORDER BY count DESC
@@ -1964,7 +1964,7 @@ export async function getQrScanStats(days: number = 30): Promise<QrScanStats> {
       sql`
         SELECT DATE(created_at) as date, COUNT(*) as count
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         GROUP BY DATE(created_at)
         ORDER BY date ASC
       `,
@@ -1972,7 +1972,7 @@ export async function getQrScanStats(days: number = 30): Promise<QrScanStats> {
       sql`
         SELECT scan_id, source, destination, device_type, os, browser, city, region, country, created_at
         FROM qr_scans
-        WHERE created_at >= NOW() - CAST(${days + ' days'} AS INTERVAL)
+        WHERE created_at >= NOW() - make_interval(days => ${days})
         ORDER BY created_at DESC
         LIMIT 20
       `,
@@ -2040,19 +2040,19 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
     const queryDaily = sql`
       SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
       FROM club_orders
-      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
       GROUP BY created_at::date ORDER BY date ASC
     `
     const queryWeekly = sql`
       SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
       FROM club_orders
-      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
       GROUP BY date_trunc('week', created_at)::date ORDER BY date ASC
     `
     const queryMonthly = sql`
       SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
       FROM club_orders
-      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      WHERE status IS DISTINCT FROM 'rejected' AND created_at >= NOW() - make_interval(days => ${days})
       GROUP BY date_trunc('month', created_at)::date ORDER BY date ASC
     `
 

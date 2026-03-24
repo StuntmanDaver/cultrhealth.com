@@ -372,7 +372,7 @@ export async function createPrelaunchCode(
         'general',
         'prelaunch',
         TRUE,
-        NOW() + INTERVAL '1 day' * ${expiryDays}
+        NOW() + make_interval(days => ${expiryDays})
       )
       RETURNING *
     `
