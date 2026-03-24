@@ -293,6 +293,22 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   const [couponSearch, setCouponSearch] = useState('')
   // Tracking link search
   const [linkSearch, setLinkSearch] = useState('')
+  // Date range filters for tables
+  const [tableStartDate, setTableStartDate] = useState(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 30)
+    return d.toISOString().split('T')[0]
+  })
+  const [tableEndDate, setTableEndDate] = useState(() => new Date().toISOString().split('T')[0])
+
+  // Sync date range when periodDays changes
+  useEffect(() => {
+    const end = new Date()
+    const start = new Date()
+    start.setDate(start.getDate() - periodDays)
+    setTableStartDate(start.toISOString().split('T')[0])
+    setTableEndDate(end.toISOString().split('T')[0])
+  }, [periodDays])
 
   useEffect(() => {
     fetchAnalytics()
@@ -358,6 +374,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
       data.allTrackingLinks.map(l => [`/r/${l.slug}`, l.creator_name, l.destination_path, l.click_count, l.conversion_count, l.click_count > 0 ? `${((l.conversion_count / l.click_count) * 100).toFixed(1)}%` : '0%', l.active ? 'Yes' : 'No'])
     )
   }, [data])
+
+  // --------------- Date Range Filter Helper ---------------
+  const filterByDateRange = useCallback(<T extends { created_at: string }>(items: T[]): T[] => {
+    if (!tableStartDate && !tableEndDate) return items
+    return items.filter(item => {
+      const d = item.created_at?.slice(0, 10)
+      if (!d) return true
+      if (tableStartDate && d < tableStartDate) return false
+      if (tableEndDate && d > tableEndDate) return false
+      return true
+    })
+  }, [tableStartDate, tableEndDate])
 
   // --------------- Order Fulfillment ---------------
   async function handleFulfill() {
@@ -1088,10 +1116,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* Creator Network */}
             {data.allCreators.length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="font-display text-xl text-brand-primary">Creator Network</h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button onClick={exportCreators} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">From</label>
+                      <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">To</label>
+                      <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search by name or email..."
@@ -1119,7 +1155,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allCreators
+                      {filterByDateRange(data.allCreators)
                         .filter(c => c.full_name.toLowerCase().includes(creatorSearch.toLowerCase()) || c.email.toLowerCase().includes(creatorSearch.toLowerCase()))
                         .map((c, i) => (
                         <tr key={c.id} className={`${i % 2 === 0 ? 'bg-brand-cream/30' : ''} hover:bg-brand-primary/5 transition-colors`}>
@@ -1152,10 +1188,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* All Tracking Links */}
             {data.allTrackingLinks.length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="font-display text-xl text-brand-primary">All Tracking Links</h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button onClick={exportTrackingLinks} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">From</label>
+                      <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">To</label>
+                      <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search slugs or creators..."
@@ -1185,7 +1229,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allTrackingLinks
+                      {filterByDateRange(data.allTrackingLinks)
                         .filter(l => !linkSearch || l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || (l.creator_name || '').toLowerCase().includes(linkSearch.toLowerCase()))
                         .map((l, i) => (
                         <tr key={l.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
@@ -1207,9 +1251,9 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* All Coupon Codes */}
             {(data.allCouponCodes.length > 0 || showCouponForm) && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="font-display text-xl text-brand-primary">All Coupon Codes</h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button onClick={exportCoupons} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
                     <button
                       onClick={() => { setShowCouponForm(!showCouponForm); setCouponError(null) }}
@@ -1217,6 +1261,14 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                     >
                       {showCouponForm ? 'Cancel' : '+ Create Coupon'}
                     </button>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">From</label>
+                      <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">To</label>
+                      <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search codes..."
@@ -1299,7 +1351,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allCouponCodes
+                      {filterByDateRange(data.allCouponCodes)
                         .filter(c => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.creator_name || '').toLowerCase().includes(couponSearch.toLowerCase()))
                         .map((c, i) => {
                         const typeBadge = c.program_type === 'prelaunch'
@@ -1337,10 +1389,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* Customer Master List */}
             {data.allCustomers.length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                   <h2 className="font-display text-xl text-brand-primary">Customer Master List</h2>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button onClick={exportCustomers} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">From</label>
+                      <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-xs text-brand-primary/50">To</label>
+                      <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                    </div>
                     <input
                       type="text"
                       placeholder="Search by name or email..."
@@ -1366,7 +1426,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allCustomers
+                      {filterByDateRange(data.allCustomers)
                         .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.email.toLowerCase().includes(customerSearch.toLowerCase()))
                         .map((c, i) => (
                         <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
