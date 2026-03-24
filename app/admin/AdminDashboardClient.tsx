@@ -189,14 +189,46 @@ interface DashboardCounts {
   pendingInvoices: number
 }
 
+interface ClubOrderItem {
+  therapyId: string
+  name: string
+  price: number | null
+  pricingNote?: string
+  note?: string
+  quantity: number
+}
+
 interface InvoiceAgingRow {
   id: string
   order_number: string
   member_name: string
   member_email: string
+  items: string // JSON string → ClubOrderItem[]
   subtotal_usd: number | null
+  coupon_code: string | null
+  discount_percent: number | null
+  tax_amount_usd: number | null
+  status: string
   created_at: string
   days_pending: number
+}
+
+const ORDER_STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
+  pending_approval: { label: 'Pending', bg: 'bg-yellow-100', text: 'text-yellow-800' },
+  approved: { label: 'Approved', bg: 'bg-blue-100', text: 'text-blue-800' },
+  invoice_sent: { label: 'Invoice Sent', bg: 'bg-indigo-100', text: 'text-indigo-800' },
+  paid: { label: 'Paid', bg: 'bg-green-100', text: 'text-green-800' },
+  rejected: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-800' },
+  cancelled: { label: 'Cancelled', bg: 'bg-gray-100', text: 'text-gray-600' },
+}
+
+function parseOrderItems(items: string | unknown): ClubOrderItem[] {
+  try {
+    const parsed = typeof items === 'string' ? JSON.parse(items) : items
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
 }
 
 interface RefundStats {
@@ -392,8 +424,10 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   // Pause modal
   const [pauseTarget, setPauseTarget] = useState<{ customerId: string; email: string; name: string } | null>(null)
   const [pauseResumeDate, setPauseResumeDate] = useState('')
-  // Invoice dismiss
+  // Club orders (invoice aging)
   const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
+  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null)
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('')
   // Cancel modal
   const [cancelTarget, setCancelTarget] = useState<{ customerId: string; email: string; name: string } | null>(null)
   const [cancelReason, setCancelReason] = useState('')
@@ -511,12 +545,23 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
 
   // --------------- Invoice Dismiss ---------------
   async function handleDismissInvoice(orderId: string) {
-    if (!confirm('Dismiss this invoice? It will be removed from the pending list.')) return
+    if (!confirm('Dismiss this order? It will be hidden from the dashboard.')) return
     setDismissingInvoice(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/dismiss`, { method: 'POST' })
       if (res.ok && data) {
-        setData({ ...data, invoiceAging: data.invoiceAging.filter(inv => inv.id !== orderId) })
+        const updatedInvoices = data.invoiceAging.filter(inv => inv.id !== orderId)
+        setData({ ...data, invoiceAging: updatedInvoices })
+        if (expandedInvoiceId === orderId) setExpandedInvoiceId(null)
+        // Re-fetch revenue data in background to update chart
+        fetch(`/api/admin/analytics?days=${periodDays}`)
+          .then(r => r.json())
+          .then(result => {
+            if (result.data?.revenueTimeSeries) {
+              setData(prev => prev ? { ...prev, revenueTimeSeries: result.data.revenueTimeSeries } : prev)
+            }
+          })
+          .catch(() => {})
       }
     } catch {
       // silent
@@ -1032,54 +1077,167 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               </div>
             )}
 
-            {/* Invoice Aging */}
-            {data.invoiceAging.length > 0 && (
-              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <h2 className="font-display text-xl text-brand-primary mb-2">Invoice Aging</h2>
-                <div className="flex flex-wrap gap-3 mb-4">
-                  <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">{data.invoiceAging.length} pending</span>
-                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Oldest: {Math.max(...data.invoiceAging.map(i => i.days_pending))} days</span>
-                  <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Avg: {Math.round(data.invoiceAging.reduce((s, i) => s + i.days_pending, 0) / data.invoiceAging.length)} days</span>
+            {/* Club Orders */}
+            {data.invoiceAging.length > 0 && (() => {
+              const filteredOrders = invoiceStatusFilter
+                ? data.invoiceAging.filter(inv => inv.status === invoiceStatusFilter)
+                : data.invoiceAging
+              const pendingCount = data.invoiceAging.filter(inv => inv.status === 'pending_approval').length
+              const totalRevenue = data.invoiceAging.reduce((s, inv) => s + (Number(inv.subtotal_usd) || 0), 0)
+              const statusCounts = data.invoiceAging.reduce((acc, inv) => {
+                acc[inv.status] = (acc[inv.status] || 0) + 1
+                return acc
+              }, {} as Record<string, number>)
+
+              return (
+                <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+                  <h2 className="font-display text-xl text-brand-primary mb-2">Club Orders</h2>
+                  <div className="flex flex-wrap gap-3 mb-4">
+                    <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">{data.invoiceAging.length} total</span>
+                    {pendingCount > 0 && (
+                      <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">{pendingCount} pending</span>
+                    )}
+                    <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Revenue: {formatCurrency(totalRevenue)}</span>
+                  </div>
+
+                  {/* Status filter pills */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      onClick={() => setInvoiceStatusFilter('')}
+                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${!invoiceStatusFilter ? 'bg-brand-primary text-white' : 'bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10'}`}
+                    >
+                      All ({data.invoiceAging.length})
+                    </button>
+                    {Object.entries(statusCounts).map(([status, count]) => {
+                      const style = ORDER_STATUS_STYLES[status] || { label: status, bg: 'bg-gray-100', text: 'text-gray-600' }
+                      return (
+                        <button
+                          key={status}
+                          onClick={() => setInvoiceStatusFilter(invoiceStatusFilter === status ? '' : status)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${invoiceStatusFilter === status ? 'bg-brand-primary text-white' : `${style.bg} ${style.text} hover:opacity-80`}`}
+                        >
+                          {style.label} ({count})
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Orders list */}
+                  <div className="border border-brand-primary/10 rounded-lg overflow-hidden">
+                    {filteredOrders.map((inv) => {
+                      const isExpanded = expandedInvoiceId === inv.id
+                      const statusStyle = ORDER_STATUS_STYLES[inv.status] || { label: inv.status, bg: 'bg-gray-100', text: 'text-gray-600' }
+                      const items = parseOrderItems(inv.items)
+                      const isPaid = inv.status === 'paid'
+
+                      return (
+                        <div key={inv.id} className="border-b border-brand-primary/10 last:border-b-0">
+                          {/* Row */}
+                          <div
+                            className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-brand-cream/30 transition-colors"
+                            onClick={() => setExpandedInvoiceId(isExpanded ? null : inv.id)}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-sm text-brand-primary">{inv.order_number}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                                  {statusStyle.label}
+                                </span>
+                                {inv.coupon_code && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
+                                    {inv.coupon_code} ({inv.discount_percent}% off)
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-brand-primary mt-0.5">{inv.member_name} <span className="text-brand-primary/40">{inv.member_email}</span></p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-sm font-semibold text-brand-primary">
+                                {inv.subtotal_usd ? formatCurrency(Number(inv.subtotal_usd)) : 'TBD'}
+                              </p>
+                              <p className="text-xs text-brand-primary/40">
+                                {new Date(inv.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {!isPaid && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDismissInvoice(inv.id) }}
+                                  disabled={dismissingInvoice === inv.id}
+                                  className="text-brand-primary/30 hover:text-red-600 transition-colors disabled:opacity-50 p-1"
+                                  title="Dismiss order"
+                                >
+                                  {dismissingInvoice === inv.id ? '...' : '✕'}
+                                </button>
+                              )}
+                              <span className="text-brand-primary/30">
+                                {isExpanded ? '▲' : '▼'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Expanded detail */}
+                          {isExpanded && (
+                            <div className="px-4 pb-4 bg-brand-cream/20">
+                              {/* Items table */}
+                              {items.length > 0 && (
+                                <div className="bg-white rounded-lg border border-brand-primary/10 p-4 mt-1 mb-3">
+                                  <table className="w-full text-sm">
+                                    <thead>
+                                      <tr className="border-b border-brand-primary/10 text-brand-primary/60">
+                                        <th className="text-left pb-2 font-medium">Product</th>
+                                        <th className="text-center pb-2 font-medium">Qty</th>
+                                        <th className="text-right pb-2 font-medium">Price</th>
+                                        <th className="text-right pb-2 font-medium">Total</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {items.map((item, idx) => (
+                                        <tr key={idx} className={idx % 2 === 0 ? 'bg-brand-cream/20' : ''}>
+                                          <td className="py-2 text-brand-primary">
+                                            {item.name}
+                                            {item.note && <span className="text-brand-primary/40 ml-1 text-xs">({item.note})</span>}
+                                          </td>
+                                          <td className="py-2 text-center text-brand-primary">{item.quantity}</td>
+                                          <td className="py-2 text-right text-brand-primary">
+                                            {item.price != null ? formatCurrency(item.price) : 'TBD'}
+                                          </td>
+                                          <td className="py-2 text-right text-brand-primary font-medium">
+                                            {item.price != null ? formatCurrency(item.price * item.quantity) : 'TBD'}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+
+                              {/* Price breakdown */}
+                              <div className="flex flex-wrap gap-x-8 gap-y-1 text-sm text-brand-primary/70">
+                                {inv.coupon_code && inv.discount_percent && (
+                                  <span>Coupon: <strong className="text-green-700">{inv.coupon_code}</strong> ({inv.discount_percent}% off)</span>
+                                )}
+                                {inv.tax_amount_usd != null && Number(inv.tax_amount_usd) > 0 && (
+                                  <span>Tax: {formatCurrency(Number(inv.tax_amount_usd))}</span>
+                                )}
+                                <span>Subtotal: <strong className="text-brand-primary">{inv.subtotal_usd ? formatCurrency(Number(inv.subtotal_usd)) : 'TBD'}</strong></span>
+                                {inv.tax_amount_usd != null && inv.subtotal_usd != null && (
+                                  <span>Total: <strong className="text-brand-primary">{formatCurrency(Number(inv.subtotal_usd) + Number(inv.tax_amount_usd))}</strong></span>
+                                )}
+                                <span className="text-brand-primary/40">{inv.days_pending}d ago</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                    {filteredOrders.length === 0 && (
+                      <div className="px-4 py-8 text-center text-sm text-brand-primary/40">No orders match this filter.</div>
+                    )}
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-brand-primary/10">
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
-                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
-                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Days Pending</th>
-                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm w-20"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.invoiceAging.map((inv, i) => (
-                        <tr key={inv.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
-                          <td className="py-3 px-4 text-sm font-mono text-brand-primary">{inv.order_number}</td>
-                          <td className="py-3 px-4 text-sm text-brand-primary">{inv.member_name} <span className="text-brand-primary/40">{inv.member_email}</span></td>
-                          <td className="py-3 px-4 text-sm text-right text-brand-primary">{inv.subtotal_usd ? formatCurrency(Number(inv.subtotal_usd)) : 'TBD'}</td>
-                          <td className="py-3 px-4 text-sm text-right">
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${inv.days_pending <= 3 ? 'bg-green-100 text-green-800' : inv.days_pending <= 7 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                              {inv.days_pending}d
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-right">
-                            <button
-                              onClick={() => handleDismissInvoice(inv.id)}
-                              disabled={dismissingInvoice === inv.id}
-                              className="text-brand-primary/40 hover:text-red-600 transition-colors disabled:opacity-50"
-                              title="Dismiss invoice"
-                            >
-                              {dismissingInvoice === inv.id ? '...' : '✕'}
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Quick Links */}
             <div className="p-6 bg-brand-primary/5 rounded-xl mb-8">

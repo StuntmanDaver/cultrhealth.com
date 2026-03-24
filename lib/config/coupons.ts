@@ -25,6 +25,7 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTR10':    { discount: 10, label: 'Promo Code' },
   'SUMMER20':   { discount: 20, label: 'Summer Promo' },
   'MARY20':     { discount: 20, label: "Mary's Discount" },
+  'LOYALTY15':  { discount: 15, label: 'Returning Customer' },
 }
 
 export function validateCoupon(code: string): ClubCoupon | null {

@@ -941,15 +941,18 @@ export async function getMembershipStats(): Promise<{ total: number; byTier: Rec
 export async function getInvoiceAging() {
   try {
     const result = await sql`
-      SELECT id, order_number, member_name, member_email, subtotal_usd, created_at,
+      SELECT id, order_number, member_name, member_email, items,
+        subtotal_usd, coupon_code, discount_percent,
+        tax_amount_usd, status, created_at,
         EXTRACT(DAY FROM NOW() - created_at)::int as days_pending
-      FROM club_orders WHERE status = 'pending_approval'
-      ORDER BY created_at ASC
+      FROM club_orders
+      WHERE status IS DISTINCT FROM 'dismissed'
+      ORDER BY created_at DESC
     `
     return result.rows
   } catch (error) {
-    console.error('Database error fetching invoice aging:', error)
-    throw new DatabaseError('Failed to fetch invoice aging', error)
+    console.error('Database error fetching club orders:', error)
+    throw new DatabaseError('Failed to fetch club orders', error)
   }
 }
 
