@@ -233,6 +233,70 @@ interface RevenueTimeSeriesPoint {
   orders: number
 }
 
+interface SearchOrderRow {
+  id: string
+  order_number: string
+  customer_email: string
+  status: string
+  total_amount: number
+  created_at: string
+  source: 'orders' | 'club_orders'
+  items: { sku: string; name: string; quantity: number; unit_price: number }[]
+}
+
+interface OrderSearchData {
+  orders: SearchOrderRow[]
+  total: number
+  page: number
+  totalPages: number
+}
+
+interface CustomerProfile {
+  member: {
+    id: string
+    name: string
+    email: string
+    phone: string | null
+    address_line1: string | null
+    address_city: string | null
+    address_state: string | null
+    address_zip: string | null
+    signup_type: string | null
+    source: string | null
+    created_at: string
+  } | null
+  clubOrders: {
+    id: string
+    order_number: string
+    status: string
+    subtotal_usd: number | null
+    items: unknown
+    coupon_code: string | null
+    created_at: string
+  }[]
+  productOrders: {
+    id: string
+    order_number: string
+    status: string
+    total_amount: number
+    items: unknown
+    payment_provider: string | null
+    created_at: string
+  }[]
+  membership: {
+    plan_tier: string
+    subscription_status: string
+    created_at: string
+  } | null
+  intakeStatus: {
+    intake_status: string
+    plan_tier: string
+    created_at: string
+  } | null
+  lifetimeValue: number
+  totalOrders: number
+}
+
 interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -293,6 +357,19 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   const [couponSearch, setCouponSearch] = useState('')
   // Tracking link search
   const [linkSearch, setLinkSearch] = useState('')
+  // Order search & pagination
+  const [orderSearch, setOrderSearch] = useState('')
+  const [orderStatusFilter, setOrderStatusFilter] = useState('')
+  const [orderDateFrom, setOrderDateFrom] = useState('')
+  const [orderDateTo, setOrderDateTo] = useState('')
+  const [orderPage, setOrderPage] = useState(1)
+  const [orderData, setOrderData] = useState<OrderSearchData | null>(null)
+  const [orderLoading, setOrderLoading] = useState(false)
+  // Customer detail modal
+  const [selectedCustomerEmail, setSelectedCustomerEmail] = useState<string | null>(null)
+  const [customerDetail, setCustomerDetail] = useState<CustomerProfile | null>(null)
+  const [customerDetailLoading, setCustomerDetailLoading] = useState(false)
+  const [customerDetailTab, setCustomerDetailTab] = useState<'overview' | 'orders' | 'activity'>('overview')
   // Date range filters for tables
   const [tableStartDate, setTableStartDate] = useState(() => {
     const d = new Date()
@@ -334,6 +411,74 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
     }
   }
 
+  // --------------- Order Search ---------------
+  const fetchOrders = useCallback(async (searchQ?: string, statusF?: string, dateF?: string, dateT?: string, pg?: number) => {
+    setOrderLoading(true)
+    try {
+      const params = new URLSearchParams()
+      const q = searchQ ?? orderSearch
+      const s = statusF ?? orderStatusFilter
+      const df = dateF ?? orderDateFrom
+      const dt = dateT ?? orderDateTo
+      const p = pg ?? orderPage
+      if (q) params.set('q', q)
+      if (s) params.set('status', s)
+      if (df) params.set('dateFrom', df)
+      if (dt) params.set('dateTo', dt)
+      params.set('page', String(p))
+      params.set('limit', '20')
+      const res = await fetch(`/api/admin/orders?${params.toString()}`)
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setOrderData(result.data)
+      }
+    } catch {
+      // silent — order search is non-critical
+    } finally {
+      setOrderLoading(false)
+    }
+  }, [orderSearch, orderStatusFilter, orderDateFrom, orderDateTo, orderPage])
+
+  // Fetch orders on mount and when filters change (debounced for search input)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setOrderPage(1)
+      fetchOrders(orderSearch, orderStatusFilter, orderDateFrom, orderDateTo, 1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [orderSearch, orderStatusFilter, orderDateFrom, orderDateTo])
+
+  // Fetch when page changes (no debounce needed)
+  useEffect(() => {
+    if (orderPage > 1) {
+      fetchOrders(orderSearch, orderStatusFilter, orderDateFrom, orderDateTo, orderPage)
+    }
+  }, [orderPage])
+
+  // --------------- Customer Detail ---------------
+  async function fetchCustomerDetail(email: string) {
+    setCustomerDetailLoading(true)
+    setCustomerDetail(null)
+    setCustomerDetailTab('overview')
+    try {
+      const res = await fetch(`/api/admin/customers/${encodeURIComponent(email)}`)
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setCustomerDetail(result.data)
+      }
+    } catch {
+      // silent
+    } finally {
+      setCustomerDetailLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedCustomerEmail) {
+      fetchCustomerDetail(selectedCustomerEmail)
+    }
+  }, [selectedCustomerEmail])
+
   // --------------- Export Handlers ---------------
   const exportCustomers = useCallback(() => {
     if (!data) return
@@ -352,12 +497,18 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   }, [data])
 
   const exportOrders = useCallback(() => {
-    if (!data) return
-    downloadCSV('cultr-orders',
-      ['Order #', 'Customer', 'Status', 'Amount', 'Date'],
-      data.sales.recentOrders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.created_at])
-    )
-  }, [data])
+    if (orderData?.orders) {
+      downloadCSV('cultr-orders',
+        ['Order #', 'Customer', 'Status', 'Amount', 'Source', 'Date'],
+        orderData.orders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.source, o.created_at])
+      )
+    } else if (data?.sales.recentOrders) {
+      downloadCSV('cultr-orders',
+        ['Order #', 'Customer', 'Status', 'Amount', 'Date'],
+        data.sales.recentOrders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.created_at])
+      )
+    }
+  }, [data, orderData])
 
   const exportCoupons = useCallback(() => {
     if (!data) return
@@ -1429,7 +1580,7 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       {filterByDateRange(data.allCustomers)
                         .filter(c => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || c.email.toLowerCase().includes(customerSearch.toLowerCase()))
                         .map((c, i) => (
-                        <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                        <tr key={c.id} className={`${i % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`} onClick={() => setSelectedCustomerEmail(c.email)}>
                           <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.name}</td>
                           <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
                           <td className="py-3 px-4 text-sm text-brand-primary/60">{c.phone || '—'}</td>
@@ -1609,47 +1760,104 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               </div>
             )}
 
-            {/* Recent Orders */}
-            {data.sales.recentOrders.length > 0 && (
-              <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-xl text-brand-primary">Recent Orders</h2>
-                  <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+            {/* Order Search & Management */}
+            <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="font-display text-xl text-brand-primary">Orders</h2>
+                <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+              </div>
+
+              {/* Search & Filters */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by order # or email..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                />
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="pending_approval">Pending Approval</option>
+                  <option value="paid">Paid</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="fulfilled">Fulfilled</option>
+                  <option value="approved">Approved</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="refunded">Refunded</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs text-brand-primary/50">From</label>
+                  <input type="date" value={orderDateFrom} onChange={(e) => setOrderDateFrom(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs text-brand-primary/50">To</label>
+                  <input type="date" value={orderDateTo} onChange={(e) => setOrderDateTo(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+                </div>
+              </div>
+
+              {/* Results summary */}
+              {orderData && (
+                <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-brand-primary/60">
+                  <span>{orderData.total} order{orderData.total !== 1 ? 's' : ''} found</span>
+                  {orderData.totalPages > 1 && (
+                    <span>Page {orderData.page} of {orderData.totalPages}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Table */}
+              {orderLoading && !orderData ? (
+                <div className="py-12 text-center text-brand-primary/40">Loading orders...</div>
+              ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-brand-primary/10">
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Order #</th>
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Customer</th>
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Status</th>
-                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Amount</th>
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Date</th>
-                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Actions</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Source</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Date</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.sales.recentOrders.map((order, index) => (
-                        <tr key={order.id} className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`} onClick={() => setSelectedOrder(order)}>
-                          <td className="py-3 px-4 text-brand-primary font-mono text-sm">
-                            {order.order_number}
-                          </td>
-                          <td className="py-3 px-4 text-brand-primary">{order.customer_email}</td>
+                      {(orderData?.orders ?? data.sales.recentOrders).map((order, index) => (
+                        <tr
+                          key={`${order.id}-${index}`}
+                          className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`}
+                          onClick={() => setSelectedOrder(order as SalesStats['recentOrders'][0])}
+                        >
+                          <td className="py-3 px-4 text-brand-primary font-mono text-sm">{order.order_number}</td>
+                          <td className="py-3 px-4 text-brand-primary text-sm">{order.customer_email}</td>
                           <td className="py-3 px-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                               {order.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-brand-primary text-right font-medium">
+                          <td className="py-3 px-4 text-brand-primary text-right font-medium text-sm">
                             {formatCurrency(order.total_amount)}
                           </td>
-                          <td className="py-3 px-4 text-brand-primary/60 text-sm">
-                            {formatDate(order.created_at)}
+                          <td className="py-3 px-4 text-sm">
+                            {'source' in order && (
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(order as SearchOrderRow).source === 'club_orders' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {(order as SearchOrderRow).source === 'club_orders' ? 'Club' : 'Product'}
+                              </span>
+                            )}
                           </td>
+                          <td className="py-3 px-4 text-brand-primary/60 text-sm">{formatDate(order.created_at)}</td>
                           <td className="py-3 px-4">
                             {order.status === 'paid' && (
                               <button
-                                onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setFulfillAction('ship'); }}
+                                onClick={(e) => { e.stopPropagation(); setSelectedOrder(order as SalesStats['recentOrders'][0]); setFulfillAction('ship'); }}
                                 className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200"
                               >
                                 Ship
@@ -1658,11 +1866,44 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                           </td>
                         </tr>
                       ))}
+                      {orderData?.orders.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-brand-primary/40 text-sm">No orders found matching your filters</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
-              </div>
-            )}
+              )}
+
+              {/* Pagination */}
+              {orderData && orderData.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-primary/10">
+                  <span className="text-sm text-brand-primary/60">
+                    Showing {((orderData.page - 1) * 20) + 1}-{Math.min(orderData.page * 20, orderData.total)} of {orderData.total}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setOrderPage(p => Math.max(1, p - 1))}
+                      disabled={orderData.page <= 1}
+                      className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-brand-primary/60 px-2">
+                      {orderData.page} / {orderData.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setOrderPage(p => Math.min(orderData.totalPages, p + 1))}
+                      disabled={orderData.page >= orderData.totalPages}
+                      className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Recent Waitlist Signups */}
             {data.waitlist.recent.length > 0 && (
@@ -1864,6 +2105,214 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========== CUSTOMER DETAIL MODAL ========== */}
+        {selectedCustomerEmail && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedCustomerEmail(null); setCustomerDetail(null) }}>
+            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="font-display text-lg text-brand-primary">
+                    {customerDetail?.member?.name || 'Customer'}
+                  </h3>
+                  <p className="text-sm text-brand-primary/60">{selectedCustomerEmail}</p>
+                </div>
+                <button onClick={() => { setSelectedCustomerEmail(null); setCustomerDetail(null) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+              </div>
+
+              {customerDetailLoading ? (
+                <div className="py-12 text-center text-brand-primary/40">Loading customer details...</div>
+              ) : customerDetail ? (
+                <>
+                  {/* Tabs */}
+                  <div className="flex gap-1 mb-6 border-b border-brand-primary/10">
+                    {(['overview', 'orders', 'activity'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setCustomerDetailTab(tab)}
+                        className={`px-4 py-2.5 text-sm font-medium capitalize transition-colors ${customerDetailTab === tab ? 'text-brand-primary border-b-2 border-brand-primary' : 'text-brand-primary/40 hover:text-brand-primary/70'}`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Overview Tab */}
+                  {customerDetailTab === 'overview' && (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                          <p className="text-2xl font-bold text-brand-primary">{formatCurrency(customerDetail.lifetimeValue)}</p>
+                          <p className="text-xs text-brand-primary/60 mt-1">Lifetime Value</p>
+                        </div>
+                        <div className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                          <p className="text-2xl font-bold text-brand-primary">{customerDetail.totalOrders}</p>
+                          <p className="text-xs text-brand-primary/60 mt-1">Total Orders</p>
+                        </div>
+                      </div>
+
+                      {customerDetail.member && (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide">Member Info</h4>
+                          <div className="bg-brand-cream/30 rounded-lg p-3 space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Member Since</span>
+                              <span className="text-brand-primary">{formatDate(customerDetail.member.created_at)}</span>
+                            </div>
+                            {customerDetail.member.phone && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-brand-primary/60">Phone</span>
+                                <span className="text-brand-primary">{customerDetail.member.phone}</span>
+                              </div>
+                            )}
+                            {customerDetail.member.signup_type && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-brand-primary/60">Signup Type</span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${customerDetail.member.signup_type === 'membership' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
+                                  {customerDetail.member.signup_type === 'membership' ? 'Membership' : 'Products'}
+                                </span>
+                              </div>
+                            )}
+                            {(customerDetail.member.address_city || customerDetail.member.address_state) && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-brand-primary/60">Address</span>
+                                <span className="text-brand-primary text-right">
+                                  {[customerDetail.member.address_line1, customerDetail.member.address_city, customerDetail.member.address_state, customerDetail.member.address_zip].filter(Boolean).join(', ')}
+                                </span>
+                              </div>
+                            )}
+                            {customerDetail.member.source && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-brand-primary/60">Source</span>
+                                <span className="text-brand-primary">{customerDetail.member.source}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {customerDetail.membership && (
+                        <div className="space-y-2">
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide">Membership</h4>
+                          <div className="bg-brand-cream/30 rounded-lg p-3 space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Plan</span>
+                              <span className="text-brand-primary capitalize">{customerDetail.membership.plan_tier}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Status</span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(customerDetail.membership.subscription_status)}`}>
+                                {customerDetail.membership.subscription_status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Orders Tab */}
+                  {customerDetailTab === 'orders' && (
+                    <div className="space-y-4">
+                      {customerDetail.clubOrders.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Club Orders ({customerDetail.clubOrders.length})</h4>
+                          <div className="space-y-2">
+                            {customerDetail.clubOrders.map(o => (
+                              <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3 flex items-center justify-between">
+                                <div>
+                                  <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
+                                  <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
+                                  {o.coupon_code && <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{o.coupon_code}</span>}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-brand-primary">{o.subtotal_usd ? formatCurrency(o.subtotal_usd) : 'TBD'}</span>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {customerDetail.productOrders.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Product Orders ({customerDetail.productOrders.length})</h4>
+                          <div className="space-y-2">
+                            {customerDetail.productOrders.map(o => (
+                              <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3 flex items-center justify-between">
+                                <div>
+                                  <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
+                                  <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
+                                  {o.payment_provider && <span className="ml-2 text-xs text-brand-primary/40">via {o.payment_provider}</span>}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-brand-primary">{formatCurrency(o.total_amount)}</span>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {customerDetail.clubOrders.length === 0 && customerDetail.productOrders.length === 0 && (
+                        <p className="text-center text-brand-primary/40 py-8 text-sm">No orders found for this customer</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Activity Tab */}
+                  {customerDetailTab === 'activity' && (
+                    <div className="space-y-4">
+                      {customerDetail.intakeStatus && (
+                        <div>
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Intake Status</h4>
+                          <div className="bg-brand-cream/30 rounded-lg p-3 space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Status</span>
+                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(customerDetail.intakeStatus.intake_status)}`}>
+                                {customerDetail.intakeStatus.intake_status}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Plan</span>
+                              <span className="text-brand-primary capitalize">{customerDetail.intakeStatus.plan_tier}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Started</span>
+                              <span className="text-brand-primary">{formatDate(customerDetail.intakeStatus.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Coupon usage from club orders */}
+                      {customerDetail.clubOrders.some(o => o.coupon_code) && (
+                        <div>
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Coupon Usage</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {Array.from(new Set(customerDetail.clubOrders.filter(o => o.coupon_code).map(o => o.coupon_code))).map(code => (
+                              <span key={code} className="px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-xs font-medium">
+                                {code}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {!customerDetail.intakeStatus && !customerDetail.clubOrders.some(o => o.coupon_code) && (
+                        <p className="text-center text-brand-primary/40 py-8 text-sm">No activity data available</p>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-center text-brand-primary/40 py-8 text-sm">Could not load customer data</p>
+              )}
             </div>
           </div>
         )}
