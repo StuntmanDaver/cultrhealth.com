@@ -2035,20 +2035,28 @@ export interface RevenueTimeSeriesPoint {
 
 export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeriesPoint[]> {
   try {
-    // Auto-bucket: <= 30 days = daily, <= 90 = weekly, else monthly
-    const bucket = days <= 30 ? 'day' : days <= 90 ? 'week' : 'month'
-
-    const result = await sql`
-      SELECT
-        date_trunc(${bucket}, created_at)::date as date,
-        COALESCE(SUM(subtotal_usd), 0) as revenue,
-        COUNT(*)::int as orders
+    // date_trunc requires a literal string — can't use parameterized query
+    // Use separate queries based on bucket size
+    const queryDaily = sql`
+      SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
       FROM club_orders
-      WHERE (status IS NULL OR status != 'rejected')
-        AND created_at >= NOW() - make_interval(days => ${days})
-      GROUP BY date_trunc(${bucket}, created_at)::date
-      ORDER BY date ASC
+      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      GROUP BY created_at::date ORDER BY date ASC
     `
+    const queryWeekly = sql`
+      SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
+      FROM club_orders
+      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      GROUP BY date_trunc('week', created_at)::date ORDER BY date ASC
+    `
+    const queryMonthly = sql`
+      SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
+      FROM club_orders
+      WHERE (status IS NULL OR status != 'rejected') AND created_at >= NOW() - make_interval(days => ${days})
+      GROUP BY date_trunc('month', created_at)::date ORDER BY date ASC
+    `
+
+    const result = await (days <= 30 ? queryDaily : days <= 90 ? queryWeekly : queryMonthly)
 
     return result.rows.map(r => ({
       date: String(r.date),
@@ -2099,62 +2107,45 @@ export async function searchOrders({
   limit = 20,
 }: SearchOrdersParams): Promise<SearchOrdersResult> {
   try {
-    const offset = (page - 1) * limit
     const searchPattern = query ? `%${query}%` : null
 
-    // Build dynamic WHERE conditions for orders table
-    // We use a CTE approach with UNION ALL for both tables
-    const result = await sql`
-      WITH combined AS (
-        SELECT
-          id::text as id,
-          order_number,
-          customer_email,
-          status,
-          COALESCE(total_amount, 0)::numeric as total_amount,
-          created_at,
-          'orders' as source,
-          items::text as items_raw
+    // Query both tables separately then merge (CTE with parameterized UNION ALL
+    // can fail in @vercel/postgres due to duplicate parameter indices)
+    const [shopResult, clubResult] = await Promise.all([
+      sql`
+        SELECT id::text as id, order_number, customer_email, status,
+          COALESCE(total_amount, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM orders
-        WHERE (${searchPattern}::text IS NULL OR (
-          order_number ILIKE ${searchPattern} OR
-          customer_email ILIKE ${searchPattern}
-        ))
+        WHERE (${searchPattern}::text IS NULL OR (order_number ILIKE ${searchPattern} OR customer_email ILIKE ${searchPattern}))
         AND (${status || null}::text IS NULL OR status = ${status})
         AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
         AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
-
-        UNION ALL
-
-        SELECT
-          id::text as id,
-          order_number,
-          member_email as customer_email,
-          status,
-          COALESCE(subtotal_usd, 0)::numeric as total_amount,
-          created_at,
-          'club_orders' as source,
-          items::text as items_raw
+        ORDER BY created_at DESC
+      `.catch(() => ({ rows: [] })),
+      sql`
+        SELECT id::text as id, order_number, member_email as customer_email, status,
+          COALESCE(subtotal_usd, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM club_orders
-        WHERE (${searchPattern}::text IS NULL OR (
-          order_number ILIKE ${searchPattern} OR
-          member_email ILIKE ${searchPattern}
-        ))
+        WHERE (${searchPattern}::text IS NULL OR (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern}))
         AND (${status || null}::text IS NULL OR status = ${status})
         AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
         AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
-      )
-      SELECT *, (SELECT COUNT(*) FROM combined) as total_count
-      FROM combined
-      ORDER BY created_at DESC
-      LIMIT ${limit}
-      OFFSET ${offset}
-    `
+        ORDER BY created_at DESC
+      `.catch(() => ({ rows: [] })),
+    ])
 
-    const total = parseInt(result.rows[0]?.total_count || '0', 10)
+    // Merge, sort, and paginate in JS
+    const allRows = [
+      ...shopResult.rows.map(r => ({ ...r, source: 'orders' as const })),
+      ...clubResult.rows.map(r => ({ ...r, source: 'club_orders' as const })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    const total = allRows.length
     const totalPages = Math.ceil(total / limit)
+    const offset = (page - 1) * limit
+    const pageRows = allRows.slice(offset, offset + limit)
 
-    const orders = result.rows.map(row => {
+    const orders = pageRows.map(row => {
       let items: OrderItem[] = []
       try {
         const parsed = typeof row.items_raw === 'string' ? JSON.parse(row.items_raw) : row.items_raw
@@ -2170,7 +2161,7 @@ export async function searchOrders({
         status: row.status,
         total_amount: parseFloat(row.total_amount) || 0,
         created_at: String(row.created_at),
-        source: row.source as 'orders' | 'club_orders',
+        source: row.source,
         items,
       }
     })
