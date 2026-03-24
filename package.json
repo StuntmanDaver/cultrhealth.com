@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
-    "setup:stripe": "ts-node scripts/setup-stripe.ts"
+    "setup:stripe": "ts-node scripts/setup-stripe.ts",
+    "check:health": "node scripts/site-health-check.mjs",
+    "check:health:staging": "node scripts/site-health-check.mjs https://staging.cultrhealth.com",
+    "test:smoke": "vitest run tests/smoke/"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.21",
