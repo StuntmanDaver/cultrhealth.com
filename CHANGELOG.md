@@ -1,3 +1,41 @@
+## [2026-03-24] - Admin Dashboard Top 5 Features + SQL Hardening
+
+### New Features
+- **Revenue time-series chart** — Recharts ComposedChart with dual Y-axis (revenue area + orders line), auto-bucketing (daily/weekly/monthly based on period)
+- **Date range filters** — From/To date pickers on Creator Network, Tracking Links, Coupon Codes, and Customer Master List tables
+- **Member lifecycle management** — 3 new API endpoints: cancel (Stripe cancellation + audit log), pause (Stripe pause_collection with resume date), upgrade (Stripe tier change with proration). Admin dashboard member table with search, status filter, and action modals.
+- **Customer detail views** — Clickable Customer Master List rows open full profile modal with tabbed view (Overview/Orders/Activity). Pulls from 5 tables: club_members, club_orders, orders, memberships, pending_intakes.
+- **Order search & filtering** — New `/api/admin/orders` endpoint with text search (order number, email), status filter, date range, pagination. Replaces static "Recent Orders" section.
+
+### Bug Fixes
+- **Creator ROI discount formula** — `getCreatorROI()` was calculating discount as `revenue * rate / 100` but revenue is post-discount. Fixed to `revenue * rate / (100 - rate)`.
+- **Customer detail 500 error** — Removed `payment_provider` column reference (doesn't exist in orders schema). Added `.catch()` fallbacks so missing tables don't crash the entire profile.
+- **Revenue chart empty data** — `WHERE status != 'rejected'` excluded NULL-status orders. Fixed with `IS DISTINCT FROM`.
+
+### SQL Pattern Hardening (@vercel/postgres compatibility)
+- Replaced 9x `CAST(${days + ' days'} AS INTERVAL)` → `make_interval(days => ${days})` in `getQrScanStats()` — JS string concat in CAST is unreliable with prepared statements
+- Replaced 3x `INTERVAL '1 day' * ${days}` → `make_interval()` in `getCouponStats()`, `getCreatorCommissionStats()`, `createPrelaunchCode()`
+- Replaced `(status IS NULL OR status != 'rejected')` → `IS DISTINCT FROM` in `getRevenueTimeSeries()`
+- Split CTE UNION ALL into parallel queries with JS merge for order search (duplicate param indices in UNION ALL)
+- Replaced `IS NULL` conditional pattern with `ILIKE '%'` wildcard-all in order search
+- Split parameterized `date_trunc(${bucket}, ...)` into 3 literal queries (daily/weekly/monthly)
+- All interval parameters now consistently use `make_interval()` across the entire codebase
+
+### New Files
+- `app/api/admin/orders/route.ts` — Order search/filter/pagination endpoint
+- `app/api/admin/customers/[email]/route.ts` — Full customer profile endpoint
+- `app/api/admin/members/[customerId]/cancel/route.ts` — Stripe subscription cancellation
+- `app/api/admin/members/[customerId]/pause/route.ts` — Stripe subscription pause
+- `app/api/admin/members/[customerId]/upgrade/route.ts` — Stripe tier upgrade
+
+### Files Modified
+- `lib/db.ts` — 6 new functions (getRevenueTimeSeries, searchOrders, getCustomerFullProfile, getAllMembershipsForAdmin, getCreatorROI fix), 15 SQL pattern fixes
+- `lib/creators/db.ts` — 1 SQL pattern fix (make_interval)
+- `app/api/admin/analytics/route.ts` — Added revenueTimeSeries + allMemberships to response
+- `app/admin/AdminDashboardClient.tsx` — Revenue chart, date filters, member management, customer detail modal, order search section
+
+---
+
 ## [2026-03-23] - SiPhox Integration Health Check + Asher Med Compatibility
 
 ### SiPhox Critical Fixes
