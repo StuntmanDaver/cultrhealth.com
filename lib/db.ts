@@ -1020,7 +1020,11 @@ export async function getCreatorROI() {
     const result = await sql`
       SELECT
         c.id, c.full_name, c.status,
-        COALESCE(SUM(ac.total_revenue * ac.discount_value / 100), 0) as total_discount_given,
+        COALESCE(SUM(
+          CASE WHEN ac.discount_value > 0 AND ac.discount_value < 100
+          THEN ac.total_revenue * ac.discount_value / (100.0 - ac.discount_value)
+          ELSE 0 END
+        ), 0) as total_discount_given,
         (SELECT COALESCE(SUM(cl.commission_amount), 0) FROM commission_ledger cl WHERE cl.beneficiary_creator_id = c.id AND cl.status != 'reversed') as total_commission_earned
       FROM creators c
       LEFT JOIN affiliate_codes ac ON ac.creator_id = c.id
