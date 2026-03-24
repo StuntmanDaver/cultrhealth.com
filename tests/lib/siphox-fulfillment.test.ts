@@ -22,6 +22,7 @@ vi.mock('@/lib/siphox/client', () => ({
   getCustomerByExternalId: (...args: unknown[]) => mockGetCustomerByExternalId(...args),
   createOrder: (...args: unknown[]) => mockCreateOrder(...args),
   checkCreditBalance: (...args: unknown[]) => mockCheckCreditBalance(...args),
+  isSiphoxConfigured: () => true,
 }))
 
 const mockSendKitFulfillmentEmail = vi.fn()

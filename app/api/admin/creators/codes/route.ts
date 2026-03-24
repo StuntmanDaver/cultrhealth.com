@@ -48,10 +48,41 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { creator_id, code, discount_type, discount_value, is_primary } = body
+    const { creator_id, code, discount_type, discount_value, is_primary, code_type } = body
 
-    if (!creator_id || !code) {
-      return NextResponse.json({ error: 'creator_id and code are required' }, { status: 400 })
+    if (!code) {
+      return NextResponse.json({ error: 'code is required' }, { status: 400 })
+    }
+
+    // For company-owned codes without a creator_id, create directly in DB
+    if (!creator_id) {
+      const { sql } = await import('@vercel/postgres')
+      const normalizedCode = code.trim().toUpperCase()
+      const effectiveType = discount_type || 'percentage'
+      const effectiveValue = discount_value || 10
+      const effectiveCodeType = code_type || 'membership'
+
+      // Check for duplicate
+      const existing = await sql`SELECT id FROM affiliate_codes WHERE UPPER(code) = ${normalizedCode}`
+      if (existing.rows.length > 0) {
+        return NextResponse.json({ error: 'Code already exists' }, { status: 409 })
+      }
+
+      const result = await sql`
+        INSERT INTO affiliate_codes (code, creator_id, is_primary, discount_type, discount_value, code_type, program_type, active)
+        VALUES (${normalizedCode}, NULL, FALSE, ${effectiveType}, ${effectiveValue}, ${effectiveCodeType}, 'company', TRUE)
+        RETURNING id, code
+      `
+
+      await createAdminAction({
+        admin_email: auth.email,
+        action_type: 'create_company_code',
+        entity_type: 'affiliate_code',
+        entity_id: result.rows[0].id,
+        metadata: { code: normalizedCode, discount_value: effectiveValue, code_type: effectiveCodeType },
+      })
+
+      return NextResponse.json({ code: result.rows[0] }, { status: 201 })
     }
 
     const newCode = await createAffiliateCode(
@@ -106,6 +137,37 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Admin code creation error:', error)
     return NextResponse.json({ error: 'Failed to create code' }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  const auth = await verifyAdminAuth(request)
+  if (!auth.authenticated || !auth.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const body = await request.json()
+    const { code_id, active } = body
+
+    if (!code_id || typeof active !== 'boolean') {
+      return NextResponse.json({ error: 'code_id and active (boolean) are required' }, { status: 400 })
+    }
+
+    const { sql } = await import('@vercel/postgres')
+    await sql`UPDATE affiliate_codes SET active = ${active}, updated_at = NOW() WHERE id = ${code_id}`
+
+    await createAdminAction({
+      admin_email: auth.email,
+      action_type: active ? 'activate_affiliate_code' : 'deactivate_affiliate_code',
+      entity_type: 'affiliate_code',
+      entity_id: code_id,
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Admin code toggle error:', error)
+    return NextResponse.json({ error: 'Failed to toggle code' }, { status: 500 })
   }
 }
 

@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Enrich with Asher Med patient data if available
-    const asherPatientId = intakeData.asher_patient_id as number | undefined;
+    const asherPatientId = intakeData.asher_patient_id as number | string | undefined;
     if (process.env.ASHER_MED_API_KEY && asherPatientId) {
       try {
         const { getPatientById } = await import('@/lib/asher-med-api');
@@ -136,7 +136,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, records });
   } catch (error) {
-    console.error('Failed to fetch medical records:', error);
+    // Error logged without PHI — only error type
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[member/records] Request failed:', errMsg);
 
     return NextResponse.json(
       { success: false, error: 'Failed to fetch medical records' },

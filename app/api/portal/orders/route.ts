@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Best-effort local DB enrichment for medication names
-    let medMap: Record<number, string> = {}
+    let medMap: Record<string, string> = {}
     try {
       const localOrders = await sql`
         SELECT asher_order_id, medication_packages
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
               ? JSON.parse(row.medication_packages)
               : row.medication_packages
             if (Array.isArray(packages) && packages.length > 0 && packages[0].name) {
-              medMap[row.asher_order_id] = packages[0].name
+              medMap[String(row.asher_order_id)] = packages[0].name
             }
           } catch {
             // Skip malformed medication_packages
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       partnerNote: order.partnerNote || null,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
-      medicationName: medMap[order.id] || order.orderType || 'Medication',
+      medicationName: medMap[String(order.id)] || order.orderType || 'Medication',
     }))
 
     // 6. Sort by createdAt descending (most recent first)

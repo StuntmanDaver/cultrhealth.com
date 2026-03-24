@@ -17,10 +17,10 @@ export interface OrderStatusDisplay {
  * Combines live Asher Med order data with local DB medication info.
  */
 export interface PortalOrder {
-  id: number
+  id: number | string
   status: AsherOrderStatus
   orderType: string | null
-  doctorId: number | null
+  doctorId: number | string | null
   partnerNote: string | null
   createdAt: string
   updatedAt: string

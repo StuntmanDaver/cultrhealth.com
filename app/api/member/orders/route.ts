@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     `;
 
     // Optionally fetch real-time status from Asher Med
-    let asherOrders: Record<number, { status: string; updatedAt: string }> = {};
+    let asherOrders: Record<string, { status: string; updatedAt: string }> = {};
 
     if (process.env.ASHER_MED_API_KEY && result.rows.length > 0) {
       try {
@@ -69,11 +69,11 @@ export async function GET(request: NextRequest) {
         const patientId = result.rows[0]?.patientId;
 
         if (patientId) {
-          const asherResponse = await getOrders({ patientId: parseInt(patientId, 10) });
+          const asherResponse = await getOrders({ patientId });
           if (asherResponse.data && asherResponse.data.length > 0) {
-            // Map Asher Med orders by ID for quick lookup
+            // Map Asher Med orders by ID (string key) for quick lookup
             asherResponse.data.forEach((order) => {
-              asherOrders[order.id] = {
+              asherOrders[String(order.id)] = {
                 status: order.status,
                 updatedAt: order.updatedAt,
               };

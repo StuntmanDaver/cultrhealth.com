@@ -1,9 +1,25 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import PrelaunchCodesSection from '@/components/admin/PrelaunchCodesSection'
 import { getTierName } from '@/lib/config/affiliate'
+
+// --------------- CSV Export Utility ---------------
+function downloadCSV(filename: string, headers: string[], rows: (string | number | null | undefined)[][]) {
+  const escape = (v: unknown) => {
+    const s = v == null ? '' : String(v)
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const csv = [headers.join(','), ...rows.map(r => r.map(escape).join(','))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${filename}-${new Date().toISOString().split('T')[0]}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
 
 interface SalesStats {
   totalOrders: number
@@ -240,6 +256,26 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
   const [periodDays, setPeriodDays] = useState(30)
   const [creatorSearch, setCreatorSearch] = useState('')
   const [customerSearch, setCustomerSearch] = useState('')
+  // Order detail modal
+  const [selectedOrder, setSelectedOrder] = useState<SalesStats['recentOrders'][0] | null>(null)
+  const [fulfillAction, setFulfillAction] = useState<'ship' | 'fulfill' | null>(null)
+  const [fulfillForm, setFulfillForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
+  const [fulfilling, setFulfilling] = useState(false)
+  const [fulfillError, setFulfillError] = useState<string | null>(null)
+  // Creator edit modal
+  const [editingCreator, setEditingCreator] = useState<CreatorAdminRow | null>(null)
+  const [creatorEditForm, setCreatorEditForm] = useState({ commission_rate: '', override_rate: '', status: '' })
+  const [savingCreator, setSavingCreator] = useState(false)
+  const [creatorEditError, setCreatorEditError] = useState<string | null>(null)
+  // Coupon create
+  const [showCouponForm, setShowCouponForm] = useState(false)
+  const [couponForm, setCouponForm] = useState({ code: '', discount_value: '10', code_type: 'membership' })
+  const [creatingCoupon, setCreatingCoupon] = useState(false)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  // Coupon search
+  const [couponSearch, setCouponSearch] = useState('')
+  // Tracking link search
+  const [linkSearch, setLinkSearch] = useState('')
 
   useEffect(() => {
     fetchAnalytics()
@@ -262,6 +298,148 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // --------------- Export Handlers ---------------
+  const exportCustomers = useCallback(() => {
+    if (!data) return
+    downloadCSV('cultr-customers',
+      ['Name', 'Email', 'Phone', 'City', 'State', 'Type', 'Source', 'Orders', 'Total Spent', 'Joined'],
+      data.allCustomers.map(c => [c.name, c.email, c.phone, c.address_city, c.address_state, c.signup_type, c.source, c.order_count, c.total_spent, c.created_at])
+    )
+  }, [data])
+
+  const exportCreators = useCallback(() => {
+    if (!data) return
+    downloadCSV('cultr-creators',
+      ['Name', 'Email', 'Status', 'Tier', 'Commission %', 'Override %', 'Recruits', 'Codes', 'Revenue', 'Joined'],
+      data.allCreators.map(c => [c.full_name, c.email, c.status, getTierName(c.tier), c.commission_rate, c.override_rate, c.recruit_count, c.code_count, c.total_code_revenue, c.created_at])
+    )
+  }, [data])
+
+  const exportOrders = useCallback(() => {
+    if (!data) return
+    downloadCSV('cultr-orders',
+      ['Order #', 'Customer', 'Status', 'Amount', 'Date'],
+      data.sales.recentOrders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.created_at])
+    )
+  }, [data])
+
+  const exportCoupons = useCallback(() => {
+    if (!data) return
+    downloadCSV('cultr-coupons',
+      ['Code', 'Creator', 'Type', 'Discount %', 'Uses', 'Revenue', 'Active', 'Expires'],
+      data.allCouponCodes.map(c => [c.code, c.creator_name || 'Company', c.code_type, c.discount_value, c.use_count, c.total_revenue, c.active ? 'Yes' : 'No', c.expires_at])
+    )
+  }, [data])
+
+  const exportTrackingLinks = useCallback(() => {
+    if (!data) return
+    downloadCSV('cultr-tracking-links',
+      ['Slug', 'Creator', 'Destination', 'Clicks', 'Conversions', 'Conv Rate', 'Active'],
+      data.allTrackingLinks.map(l => [`/r/${l.slug}`, l.creator_name, l.destination_path, l.click_count, l.conversion_count, l.click_count > 0 ? `${((l.conversion_count / l.click_count) * 100).toFixed(1)}%` : '0%', l.active ? 'Yes' : 'No'])
+    )
+  }, [data])
+
+  // --------------- Order Fulfillment ---------------
+  async function handleFulfill() {
+    if (!selectedOrder || !fulfillAction) return
+    setFulfilling(true)
+    setFulfillError(null)
+    try {
+      const res = await fetch(`/api/admin/orders/${selectedOrder.order_number}/fulfill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: fulfillAction,
+          carrier: fulfillForm.carrier || undefined,
+          trackingNumber: fulfillForm.trackingNumber || undefined,
+          trackingUrl: fulfillForm.trackingUrl || undefined,
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Fulfillment failed')
+      setSelectedOrder(null)
+      setFulfillAction(null)
+      setFulfillForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
+      fetchAnalytics()
+    } catch (err) {
+      setFulfillError(err instanceof Error ? err.message : 'Failed')
+    } finally {
+      setFulfilling(false)
+    }
+  }
+
+  // --------------- Creator Edit ---------------
+  async function handleSaveCreator() {
+    if (!editingCreator) return
+    setSavingCreator(true)
+    setCreatorEditError(null)
+    try {
+      const res = await fetch('/api/admin/creators/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          creator_id: editingCreator.id,
+          commission_rate: parseFloat(creatorEditForm.commission_rate),
+          override_rate: parseFloat(creatorEditForm.override_rate),
+          status: creatorEditForm.status,
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Update failed')
+      setEditingCreator(null)
+      fetchAnalytics()
+    } catch (err) {
+      setCreatorEditError(err instanceof Error ? err.message : 'Failed')
+    } finally {
+      setSavingCreator(false)
+    }
+  }
+
+  // --------------- Coupon Create ---------------
+  async function handleCreateCoupon() {
+    if (!couponForm.code.trim()) return
+    setCreatingCoupon(true)
+    setCouponError(null)
+    try {
+      const res = await fetch('/api/admin/creators/codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponForm.code.trim().toUpperCase(),
+          discount_value: parseFloat(couponForm.discount_value),
+          code_type: couponForm.code_type,
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Create failed')
+      setCouponForm({ code: '', discount_value: '10', code_type: 'membership' })
+      setShowCouponForm(false)
+      fetchAnalytics()
+    } catch (err) {
+      setCouponError(err instanceof Error ? err.message : 'Failed')
+    } finally {
+      setCreatingCoupon(false)
+    }
+  }
+
+  // --------------- Coupon Toggle ---------------
+  async function handleToggleCoupon(codeId: string, currentlyActive: boolean) {
+    try {
+      const res = await fetch('/api/admin/creators/codes', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code_id: codeId, active: !currentlyActive }),
+      })
+      if (!res.ok) {
+        const result = await res.json()
+        throw new Error(result.error || 'Toggle failed')
+      }
+      fetchAnalytics()
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to toggle coupon')
     }
   }
 
@@ -809,13 +987,16 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-display text-xl text-brand-primary">Creator Network</h2>
-                  <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={creatorSearch}
-                    onChange={(e) => setCreatorSearch(e.target.value)}
-                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
-                  />
+                  <div className="flex items-center gap-3">
+                    <button onClick={exportCreators} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <input
+                      type="text"
+                      placeholder="Search by name or email..."
+                      value={creatorSearch}
+                      onChange={(e) => setCreatorSearch(e.target.value)}
+                      className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                    />
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -831,13 +1012,14 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                         <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Codes</th>
                         <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Revenue</th>
                         <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Joined</th>
+                        <th className="text-center py-3 px-4 text-brand-primary/60 font-medium text-sm">Edit</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.allCreators
                         .filter(c => c.full_name.toLowerCase().includes(creatorSearch.toLowerCase()) || c.email.toLowerCase().includes(creatorSearch.toLowerCase()))
                         .map((c, i) => (
-                        <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                        <tr key={c.id} className={`${i % 2 === 0 ? 'bg-brand-cream/30' : ''} hover:bg-brand-primary/5 transition-colors`}>
                           <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.full_name}</td>
                           <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
                           <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(c.status)}`}>{c.status}</span></td>
@@ -848,6 +1030,14 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                           <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.code_count}</td>
                           <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_code_revenue))}</td>
                           <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
+                          <td className="py-3 px-4 text-center">
+                            <button
+                              onClick={() => { setEditingCreator(c); setCreatorEditForm({ commission_rate: String(Number(c.commission_rate)), override_rate: String(Number(c.override_rate)), status: c.status }); setCreatorEditError(null) }}
+                              className="text-xs text-brand-primary underline hover:text-brand-primaryHover"
+                            >
+                              Edit
+                            </button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -859,7 +1049,19 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* All Tracking Links */}
             {data.allTrackingLinks.length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <h2 className="font-display text-xl text-brand-primary mb-4">All Tracking Links</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">All Tracking Links</h2>
+                  <div className="flex items-center gap-3">
+                    <button onClick={exportTrackingLinks} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <input
+                      type="text"
+                      placeholder="Search slugs or creators..."
+                      value={linkSearch}
+                      onChange={(e) => setLinkSearch(e.target.value)}
+                      className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-48"
+                    />
+                  </div>
+                </div>
                 <div className="flex flex-wrap gap-3 mb-4">
                   <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allTrackingLinks.length}</span>
                   <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allTrackingLinks.filter(l => l.active).length}</span>
@@ -880,7 +1082,9 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allTrackingLinks.map((l, i) => (
+                      {data.allTrackingLinks
+                        .filter(l => !linkSearch || l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || (l.creator_name || '').toLowerCase().includes(linkSearch.toLowerCase()))
+                        .map((l, i) => (
                         <tr key={l.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
                           <td className="py-3 px-4 text-sm font-mono text-brand-primary">/r/{l.slug}</td>
                           <td className="py-3 px-4 text-sm text-brand-primary">{l.creator_name || '—'}</td>
@@ -898,9 +1102,78 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             )}
 
             {/* All Coupon Codes */}
-            {data.allCouponCodes.length > 0 && (
+            {(data.allCouponCodes.length > 0 || showCouponForm) && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <h2 className="font-display text-xl text-brand-primary mb-4">All Coupon Codes</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">All Coupon Codes</h2>
+                  <div className="flex items-center gap-3">
+                    <button onClick={exportCoupons} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <button
+                      onClick={() => { setShowCouponForm(!showCouponForm); setCouponError(null) }}
+                      className="px-4 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-brand-primaryHover transition-colors"
+                    >
+                      {showCouponForm ? 'Cancel' : '+ Create Coupon'}
+                    </button>
+                    <input
+                      type="text"
+                      placeholder="Search codes..."
+                      value={couponSearch}
+                      onChange={(e) => setCouponSearch(e.target.value)}
+                      className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-40"
+                    />
+                  </div>
+                </div>
+
+                {/* Create Coupon Form */}
+                {showCouponForm && (
+                  <div className="bg-brand-cream/50 rounded-lg p-4 mb-6 border border-brand-primary/10">
+                    <h3 className="text-sm font-medium text-brand-primary mb-3">New Coupon Code</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                      <div>
+                        <label className="block text-xs text-brand-primary/60 mb-1">Code</label>
+                        <input
+                          type="text"
+                          value={couponForm.code}
+                          onChange={(e) => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                          placeholder="e.g. SUMMER25"
+                          className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-brand-primary/60 mb-1">Discount %</label>
+                        <input
+                          type="number"
+                          value={couponForm.discount_value}
+                          onChange={(e) => setCouponForm(f => ({ ...f, discount_value: e.target.value }))}
+                          min="1" max="100"
+                          className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-brand-primary/60 mb-1">Type</label>
+                        <select
+                          value={couponForm.code_type}
+                          onChange={(e) => setCouponForm(f => ({ ...f, code_type: e.target.value }))}
+                          className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                        >
+                          <option value="membership">Membership</option>
+                          <option value="product">Product</option>
+                        </select>
+                      </div>
+                      <div>
+                        <button
+                          onClick={handleCreateCoupon}
+                          disabled={creatingCoupon || !couponForm.code.trim()}
+                          className="w-full px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
+                        >
+                          {creatingCoupon ? 'Creating...' : 'Create'}
+                        </button>
+                      </div>
+                    </div>
+                    {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-3 mb-4">
                   <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allCouponCodes.length}</span>
                   <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allCouponCodes.filter(c => c.active).length}</span>
@@ -923,7 +1196,9 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                       </tr>
                     </thead>
                     <tbody>
-                      {data.allCouponCodes.map((c, i) => {
+                      {data.allCouponCodes
+                        .filter(c => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.creator_name || '').toLowerCase().includes(couponSearch.toLowerCase()))
+                        .map((c, i) => {
                         const typeBadge = c.program_type === 'prelaunch'
                           ? 'bg-blue-100 text-blue-800'
                           : c.code_type === 'membership' ? 'bg-purple-100 text-purple-800'
@@ -938,7 +1213,14 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                             <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.use_count}</td>
                             <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_revenue))}</td>
                             <td className="py-3 px-4 text-sm text-brand-primary">{c.stripe_promotion_code_id ? '✓' : '—'}</td>
-                            <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{c.active ? 'Yes' : 'No'}</span></td>
+                            <td className="py-3 px-4">
+                              <button
+                                onClick={() => handleToggleCoupon(c.id, c.active)}
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${c.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                              >
+                                {c.active ? 'Active' : 'Inactive'}
+                              </button>
+                            </td>
                             <td className="py-3 px-4 text-sm text-brand-primary/60">{c.expires_at ? formatDate(c.expires_at) : '—'}</td>
                           </tr>
                         )
@@ -954,13 +1236,16 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-display text-xl text-brand-primary">Customer Master List</h2>
-                  <input
-                    type="text"
-                    placeholder="Search by name or email..."
-                    value={customerSearch}
-                    onChange={(e) => setCustomerSearch(e.target.value)}
-                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
-                  />
+                  <div className="flex items-center gap-3">
+                    <button onClick={exportCustomers} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                    <input
+                      type="text"
+                      placeholder="Search by name or email..."
+                      value={customerSearch}
+                      onChange={(e) => setCustomerSearch(e.target.value)}
+                      className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                    />
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1164,7 +1449,10 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
             {/* Recent Orders */}
             {data.sales.recentOrders.length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6 mb-8">
-                <h2 className="font-display text-xl text-brand-primary mb-4">Recent Orders</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-display text-xl text-brand-primary">Recent Orders</h2>
+                  <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
+                </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
@@ -1174,11 +1462,12 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                         <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Status</th>
                         <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Amount</th>
                         <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Date</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.sales.recentOrders.map((order, index) => (
-                        <tr key={order.id} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                        <tr key={order.id} className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`} onClick={() => setSelectedOrder(order)}>
                           <td className="py-3 px-4 text-brand-primary font-mono text-sm">
                             {order.order_number}
                           </td>
@@ -1193,6 +1482,16 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
                           </td>
                           <td className="py-3 px-4 text-brand-primary/60 text-sm">
                             {formatDate(order.created_at)}
+                          </td>
+                          <td className="py-3 px-4">
+                            {order.status === 'paid' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setFulfillAction('ship'); }}
+                                className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200"
+                              >
+                                Ship
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1235,6 +1534,177 @@ export default function AdminDashboardClient({ userEmail }: { userEmail: string 
 
           </>
         )}
+
+        {/* ========== ORDER DETAIL MODAL ========== */}
+        {selectedOrder && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedOrder(null); setFulfillAction(null); setFulfillError(null) }}>
+            <div className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-lg text-brand-primary">
+                  Order <span className="font-mono">{selectedOrder.order_number}</span>
+                </h3>
+                <button onClick={() => { setSelectedOrder(null); setFulfillAction(null) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+              </div>
+
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-primary/60">Customer</span>
+                  <span className="text-brand-primary">{selectedOrder.customer_email}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-primary/60">Status</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-primary/60">Amount</span>
+                  <span className="font-medium text-brand-primary">{formatCurrency(selectedOrder.total_amount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-brand-primary/60">Date</span>
+                  <span className="text-brand-primary">{formatDate(selectedOrder.created_at)}</span>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div className="bg-brand-cream/30 rounded-lg p-3 mb-4">
+                  <h4 className="text-xs font-medium text-brand-primary/60 mb-2 uppercase tracking-wide">Items</h4>
+                  {selectedOrder.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between text-sm py-1">
+                      <span className="text-brand-primary">{item.name} x{item.quantity}</span>
+                      <span className="text-brand-primary/60">{formatCurrency(item.unit_price * item.quantity)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Fulfillment Actions */}
+              {(selectedOrder.status === 'paid' || selectedOrder.status === 'shipped') && (
+                <div className="border-t border-brand-primary/10 pt-4">
+                  <div className="flex gap-2 mb-3">
+                    {selectedOrder.status === 'paid' && (
+                      <button
+                        onClick={() => setFulfillAction('ship')}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium ${fulfillAction === 'ship' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                      >
+                        Mark Shipped
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setFulfillAction('fulfill')}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium ${fulfillAction === 'fulfill' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
+                    >
+                      Mark Fulfilled
+                    </button>
+                  </div>
+
+                  {fulfillAction === 'ship' && (
+                    <div className="space-y-2 mb-3">
+                      <input
+                        type="text"
+                        placeholder="Carrier (e.g., USPS, UPS, FedEx)"
+                        value={fulfillForm.carrier}
+                        onChange={(e) => setFulfillForm(f => ({ ...f, carrier: e.target.value }))}
+                        className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Tracking Number"
+                        value={fulfillForm.trackingNumber}
+                        onChange={(e) => setFulfillForm(f => ({ ...f, trackingNumber: e.target.value }))}
+                        className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Tracking URL (optional)"
+                        value={fulfillForm.trackingUrl}
+                        onChange={(e) => setFulfillForm(f => ({ ...f, trackingUrl: e.target.value }))}
+                        className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                      />
+                    </div>
+                  )}
+
+                  {fulfillError && <p className="text-sm text-red-600 mb-2">{fulfillError}</p>}
+
+                  {fulfillAction && (
+                    <button
+                      onClick={handleFulfill}
+                      disabled={fulfilling || (fulfillAction === 'ship' && (!fulfillForm.carrier || !fulfillForm.trackingNumber))}
+                      className="w-full px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
+                    >
+                      {fulfilling ? 'Processing...' : fulfillAction === 'ship' ? 'Ship Order' : 'Mark as Fulfilled'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ========== CREATOR EDIT MODAL ========== */}
+        {editingCreator && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingCreator(null)}>
+            <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-lg text-brand-primary">
+                  Edit {editingCreator.full_name}
+                </h3>
+                <button onClick={() => setEditingCreator(null)} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Status</label>
+                  <select
+                    value={creatorEditForm.status}
+                    onChange={(e) => setCreatorEditForm(f => ({ ...f, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                  >
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Commission Rate (%)</label>
+                  <input
+                    type="number"
+                    value={creatorEditForm.commission_rate}
+                    onChange={(e) => setCreatorEditForm(f => ({ ...f, commission_rate: e.target.value }))}
+                    min="0" max="50" step="0.5"
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Override Rate (%)</label>
+                  <input
+                    type="number"
+                    value={creatorEditForm.override_rate}
+                    onChange={(e) => setCreatorEditForm(f => ({ ...f, override_rate: e.target.value }))}
+                    min="0" max="25" step="0.5"
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              {creatorEditError && <p className="mt-3 text-sm text-red-600">{creatorEditError}</p>}
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSaveCreator}
+                  disabled={savingCreator}
+                  className="flex-1 px-4 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
+                >
+                  {savingCreator ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button onClick={() => setEditingCreator(null)} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

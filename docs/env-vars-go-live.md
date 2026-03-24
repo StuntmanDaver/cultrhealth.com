@@ -1,7 +1,7 @@
 # Environment Variables — Go-Live Checklist
 
 > **Project:** `cultrhealth-com` on Vercel (stuntmandavers-projects)
-> **Last updated:** 2026-03-11
+> **Last updated:** 2026-03-23
 
 ## Already Configured (36 vars) — No Action Needed
 
@@ -52,6 +52,18 @@ POSTGRES_URL, POSTGRES_PRISMA_URL, POSTGRES_URL_NON_POOLING, POSTGRES_URL_NO_SSL
 | `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM` | Curator.io Instagram feed embed ID | Missing |
 | `NEXT_PUBLIC_CURATOR_FEED_TIKTOK` | Curator.io TikTok feed embed ID | Missing |
 | `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE` | Curator.io YouTube feed embed ID | Missing |
+
+## SIPHOX HEALTH — Blood Test Kit Integration
+
+| Variable | Description | Status |
+|---|---|---|
+| `SIPHOX_API_KEY` | SiPhox Health API Bearer token (required for kit ordering, results, biomarkers) | Missing |
+| `SIPHOX_API_URL` | SiPhox API base URL (optional, defaults to `https://connect.siphoxhealth.com/api/v1`) | Missing |
+| `BLOOD_TEST_STRIPE_PRICE_ID` | Stripe Price ID for $135 blood test add-on (Core tier only) | Missing |
+
+**Note:** Without `SIPHOX_API_KEY`, all SiPhox features gracefully degrade (no kit orders placed, empty labs dashboard). The `CRON_SECRET` variable (listed under Security above) is also required for SiPhox cron jobs.
+
+**Migration required:** Run `node scripts/run-migration.mjs` with migration 027 to relax FK constraints on SiPhox tables.
 
 ## BNPL — Only If Enabling Buy Now Pay Later
 

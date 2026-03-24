@@ -39,8 +39,11 @@ export type AsherMedicationType = 'Injection' | 'Troche';
 
 export type AsherMedicationTypeSelection = 'GLP1' | 'NonGLP1';
 
+/** Patient ID can be a numeric ID or a UUID string depending on the API version */
+export type AsherEntityId = number | string;
+
 export interface AsherPatient {
-  id: number;
+  id: AsherEntityId;
   firstName: string;
   lastName: string;
   email: string;
@@ -64,9 +67,9 @@ export interface AsherPatient {
 }
 
 export interface AsherOrder {
-  id: number;
-  patientId: number;
-  doctorId?: number;
+  id: AsherEntityId;
+  patientId: AsherEntityId;
+  doctorId?: AsherEntityId;
   status: AsherOrderStatus;
   orderType?: string;
   partnerNote?: string;
@@ -225,7 +228,15 @@ export type AsherApiResponse<T> = AsherApiSuccess<T> | AsherApiError;
 // ============================================================
 
 export function getAsherMedApiUrl(): string {
-  return process.env.ASHER_MED_API_URL || 'https://prod-api.asherweightloss.com';
+  // If ASHER_MED_API_URL is explicitly set, use it
+  if (process.env.ASHER_MED_API_URL) {
+    return process.env.ASHER_MED_API_URL;
+  }
+  // Otherwise, derive from ASHER_MED_ENVIRONMENT
+  const env = (process.env.ASHER_MED_ENVIRONMENT || 'production') as 'production' | 'sandbox';
+  return env === 'sandbox'
+    ? 'https://sandbox-api.asherweightloss.com'
+    : 'https://prod-api.asherweightloss.com';
 }
 
 export function getAsherMedPartnerId(): string | undefined {
@@ -326,18 +337,24 @@ async function asherRequest<T>(
 /**
  * Get orders for the partner
  * GET /api/v1/external/partner/orders
+ *
+ * Note: The API may not support server-side patientId filtering.
+ * We still send it as a query param (the API ignores unknown params),
+ * but we also apply client-side filtering as a safety net so callers
+ * always receive only the requested patient's orders.
  */
 export async function getOrders(params?: {
   page?: number;
   limit?: number;
   search?: string;
   status?: string;
-  patientId?: number;
+  patientId?: AsherEntityId;
 }): Promise<AsherPaginatedResponse<AsherOrder>> {
   const response = await asherRequest<{
     orders?: AsherOrder[];
     data?: AsherOrder[];
     total?: number;
+    totalItems?: number;
   }>('/api/v1/external/partner/orders', {
     params: {
       page: params?.page,
@@ -348,9 +365,17 @@ export async function getOrders(params?: {
     },
   });
 
+  let orders = response.orders || response.data || [];
+
+  // Client-side patientId filter — safety net in case the API ignores the param
+  if (params?.patientId != null) {
+    const pid = String(params.patientId);
+    orders = orders.filter((o) => String(o.patientId) === pid);
+  }
+
   return {
-    data: response.orders || response.data || [],
-    total: response.total || 0,
+    data: orders,
+    total: response.total ?? response.totalItems ?? orders.length,
   };
 }
 
@@ -373,11 +398,17 @@ export async function getOrderDetail(orderId: number | string): Promise<AsherOrd
 /**
  * Create a new patient and order
  * POST /api/v1/external/partner/orders/new-order
+ *
+ * The API may return data in two shapes:
+ *   1. { success: true, data: { patient: {...}, order: {...} } }  (nested)
+ *   2. { success: true, data: { id, firstName, ... } }            (flat patient)
+ * This function normalises both into AsherApiSuccess<AsherPatient>.
  */
 export async function createNewOrder(
   orderData: AsherNewOrderRequest
 ): Promise<AsherApiSuccess<AsherPatient>> {
-  const response = await asherRequest<AsherApiResponse<AsherPatient>>(
+  // Use `unknown` so we can inspect the shape before casting
+  const response = await asherRequest<AsherApiResponse<unknown>>(
     '/api/v1/external/partner/orders/new-order',
     {
       method: 'POST',
@@ -393,7 +424,22 @@ export async function createNewOrder(
     );
   }
 
-  return response as AsherApiSuccess<AsherPatient>;
+  // Normalise nested vs flat response shape
+  const rawData = (response as AsherApiSuccess<unknown>).data as Record<string, unknown> | undefined;
+  let patient: AsherPatient;
+
+  if (rawData && 'patient' in rawData && typeof rawData.patient === 'object' && rawData.patient !== null) {
+    // Nested shape: { patient: {...}, order: {...} }
+    patient = rawData.patient as AsherPatient;
+  } else if (rawData && ('firstName' in rawData || 'id' in rawData)) {
+    // Flat shape: data IS the patient
+    patient = rawData as unknown as AsherPatient;
+  } else {
+    // Fallback — return whatever we got and let the caller handle it
+    patient = (rawData ?? {}) as unknown as AsherPatient;
+  }
+
+  return { success: true, data: patient, message: (response as AsherApiSuccess<unknown>).message };
 }
 
 /**

@@ -224,7 +224,7 @@ export async function PUT(request: NextRequest) {
             updateData.zipcode = shippingAddress.zipCode;
           }
 
-          await updatePatient(parseInt(asherPatientId, 10), updateData);
+          await updatePatient(asherPatientId, updateData);
         } catch {
           // Non-fatal: Asher Med update failed, continue with local response
         }

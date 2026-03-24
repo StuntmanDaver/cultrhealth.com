@@ -32,7 +32,7 @@ export interface MembershipEntry {
   stripe_subscription_id: string
   plan_tier: string
   subscription_status: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   created_at: Date
   updated_at: Date
   cancelled_at?: Date
@@ -44,13 +44,13 @@ export interface CreateMembershipInput {
   stripe_subscription_id: string
   plan_tier: string
   subscription_status: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
 }
 
 export interface UpdateMembershipInput {
   subscription_status?: string
   plan_tier?: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   cancelled_at?: Date
   cancellation_reason?: string
 }
@@ -305,7 +305,7 @@ export interface OrderEntry {
   customer_email: string
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   payment_provider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
@@ -330,7 +330,7 @@ export interface CreateOrderInput {
   customer_email: string
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
@@ -341,7 +341,7 @@ export interface CreateOrderInput {
 
 export interface UpdateOrderInput {
   status?: 'pending' | 'paid' | 'fulfilled' | 'cancelled' | 'refunded' | 'shipped'
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   fulfilled_at?: Date
   shipped_at?: Date
   tracking_carrier?: string
@@ -600,13 +600,13 @@ export interface SalesStats {
 
 export async function getSalesStats(days = 30): Promise<SalesStats> {
   try {
-    // Get total orders and revenue
+    // Get total orders and revenue (use make_interval for safe parameterization)
     const totalsResult = await sql`
-      SELECT 
+      SELECT
         COUNT(*) as total_orders,
         COALESCE(SUM(total_amount), 0) as total_revenue
       FROM orders
-      WHERE created_at >= NOW() - INTERVAL '${days} days'
+      WHERE created_at >= NOW() - make_interval(days => ${days})
         AND status IN ('paid', 'fulfilled')
     `
 
@@ -614,15 +614,22 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
     const statusResult = await sql`
       SELECT status, COUNT(*) as count
       FROM orders
-      WHERE created_at >= NOW() - INTERVAL '${days} days'
+      WHERE created_at >= NOW() - make_interval(days => ${days})
       GROUP BY status
     `
 
-    // Get recent orders
+    // Get recent orders (most recent 20 for the table display)
     const recentResult = await sql`
-      SELECT * FROM orders 
+      SELECT * FROM orders
       ORDER BY created_at DESC
       LIMIT 20
+    `
+
+    // Get ALL paid/fulfilled orders in the period for accurate top products
+    const periodOrdersResult = await sql`
+      SELECT items FROM orders
+      WHERE created_at >= NOW() - make_interval(days => ${days})
+        AND status IN ('paid', 'fulfilled')
     `
 
     const ordersByStatus: Record<string, number> = {}
@@ -630,14 +637,12 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
       ordersByStatus[row.status] = parseInt(row.count, 10)
     })
 
-    // Calculate top products from recent orders
+    // Calculate top products from ALL period orders (not just recent 20)
     const productMap = new Map<string, { sku: string; name: string; quantity: number; revenue: number }>()
 
-    const recentOrders = recentResult.rows.map(row => {
+    periodOrdersResult.rows.forEach(row => {
       const items = typeof row.items === 'string' ? JSON.parse(row.items) : row.items
-
-      // Aggregate product stats
-      if (row.status === 'paid' || row.status === 'fulfilled') {
+      if (Array.isArray(items)) {
         items.forEach((item: OrderItem) => {
           const existing = productMap.get(item.sku)
           if (existing) {
@@ -653,7 +658,10 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
           }
         })
       }
+    })
 
+    const recentOrders = recentResult.rows.map(row => {
+      const items = typeof row.items === 'string' ? JSON.parse(row.items) : row.items
       return { ...row, items } as OrderEntry
     })
 
@@ -1175,7 +1183,7 @@ export async function testDatabaseConnection(): Promise<{ success: boolean; erro
 export interface DailyLogEntry {
   id: string
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   log_date: string
   energy_level?: number
   mood_rating?: number
@@ -1206,7 +1214,7 @@ export interface DailyLogEntry {
 
 export interface CreateDailyLogInput {
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   log_date: string
   energy_level?: number
   mood_rating?: number
@@ -1336,7 +1344,7 @@ export async function getDailyLogByDate(
 export interface BiomarkerEntry {
   id: string
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   biomarker_id: string
   biomarker_name: string
   category: string
@@ -1359,7 +1367,7 @@ export interface BiomarkerEntry {
 
 export interface CreateBiomarkerEntryInput {
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   biomarker_id: string
   biomarker_name: string
   category: string
@@ -1481,7 +1489,7 @@ export interface ActualOutcome {
 export interface ProtocolOutcomeEntry {
   id: string
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   protocol_id: string
   protocol_version: string
   protocol_type: 'template' | 'symptom' | 'custom'
@@ -1514,7 +1522,7 @@ export interface ProtocolOutcomeEntry {
 
 export interface CreateProtocolOutcomeInput {
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   protocol_id: string
   protocol_version: string
   protocol_type: 'template' | 'symptom' | 'custom'
@@ -1662,7 +1670,7 @@ export async function getProtocolOutcomesByUser(
 export interface ResilienceScoreEntry {
   id: string
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   overall_score: number
   grade: string
   category_scores: Record<string, number>
@@ -1683,7 +1691,7 @@ export interface ResilienceScoreEntry {
 
 export interface CreateResilienceScoreInput {
   user_id: string
-  asher_patient_id?: number
+  asher_patient_id?: number | string
   overall_score: number
   grade: string
   category_scores: Record<string, number>

@@ -141,7 +141,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const stripe = getStripe();
 
   // Look up Asher Med patient ID from asher_orders table (patient already created during intake)
-  let asherPatientId: number | undefined;
+  let asherPatientId: number | string | undefined;
   const customerId = typeof session.customer === 'string'
     ? session.customer
     : session.customer?.id;

@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
     if (patientId && partnerNote) {
       try {
         const { getOrders } = await import('@/lib/asher-med-api');
-        const ordersResponse = await getOrders({ patientId });
+        const ordersResponse = await getOrders({ patientId: Number(patientId) });
         // Most recent order for this patient is the one we just created
         const latestOrder = ordersResponse.data?.[0];
         if (latestOrder?.id) {

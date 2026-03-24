@@ -18,6 +18,7 @@ import {
   getCustomerByExternalId,
   createOrder,
   checkCreditBalance,
+  isSiphoxConfigured,
 } from './client'
 import { upsertSiphoxCustomer } from './db'
 
@@ -172,6 +173,12 @@ export async function triggerSiphoxFulfillment(params: {
   const { customerEmail, planTier, stripeCheckoutSessionId, stripeSubscriptionId } = params
 
   try {
+    // Guard: skip if SiPhox API key is not configured
+    if (!isSiphoxConfigured()) {
+      console.log('SiPhox fulfillment: skipped — SIPHOX_API_KEY not configured')
+      return
+    }
+
     // Tier check: only catalyst, concierge, or core-with-addon are eligible
     // (Core add-on detection is done in the webhook before calling this function)
     if (!['catalyst', 'concierge', 'core'].includes(planTier)) {
@@ -346,6 +353,10 @@ export async function processDeferredOrders(): Promise<{
   let fulfilled = 0
   let stillPending = 0
 
+  if (!isSiphoxConfigured()) {
+    return { processed, fulfilled, stillPending }
+  }
+
   try {
     const orders = await getDeferredIntakeOrders()
 
@@ -448,6 +459,10 @@ export async function retryFailedOrders(): Promise<{
   let retried = 0
   let fulfilled = 0
   let permanentlyFailed = 0
+
+  if (!isSiphoxConfigured()) {
+    return { retried, fulfilled, permanentlyFailed }
+  }
 
   try {
     const orders = await getPendingFulfillmentOrders()

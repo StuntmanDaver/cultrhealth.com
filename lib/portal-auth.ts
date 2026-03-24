@@ -38,7 +38,8 @@ const REFRESH_COOKIE_MAX_AGE = 604800 // 7 days in seconds
 
 export interface PortalSession {
   phone: string
-  asherPatientId: number | null
+  /** Patient ID from Asher Med — may be numeric or a UUID string */
+  asherPatientId: number | string | null
 }
 
 // ===========================================
@@ -51,7 +52,7 @@ export interface PortalSession {
  */
 export async function createPortalAccessToken(
   phone: string,
-  patientId: number | null
+  patientId: number | string | null
 ): Promise<string> {
   return new SignJWT({
     phone,
@@ -70,7 +71,7 @@ export async function createPortalAccessToken(
  */
 export async function createPortalRefreshToken(
   phone: string,
-  patientId: number | null
+  patientId: number | string | null
 ): Promise<string> {
   return new SignJWT({
     phone,
@@ -102,7 +103,7 @@ export async function verifyPortalAccessToken(
     return {
       phone: payload.phone,
       asherPatientId:
-        typeof payload.asherPatientId === 'number'
+        typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
           ? payload.asherPatientId
           : null,
     }
@@ -129,7 +130,7 @@ export async function verifyPortalRefreshToken(
     return {
       phone: payload.phone,
       asherPatientId:
-        typeof payload.asherPatientId === 'number'
+        typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
           ? payload.asherPatientId
           : null,
     }
@@ -209,7 +210,7 @@ export async function verifyPortalAuth(
 ): Promise<{
   authenticated: boolean
   phone: string | null
-  asherPatientId: number | null
+  asherPatientId: number | string | null
 }> {
   const token = request.cookies.get(PORTAL_ACCESS_COOKIE)?.value
   if (!token) {

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOrderByOrderNumber, markOrderShipped, markOrderFulfilled } from '@/lib/db';
 import { sendShippingNotificationEmail } from '@/lib/resend';
+import { getSession, isProviderEmail } from '@/lib/auth';
 
 /**
  * Admin Order Fulfillment API
- * 
+ *
  * POST /api/admin/orders/[orderNumber]/fulfill
- * 
+ *
  * Body:
  * - action: 'ship' | 'fulfill' (required)
  * - carrier: string (required for ship action)
@@ -14,8 +15,6 @@ import { sendShippingNotificationEmail } from '@/lib/resend';
  * - trackingUrl: string (optional, for ship action)
  * - estimatedDelivery: string ISO date (optional, for ship action)
  * - sendEmail: boolean (default: true)
- * 
- * Note: Authentication should be handled by middleware or checked here
  */
 export async function POST(
   request: NextRequest,
@@ -24,10 +23,15 @@ export async function POST(
   try {
     const { orderNumber } = await params;
 
-    // TODO: Add proper authentication check here
-    // For now, check for admin secret in header
+    // Check session-based admin auth (used by dashboard), or legacy x-admin-secret header
+    const session = await getSession();
     const adminSecret = request.headers.get('x-admin-secret');
-    if (adminSecret !== process.env.ADMIN_SECRET && process.env.NODE_ENV === 'production') {
+    const adminEmails = process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || '';
+    const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    const isSessionAdmin = session && (allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email));
+    const isSecretAdmin = adminSecret === process.env.ADMIN_SECRET;
+
+    if (!isSessionAdmin && !isSecretAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -177,9 +181,15 @@ export async function GET(
   try {
     const { orderNumber } = await params;
 
-    // TODO: Add proper authentication check here
+    // Check session-based admin auth or legacy x-admin-secret header
+    const session = await getSession();
     const adminSecret = request.headers.get('x-admin-secret');
-    if (adminSecret !== process.env.ADMIN_SECRET && process.env.NODE_ENV === 'production') {
+    const adminEmails = process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || '';
+    const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+    const isSessionAdmin = session && (allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email));
+    const isSecretAdmin = adminSecret === process.env.ADMIN_SECRET;
+
+    if (!isSessionAdmin && !isSecretAdmin) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }

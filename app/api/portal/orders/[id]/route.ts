@@ -35,10 +35,9 @@ export async function GET(
   }
 
   try {
-    // 3. Extract order ID from params
+    // 3. Extract order ID from params (may be numeric or UUID string)
     const { id } = await params
-    const orderId = parseInt(id, 10)
-    if (isNaN(orderId)) {
+    if (!id) {
       return NextResponse.json(
         { error: 'Invalid order ID' },
         { status: 400 }
@@ -46,10 +45,11 @@ export async function GET(
     }
 
     // 4. Fetch order detail from Asher Med
-    const order = await getOrderDetail(orderId)
+    const order = await getOrderDetail(id)
 
     // 5. Ownership check — verify order belongs to authenticated patient
-    if (order.patientId !== auth.asherPatientId) {
+    // Compare as strings to handle both numeric and UUID ID formats
+    if (String(order.patientId) !== String(auth.asherPatientId)) {
       return NextResponse.json(
         { error: 'Not authorized' },
         { status: 403 }
@@ -62,7 +62,7 @@ export async function GET(
       const localOrder = await sql`
         SELECT medication_packages
         FROM asher_orders
-        WHERE asher_order_id = ${orderId}
+        WHERE asher_order_id = ${id}
         LIMIT 1
       `
       if (localOrder.rows.length > 0 && localOrder.rows[0].medication_packages) {

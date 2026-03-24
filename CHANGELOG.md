@@ -1,3 +1,30 @@
+## [2026-03-23] - Asher Med API Compatibility Fixes
+
+### Critical Fixes
+- **ID type handling** — Removed `parseInt()` calls on Asher Med IDs across 5 API routes; IDs now passed as-is to support both numeric and UUID formats
+- **Patient order filtering (HIPAA)** — Added client-side patient filtering safety net in all 4 `getOrders()` consumers to prevent cross-patient data exposure if API ignores `patientId` query param
+- **createNewOrder response parsing** — Now handles both flat (`data.id`) and nested (`data.patient.id`) response shapes from Asher Med API
+
+### Moderate/Minor Fixes
+- **URL config unification** — API client now respects `ASHER_MED_ENVIRONMENT` setting instead of using duplicate URL lookup
+- **Admin portal link** — Fixed link from API endpoint URL to actual partner portal UI
+
+### Documentation
+- `.env.example` — Added all Asher Med environment variables with descriptions
+- `docs/env-vars-go-live.md` — Updated Asher Med configuration section
+
+### Files Changed
+- `lib/asher-med-api.ts` — Response parsing, URL unification, patient filtering safety net
+- `lib/portal-auth.ts`, `lib/portal-db.ts`, `lib/portal-orders.ts` — ID type consistency (string | number)
+- `app/api/intake/submit/route.ts` — Flexible response shape handling
+- `app/api/member/orders/route.ts`, `app/api/member/profile/route.ts`, `app/api/member/medical-records/route.ts` — Defensive ID handling
+- `app/api/portal/orders/route.ts`, `app/api/portal/orders/[id]/route.ts` — Patient filtering + ID fixes
+- `app/admin/AdminDashboardClient.tsx` — Portal link fix + coupon code management improvements
+- `lib/db.ts` — ID handling updates
+- `app/api/webhook/stripe/route.ts` — ID type consistency
+
+---
+
 ## [2026-03-23] - Admin Dashboard Operational Intelligence
 
 ### Operational Health Metrics

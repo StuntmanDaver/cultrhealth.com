@@ -8,7 +8,8 @@ export interface PortalSessionRow {
   id: string
   phone: string
   phone_e164: string
-  asher_patient_id: number | null
+  /** Patient ID from Asher Med — may be numeric or a UUID string */
+  asher_patient_id: number | string | null
   first_name: string | null
   last_name: string | null
   verified_at: Date
@@ -40,7 +41,7 @@ export class PortalDatabaseError extends Error {
 export async function upsertPortalSession(
   phone: string,
   phoneE164: string,
-  asherPatientId: number | null,
+  asherPatientId: number | string | null,
   firstName?: string,
   lastName?: string
 ): Promise<void> {
@@ -88,7 +89,7 @@ export async function getPortalSessionByPhone(
  */
 export async function updatePortalPatientId(
   phoneE164: string,
-  asherPatientId: number
+  asherPatientId: number | string
 ): Promise<void> {
   try {
     await sql`

@@ -31,7 +31,7 @@ export default function DashboardClient() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null)
+  const [selectedOrderId, setSelectedOrderId] = useState<PortalOrder['id'] | null>(null)
   const [detailOrder, setDetailOrder] = useState<PortalOrder | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
 
