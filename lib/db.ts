@@ -2107,29 +2107,26 @@ export async function searchOrders({
   limit = 20,
 }: SearchOrdersParams): Promise<SearchOrdersResult> {
   try {
-    const searchPattern = query ? `%${query}%` : null
+    const searchPattern = query ? `%${query}%` : '%'
+    const statusFilter = status || '%'
 
-    // Query both tables separately then merge (CTE with parameterized UNION ALL
-    // can fail in @vercel/postgres due to duplicate parameter indices)
+    // Query both tables separately then merge
+    // Use ILIKE with '%' as wildcard-all instead of IS NULL checks (more compatible with @vercel/postgres)
     const [shopResult, clubResult] = await Promise.all([
       sql`
         SELECT id::text as id, order_number, customer_email, status,
           COALESCE(total_amount, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM orders
-        WHERE (${searchPattern}::text IS NULL OR (order_number ILIKE ${searchPattern} OR customer_email ILIKE ${searchPattern}))
-        AND (${status || null}::text IS NULL OR status = ${status})
-        AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
-        AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
+        WHERE (order_number ILIKE ${searchPattern} OR customer_email ILIKE ${searchPattern})
+        AND COALESCE(status, '') ILIKE ${statusFilter}
         ORDER BY created_at DESC
       `.catch(() => ({ rows: [] })),
       sql`
         SELECT id::text as id, order_number, member_email as customer_email, status,
           COALESCE(subtotal_usd, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM club_orders
-        WHERE (${searchPattern}::text IS NULL OR (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern}))
-        AND (${status || null}::text IS NULL OR status = ${status})
-        AND (${dateFrom || null}::text IS NULL OR created_at >= ${dateFrom}::date)
-        AND (${dateTo || null}::text IS NULL OR created_at < (${dateTo}::date + interval '1 day'))
+        WHERE (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern})
+        AND COALESCE(status, '') ILIKE ${statusFilter}
         ORDER BY created_at DESC
       `.catch(() => ({ rows: [] })),
     ])
