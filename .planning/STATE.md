@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: "Completed quick task 2: Jon Collins creator E2E test"
-last_updated: "2026-03-23T02:20:52.985Z"
+stopped_at: "Completed quick task 3: Change JON21 coupon discount to 10%"
+last_updated: "2026-03-24T00:32:00Z"
 last_activity: 2026-03-17 -- Completed plan 04-03 (Dashboard widgets + results notification)
 progress:
   total_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 Phase: 4 of 4 (Labs Dashboard) -- COMPLETE
 Plan: 3 of 3 in current phase -- 04-03 COMPLETE
 Status: All 4 phases complete, all 9 plans complete
-Last activity: 2026-03-23 - Completed quick task 2: Jon Collins creator E2E test
+Last activity: 2026-03-23 - Completed quick task 3: Change JON21 coupon discount to 10%
 
 Progress: [██████████] 100%
 
@@ -102,10 +102,11 @@ None.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 2 | Jon Collins creator E2E test — codes, coupons, links, metrics, commissions, dashboards | 2026-03-23 | 65b416e | [2-end-to-end-test-jon-collins-creator-acco](./quick/2-end-to-end-test-jon-collins-creator-acco/) |
+| 3 | Change JON21 coupon discount from 20% to 10% (commission unchanged) | 2026-03-23 | 8dc3257 | [3-change-jon-collins-jon21-coupon-to-10-cu](./quick/3-change-jon-collins-jon21-coupon-to-10-cu/) |
 
 ## Session Continuity
 
-Last session: 2026-03-23T02:20:52.983Z
-Stopped at: Completed quick task 2: Jon Collins creator E2E test
+Last session: 2026-03-24T00:32:00Z
+Stopped at: Completed quick task 3: Change JON21 coupon discount to 10%
 Resume file: None
 Next: SiPhox integration v1 complete. v2 work (LNG-01, DSH-02, DSH-03) tracked in REQUIREMENTS.md.
