@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
 import { TAX_RATE_LABEL } from '@/lib/config/tax'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
+import { getAccessToken, findOrCreateCustomer, createInvoice, sendInvoice, getInvoiceLink } from '@/lib/quickbooks'
 
 interface OrderItem {
   therapyId: string
@@ -122,13 +123,52 @@ export async function POST(
       )
     }
 
-    // Update order status to approved
+    // Attempt QuickBooks invoice creation → sets status to invoice_sent when successful
+    let finalStatus = 'approved'
+    let qbInvoiceId: string | null = null
+    let qbInvoiceUrl: string | null = null
+
+    try {
+      const accessToken = await getAccessToken()
+      if (accessToken) {
+        const customerId = await findOrCreateCustomer(accessToken, order.member_name, order.member_email)
+        if (customerId) {
+          const invoiceResult = await createInvoice(
+            accessToken,
+            customerId,
+            order.items as OrderItem[],
+            order.order_number,
+            discountPercent,
+            couponCode,
+          )
+          if (invoiceResult) {
+            qbInvoiceId = invoiceResult.invoiceId
+
+            const sendResult = await sendInvoice(accessToken, invoiceResult.invoiceId, order.member_email)
+            qbInvoiceUrl = sendResult?.payNowLink || invoiceResult.invoiceLink || null
+
+            if (!qbInvoiceUrl) {
+              const linkResult = await getInvoiceLink(accessToken, invoiceResult.invoiceId)
+              if (linkResult) qbInvoiceUrl = linkResult
+            }
+
+            finalStatus = 'invoice_sent'
+            console.log('[club-orders/approve] QB invoice created and sent:', qbInvoiceId)
+          }
+        }
+      }
+    } catch (qbError) {
+      console.error('[club-orders/approve] QB invoice creation failed (non-fatal), falling back to approved:', qbError)
+    }
+
     await sql`
       UPDATE club_orders
       SET
-        status = 'approved',
+        status = ${finalStatus},
         approved_at = NOW(),
         approved_by = ${session?.email || 'email_link'},
+        qb_invoice_id = ${qbInvoiceId},
+        qb_invoice_url = ${qbInvoiceUrl},
         updated_at = NOW()
       WHERE id = ${orderId}::uuid
     `
@@ -144,7 +184,9 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      status: 'approved',
+      status: finalStatus,
+      qbInvoiceId,
+      qbInvoiceUrl,
     })
   } catch (error) {
     console.error('[club-orders/approve] Error:', error)

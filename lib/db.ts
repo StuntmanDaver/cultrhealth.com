@@ -609,6 +609,14 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
       WHERE created_at >= NOW() - make_interval(days => ${days})
         AND status IN ('paid', 'fulfilled')
     `
+    const clubTotalsResult = await sql`
+      SELECT
+        COUNT(*) as total_orders,
+        COALESCE(SUM(subtotal_usd), 0) as total_revenue
+      FROM club_orders
+      WHERE created_at >= NOW() - make_interval(days => ${days})
+        AND status IN ('invoice_sent', 'paid')
+    `
 
     // Get orders by status
     const statusResult = await sql`
@@ -669,9 +677,17 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10)
 
+    // #region agent log
+    fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:`analytics-${Date.now()}`,hypothesisId:'H3',location:'lib/db.ts:getSalesStats:return',message:'sales stats computed',data:{days,ordersTableRevenue:parseFloat(totalsResult.rows[0]?.total_revenue||'0'),ordersTableCount:parseInt(totalsResult.rows[0]?.total_orders||'0',10),clubTableRevenue:parseFloat(clubTotalsResult.rows[0]?.total_revenue||'0'),clubTableCount:parseInt(clubTotalsResult.rows[0]?.total_orders||'0',10)},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
+
     return {
-      totalOrders: parseInt(totalsResult.rows[0]?.total_orders || '0', 10),
-      totalRevenue: parseFloat(totalsResult.rows[0]?.total_revenue || '0'),
+      totalOrders:
+        parseInt(totalsResult.rows[0]?.total_orders || '0', 10) +
+        parseInt(clubTotalsResult.rows[0]?.total_orders || '0', 10),
+      totalRevenue:
+        parseFloat(totalsResult.rows[0]?.total_revenue || '0') +
+        parseFloat(clubTotalsResult.rows[0]?.total_revenue || '0'),
       ordersByStatus,
       topProducts,
       recentOrders,
@@ -849,6 +865,9 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
     statusResult.rows.forEach(r => {
       creatorsByStatus[r.status] = parseInt(r.count, 10)
     })
+    // #region agent log
+    fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:`analytics-${Date.now()}`,hypothesisId:'H4',location:'lib/db.ts:getCreatorCommissionStats:return',message:'creator commission stats computed',data:{days,activeCreators:parseInt(row?.active_creators||'0',10),totalPending:parseFloat(row?.total_pending||'0'),totalApproved:parseFloat(row?.total_approved||'0'),totalPaid:parseFloat(row?.total_paid||'0'),totalLifetime:parseFloat(row?.total_lifetime||'0')},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
 
     return {
       activeCreatorsWithCommissions: parseInt(row?.active_creators || '0', 10),
@@ -949,6 +968,10 @@ export async function getInvoiceAging() {
       WHERE status IS DISTINCT FROM 'dismissed'
       ORDER BY created_at DESC
     `
+    const orderNumbers = result.rows.map(r => String(r.order_number))
+    // #region agent log
+    fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:`analytics-${Date.now()}`,hypothesisId:'H2',location:'lib/db.ts:getInvoiceAging:return',message:'invoice aging rows fetched',data:{count:result.rows.length,containsSandraOrder:orderNumbers.includes('CLB-MN5Q0SNS-88E5'),containsDebraOrder:orderNumbers.includes('CLB-MN59AETX-F120')},timestamp:Date.now()})}).catch(()=>{})
+    // #endregion
     return result.rows
   } catch (error) {
     console.error('Database error fetching club orders:', error)
@@ -2046,7 +2069,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+        WHERE status IN ('invoice_sent', 'paid')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY created_at::date
       `
@@ -2061,7 +2084,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+        WHERE status IN ('invoice_sent', 'paid')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY date_trunc('week', created_at)::date
       `
@@ -2076,7 +2099,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IS DISTINCT FROM 'rejected' AND status IS DISTINCT FROM 'dismissed'
+        WHERE status IN ('invoice_sent', 'paid')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY date_trunc('month', created_at)::date
       `
@@ -2372,6 +2395,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
 
 export interface MembershipAdminRow {
   id: string
+  email: string
   stripe_customer_id: string
   stripe_subscription_id: string
   plan_tier: string
@@ -2391,6 +2415,7 @@ export async function getAllMembershipsForAdmin(): Promise<MembershipAdminRow[]>
     const result = await sql`
       SELECT
         id,
+        email,
         stripe_customer_id,
         stripe_subscription_id,
         plan_tier,
