@@ -132,6 +132,15 @@ export interface TrackingLinkAdminRow {
   creator_status: string | null
 }
 
+export interface CreatorLinkPerformanceRow {
+  creator_id: string
+  creator_name: string
+  total_clicks: number
+  converted_clicks: number
+  non_converted_clicks: number
+  conversion_rate: number
+}
+
 export interface AffiliateCodeAdminRow {
   id: string
   creator_id: string | null
@@ -325,6 +334,7 @@ export interface AnalyticsData {
   creatorROI: CreatorROIRow[]
   intakeFunnel: IntakeFunnel
   revenueTimeSeries: RevenueTimeSeriesPoint[]
+  creatorLinkPerformance: CreatorLinkPerformanceRow[]
   periodDays: number
   generatedAt: string
 }

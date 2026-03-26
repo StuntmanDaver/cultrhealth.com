@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts, getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel, getRevenueTimeSeries, getAllMembershipsForAdmin } from '@/lib/db'
+import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts, getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel, getRevenueTimeSeries, getAllMembershipsForAdmin, getCreatorLinkPerformance } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
 export async function GET(request: NextRequest) {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30', 10)
 
     // Fetch all analytics data
-    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats, allCreators, allTrackingLinks, allCouponCodes, allCustomers, dashboardCounts, invoiceAging, refundStats, revenueByTier, bnplAdoption, creatorROI, intakeFunnel, revenueTimeSeries, allMemberships] = await Promise.all([
+    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats, allCreators, allTrackingLinks, allCouponCodes, allCustomers, dashboardCounts, invoiceAging, refundStats, revenueByTier, bnplAdoption, creatorROI, intakeFunnel, revenueTimeSeries, allMemberships, creatorLinkPerformance] = await Promise.all([
       getSalesStats(days).catch(() => ({
         totalOrders: 0,
         totalRevenue: 0,
@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
       getIntakeFunnel(days).catch(() => ({ totalStarted: 0, completed: 0, pending: 0, completionRate: 0 })),
       getRevenueTimeSeries(days).catch(() => []),
       getAllMembershipsForAdmin().catch(() => []),
+      getCreatorLinkPerformance(days).catch(() => []),
     ])
 
     return NextResponse.json({
@@ -123,6 +124,7 @@ export async function GET(request: NextRequest) {
         intakeFunnel,
         revenueTimeSeries,
         allMemberships,
+        creatorLinkPerformance,
         periodDays: days,
         generatedAt: new Date().toISOString(),
       },

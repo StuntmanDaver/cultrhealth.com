@@ -1034,16 +1034,27 @@ export async function getCreatorROI() {
     const result = await sql`
       SELECT
         c.id, c.full_name, c.status,
-        COALESCE(SUM(
-          CASE WHEN ac.discount_value > 0 AND ac.discount_value < 100
-          THEN ac.total_revenue * ac.discount_value / (100.0 - ac.discount_value)
-          ELSE 0 END
-        ), 0) as total_discount_given,
-        (SELECT COALESCE(SUM(cl.commission_amount), 0) FROM commission_ledger cl WHERE cl.beneficiary_creator_id = c.id AND cl.status != 'reversed') as total_commission_earned
+        COALESCE((
+          SELECT SUM(
+            CASE
+              WHEN oa.attribution_method = 'coupon_code'
+                AND ac2.discount_value > 0
+                AND ac2.discount_value < 100
+              THEN oa.net_revenue * ac2.discount_value / (100.0 - ac2.discount_value)
+              ELSE 0
+            END
+          )
+          FROM order_attributions oa
+          LEFT JOIN affiliate_codes ac2 ON ac2.id = oa.code_id
+          WHERE oa.creator_id = c.id AND oa.net_revenue > 0
+        ), 0) AS total_discount_given,
+        COALESCE((
+          SELECT SUM(cl.commission_amount)
+          FROM commission_ledger cl
+          WHERE cl.beneficiary_creator_id = c.id AND cl.status != 'reversed'
+        ), 0) AS total_commission_earned
       FROM creators c
-      LEFT JOIN affiliate_codes ac ON ac.creator_id = c.id
       WHERE c.status = 'active'
-      GROUP BY c.id, c.full_name, c.status
       ORDER BY total_commission_earned DESC
     `
     return result.rows.map(r => ({
@@ -1118,6 +1129,32 @@ export async function getAllTrackingLinksForAdmin() {
   } catch (error) {
     console.error('Database error fetching all tracking links:', error)
     throw new DatabaseError('Failed to fetch all tracking links', error)
+  }
+}
+
+export async function getCreatorLinkPerformance(days: number) {
+  try {
+    const result = await sql`
+      SELECT
+        c.id AS creator_id,
+        c.full_name AS creator_name,
+        COUNT(ce.id)::int AS total_clicks,
+        COUNT(CASE WHEN ce.converted = true THEN 1 END)::int AS converted_clicks,
+        COUNT(CASE WHEN ce.converted = false THEN 1 END)::int AS non_converted_clicks,
+        ROUND(
+          COUNT(CASE WHEN ce.converted = true THEN 1 END)::numeric
+          / NULLIF(COUNT(ce.id), 0) * 100, 1
+        )::float8 AS conversion_rate
+      FROM click_events ce
+      JOIN creators c ON ce.creator_id = c.id
+      WHERE ce.clicked_at >= NOW() - make_interval(days => ${days})
+      GROUP BY c.id, c.full_name
+      ORDER BY total_clicks DESC
+    `
+    return result.rows
+  } catch (error) {
+    console.error('Database error fetching creator link performance:', error)
+    throw new DatabaseError('Failed to fetch creator link performance', error)
   }
 }
 

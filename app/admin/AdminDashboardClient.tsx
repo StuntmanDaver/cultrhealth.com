@@ -311,6 +311,82 @@ export default function AdminDashboardClient() {
             </div>
           )}
 
+          {/* Creator Link Performance */}
+          {data.creatorLinkPerformance.length > 0 && (() => {
+            const totalClicks = data.creatorLinkPerformance.reduce((s, r) => s + r.total_clicks, 0)
+            const totalConverted = data.creatorLinkPerformance.reduce((s, r) => s + r.converted_clicks, 0)
+            const totalNonConverted = totalClicks - totalConverted
+            const overallRate = totalClicks > 0 ? Math.round((totalConverted / totalClicks) * 1000) / 10 : 0
+
+            return (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Creator Link Performance</h2>
+
+                {/* Summary cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-brand-primary/5 rounded-xl p-4">
+                    <p className="text-xs text-brand-primary/60 mb-1">Total Clicks</p>
+                    <p className="text-2xl font-bold text-brand-primary">{totalClicks}</p>
+                  </div>
+                  <div className="bg-brand-primary/5 rounded-xl p-4">
+                    <p className="text-xs text-brand-primary/60 mb-1">Converted</p>
+                    <p className="text-2xl font-bold text-green-600">{totalConverted}</p>
+                  </div>
+                  <div className="bg-brand-primary/5 rounded-xl p-4">
+                    <p className="text-xs text-brand-primary/60 mb-1">Non-Converted</p>
+                    <p className="text-2xl font-bold text-brand-primary">{totalNonConverted}</p>
+                  </div>
+                  <div className="bg-brand-primary/5 rounded-xl p-4">
+                    <p className="text-xs text-brand-primary/60 mb-1">Conv. Rate</p>
+                    <p className={`text-2xl font-bold ${overallRate >= 15 ? 'text-green-600' : overallRate >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {overallRate}%
+                    </p>
+                  </div>
+                </div>
+
+                {/* Per-creator table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-2 pr-4 font-medium text-brand-primary/60">Creator</th>
+                        <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Clicks</th>
+                        <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Converted</th>
+                        <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Non-Converted</th>
+                        <th className="text-right py-2 font-medium text-brand-primary/60">Conv. Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.creatorLinkPerformance.map((row) => (
+                        <tr key={row.creator_id} className="border-b border-brand-primary/5 last:border-0">
+                          <td className="py-2 pr-4 text-brand-primary font-medium">{row.creator_name}</td>
+                          <td className="py-2 pr-4 text-right text-brand-primary">{row.total_clicks}</td>
+                          <td className="py-2 pr-4 text-right text-green-600">{row.converted_clicks}</td>
+                          <td className="py-2 pr-4 text-right text-brand-primary/70">{row.non_converted_clicks}</td>
+                          <td className={`py-2 text-right font-medium ${Number(row.conversion_rate) >= 15 ? 'text-green-600' : Number(row.conversion_rate) >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {row.conversion_rate}%
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Totals row */}
+                      {data.creatorLinkPerformance.length > 1 && (
+                        <tr className="border-t border-brand-primary/20 bg-brand-primary/5">
+                          <td className="py-2 pr-4 font-bold text-brand-primary">Total</td>
+                          <td className="py-2 pr-4 text-right font-bold text-brand-primary">{totalClicks}</td>
+                          <td className="py-2 pr-4 text-right font-bold text-green-600">{totalConverted}</td>
+                          <td className="py-2 pr-4 text-right font-bold text-brand-primary/70">{totalNonConverted}</td>
+                          <td className={`py-2 text-right font-bold ${overallRate >= 15 ? 'text-green-600' : overallRate >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {overallRate}%
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Club Orders Summary */}
           {data.invoiceAging.length > 0 && (() => {
             const filteredOrders = invoiceStatusFilter
