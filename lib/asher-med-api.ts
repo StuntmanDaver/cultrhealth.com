@@ -10,13 +10,24 @@ export type AsherGender = 'MALE' | 'FEMALE';
 
 export type AsherPatientStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING';
 
+/** Known order statuses from Asher Med partner portal.
+ *  The API may return additional values — code should handle unknown statuses gracefully. */
 export type AsherOrderStatus =
   | 'PENDING'
   | 'APPROVED'
   | 'DENIED'
   | 'COMPLETED'
   | 'CANCELLED'
-  | 'WaitingRoom';
+  | 'WaitingRoom'
+  | 'Incomplete'
+  | 'Approval Needed'
+  | 'Submitted'
+  | 'RX Submitted'
+  | 'RX Approved'
+  | 'Shipped'
+  | 'Delivered'
+  | 'Payment Pending'
+  | (string & {});
 
 export type AsherApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 

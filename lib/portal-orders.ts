@@ -31,7 +31,7 @@ export interface PortalOrder {
 // STATUS MAPPING
 // ===========================================
 
-const STATUS_MAP: Record<AsherOrderStatus, OrderStatusDisplay> = {
+const STATUS_MAP: Partial<Record<string, OrderStatusDisplay>> = {
   PENDING: {
     label: 'Submitted',
     explanation: 'Your order has been received and is being processed.',
@@ -52,6 +52,62 @@ const STATUS_MAP: Record<AsherOrderStatus, OrderStatusDisplay> = {
     color: 'amber',
     bgClass: 'bg-amber-50',
     textClass: 'text-amber-700',
+  },
+  Incomplete: {
+    label: 'Incomplete',
+    explanation: 'Additional information is needed to process your order.',
+    color: 'amber',
+    bgClass: 'bg-amber-50',
+    textClass: 'text-amber-700',
+  },
+  'Approval Needed': {
+    label: 'Approval Needed',
+    explanation: 'Your order is awaiting provider approval.',
+    color: 'amber',
+    bgClass: 'bg-amber-100',
+    textClass: 'text-amber-800',
+  },
+  Submitted: {
+    label: 'Submitted',
+    explanation: 'Your order has been submitted and is under review.',
+    color: 'amber',
+    bgClass: 'bg-amber-100',
+    textClass: 'text-amber-800',
+  },
+  'RX Submitted': {
+    label: 'Prescription Submitted',
+    explanation: 'Your prescription has been submitted to the pharmacy.',
+    color: 'blue',
+    bgClass: 'bg-blue-50',
+    textClass: 'text-blue-700',
+  },
+  'RX Approved': {
+    label: 'Prescription Approved',
+    explanation: 'Your prescription has been approved by the pharmacy.',
+    color: 'green',
+    bgClass: 'bg-green-50',
+    textClass: 'text-green-700',
+  },
+  Shipped: {
+    label: 'Shipped',
+    explanation: 'Your order is on its way.',
+    color: 'blue',
+    bgClass: 'bg-blue-100',
+    textClass: 'text-blue-800',
+  },
+  Delivered: {
+    label: 'Delivered',
+    explanation: 'Your order has been delivered.',
+    color: 'green',
+    bgClass: 'bg-green-100',
+    textClass: 'text-green-800',
+  },
+  'Payment Pending': {
+    label: 'Payment Pending',
+    explanation: 'Payment is required to proceed with your order.',
+    color: 'amber',
+    bgClass: 'bg-amber-100',
+    textClass: 'text-amber-800',
   },
   COMPLETED: {
     label: 'Fulfilled',
@@ -82,7 +138,7 @@ const STATUS_MAP: Record<AsherOrderStatus, OrderStatusDisplay> = {
  * Falls back to PENDING display for unknown statuses.
  */
 export function getStatusDisplay(status: AsherOrderStatus): OrderStatusDisplay {
-  return STATUS_MAP[status] || STATUS_MAP.PENDING
+  return STATUS_MAP[status] ?? STATUS_MAP['PENDING']!
 }
 
 // ===========================================
@@ -91,13 +147,19 @@ export function getStatusDisplay(status: AsherOrderStatus): OrderStatusDisplay {
 
 /**
  * Statuses considered "active" — used to identify the hero card order.
- * PENDING, APPROVED, and WaitingRoom are active.
- * COMPLETED, DENIED, and CANCELLED are terminal.
+ * In-flight pipeline statuses are active; COMPLETED, DENIED, and CANCELLED are terminal.
  */
 export const ACTIVE_STATUSES: AsherOrderStatus[] = [
   'PENDING',
   'APPROVED',
   'WaitingRoom',
+  'Incomplete',
+  'Approval Needed',
+  'Submitted',
+  'RX Submitted',
+  'RX Approved',
+  'Shipped',
+  'Payment Pending',
 ]
 
 /**
