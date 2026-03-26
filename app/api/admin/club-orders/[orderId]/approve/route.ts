@@ -70,7 +70,7 @@ export async function POST(
 
     // Fetch the order
     const orderResult = await sql`
-      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status, coupon_code, discount_percent, tax_rate, tax_amount_usd
+      SELECT id, order_number, member_name, member_email, member_phone, items, subtotal_usd, status, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method
       FROM club_orders
       WHERE id = ${orderId}::uuid
     `
@@ -139,6 +139,7 @@ export async function POST(
     let finalStatus = 'approved'
     let qbInvoiceId: string | null = null
     let qbInvoiceUrl: string | null = null
+    let invoicedTotal: number | null = null
 
     try {
       const accessToken = await getAccessToken()
@@ -155,6 +156,7 @@ export async function POST(
           )
           if (invoiceResult) {
             qbInvoiceId = invoiceResult.invoiceId
+            invoicedTotal = invoiceResult.total
 
             const sendResult = await sendInvoice(accessToken, invoiceResult.invoiceId, order.member_email)
             qbInvoiceUrl = sendResult?.payNowLink || invoiceResult.invoiceLink || null
@@ -165,13 +167,18 @@ export async function POST(
             }
 
             finalStatus = 'invoice_sent'
-            console.log('[club-orders/approve] QB invoice created and sent:', qbInvoiceId)
+            console.log('[club-orders/approve] QB invoice created and sent:', qbInvoiceId, '| total:', invoicedTotal)
           }
         }
       }
     } catch (qbError) {
       console.error('[club-orders/approve] QB invoice creation failed (non-fatal), falling back to approved:', qbError)
     }
+
+    // If QB invoice provided a total and the order had no subtotal, update it
+    // so commission calculation can use the actual invoiced amount.
+    const effectiveSubtotal = subtotal > 0 ? subtotal : (invoicedTotal && invoicedTotal > 0 ? invoicedTotal : 0)
+    const subtotalUpdated = effectiveSubtotal > 0 && subtotal === 0
 
     await sql`
       UPDATE club_orders
@@ -181,9 +188,72 @@ export async function POST(
         approved_by = ${session?.email || 'email_link'},
         qb_invoice_id = ${qbInvoiceId},
         qb_invoice_url = ${qbInvoiceUrl},
+        subtotal_usd = COALESCE(subtotal_usd, ${subtotalUpdated ? effectiveSubtotal : null}),
         updated_at = NOW()
       WHERE id = ${orderId}::uuid
     `
+
+    // Record commission on approval for attributed orders where subtotal is known.
+    // This updates the zero-revenue placeholder created at order time and inserts
+    // commission_ledger entries (direct + override) with the actual invoiced amount.
+    if (order.attributed_creator_id && effectiveSubtotal > 0) {
+      try {
+        const { getCreatorById } = await import('@/lib/creators/db')
+        const { COMMISSION_CONFIG } = await import('@/lib/config/affiliate')
+        const { calculateOverrideCommission, insertCommissionLedgerEntries } = await import('@/lib/creators/commission')
+        const { db: pgDb } = await import('@vercel/postgres')
+
+        const creator = await getCreatorById(order.attributed_creator_id)
+        const directRate = creator?.commission_rate != null ? Number(creator.commission_rate) : COMMISSION_CONFIG.directRate
+        const directAmount = Math.round((effectiveSubtotal * directRate) / 100 * 100) / 100
+
+        // Calculate override commission for the recruiter (if any)
+        const override = await calculateOverrideCommission(order.attributed_creator_id, effectiveSubtotal, directAmount)
+
+        const pgClient = await pgDb.connect()
+        try {
+          await pgClient.query('BEGIN')
+
+          // Only update attribution entries that are still at zero-revenue (placeholder state).
+          // Priced orders already have a full attribution + commission entry from order time.
+          const attrUpdate = await pgClient.query(
+            `UPDATE order_attributions
+             SET net_revenue = $1, direct_commission_rate = $2, direct_commission_amount = $3, updated_at = NOW()
+             WHERE order_id = $4 AND net_revenue = 0
+             RETURNING id`,
+            [effectiveSubtotal, directRate, directAmount, order.id]
+          )
+
+          if (attrUpdate.rows[0]) {
+            const attributionId = attrUpdate.rows[0].id as string
+
+            // Insert direct + override commissions using shared helper
+            const result = await insertCommissionLedgerEntries(
+              pgClient, attributionId, order.attributed_creator_id,
+              effectiveSubtotal, directRate, directAmount, override
+            )
+
+            if (order.coupon_code && order.attribution_method === 'coupon_code') {
+              await pgClient.query(
+                `UPDATE affiliate_codes SET total_revenue = total_revenue + $1, updated_at = NOW()
+                 WHERE UPPER(code) = UPPER($2)`,
+                [effectiveSubtotal, order.coupon_code]
+              )
+            }
+            console.log(`[club-orders/approve] Commission recorded: creator=${order.attributed_creator_id} direct=$${result.directCommission} override=$${result.overrideCommission} for order ${order.order_number}`)
+          }
+
+          await pgClient.query('COMMIT')
+        } catch (err) {
+          await pgClient.query('ROLLBACK')
+          throw err
+        } finally {
+          pgClient.release()
+        }
+      } catch (commErr) {
+        console.error('[club-orders/approve] Commission recording failed (non-fatal):', commErr)
+      }
+    }
 
     // If called from email link, redirect
     if (tokenFromUrl) {

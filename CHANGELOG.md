@@ -1,3 +1,50 @@
+## [2026-03-26] - Creator Commission System Audit & 5-Bug Fix
+
+### Critical Fixes
+- **BUG 1 (CRITICAL): Quote-only orders now get commissions on approval** — Previously, orders with `subtotal_usd = NULL` (quote-only carts) never triggered commission creation on approval. Now the approve route captures the QB invoice total and uses it as `effectiveSubtotal` for commission calculation, also writing it back to `club_orders.subtotal_usd`.
+- **BUG 2 (CRITICAL): Override/recruiter commissions on approval** — The approve route only created direct commissions, never override. Extracted shared `calculateOverrideCommission()` and `insertCommissionLedgerEntries()` helpers in `lib/creators/commission.ts`, used by both `processOrderAttribution()` and the approve route.
+- **BUG 3 (HIGH): `staging_creator` auth fallback logging** — `verifyCreatorAuth()` silently swallowed DB errors and returned `creatorId: 'staging_creator'` (invalid UUID). Now logs errors and warnings when this fallback fires.
+- **BUG 4 (HIGH): Commission cron jobs now scheduled** — `approve-commissions` (2am daily) and `update-tiers` (3am daily) were missing from `vercel.json`. All commissions were stuck at `pending` forever.
+- **BUG 5 (MEDIUM): QB `createInvoice` now returns invoice total** — `TotalAmt` from QB API response is now captured and returned, enabling BUG 1 fix.
+
+### Database Audit Findings
+- 30 real club orders exist — all used staff codes (OWNER, CULTRSTAFF, CULTRFAM, CULTR10, MARY20)
+- Zero orders used creator codes (JON21, STEWART1) — dashboards legitimately empty
+- Jon Collins: 171 clicks (108 unique IPs), 0 conversions
+- Ran tier update cron manually — fixed 5 creators with `override_rate = 0%` → `5%` (Starter tier default)
+
+### Files Modified
+- `lib/quickbooks.ts` — `createInvoice()` returns `total` (from QB `TotalAmt` or local calculation)
+- `lib/creators/commission.ts` — New `calculateOverrideCommission()` + `insertCommissionLedgerEntries()` shared helpers; refactored `processOrderAttribution()` to use them
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` — Uses invoice total for commission, calls shared helper for direct + override
+- `lib/auth.ts` — Error/warning logging on `staging_creator` fallback
+- `vercel.json` — Added `approve-commissions` + `update-tiers` cron schedules
+
+### New Files
+- `scripts/run-crons-manual.mjs` — One-shot script to run commission approval + tier update crons directly (bypasses CRON_SECRET auth)
+
+---
+
+## [2026-03-26] - Creator Link Performance Tracking (Admin Dashboard)
+
+### New Features
+- **Creator Link Performance section** — New section in the admin Overview dashboard showing clicks, conversions, non-converted visitors, and conversion rate per creator. Respects the existing period selector (7/30/90/365 days). Section hidden when no click data exists for the selected period.
+- Summary cards: Total Clicks, Converted, Non-Converted, overall Conv. Rate (color-coded green ≥15% / yellow 10–14% / red <10%)
+- Per-creator table sorted by total clicks (highest traffic first), with color-coded conv. rate per row. Totals row shown when >1 creator.
+
+### Implementation Notes
+- No new DB tables — surfaces existing `click_events.converted` boolean that was already being tracked but never displayed
+- `getCreatorLinkPerformance(days)` SQL uses `ROUND(...)::float8` cast to ensure PostgreSQL `numeric` type is returned as a JS number (not string) by `@vercel/postgres`
+- `make_interval(days => ${days})` — consistent with all other time-range queries in `lib/db.ts`
+
+### Files Modified
+- `lib/admin-types.ts` — Added `CreatorLinkPerformanceRow` interface + `creatorLinkPerformance` field to `AnalyticsData`
+- `lib/db.ts` — Added `getCreatorLinkPerformance(days)` function
+- `app/api/admin/analytics/route.ts` — Added to parallel `Promise.all`, included in response
+- `app/admin/AdminDashboardClient.tsx` — New UI section after Operational Health, before Club Orders
+
+---
+
 ## [2026-03-24] - Admin Dashboard Top 5 Features + SQL Hardening
 
 ### New Features

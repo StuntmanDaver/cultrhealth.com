@@ -175,40 +175,60 @@ export async function POST(request: Request) {
 
     // Process creator attribution for commission tracking (coupon OR tracking cookie)
     // This runs OUTSIDE the transaction — attribution failure must not roll back the order
-    if (attributedCreatorId && subtotal > 0) {
-      try {
-        const { processOrderAttribution } = await import('@/lib/creators/commission')
+    if (attributedCreatorId) {
+      const attrPayload = attributionMethod === 'coupon_code'
+        ? {
+            creatorId: attributedCreatorId,
+            method: 'coupon_code' as const,
+            codeId: attributionCodeId,
+            codeType: attributionCodeType,
+            isSelfReferral,
+          }
+        : {
+            creatorId: attributedCreatorId,
+            method: 'link_click' as const,
+            linkId: cookieLinkId,
+            clickEventId: cookieClickEventId,
+            isSelfReferral,
+          }
 
-        const attrPayload = attributionMethod === 'coupon_code'
-          ? {
-              creatorId: attributedCreatorId,
-              method: 'coupon_code' as const,
-              codeId: attributionCodeId,
-              codeType: attributionCodeType,
-              isSelfReferral,
-            }
-          : {
-              creatorId: attributedCreatorId,
-              method: 'link_click' as const,
-              linkId: cookieLinkId,
-              clickEventId: cookieClickEventId,
-              isSelfReferral,
-            }
-
-        await processOrderAttribution({
-          orderId,
-          netRevenue: subtotal,
-          customerEmail: normalizedEmail,
-          attribution: attrPayload,
-          isSubscription: false,
-        })
-      } catch (attrError) {
-        console.error('[club/orders] Attribution processing failed (non-fatal):', {
-          orderId,
-          creatorId: attributedCreatorId,
-          method: attributionMethod,
-          error: attrError instanceof Error ? attrError.message : attrError,
-        })
+      if (subtotal > 0) {
+        try {
+          const { processOrderAttribution } = await import('@/lib/creators/commission')
+          await processOrderAttribution({
+            orderId,
+            netRevenue: subtotal,
+            customerEmail: normalizedEmail,
+            attribution: attrPayload,
+            isSubscription: false,
+          })
+        } catch (attrError) {
+          console.error('[club/orders] Attribution processing failed (non-fatal):', {
+            orderId,
+            creatorId: attributedCreatorId,
+            method: attributionMethod,
+            error: attrError instanceof Error ? attrError.message : attrError,
+          })
+        }
+      } else {
+        // Quote-only cart (all items have null prices): record a zero-revenue attribution
+        // placeholder so the referral is tracked. Commission is recorded on order approval
+        // when the actual invoiced amount is known.
+        try {
+          const { recordZeroRevenueAttribution } = await import('@/lib/creators/commission')
+          await recordZeroRevenueAttribution({
+            orderId,
+            customerEmail: normalizedEmail,
+            attribution: attrPayload,
+          })
+        } catch (attrError) {
+          console.error('[club/orders] Zero-revenue attribution failed (non-fatal):', {
+            orderId,
+            creatorId: attributedCreatorId,
+            method: attributionMethod,
+            error: attrError instanceof Error ? attrError.message : attrError,
+          })
+        }
       }
     }
 

@@ -301,7 +301,7 @@ export async function createInvoice(
   orderNumber: string,
   discountPercent: number = 0,
   couponCode?: string
-): Promise<{ invoiceId: string; invoiceLink: string | null } | null> {
+): Promise<{ invoiceId: string; invoiceLink: string | null; total: number } | null> {
   try {
     // Filter to items with prices (QB requires priced line items)
     const pricedItems = items.filter((item) => item.price !== null && item.price > 0)
@@ -387,7 +387,7 @@ export async function createInvoice(
       return null
     }
 
-    const data = await res.json() as { Invoice?: { Id: string; InvoiceLink?: string } }
+    const data = await res.json() as { Invoice?: { Id: string; InvoiceLink?: string; TotalAmt?: number } }
     const invoice = data.Invoice
 
     if (!invoice?.Id) {
@@ -395,11 +395,12 @@ export async function createInvoice(
       return null
     }
 
-    console.log('[quickbooks] Created invoice:', invoice.Id, '| InvoiceLink:', invoice.InvoiceLink || 'NULL')
+    console.log('[quickbooks] Created invoice:', invoice.Id, '| InvoiceLink:', invoice.InvoiceLink || 'NULL', '| Total:', invoice.TotalAmt ?? total)
 
     return {
       invoiceId: invoice.Id,
       invoiceLink: invoice.InvoiceLink || null,
+      total: invoice.TotalAmt ?? total,
     }
   } catch (error) {
     console.error('[quickbooks] createInvoice error:', error)
