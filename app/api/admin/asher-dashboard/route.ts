@@ -1,11 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import {
-  getPatients,
-  getOrders,
-  isAsherMedConfigured,
-} from '@/lib/asher-med-api'
-import type { AsherPatient, AsherOrder } from '@/lib/asher-med-api'
+import { isAsherMedConfigured } from '@/lib/asher-med-api'
 import { sql } from '@vercel/postgres'
 
 /** The 8 pipeline statuses shown on the Asher Med partner dashboard */
@@ -19,8 +14,6 @@ const PIPELINE_STATUSES = [
   'Delivered',
   'Payment Pending',
 ] as const
-
-type PipelineStatus = (typeof PIPELINE_STATUSES)[number]
 
 export interface AsherDashboardData {
   patients: {
@@ -46,33 +39,12 @@ export interface AsherDashboardData {
     createdAt: string
   }>
   lastSynced: string
-}
-
-/** Normalise whatever status string the API returns into a known pipeline bucket */
-function normaliseToPipelineStatus(status: string): PipelineStatus | null {
-  const lower = status.toLowerCase().replace(/[_-]/g, ' ').trim()
-
-  const map: Record<string, PipelineStatus> = {
-    incomplete: 'Incomplete',
-    pending: 'Approval Needed',
-    'approval needed': 'Approval Needed',
-    'waitingroom': 'Approval Needed',
-    submitted: 'Submitted',
-    approved: 'Submitted',
-    'rx submitted': 'RX Submitted',
-    'rx approved': 'RX Approved',
-    shipped: 'Shipped',
-    delivered: 'Delivered',
-    completed: 'Delivered',
-    'payment pending': 'Payment Pending',
-  }
-
-  return map[lower] ?? null
+  source: 'cache' | 'not_configured'
 }
 
 export async function GET() {
   try {
-    // Verify admin access (same pattern as /api/admin/intakes)
+    // Verify admin access
     const session = await getSession()
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -94,100 +66,75 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Check if Asher Med is configured
-    if (!isAsherMedConfigured()) {
-      return NextResponse.json({
-        data: {
-          patients: { total: 0, active: 0, inactive: 0, activePercent: 0, inactivePercent: 0 },
-          orderStatusCounts: Object.fromEntries(PIPELINE_STATUSES.map((s) => [s, 0])),
-          pipelineStatuses: PIPELINE_STATUSES,
-          quickApproval: [],
-          incompleteIntakes: [],
-          lastSynced: new Date().toISOString(),
-        } satisfies AsherDashboardData,
-      })
+    const emptyData: AsherDashboardData = {
+      patients: { total: 0, active: 0, inactive: 0, activePercent: 0, inactivePercent: 0 },
+      orderStatusCounts: Object.fromEntries(PIPELINE_STATUSES.map((s) => [s, 0])),
+      pipelineStatuses: PIPELINE_STATUSES,
+      quickApproval: [],
+      incompleteIntakes: [],
+      lastSynced: new Date().toISOString(),
+      source: 'not_configured',
     }
 
-    // Fetch patients and orders in parallel from Asher Med
-    const [patientsRes, ordersRes] = await Promise.all([
-      getPatients({ limit: 1000 }),
-      getOrders({ limit: 1000 }),
-    ])
+    if (!isAsherMedConfigured()) {
+      return NextResponse.json({ data: emptyData })
+    }
 
-    const patients: AsherPatient[] = patientsRes.data || []
-    const orders: AsherOrder[] = ordersRes.data || []
+    // Read from cron-populated cache (asher-sync cron runs every 30 min)
+    let cachedData: Partial<AsherDashboardData> | null = null
+    try {
+      const { rows } = await sql`
+        SELECT data, synced_at FROM asher_sync_cache
+        WHERE sync_type = 'dashboard'
+        LIMIT 1
+      `
+      if (rows[0]) {
+        cachedData = rows[0].data as Partial<AsherDashboardData>
+        cachedData.lastSynced = rows[0].synced_at
+      }
+    } catch {
+      // Cache table may not exist yet — fall through to empty
+    }
 
-    // --- Patient metrics ---
-    const active = patients.filter((p) => p.status === 'ACTIVE').length
-    const inactive = patients.filter((p) => p.status === 'INACTIVE').length
-    const total = patients.length
-
-    // --- Order pipeline counts ---
-    const orderStatusCounts: Record<string, number> = Object.fromEntries(
-      PIPELINE_STATUSES.map((s) => [s, 0])
-    )
-
-    for (const order of orders) {
-      const bucket = normaliseToPipelineStatus(order.status)
-      if (bucket) {
-        orderStatusCounts[bucket]++
-      } else {
-        // Unknown status — still count it under its raw name
-        orderStatusCounts[order.status] = (orderStatusCounts[order.status] || 0) + 1
+    // Incomplete intakes are always live from our DB
+    let incompleteIntakes: AsherDashboardData['incompleteIntakes'] = []
+    if (process.env.POSTGRES_URL) {
+      try {
+        const result = await sql`
+          SELECT id, customer_email, plan_tier, created_at
+          FROM pending_intakes
+          WHERE intake_status = 'pending'
+          ORDER BY created_at DESC
+          LIMIT 10
+        `
+        incompleteIntakes = result.rows.map((r) => ({
+          id: r.id,
+          email: r.customer_email,
+          planTier: r.plan_tier,
+          createdAt: r.created_at,
+        }))
+      } catch {
+        // Table may not exist
       }
     }
 
-    // --- Quick Approval (orders needing partner approval) ---
-    const approvalOrders = orders
-      .filter((o) => {
-        const lower = o.status.toLowerCase().replace(/[_-]/g, ' ').trim()
-        return lower === 'pending' || lower === 'approval needed' || lower === 'waitingroom'
-      })
-      .slice(0, 10)
-      .map((o) => ({
-        id: o.id,
-        patientName: o.patient
-          ? `${o.patient.firstName || ''} ${o.patient.lastName || ''}`.trim()
-          : 'Unknown',
-        email: o.patient?.email || '',
-        createdAt: o.createdAt,
-        status: o.status,
-      }))
-
-    // --- Incomplete intakes from our DB ---
-    let incompleteIntakes: AsherDashboardData['incompleteIntakes'] = []
-    if (process.env.POSTGRES_URL) {
-      const result = await sql`
-        SELECT id, customer_email, plan_tier, created_at
-        FROM pending_intakes
-        WHERE intake_status = 'pending'
-        ORDER BY created_at DESC
-        LIMIT 10
-      `
-      incompleteIntakes = result.rows.map((r) => ({
-        id: r.id,
-        email: r.customer_email,
-        planTier: r.plan_tier,
-        createdAt: r.created_at,
-      }))
+    if (cachedData) {
+      const data: AsherDashboardData = {
+        patients: cachedData.patients || emptyData.patients,
+        orderStatusCounts: cachedData.orderStatusCounts || emptyData.orderStatusCounts,
+        pipelineStatuses: PIPELINE_STATUSES,
+        quickApproval: cachedData.quickApproval || [],
+        incompleteIntakes,
+        lastSynced: cachedData.lastSynced || new Date().toISOString(),
+        source: 'cache',
+      }
+      return NextResponse.json({ data })
     }
 
-    const data: AsherDashboardData = {
-      patients: {
-        total,
-        active,
-        inactive,
-        activePercent: total > 0 ? Math.round((active / total) * 100) : 0,
-        inactivePercent: total > 0 ? Math.round((inactive / total) * 100) : 0,
-      },
-      orderStatusCounts,
-      pipelineStatuses: PIPELINE_STATUSES,
-      quickApproval: approvalOrders,
-      incompleteIntakes,
-      lastSynced: new Date().toISOString(),
-    }
-
-    return NextResponse.json({ data })
+    // No cache yet — return empty with intakes
+    return NextResponse.json({
+      data: { ...emptyData, incompleteIntakes, source: 'not_configured' as const },
+    })
   } catch (error) {
     console.error('[admin/asher-dashboard] Error:', error)
     return NextResponse.json(

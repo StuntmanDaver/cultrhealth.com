@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { startCronRun } from '@/lib/cron-logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const run = await startCronRun('siphox-fulfillment')
+
   try {
     const { processDeferredOrders, retryFailedOrders } = await import('@/lib/siphox/fulfillment')
 
@@ -32,14 +35,17 @@ export async function GET(request: NextRequest) {
       `Cron siphox-fulfillment: ${deferred.processed} deferred (${deferred.fulfilled} fulfilled, ${deferred.stillPending} still pending), ${retry.retried} retried (${retry.fulfilled} fulfilled, ${retry.permanentlyFailed} failed)`
     )
 
+    const result = { deferred, retry }
+    await run.success(result)
+
     return NextResponse.json({
       success: true,
-      deferred,
-      retry,
+      ...result,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
     console.error('Cron siphox-fulfillment error:', error)
+    await run.error(error)
     return NextResponse.json(
       { error: 'Failed to process SiPhox fulfillment' },
       { status: 500 }

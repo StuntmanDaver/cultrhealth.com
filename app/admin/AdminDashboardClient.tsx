@@ -16,6 +16,20 @@ import { MetricCard } from '@/components/admin/MetricCard'
 import { parseOrderItems, ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
+interface CronStatus {
+  name: string
+  schedule: string
+  health: 'healthy' | 'stale' | 'error' | 'never_run'
+  lastRun: {
+    status: string
+    startedAt: string
+    completedAt: string | null
+    durationMs: number | null
+    result: Record<string, unknown> | null
+    error: string | null
+  } | null
+}
+
 export default function AdminDashboardClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +39,9 @@ export default function AdminDashboardClient() {
   const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null)
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('')
+  // Cron status
+  const [cronStatuses, setCronStatuses] = useState<CronStatus[]>([])
+  const [cronLoading, setCronLoading] = useState(false)
 
   const fetchAnalytics = useCallback(async () => {
     setLoading(true)
@@ -43,9 +60,25 @@ export default function AdminDashboardClient() {
     }
   }, [periodDays])
 
+  const fetchCronStatuses = useCallback(async () => {
+    setCronLoading(true)
+    try {
+      const res = await fetch('/api/admin/cron-status')
+      const json = await res.json()
+      if (res.ok && json.data) {
+        setCronStatuses(json.data)
+      }
+    } catch {
+      // Non-critical — silent
+    } finally {
+      setCronLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchAnalytics()
-  }, [fetchAnalytics])
+    fetchCronStatuses()
+  }, [fetchAnalytics, fetchCronStatuses])
 
   async function handleDismissInvoice(orderId: string) {
     if (!confirm('Dismiss this order? It will be hidden from the dashboard.')) return
@@ -549,6 +582,89 @@ export default function AdminDashboardClient() {
               </div>
             )
           })()}
+
+          {/* Cron Jobs Health */}
+          <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-display text-lg text-brand-primary">System Cron Jobs</h2>
+                <p className="text-xs text-brand-primary/50 mt-0.5">Automated background tasks</p>
+              </div>
+              <button
+                onClick={fetchCronStatuses}
+                disabled={cronLoading}
+                className="text-xs text-brand-primary/60 hover:text-brand-primary disabled:opacity-50"
+              >
+                {cronLoading ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
+            {cronStatuses.length === 0 ? (
+              <p className="text-sm text-brand-primary/40 py-4">
+                {cronLoading ? 'Loading cron status...' : 'No cron data yet — runs will appear after the first execution.'}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {cronStatuses.map((cron) => {
+                  const healthColors = {
+                    healthy: 'bg-green-50 border-green-200',
+                    stale: 'bg-yellow-50 border-yellow-200',
+                    error: 'bg-red-50 border-red-200',
+                    never_run: 'bg-gray-50 border-gray-200',
+                  }
+                  const dotColors = {
+                    healthy: 'bg-green-500',
+                    stale: 'bg-yellow-500',
+                    error: 'bg-red-500',
+                    never_run: 'bg-gray-400',
+                  }
+                  const labelMap: Record<string, string> = {
+                    'siphox-fulfillment': 'SiPhox Fulfillment',
+                    'siphox-results': 'SiPhox Results',
+                    'approve-commissions': 'Commission Approval',
+                    'update-tiers': 'Tier Recalculation',
+                    'asher-sync': 'Asher Med Sync',
+                  }
+
+                  return (
+                    <div
+                      key={cron.name}
+                      className={`rounded-lg border p-3 ${healthColors[cron.health]}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`w-2 h-2 rounded-full ${dotColors[cron.health]}`} />
+                        <span className="text-sm font-medium text-brand-primary">
+                          {labelMap[cron.name] || cron.name}
+                        </span>
+                      </div>
+                      <p className="text-xs text-brand-primary/50">{cron.schedule}</p>
+                      {cron.lastRun ? (
+                        <div className="mt-2 text-xs text-brand-primary/60">
+                          <p>
+                            Last: {new Date(cron.lastRun.startedAt).toLocaleString()}
+                          </p>
+                          {cron.lastRun.durationMs != null && (
+                            <p>{cron.lastRun.durationMs < 1000 ? `${cron.lastRun.durationMs}ms` : `${(cron.lastRun.durationMs / 1000).toFixed(1)}s`}</p>
+                          )}
+                          {cron.lastRun.error && (
+                            <p className="text-red-600 mt-1 truncate" title={cron.lastRun.error}>
+                              {cron.lastRun.error}
+                            </p>
+                          )}
+                          {cron.lastRun.result && !cron.lastRun.error && (
+                            <p className="text-green-700 mt-1 truncate" title={JSON.stringify(cron.lastRun.result)}>
+                              {Object.entries(cron.lastRun.result).map(([k, v]) => `${k}: ${v}`).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-xs text-brand-primary/40">Never run</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
           {/* External Tools */}
           <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
