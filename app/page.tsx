@@ -138,7 +138,7 @@ export default function HomePage() {
           </div>
           <ScrollReveal className="text-center mb-12 mt-2 md:mt-0">
             <h2 className="text-2xl md:text-5xl font-display font-bold text-cultr-forest">
-              Real results. No nonsense.
+              Get matched to a personalized care path built around your goals, symptoms, and lab data — with licensed providers and advanced support when appropriate.
             </h2>
           </ScrollReveal>
 
