@@ -2139,6 +2139,7 @@ export interface SearchOrdersResult {
     id: string
     order_number: string
     customer_email: string
+    customer_name: string | null
     status: string
     total_amount: number
     created_at: string
@@ -2166,7 +2167,7 @@ export async function searchOrders({
     // Use ILIKE with '%' as wildcard-all instead of IS NULL checks (more compatible with @vercel/postgres)
     const [shopResult, clubResult] = await Promise.all([
       sql`
-        SELECT id::text as id, order_number, customer_email, status,
+        SELECT id::text as id, order_number, customer_email, NULL::text as customer_name, status,
           COALESCE(total_amount, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM orders
         WHERE (order_number ILIKE ${searchPattern} OR customer_email ILIKE ${searchPattern})
@@ -2174,7 +2175,7 @@ export async function searchOrders({
         ORDER BY created_at DESC
       `.catch(() => ({ rows: [] })),
       sql`
-        SELECT id::text as id, order_number, member_email as customer_email, status,
+        SELECT id::text as id, order_number, member_email as customer_email, member_name as customer_name, status,
           COALESCE(subtotal_usd, 0)::numeric as total_amount, created_at, items::text as items_raw
         FROM club_orders
         WHERE (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern})
@@ -2207,6 +2208,7 @@ export async function searchOrders({
         id: row.id,
         order_number: row.order_number,
         customer_email: row.customer_email,
+        customer_name: row.customer_name ?? null,
         status: row.status,
         total_amount: parseFloat(row.total_amount) || 0,
         created_at: String(row.created_at),

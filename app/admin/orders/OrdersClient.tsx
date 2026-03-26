@@ -295,7 +295,12 @@ export default function OrdersClient() {
                     onClick={() => setSelectedOrder(order as OrderRow)}
                   >
                     <td className="py-3 px-4 text-brand-primary font-mono text-sm">{order.order_number}</td>
-                    <td className="py-3 px-4 text-brand-primary text-sm">{order.customer_email}</td>
+                    <td className="py-3 px-4 text-sm">
+                      {'customer_name' in order && (order as SearchOrderRow).customer_name && (
+                        <div className="text-brand-primary font-medium">{(order as SearchOrderRow).customer_name}</div>
+                      )}
+                      <div className="text-brand-primary/60">{order.customer_email}</div>
+                    </td>
                     <td className="py-3 px-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                         {order.status}

@@ -230,6 +230,7 @@ export interface SearchOrderRow {
   id: string
   order_number: string
   customer_email: string
+  customer_name: string | null
   status: string
   total_amount: number
   created_at: string

@@ -25,6 +25,8 @@ export default function CreatorsClient() {
   const [creatorEditForm, setCreatorEditForm] = useState({ commission_rate: '', override_rate: '', status: '' })
   const [savingCreator, setSavingCreator] = useState(false)
   const [creatorEditError, setCreatorEditError] = useState<string | null>(null)
+  const [deletingCreator, setDeletingCreator] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Sync date range when periodDays changes
   useEffect(() => {
@@ -55,6 +57,24 @@ export default function CreatorsClient() {
       data.allCreators.map(c => [c.full_name, c.email, c.status, getTierName(c.tier), c.commission_rate, c.override_rate, c.recruit_count, c.code_count, c.total_code_revenue, c.created_at])
     )
   }, [data])
+
+  async function handleDeleteCreator() {
+    if (!editingCreator) return
+    setDeletingCreator(true)
+    setCreatorEditError(null)
+    try {
+      const res = await fetch(`/api/admin/creators/${editingCreator.id}/delete`, { method: 'DELETE' })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Delete failed')
+      setEditingCreator(null)
+      setConfirmDelete(false)
+      fetchAnalytics()
+    } catch (err) {
+      setCreatorEditError(err instanceof Error ? err.message : 'Failed')
+    } finally {
+      setDeletingCreator(false)
+    }
+  }
 
   async function handleSaveCreator() {
     if (!editingCreator) return
@@ -303,13 +323,13 @@ export default function CreatorsClient() {
 
       {/* ========== CREATOR EDIT MODAL ========== */}
       {editingCreator && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setEditingCreator(null)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setEditingCreator(null); setConfirmDelete(false) }}>
           <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg text-brand-primary">
                 Edit {editingCreator.full_name}
               </h3>
-              <button onClick={() => setEditingCreator(null)} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+              <button onClick={() => { setEditingCreator(null); setConfirmDelete(false) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
             </div>
 
             <div className="space-y-4">
@@ -352,14 +372,46 @@ export default function CreatorsClient() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={handleSaveCreator}
-                disabled={savingCreator}
+                disabled={savingCreator || deletingCreator}
                 className="flex-1 px-4 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
               >
                 {savingCreator ? 'Saving...' : 'Save Changes'}
               </button>
-              <button onClick={() => setEditingCreator(null)} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
+              <button onClick={() => { setEditingCreator(null); setConfirmDelete(false) }} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
                 Cancel
               </button>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-brand-primary/10">
+              {!confirmDelete ? (
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className="w-full px-4 py-2.5 text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                >
+                  Delete Creator
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-red-600 text-center">
+                    Permanently delete <strong>{editingCreator.full_name}</strong> and all their data?
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDeleteCreator}
+                      disabled={deletingCreator}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                    >
+                      {deletingCreator ? 'Deleting...' : 'Yes, Delete'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      className="flex-1 px-4 py-2.5 text-brand-primary/60 border border-brand-primary/20 rounded-lg text-sm hover:text-brand-primary transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
