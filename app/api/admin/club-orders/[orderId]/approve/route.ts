@@ -36,12 +36,27 @@ export async function POST(
 
     // Check token from email link
     if (!isAuthorized && tokenFromUrl) {
-      // Validate token against stored approval_token
+      // Validate HMAC token against stored approval_token AND enforce expiry at DB level.
+      // token_expires_at is NULL for legacy rows — treated as always-valid to avoid breaking
+      // in-flight approvals during the migration window.
       if (process.env.POSTGRES_URL) {
         const tokenCheck = await sql`
-          SELECT id FROM club_orders WHERE id = ${orderId}::uuid AND approval_token = ${tokenFromUrl}
+          SELECT id FROM club_orders
+          WHERE id = ${orderId}::uuid
+            AND approval_token = ${tokenFromUrl}
+            AND (token_expires_at IS NULL OR token_expires_at > NOW())
         `
-        isAuthorized = tokenCheck.rows.length > 0
+        if (tokenCheck.rows.length > 0) {
+          isAuthorized = true
+        } else {
+          // Distinguish expired vs wrong token to give admins a useful error message
+          const tokenExists = await sql`
+            SELECT id FROM club_orders WHERE id = ${orderId}::uuid AND approval_token = ${tokenFromUrl}
+          `
+          if (tokenExists.rows.length > 0) {
+            return NextResponse.json({ error: 'Approval link has expired. Please re-submit the order to generate a new link.' }, { status: 410 })
+          }
+        }
       }
     }
 
@@ -69,10 +84,7 @@ export async function POST(
     if (order.status !== 'pending_approval') {
       // If called from email link, redirect to a success page
       if (tokenFromUrl) {
-        const hostHeader = request.headers.get('host') || ''
-        const siteUrl = (hostHeader.includes('join.cultrhealth.com') || hostHeader.includes('staging.cultrhealth.com'))
-          ? `https://${hostHeader}`
-          : process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
         return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}&already=true`)
       }
       return NextResponse.json({
@@ -175,10 +187,7 @@ export async function POST(
 
     // If called from email link, redirect
     if (tokenFromUrl) {
-      const hostHeader = request.headers.get('host') || ''
-      const siteUrl = (hostHeader.includes('join.cultrhealth.com') || hostHeader.includes('staging.cultrhealth.com'))
-        ? `https://${hostHeader}`
-        : process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
       return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}`)
     }
 

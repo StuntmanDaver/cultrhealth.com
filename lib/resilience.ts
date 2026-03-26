@@ -692,7 +692,7 @@ export function prepareAnonymizedExport(
 ): AnonymizedPatientData {
   // Create anonymous hash
   const encoder = new TextEncoder()
-  const data = encoder.encode(patientId + process.env.ANONYMIZATION_SALT || 'cultr-salt')
+  const data = encoder.encode(patientId + (process.env.ANONYMIZATION_SALT || 'cultr-salt'))
   // Note: In production, use crypto.subtle.digest for proper hashing
   const anonymousId = Buffer.from(data).toString('base64').slice(0, 16)
 

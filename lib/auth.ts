@@ -5,11 +5,21 @@ import { getMembershipByCustomerId } from '@/lib/db'
 import { getCookieDomain } from '@/lib/utils'
 
 const SESSION_COOKIE_NAME = 'cultr_session'
+
+const jwtSecret = process.env.JWT_SECRET
+if (!jwtSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable is required in production')
+}
 const MAGIC_LINK_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'cultr-magic-link-secret-change-in-production'
+  jwtSecret || 'cultr-magic-link-secret-dev-only'
 )
+
+const sessionSecret = process.env.SESSION_SECRET
+if (!sessionSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('SESSION_SECRET environment variable is required in production')
+}
 const SESSION_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || 'cultr-session-secret-change-in-production'
+  sessionSecret || 'cultr-session-secret-dev-only'
 )
 
 // Magic link token (short-lived, 15 minutes)
@@ -96,11 +106,6 @@ export async function setSessionCookie(token: string): Promise<void> {
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
-  // Development mode: auto-grant access for testing
-  if (process.env.NODE_ENV === 'development') {
-    return { email: 'member@cultrhealth.com', customerId: 'dev_customer', role: 'admin' }
-  }
-
   const cookieStore = await cookies()
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
   if (!token) return null
@@ -173,9 +178,9 @@ function normalizePlanTier(tier: string | null | undefined): PlanTier | null {
 export async function getMembershipTier(customerId: string, email?: string): Promise<PlanTier | null> {
   if (!customerId) return null
 
-  // Development/staging mode: return full access tier
-  if (process.env.NODE_ENV === 'development' || customerId === 'dev_customer' || customerId === 'staging_customer') {
-    return 'concierge' // Full access in dev/staging mode
+  // Development mode: return full access tier for local testing
+  if (process.env.NODE_ENV === 'development') {
+    return 'concierge'
   }
 
   // Team emails and staging always get full access
@@ -291,17 +296,6 @@ interface AuthResult {
  * Reads session from cookie or Authorization header
  */
 export async function verifyAuth(request: NextRequest): Promise<AuthResult> {
-  // Development mode: auto-grant access for testing
-  if (process.env.NODE_ENV === 'development') {
-    return {
-      authenticated: true,
-      email: 'member@cultrhealth.com',
-      customerId: 'dev_customer',
-      creatorId: 'dev_creator',
-      role: 'admin',
-    }
-  }
-
   // Try to get session from cookie
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
   if (sessionCookie) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { verifyToken } from '@/lib/auth'
+import { verifySessionToken, isProviderEmail } from '@/lib/auth'
 
 // SiPhox Health API smoke test — permanent admin health check endpoint
 // Runs 6 sequential tests against the live SiPhox API
@@ -21,9 +21,12 @@ export async function GET(request: NextRequest) {
     if (!session?.value) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    const payload = await verifyToken(session.value)
+    const payload = await verifySessionToken(session.value)
     if (!payload?.email) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
+    }
+    if (!isProviderEmail(payload.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
   } catch {
     return NextResponse.json({ error: 'Auth failed' }, { status: 401 })

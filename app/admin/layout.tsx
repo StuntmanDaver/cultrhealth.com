@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { AdminTopBar } from './AdminTopBar'
+import { AdminLayoutClient } from '@/components/admin/AdminLayoutClient'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession()
@@ -18,9 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <>
-      <AdminTopBar email={session.email} />
+    <AdminLayoutClient email={session.email}>
       {children}
-    </>
+    </AdminLayoutClient>
   )
 }

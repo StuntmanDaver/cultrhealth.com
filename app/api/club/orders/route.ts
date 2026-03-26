@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { sql } from '@vercel/postgres'
+import { sql, db } from '@vercel/postgres'
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
@@ -29,11 +29,7 @@ export async function POST(request: Request) {
       couponCode?: string
       address?: { street: string; city: string; state: string; zip: string }
     }
-    const debugRunId = `club-order-${Date.now()}`
     const requestHost = request.headers.get('host') || ''
-    // #region agent log
-    fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H1_H5',location:'app/api/club/orders/route.ts:POST:entry',message:'club order request received',data:{host:requestHost,hasPostgresUrl:Boolean(process.env.POSTGRES_URL),itemCount:Array.isArray(items)?items.length:0,hasCoupon:Boolean(couponCode)},timestamp:Date.now()})}).catch(()=>{})
-    // #endregion
 
     // Validate coupon server-side (checks both staff coupons and creator affiliate codes)
     const couponResult: UnifiedCouponResult | null = couponCode ? await validateCouponUnified(couponCode) : null
@@ -72,158 +68,159 @@ export async function POST(request: Request) {
       console.error('[club/orders] CRITICAL: JWT_SECRET is not set')
       return NextResponse.json({ error: 'Server configuration error.' }, { status: 500 })
     }
+    const expiresAt = Date.now() + 48 * 60 * 60 * 1000 // 48 hours from now
     const approvalToken = crypto
       .createHmac('sha256', approvalSecret)
-      .update(`${orderNumber}:${normalizedEmail}:${Date.now()}`)
+      .update(`${orderNumber}:${normalizedEmail}:${expiresAt}`)
       .digest('hex')
 
     // Look up or create member
     let memberId: string | null = null
     let orderId: string | null = null
     if (!process.env.POSTGRES_URL) {
-      // #region agent log
-      fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H1',location:'app/api/club/orders/route.ts:POST:missing_postgres',message:'club order blocked because POSTGRES_URL missing',data:{host:requestHost,orderNumber},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       return NextResponse.json({ error: 'Order system temporarily unavailable. Please try again shortly.' }, { status: 503 })
     }
 
+    // Resolve attribution before the transaction (non-DB, non-fatal)
+    const appliedCouponCode = couponResult ? couponCode!.trim().toUpperCase() : null
+    let attributedCreatorId: string | null = couponResult?.isCreatorCode ? couponResult.creatorId! : null
+    let attributionMethod: string | null = couponResult?.isCreatorCode ? 'coupon_code' : null
+    let cookieLinkId: string | undefined
+    let cookieClickEventId: string | undefined
+    let attributionCodeId: string | undefined = couponResult?.isCreatorCode ? couponResult.codeId : undefined
+    let attributionCodeType: 'membership' | 'product' | 'general' | undefined =
+      couponResult?.isCreatorCode ? couponResult.codeType : undefined
+    let isSelfReferral = false
+
     try {
-      // Get or create member
-      const memberResult = await sql`
-        INSERT INTO club_members (name, email, phone, source)
-        VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, 'join_landing')
-        ON CONFLICT (LOWER(email))
-        DO UPDATE SET updated_at = NOW()
-        RETURNING id
-      `
-      memberId = memberResult.rows[0]?.id
-      // #region agent log
-      fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H1',location:'app/api/club/orders/route.ts:POST:member_upsert',message:'club member upsert completed',data:{host:requestHost,memberIdExists:Boolean(memberId)},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
-      if (!memberId) {
-        throw new Error('member_upsert_missing_id')
+      const cookieStore = await cookies()
+      const attrCookieValue = cookieStore.get('cultr_attribution')?.value
+      const resolvedAttribution = await resolveAttribution({
+        customerEmail: normalizedEmail,
+        couponCode: couponCode?.trim(),
+        attributionCookie: attrCookieValue,
+      })
+      if (resolvedAttribution) {
+        attributedCreatorId = resolvedAttribution.creatorId
+        attributionMethod = resolvedAttribution.method
+        cookieLinkId = resolvedAttribution.linkId
+        cookieClickEventId = resolvedAttribution.clickEventId
+        attributionCodeId = resolvedAttribution.codeId
+        attributionCodeType = resolvedAttribution.codeType
+        isSelfReferral = resolvedAttribution.isSelfReferral
       }
+    } catch {
+      // Attribution resolution is non-fatal
+    }
 
-      const appliedCouponCode = couponResult ? couponCode!.trim().toUpperCase() : null
-      let attributedCreatorId: string | null = couponResult?.isCreatorCode ? couponResult.creatorId! : null
-      let attributionMethod: string | null = couponResult?.isCreatorCode ? 'coupon_code' : null
-      let cookieLinkId: string | undefined
-      let cookieClickEventId: string | undefined
-      let attributionCodeId: string | undefined = couponResult?.isCreatorCode ? couponResult.codeId : undefined
-      let attributionCodeType: 'membership' | 'product' | 'general' | undefined =
-        couponResult?.isCreatorCode ? couponResult.codeType : undefined
-      let isSelfReferral = false
-
+    // Wrap member upsert + order insert in a transaction to prevent partial writes
+    try {
+      const client = await db.connect()
       try {
-        const cookieStore = await cookies()
-        const attrCookieValue = cookieStore.get('cultr_attribution')?.value
-        const resolvedAttribution = await resolveAttribution({
-          customerEmail: normalizedEmail,
-          couponCode: couponCode?.trim(),
-          attributionCookie: attrCookieValue,
-        })
-        if (resolvedAttribution) {
-          attributedCreatorId = resolvedAttribution.creatorId
-          attributionMethod = resolvedAttribution.method
-          cookieLinkId = resolvedAttribution.linkId
-          cookieClickEventId = resolvedAttribution.clickEventId
-          attributionCodeId = resolvedAttribution.codeId
-          attributionCodeType = resolvedAttribution.codeType
-          isSelfReferral = resolvedAttribution.isSelfReferral
-        }
-      } catch {
-        // Attribution resolution is non-fatal
-      }
-      const orderResult = await sql`
-        INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
-        VALUES (
-          ${orderNumber},
-          ${memberId},
-          ${name.trim()},
-          ${normalizedEmail},
-          ${phone?.trim() || null},
-          ${JSON.stringify(items)},
-          ${subtotal > 0 ? subtotal : null},
-          ${notes || null},
-          'pending_approval',
-          ${approvalToken},
-          ${appliedCouponCode},
-          ${discountPercent > 0 ? discountPercent : null},
-          ${FL_TAX_RATE},
-          ${taxAmount > 0 ? taxAmount : 0},
-          ${attributedCreatorId || null},
-          ${attributionMethod}
+        await client.query('BEGIN')
+
+        // Get or create member
+        const memberResult = await client.query(
+          `INSERT INTO club_members (name, email, phone, source)
+           VALUES ($1, $2, $3, 'join_landing')
+           ON CONFLICT (LOWER(email))
+           DO UPDATE SET updated_at = NOW()
+           RETURNING id`,
+          [name.trim(), normalizedEmail, phone?.trim() || null]
         )
-        RETURNING id
-      `
-      orderId = orderResult.rows[0]?.id
-      // #region agent log
-      fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H1_H2',location:'app/api/club/orders/route.ts:POST:order_insert',message:'club order insert completed',data:{host:requestHost,orderNumber,orderIdExists:Boolean(orderId),subtotal,status:'pending_approval',creatorAttributed:Boolean(attributedCreatorId)},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
-      if (!orderId) {
-        throw new Error('club_order_insert_missing_id')
-      }
-
-      // Process creator attribution for commission tracking (coupon OR tracking cookie)
-      if (attributedCreatorId && subtotal > 0) {
-        try {
-          const { processOrderAttribution } = await import('@/lib/creators/commission')
-
-          const attrPayload = attributionMethod === 'coupon_code'
-            ? {
-                creatorId: attributedCreatorId,
-                method: 'coupon_code' as const,
-                codeId: attributionCodeId,
-                codeType: attributionCodeType,
-                isSelfReferral,
-              }
-            : {
-                creatorId: attributedCreatorId,
-                method: 'link_click' as const,
-                linkId: cookieLinkId,
-                clickEventId: cookieClickEventId,
-                isSelfReferral,
-              }
-
-          const attributionResult = await processOrderAttribution({
-            orderId,
-            netRevenue: subtotal,
-            customerEmail: normalizedEmail,
-            attribution: attrPayload,
-            isSubscription: false,
-          })
-          // #region agent log
-          fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H4',location:'app/api/club/orders/route.ts:POST:attribution_success',message:'creator attribution processed',data:{orderNumber,creatorId:attributedCreatorId,method:attributionMethod,hasAttributionResult:Boolean(attributionResult),totalCommission:attributionResult?.totalCommission||0},timestamp:Date.now()})}).catch(()=>{})
-          // #endregion
-        } catch (attrError) {
-          // #region agent log
-          fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H4',location:'app/api/club/orders/route.ts:POST:attribution_error',message:'creator attribution failed',data:{orderNumber,creatorId:attributedCreatorId,method:attributionMethod,error:attrError instanceof Error?attrError.message:String(attrError)},timestamp:Date.now()})}).catch(()=>{})
-          // #endregion
-          console.error('[club/orders] Attribution processing failed (non-fatal):', {
-            orderId,
-            creatorId: attributedCreatorId,
-            method: attributionMethod,
-            error: attrError instanceof Error ? attrError.message : attrError,
-          })
+        memberId = memberResult.rows[0]?.id
+        if (!memberId) {
+          throw new Error('member_upsert_missing_id')
         }
-      }
 
-      // Increment usage for company-owned DB codes (prelaunch codes without a creator)
-      // Creator-owned codes are already incremented inside processOrderAttribution
-      if (couponResult?.codeId && !couponResult.isCreatorCode) {
-        try {
-          const { incrementCodeUsage } = await import('@/lib/creators/db')
-          await incrementCodeUsage(couponResult.codeId, subtotal > 0 ? subtotal : 0)
-        } catch (err) {
-          console.error('[club/orders] Code usage increment failed (non-fatal):', err)
+        const orderResult = await client.query(
+          `INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, token_expires_at, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_approval', $9, to_timestamp($10::double precision / 1000), $11, $12, $13, $14, $15, $16)
+           RETURNING id`,
+          [
+            orderNumber,
+            memberId,
+            name.trim(),
+            normalizedEmail,
+            phone?.trim() || null,
+            JSON.stringify(items),
+            subtotal > 0 ? subtotal : null,
+            notes || null,
+            approvalToken,
+            expiresAt,
+            appliedCouponCode,
+            discountPercent > 0 ? discountPercent : null,
+            FL_TAX_RATE,
+            taxAmount > 0 ? taxAmount : 0,
+            attributedCreatorId || null,
+            attributionMethod,
+          ]
+        )
+        orderId = orderResult.rows[0]?.id
+        if (!orderId) {
+          throw new Error('club_order_insert_missing_id')
         }
+
+        await client.query('COMMIT')
+      } catch (err) {
+        await client.query('ROLLBACK')
+        throw err
+      } finally {
+        client.release()
       }
     } catch (dbError) {
-      // #region agent log
-      fetch('http://127.0.0.1:7458/ingest/e7d2a711-1414-44d3-bb3a-a337ac28814c',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'aadfe6'},body:JSON.stringify({sessionId:'aadfe6',runId:debugRunId,hypothesisId:'H1',location:'app/api/club/orders/route.ts:POST:db_error',message:'club order db write failed',data:{host:requestHost,error:dbError instanceof Error?dbError.message:String(dbError)},timestamp:Date.now()})}).catch(()=>{})
-      // #endregion
       console.error('[club/orders] DB error (fatal):', dbError)
       return NextResponse.json({ error: 'We could not save your order. Please retry in a moment.' }, { status: 500 })
+    }
+
+    // Process creator attribution for commission tracking (coupon OR tracking cookie)
+    // This runs OUTSIDE the transaction — attribution failure must not roll back the order
+    if (attributedCreatorId && subtotal > 0) {
+      try {
+        const { processOrderAttribution } = await import('@/lib/creators/commission')
+
+        const attrPayload = attributionMethod === 'coupon_code'
+          ? {
+              creatorId: attributedCreatorId,
+              method: 'coupon_code' as const,
+              codeId: attributionCodeId,
+              codeType: attributionCodeType,
+              isSelfReferral,
+            }
+          : {
+              creatorId: attributedCreatorId,
+              method: 'link_click' as const,
+              linkId: cookieLinkId,
+              clickEventId: cookieClickEventId,
+              isSelfReferral,
+            }
+
+        await processOrderAttribution({
+          orderId,
+          netRevenue: subtotal,
+          customerEmail: normalizedEmail,
+          attribution: attrPayload,
+          isSubscription: false,
+        })
+      } catch (attrError) {
+        console.error('[club/orders] Attribution processing failed (non-fatal):', {
+          orderId,
+          creatorId: attributedCreatorId,
+          method: attributionMethod,
+          error: attrError instanceof Error ? attrError.message : attrError,
+        })
+      }
+    }
+
+    // Increment usage for company-owned DB codes (prelaunch codes without a creator)
+    // Creator-owned codes are already incremented inside processOrderAttribution
+    if (couponResult?.codeId && !couponResult.isCreatorCode) {
+      try {
+        const { incrementCodeUsage } = await import('@/lib/creators/db')
+        await incrementCodeUsage(couponResult.codeId, subtotal > 0 ? subtotal : 0)
+      } catch (err) {
+        console.error('[club/orders] Code usage increment failed (non-fatal):', err)
+      }
     }
 
     // Determine the correct site URL based on request hostname
@@ -279,6 +276,7 @@ export async function POST(request: Request) {
         discountPercent,
         notes: notes || '',
         approvalToken,
+        expiresAt,
         siteUrl,
         referredBy: couponResult?.isCreatorCode ? couponResult.creatorName : undefined,
       })
@@ -441,6 +439,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   discountPercent: number
   notes: string
   approvalToken: string
+  expiresAt: number
   siteUrl: string
   referredBy?: string
 }) {
@@ -524,7 +523,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
     ` : ''}
 
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${data.siteUrl}/api/admin/club-orders/${data.orderId}/approve?token=${data.approvalToken}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">
+      <a href="${data.siteUrl}/api/admin/club-orders/${data.orderId}/approve?token=${data.approvalToken}&expires=${data.expiresAt}" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">
         Approve This Order
       </a>
     </div>

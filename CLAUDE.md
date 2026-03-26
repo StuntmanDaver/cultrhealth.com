@@ -846,8 +846,20 @@ LINKS = {
 ### Claude Code Configuration (`.claude/`)
 ```
 .claude/
+├── commands/
+│   └── pre-deploy.md             # /pre-deploy slash command — full 12-step deployment checklist
+├── hooks/
+│   ├── run-tests.sh
+│   ├── type-check.sh
+│   ├── code-audit.sh
+│   └── marketing-check.sh
 └── settings.local.json           # Local permission settings
 ```
+
+### Slash Commands (`.claude/commands/`)
+| Command | Description |
+|---|---|
+| `/pre-deploy` | 12-step pre-deployment checklist: TypeScript, tests, lint, console stmts, HIPAA scan, secrets check, build, env vars, site health, git status, DB migrations, bundle size. Outputs PASS/FAIL/WARN summary table with READY/BLOCKED verdict. Accepts optional arg: `staging` (default) or `production`. |
 
 **Allowed permissions** (`.claude/settings.local.json`):
 - `WebFetch` for: docs.klarna.com, docs.affirm.com, docs.google.com, Google Sheets (doc-08-68-sheets.googleusercontent.com)
@@ -1014,6 +1026,9 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 ---
 
 ## Development Guidelines
+
+### Self-Correcting CLAUDE.md Rule
+**Every time Claude gets something wrong about this project — a wrong file path, incorrect assumption, outdated pattern, misunderstood convention — add the correction directly to CLAUDE.md.** Do not just re-prompt or fix inline. Update this file so the correction persists across every future session, every subagent, and every teammate. Over time, CLAUDE.md becomes a precision-tuned instruction set that makes Claude increasingly effective. This applies to all contributors: when you spot Claude making a recurring mistake, codify the fix here.
 
 ### Code Standards
 - TypeScript (tsconfig has `strict: false`, `allowJs: true` — be aware of loose type checking)

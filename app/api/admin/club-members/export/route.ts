@@ -1,19 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { getSession, isProviderEmail } from '@/lib/auth'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    // Verify authorization via bearer token
-    const authHeader = request.headers.get('authorization') || ''
-    const token = authHeader.replace('Bearer ', '').trim()
-
-    // Use the same secret as club order approvals
-    const secret = process.env.CLUB_ORDER_APPROVAL_SECRET || process.env.JWT_SECRET
-    if (!secret || token !== secret) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // Verify admin session authentication
+    const session = await getSession()
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!isProviderEmail(session.email)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     if (!process.env.POSTGRES_URL) {
