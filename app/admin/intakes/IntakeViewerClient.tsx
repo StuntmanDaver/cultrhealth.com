@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
+import AsherDashboardSection from './AsherDashboardSection'
 
 interface IntakeRecord {
   id: string
@@ -53,19 +53,14 @@ export default function IntakeViewerClient() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/admin" className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Intake Submissions</h1>
-              <p className="text-sm text-gray-500">
-                {intakes.length} submission{intakes.length !== 1 ? 's' : ''} total
-              </p>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Intake Submissions</h1>
+            <p className="text-sm text-gray-500">
+              Asher Med partner overview &amp; intake submissions
+            </p>
           </div>
           <button
             onClick={fetchIntakes}
@@ -73,8 +68,21 @@ export default function IntakeViewerClient() {
             className="flex items-center gap-2 px-4 py-2 text-sm bg-white border rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            Refresh Intakes
           </button>
+        </div>
+
+        {/* Asher Med Dashboard */}
+        <AsherDashboardSection />
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 my-6" />
+
+        {/* Section header for intake list */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Submissions ({intakes.length})
+          </h2>
         </div>
 
         {/* Error */}
