@@ -126,7 +126,18 @@ describe('isActiveStatus', () => {
 // --------------------------------------------------
 
 describe('ACTIVE_STATUSES', () => {
-  it('contains exactly PENDING, APPROVED, and WaitingRoom', () => {
-    expect(ACTIVE_STATUSES).toEqual(['PENDING', 'APPROVED', 'WaitingRoom'])
+  it('contains all in-flight pipeline statuses', () => {
+    expect(ACTIVE_STATUSES).toEqual([
+      'PENDING',
+      'APPROVED',
+      'WaitingRoom',
+      'Incomplete',
+      'Approval Needed',
+      'Submitted',
+      'RX Submitted',
+      'RX Approved',
+      'Shipped',
+      'Payment Pending',
+    ])
   })
 })
