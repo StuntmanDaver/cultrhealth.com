@@ -273,7 +273,7 @@ export default function CreatorsClient() {
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
                     <td className="py-3 px-4 text-center">
                       <button
-                        onClick={() => { setEditingCreator(c); setCreatorEditForm({ commission_rate: String(Number(c.commission_rate)), override_rate: String(Number(c.override_rate)), status: c.status }); setCreatorEditError(null) }}
+                        onClick={() => { setEditingCreator(c); setCreatorEditForm({ commission_rate: String(Number(c.commission_rate)), override_rate: String(Number(c.override_rate)), status: c.status }); setCreatorEditError(null); setConfirmDelete(false) }}
                         className="text-xs text-brand-primary underline hover:text-brand-primaryHover"
                       >
                         Edit
