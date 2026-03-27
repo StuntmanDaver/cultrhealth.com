@@ -60,11 +60,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock upload on development/staging (real uploads only in production)
+    // Mock upload if API key not configured (development or staging without Asher Med)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const isStaging = siteUrl.includes('staging');
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const shouldMock = isDevelopment || isStaging;
+    const shouldMock = (!process.env.ASHER_MED_API_KEY) && (isDevelopment || isStaging);
 
     if (shouldMock) {
       // Generate mock key for development/staging
@@ -101,7 +101,15 @@ export async function POST(request: NextRequest) {
       key: presignedData.data.key,
     });
   } catch (error) {
-    console.error('Failed to get presigned URL:', error);
+    const statusCode = (error as { statusCode?: number })?.statusCode;
+    const responseBody = (error as { response?: unknown })?.response;
+    console.error('Failed to get presigned URL:', {
+      message: error instanceof Error ? error.message : String(error),
+      statusCode,
+      response: responseBody,
+      apiUrl: process.env.ASHER_MED_API_URL || `derived from ASHER_MED_ENVIRONMENT=${process.env.ASHER_MED_ENVIRONMENT || 'production'}`,
+      hasApiKey: !!process.env.ASHER_MED_API_KEY,
+    });
 
     const errorMessage = error instanceof Error ? error.message : 'Failed to get upload URL';
 
