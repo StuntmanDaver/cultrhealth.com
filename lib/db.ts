@@ -1030,6 +1030,10 @@ export async function getBnplAdoption(days: number) {
 }
 
 export async function getCreatorROI() {
+  // NOTE: Discount calculation uses the CURRENT affiliate_codes.discount_value,
+  // not the rate at order time. If a code's discount changes (e.g. 10% → 20%),
+  // historical orders will show the new rate's discount amount, not the original.
+  // This is acceptable since discount_value rarely changes and no snapshot is stored.
   try {
     const result = await sql`
       SELECT
