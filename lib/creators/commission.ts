@@ -40,7 +40,7 @@ export async function calculateOverrideCommission(
 
   let overrideRate: number
   if (isInBonusWindow(recruiter.creator_start_date)) {
-    overrideRate = recruiter.override_rate
+    overrideRate = Number(recruiter.override_rate)
   } else {
     overrideRate = COMMISSION_CONFIG.postBonusRate
   }
