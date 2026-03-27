@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
     
     // Also check against provider list
-    const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email)
+    const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email) || session.role === 'admin'
     
     if (!isAdmin) {
       return NextResponse.json(

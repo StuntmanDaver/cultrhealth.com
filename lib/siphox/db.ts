@@ -214,6 +214,34 @@ export async function updateKitOrderStatus(
   }
 }
 
+/**
+ * Get all non-terminal kit orders that have a real SiPhox order ID.
+ * Used by the siphox-status-sync cron to poll for status updates.
+ */
+export async function getActiveKitOrders(limit = 50) {
+  try {
+    const { rows } = await sql`
+      SELECT id, siphox_order_id, siphox_customer_id, status, tracking_number
+      FROM siphox_kit_orders
+      WHERE siphox_order_id IS NOT NULL
+        AND siphox_order_id != 'pending'
+        AND status NOT IN ('results_ready', 'failed')
+        AND fulfillment_status NOT IN ('failed', 'needs_credits', 'pending_intake')
+      ORDER BY updated_at ASC
+      LIMIT ${limit}
+    `
+    return rows as Array<{
+      id: string
+      siphox_order_id: string
+      siphox_customer_id: string
+      status: string
+      tracking_number: string | null
+    }>
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get active kit orders', error)
+  }
+}
+
 // ============================================================
 // FULFILLMENT OPERATIONS
 // ============================================================

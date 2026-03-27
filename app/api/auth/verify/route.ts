@@ -51,12 +51,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
+    const redirectParam = searchParams.get('redirect')
 
     // Build base URL for redirects
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
+
+    // Validate redirect is a safe relative path (prevent open redirect)
+    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/library'
 
     if (!token) {
       return NextResponse.redirect(`${baseUrl}/library?error=invalid_link`)
@@ -79,7 +83,7 @@ export async function GET(request: NextRequest) {
       // Use staging IDs with full admin access for bypass emails
       customerId = 'staging_customer'
       const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
-      const response = NextResponse.redirect(`${baseUrl}/library`)
+      const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
       setSessionOnResponse(response, sessionToken)
       console.log('Staging admin access granted:', { email, timestamp: new Date().toISOString() })
       return response
@@ -119,7 +123,7 @@ export async function GET(request: NextRequest) {
 
     // Create session token and set cookie directly on the redirect response
     const sessionToken = await createSessionToken(email, customerId)
-    const response = NextResponse.redirect(`${baseUrl}/library`)
+    const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
     setSessionOnResponse(response, sessionToken)
 
     console.log('Session created:', {

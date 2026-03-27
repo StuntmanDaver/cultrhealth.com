@@ -29,6 +29,7 @@ export default function LoginPage() {
 function LoginForm() {
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
+  const redirectParam = searchParams.get('redirect')
 
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -45,7 +46,7 @@ function LoginForm() {
       const res = await fetch('/api/auth/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, redirect: redirectParam || undefined }),
       })
 
       const data = await res.json()

@@ -182,6 +182,8 @@ export async function POST(request: Request) {
             method: 'coupon_code' as const,
             codeId: attributionCodeId,
             codeType: attributionCodeType,
+            linkId: cookieLinkId,
+            clickEventId: cookieClickEventId,
             isSelfReferral,
           }
         : {

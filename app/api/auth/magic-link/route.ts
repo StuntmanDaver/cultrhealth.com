@@ -44,7 +44,7 @@ function isStagingBypassEmail(email: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, redirect: redirectPath } = await request.json()
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -128,7 +128,10 @@ export async function POST(request: NextRequest) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
       'http://localhost:3000')
     
-    const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}`
+    // Validate redirect is a safe relative path (prevent open redirect)
+    const safeRedirect = typeof redirectPath === 'string' && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null
+    const redirectParam = safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''
+    const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}${redirectParam}`
 
     // For staging access emails, return the link directly (no email needed)
     if (isStagingAccess) {

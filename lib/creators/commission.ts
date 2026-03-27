@@ -271,6 +271,12 @@ export async function recordZeroRevenueAttribution(params: {
           [attribution.codeId]
         )
       }
+      if (attribution.linkId) {
+        await client.query(
+          `UPDATE tracking_links SET conversion_count = conversion_count + 1, updated_at = NOW() WHERE id = $1`,
+          [attribution.linkId]
+        )
+      }
       if (attribution.clickEventId) {
         await client.query(
           `UPDATE click_events SET converted = TRUE, order_id = $1 WHERE id = $2`,

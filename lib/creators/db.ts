@@ -1307,19 +1307,30 @@ export async function updateAffiliateCodeStripeIds(
 export async function getCreatorLinkStats(creatorId: string) {
   try {
     const result = await sql`
-      SELECT id, slug, destination_path, click_count, conversion_count,
-        CASE WHEN click_count > 0 THEN ROUND(conversion_count::numeric / click_count * 100, 1) ELSE 0 END as conversion_rate
-      FROM tracking_links WHERE creator_id = ${creatorId} AND active = TRUE
-      ORDER BY click_count DESC
+      SELECT tl.id, tl.slug, tl.destination_path, tl.click_count, tl.conversion_count,
+        COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
+      FROM tracking_links tl
+      LEFT JOIN (
+        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        FROM click_events
+        WHERE link_id IS NOT NULL AND creator_id = ${creatorId}
+        GROUP BY link_id
+      ) ce_stats ON ce_stats.link_id = tl.id
+      WHERE tl.creator_id = ${creatorId} AND tl.active = TRUE
+      ORDER BY tl.click_count DESC
     `
-    return result.rows.map(r => ({
-      id: r.id,
-      slug: r.slug,
-      destinationPath: r.destination_path,
-      clickCount: parseInt(r.click_count || '0', 10),
-      conversionCount: parseInt(r.conversion_count || '0', 10),
-      conversionRate: parseFloat(r.conversion_rate || '0'),
-    }))
+    return result.rows.map(r => {
+      const conversions = Math.max(Number(r.conversion_count) || 0, Number(r.real_conversion_count) || 0)
+      const clicks = parseInt(r.click_count || '0', 10)
+      return {
+        id: r.id,
+        slug: r.slug,
+        destinationPath: r.destination_path,
+        clickCount: clicks,
+        conversionCount: conversions,
+        conversionRate: clicks > 0 ? Math.round(conversions / clicks * 1000) / 10 : 0,
+      }
+    })
   } catch (error) {
     console.error('Database error fetching creator link stats:', error)
     throw new DatabaseError('Failed to fetch creator link stats', error)

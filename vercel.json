@@ -26,6 +26,10 @@
     {
       "path": "/api/cron/asher-sync",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/siphox-status-sync",
+      "schedule": "*/30 * * * *"
     }
   ]
 }

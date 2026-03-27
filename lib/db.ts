@@ -1124,12 +1124,26 @@ export async function getAllTrackingLinksForAdmin() {
       SELECT
         tl.*,
         c.full_name as creator_name,
-        c.status as creator_status
+        c.status as creator_status,
+        COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
       FROM tracking_links tl
       LEFT JOIN creators c ON tl.creator_id = c.id
+      LEFT JOIN (
+        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        FROM click_events
+        WHERE link_id IS NOT NULL
+        GROUP BY link_id
+      ) ce_stats ON ce_stats.link_id = tl.id
       ORDER BY tl.click_count DESC, tl.created_at DESC
     `
-    return result.rows
+    // Use the live count from click_events if it's higher than the stale counter
+    return result.rows.map(r => ({
+      ...r,
+      conversion_count: Math.max(
+        Number(r.conversion_count) || 0,
+        Number(r.real_conversion_count) || 0
+      ),
+    }))
   } catch (error) {
     console.error('Database error fetching all tracking links:', error)
     throw new DatabaseError('Failed to fetch all tracking links', error)

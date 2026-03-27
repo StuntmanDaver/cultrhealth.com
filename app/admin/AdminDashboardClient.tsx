@@ -623,6 +623,7 @@ export default function AdminDashboardClient() {
                     'approve-commissions': 'Commission Approval',
                     'update-tiers': 'Tier Recalculation',
                     'asher-sync': 'Asher Med Sync',
+                    'siphox-status-sync': 'SiPhox Status Sync',
                   }
 
                   return (

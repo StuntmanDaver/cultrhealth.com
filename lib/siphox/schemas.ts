@@ -27,6 +27,7 @@ export const SiphoxCustomerSchema = z.object({
 export const SiphoxOrderSchema = z.object({
   _id: z.string(),
   status: z.string(),
+  tracking_number: z.string().optional(),
   kit_types: z.array(z.object({
     kitType: z.string(),
     quantity: z.number(),

@@ -155,7 +155,22 @@ export async function resolveAttribution(params: {
   attributionCookie?: string
   couponCode?: string
 }): Promise<ResolvedAttribution | null> {
+  // Resolve click event from cookie (used by both coupon and link-click paths)
+  let clickEventId: string | undefined
+  let clickLinkId: string | undefined
+  if (params.attributionCookie) {
+    const cookieData = parseAttributionCookie(params.attributionCookie)
+    if (cookieData) {
+      const clickEvent = await getClickEventByToken(cookieData.token)
+      if (clickEvent) {
+        clickEventId = clickEvent.id
+        clickLinkId = clickEvent.link_id || undefined
+      }
+    }
+  }
+
   // Priority 1: Coupon code attribution
+  // Also includes click event info so the tracking link still gets conversion credit
   if (params.couponCode) {
     const code = await getAffiliateCodeByCode(params.couponCode)
     if (code) {
@@ -167,6 +182,8 @@ export async function resolveAttribution(params: {
           method: 'coupon_code',
           codeId: code.id,
           codeType: code.code_type || 'general',
+          clickEventId,
+          linkId: clickLinkId,
           isSelfReferral,
         }
       }
@@ -174,21 +191,18 @@ export async function resolveAttribution(params: {
   }
 
   // Priority 2: Link click attribution (cookie)
-  if (params.attributionCookie) {
-    const cookieData = parseAttributionCookie(params.attributionCookie)
+  if (clickEventId) {
+    const cookieData = parseAttributionCookie(params.attributionCookie!)
     if (cookieData) {
-      const clickEvent = await getClickEventByToken(cookieData.token)
-      if (clickEvent) {
-        const creator = await getCreatorById(clickEvent.creator_id)
-        if (creator && creator.status === 'active') {
-          const isSelfReferral = creator.email.toLowerCase() === params.customerEmail.toLowerCase()
-          return {
-            creatorId: creator.id,
-            method: 'link_click',
-            linkId: clickEvent.link_id || undefined,
-            clickEventId: clickEvent.id,
-            isSelfReferral,
-          }
+      const creator = await getCreatorById(cookieData.creatorId)
+      if (creator && creator.status === 'active') {
+        const isSelfReferral = creator.email.toLowerCase() === params.customerEmail.toLowerCase()
+        return {
+          creatorId: creator.id,
+          method: 'link_click',
+          linkId: clickLinkId,
+          clickEventId,
+          isSelfReferral,
         }
       }
     }

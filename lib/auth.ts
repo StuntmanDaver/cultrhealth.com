@@ -406,7 +406,7 @@ export async function verifyAdminAuth(request: NextRequest): Promise<{
     return { authenticated: false, email: null }
   }
 
-  if (!isProviderEmail(auth.email)) {
+  if (!isProviderEmail(auth.email) && auth.role !== 'admin') {
     return { authenticated: false, email: auth.email }
   }
 
