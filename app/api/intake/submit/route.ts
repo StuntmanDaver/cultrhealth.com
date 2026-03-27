@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
 import {
   createNewOrder,
   updateOrderApproval,
@@ -33,6 +34,15 @@ import { formatMedicationsList, buildPartnerNote } from '@/lib/intake-utils';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Require authenticated session (skip on staging where Asher Med is not configured)
+    const asherConfigured = !!process.env.ASHER_MED_API_KEY;
+    if (asherConfigured) {
+      const auth = await verifyAuth(request);
+      if (!auth.authenticated) {
+        return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
+      }
+    }
+
     const body = await request.json();
 
     // Validate required fields

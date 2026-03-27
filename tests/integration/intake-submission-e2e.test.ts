@@ -2,12 +2,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // ============================================================
-// MOCKS — declared before source imports
+// MOCKS — use vi.hoisted() so variables are available inside vi.mock factories
 // ============================================================
 
-const mockSql = vi.fn()
+const { mockSql } = vi.hoisted(() => ({ mockSql: vi.fn() }))
 vi.mock('@vercel/postgres', () => ({
   sql: mockSql,
+}))
+
+vi.mock('@/lib/auth', () => ({
+  verifyAuth: vi.fn().mockResolvedValue({ authenticated: true, email: 'test@example.com', customerId: 'cus_test', role: 'member' }),
+  getSession: vi.fn().mockResolvedValue(null),
 }))
 
 const mockCreateNewOrder = vi.fn()

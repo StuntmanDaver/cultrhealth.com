@@ -383,7 +383,8 @@ describe('commission processing — real DB transactions', () => {
 
     expect(result).not.toBeNull()
     expect(result!.isSelfReferral).toBe(true)
-    expect(result!.directCommission).toBe(19.90)
+    expect(result!.directCommission).toBe(0) // self-referrals blocked from commission
+    expect(result!.totalCommission).toBe(0)
 
     // Verify is_self_referral in DB
     const attrRow = await sql`
@@ -404,8 +405,8 @@ describe('dashboard stats — real DB after commissions', () => {
     // We created at least 2 orders (ORDER_DIRECT + ORDER_SELF) for this creator
     expect(stats.totalOrders).toBeGreaterThanOrEqual(2)
     expect(stats.totalRevenue).toBeGreaterThanOrEqual(398) // 199 + 199
-    expect(stats.totalCommission).toBeGreaterThanOrEqual(39.80) // 19.90 + 19.90
-    expect(stats.pendingCommission).toBeGreaterThanOrEqual(39.80)
+    expect(stats.totalCommission).toBeGreaterThanOrEqual(19.80) // 19.90 from ORDER_DIRECT only (ORDER_SELF is self-referral, no commission)
+    expect(stats.pendingCommission).toBeGreaterThanOrEqual(19.80)
 
     // Verify numeric types
     expect(typeof stats.totalClicks).toBe('number')
@@ -423,7 +424,8 @@ describe('dashboard stats — real DB after commissions', () => {
     const breakdown = await getCommissionBreakdownByCreator(creatorId)
 
     // Our test orders were non-subscription → directProduct
-    expect(breakdown.directProduct).toBeGreaterThanOrEqual(39.80)
+    // ORDER_SELF is a self-referral (no commission), so only ORDER_DIRECT's 19.90 counts
+    expect(breakdown.directProduct).toBeGreaterThanOrEqual(19.80)
     expect(typeof breakdown.directMembership).toBe('number')
     expect(typeof breakdown.directProduct).toBe('number')
     expect(typeof breakdown.override).toBe('number')

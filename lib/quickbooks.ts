@@ -207,7 +207,7 @@ export async function findOrCreateCustomer(
   email: string
 ): Promise<string | null> {
   try {
-    const emailEscaped = email.replace(/'/g, "\\'")
+    const emailEscaped = email.replace(/'/g, "''")
 
     // Search by email — QB Online uses 'Email' field in IDS queries
     const emailQuery = encodeURIComponent(`SELECT * FROM Customer WHERE Email = '${emailEscaped}'`)
@@ -222,7 +222,7 @@ export async function findOrCreateCustomer(
     }
 
     // Fall back: search by DisplayName in case email query is unsupported
-    const nameEscaped = displayName.slice(0, 41).replace(/'/g, "\\'")
+    const nameEscaped = displayName.slice(0, 41).replace(/'/g, "''")
     const nameQuery = encodeURIComponent(`SELECT * FROM Customer WHERE DisplayName = '${nameEscaped}'`)
     const nameSearchRes = await qbFetch(accessToken, `/query?query=${nameQuery}`)
     if (nameSearchRes.ok) {

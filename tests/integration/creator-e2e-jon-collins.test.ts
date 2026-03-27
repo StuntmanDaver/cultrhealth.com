@@ -474,7 +474,8 @@ describe('Jon Collins Creator E2E Integration', () => {
       })
 
       expect(result).not.toBeNull()
-      expect(result!.directCommission).toBe(40) // 20% of 200
+      expect(result!.directCommission).toBe(0) // self-referrals blocked from commission
+      expect(result!.totalCommission).toBe(0)
       expect(result!.isSelfReferral).toBe(true)
       expect(result!.creatorId).toBe(JON_CREATOR_ID)
     })

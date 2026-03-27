@@ -1,5 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { generateText } from 'ai';
+import type { NextRequest } from 'next/server';
+import { verifyAuth } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 
@@ -60,13 +62,21 @@ function getFriendlyError(err: unknown): { message: string; status: number } {
   return { message: 'Something went wrong generating your meal plan. Please try again.', status: 500 };
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'Meal plan service is not configured. Please contact support.' }),
         { status: 503, headers: { 'Content-Type': 'application/json' } }
       );
+    }
+
+    const auth = await verifyAuth(req)
+    if (!auth.authenticated) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      )
     }
 
     const body = await req.json();

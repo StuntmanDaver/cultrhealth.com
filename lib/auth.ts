@@ -275,7 +275,6 @@ export function hasFeatureAccess(tier: PlanTier | null | undefined, feature: key
 export function isProviderEmail(email: string): boolean {
   const lower = email.toLowerCase()
   if (TEAM_EMAILS.includes(lower)) return true
-  if (isStaging()) return true
   const allowlist = process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
   const normalized = allowlist.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
   if (normalized.includes(lower)) return true
@@ -379,12 +378,6 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
   // should have created a real creator record; this fallback means DB was down.)
   if (TEAM_EMAILS.includes(auth.email.toLowerCase())) {
     console.warn('[auth] staging_creator fallback for team email:', auth.email, '— dashboard will show no real data')
-    return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
-  }
-
-  // Staging bypass: allow any email on staging domain, or check whitelist
-  if (isStaging()) {
-    console.warn('[auth] staging_creator fallback for staging email:', auth.email, '— dashboard will show no real data')
     return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
   }
 

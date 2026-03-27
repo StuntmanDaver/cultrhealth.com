@@ -107,6 +107,11 @@ export async function POST(
       couponDiscountAmount = Math.round((subtotalBeforeDiscount - subtotal) * 100) / 100
     }
 
+    // H-3: Validate order.items before proceeding
+    if (!Array.isArray(order.items) || order.items.length === 0) {
+      return NextResponse.json({ error: 'Order has no valid items.' }, { status: 422 })
+    }
+
     const emailData = {
       name: order.member_name,
       email: order.member_email,
@@ -119,20 +124,6 @@ export async function POST(
       discountPercent,
       taxAmount: taxAmountUsd,
       total: subtotal + taxAmountUsd,
-    }
-
-    try {
-      await Promise.all([
-        sendApprovalEmailToCustomer(emailData),
-        sendApprovalConfirmationToAdmin(emailData),
-      ])
-      console.log('[club-orders/approve] Approval emails sent for', order.order_number)
-    } catch (err) {
-      console.error('[club-orders/approve] Email send failed:', err)
-      return NextResponse.json(
-        { error: 'Email send failed. Please retry approval.' },
-        { status: 500 }
-      )
     }
 
     // Attempt QuickBooks invoice creation → sets status to invoice_sent when successful
@@ -175,12 +166,14 @@ export async function POST(
       console.error('[club-orders/approve] QB invoice creation failed (non-fatal), falling back to approved:', qbError)
     }
 
-    // If QB invoice provided a total and the order had no subtotal, update it
+    // If QB invoice provided a total and the order had no subtotal, use it
     // so commission calculation can use the actual invoiced amount.
     const effectiveSubtotal = subtotal > 0 ? subtotal : (invoicedTotal && invoicedTotal > 0 ? invoicedTotal : 0)
     const subtotalUpdated = effectiveSubtotal > 0 && subtotal === 0
 
-    await sql`
+    // HIGH-1: Atomic status transition — include AND status = 'pending_approval' so a
+    // concurrent request that already approved the order results in 0 rows updated.
+    const updateResult = await sql`
       UPDATE club_orders
       SET
         status = ${finalStatus},
@@ -190,8 +183,20 @@ export async function POST(
         qb_invoice_url = ${qbInvoiceUrl},
         subtotal_usd = COALESCE(subtotal_usd, ${subtotalUpdated ? effectiveSubtotal : null}),
         updated_at = NOW()
-      WHERE id = ${orderId}::uuid
+      WHERE id = ${orderId}::uuid AND status = 'pending_approval'
     `
+
+    if (updateResult.rowCount === 0) {
+      // Another concurrent request already approved this order — treat as already-approved
+      if (tokenFromUrl) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+        return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}&already=true`)
+      }
+      return NextResponse.json({
+        error: `Order is already ${order.status}`,
+        status: order.status,
+      }, { status: 400 })
+    }
 
     // Record commission on approval for attributed orders where subtotal is known.
     // This updates the zero-revenue placeholder created at order time and inserts
@@ -253,6 +258,19 @@ export async function POST(
       } catch (commErr) {
         console.error('[club-orders/approve] Commission recording failed (non-fatal):', commErr)
       }
+    }
+
+    // H-1: Send emails AFTER DB update is committed so email failures cannot leave
+    // the order in an approved state without the customer being notified — the approval
+    // is already persisted; email errors are non-fatal.
+    try {
+      await Promise.all([
+        sendApprovalEmailToCustomer(emailData),
+        sendApprovalConfirmationToAdmin(emailData),
+      ])
+      console.log('[club-orders/approve] Approval emails sent for', order.order_number)
+    } catch (err) {
+      console.error('[club-orders/approve] Email send failed (non-fatal, order already approved):', err)
     }
 
     // If called from email link, redirect

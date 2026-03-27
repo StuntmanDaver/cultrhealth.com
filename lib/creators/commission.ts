@@ -178,11 +178,13 @@ export async function processOrderAttribution(params: {
     }
     attributionId = attrResult.rows[0].id
 
-    // Insert direct + override commission ledger entries
-    await insertCommissionLedgerEntries(
-      client, attributionId, attribution.creatorId,
-      netRevenue, directRate, directAmount, override
-    )
+    // Self-referrals: record attribution for tracking but skip commissions
+    if (!attribution.isSelfReferral) {
+      await insertCommissionLedgerEntries(
+        client, attributionId, attribution.creatorId,
+        netRevenue, directRate, directAmount, override
+      )
+    }
 
     // Update code usage stats
     if (attribution.codeId) {
@@ -217,11 +219,13 @@ export async function processOrderAttribution(params: {
     client.release()
   }
 
+  const earnedDirect = attribution.isSelfReferral ? 0 : directAmount
+  const earnedOverride = attribution.isSelfReferral ? 0 : (override?.overrideAmount ?? 0)
   return {
     attributionId,
-    directCommission: directAmount,
-    overrideCommission: override?.overrideAmount ?? 0,
-    totalCommission: directAmount + (override?.overrideAmount ?? 0),
+    directCommission: earnedDirect,
+    overrideCommission: earnedOverride,
+    totalCommission: earnedDirect + earnedOverride,
     isSelfReferral: attribution.isSelfReferral,
     creatorId: attribution.creatorId,
     recruiterId: override?.recruiterId,
