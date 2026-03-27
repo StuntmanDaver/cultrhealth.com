@@ -114,7 +114,15 @@ export async function getSession(): Promise<SessionPayload | null> {
 
 export async function clearSession(): Promise<void> {
   const cookieStore = await cookies()
-  cookieStore.delete(SESSION_COOKIE_NAME)
+  const domain = getCookieDomain()
+  cookieStore.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/',
+    ...(domain ? { domain } : {}),
+  })
 }
 
 // Rate limiting for magic link requests (simple in-memory, use Redis in production)

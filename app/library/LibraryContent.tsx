@@ -45,7 +45,7 @@ export function LibraryContent({
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.refresh()
+    window.location.href = '/library'
   }
 
   const tierDisplay = tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Member'
