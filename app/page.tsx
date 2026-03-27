@@ -80,7 +80,7 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 h-48 pointer-events-none" style={{ background: 'linear-gradient(to top, #FCFBF7 0%, rgba(43,69,66,0.25) 35%, rgba(43,69,66,0.5) 65%, transparent 100%)' }} />
 
         <div className="absolute inset-0 z-10 flex items-center">
-          <div className="text-left absolute left-[25%] lg:left-[26%] xl:left-[25%] 2xl:left-[24%] -translate-x-1/2 max-w-[420px] lg:max-w-[480px]">
+          <div className="text-left absolute left-[30%] lg:left-[30%] xl:left-[29%] 2xl:left-[28%] -translate-x-1/2 max-w-[420px] lg:max-w-[480px]">
             <h1 className="text-5xl lg:text-6xl xl:text-7xl font-display font-bold mb-4 leading-[1.1] text-white drop-shadow-lg">
               Change the<br /><span className="">CULTR</span>,<br /><span className="italic">rebrand</span> yourself.
             </h1>
