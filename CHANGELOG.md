@@ -1,3 +1,27 @@
+## [2026-03-27] - Creator Coupon Checkout Fix + NUMERIC Type Audit
+
+### Critical Fixes
+- **Creator coupon orders returning 500** — Orders using creator coupon codes (JON21, STEWART1, etc.) crashed with `invalid input syntax for type integer: "20.00"`. Root cause: `@vercel/postgres` returns `NUMERIC(8,2)` columns as strings. `affiliate_codes.discount_value` flowed as `"20.00"` into `club_orders.discount_percent INTEGER`. Staff coupons (OWNER, CULTR10) were unaffected since their discounts are JS number literals. **13 customer orders failed over 24 hours before detection.**
+- **Override commission rate coercion** — `recruiter.override_rate` (NUMERIC string) was assigned directly to a `number` variable in `calculateOverrideCommission()` without `Number()` conversion, causing silent string arithmetic in override commission calculations.
+- **Silent 500 errors on staging** — `next.config.js` had `removeConsole: true` which strips ALL console output (including `console.error`) on Vercel. Changed to `{ exclude: ['error', 'warn'] }` so server-side errors are visible in Vercel runtime logs.
+
+### Full NUMERIC Audit
+Verified every NUMERIC column read in the codebase. All other paths already use `Number()` or `parseFloat()`:
+- `lib/creators/commission.ts` — `commission_rate` (line 144), `override_rate` (line 325)
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` — `tax_amount_usd`, `subtotal_usd`, `discount_percent`, `commission_rate`
+- `app/api/admin/creators/update/route.ts` — `commission_rate`, `override_rate` via `parseFloat()`
+- `lib/creators/db.ts` — All reads via `parseFloat()` at point of access
+- `lib/db.ts` — All reads via `parseFloat()` at point of access
+- All dashboard/network/leaderboard/earnings routes — `Number()` conversions
+
+### Files Modified
+- `lib/config/coupons.ts` — `Math.floor(Number(affiliateCode.discount_value))` on all 3 return paths
+- `app/api/club/orders/route.ts` — `Math.floor(Number(couponResult.discount))` defense-in-depth
+- `lib/creators/commission.ts` — `Number(recruiter.override_rate)` in `calculateOverrideCommission()`
+- `next.config.js` — `removeConsole: { exclude: ['error', 'warn'] }`
+
+---
+
 ## [2026-03-26] - Creator Commission System Audit & 5-Bug Fix
 
 ### Critical Fixes
