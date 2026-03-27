@@ -9,8 +9,10 @@ const nextConfig = {
 
   // Optimize production builds
   compiler: {
-    // Remove console.log in production
-    removeConsole: process.env.NODE_ENV === 'production',
+    // Remove console.log in production but keep error/warn for debugging
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? { exclude: ['error', 'warn'] }
+      : false,
   },
 
   // Experimental features for better performance

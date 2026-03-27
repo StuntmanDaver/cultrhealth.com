@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
     // Validate coupon server-side (checks both staff coupons and creator affiliate codes)
     const couponResult: UnifiedCouponResult | null = couponCode ? await validateCouponUnified(couponCode) : null
-    const discountPercent = couponResult?.discount ?? 0
+    const discountPercent = couponResult ? Math.floor(Number(couponResult.discount)) : 0
 
     // Validation
     if (!email?.trim() || !name?.trim()) {
