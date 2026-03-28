@@ -21,6 +21,7 @@ import {
   isSiphoxConfigured,
 } from './client'
 import { upsertSiphoxCustomer } from './db'
+import { formatPhoneE164 } from '@/lib/validation'
 
 // ============================================================
 // INTERNAL TYPES
@@ -138,7 +139,8 @@ async function resolveMemberData(customerEmail: string): Promise<MemberData | nu
     const personalInfo = data.personalInfo || data
     const firstName = personalInfo.firstName || personalInfo.first_name || 'Member'
     const lastName = personalInfo.lastName || personalInfo.last_name || ''
-    const phone = personalInfo.phone || personalInfo.phoneNumber || ''
+    const rawPhone = personalInfo.phone || personalInfo.phoneNumber || ''
+    const phone = rawPhone ? formatPhoneE164(rawPhone) : ''
 
     return {
       firstName,
@@ -242,14 +244,16 @@ export async function triggerSiphoxFulfillment(params: {
         })
         siphoxCustomerId = newCustomer._id
 
-        // Persist customer mapping
-        await upsertSiphoxCustomer(
-          memberData.phone || externalId,
-          siphoxCustomerId,
-          memberData.firstName,
-          memberData.lastName,
-          memberData.email
-        )
+        // Persist customer mapping (only if we have a valid phone for lookup)
+        if (memberData.phone) {
+          await upsertSiphoxCustomer(
+            memberData.phone,
+            siphoxCustomerId,
+            memberData.firstName,
+            memberData.lastName,
+            memberData.email
+          )
+        }
       }
     } catch (customerError) {
       // Customer creation failed -- queue for retry
