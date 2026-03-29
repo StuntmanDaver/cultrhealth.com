@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { startCronRun } from '@/lib/cron-logger'
+import { addTagsToContact } from '@/lib/mailchimp'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,13 @@ export async function GET(request: NextRequest) {
       if (result.success) {
         await markResultsNotified(customer.siphox_customer_id, customer.latest_report_id)
         sent++
+
+        // Tag Mailchimp contact (non-blocking, don't count as failure)
+        if (customer.email) {
+          addTagsToContact(customer.email, ['labs-results-ready']).catch((err) =>
+            console.error('[siphox-results] Mailchimp tag error (non-fatal):', err)
+          )
+        }
       } else {
         failed++
       }
