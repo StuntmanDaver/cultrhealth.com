@@ -40,7 +40,7 @@ const NAV_GROUPS = [
   {
     label: 'LEARN',
     items: [
-      { label: 'Peptide Library', href: '/library/peptides', icon: Library },
+      { label: 'Peptide Library', href: '/library/index', icon: Library },
       { label: 'Peptide FAQ', href: '/library/peptide-faq', icon: HelpCircle },
     ],
   },
@@ -61,8 +61,8 @@ const NAV_GROUPS = [
   {
     label: 'ACCOUNT',
     items: [
-      { label: 'Profile', href: '/library/profile', icon: User },
-      { label: 'Billing', href: '/library/billing', icon: CreditCard },
+      { label: 'Profile', href: '/portal/profile', icon: User },
+      { label: 'Documents', href: '/portal/documents', icon: CreditCard },
     ],
   },
 ]
