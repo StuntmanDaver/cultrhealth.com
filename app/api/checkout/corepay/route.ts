@@ -52,6 +52,9 @@ export async function POST(request: NextRequest) {
     if (!plan) {
       return NextResponse.json({ error: 'Plan not found' }, { status: 400 });
     }
+    if (plan.price <= 0) {
+      return NextResponse.json({ error: 'This plan does not require payment' }, { status: 400 });
+    }
 
     const orderId = `SUB-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 

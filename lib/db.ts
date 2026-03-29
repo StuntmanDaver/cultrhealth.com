@@ -1,4 +1,5 @@
 import { sql } from '@vercel/postgres'
+import type { PaymentProvider } from '@/lib/payments/payment-types'
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -310,7 +311,7 @@ export interface OrderEntry {
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
   asher_patient_id?: number | string
-  payment_provider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'corepay' | 'nowpayments'
+  payment_provider: PaymentProvider
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
   currency: string
@@ -335,7 +336,7 @@ export interface CreateOrderInput {
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
   asher_patient_id?: number | string
-  payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'corepay' | 'nowpayments'
+  payment_provider?: PaymentProvider
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
   currency?: string
