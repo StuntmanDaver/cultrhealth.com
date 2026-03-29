@@ -94,7 +94,7 @@ export function Header() {
                   alt="CULTR Health"
                   className={`
                     w-auto transition-[height] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-                    ${scrolled ? 'h-[72px]' : 'h-[100px]'}
+                    ${scrolled ? 'h-[60px]' : 'h-[85px]'}
                   `}
                 />
               </Link>
