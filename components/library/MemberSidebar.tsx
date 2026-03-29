@@ -95,8 +95,8 @@ export function MemberSidebar({ mobileOpen, onClose }: MemberSidebarProps) {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-6 pb-4">
-        <Link href="/library" className="flex items-center gap-2">
-          <img src="/cultr-health-logo.png" alt="CULTR Health" className="h-12 w-auto" />
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/cultr-health-logo.png" alt="CULTR Health" className="h-16 w-auto" />
         </Link>
         {onClose && (
           <button onClick={onClose} className="md:hidden p-1 text-cultr-textMuted hover:text-cultr-forest">
