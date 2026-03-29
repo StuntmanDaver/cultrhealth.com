@@ -60,11 +60,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock upload if API key not configured (development or staging without Asher Med)
+    // Mock upload on staging/dev (Asher Med presigned URLs are production-only)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const isStaging = siteUrl.includes('staging');
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const shouldMock = (!process.env.ASHER_MED_API_KEY) && (isDevelopment || isStaging);
+    const shouldMock = isDevelopment || isStaging;
 
     if (shouldMock) {
       // Generate mock key for development/staging
