@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { CartProvider } from '@/lib/cart-context'
+import { LibrarySidebarShell } from './LibrarySidebarShell'
 
 export const metadata: Metadata = {
   title: 'Peptide Library | CULTR Health',
@@ -13,9 +14,9 @@ export default function LibraryLayout({
 }) {
   return (
     <CartProvider>
-      <div className="min-h-screen">
+      <LibrarySidebarShell>
         {children}
-      </div>
+      </LibrarySidebarShell>
     </CartProvider>
   )
 }

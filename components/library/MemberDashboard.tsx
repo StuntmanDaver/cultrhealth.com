@@ -161,86 +161,17 @@ export function MemberDashboard({
             </span>
           </Link>
 
-          <button
-            onClick={() => setShowLmnModal(true)}
-            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all relative"
+          <Link
+            href="/library/shop"
+            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
           >
-            <DollarSign className="w-6 h-6 text-white/80" />
+            <ShoppingCart className="w-6 h-6 text-white/80" />
             <span className="text-xs font-medium text-center leading-tight">
-              HSA/FSA Docs
+              Shop Products
             </span>
-            {lmnRecords.length > 0 && (
-              <span className="absolute top-2 right-2 w-5 h-5 bg-sage text-brand-primary text-xs font-bold rounded-full flex items-center justify-center">
-                {lmnRecords.length}
-              </span>
-            )}
-          </button>
+          </Link>
         </div>
       </div>
-
-      {/* LMN Viewer Modal */}
-      {showLmnModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLmnModal(false)}>
-          <div className="bg-brand-cream rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-mint rounded-xl flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-brand-primary" />
-                </div>
-                <h3 className="font-display font-bold text-brand-primary">
-                  Letters of Medical Necessity
-                </h3>
-              </div>
-              <button onClick={() => setShowLmnModal(false)} className="text-brand-primary/40 hover:text-brand-primary text-xl leading-none">&times;</button>
-            </div>
-
-            {lmnLoading ? (
-              <div className="text-center py-8">
-                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-sm text-brand-primary/50 mt-2">Loading documents...</p>
-              </div>
-            ) : lmnRecords.length > 0 ? (
-              <div className="space-y-3 max-h-80 overflow-y-auto">
-                {lmnRecords.map((record) => (
-                  <div
-                    key={record.lmnNumber}
-                    className="bg-cream-dark rounded-xl p-4 border border-brand-primary/10 flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-medium text-brand-primary text-sm">
-                        {record.lmnNumber}
-                      </p>
-                      <p className="text-xs text-brand-primary/50 mt-0.5">
-                        Order {record.orderNumber} &middot;{' '}
-                        {new Date(record.issueDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                    <a
-                      href={`/api/lmn/${record.lmnNumber}`}
-                      className="flex items-center gap-2 px-3 py-2 bg-brand-primary text-white font-medium rounded-full hover:bg-forest-light transition-colors text-sm"
-                    >
-                      <Download className="w-4 h-4" />
-                      View
-                    </a>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Receipt className="w-10 h-10 text-brand-primary/20 mx-auto mb-3" />
-                <p className="text-brand-primary font-medium">No Documents Yet</p>
-                <p className="text-sm text-brand-primary/50 mt-1">
-                  When you purchase eligible products, your LMN will appear here.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Orders Section */}
       <div>
@@ -366,83 +297,6 @@ export function MemberDashboard({
                 <span className="text-xs text-brand-primary/30 italic">Coming soon</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Protocol Tools */}
-        <div>
-          <h2 className="text-xl font-display font-bold text-brand-primary mb-4">Protocol Tools</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <TierGate
-              requiredTier="club"
-              currentTier={tier}
-              upgradeMessage={brandify("Join CULTR Club to unlock dosing calculators.")}
-            >
-              <Link
-                href="/library/dosing-calculator"
-                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
-              >
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                  <Scale className="w-6 h-6 text-purple-700" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-brand-primary font-medium">Dosing Calculators</p>
-                  <p className="text-brand-primary/50 text-sm">Peptide reconstitution & syringe dosing</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
-              </Link>
-            </TierGate>
-            <TierGate
-              requiredTier="club"
-              currentTier={tier}
-              upgradeMessage={brandify("Join CULTR Club to unlock the calorie calculator.")}
-            >
-              <Link
-                href="/library/calorie-calculator"
-                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
-              >
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                  <Flame className="w-6 h-6 text-orange-700" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-brand-primary font-medium">Calorie & Macro Calculator</p>
-                  <p className="text-brand-primary/50 text-sm">BMR, TDEE & macro planning</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
-              </Link>
-            </TierGate>
-            <Link
-              href="/library/peptide-faq"
-              className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
-            >
-              <div className="w-12 h-12 bg-mint rounded-xl flex items-center justify-center group-hover:bg-sage/50 transition-colors">
-                <HelpCircle className="w-6 h-6 text-brand-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-brand-primary font-medium">Peptide FAQ</p>
-                <p className="text-brand-primary/50 text-sm">50+ questions on dosing, safety, stacking & more</p>
-              </div>
-              <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
-            </Link>
-            <TierGate
-              requiredTier="club"
-              currentTier={tier}
-              upgradeMessage={brandify("Join CULTR Club to unlock stacking guides.")}
-            >
-              <Link
-                href="/library/stack-guides"
-                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
-              >
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
-                  <Dumbbell className="w-6 h-6 text-orange-700" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-brand-primary font-medium">Stacking Guides</p>
-                  <p className="text-brand-primary/50 text-sm">Protocol combinations and sequencing</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
-              </Link>
-            </TierGate>
           </div>
         </div>
 
