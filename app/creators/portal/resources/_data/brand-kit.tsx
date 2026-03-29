@@ -20,10 +20,10 @@ export const brandKit: Record<string, ResourceEntry> = {
         <SectionHeading>Available Formats</SectionHeading>
         <div className="grid sm:grid-cols-2 gap-4 my-4">
           <div className="grad-dark p-8 rounded-xl flex items-center justify-center">
-            <span className="font-display font-bold text-white text-3xl">CULTR</span>
+            <img src="/creators/brand-kit/cultr-logo-white.png" alt="CULTR Health (white)" className="h-10 w-auto" />
           </div>
           <div className="bg-white border border-stone-200 p-8 rounded-xl flex items-center justify-center">
-            <span className="font-display font-bold text-cultr-forest text-3xl">CULTR</span>
+            <img src="/cultr-health-logo.png" alt="CULTR Health (dark)" className="h-10 w-auto" />
           </div>
         </div>
 
@@ -45,8 +45,8 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SectionHeading>Download</SectionHeading>
         <div className="grid sm:grid-cols-2 gap-3 my-4">
-          <DownloadButton href="/creators/brand-kit/cultr-logo-dark.svg" label="Logo \u2014 Dark (Forest)" format="SVG" />
-          <DownloadButton href="/creators/brand-kit/cultr-logo-white.svg" label="Logo \u2014 White (Reversed)" format="SVG" />
+          <DownloadButton href="/creators/brand-kit/cultr-logo-dark.png" label="Logo \u2014 Dark (Forest)" format="PNG" />
+          <DownloadButton href="/creators/brand-kit/cultr-logo-white.png" label="Logo \u2014 White (Reversed)" format="PNG" />
         </div>
         <Paragraph>Need additional formats (PNG @2x/@3x) or custom variants? Contact creators@cultrhealth.com.</Paragraph>
       </>

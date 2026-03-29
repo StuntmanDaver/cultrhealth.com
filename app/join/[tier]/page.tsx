@@ -415,7 +415,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
         router.push(`/success?provider=klarna&order_id=${data.order_id}&pending=true`);
       } else {
         setError('Klarna order was not approved. Please try another payment method.');
-        setPaymentMethod('stripe');
+        setPaymentMethod(COREPAY_ENABLED ? 'corepay' : 'stripe');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Klarna payment failed');

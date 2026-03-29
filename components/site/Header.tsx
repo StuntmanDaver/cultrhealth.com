@@ -89,28 +89,14 @@ export function Header() {
             {/* Logo + Left Nav */}
             <div className="flex items-center gap-8">
               <Link href="/" className="flex items-center shrink-0">
-                <div className="flex flex-col items-end leading-none">
-                  <span
-                    className={`
-                      font-display font-bold uppercase text-brand-primary
-                      transition-[font-size] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-                      ${scrolled ? 'text-lg' : 'text-[22px]'}
-                    `}
-                    style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}
-                  >
-                    CULTR
-                  </span>
-                  <span
-                    className={`
-                      font-display font-medium tracking-[0.12em] uppercase text-brand-primary
-                      transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
-                      text-[8px]
-                      ${scrolled ? 'opacity-0 max-h-0 overflow-hidden' : 'opacity-100 max-h-4'}
-                    `}
-                  >
-                    Health
-                  </span>
-                </div>
+                <img
+                  src="/cultr-health-logo.png"
+                  alt="CULTR Health"
+                  className={`
+                    w-auto transition-[height] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    ${scrolled ? 'h-5' : 'h-8'}
+                  `}
+                />
               </Link>
 
               <div className="hidden lg:flex items-center gap-0.5 ml-4">

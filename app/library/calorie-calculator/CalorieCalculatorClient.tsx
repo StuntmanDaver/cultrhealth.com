@@ -317,11 +317,7 @@ function MealPlanModal({
               margin-bottom: 32px;
             }
             .logo {
-              font-family: 'Playfair Display', Georgia, serif;
-              font-size: 28px;
-              font-weight: bold;
-              color: #2A4542;
-              letter-spacing: 2px;
+              text-align: center;
               margin-bottom: 8px;
             }
             .subtitle {
@@ -399,7 +395,7 @@ function MealPlanModal({
         </head>
         <body>
           <div class="header">
-            <div class="logo">CULTR HEALTH</div>
+            <div class="logo"><img src="/cultr-health-logo.png" alt="CULTR Health" style="height: 40px; width: auto;" /></div>
             <div class="subtitle">Your Personalized Meal Plan</div>
             <div class="date">Generated on ${today}</div>
           </div>

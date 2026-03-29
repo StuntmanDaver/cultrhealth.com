@@ -57,6 +57,7 @@ export function brandedEmailHeader(variant: 'dark' | 'light' = 'dark'): string {
   const accentGreen = '#B7E4C7'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
   // Official logo: public/cultr-health-logo.png (forest green on transparent)
+  // Cream variant: public/images/email-logo-cream.png (generated via scripts/generate-cream-logo.mjs)
   // Dark header → cream version so logo is visible on dark bg
   // Light header → official green logo on cream bg
   const logoSrc = variant === 'dark'

@@ -505,12 +505,12 @@ tests/                            # Test suite (Vitest + React Testing Library)
     └── protocol-templates.test.ts
 
 public/                           # Static assets
-├── cultr-logo-black.png
-├── cultr-logo-green.svg
+├── cultr-health-logo.png         # Official CULTR Health logo (forest green on transparent)
 ├── og-image.png
 ├── robots.txt
 ├── llms.txt                      # LLM crawler info
 ├── images/                       # Hero & lifestyle images (14+ files)
+│   ├── email-logo-cream.png      # Cream variant of official logo (for email dark backgrounds)
 │   ├── hero-banner-desktop.png
 │   ├── hero-banner-mobile.png
 │   ├── hero-girls-warming-up.png
@@ -527,8 +527,8 @@ public/                           # Static assets
 │   └── lifestyle-woman-running.jpg
 └── creators/brand-kit/           # Creator brand assets
     ├── cultr-brand-colors.json
-    ├── cultr-logo-dark.svg
-    └── cultr-logo-white.svg
+    ├── cultr-logo-dark.png       # Official logo for creator downloads
+    └── cultr-logo-white.png      # White variant for creator downloads
 ```
 
 ---

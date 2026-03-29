@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/images') ||
       url.pathname.startsWith('/favicon') ||
-      url.pathname.startsWith('/cultr-logo') ||
+      url.pathname.startsWith('/cultr-') ||
       url.pathname === '/robots.txt' ||
       url.pathname === '/sitemap.xml'
     ) {

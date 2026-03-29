@@ -87,10 +87,11 @@ export function CTASection({
 
           {/* Right - CULTR Logo */}
           <img
-            src="/cultr-logo-cream-health.svg"
+            src="/cultr-health-logo.png"
             alt="CULTR Health"
             loading="lazy"
             className="h-10 md:h-12 w-auto shrink-0"
+            style={{ filter: 'brightness(0) invert(1)' }}
           />
         </div>
       </div>

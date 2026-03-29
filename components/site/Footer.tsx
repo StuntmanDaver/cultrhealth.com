@@ -54,10 +54,11 @@ export function Footer() {
           <div className="mb-12">
             <Link href="/" className="inline-block">
               <img
-                src="/cultr-logo-cream-health.svg"
+                src="/cultr-health-logo.png"
                 alt="CULTR Health"
                 loading="lazy"
                 className="h-8 w-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
             </Link>
             <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold">CULTR</span>, rebrand yourself.</p>

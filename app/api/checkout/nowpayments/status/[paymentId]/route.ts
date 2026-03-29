@@ -19,8 +19,8 @@ export async function GET(
     }
 
     const { paymentId } = params;
-    if (!paymentId) {
-      return NextResponse.json({ error: 'Payment ID is required' }, { status: 400 });
+    if (!paymentId || !/^\d+$/.test(paymentId)) {
+      return NextResponse.json({ error: 'Valid payment ID is required' }, { status: 400 });
     }
 
     const payment = await getNowPaymentStatus(paymentId);

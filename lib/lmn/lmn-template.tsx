@@ -6,9 +6,11 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
   Font,
 } from '@react-pdf/renderer'
+import { join } from 'path'
 import type { LmnData } from './lmn-types'
 
 // Register Playfair Display for the CULTR logo
@@ -37,11 +39,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   logo: {
-    fontSize: 24,
-    fontFamily: 'Playfair Display',
-    fontWeight: 'bold',
-    letterSpacing: 0,
-    color: '#1a1a1a',
+    width: 120,
+    height: 'auto' as unknown as number,
     marginBottom: 5,
   },
   tagline: {
@@ -206,7 +205,7 @@ export function LmnDocument({ data }: LmnDocumentProps) {
       <Page size="LETTER" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.logo}>CULTR</Text>
+          <Image style={styles.logo} src={join(process.cwd(), 'public/cultr-health-logo.png')} />
           <Text style={styles.tagline}>PERSONALIZED LONGEVITY MEDICINE</Text>
         </View>
 

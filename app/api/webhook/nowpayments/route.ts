@@ -54,11 +54,20 @@ export async function POST(request: NextRequest) {
         }
         break;
       }
-      case 'partially_paid':
+      case 'partially_paid': {
+        // Preserve existing JSON notes structure (cron job depends on it)
+        const partialOrder = await getOrderByOrderNumber(order_id);
+        const existingNotes = partialOrder?.notes
+          ? (typeof partialOrder.notes === 'string' ? (() => { try { return JSON.parse(partialOrder.notes); } catch { return {}; } })() : partialOrder.notes)
+          : {};
         await updateOrderByOrderNumber(order_id, {
-          notes: `Partial BTC payment received: ${actually_paid} (expected for $${price_amount})`,
+          notes: JSON.stringify({
+            ...existingNotes,
+            partial_payment: `${actually_paid} received (expected for $${price_amount})`,
+          }),
         });
         break;
+      }
       case 'failed':
       case 'expired':
         await updateOrderByOrderNumber(order_id, { status: 'cancelled' });
