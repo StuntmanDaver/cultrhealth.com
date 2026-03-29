@@ -35,9 +35,10 @@ import { addTagsToContact } from '@/lib/mailchimp';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Require authenticated session (skip on staging where Asher Med is not configured)
-    const asherConfigured = !!process.env.ASHER_MED_API_KEY;
-    if (asherConfigured) {
+    // Require authenticated session (skip on staging/dev for testing)
+    const stagingSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const isStagingAuth = stagingSiteUrl.includes('staging') || process.env.NODE_ENV === 'development';
+    if (!isStagingAuth) {
       const auth = await verifyAuth(request);
       if (!auth.authenticated) {
         return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
@@ -178,28 +179,113 @@ export async function POST(request: NextRequest) {
       medicationTypeSelection: medications.some(m => m.isGLP1) ? 'GLP1' : 'NonGLP1',
     };
 
-    // Staging bypass: return mock success when Asher Med is not configured
-    const isStaging = !process.env.ASHER_MED_API_KEY;
+    // Staging bypass: mock Asher Med order creation on staging/dev
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
+    const isStaging = siteUrl.includes('staging') || process.env.NODE_ENV === 'development';
+    // Shared intake data payload for both staging and production DB updates
+    const intakeFormData = {
+      firstName: body.firstName,
+      lastName: body.lastName,
+      phone: body.phone,
+      dateOfBirth: body.dateOfBirth,
+      gender: body.gender,
+      heightFeet: body.heightFeet,
+      heightInches: body.heightInches,
+      weightLbs: body.weightLbs,
+      shippingAddress: body.shippingAddress,
+      selectedMedications: selectedMedications,
+      treatmentPreferences: body.treatmentPreferences || null,
+      currentMedications: body.currentMedications || null,
+      goalsMotivation: body.goalsMotivation || null,
+    };
+
     if (isStaging) {
-      const mockPatientId = Date.now();
+      // Safe mock ID that fits PostgreSQL INTEGER (max ~2.1 billion)
+      const mockPatientId = Math.floor(Math.random() * 2000000000);
 
       // Still update DB if available
-      if (process.env.POSTGRES_URL && body.stripeSessionId) {
+      if (process.env.POSTGRES_URL) {
         try {
           const { sql } = await import('@vercel/postgres');
-          await sql`
-            UPDATE pending_intakes
-            SET intake_status = 'completed', completed_at = NOW(),
-                intake_data = intake_data || ${JSON.stringify({
+
+          // Use UPSERT: update if exists (matched by stripe session), insert if not
+          if (body.stripeSessionId) {
+            const updated = await sql`
+              UPDATE pending_intakes
+              SET intake_status = 'completed', completed_at = NOW(), updated_at = NOW(),
+                  intake_data = COALESCE(intake_data, '{}'::jsonb) || ${JSON.stringify({
+                    ...intakeFormData,
+                    asher_patient_id: mockPatientId,
+                    submitted_at: new Date().toISOString(),
+                    staging_bypass: true,
+                    partnerNote: partnerNote || null,
+                  })}::jsonb
+              WHERE stripe_payment_intent_id = ${body.stripeSessionId}
+                OR intake_data->>'session_id' = ${body.stripeSessionId}
+              RETURNING id
+            `;
+
+            // If no row matched (webhook didn't create the record), insert directly
+            if (updated.rowCount === 0) {
+              await sql`
+                INSERT INTO pending_intakes (
+                  stripe_payment_intent_id, customer_email, plan_tier,
+                  intake_status, intake_data, created_at, updated_at, completed_at
+                ) VALUES (
+                  ${body.stripeSessionId},
+                  ${body.email.toLowerCase()},
+                  ${body.planTier || 'unknown'},
+                  'completed',
+                  ${JSON.stringify({
+                    session_id: body.stripeSessionId,
+                    ...intakeFormData,
+                    asher_patient_id: mockPatientId,
+                    submitted_at: new Date().toISOString(),
+                    staging_bypass: true,
+                    partnerNote: partnerNote || null,
+                  })}::jsonb,
+                  NOW(), NOW(), NOW()
+                )
+              `;
+            }
+          } else {
+            // No stripe session — insert directly with email as key
+            await sql`
+              INSERT INTO pending_intakes (
+                customer_email, plan_tier, intake_status, intake_data,
+                created_at, updated_at, completed_at
+              ) VALUES (
+                ${body.email.toLowerCase()},
+                ${body.planTier || 'unknown'},
+                'completed',
+                ${JSON.stringify({
+                  ...intakeFormData,
                   asher_patient_id: mockPatientId,
                   submitted_at: new Date().toISOString(),
                   staging_bypass: true,
-                })}::jsonb
-            WHERE stripe_payment_intent_id = ${body.stripeSessionId}
-              OR intake_data->>'session_id' = ${body.stripeSessionId}
+                  partnerNote: partnerNote || null,
+                })}::jsonb,
+                NOW(), NOW(), NOW()
+              )
+            `;
+          }
+
+          // Also create asher_orders record on staging (so admin intakes JOIN works)
+          await sql`
+            INSERT INTO asher_orders (
+              asher_order_id, asher_patient_id, customer_email, order_type,
+              order_status, partner_note, medication_packages,
+              stripe_payment_intent_id, created_at
+            ) VALUES (
+              ${mockPatientId}, ${mockPatientId},
+              ${body.email.toLowerCase()}, 'new', 'pending',
+              ${partnerNote},
+              ${JSON.stringify(orderRequest.medicationPackages)},
+              ${body.stripeSessionId || null}, NOW()
+            )
           `;
-        } catch {
-          // Non-fatal
+        } catch (dbErr) {
+          console.error('[intake/submit] Staging DB error (non-fatal):', dbErr instanceof Error ? dbErr.message : 'Unknown');
         }
       }
 
@@ -251,26 +337,61 @@ export async function POST(request: NextRequest) {
     }
 
     // Update pending intake status in database
-    if (process.env.POSTGRES_URL && body.stripeSessionId) {
+    if (process.env.POSTGRES_URL) {
       try {
         const { sql } = await import('@vercel/postgres');
 
-        await sql`
-          UPDATE pending_intakes
-          SET
-            intake_status = 'completed',
-            completed_at = NOW(),
-            intake_data = intake_data || ${JSON.stringify({
-              asher_patient_id: result.data?.id,
-              submitted_at: new Date().toISOString(),
-              treatmentPreferences: body.treatmentPreferences || null,
-              currentMedications: body.currentMedications || null,
-              partnerNote: partnerNote || null,
-              goalsMotivation: body.goalsMotivation || null,
-            })}::jsonb
-          WHERE stripe_payment_intent_id = ${body.stripeSessionId}
-            OR intake_data->>'session_id' = ${body.stripeSessionId}
-        `;
+        const completionData = JSON.stringify({
+          ...intakeFormData,
+          asher_patient_id: result.data?.id,
+          submitted_at: new Date().toISOString(),
+          partnerNote: partnerNote || null,
+        });
+
+        if (body.stripeSessionId) {
+          const updated = await sql`
+            UPDATE pending_intakes
+            SET
+              intake_status = 'completed',
+              completed_at = NOW(),
+              updated_at = NOW(),
+              intake_data = COALESCE(intake_data, '{}'::jsonb) || ${completionData}::jsonb
+            WHERE stripe_payment_intent_id = ${body.stripeSessionId}
+              OR intake_data->>'session_id' = ${body.stripeSessionId}
+            RETURNING id
+          `;
+
+          // If no row matched (webhook didn't create the record), insert directly
+          if (updated.rowCount === 0) {
+            await sql`
+              INSERT INTO pending_intakes (
+                stripe_payment_intent_id, customer_email, plan_tier,
+                intake_status, intake_data, created_at, updated_at, completed_at
+              ) VALUES (
+                ${body.stripeSessionId},
+                ${body.email.toLowerCase()},
+                ${body.planTier || 'unknown'},
+                'completed',
+                ${JSON.stringify({ session_id: body.stripeSessionId, ...JSON.parse(completionData) })}::jsonb,
+                NOW(), NOW(), NOW()
+              )
+            `;
+          }
+        } else {
+          // No stripe session — insert directly
+          await sql`
+            INSERT INTO pending_intakes (
+              customer_email, plan_tier, intake_status, intake_data,
+              created_at, updated_at, completed_at
+            ) VALUES (
+              ${body.email.toLowerCase()},
+              ${body.planTier || 'unknown'},
+              'completed',
+              ${completionData}::jsonb,
+              NOW(), NOW(), NOW()
+            )
+          `;
+        }
 
         // Create asher_orders record
         await sql`
