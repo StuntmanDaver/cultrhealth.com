@@ -15,7 +15,6 @@ import {
   Flame,
   ShoppingBag,
   ShoppingCart,
-  User,
   CreditCard,
   X,
   LogOut,
@@ -61,8 +60,7 @@ const NAV_GROUPS = [
   {
     label: 'ACCOUNT',
     items: [
-      { label: 'Profile', href: '/portal/profile', icon: User },
-      { label: 'Documents', href: '/portal/documents', icon: CreditCard },
+      { label: 'Manage Billing', href: 'https://billing.stripe.com/p/login/4gM00igPh021086fle6J200', icon: CreditCard },
     ],
   },
 ]
@@ -116,16 +114,29 @@ export function MemberSidebar({ mobileOpen, onClose }: MemberSidebarProps) {
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isActive(item.href)
-                return (
+                const isExternal = item.href.startsWith('http')
+                const className = `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  active
+                    ? 'bg-cultr-forest text-white'
+                    : 'text-cultr-textMuted hover:bg-cultr-mint hover:text-cultr-forest'
+                }`
+                return isExternal ? (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={className}
+                  >
+                    <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
+                    {item.label}
+                  </a>
+                ) : (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={onClose}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-cultr-forest text-white'
-                        : 'text-cultr-textMuted hover:bg-cultr-mint hover:text-cultr-forest'
-                    }`}
+                    className={className}
                   >
                     <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
                     {item.label}
