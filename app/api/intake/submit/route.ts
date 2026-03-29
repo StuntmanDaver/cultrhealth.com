@@ -336,7 +336,52 @@ export async function POST(request: NextRequest) {
       patientId: result.data?.id,
     });
   } catch (error) {
-    console.error('Failed to submit intake form:', error);
+    // Log full Asher Med error details for debugging
+    const asherError = error as { statusCode?: number; response?: unknown };
+    console.error('[intake/submit] Failed:', {
+      message: error instanceof Error ? error.message : String(error),
+      statusCode: asherError.statusCode,
+      response: asherError.response,
+      apiUrl: process.env.ASHER_MED_API_URL || 'derived from ASHER_MED_ENVIRONMENT',
+      environment: process.env.ASHER_MED_ENVIRONMENT || 'production',
+      hasApiKey: !!process.env.ASHER_MED_API_KEY,
+      hasPartnerId: !!process.env.ASHER_MED_PARTNER_ID,
+    });
+
+    // Still save intake to DB so it appears in admin dashboard
+    if (process.env.POSTGRES_URL) {
+      try {
+        const { sql } = await import('@vercel/postgres');
+        const body = await request.clone().json().catch(() => null);
+        if (body?.email) {
+          await sql`
+            INSERT INTO pending_intakes (
+              stripe_payment_intent_id, customer_email, plan_tier,
+              intake_status, intake_data, created_at, updated_at
+            ) VALUES (
+              ${body.stripeSessionId || null},
+              ${body.email.toLowerCase()},
+              ${body.planTier || 'unknown'},
+              'failed',
+              ${JSON.stringify({
+                session_id: body.stripeSessionId || null,
+                firstName: body.firstName,
+                lastName: body.lastName,
+                phone: body.phone,
+                selectedMedications: body.selectedMedications || [],
+                submitted_at: new Date().toISOString(),
+                asher_error: error instanceof Error ? error.message : String(error),
+                asher_status_code: asherError.statusCode,
+              })}::jsonb,
+              NOW(), NOW()
+            )
+            ON CONFLICT DO NOTHING
+          `;
+        }
+      } catch {
+        // Non-fatal: DB save failed too
+      }
+    }
 
     const errorMessage = error instanceof Error ? error.message : 'Failed to submit intake form';
 
