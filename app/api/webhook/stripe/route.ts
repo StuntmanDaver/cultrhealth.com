@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
+import { syncContactToMailchimp } from '@/lib/mailchimp'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -293,6 +294,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           dashboardUrl,
         });
         console.log('Welcome email sent to:', custEmail);
+
+        // Sync to Mailchimp with tier tag (non-blocking)
+        const planTier = session.metadata?.plan_tier || 'unknown'
+        const tierTag = planTier !== 'unknown' ? `tier-${planTier}` : null
+        syncContactToMailchimp({
+          email: custEmail,
+          firstName: customerName.split(' ')[0] || customerName,
+          lastName: customerName.split(' ').slice(1).join(' ') || '',
+          tags: ['cultr-member', ...(tierTag ? [tierTag] : [])],
+          mergeFields: {
+            TIER: planTier.charAt(0).toUpperCase() + planTier.slice(1),
+          },
+        }).catch((err) =>
+          console.error('[stripe-webhook] Mailchimp sync error (non-fatal):', err)
+        )
       }
     } catch (emailError) {
       console.error('Failed to send welcome email:', emailError);
