@@ -93,6 +93,10 @@ export async function getRecordingDownloadLink(recordingId: string): Promise<str
   return data.download_link
 }
 
+export async function deleteRecording(recordingId: string): Promise<void> {
+  await dailyFetch(`/recordings/${recordingId}`, { method: 'DELETE' })
+}
+
 export async function updateRoomRecording(roomName: string, enableRecording: boolean): Promise<void> {
   await dailyFetch(`/rooms/${roomName}`, {
     method: 'POST',

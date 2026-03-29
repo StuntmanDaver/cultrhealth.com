@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAuth } from '@/lib/auth'
 import { getConsultationById, getNotesForConsultation, updateRecordingConsent } from '@/lib/consultations-db'
-import { createMeetingToken } from '@/lib/daily'
+import { createMeetingToken, updateRoomRecording } from '@/lib/daily'
 
 export async function GET(
   request: NextRequest,
@@ -46,6 +46,7 @@ export async function GET(
       consultation: {
         ...consultation,
         daily_room_name: undefined,
+        daily_room_url: undefined,
       },
       meetingToken,
       notes,
@@ -80,6 +81,15 @@ export async function PATCH(
 
     if (typeof body.recordingConsent === 'boolean') {
       await updateRecordingConsent(Number(id), body.recordingConsent)
+
+      // If consent declined, disable recording on the Daily.co room
+      if (!body.recordingConsent && consultation.daily_room_name) {
+        try {
+          await updateRoomRecording(consultation.daily_room_name, false)
+        } catch (roomErr) {
+          console.error('Failed to disable room recording:', roomErr)
+        }
+      }
     }
 
     return NextResponse.json({ success: true })

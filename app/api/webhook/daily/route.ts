@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
-import { verifyDailyWebhook, getRecordingDownloadLink } from '@/lib/daily'
+import { verifyDailyWebhook, getRecordingDownloadLink, deleteRecording } from '@/lib/daily'
 import {
   updateConsultationStatus,
   createRecordingEntry,
@@ -123,6 +123,13 @@ export async function POST(request: NextRequest) {
             durationSecs || 0,
             buffer.length
           )
+
+          // Delete recording from Daily.co cloud (HIPAA: don't leave copies on third party)
+          try {
+            await deleteRecording(recordingId)
+          } catch (delErr) {
+            console.error(`Failed to delete recording ${recordingId} from Daily.co:`, delErr)
+          }
 
           try {
             await sendRecordingReadyNotification({
