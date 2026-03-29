@@ -15,11 +15,18 @@ const ERROR_MESSAGES: Record<string, string> = {
   expired: 'This kit has expired.',
 }
 
+const REQUIRED_GUIDES = [
+  { id: 'collection', label: 'Collection Guide', href: '/docs/blood-test/collection-guide.pdf' },
+  { id: 'instructions', label: 'Instructions', href: '/docs/blood-test/instructions.pdf' },
+  { id: 'ice-pack', label: 'Ice Pack Preparation', href: '/docs/blood-test/ice-pack-frozen.pdf' },
+]
+
 export function KitRegistrationForm({ onSuccess, labsEndpoint = '/api/portal/labs' }: KitRegistrationFormProps) {
   const [kitId, setKitId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [readGuides, setReadGuides] = useState<Record<string, boolean>>({})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,8 +90,48 @@ export function KitRegistrationForm({ onSuccess, labsEndpoint = '/api/portal/lab
     }
   }
 
+  const allGuidesRead = REQUIRED_GUIDES.every((g) => readGuides[g.id])
+
   return (
     <form onSubmit={handleSubmit} className="mt-6">
+      {/* Required reading before registration */}
+      <div className="rounded-xl border border-brand-primary/10 bg-white p-4 mb-5">
+        <p className="text-sm font-semibold text-brand-primary mb-1">
+          Required Reading
+        </p>
+        <p className="text-xs text-brand-primary/50 mb-3">
+          Review each guide before registering your kit.
+        </p>
+        <div className="space-y-2">
+          {REQUIRED_GUIDES.map((guide) => (
+            <label key={guide.id} className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={!!readGuides[guide.id]}
+                onChange={(e) =>
+                  setReadGuides((prev) => ({ ...prev, [guide.id]: e.target.checked }))
+                }
+                className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/30 accent-brand-primary"
+              />
+              <a
+                href={guide.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-brand-primary underline underline-offset-2 group-hover:text-forest-light"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {guide.label}
+              </a>
+            </label>
+          ))}
+        </div>
+        {!allGuidesRead && (
+          <p className="text-xs text-amber-600 mt-3">
+            Please review and check all guides to continue.
+          </p>
+        )}
+      </div>
+
       <label
         htmlFor="kit-id-input"
         className="block text-sm font-semibold text-brand-primary mb-1"
@@ -105,10 +152,10 @@ export function KitRegistrationForm({ onSuccess, labsEndpoint = '/api/portal/lab
             if (success) setSuccess(false)
           }}
           placeholder="e.g., KIT-XXXXX"
-          className="flex-1 rounded-xl border border-brand-primary/20 bg-white px-4 py-2.5 text-sm text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary/40"
-          disabled={isLoading}
+          className="flex-1 rounded-xl border border-brand-primary/20 bg-white px-4 py-2.5 text-sm text-brand-primary placeholder:text-brand-primary/30 focus:outline-none focus:ring-2 focus:ring-brand-primary/30 focus:border-brand-primary/40 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isLoading || !allGuidesRead}
         />
-        <Button type="submit" variant="primary" size="sm" isLoading={isLoading}>
+        <Button type="submit" variant="primary" size="sm" isLoading={isLoading} disabled={!allGuidesRead}>
           Register Kit
         </Button>
       </div>
