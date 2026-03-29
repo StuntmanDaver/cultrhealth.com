@@ -37,7 +37,7 @@ function NavDockItem({ href, label, hasDropdown, isActive, scrolled, mouseX }: N
         rounded-lg whitespace-nowrap tracking-[0.01em]
         transition-colors duration-200 ease-out hover:bg-brand-primary/[0.07]
         ${isActive ? 'text-brand-primary bg-brand-primary/[0.08]' : 'text-brand-primary'}
-        ${scrolled ? 'text-[13px] py-1.5 px-3' : 'text-sm py-[7px] px-[15px]'}
+        ${scrolled ? 'text-[12.5px] py-1.5 px-2.5' : 'text-[13px] py-[7px] px-[11px]'}
       `}
     >
       <motion.span

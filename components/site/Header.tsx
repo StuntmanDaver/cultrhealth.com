@@ -87,7 +87,7 @@ export function Header() {
             `}
           >
             {/* Logo + Left Nav */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-5">
               <Link href="/" className="flex items-center shrink-0">
                 <img
                   src="/cultr-health-logo.png"
