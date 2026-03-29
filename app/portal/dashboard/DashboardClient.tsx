@@ -23,6 +23,7 @@ import {
   ChevronRight,
   CheckCircle,
   AlertTriangle,
+  Download,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -312,6 +313,31 @@ export default function DashboardClient() {
             </div>
           )}
         </Link>
+      )}
+
+      {/* Blood Test Guides */}
+      {!kitStatusLoading && kitStatusMessage && kitStatusMessage !== 'Upgrade your plan to unlock blood testing' && (
+        <div className="rounded-2xl border border-brand-primary/10 bg-white p-5 mb-6">
+          <h3 className="text-sm font-semibold text-brand-primary mb-3">Blood Test Guides</h3>
+          <div className="space-y-2">
+            {[
+              { label: 'Collection Guide', href: '/docs/blood-test/collection-guide.pdf' },
+              { label: 'Instructions', href: '/docs/blood-test/instructions.pdf' },
+              { label: 'Ice Pack Preparation', href: '/docs/blood-test/ice-pack-frozen.pdf' },
+            ].map((doc) => (
+              <a
+                key={doc.href}
+                href={doc.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 rounded-xl p-3 hover:bg-brand-primary/[0.03] transition-colors"
+              >
+                <Download className="w-4 h-4 text-brand-primary/40 flex-shrink-0" />
+                <span className="text-sm font-medium text-brand-primary">{doc.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Loading State */}

@@ -3,6 +3,7 @@
 .cursor
 archive
 *.pdf
+!/public/docs/**/*.pdf
 "*Screenshot*"
 "*AGENT*"
 "*ARCHITECTURE*"
