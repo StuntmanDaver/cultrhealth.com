@@ -17,6 +17,7 @@ import {
   Clock,
   X,
   LogOut,
+  Video,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -38,6 +39,7 @@ const NAV_GROUPS = [
       { label: 'Customers', href: '/admin/customers', icon: Users },
       { label: 'Members', href: '/admin/members', icon: CreditCard },
       { label: 'Intakes', href: '/admin/intakes', icon: ClipboardList },
+      { label: 'Consultations', href: '/admin/consultations', icon: Video },
     ],
   },
   {

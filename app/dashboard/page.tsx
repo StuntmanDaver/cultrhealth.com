@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
+import { ConsultationCard } from '@/components/consultations/ConsultationCard'
 import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 
 const DEFAULT_ACCESS: LibraryAccess = {
@@ -18,6 +20,7 @@ export default function DashboardPage() {
   const [email, setEmail] = useState('')
   const [libraryAccess, setLibraryAccess] = useState<LibraryAccess>(DEFAULT_ACCESS)
   const [loading, setLoading] = useState(true)
+  const [upcomingConsultation, setUpcomingConsultation] = useState<Record<string, unknown> | null>(null)
 
   useEffect(() => {
     async function fetchProfile() {
@@ -39,9 +42,17 @@ export default function DashboardPage() {
         }
       } catch {
         // Profile fetch failed — show dashboard with defaults
-      } finally {
-        setLoading(false)
       }
+
+      try {
+        const consultRes = await fetch('/api/consultations?status=scheduled')
+        const consultData = await consultRes.json()
+        if (consultData.success && consultData.consultations?.length > 0) {
+          setUpcomingConsultation(consultData.consultations[0])
+        }
+      } catch { /* ignore */ }
+
+      setLoading(false)
     }
     fetchProfile()
   }, [])
@@ -67,6 +78,29 @@ export default function DashboardPage() {
             email={email}
           />
         )}
+
+        {/* Consultations */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display text-lg text-brand-primary">Consultations</h3>
+            <Link href="/consultations" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+              Book consultation
+            </Link>
+          </div>
+          {upcomingConsultation ? (
+            <ConsultationCard consultation={upcomingConsultation as never} />
+          ) : (
+            <div className="bg-cream-dark rounded-xl p-4 text-center">
+              <p className="text-sm text-brand-primary/60 mb-3">No upcoming consultations.</p>
+              <Link
+                href="/consultations"
+                className="inline-flex px-5 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
+              >
+                Book Now
+              </Link>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   )
