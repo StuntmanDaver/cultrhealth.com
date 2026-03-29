@@ -332,6 +332,7 @@ export async function POST(request: Request) {
       mergeFields: {
         THERAPY: items[0]?.name || '',
         ORDER_NUM: orderNumber,
+        ORDER_DATE: new Date().toISOString().split('T')[0],
       },
     }).catch((err) =>
       console.error('[club/orders] Mailchimp sync error (non-fatal):', err)

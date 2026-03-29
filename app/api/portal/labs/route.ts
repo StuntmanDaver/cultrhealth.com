@@ -4,6 +4,7 @@ import { getSiphoxCustomerByPhone, getKitOrdersByCustomer, updateKitOrderStatus,
 import { registerKit } from '@/lib/siphox/client'
 import { SiphoxApiError } from '@/lib/siphox/errors'
 import { deriveKitLifecycleState } from '@/lib/siphox/kit-lifecycle'
+import { addTagsToContact } from '@/lib/mailchimp'
 
 /** Empty labs response — used when DB is unavailable or customer has no data */
 const EMPTY_LABS_RESPONSE = {
@@ -141,6 +142,13 @@ export async function POST(request: NextRequest) {
         // Non-fatal: SiPhox registration succeeded, local DB update failed
         console.error('Failed to update local kit order status:', updateError instanceof Error ? updateError.message : updateError)
       }
+    }
+
+    // Tag Mailchimp contact as labs-ordered (non-blocking)
+    if (registration.valid && siphoxCustomer.email) {
+      addTagsToContact(siphoxCustomer.email, ['labs-ordered']).catch((err) =>
+        console.error('[portal/labs] Mailchimp tag error (non-fatal):', err)
+      )
     }
 
     return NextResponse.json({ success: true, registration })
