@@ -35,13 +35,7 @@ export function PortalSidebar({ mobileOpen = false, onClose }: PortalSidebarProp
       {/* Brand header */}
       <div className="px-6 py-6">
         <Link href="/portal/dashboard" className="block">
-          <span
-            className="text-2xl font-bold tracking-tight text-white"
-            style={{ fontFamily: 'var(--font-fraunces)' }}
-          >
-            CULTR
-          </span>
-          <span className="block text-xs text-white/60 -mt-0.5">Health</span>
+          <img src="/images/email-logo-cream.png" alt="CULTR Health" className="h-10 w-auto" />
         </Link>
       </div>
 
