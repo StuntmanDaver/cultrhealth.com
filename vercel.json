@@ -30,6 +30,10 @@
     {
       "path": "/api/cron/siphox-status-sync",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/consultation-reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
