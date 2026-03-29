@@ -45,6 +45,7 @@ export interface CreateMembershipInput {
   plan_tier: string
   subscription_status: string
   asher_patient_id?: number | string
+  email?: string
 }
 
 export interface UpdateMembershipInput {
@@ -148,7 +149,7 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
 // ===========================================
 
 export async function createMembership(input: CreateMembershipInput): Promise<{ id: string }> {
-  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id } = input
+  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id, email } = input
 
   try {
     const result = await sql`
@@ -158,6 +159,7 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         plan_tier,
         subscription_status,
         asher_patient_id,
+        email,
         created_at,
         updated_at
       )
@@ -167,6 +169,7 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         ${plan_tier},
         ${subscription_status},
         ${asher_patient_id || null},
+        ${email || null},
         NOW(),
         NOW()
       )
@@ -174,6 +177,7 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
       DO UPDATE SET
         subscription_status = EXCLUDED.subscription_status,
         plan_tier = EXCLUDED.plan_tier,
+        email = COALESCE(EXCLUDED.email, memberships.email),
         updated_at = NOW()
       RETURNING id
     `

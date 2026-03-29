@@ -1,38 +1,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import PortalLoginClient from '@/app/portal/login/PortalLoginClient'
 
 // ===========================================
 // MOCKS
 // ===========================================
 
-const mockPush = vi.fn()
-const mockPathname = '/portal/login'
-
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: mockPush,
+    push: vi.fn(),
     replace: vi.fn(),
     back: vi.fn(),
     prefetch: vi.fn(),
   }),
-  usePathname: () => mockPathname,
+  usePathname: () => '/portal/login',
 }))
 
-// Mock fetch globally
+vi.mock('next/link', () => ({
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
+
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
 // Mock IntersectionObserver for ScrollReveal
-// Must defer callback to avoid "Cannot access 'unobserve' before initialization"
-// in ScrollReveal's observe() function where const unobserve = observe(el, cb)
 class MockIntersectionObserver {
   callback: IntersectionObserverCallback
   constructor(callback: IntersectionObserverCallback) {
     this.callback = callback
   }
   observe(el: Element) {
-    // Defer to next microtask so the const binding is established
     Promise.resolve().then(() => {
       this.callback(
         [{ target: el, isIntersecting: true, intersectionRatio: 1 } as IntersectionObserverEntry],
@@ -49,28 +48,16 @@ Object.defineProperty(window, 'IntersectionObserver', {
   writable: true,
 })
 
-// Mock ResizeObserver (needed by input-otp)
-class MockResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-}
-Object.defineProperty(window, 'ResizeObserver', {
-  value: MockResizeObserver,
-  writable: true,
-})
-
 // ===========================================
 // SETUP
 // ===========================================
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.useFakeTimers({ shouldAdvanceTime: true })
 })
 
 afterEach(() => {
-  vi.useRealTimers()
+  vi.restoreAllMocks()
 })
 
 // ===========================================
@@ -78,322 +65,196 @@ afterEach(() => {
 // ===========================================
 
 describe('PortalLoginClient', () => {
-  describe('Phone Input Step', () => {
-    it('renders phone input on initial load', () => {
+  describe('Initial Render', () => {
+    it('renders email input and branding', async () => {
       render(<PortalLoginClient />)
-      expect(screen.getByTestId('phone-input')).toBeInTheDocument()
-      expect(screen.getByText('Continue')).toBeInTheDocument()
-      expect(screen.getByText('Change the CULTR')).toBeInTheDocument()
-      expect(screen.getByText('Access your portal')).toBeInTheDocument()
-    })
 
-    it('formats phone input as US mask', async () => {
-      render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input') as HTMLInputElement
-
-      // Simulate typing digits
-      fireEvent.change(input, { target: { value: '5551234567' } })
-      expect(input.value).toBe('(555) 123-4567')
-    })
-
-    it('formats partial phone numbers correctly', () => {
-      render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input') as HTMLInputElement
-
-      fireEvent.change(input, { target: { value: '555' } })
-      expect(input.value).toBe('(555')
-
-      fireEvent.change(input, { target: { value: '555123' } })
-      expect(input.value).toBe('(555) 123')
-    })
-
-    it('shows loading state when submitting phone', async () => {
-      mockFetch.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({
-          ok: true,
-          json: async () => ({ success: true, phone: '+15551234567' }),
-        }), 100))
-      )
-
-      render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-      fireEvent.change(input, { target: { value: '5551234567' } })
-
-      const form = input.closest('form')!
-      fireEvent.submit(form)
-
-      // Button should show loading state (the Button component renders "Loading..." when isLoading)
       await waitFor(() => {
-        expect(screen.getByText('Loading...')).toBeInTheDocument()
+        expect(screen.getByText('Change the CULTR')).toBeInTheDocument()
+        expect(screen.getByText('Access your portal')).toBeInTheDocument()
+        expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument()
+        expect(screen.getByText('Send Login Link')).toBeInTheDocument()
       })
     })
 
-    it('shows error message for invalid phone', async () => {
+    it('submit button is disabled when email is empty', async () => {
       render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-
-      // Enter a short number
-      fireEvent.change(input, { target: { value: '555' } })
-
-      // Try to submit (the button should be disabled, so submit the form directly)
-      const form = input.closest('form')!
-      fireEvent.submit(form)
 
       await waitFor(() => {
-        expect(screen.getByText('Please enter a valid 10-digit US phone number.')).toBeInTheDocument()
+        const button = screen.getByRole('button', { name: /send login link/i })
+        expect(button).toBeDisabled()
       })
     })
 
+    it('submit button is enabled when email is entered', async () => {
+      render(<PortalLoginClient />)
+
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+        const button = screen.getByRole('button', { name: /send login link/i })
+        expect(button).not.toBeDisabled()
+      })
+    })
+  })
+
+  describe('Form Submission', () => {
+    it('calls magic-link API with email on submit', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+
+      render(<PortalLoginClient />)
+
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(mockFetch).toHaveBeenCalledWith('/api/auth/magic-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test@example.com' }),
+        })
+      })
+    })
+
+    it('shows success message after successful submission', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+
+      render(<PortalLoginClient />)
+
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(screen.getByText('Check your email')).toBeInTheDocument()
+        expect(screen.getByText(/receive a login link shortly/)).toBeInTheDocument()
+      })
+    })
+
+    it('shows "Use a different email" after success', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+
+      render(<PortalLoginClient />)
+
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(screen.getByText('Use a different email')).toBeInTheDocument()
+      })
+    })
+
+    it('returns to form when "Use a different email" is clicked', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+
+      render(<PortalLoginClient />)
+
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
+      fireEvent.submit(form)
+
+      await waitFor(() => {
+        expect(screen.getByText('Use a different email')).toBeInTheDocument()
+      })
+
+      fireEvent.click(screen.getByText('Use a different email'))
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Error Handling', () => {
     it('shows error from API response', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ error: 'Phone number is not valid' }),
+        json: async () => ({ error: 'Invalid email address' }),
       })
 
       render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-      fireEvent.change(input, { target: { value: '5551234567' } })
 
-      const form = input.closest('form')!
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'bad@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
       fireEvent.submit(form)
 
       await waitFor(() => {
-        expect(screen.getByText('Phone number is not valid')).toBeInTheDocument()
+        expect(screen.getByText('Invalid email address')).toBeInTheDocument()
       })
     })
 
-    it('clears error when user starts typing', async () => {
-      render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-
-      // Trigger an error
-      fireEvent.change(input, { target: { value: '555' } })
-      const form = input.closest('form')!
-      fireEvent.submit(form)
-
-      await waitFor(() => {
-        expect(screen.getByText('Please enter a valid 10-digit US phone number.')).toBeInTheDocument()
-      })
-
-      // Type again to clear error
-      fireEvent.change(input, { target: { value: '5551' } })
-      expect(screen.queryByText('Please enter a valid 10-digit US phone number.')).not.toBeInTheDocument()
-    })
-  })
-
-  describe('OTP Step', () => {
-    async function navigateToOtp() {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, phone: '+15551234567' }),
-      })
+    it('shows network error on fetch failure', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'))
 
       render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-      fireEvent.change(input, { target: { value: '5551234567' } })
 
-      const form = input.closest('form')!
+      await waitFor(() => {
+        const input = screen.getByPlaceholderText('you@example.com')
+        fireEvent.change(input, { target: { value: 'test@example.com' } })
+      })
+
+      const form = screen.getByPlaceholderText('you@example.com').closest('form')!
       fireEvent.submit(form)
 
       await waitFor(() => {
-        expect(screen.getByText('Enter verification code')).toBeInTheDocument()
-      })
-    }
-
-    it('transitions to OTP step after successful send-otp', async () => {
-      await navigateToOtp()
-
-      expect(screen.getByText('Enter verification code')).toBeInTheDocument()
-      expect(screen.getByText(/We sent a 6-digit code to/)).toBeInTheDocument()
-    })
-
-    it('shows masked phone number on OTP step', async () => {
-      await navigateToOtp()
-
-      expect(screen.getByText('*** *** 4567')).toBeInTheDocument()
-    })
-
-    it('back button returns to phone step', async () => {
-      await navigateToOtp()
-
-      const backButton = screen.getByTestId('back-button')
-      fireEvent.click(backButton)
-
-      await waitFor(() => {
-        expect(screen.getByTestId('phone-input')).toBeInTheDocument()
-      })
-    })
-
-    it('resend countdown starts at 30 and decrements', async () => {
-      await navigateToOtp()
-
-      // Should show countdown starting at 30
-      expect(screen.getByText(/Resend in 30s/)).toBeInTheDocument()
-
-      // Advance timer by 1 second
-      act(() => {
-        vi.advanceTimersByTime(1000)
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText(/Resend in 29s/)).toBeInTheDocument()
-      })
-    })
-
-    it('shows resend button after countdown reaches 0', async () => {
-      await navigateToOtp()
-
-      // Advance timer to finish countdown
-      act(() => {
-        vi.advanceTimersByTime(31000)
-      })
-
-      await waitFor(() => {
-        expect(screen.getByTestId('resend-button')).toBeInTheDocument()
-        expect(screen.getByText('Resend code')).toBeInTheDocument()
-      })
-    })
-
-    it('shows error message for invalid OTP', async () => {
-      await navigateToOtp()
-
-      // Mock verify failure
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: async () => ({ error: 'Invalid or expired verification code' }),
-      })
-
-      // Type OTP (simulate the onComplete callback)
-      const otpContainer = screen.getByText('Enter verification code').closest('div')!
-      const inputs = otpContainer.querySelectorAll('input')
-      if (inputs.length > 0) {
-        // input-otp uses a single hidden input
-        fireEvent.change(inputs[0], { target: { value: '999999' } })
-      }
-
-      // Wait for error to display
-      await waitFor(() => {
-        const alerts = screen.queryAllByRole('alert')
-        // If the OTP was submitted and error returned, it should show
-        if (alerts.length > 0) {
-          expect(alerts[0]).toBeInTheDocument()
-        }
-      })
-    })
-
-    it('shows support message when verify-otp returns knownPhone=false', async () => {
-      await navigateToOtp()
-
-      // Mock verify returning never-seen phone
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, hasPatient: false, knownPhone: false }),
-      })
-
-      // Simulate OTP complete by finding the input and triggering change
-      const otpContainer = screen.getByText('Enter verification code').closest('div')!
-      const inputs = otpContainer.querySelectorAll('input')
-      if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: '123456' } })
-      }
-
-      await waitFor(() => {
-        const supportMsg = screen.queryByText(/couldn't find your medical record/)
-        if (supportMsg) {
-          expect(supportMsg).toBeInTheDocument()
-          expect(screen.getByText('support@cultrhealth.com')).toBeInTheDocument()
-        }
-      })
-    })
-
-    it('redirects to /intake when verify-otp returns knownPhone=true, hasPatient=false', async () => {
-      await navigateToOtp()
-
-      // Mock verify returning known phone without patient
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, hasPatient: false, knownPhone: true, redirect: '/intake' }),
-      })
-
-      // Simulate OTP complete
-      const otpContainer = screen.getByText('Enter verification code').closest('div')!
-      const inputs = otpContainer.querySelectorAll('input')
-      if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: '123456' } })
-      }
-
-      await waitFor(() => {
-        if (mockFetch.mock.calls.length >= 2) {
-          // If the second fetch was called (verify-otp), check the redirect
-          const verifyCall = mockFetch.mock.calls.find(
-            (call: unknown[]) => typeof call[0] === 'string' && (call[0] as string).includes('verify-otp')
-          )
-          if (verifyCall) {
-            expect(mockPush).toHaveBeenCalledWith('/intake')
-          }
-        }
-      })
-    })
-
-    it('redirects to /portal/dashboard when verify-otp returns hasPatient=true', async () => {
-      await navigateToOtp()
-
-      // Mock verify returning patient found
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, hasPatient: true, knownPhone: true, redirect: '/portal/dashboard' }),
-      })
-
-      // Simulate OTP complete
-      const otpContainer = screen.getByText('Enter verification code').closest('div')!
-      const inputs = otpContainer.querySelectorAll('input')
-      if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: '123456' } })
-      }
-
-      await waitFor(() => {
-        if (mockFetch.mock.calls.length >= 2) {
-          const verifyCall = mockFetch.mock.calls.find(
-            (call: unknown[]) => typeof call[0] === 'string' && (call[0] as string).includes('verify-otp')
-          )
-          if (verifyCall) {
-            expect(mockPush).toHaveBeenCalledWith('/portal/dashboard')
-          }
-        }
+        expect(screen.getByText('Network error. Please try again.')).toBeInTheDocument()
       })
     })
   })
 
-  describe('OTP Input Attributes', () => {
-    it('has autocomplete one-time-code attribute', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ success: true, phone: '+15551234567' }),
-      })
-
+  describe('Navigation', () => {
+    it('has link to pricing page for non-members', async () => {
       render(<PortalLoginClient />)
-      const input = screen.getByTestId('phone-input')
-      fireEvent.change(input, { target: { value: '5551234567' } })
-
-      const form = input.closest('form')!
-      fireEvent.submit(form)
 
       await waitFor(() => {
-        expect(screen.getByText('Enter verification code')).toBeInTheDocument()
+        expect(screen.getByText('Not a member?')).toBeInTheDocument()
+        const link = screen.getByRole('link', { name: /join cultr/i })
+        expect(link).toHaveAttribute('href', '/pricing')
       })
-
-      // input-otp renders a hidden input with autocomplete attribute
-      const otpContainer = screen.getByText('Enter verification code').closest('div')!
-      const otpInput = otpContainer.querySelector('input[autocomplete="one-time-code"]')
-      expect(otpInput).toBeInTheDocument()
     })
   })
 
   describe('HIPAA Compliance Badge', () => {
-    it('shows HIPAA-compliant badge', () => {
+    it('shows HIPAA-compliant badge', async () => {
       render(<PortalLoginClient />)
-      expect(screen.getByText('HIPAA-compliant secure access')).toBeInTheDocument()
+
+      await waitFor(() => {
+        expect(screen.getByText('HIPAA-compliant secure access')).toBeInTheDocument()
+      })
     })
   })
 })

@@ -96,13 +96,13 @@ export async function GET(request: NextRequest) {
       renewalEligible = parseInt(orderResult.rows[0]?.count || '0', 10) > 0;
 
       // Build patient object from intake data
-      const customerName = (intakeData?.customer_name as string) || '';
+      // intake_data stores firstName/lastName directly (set during intake/submit)
       const asherPatientId = intakeData?.asher_patient_id as number | null;
 
       patient = {
         id: asherPatientId || intake.id,
-        firstName: customerName.split(' ')[0] || '',
-        lastName: customerName.split(' ').slice(1).join(' ') || '',
+        firstName: (intakeData?.firstName as string) || '',
+        lastName: (intakeData?.lastName as string) || '',
         email: intake.customer_email,
         phone: (intakeData?.phone as string) || '',
         shippingAddress: intakeData?.shippingAddress || null,

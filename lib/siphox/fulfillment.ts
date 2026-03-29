@@ -58,7 +58,7 @@ async function resolveShippingAddress(customerEmail: string): Promise<ShippingAd
     const result = await sql`
       SELECT intake_data
       FROM pending_intakes
-      WHERE LOWER(email) = LOWER(${customerEmail})
+      WHERE LOWER(customer_email) = LOWER(${customerEmail})
       ORDER BY created_at DESC
       LIMIT 1
     `
@@ -106,7 +106,7 @@ async function resolveMemberData(customerEmail: string): Promise<MemberData | nu
     const result = await sql`
       SELECT intake_data
       FROM pending_intakes
-      WHERE LOWER(email) = LOWER(${customerEmail})
+      WHERE LOWER(customer_email) = LOWER(${customerEmail})
       ORDER BY created_at DESC
       LIMIT 1
     `

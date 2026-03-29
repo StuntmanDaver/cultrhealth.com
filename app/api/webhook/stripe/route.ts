@@ -169,6 +169,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // If database is configured, store membership record using helper
+  const checkoutEmail = session.customer_details?.email;
   if (process.env.POSTGRES_URL) {
     try {
       const { createMembership } = await import('@/lib/db');
@@ -182,12 +183,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         : session.customer?.id;
 
       if (subscriptionId && custId) {
+        // Resolve email for the membership record
+        let memberEmail = checkoutEmail;
+        if (!memberEmail && custId) {
+          try {
+            const customer = await stripe.customers.retrieve(custId) as Stripe.Customer;
+            memberEmail = customer.email || undefined;
+          } catch {
+            // Non-fatal
+          }
+        }
+
         await createMembership({
           stripe_customer_id: custId,
           stripe_subscription_id: subscriptionId,
           plan_tier: planTier,
           subscription_status: 'active',
           asher_patient_id: asherPatientId,
+          email: memberEmail?.toLowerCase(),
         });
         console.log('Membership record created/updated');
       }
@@ -195,6 +208,45 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.error('Failed to update membership database:', dbError);
       // Throwing so Stripe retries the webhook
       throw dbError;
+    }
+
+    // Create pending_intakes record so admin dashboard tracks intake funnel
+    // and intake/submit can UPDATE it later when user completes the form.
+    // NOTE: stripe_payment_intent_id stores the checkout session ID (cs_...) here,
+    // not a payment intent ID (pi_...). The intake/submit endpoint matches on it
+    // via body.stripeSessionId which is the same session ID from the success URL.
+    if (checkoutEmail) {
+      try {
+        const { sql } = await import('@vercel/postgres');
+        const intakePlanTier = session.metadata?.plan_tier || 'unknown';
+        await sql`
+          INSERT INTO pending_intakes (
+            stripe_payment_intent_id,
+            customer_email,
+            plan_tier,
+            intake_status,
+            intake_data,
+            created_at,
+            updated_at,
+            expires_at
+          ) VALUES (
+            ${session.id},
+            ${checkoutEmail.toLowerCase()},
+            ${intakePlanTier},
+            'pending',
+            ${JSON.stringify({ session_id: session.id })}::jsonb,
+            NOW(),
+            NOW(),
+            NOW() + INTERVAL '30 days'
+          )
+          ON CONFLICT (stripe_payment_intent_id)
+          DO UPDATE SET updated_at = NOW()
+        `;
+        console.log('Pending intake record created for:', checkoutEmail);
+      } catch (intakeError) {
+        console.error('Failed to create pending intake (non-fatal):', intakeError);
+        // Non-fatal — intake form submission will still work via direct insert fallback
+      }
     }
   }
 
