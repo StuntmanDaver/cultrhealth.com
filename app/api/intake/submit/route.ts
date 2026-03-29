@@ -13,6 +13,7 @@ import { MEDICATION_OPTIONS } from '@/lib/config/asher-med';
 import { getAsherMedIdFromProductId } from '@/lib/config/product-to-asher-mapping';
 import { updatePortalPatientId } from '@/lib/portal-db';
 import { formatMedicationsList, buildPartnerNote } from '@/lib/intake-utils';
+import { addTagsToContact } from '@/lib/mailchimp';
 
 /**
  * POST /api/intake/submit
@@ -211,6 +212,13 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Tag Mailchimp contact as intake complete (non-blocking)
+      if (body.email) {
+        addTagsToContact(body.email, ['intake-complete']).catch((err) =>
+          console.error('[intake/submit] Mailchimp tag error (non-fatal):', err)
+        )
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Intake form submitted successfully (staging)',
@@ -314,6 +322,13 @@ export async function POST(request: NextRequest) {
       medications: medications.map(m => m.name),
       medicationCount: medications.length,
     });
+
+    // Tag Mailchimp contact as intake complete (non-blocking)
+    if (body.email) {
+      addTagsToContact(body.email, ['intake-complete']).catch((err) =>
+        console.error('[intake/submit] Mailchimp tag error (non-fatal):', err)
+      )
+    }
 
     return NextResponse.json({
       success: true,
