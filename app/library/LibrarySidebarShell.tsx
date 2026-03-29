@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { MemberSidebar } from '@/components/library/MemberSidebar'
 
-export function LibrarySidebarShell({ children }: { children: React.ReactNode }) {
+export function LibrarySidebarShell({ children, isProvider }: { children: React.ReactNode; isProvider?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <div className="min-h-screen">
-      <MemberSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <MemberSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} isProvider={isProvider} />
 
       {/* Mobile top bar with hamburger */}
       <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-b border-stone-200">

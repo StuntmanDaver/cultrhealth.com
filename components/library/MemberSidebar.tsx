@@ -18,6 +18,8 @@ import {
   CreditCard,
   X,
   LogOut,
+  CalendarClock,
+  FlaskConical,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -65,15 +67,28 @@ const NAV_GROUPS = [
   },
 ]
 
+// Provider-only nav items (shown when isProvider is true)
+const PROVIDER_NAV_GROUP = {
+  label: 'PROVIDER',
+  items: [
+    { label: 'Protocol Builder', href: '/library/protocol-builder', icon: FlaskConical },
+    { label: 'Provider Schedule', href: '/library/provider-schedule', icon: CalendarClock },
+  ],
+}
+
 interface MemberSidebarProps {
   mobileOpen?: boolean
   onClose?: () => void
+  isProvider?: boolean
 }
 
-export function MemberSidebar({ mobileOpen, onClose }: MemberSidebarProps) {
+export function MemberSidebar({ mobileOpen, onClose, isProvider }: MemberSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
+
+  // Build nav groups — include provider section if user is a provider
+  const navGroups = isProvider ? [...NAV_GROUPS, PROVIDER_NAV_GROUP] : NAV_GROUPS
 
   const handleLogout = async () => {
     setLoggingOut(true)
@@ -104,7 +119,7 @@ export function MemberSidebar({ mobileOpen, onClose }: MemberSidebarProps) {
       </div>
 
       <nav className="flex-1 px-3 space-y-4 overflow-y-auto">
-        {NAV_GROUPS.map((group, gi) => (
+        {navGroups.map((group, gi) => (
           <div key={gi}>
             {group.label && (
               <p className="px-3 mb-1 text-[10px] font-semibold tracking-widest text-stone-400 uppercase">
