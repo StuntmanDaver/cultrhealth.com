@@ -7,6 +7,7 @@ import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/t
 import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
+import { syncContactToMailchimp } from '@/lib/mailchimp'
 
 interface OrderItem {
   therapyId: string
@@ -315,6 +316,26 @@ export async function POST(request: Request) {
     } else {
       console.error('[club/orders] Both emails failed for', orderNumber)
     }
+
+    // Sync to Mailchimp with order tags (non-blocking)
+    const therapyNames = items
+      .map((item: OrderItem) => item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))
+      .map((slug: string) => `therapy-${slug}`)
+    const firstName = name.trim().split(' ')[0]
+    const lastName = name.trim().split(' ').slice(1).join(' ') || ''
+    syncContactToMailchimp({
+      email: normalizedEmail,
+      firstName,
+      lastName,
+      phone: phone?.trim() || undefined,
+      tags: ['club-order-placed', ...therapyNames],
+      mergeFields: {
+        THERAPY: items[0]?.name || '',
+        ORDER_NUM: orderNumber,
+      },
+    }).catch((err) =>
+      console.error('[club/orders] Mailchimp sync error (non-fatal):', err)
+    )
 
     return NextResponse.json({
       success: true,
