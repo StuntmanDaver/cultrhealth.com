@@ -11,9 +11,15 @@ export const KLARNA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_KLARNA === 'true';
 export const AFFIRM_ENABLED = process.env.NEXT_PUBLIC_ENABLE_AFFIRM === 'true';
 export const AUTHORIZE_NET_ENABLED = process.env.NEXT_PUBLIC_ENABLE_AUTHORIZE_NET === 'true';
 
+// New providers
+export const COREPAY_ENABLED = process.env.NEXT_PUBLIC_ENABLE_COREPAY === 'true';
+export const NOWPAYMENTS_ENABLED = process.env.NEXT_PUBLIC_ENABLE_NOWPAYMENTS === 'true';
+export const CHERRY_ENABLED = process.env.NEXT_PUBLIC_ENABLE_CHERRY === 'true';
+export const COINBASE_COMMERCE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_COINBASE_COMMERCE === 'true';
+
 // Primary payment provider for card transactions (stripe or authorize_net)
 // This determines which provider handles direct card payments
-export const PRIMARY_PAYMENT_PROVIDER: 'stripe' | 'authorize_net' = 
+export const PRIMARY_PAYMENT_PROVIDER: 'stripe' | 'authorize_net' =
   (process.env.NEXT_PUBLIC_PRIMARY_PAYMENT_PROVIDER as 'stripe' | 'authorize_net') || 'stripe';
 
 export function isProviderEnabled(provider: PaymentProvider): boolean {
@@ -26,16 +32,29 @@ export function isProviderEnabled(provider: PaymentProvider): boolean {
       return AFFIRM_ENABLED;
     case 'authorize_net':
       return AUTHORIZE_NET_ENABLED;
+    case 'corepay':
+      return COREPAY_ENABLED;
+    case 'nowpayments':
+      return NOWPAYMENTS_ENABLED;
+    case 'cherry':
+      return CHERRY_ENABLED;
+    case 'coinbase_commerce':
+      return COINBASE_COMMERCE_ENABLED;
     default:
       return false;
   }
 }
 
 export function getEnabledProviders(): PaymentProvider[] {
-  const providers: PaymentProvider[] = ['stripe'];
+  const providers: PaymentProvider[] = [];
+  if (COREPAY_ENABLED) providers.push('corepay');
+  if (NOWPAYMENTS_ENABLED) providers.push('nowpayments');
   if (AUTHORIZE_NET_ENABLED) providers.push('authorize_net');
+  providers.push('stripe'); // always listed (shown as Coming Soon when not primary)
   if (KLARNA_ENABLED) providers.push('klarna');
   if (AFFIRM_ENABLED) providers.push('affirm');
+  if (CHERRY_ENABLED) providers.push('cherry');
+  if (COINBASE_COMMERCE_ENABLED) providers.push('coinbase_commerce');
   return providers;
 }
 
@@ -91,6 +110,31 @@ export const AFFIRM_CONFIG = {
   publicKey: process.env.NEXT_PUBLIC_AFFIRM_PUBLIC_KEY || '',
   scriptUrl: process.env.NEXT_PUBLIC_AFFIRM_SCRIPT_URL || 'https://cdn1-sandbox.affirm.com/js/v2/affirm.js',
   currency: 'USD',
+} as const;
+
+// ---------------------
+// CorePay Configuration (uses Authorize.Net gateway)
+// ---------------------
+
+export const COREPAY_CONFIG = {
+  apiUrl: process.env.COREPAY_ENVIRONMENT === 'production'
+    ? 'https://api.authorize.net/xml/v1/request.api'
+    : 'https://apitest.authorize.net/xml/v1/request.api',
+  acceptJsUrl: process.env.COREPAY_ENVIRONMENT === 'production'
+    ? 'https://js.authorize.net/v1/Accept.js'
+    : 'https://jstest.authorize.net/v1/Accept.js',
+  apiLoginId: process.env.NEXT_PUBLIC_COREPAY_API_LOGIN_ID || '',
+  publicClientKey: process.env.NEXT_PUBLIC_COREPAY_PUBLIC_CLIENT_KEY || '',
+  environment: (process.env.COREPAY_ENVIRONMENT || 'sandbox') as 'sandbox' | 'production',
+  currency: 'USD',
+} as const;
+
+// ---------------------
+// NOWPayments Configuration
+// ---------------------
+
+export const NOWPAYMENTS_CONFIG = {
+  apiUrl: process.env.NOWPAYMENTS_API_URL || 'https://api-sandbox.nowpayments.io/v1',
 } as const;
 
 // ---------------------

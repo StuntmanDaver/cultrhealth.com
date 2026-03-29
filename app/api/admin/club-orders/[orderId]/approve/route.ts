@@ -85,7 +85,7 @@ export async function POST(
       // If called from email link, redirect to a success page
       if (tokenFromUrl) {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-        return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}&already=true`)
+        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&approved=${order.order_number}&already=true`)
       }
       return NextResponse.json({
         error: `Order is already ${order.status}`,
@@ -190,7 +190,7 @@ export async function POST(
       // Another concurrent request already approved this order — treat as already-approved
       if (tokenFromUrl) {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-        return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}&already=true`)
+        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&approved=${order.order_number}&already=true`)
       }
       return NextResponse.json({
         error: `Order is already ${order.status}`,
@@ -276,7 +276,7 @@ export async function POST(
     // If called from email link, redirect
     if (tokenFromUrl) {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-      return NextResponse.redirect(`${siteUrl}/admin/club-orders?approved=${order.order_number}`)
+      return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&approved=${order.order_number}`)
     }
 
     return NextResponse.json({

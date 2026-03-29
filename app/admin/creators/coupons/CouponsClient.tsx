@@ -184,7 +184,7 @@ export default function CouponsClient() {
                     ? 'bg-blue-100 text-blue-800'
                     : isCreator
                       ? 'bg-purple-100 text-purple-800'
-                      : internalLabel === 'Owner' || internalLabel === 'Staff' || internalLabel === 'Family'
+                      : internalLabel === 'Owner' || internalLabel === 'Owner Promo' || internalLabel === 'Staff' || internalLabel === 'Family'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-green-100 text-green-800'
                   return (

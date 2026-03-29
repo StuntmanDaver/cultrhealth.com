@@ -331,7 +331,7 @@ export interface CreateOrderInput {
   stripe_payment_intent_id?: string
   stripe_customer_id?: string
   asher_patient_id?: number | string
-  payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
+  payment_provider?: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'corepay' | 'nowpayments'
   status: 'pending' | 'paid' | 'shipped' | 'fulfilled' | 'cancelled' | 'refunded'
   total_amount: number
   currency?: string

@@ -84,6 +84,18 @@ export async function getCreatorById(id: string): Promise<Creator | null> {
   }
 }
 
+export async function getCreatorPhone(creatorId: string): Promise<string | null> {
+  try {
+    const result = await sql`
+      SELECT phone FROM creators WHERE id = ${creatorId}
+    `
+    return result.rows[0]?.phone || null
+  } catch (error) {
+    console.error('Database error fetching creator phone:', error)
+    throw new DatabaseError('Failed to fetch creator phone', error)
+  }
+}
+
 export async function updateCreatorStatus(
   id: string,
   status: CreatorStatus,
@@ -237,7 +249,7 @@ export async function getAllActiveCreators(limit = 200): Promise<Creator[]> {
 // ===========================================
 
 // Reserved code names that cannot be used as affiliate codes (hardcoded in CLUB_COUPONS)
-const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'MARY20'])
+const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'MARY20', 'LOYALTY15', 'CULTR30'])
 
 export async function createAffiliateCode(
   creatorId: string,

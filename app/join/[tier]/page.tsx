@@ -13,7 +13,9 @@ import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelect
 import { KlarnaWidget } from '@/components/payments/KlarnaWidget';
 import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton';
 import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm';
-import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED } from '@/lib/config/payments';
+import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED, COREPAY_ENABLED, NOWPAYMENTS_ENABLED } from '@/lib/config/payments';
+import { CorePayForm } from '@/components/payments/CorePayForm';
+import { CryptoPaymentWidget, type CryptoPaymentData } from '@/components/payments/CryptoPaymentWidget';
 
 // Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
@@ -237,7 +239,11 @@ function CheckoutForm({ plan, onSuccess, onError }: {
 export default function JoinPage({ params }: { params: { tier: string } }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>(COREPAY_ENABLED ? 'corepay' : 'stripe');
+
+  // NOWPayments (Bitcoin) state
+  const [nowPaymentsData, setNowPaymentsData] = useState<CryptoPaymentData | null>(null);
+  const [nowPaymentsLoading, setNowPaymentsLoading] = useState(false);
 
   // Determine primary card payment provider (Stripe vs Authorize.net)
   const primaryProvider = getPrimaryPaymentProvider();
@@ -338,6 +344,9 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
     if (provider !== 'affirm') {
       setAffirmConfig(null);
     }
+    if (provider !== 'nowpayments') {
+      setNowPaymentsData(null);
+    }
   };
 
   // Klarna: create session when user clicks checkout button
@@ -417,8 +426,32 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
 
   const handleBnplError = useCallback((msg: string) => {
     setError(msg);
-    setPaymentMethod('stripe');
+    setPaymentMethod(COREPAY_ENABLED ? 'corepay' : 'stripe');
   }, []);
+
+  // NOWPayments: create Bitcoin payment
+  const handleNowPaymentsCheckout = async () => {
+    setNowPaymentsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/checkout/nowpayments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planSlug: plan.slug,
+          amountCents: plan.price * 100,
+          email: authNetEmail || '',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create payment');
+      setNowPaymentsData(data);
+    } catch (err) {
+      handleCheckoutError(err instanceof Error ? err.message : 'Bitcoin checkout failed');
+    } finally {
+      setNowPaymentsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen grad-light">
@@ -620,6 +653,72 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               <div className="flex items-center justify-center py-6 mb-6">
                 <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
                 <span className="ml-2 text-sm text-cultr-textMuted">Loading Affirm...</span>
+              </div>
+            )}
+
+            {/* CorePay Card Form */}
+            {paymentMethod === 'corepay' && (
+              <div className="space-y-4 mb-6">
+                {/* Email input */}
+                <div>
+                  <label htmlFor="corepayEmail" className="block text-sm text-cultr-textMuted mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="corepayEmail"
+                    value={authNetEmail}
+                    onChange={(e) => setAuthNetEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                    className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+                    required
+                  />
+                </div>
+                <CorePayForm
+                  planSlug={plan.slug}
+                  amountCents={amountCents}
+                  email={authNetEmail}
+                  onSuccess={handleCheckoutSuccess}
+                  onError={handleCheckoutError}
+                />
+              </div>
+            )}
+
+            {/* NOWPayments — Bitcoin */}
+            {paymentMethod === 'nowpayments' && !nowPaymentsData && (
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label htmlFor="btcEmail" className="block text-sm text-cultr-textMuted mb-1.5">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    id="btcEmail"
+                    value={authNetEmail}
+                    onChange={(e) => setAuthNetEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                    className="w-full px-4 py-3 border border-cultr-sage rounded-lg focus:outline-none focus:ring-2 focus:ring-cultr-forest/20 focus:border-cultr-forest"
+                    required
+                  />
+                </div>
+                <Button
+                  onClick={handleNowPaymentsCheckout}
+                  isLoading={nowPaymentsLoading}
+                  className="w-full text-lg py-6"
+                  disabled={!authNetEmail}
+                >
+                  Continue with Bitcoin
+                </Button>
+              </div>
+            )}
+
+            {paymentMethod === 'nowpayments' && nowPaymentsData && (
+              <div className="mb-6">
+                <CryptoPaymentWidget
+                  {...nowPaymentsData}
+                  onSuccess={() => handleCheckoutSuccess('/success?provider=nowpayments')}
+                  onError={handleCheckoutError}
+                />
               </div>
             )}
 

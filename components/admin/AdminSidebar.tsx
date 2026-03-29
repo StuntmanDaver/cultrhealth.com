@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard,
   ShoppingCart,
-  Package,
   Users,
   CreditCard,
   ClipboardList,
@@ -31,7 +30,6 @@ const NAV_GROUPS = [
     label: 'REVENUE',
     items: [
       { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-      { label: 'Club Orders', href: '/admin/club-orders', icon: Package },
     ],
   },
   {

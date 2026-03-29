@@ -37,13 +37,25 @@ function getApiUrl(): string {
 // API Request Helper
 // ---------------------
 
-async function authorizeNetFetch<T>(requestBody: Record<string, unknown>): Promise<T> {
-  const url = getApiUrl();
-  
+export interface GatewayCredentials {
+  apiLoginId: string;
+  transactionKey: string;
+  apiUrl?: string;
+}
+
+async function authorizeNetFetch<T>(
+  requestBody: Record<string, unknown>,
+  overrides?: GatewayCredentials,
+): Promise<T> {
+  const url = overrides?.apiUrl || getApiUrl();
+
   // Add merchant authentication to request
+  const auth = overrides
+    ? { name: overrides.apiLoginId, transactionKey: overrides.transactionKey }
+    : getMerchantAuthentication();
   const fullRequest = {
     ...requestBody,
-    merchantAuthentication: getMerchantAuthentication(),
+    merchantAuthentication: auth,
   };
   
   // Wrap in the appropriate API request envelope
@@ -198,6 +210,7 @@ export interface CreateSubscriptionParams {
   description?: string;
   startDate?: string; // YYYY-MM-DD, defaults to today
   intervalMonths?: number; // Defaults to 1 (monthly)
+  credentials?: GatewayCredentials; // Override for CorePay or other gateway accounts
 }
 
 export async function createSubscription(
@@ -242,11 +255,10 @@ export async function createSubscription(
     };
   }
   
-  const response = await authorizeNetFetch<AuthorizeNetSubscriptionResponse>({
-    ARBCreateSubscriptionRequest: {
-      subscription,
-    },
-  });
+  const response = await authorizeNetFetch<AuthorizeNetSubscriptionResponse>(
+    { ARBCreateSubscriptionRequest: { subscription } },
+    params.credentials,
+  );
   
   // Log subscription result (no PHI)
   console.log('Authorize.net subscription created:', {

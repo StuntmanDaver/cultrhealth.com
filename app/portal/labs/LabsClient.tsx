@@ -20,9 +20,20 @@ interface LabsData {
   kitOrders: KitOrderWithLifecycle[]
   siphoxCustomerId: string | null
   tier: string | null
+  needsPhone?: boolean
 }
 
-export default function LabsClient() {
+interface LabsClientProps {
+  /** API endpoint for kit orders. Defaults to '/api/portal/labs'. */
+  labsEndpoint?: string
+  /** API endpoint for biomarker results. Defaults to '/api/portal/results'. */
+  resultsEndpoint?: string
+}
+
+export default function LabsClient({
+  labsEndpoint = '/api/portal/labs',
+  resultsEndpoint = '/api/portal/results',
+}: LabsClientProps = {}) {
   const [data, setData] = useState<LabsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +41,7 @@ export default function LabsClient() {
   const loadKitData = useCallback(async () => {
     try {
       setError(null)
-      const res = await fetch('/api/portal/labs')
+      const res = await fetch(labsEndpoint)
       if (res.status === 401) { setIsLoading(false); return }
       if (!res.ok) throw new Error('Failed to load kit data')
       const json = await res.json()
@@ -38,13 +49,14 @@ export default function LabsClient() {
         kitOrders: json.kitOrders || [],
         siphoxCustomerId: json.siphoxCustomerId || null,
         tier: json.tier || null,
+        needsPhone: json.needsPhone || false,
       })
     } catch {
       setError('Unable to load your lab data right now.')
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [labsEndpoint])
 
   useEffect(() => {
     loadKitData()
@@ -82,6 +94,34 @@ export default function LabsClient() {
           >
             Try again
           </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Needs phone state (creator without phone)
+  if (data?.needsPhone) {
+    return (
+      <div className="p-6 md:p-8 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-display font-bold text-brand-primary mb-6">
+          Blood Test Kit
+        </h1>
+        <div className="rounded-2xl border border-brand-primary/10 bg-white p-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-sage/30 flex items-center justify-center mx-auto mb-4">
+            <TestTube2 className="w-7 h-7 text-brand-primary" />
+          </div>
+          <h2 className="text-lg font-semibold text-brand-primary mb-2">
+            Phone Number Required
+          </h2>
+          <p className="text-sm text-brand-primary/60 mb-6 max-w-sm mx-auto">
+            Add your phone number in Settings to access blood testing and view your biomarker results.
+          </p>
+          <a
+            href="/creators/portal/settings"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
+          >
+            Go to Settings
+          </a>
         </div>
       </div>
     )
@@ -161,12 +201,12 @@ export default function LabsClient() {
       )}
 
       {showRegistrationForm && (
-        <KitRegistrationForm onSuccess={loadKitData} />
+        <KitRegistrationForm onSuccess={loadKitData} labsEndpoint={labsEndpoint} />
       )}
 
       {showResults && (
         <div className="mt-6">
-          <LabsResultsView />
+          <LabsResultsView resultsEndpoint={resultsEndpoint} />
         </div>
       )}
     </div>

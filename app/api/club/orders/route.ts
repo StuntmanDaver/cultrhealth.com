@@ -50,8 +50,9 @@ export async function POST(request: Request) {
       return item.price ? sum + item.price * item.quantity : sum
     }, 0)
     // Bundle discount: 10% off items whose bundleWith partner is in the cart
-    // OWNER coupon overrides bundle discount (they don't stack)
-    const bundleDiscountAmount = couponCode?.trim().toUpperCase() === 'OWNER' ? 0 : calculateBundleDiscount(items)
+    // OWNER and noBundleStack coupons override bundle discount (they don't stack)
+    const skipBundle = couponCode?.trim().toUpperCase() === 'OWNER' || couponResult?.noBundleStack
+    const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(items)
     const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
     // Coupon discount applied after bundle discount
     const couponDiscountAmount = discountPercent > 0 ? Math.round(subtotalAfterBundle * discountPercent) / 100 : 0
@@ -551,7 +552,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
     </div>
 
     <p style="color: #666; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
-      If you prefer, you can also <a href="${data.siteUrl}/admin/club-orders" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
+      If you prefer, you can also <a href="${data.siteUrl}/admin/orders?tab=pending" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
     </p>
   </div>
 </body>

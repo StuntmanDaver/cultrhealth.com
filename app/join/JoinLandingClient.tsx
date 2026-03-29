@@ -690,7 +690,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [couponInput, setCouponInput] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string; isCreatorCode?: boolean; creatorName?: string; creatorId?: string } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string; isCreatorCode?: boolean; noBundleStack?: boolean; creatorName?: string; creatorId?: string } | null>(null)
   const [couponError, setCouponError] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
 
@@ -707,11 +707,11 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
       })
       const data = await res.json()
       if (data.valid) {
-        setAppliedCoupon({ code, discount: data.discount, label: data.label, isCreatorCode: data.isCreatorCode, creatorName: data.creatorName, creatorId: data.creatorId })
+        setAppliedCoupon({ code, discount: data.discount, label: data.label, isCreatorCode: data.isCreatorCode, noBundleStack: data.noBundleStack, creatorName: data.creatorName, creatorId: data.creatorId })
         setCouponInput('')
         setCouponError('')
       } else {
-        setCouponError('Invalid coupon code.')
+        setCouponError(data.error || 'Invalid coupon code.')
         setAppliedCoupon(null)
       }
     } catch {
@@ -837,7 +837,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
           <div className="pt-2 pb-4">
             {(() => {
               const rawSubtotal = cart.getCartTotal()
-              const bundleDisc = appliedCoupon?.code === 'OWNER' ? 0 : cart.getBundleDiscount()
+              const bundleDisc = (appliedCoupon?.code === 'OWNER' || appliedCoupon?.noBundleStack) ? 0 : cart.getBundleDiscount()
               const subtotalAfterBundle = rawSubtotal - bundleDisc
               const couponAmt = appliedCoupon && subtotalAfterBundle > 0
                 ? Math.round(subtotalAfterBundle * appliedCoupon.discount) / 100

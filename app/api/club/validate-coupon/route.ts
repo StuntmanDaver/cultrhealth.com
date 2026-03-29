@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { validateCouponUnified } from '@/lib/config/coupons'
+import { validateCouponUnified, isExpiredCoupon } from '@/lib/config/coupons'
 
 export async function POST(request: Request) {
   try {
@@ -9,13 +9,15 @@ export async function POST(request: Request) {
     }
     const result = await validateCouponUnified(code)
     if (!result) {
-      return NextResponse.json({ valid: false, error: 'Invalid coupon code' })
+      const error = isExpiredCoupon(code) ? 'This coupon code has expired.' : 'Invalid coupon code.'
+      return NextResponse.json({ valid: false, error })
     }
     return NextResponse.json({
       valid: true,
       discount: result.discount,
       label: result.label,
       isCreatorCode: result.isCreatorCode,
+      noBundleStack: result.noBundleStack || false,
       creatorName: result.creatorName || undefined,
       creatorId: result.creatorId || undefined,
     })

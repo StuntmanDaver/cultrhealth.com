@@ -5,6 +5,8 @@ import Button from '@/components/ui/Button'
 
 interface KitRegistrationFormProps {
   onSuccess: () => void
+  /** Base endpoint for labs API. Defaults to '/api/portal/labs'. */
+  labsEndpoint?: string
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -13,7 +15,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   expired: 'This kit has expired.',
 }
 
-export function KitRegistrationForm({ onSuccess }: KitRegistrationFormProps) {
+export function KitRegistrationForm({ onSuccess, labsEndpoint = '/api/portal/labs' }: KitRegistrationFormProps) {
   const [kitId, setKitId] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export function KitRegistrationForm({ onSuccess }: KitRegistrationFormProps) {
 
     try {
       // Step 1: Validate kit ID
-      const validateRes = await fetch('/api/portal/labs/validate', {
+      const validateRes = await fetch(`${labsEndpoint}/validate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitId: trimmed }),
@@ -57,7 +59,7 @@ export function KitRegistrationForm({ onSuccess }: KitRegistrationFormProps) {
       }
 
       // Step 2: Register kit
-      const registerRes = await fetch('/api/portal/labs', {
+      const registerRes = await fetch(labsEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ kitId: trimmed }),

@@ -13,11 +13,16 @@ import { BiomarkerCategoryCard } from './BiomarkerCategoryCard'
 import { BiomarkerDetailModal } from './BiomarkerDetailModal'
 import type { ProcessedReport, ProcessedBiomarker } from '@/lib/siphox/reports'
 
+interface LabsResultsViewProps {
+  /** API endpoint to fetch results from. Defaults to '/api/portal/results'. */
+  resultsEndpoint?: string
+}
+
 /**
- * Full biomarker results dashboard shown when a member's lab results are ready.
- * Fetches from /api/portal/results and renders categorized biomarker data.
+ * Full biomarker results dashboard shown when lab results are ready.
+ * Fetches from the provided resultsEndpoint and renders categorized biomarker data.
  */
-export function LabsResultsView() {
+export function LabsResultsView({ resultsEndpoint = '/api/portal/results' }: LabsResultsViewProps) {
   const [report, setReport] = useState<ProcessedReport | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +31,7 @@ export function LabsResultsView() {
   const loadResults = useCallback(async () => {
     try {
       setError(null)
-      const res = await fetch('/api/portal/results')
+      const res = await fetch(resultsEndpoint)
       if (res.status === 401) { setIsLoading(false); return }
       if (!res.ok) throw new Error('Failed to load results')
       const json = await res.json()
@@ -38,7 +43,7 @@ export function LabsResultsView() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [resultsEndpoint])
 
   useEffect(() => {
     loadResults()

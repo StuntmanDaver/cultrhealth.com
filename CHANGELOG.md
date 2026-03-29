@@ -1,3 +1,80 @@
+## [2026-03-29] - Payment Providers + Admin Orders Overhaul + Creator Labs Dashboard
+
+### New Payment Providers
+- **CorePay (Authorize.Net gateway)** — New primary card processor with Accept.js tokenization (`CorePayForm.tsx`), API route (`/api/checkout/corepay`), and config (`COREPAY_CONFIG` in `lib/config/payments.ts`)
+- **NOWPayments (Bitcoin)** — Crypto payment support via NOWPayments API (`lib/payments/nowpayments-api.ts`), checkout route (`/api/checkout/nowpayments`), webhook handler (`/api/webhook/nowpayments`), invoice cron (`/api/cron/nowpayments-invoices`), and `CryptoPaymentWidget.tsx`
+- **Coming Soon providers** — Cherry and Coinbase Commerce feature flags added (`CHERRY_ENABLED`, `COINBASE_COMMERCE_ENABLED`)
+- **PaymentMethodSelector** — Rebuilt to show active providers first (CorePay, NOWPayments) then "Coming Soon" badges for Stripe, Klarna, Affirm, Cherry, Coinbase
+- **Join page** — Updated default payment method to CorePay when enabled; added Bitcoin checkout flow
+
+### Admin Orders Overhaul
+- **Tabbed Orders page** — All Orders / Pending Approval tabs with URL param support (`?tab=pending`), pending count badge
+- **PendingApprovalTab** — New dedicated component for pending club order approvals
+- **Club Orders "View all" link** — Now routes to `/admin/orders?tab=pending` instead of `/admin/club-orders`
+- **Admin Dashboard** — External Tools section repositioned above Club Orders (was at bottom of page)
+
+### Creator Portal — Labs Integration
+- **Labs status card** — New `LabsStatusCard` on creator dashboard showing kit status, results summary, and phone requirement prompt
+- **Creator labs API** — New endpoints: `/api/creators/labs` (kit status), `/api/creators/results` (biomarker results)
+- **Creator labs page** — New `/creators/portal/labs` page for biomarker testing
+- **Creator sidebar** — Added Labs navigation link
+
+### Other Changes
+- **Coupon config** — Updated coupon validation and configuration
+- **Authorize.net API** — Minor fixes to `lib/payments/authorize-net-api.ts`
+- **Portal labs** — `LabsClient.tsx` and `LabsResultsView.tsx` updates
+- **KitRegistrationForm** — Minor updates
+
+### Files Added
+- `app/admin/orders/PendingApprovalTab.tsx`
+- `app/api/checkout/corepay/route.ts`
+- `app/api/checkout/nowpayments/route.ts`
+- `app/api/cron/nowpayments-invoices/route.ts`
+- `app/api/webhook/nowpayments/route.ts`
+- `app/api/creators/labs/route.ts`
+- `app/api/creators/results/route.ts`
+- `app/creators/portal/labs/page.tsx`
+- `components/payments/CorePayForm.tsx`
+- `components/payments/CryptoPaymentWidget.tsx`
+- `lib/payments/nowpayments-api.ts`
+
+### Files Modified
+- `app/admin/AdminDashboardClient.tsx` — External Tools repositioned, Club Orders link updated
+- `app/admin/orders/OrdersClient.tsx` — Tabbed layout with pending approval tab
+- `app/admin/orders/page.tsx` — Suspense wrapper for searchParams
+- `app/join/[tier]/page.tsx` — CorePay + NOWPayments checkout flows
+- `components/payments/PaymentMethodSelector.tsx` — New providers + Coming Soon states
+- `lib/config/payments.ts` — CorePay, NOWPayments, Cherry, Coinbase Commerce configs
+- `lib/payments/payment-types.ts` — New provider types
+- `app/creators/portal/dashboard/page.tsx` — Labs status card
+- `components/creators/CreatorSidebar.tsx` — Labs nav link
+- Plus 10 other files with minor updates
+
+---
+
+## [2026-03-28] - Homepage Hero Responsive Alignment + Typography Fix
+
+### Hero Text Positioning
+- **Hero headline now anchored over the bending girl across all viewports** — Previously `left-[32%]` was fixed from 768px to 2560px+ while `object-cover object-center` cropped the image differently at each size, causing the headline to drift away from the girl.
+- **Image focal point** — Changed from `object-center` to `object-[25%_center]` to anchor the crop on the bending girl (~25% from left edge of image), stabilizing her rendered position across all aspect ratios.
+- **Responsive text positioning** — Replaced fixed `left-[32%]` with breakpoint-specific values: `left-[30%] lg:left-[30%] xl:left-[29%] 2xl:left-[28%]` so text tracks the girl from tablet to ultrawide.
+- **Graduated font sizing** — Changed from `text-6xl lg:text-7xl` (2-step) to `text-5xl lg:text-6xl xl:text-7xl` (3-step) to prevent text overflow on tablets.
+- **Text block constraint** — Added `max-w-[420px] lg:max-w-[480px]` to prevent sprawl on large screens.
+
+### Typography Fix
+- **Care path heading reduced** — `h2` ("Get matched to a personalized care path...") scaled down from `text-2xl md:text-5xl` to `text-xl md:text-3xl lg:text-4xl` for better proportion with the video cards below.
+
+### Testing
+- Added Playwright hero alignment test (`e2e/hero-alignment.spec.ts`) verifying text stays at 28-30% from left across 5 viewports (768px, 1024px, 1280px, 1440px, 1920px).
+- Playwright config (`playwright.config.ts`) added with 5 viewport projects targeting staging.cultrhealth.com.
+
+### Files Modified
+- `app/page.tsx` — Hero image `object-position`, text positioning, font sizing, care path heading
+- `playwright.config.ts` — New Playwright config
+- `e2e/hero-alignment.spec.ts` — New hero alignment test
+
+---
+
 ## [2026-03-27] - Creator Coupon Checkout Fix + NUMERIC Type Audit
 
 ### Critical Fixes

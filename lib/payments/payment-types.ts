@@ -1,6 +1,14 @@
-// Shared types for payment providers (Stripe, Klarna, Affirm, Authorize.net)
+// Shared types for payment providers (Stripe, Klarna, Affirm, Authorize.net, CorePay, NOWPayments, Cherry, Coinbase Commerce)
 
-export type PaymentProvider = 'stripe' | 'klarna' | 'affirm' | 'authorize_net';
+export type PaymentProvider =
+  | 'stripe'
+  | 'klarna'
+  | 'affirm'
+  | 'authorize_net'
+  | 'corepay'
+  | 'nowpayments'
+  | 'cherry'
+  | 'coinbase_commerce';
 
 export type CheckoutType = 'subscription' | 'product';
 
@@ -287,6 +295,51 @@ export interface AuthorizeNetSubscriptionResponse {
       text: string;
     }[];
   };
+}
+
+// ---------------------
+// NOWPayments Types
+// ---------------------
+
+export type NowPaymentsStatus =
+  | 'waiting'
+  | 'confirming'
+  | 'confirmed'
+  | 'sending'
+  | 'partially_paid'
+  | 'finished'
+  | 'failed'
+  | 'refunded'
+  | 'expired';
+
+export interface NowPaymentsPayment {
+  payment_id: string;
+  payment_status: NowPaymentsStatus;
+  pay_address: string;
+  pay_amount: number;
+  price_amount: number;
+  price_currency: string;
+  pay_currency: string;
+  order_id: string;
+  expiration_estimate_date: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface NowPaymentsInvoice {
+  id: string;
+  invoice_url: string;
+}
+
+export interface NowPaymentsIPNPayload {
+  payment_id: string;
+  payment_status: NowPaymentsStatus;
+  order_id: string;
+  price_amount: number;
+  price_currency: string;
+  pay_amount: number;
+  pay_currency: string;
+  actually_paid: number;
 }
 
 export interface AuthorizeNetWebhookEvent {

@@ -1,10 +1,19 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
 import type { AnalyticsData, OrderSearchData, SearchOrderRow, OrderRow } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor } from '@/lib/admin-utils'
+import PendingApprovalTab from './PendingApprovalTab'
 
 export default function OrdersClient() {
+  // --------------- Tab State ---------------
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState<'all' | 'pending'>(
+    searchParams.get('tab') === 'pending' ? 'pending' : 'all'
+  )
+  const [pendingCount, setPendingCount] = useState(0)
+
   // --------------- Analytics Data ---------------
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -132,43 +141,88 @@ export default function OrdersClient() {
     }
   }
 
-  // --------------- Loading State ---------------
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <h1 className="font-display text-2xl text-brand-primary">Orders</h1>
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-xl" />)}
-        </div>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return (
-      <div className="space-y-4">
-        <h1 className="font-display text-2xl text-brand-primary">Orders</h1>
-        <p className="text-brand-primary/60">Failed to load data.</p>
-      </div>
-    )
-  }
+  // --------------- Fetch Pending Count on Mount ---------------
+  useEffect(() => {
+    fetch('/api/admin/club-orders')
+      .then(r => r.json())
+      .then(result => {
+        const orders = result.orders || []
+        setPendingCount(orders.filter((o: { status: string }) => o.status === 'pending_approval').length)
+      })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="space-y-6">
-      {/* Header + Period Selector */}
-      <div className="flex items-center justify-between">
+      {/* Header + Tabs + Period Selector */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl text-brand-primary">Orders</h1>
-        <select
-          value={periodDays}
-          onChange={(e) => setPeriodDays(Number(e.target.value))}
-          className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-        >
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-          <option value={365}>Last 365 days</option>
-        </select>
+        <div className="flex items-center gap-4">
+          {/* Tab buttons */}
+          <div className="flex items-center gap-1 bg-brand-cream/60 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                activeTab === 'all'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
+              }`}
+            >
+              All Orders
+            </button>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'pending'
+                  ? 'bg-brand-primary text-white shadow-sm'
+                  : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
+              }`}
+            >
+              Pending Approval
+              {pendingCount > 0 && (
+                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
+                  activeTab === 'pending'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-red-500 text-white'
+                }`}>
+                  {pendingCount}
+                </span>
+              )}
+            </button>
+          </div>
+          {/* Period selector - only for All Orders tab */}
+          {activeTab === 'all' && (
+            <select
+              value={periodDays}
+              onChange={(e) => setPeriodDays(Number(e.target.value))}
+              className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+            >
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
+              <option value={365}>Last 365 days</option>
+            </select>
+          )}
+        </div>
       </div>
+
+      {/* Pending Approval Tab */}
+      {activeTab === 'pending' && (
+        <PendingApprovalTab onPendingCountChange={setPendingCount} />
+      )}
+
+      {/* All Orders Tab */}
+      {activeTab === 'all' && loading && (
+        <div className="animate-pulse space-y-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-xl" />)}
+        </div>
+      )}
+
+      {activeTab === 'all' && !loading && !data && (
+        <p className="text-brand-primary/60">Failed to load data.</p>
+      )}
+
+      {activeTab === 'all' && !loading && data && <>
 
       {/* Sales by Status */}
       {Object.keys(data.sales.ordersByStatus).length > 0 && (
@@ -368,8 +422,10 @@ export default function OrdersClient() {
         )}
       </div>
 
+      </>}
+
       {/* ========== ORDER DETAIL MODAL ========== */}
-      {selectedOrder && (
+      {selectedOrder && activeTab === 'all' && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedOrder(null); setFulfillAction(null); setFulfillError(null) }}>
           <div className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">

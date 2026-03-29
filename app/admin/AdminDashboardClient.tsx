@@ -420,6 +420,25 @@ export default function AdminDashboardClient() {
             )
           })()}
 
+          {/* External Tools */}
+          <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+            <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
+            <div className="flex flex-wrap gap-3">
+              <a href="https://partners.joinasher.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Asher Med Portal →
+              </a>
+              <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Stripe Dashboard →
+              </a>
+              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Google Analytics →
+              </a>
+              <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Search Console →
+              </a>
+            </div>
+          </div>
+
           {/* Club Orders Summary */}
           {data.invoiceAging.length > 0 && (() => {
             const filteredOrders = invoiceStatusFilter
@@ -436,7 +455,7 @@ export default function AdminDashboardClient() {
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="font-display text-xl text-brand-primary">Club Orders</h2>
-                  <Link href="/admin/club-orders" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+                  <Link href="/admin/orders?tab=pending" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
                     View all →
                   </Link>
                 </div>
@@ -667,24 +686,6 @@ export default function AdminDashboardClient() {
             )}
           </div>
 
-          {/* External Tools */}
-          <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-            <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
-            <div className="flex flex-wrap gap-3">
-              <a href="https://partners.joinasher.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Asher Med Portal →
-              </a>
-              <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Stripe Dashboard →
-              </a>
-              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Google Analytics →
-              </a>
-              <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Search Console →
-              </a>
-            </div>
-          </div>
         </>
       )}
     </div>

@@ -20,7 +20,7 @@ export interface InvoiceData {
   total: number
   currency: string
   paymentMethod: string
-  paymentProvider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net'
+  paymentProvider: 'stripe' | 'klarna' | 'affirm' | 'authorize_net' | 'corepay' | 'nowpayments' | 'cherry' | 'coinbase_commerce'
   billingAddress?: {
     line1?: string
     city?: string
