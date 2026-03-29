@@ -32,7 +32,7 @@ const NAV_GROUPS = [
     label: 'MY CARE',
     items: [
       { label: 'Intake Form', href: '/intake', icon: ClipboardList },
-      { label: 'Consultations', href: '/consultations', icon: Video },
+      { label: 'Consultations', href: '/library/consultations', icon: Video },
       { label: 'Labs & Results', href: '/library/labs', icon: TestTube2 },
       { label: 'Renewal', href: '/renewal', icon: RefreshCw },
     ],

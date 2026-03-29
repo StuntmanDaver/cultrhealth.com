@@ -86,7 +86,7 @@ export function ConsultationRoomClient({ consultationId }: ConsultationRoomClien
       <div className="min-h-screen bg-brand-cream flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-2">{error}</p>
-          <a href="/consultations" className="text-sm text-brand-primary underline">Back to consultations</a>
+          <a href="/library/consultations" className="text-sm text-brand-primary underline">Back to consultations</a>
         </div>
       </div>
     )

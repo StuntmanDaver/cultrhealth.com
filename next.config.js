@@ -122,6 +122,16 @@ const nextConfig = {
         destination: '/pricing',
         permanent: true,
       },
+      {
+        source: '/consultations',
+        destination: '/library/consultations',
+        permanent: true,
+      },
+      {
+        source: '/consultations/:path*',
+        destination: '/library/consultations/:path*',
+        permanent: true,
+      },
     ];
   },
 };

@@ -30,7 +30,7 @@ export function ConsultationHistoryClient() {
             <p className="text-white/70">Your past and upcoming consultations.</p>
           </div>
           <Link
-            href="/consultations"
+            href="/library/consultations"
             className="px-5 py-2 bg-white/10 text-white rounded-full text-sm font-medium hover:bg-white/20 transition-colors"
           >
             Book New
@@ -46,7 +46,7 @@ export function ConsultationHistoryClient() {
             <div className="text-center py-12">
               <p className="text-brand-primary/40 mb-4">No consultations yet.</p>
               <Link
-                href="/consultations"
+                href="/library/consultations"
                 className="inline-flex px-6 py-2.5 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
               >
                 Book Your First

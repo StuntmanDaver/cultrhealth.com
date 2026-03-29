@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
           reason,
         })
 
-        const joinUrl = `${siteUrl}/consultations/${consultationId}`
-        const cancelUrl = `${siteUrl}/consultations/${consultationId}?action=cancel`
+        const joinUrl = `${siteUrl}/library/consultations/${consultationId}`
+        const cancelUrl = `${siteUrl}/library/consultations/${consultationId}?action=cancel`
         const typeConfig = CONSULTATION_TYPES[consultationType as keyof typeof CONSULTATION_TYPES]
 
         try {
