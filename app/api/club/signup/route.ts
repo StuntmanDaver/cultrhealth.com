@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
-import crypto from 'crypto'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { getCookieDomain } from '@/lib/utils'
+import { syncContactToMailchimp } from '@/lib/mailchimp'
 
 export async function POST(request: Request) {
   try {
@@ -49,7 +49,14 @@ export async function POST(request: Request) {
     }
 
     // Sync to Mailchimp (non-blocking)
-    syncToMailchimp(name.trim(), normalizedEmail, phone?.trim() || '', socialHandle?.trim() || '').catch((err) =>
+    syncContactToMailchimp({
+      email: normalizedEmail,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: phone?.trim() || undefined,
+      socialHandle: socialHandle?.trim() || undefined,
+      tags: ['cultr-club-signup', 'club-member'],
+    }).catch((err) =>
       console.error('[club/signup] Mailchimp sync error (non-fatal):', err)
     )
 
@@ -122,60 +129,4 @@ async function sendClubWelcomeEmail(firstName: string, email: string) {
 </body>
 </html>`,
   })
-}
-
-
-async function syncToMailchimp(name: string, email: string, phone: string, socialHandle: string) {
-  const apiKey = process.env.MAILCHIMP_API_KEY
-  const audienceId = process.env.MAILCHIMP_AUDIENCE_ID
-  const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX
-
-  // Skip if not configured
-  if (!apiKey || !audienceId || !serverPrefix) {
-    console.warn('[club/signup] Mailchimp not configured, skipping sync')
-    return
-  }
-
-  try {
-    // Create MD5 hash of lowercase email for Mailchimp member endpoint
-    const emailHash = crypto
-      .createHash('md5')
-      .update(email.toLowerCase())
-      .digest('hex')
-
-    const firstName = name.split(' ')[0]
-    const lastName = name.split(' ').slice(1).join(' ') || ''
-
-    const response = await fetch(
-      `https://${serverPrefix}.api.mailchimp.com/3.0/lists/${audienceId}/members/${emailHash}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`anystring:${apiKey}`).toString('base64')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email_address: email,
-          status_if_new: 'subscribed',
-          merge_fields: {
-            FNAME: firstName,
-            LNAME: lastName,
-            PHONE: phone,
-            MMERGE5: socialHandle, // Custom field: Social Handle
-          },
-          tags: ['cultr-club-signup'],
-        }),
-      }
-    )
-
-    if (!response.ok) {
-      const error = await response.json()
-      console.error('[club/signup] Mailchimp sync failed:', error)
-    } else {
-      console.log('[club/signup] Mailchimp sync successful for', email)
-    }
-  } catch (err) {
-    console.error('[club/signup] Mailchimp sync error:', err)
-    throw err
-  }
 }
