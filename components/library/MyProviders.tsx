@@ -40,7 +40,7 @@ export function MyProviders() {
             Contact Care Team
           </a>
           <a
-            href="https://asherweightloss.com"
+            href="https://partners.joinasher.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-100 text-stone-700 rounded-xl text-sm font-medium hover:bg-stone-200 transition-colors"

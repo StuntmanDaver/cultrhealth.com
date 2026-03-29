@@ -13,8 +13,8 @@ export const ASHER_MED_URLS = {
     sandbox: 'https://sandbox-api.asherweightloss.com', // If sandbox exists
   },
   website: {
-    production: 'https://asherweightloss.com',
-    sandbox: 'https://asherweightloss.com',
+    production: 'https://partners.joinasher.com',
+    sandbox: 'https://partners.joinasher.com',
   },
 } as const;
 
