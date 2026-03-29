@@ -33,6 +33,8 @@ export type Plan = {
   ctaLabel: string;
   /** Whether BNPL providers (Klarna/Affirm) are available for this plan */
   bnplEnabled: boolean;
+  /** Number of telehealth consultations included per month (0 = none, Infinity = unlimited) */
+  consultationsPerMonth: number;
 };
 
 /**
@@ -106,6 +108,7 @@ export const PLANS: Plan[] = [
     isRecommended: false,
     ctaLabel: 'Join Free',
     bnplEnabled: false,
+    consultationsPerMonth: 0,
   },
   {
     slug: 'core',
@@ -133,6 +136,7 @@ export const PLANS: Plan[] = [
     isFeatured: false,
     ctaLabel: 'Join Core',
     bnplEnabled: true,
+    consultationsPerMonth: 1,
   },
   {
     slug: 'catalyst',
@@ -160,6 +164,7 @@ export const PLANS: Plan[] = [
     isFeatured: true,
     ctaLabel: 'Join Catalyst+',
     bnplEnabled: true,
+    consultationsPerMonth: 2,
   },
   {
     slug: 'concierge',
@@ -187,5 +192,6 @@ export const PLANS: Plan[] = [
     isFeatured: false,
     ctaLabel: 'Join Curated',
     bnplEnabled: true,
+    consultationsPerMonth: Infinity,
   },
 ];
