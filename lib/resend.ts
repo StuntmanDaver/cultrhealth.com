@@ -1916,3 +1916,440 @@ export async function sendSiphoxFailureAlert(params: {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
+
+// ===========================================
+// CONSULTATION LIFECYCLE EMAILS
+// ===========================================
+
+interface ConsultationConfirmationData {
+  patientName: string
+  patientEmail: string
+  providerName: string
+  consultationType: string
+  scheduledAt: Date
+  joinUrl: string
+  cancelUrl: string
+}
+
+export async function sendConsultationConfirmationToPatient(
+  data: ConsultationConfirmationData
+): Promise<EmailResult> {
+  const {
+    patientName,
+    patientEmail,
+    providerName,
+    consultationType,
+    scheduledAt,
+    joinUrl,
+    cancelUrl,
+  } = data
+
+  const safePatientName = escapeHtml(patientName)
+  const safeProviderName = escapeHtml(providerName)
+  const safeConsultationType = escapeHtml(consultationType)
+  const firstName = safePatientName.split(' ')[0]
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }
+  const formattedDate = scheduledAt.toLocaleDateString('en-US', dateOptions)
+  const formattedTime = scheduledAt.toLocaleTimeString('en-US', timeOptions)
+
+  const content = `
+    <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; color: #2A4542; margin-bottom: 16px;">
+      Your Consultation is Confirmed
+    </h1>
+
+    <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #2A4542; margin-bottom: 24px;">
+      Hi ${firstName}, you're all set. Here are the details for your upcoming consultation.
+    </p>
+
+    <div style="background-color: #F5F0E8; border-radius: 10px; padding: 24px; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px; width: 130px;">Type</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; font-weight: 500;">${safeConsultationType}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Date</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${formattedDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Time</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; font-weight: 500;">${formattedTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Provider</td>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${safeProviderName}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${joinUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 36px; text-decoration: none; border-radius: 50px;">
+        Join Consultation
+      </a>
+    </div>
+
+    <p style="font-family: 'Inter', sans-serif; font-size: 13px; color: #5A6B68; line-height: 1.6; text-align: center; margin-bottom: 16px;">
+      Your link will be active 10 minutes before the scheduled time. We recommend joining a few minutes early to test your connection.
+    </p>
+
+    <p style="font-family: 'Inter', sans-serif; font-size: 13px; color: #5A6B68; text-align: center; margin: 0;">
+      Need to cancel? <a href="${cancelUrl}" style="color: #2A4542; text-decoration: underline;">Cancel this consultation</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: patientEmail,
+      subject: `Consultation Confirmed — ${formattedDate} at ${formattedTime}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Consultation confirmation email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Consultation confirmation email sent')
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send consultation confirmation email:', err)
+    return { success: false, error: String(err) }
+  }
+}
+
+interface ConsultationProviderNotificationData {
+  providerName: string
+  providerEmail: string
+  patientName: string
+  patientEmail: string
+  consultationType: string
+  scheduledAt: Date
+  dailyRoomUrl: string
+  reason?: string
+}
+
+export async function sendConsultationNotificationToProvider(
+  data: ConsultationProviderNotificationData
+): Promise<EmailResult> {
+  const {
+    providerName,
+    providerEmail,
+    patientName,
+    patientEmail,
+    consultationType,
+    scheduledAt,
+    dailyRoomUrl,
+    reason,
+  } = data
+
+  const safeProviderName = escapeHtml(providerName)
+  const safePatientName = escapeHtml(patientName)
+  const safePatientEmail = escapeHtml(patientEmail)
+  const safeConsultationType = escapeHtml(consultationType)
+  const safeReason = reason ? escapeHtml(reason) : null
+  const firstName = safeProviderName.split(' ')[0]
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }
+  const formattedDate = scheduledAt.toLocaleDateString('en-US', dateOptions)
+  const formattedTime = scheduledAt.toLocaleTimeString('en-US', timeOptions)
+
+  const content = `
+    <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; color: #2A4542; margin-bottom: 16px;">
+      New Consultation Scheduled
+    </h1>
+
+    <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #2A4542; margin-bottom: 24px;">
+      Hi ${firstName}, a new consultation has been booked and is waiting for you.
+    </p>
+
+    <div style="background-color: #F5F0E8; border-radius: 10px; padding: 24px; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px; width: 130px;">Patient</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; font-weight: 500;">${safePatientName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Patient Email</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${safePatientEmail}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Type</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${safeConsultationType}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Date</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${formattedDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; ${safeReason ? 'border-bottom: 1px solid #D8E8D8;' : ''} font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Time</td>
+          <td style="padding: 10px 0; ${safeReason ? 'border-bottom: 1px solid #D8E8D8;' : ''} font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; font-weight: 500;">${formattedTime}</td>
+        </tr>
+        ${safeReason ? `
+        <tr>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px; vertical-align: top;">Reason</td>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; line-height: 1.5;">${safeReason}</td>
+        </tr>
+        ` : ''}
+      </table>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${dailyRoomUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 36px; text-decoration: none; border-radius: 50px;">
+        Join Video Room
+      </a>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: providerEmail,
+      subject: `Consultation: ${safePatientName} — ${formattedDate}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Consultation provider notification email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Consultation notification email sent')
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send consultation notification to provider:', err)
+    return { success: false, error: String(err) }
+  }
+}
+
+interface ConsultationReminderData {
+  patientName: string
+  patientEmail: string
+  providerName: string
+  scheduledAt: Date
+  joinUrl: string
+}
+
+export async function sendConsultationReminder(
+  data: ConsultationReminderData
+): Promise<EmailResult> {
+  const { patientName, patientEmail, providerName, scheduledAt, joinUrl } = data
+
+  const safePatientName = escapeHtml(patientName)
+  const safeProviderName = escapeHtml(providerName)
+  const firstName = safePatientName.split(' ')[0]
+
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  }
+  const formattedTime = scheduledAt.toLocaleTimeString('en-US', timeOptions)
+
+  const content = `
+    <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; color: #2A4542; margin-bottom: 16px;">
+      Your Consultation Starts Soon
+    </h1>
+
+    <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #2A4542; margin-bottom: 24px;">
+      Hi ${firstName}, your consultation with ${safeProviderName} starts at ${formattedTime} — that's in about 1 hour.
+    </p>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${joinUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 36px; text-decoration: none; border-radius: 50px;">
+        Join Consultation
+      </a>
+    </div>
+
+    <div style="background-color: #F5F0E8; border-radius: 10px; padding: 20px; margin-top: 8px;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #2A4542; font-weight: 500; margin: 0 0 8px 0;">
+        Quick Tip
+      </p>
+      <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #5A6B68; line-height: 1.6; margin: 0;">
+        Take a moment now to test your camera and microphone so the session goes smoothly. You can join the room up to 10 minutes before your scheduled time.
+      </p>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: patientEmail,
+      subject: `Reminder: Consultation at ${formattedTime}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Consultation reminder email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Consultation reminder email sent')
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send consultation reminder email:', err)
+    return { success: false, error: String(err) }
+  }
+}
+
+interface ConsultationCompletedData {
+  patientName: string
+  patientEmail: string
+  providerName: string
+  durationMins: number
+  notesUrl: string
+  bookFollowUpUrl: string
+}
+
+export async function sendConsultationCompleted(
+  data: ConsultationCompletedData
+): Promise<EmailResult> {
+  const { patientName, patientEmail, providerName, durationMins, notesUrl, bookFollowUpUrl } = data
+
+  const safePatientName = escapeHtml(patientName)
+  const safeProviderName = escapeHtml(providerName)
+  const firstName = safePatientName.split(' ')[0]
+
+  const content = `
+    <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; color: #2A4542; margin-bottom: 16px;">
+      Consultation Complete
+    </h1>
+
+    <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #2A4542; margin-bottom: 24px;">
+      Hi ${firstName}, thank you for attending your ${durationMins}-minute consultation with ${safeProviderName}.
+    </p>
+
+    <div style="background-color: #F5F0E8; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+      <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #5A6B68; line-height: 1.6; margin: 0;">
+        Your provider's notes and any recommended protocols will be available in your member portal shortly. You'll receive a notification once they've been published.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${notesUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 36px; text-decoration: none; border-radius: 50px;">
+        View Notes
+      </a>
+    </div>
+
+    <p style="font-family: 'Inter', sans-serif; font-size: 14px; color: #5A6B68; text-align: center; margin: 0;">
+      Ready to continue your optimization journey?
+      <a href="${bookFollowUpUrl}" style="color: #2A4542; font-weight: 500; text-decoration: underline;">Book a follow-up consultation</a>
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: patientEmail,
+      subject: 'Your CULTR Consultation — Summary',
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Consultation completed email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Consultation completed email sent')
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send consultation completed email:', err)
+    return { success: false, error: String(err) }
+  }
+}
+
+interface RecordingReadyData {
+  consultationId: number
+  patientName: string
+  providerName: string
+  adminUrl: string
+}
+
+export async function sendRecordingReadyNotification(
+  data: RecordingReadyData
+): Promise<EmailResult> {
+  const { consultationId, patientName, providerName, adminUrl } = data
+
+  const safePatientName = escapeHtml(patientName)
+  const safeProviderName = escapeHtml(providerName)
+  const toEmail = process.env.ADMIN_APPROVAL_EMAIL || 'admin@cultrhealth.com'
+
+  const content = `
+    <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 500; color: #2A4542; margin-bottom: 16px;">
+      Recording Ready
+    </h1>
+
+    <p style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 16px; line-height: 1.6; color: #2A4542; margin-bottom: 24px;">
+      A consultation recording has been processed and is ready for review.
+    </p>
+
+    <div style="background-color: #F5F0E8; border-radius: 10px; padding: 24px; margin-bottom: 24px;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px; width: 160px;">Consultation ID</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px; font-weight: 500; font-family: monospace;">#${consultationId}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Patient</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D8E8D8; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${safePatientName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #5A6B68; font-size: 14px;">Provider</td>
+          <td style="padding: 10px 0; font-family: 'Inter', sans-serif; color: #2A4542; font-size: 14px;">${safeProviderName}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${adminUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 36px; text-decoration: none; border-radius: 50px;">
+        View Recording
+      </a>
+    </div>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: toEmail,
+      subject: `Recording Ready — Consultation #${consultationId}`,
+      html: baseEmailTemplate(content),
+    })
+
+    if (error) {
+      console.error('Recording ready notification email error:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('Recording ready notification sent:', { consultationId, toEmail })
+    return { success: true }
+  } catch (err) {
+    console.error('Failed to send recording ready notification:', err)
+    return { success: false, error: String(err) }
+  }
+}
