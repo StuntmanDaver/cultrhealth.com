@@ -23,8 +23,10 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 })
     }
 
+    // Generate meeting token for scheduled or in_progress consultations (allows rejoin)
     let meetingToken: string | null = null
-    if (consultation.daily_room_name && consultation.status === 'scheduled') {
+    const joinableStatuses = ['scheduled', 'in_progress']
+    if (consultation.daily_room_name && joinableStatuses.includes(consultation.status)) {
       try {
         const scheduledAt = new Date(consultation.scheduled_at || Date.now())
         const tokenExpiry = new Date(scheduledAt.getTime() + 2 * 60 * 60 * 1000)
@@ -45,8 +47,8 @@ export async function GET(
       success: true,
       consultation: {
         ...consultation,
-        daily_room_name: undefined,
-        daily_room_url: undefined,
+        daily_room_name: undefined, // Don't expose internal room name
+        // Keep daily_room_url — client needs it to join the video room
       },
       meetingToken,
       notes,

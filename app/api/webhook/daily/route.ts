@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
             bookFollowUpUrl: `${siteUrl}/consultations`,
           })
         } catch (emailErr) {
-          console.error('Failed to send completion email:', emailErr)
+          console.error('Failed to send completion email:', emailErr instanceof Error ? emailErr.message : 'Unknown error')
         }
 
         break
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
           try {
             await deleteRecording(recordingId)
           } catch (delErr) {
-            console.error(`Failed to delete recording ${recordingId} from Daily.co:`, delErr)
+            console.error(`Failed to delete recording ${recordingId} from Daily.co:`, delErr instanceof Error ? delErr.message : 'Unknown error')
           }
 
           try {
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
               adminUrl: `${siteUrl}/admin/consultations/${consultation.id}`,
             })
           } catch (emailErr) {
-            console.error('Failed to send recording notification:', emailErr)
+            console.error('Failed to send recording notification:', emailErr instanceof Error ? emailErr.message : 'Unknown error')
           }
         } catch (err) {
           console.error(`Failed to process recording ${recordingId}:`, err)

@@ -180,7 +180,7 @@ export async function updateConsultationStatus(
     await sql`
       UPDATE consult_requests
       SET status = ${status}, ended_at = NOW(),
-          duration_mins = ${(extras?.durationMins as number) || null},
+          duration_mins = ${extras?.durationMins != null ? Number(extras.durationMins) : null},
           updated_at = NOW()
       WHERE id = ${id}
     `

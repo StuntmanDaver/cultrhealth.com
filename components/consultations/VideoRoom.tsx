@@ -83,7 +83,7 @@ function CallUI({ onLeave }: { onLeave: () => void }) {
       {/* Top bar */}
       <div className="absolute top-4 left-4 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/cultr-health-logo.png" alt="CULTR Health" className="h-6 opacity-80" style={{ filter: 'brightness(0) invert(1)' }} />
+        <img src="/cultr-logo-green.svg" alt="CULTR" className="h-6 opacity-80" style={{ filter: 'brightness(0) invert(1)' }} />
         <span className="text-white/60 text-sm font-mono">{mins}:{secs}</span>
       </div>
 

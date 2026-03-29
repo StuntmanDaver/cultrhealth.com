@@ -49,7 +49,7 @@ export async function createRoom(options: {
       privacy: 'private',
       properties: {
         exp: Math.floor(options.expiresAt.getTime() / 1000),
-        enable_recording: options.enableRecording ? 'cloud' : undefined,
+        enable_recording: options.enableRecording ? 'cloud' : false,
         enable_chat: true,
         enable_screenshare: true,
         start_audio_off: false,
@@ -102,7 +102,7 @@ export async function updateRoomRecording(roomName: string, enableRecording: boo
     method: 'POST',
     body: JSON.stringify({
       properties: {
-        enable_recording: enableRecording ? 'cloud' : undefined,
+        enable_recording: enableRecording ? 'cloud' : false,
       },
     }),
   })
@@ -118,8 +118,8 @@ export function verifyDailyWebhook(payload: string, signature: string): boolean 
     .createHmac('sha256', secret)
     .update(payload)
     .digest('hex')
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  )
+  const sigBuffer = Buffer.from(signature)
+  const expectedBuffer = Buffer.from(expectedSignature)
+  if (sigBuffer.length !== expectedBuffer.length) return false
+  return crypto.timingSafeEqual(sigBuffer, expectedBuffer)
 }

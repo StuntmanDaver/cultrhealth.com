@@ -155,11 +155,12 @@ export async function POST(request: NextRequest) {
         if (consultation) {
           const newScheduledAt = event.payload?.startTime
           if (newScheduledAt) {
-            await updateConsultationStatus(consultation.id, 'scheduled')
+            // Atomic update: status + scheduled_at in one query
             const { sql } = await import('@vercel/postgres')
             await sql`
               UPDATE consult_requests
-              SET scheduled_at = ${newScheduledAt}, updated_at = NOW()
+              SET status = 'scheduled', scheduled_at = ${newScheduledAt},
+                  reminder_sent_at = NULL, updated_at = NOW()
               WHERE id = ${consultation.id}
             `
           }
