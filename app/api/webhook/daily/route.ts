@@ -28,7 +28,9 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(body)
     const eventType = event.type as string
-    const eventId = `daily_${event.event_ts || Date.now()}_${eventType}`
+    // Use deterministic keys: recording_id or room_name, not timestamps
+    const eventKey = event.payload?.recording_id || event.payload?.room_name || event.event_ts || 'unknown'
+    const eventId = `daily_${eventKey}_${eventType}`
 
     if (await isWebhookProcessed(eventId)) {
       return NextResponse.json({ received: true, duplicate: true })

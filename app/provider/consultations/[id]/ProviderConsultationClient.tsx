@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react'
 import { ProviderNotesForm } from '@/components/consultations/ProviderNotesForm'
 import { RecordingPlayer } from '@/components/consultations/RecordingPlayer'
-import { ConsultationCard } from '@/components/consultations/ConsultationCard'
+import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
 
 interface ProviderConsultationClientProps {
   consultationId: number
 }
 
 export function ProviderConsultationClient({ consultationId }: ProviderConsultationClientProps) {
-  const [consultation, setConsultation] = useState<Record<string, unknown> | null>(null)
-  const [notes, setNotes] = useState<Record<string, unknown> | null>(null)
+  const [consultation, setConsultation] = useState<ConsultationCardData | null>(null)
+  const [notes, setNotes] = useState<{ reason?: string | null; outcome?: string | null; next_steps?: string | null; internal_notes?: string | null } | null>(null)
   const [hasRecording, setHasRecording] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -54,7 +54,7 @@ export function ProviderConsultationClient({ consultationId }: ProviderConsultat
       <section className="py-8 px-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {consultation && (
-            <ConsultationCard consultation={consultation as never} showPatient showActions={false} />
+            <ConsultationCard consultation={consultation} showPatient showActions={false} />
           )}
 
           {hasRecording && (
@@ -69,7 +69,7 @@ export function ProviderConsultationClient({ consultationId }: ProviderConsultat
             <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
               <ProviderNotesForm
                 consultationId={consultationId}
-                existingNotes={notes as never}
+                existingNotes={notes || undefined}
               />
             </div>
           </div>

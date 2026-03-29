@@ -1,15 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ConsultationCard } from '@/components/consultations/ConsultationCard'
+import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
 
 interface ProviderConsultationsClientProps {
   providerEmail: string
 }
 
 export function ProviderConsultationsClient({ providerEmail }: ProviderConsultationsClientProps) {
-  const [upcoming, setUpcoming] = useState<Array<Record<string, unknown>>>([])
-  const [past, setPast] = useState<Array<Record<string, unknown>>>([])
+  const [upcoming, setUpcoming] = useState<ConsultationCardData[]>([])
+  const [past, setPast] = useState<ConsultationCardData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function ProviderConsultationsClient({ providerEmail }: ProviderConsultat
         const upData = await upRes.json()
         const allData = await allRes.json()
         if (upData.success) setUpcoming(upData.consultations)
-        if (allData.success) setPast(allData.consultations.filter((c: Record<string, unknown>) => c.status === 'completed'))
+        if (allData.success) setPast(allData.consultations.filter((c: ConsultationCardData) => c.status === 'completed'))
       } catch { /* ignore */ } finally {
         setLoading(false)
       }
@@ -56,7 +56,7 @@ export function ProviderConsultationsClient({ providerEmail }: ProviderConsultat
                 <p className="text-sm text-brand-primary/40">No upcoming consultations.</p>
               ) : (
                 upcoming.map((c) => (
-                  <ConsultationCard key={c.id as number} consultation={c as never} showPatient />
+                  <ConsultationCard key={c.id} consultation={c} showPatient />
                 ))
               )}
             </div>
@@ -69,7 +69,7 @@ export function ProviderConsultationsClient({ providerEmail }: ProviderConsultat
                 <p className="text-sm text-brand-primary/40">No completed consultations yet.</p>
               ) : (
                 past.map((c) => (
-                  <ConsultationCard key={c.id as number} consultation={c as never} showPatient />
+                  <ConsultationCard key={c.id} consultation={c} showPatient />
                 ))
               )}
             </div>

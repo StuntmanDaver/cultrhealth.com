@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ConsultationCard } from '@/components/consultations/ConsultationCard'
+import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
 import { CONSULTATION_STATUSES } from '@/lib/config/consultations'
 
 export function AdminConsultationsClient() {
-  const [consultations, setConsultations] = useState<Array<Record<string, unknown>>>([])
+  const [consultations, setConsultations] = useState<ConsultationCardData[]>([])
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState('')
   const [loading, setLoading] = useState(true)
@@ -66,8 +66,8 @@ export function AdminConsultationsClient() {
           <p className="text-brand-primary/40 text-center py-8">No consultations found.</p>
         ) : (
           consultations.map((c) => (
-            <Link key={c.id as number} href={`/provider/consultations/${c.id}`}>
-              <ConsultationCard consultation={c as never} showPatient showActions={false} />
+            <Link key={c.id} href={`/provider/consultations/${c.id}`}>
+              <ConsultationCard consultation={c} showPatient showActions={false} />
             </Link>
           ))
         )}

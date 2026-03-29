@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
-import { ConsultationCard } from '@/components/consultations/ConsultationCard'
+import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
 import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 
 const DEFAULT_ACCESS: LibraryAccess = {
@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [email, setEmail] = useState('')
   const [libraryAccess, setLibraryAccess] = useState<LibraryAccess>(DEFAULT_ACCESS)
   const [loading, setLoading] = useState(true)
-  const [upcomingConsultation, setUpcomingConsultation] = useState<Record<string, unknown> | null>(null)
+  const [upcomingConsultation, setUpcomingConsultation] = useState<ConsultationCardData | null>(null)
 
   useEffect(() => {
     async function fetchProfile() {
@@ -88,7 +88,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           {upcomingConsultation ? (
-            <ConsultationCard consultation={upcomingConsultation as never} />
+            <ConsultationCard consultation={upcomingConsultation} />
           ) : (
             <div className="bg-cream-dark rounded-xl p-4 text-center">
               <p className="text-sm text-brand-primary/60 mb-3">No upcoming consultations.</p>

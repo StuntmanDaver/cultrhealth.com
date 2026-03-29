@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ConsultationCard } from '@/components/consultations/ConsultationCard'
+import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
 import Link from 'next/link'
 
 export function ConsultationHistoryClient() {
-  const [consultations, setConsultations] = useState<Array<Record<string, unknown>>>([])
+  const [consultations, setConsultations] = useState<ConsultationCardData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export function ConsultationHistoryClient() {
             </div>
           ) : (
             consultations.map((c) => (
-              <ConsultationCard key={c.id as number} consultation={c as never} />
+              <ConsultationCard key={c.id} consultation={c} />
             ))
           )}
         </div>
