@@ -119,6 +119,27 @@ export async function getSiphoxCustomerByPhone(
 }
 
 /**
+ * Look up a SiPhox customer by email address.
+ * Returns the matching row or null if not found.
+ */
+export async function getSiphoxCustomerByEmail(
+  email: string
+): Promise<SiphoxCustomerRow | null> {
+  try {
+    const result = await sql`
+      SELECT id, phone_e164, siphox_customer_id, external_id, first_name, last_name, email,
+             created_at, updated_at
+      FROM siphox_customers
+      WHERE LOWER(email) = ${email.toLowerCase()}
+    `
+    if (result.rows.length === 0) return null
+    return result.rows[0] as SiphoxCustomerRow
+  } catch (error) {
+    throw new SiphoxDatabaseError('Failed to get SiPhox customer by email', error)
+  }
+}
+
+/**
  * Look up a SiPhox customer by their SiPhox customer ID.
  * Returns the matching row or null if not found.
  */

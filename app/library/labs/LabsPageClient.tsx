@@ -33,8 +33,8 @@ export default function LabsPageClient() {
 
       {/* SiPhox Labs — kit status, registration, results */}
       <LabsClient
-        labsEndpoint="/api/portal/labs"
-        resultsEndpoint="/api/portal/results"
+        labsEndpoint="/api/member/labs"
+        resultsEndpoint="/api/member/results"
       />
     </div>
   )
