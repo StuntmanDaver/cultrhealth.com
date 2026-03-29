@@ -24,6 +24,7 @@ import {
   CheckCircle,
   AlertTriangle,
   Download,
+  Layers,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -338,6 +339,27 @@ export default function DashboardClient() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Stacking Guides Card */}
+      {!kitStatusLoading && (
+        <Link
+          href="/portal/stacking"
+          className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-sage/30 flex items-center justify-center">
+                <Layers className="w-5 h-5 text-brand-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-brand-primary">Peptide Stacking Protocols</p>
+                <p className="text-xs text-brand-primary/60">Goal-based guides for your regimen</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-brand-primary/40" />
+          </div>
+        </Link>
       )}
 
       {/* Loading State */}

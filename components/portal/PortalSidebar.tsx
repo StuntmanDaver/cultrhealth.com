@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, TestTube2, X } from 'lucide-react'
+import { LayoutDashboard, TestTube2, Layers, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ============================================================
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
   { label: 'Labs', href: '/portal/labs', icon: TestTube2 },
+  { label: 'Stacking Guides', href: '/portal/stacking', icon: Layers },
 ]
 
 // ============================================================
