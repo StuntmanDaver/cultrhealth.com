@@ -122,7 +122,7 @@ export function MemberDashboard({
   return (
     <div className="space-y-8">
       {/* Quick Actions Header */}
-      <div className="bg-gradient-to-br from-stone-900 to-stone-800 rounded-3xl p-8 text-white">
+      <div className="bg-gradient-to-br from-brand-primary to-forest-dark rounded-3xl p-8 text-white">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-display font-bold">
@@ -143,9 +143,9 @@ export function MemberDashboard({
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <Link
             href="/intake"
-            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white text-stone-900 hover:bg-stone-100 transition-all"
+            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-brand-cream text-brand-primary hover:bg-cream-dark transition-all"
           >
-            <Plus className="w-6 h-6 text-stone-700" />
+            <Plus className="w-6 h-6 text-brand-primary" />
             <span className="text-xs font-medium text-center leading-tight">
               Start New Order
             </span>
@@ -170,7 +170,7 @@ export function MemberDashboard({
               HSA/FSA Docs
             </span>
             {lmnRecords.length > 0 && (
-              <span className="absolute top-2 right-2 w-5 h-5 bg-emerald-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span className="absolute top-2 right-2 w-5 h-5 bg-sage text-brand-primary text-xs font-bold rounded-full flex items-center justify-center">
                 {lmnRecords.length}
               </span>
             )}
@@ -181,36 +181,36 @@ export function MemberDashboard({
       {/* LMN Viewer Modal */}
       {showLmnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowLmnModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-brand-cream rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 bg-mint rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-brand-primary" />
                 </div>
-                <h3 className="font-display font-bold text-stone-900">
+                <h3 className="font-display font-bold text-brand-primary">
                   Letters of Medical Necessity
                 </h3>
               </div>
-              <button onClick={() => setShowLmnModal(false)} className="text-stone-400 hover:text-stone-600 text-xl leading-none">&times;</button>
+              <button onClick={() => setShowLmnModal(false)} className="text-brand-primary/40 hover:text-brand-primary text-xl leading-none">&times;</button>
             </div>
 
             {lmnLoading ? (
               <div className="text-center py-8">
-                <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-sm text-stone-500 mt-2">Loading documents...</p>
+                <div className="w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-sm text-brand-primary/50 mt-2">Loading documents...</p>
               </div>
             ) : lmnRecords.length > 0 ? (
               <div className="space-y-3 max-h-80 overflow-y-auto">
                 {lmnRecords.map((record) => (
                   <div
                     key={record.lmnNumber}
-                    className="bg-stone-50 rounded-xl p-4 border border-stone-200 flex items-center justify-between"
+                    className="bg-cream-dark rounded-xl p-4 border border-brand-primary/10 flex items-center justify-between"
                   >
                     <div>
-                      <p className="font-medium text-stone-900 text-sm">
+                      <p className="font-medium text-brand-primary text-sm">
                         {record.lmnNumber}
                       </p>
-                      <p className="text-xs text-stone-500 mt-0.5">
+                      <p className="text-xs text-brand-primary/50 mt-0.5">
                         Order {record.orderNumber} &middot;{' '}
                         {new Date(record.issueDate).toLocaleDateString('en-US', {
                           month: 'short',
@@ -221,7 +221,7 @@ export function MemberDashboard({
                     </div>
                     <a
                       href={`/api/lmn/${record.lmnNumber}`}
-                      className="flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors text-sm"
+                      className="flex items-center gap-2 px-3 py-2 bg-brand-primary text-white font-medium rounded-full hover:bg-forest-light transition-colors text-sm"
                     >
                       <Download className="w-4 h-4" />
                       View
@@ -231,9 +231,9 @@ export function MemberDashboard({
               </div>
             ) : (
               <div className="text-center py-8">
-                <Receipt className="w-10 h-10 text-stone-300 mx-auto mb-3" />
-                <p className="text-stone-600 font-medium">No Documents Yet</p>
-                <p className="text-sm text-stone-500 mt-1">
+                <Receipt className="w-10 h-10 text-brand-primary/20 mx-auto mb-3" />
+                <p className="text-brand-primary font-medium">No Documents Yet</p>
+                <p className="text-sm text-brand-primary/50 mt-1">
                   When you purchase eligible products, your LMN will appear here.
                 </p>
               </div>
@@ -245,12 +245,12 @@ export function MemberDashboard({
       {/* Orders Section */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-display font-bold text-stone-900">
+          <h3 className="text-lg font-display font-bold text-brand-primary">
             Your Orders
           </h3>
           <Link
             href="/intake"
-            className="text-sm text-stone-500 hover:text-stone-700 font-medium flex items-center gap-1"
+            className="text-sm text-brand-primary/50 hover:text-brand-primary font-medium flex items-center gap-1"
           >
             New Order <ChevronRight className="w-4 h-4" />
           </Link>
@@ -259,12 +259,12 @@ export function MemberDashboard({
         {ordersLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white border border-stone-200 rounded-2xl p-5 animate-pulse">
+              <div key={i} className="bg-cream-dark border border-brand-primary/10 rounded-2xl p-5 animate-pulse">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-stone-100 rounded-xl" />
+                  <div className="w-12 h-12 bg-brand-primary/5 rounded-xl" />
                   <div className="flex-1">
-                    <div className="h-4 bg-stone-100 rounded w-40 mb-2" />
-                    <div className="h-3 bg-stone-100 rounded w-24" />
+                    <div className="h-4 bg-brand-primary/5 rounded w-40 mb-2" />
+                    <div className="h-3 bg-brand-primary/5 rounded w-24" />
                   </div>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function MemberDashboard({
               return (
                 <div
                   key={order.orderNumber}
-                  className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-stone-300 transition-colors"
+                  className="bg-cream-dark border border-brand-primary/10 rounded-2xl p-5 hover:border-brand-primary/20 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 ${config.bgColor} rounded-xl flex items-center justify-center flex-shrink-0`}>
@@ -286,7 +286,7 @@ export function MemberDashboard({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-stone-900 truncate">
+                        <p className="font-medium text-brand-primary truncate">
                           {order.medicationName}
                         </p>
                         <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
@@ -294,7 +294,7 @@ export function MemberDashboard({
                           <span className="capitalize">{order.status}</span>
                         </span>
                       </div>
-                      <p className="text-sm text-stone-500 mt-1">
+                      <p className="text-sm text-brand-primary/50 mt-1">
                         Order {order.orderNumber} &middot;{' '}
                         {new Date(order.createdAt).toLocaleDateString('en-US', {
                           month: 'short',
@@ -303,8 +303,8 @@ export function MemberDashboard({
                         })}
                       </p>
                       {order.tracking && (
-                        <p className="text-sm text-stone-500 mt-1">
-                          Tracking: <span className="font-medium text-stone-700">{order.tracking}</span>
+                        <p className="text-sm text-brand-primary/50 mt-1">
+                          Tracking: <span className="font-medium text-brand-primary/70">{order.tracking}</span>
                         </p>
                       )}
                     </div>
@@ -314,15 +314,15 @@ export function MemberDashboard({
             })}
           </div>
         ) : (
-          <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center">
-            <Package className="w-12 h-12 text-stone-300 mx-auto mb-3" />
-            <p className="text-stone-600 font-medium">No Orders Yet</p>
-            <p className="text-sm text-stone-500 mt-1 mb-4">
+          <div className="bg-cream-dark border border-brand-primary/10 rounded-2xl p-8 text-center">
+            <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-3" />
+            <p className="text-brand-primary font-medium">No Orders Yet</p>
+            <p className="text-sm text-brand-primary/50 mt-1 mb-4">
               Start your first order to begin your protocol.
             </p>
             <Link
               href="/intake"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white rounded-lg font-medium hover:bg-stone-800 transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-5 py-2 bg-brand-primary text-white rounded-full font-medium hover:bg-forest-light transition-colors text-sm"
             >
               <Plus className="w-4 h-4" />
               Start New Order
@@ -335,7 +335,7 @@ export function MemberDashboard({
       <div className="space-y-12 mt-12">
         {/* Members Shop */}
         <div>
-          <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Members Shop</h2>
+          <h2 className="text-xl font-display font-bold text-brand-primary mb-4">Members Shop</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <TierGate
               requiredTier="core"
@@ -344,7 +344,7 @@ export function MemberDashboard({
             >
               <Link
                 href="/library/shop"
-                className="group flex items-center gap-4 px-6 py-5 bg-stone-900 text-white rounded-2xl hover:bg-stone-800 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 bg-brand-primary text-white rounded-2xl hover:bg-forest-light transition-all"
               >
                 <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">
                   <ShoppingCart className="w-6 h-6 text-white" />
@@ -356,14 +356,14 @@ export function MemberDashboard({
                 <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
             </TierGate>
-            <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
-              <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-stone-600" />
+            <div className="flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl">
+              <div className="w-12 h-12 bg-brand-primary/5 rounded-xl flex items-center justify-center">
+                <FileText className="w-6 h-6 text-brand-primary/40" />
               </div>
               <div className="flex-1">
-                <p className="text-stone-900 font-medium">Quote History</p>
-                <p className="text-stone-500 text-sm">View past quote requests</p>
-                <span className="text-xs text-stone-400 italic">Coming soon</span>
+                <p className="text-brand-primary font-medium">Quote History</p>
+                <p className="text-brand-primary/50 text-sm">View past quote requests</p>
+                <span className="text-xs text-brand-primary/30 italic">Coming soon</span>
               </div>
             </div>
           </div>
@@ -371,7 +371,7 @@ export function MemberDashboard({
 
         {/* Protocol Tools */}
         <div>
-          <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Protocol Tools</h2>
+          <h2 className="text-xl font-display font-bold text-brand-primary mb-4">Protocol Tools</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <TierGate
               requiredTier="club"
@@ -380,16 +380,16 @@ export function MemberDashboard({
             >
               <Link
                 href="/library/dosing-calculator"
-                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
               >
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:bg-purple-200 transition-colors">
                   <Scale className="w-6 h-6 text-purple-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Dosing Calculators</p>
-                  <p className="text-stone-500 text-sm">Peptide reconstitution & syringe dosing</p>
+                  <p className="text-brand-primary font-medium">Dosing Calculators</p>
+                  <p className="text-brand-primary/50 text-sm">Peptide reconstitution & syringe dosing</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
               </Link>
             </TierGate>
             <TierGate
@@ -399,30 +399,30 @@ export function MemberDashboard({
             >
               <Link
                 href="/library/calorie-calculator"
-                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
               >
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                   <Flame className="w-6 h-6 text-orange-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Calorie & Macro Calculator</p>
-                  <p className="text-stone-500 text-sm">BMR, TDEE & macro planning</p>
+                  <p className="text-brand-primary font-medium">Calorie & Macro Calculator</p>
+                  <p className="text-brand-primary/50 text-sm">BMR, TDEE & macro planning</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
               </Link>
             </TierGate>
             <Link
               href="/library/peptide-faq"
-              className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+              className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
             >
-              <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center group-hover:bg-teal-200 transition-colors">
-                <HelpCircle className="w-6 h-6 text-teal-700" />
+              <div className="w-12 h-12 bg-mint rounded-xl flex items-center justify-center group-hover:bg-sage/50 transition-colors">
+                <HelpCircle className="w-6 h-6 text-brand-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-stone-900 font-medium">Peptide FAQ</p>
-                <p className="text-stone-500 text-sm">50+ questions on dosing, safety, stacking & more</p>
+                <p className="text-brand-primary font-medium">Peptide FAQ</p>
+                <p className="text-brand-primary/50 text-sm">50+ questions on dosing, safety, stacking & more</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+              <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
             </Link>
             <TierGate
               requiredTier="club"
@@ -431,16 +431,16 @@ export function MemberDashboard({
             >
               <Link
                 href="/library/stack-guides"
-                className="group flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl hover:border-stone-300 hover:shadow-lg hover:shadow-stone-200/50 transition-all"
+                className="group flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl hover:border-brand-primary/20 hover:shadow-lg hover:shadow-brand-primary/5 transition-all"
               >
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
                   <Dumbbell className="w-6 h-6 text-orange-700" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Stacking Guides</p>
-                  <p className="text-stone-500 text-sm">Protocol combinations and sequencing</p>
+                  <p className="text-brand-primary font-medium">Stacking Guides</p>
+                  <p className="text-brand-primary/50 text-sm">Protocol combinations and sequencing</p>
                 </div>
-                <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 group-hover:translate-x-1 transition-all" />
+                <ArrowRight className="w-5 h-5 text-brand-primary/20 group-hover:text-brand-primary/50 group-hover:translate-x-1 transition-all" />
               </Link>
             </TierGate>
           </div>
@@ -448,35 +448,35 @@ export function MemberDashboard({
 
         {/* Provider Resources */}
         <div>
-          <h2 className="text-xl font-display font-bold text-stone-900 mb-4">Provider Resources</h2>
+          <h2 className="text-xl font-display font-bold text-brand-primary mb-4">Provider Resources</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <TierGate
               requiredTier="concierge"
               currentTier={tier}
-              upgradeMessage="Upgrade to Curated to unlock provider note templates."
+              upgradeMessage="Upgrade to Concierge to unlock provider note templates."
             >
-              <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
-                <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-stone-600" />
+              <div className="flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl">
+                <div className="w-12 h-12 bg-brand-primary/5 rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-brand-primary/40" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Provider Note Templates</p>
-                  <p className="text-stone-500 text-sm">High-touch documentation workflows</p>
+                  <p className="text-brand-primary font-medium">Provider Note Templates</p>
+                  <p className="text-brand-primary/50 text-sm">High-touch documentation workflows</p>
                 </div>
               </div>
             </TierGate>
             <TierGate
               requiredTier="concierge"
               currentTier={tier}
-              upgradeMessage="Upgrade to Curated to unlock custom protocol requests."
+              upgradeMessage="Upgrade to Concierge to unlock custom protocol requests."
             >
-              <div className="flex items-center gap-4 px-6 py-5 grad-white border border-stone-200 rounded-2xl">
-                <div className="w-12 h-12 bg-stone-100 rounded-xl flex items-center justify-center">
-                  <Brain className="w-6 h-6 text-stone-600" />
+              <div className="flex items-center gap-4 px-6 py-5 bg-cream-dark border border-brand-primary/10 rounded-2xl">
+                <div className="w-12 h-12 bg-brand-primary/5 rounded-xl flex items-center justify-center">
+                  <Brain className="w-6 h-6 text-brand-primary/40" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-stone-900 font-medium">Custom Protocol Requests</p>
-                  <p className="text-stone-500 text-sm">White-glove protocol design with your provider</p>
+                  <p className="text-brand-primary font-medium">Custom Protocol Requests</p>
+                  <p className="text-brand-primary/50 text-sm">White-glove protocol design with your provider</p>
                 </div>
               </div>
             </TierGate>

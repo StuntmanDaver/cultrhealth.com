@@ -58,18 +58,18 @@ export default function DashboardPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-brand-cream">
+      <header className="border-b border-brand-primary/10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-sm text-gray-500">Your orders and protocols</p>
+          <h1 className="text-2xl font-display font-bold text-brand-primary">Dashboard</h1>
+          <p className="text-sm text-brand-primary/50">Your orders and protocols</p>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-stone-900 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <MemberDashboard

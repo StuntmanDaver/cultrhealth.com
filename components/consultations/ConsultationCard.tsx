@@ -4,30 +4,32 @@ import Link from 'next/link'
 import { Calendar, Clock, Video, FileText } from 'lucide-react'
 import { CONSULTATION_STATUSES } from '@/lib/config/consultations'
 
+export interface ConsultationCardData {
+  id: number
+  status: string
+  consultation_type: string
+  provider_email: string | null
+  scheduled_at: string | null
+  duration_mins: number | null
+  customer_email?: string
+}
+
 interface ConsultationCardProps {
-  consultation: {
-    id: number
-    status: string
-    consultation_type: string
-    provider_email: string | null
-    scheduled_at: string | null
-    duration_mins: number | null
-    customer_email?: string
-  }
+  consultation: ConsultationCardData
   showPatient?: boolean
   showActions?: boolean
 }
 
 export function ConsultationCard({ consultation, showPatient, showActions = true }: ConsultationCardProps) {
   const statusConfig = CONSULTATION_STATUSES[consultation.status as keyof typeof CONSULTATION_STATUSES]
-    || { label: consultation.status, bg: 'bg-gray-100', text: 'text-gray-600' }
+    || { label: consultation.status, bg: 'bg-brand-primary/5', text: 'text-brand-primary/60' }
 
   const scheduledDate = consultation.scheduled_at ? new Date(consultation.scheduled_at) : null
   const isUpcoming = scheduledDate && scheduledDate > new Date() && consultation.status === 'scheduled'
   const isJoinable = isUpcoming && scheduledDate.getTime() - Date.now() < 10 * 60 * 1000
 
   return (
-    <div className="bg-white rounded-xl border border-brand-primary/10 p-4">
+    <div className="bg-cream-dark rounded-xl border border-brand-primary/10 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">

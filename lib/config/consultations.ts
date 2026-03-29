@@ -54,7 +54,7 @@ export const CONSULTATION_STATUSES = {
   scheduled: { label: 'Scheduled', bg: 'bg-blue-50', text: 'text-blue-700' },
   in_progress: { label: 'In Progress', bg: 'bg-green-50', text: 'text-green-700' },
   completed: { label: 'Completed', bg: 'bg-brand-primary/5', text: 'text-brand-primary' },
-  cancelled: { label: 'Cancelled', bg: 'bg-gray-100', text: 'text-gray-600' },
+  cancelled: { label: 'Cancelled', bg: 'bg-brand-primary/5', text: 'text-brand-primary/60' },
   no_show: { label: 'No Show', bg: 'bg-red-50', text: 'text-red-700' },
 } as const
 

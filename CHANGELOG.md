@@ -1,3 +1,33 @@
+## [2026-03-29] - Members Dashboard Brand Alignment
+
+### Dashboard Rebranding
+- **Page wrapper** — Replaced `bg-gray-50` with `bg-brand-cream`, header now uses brand tokens (`text-brand-primary`, `border-brand-primary/10`, `font-display`)
+- **Removed sticky header overlap** — Dashboard had `sticky top-0 z-10` header that collided with site-wide Header from LayoutShell; now scrolls normally with content
+- **MemberDashboard hero** — `from-stone-900 to-stone-800` gradient → `from-brand-primary to-forest-dark` (forest green)
+- **All cards** — `bg-white border-stone-200` → `bg-cream-dark border-brand-primary/10` throughout (orders, LMN modal, protocol tools, provider resources, shop)
+- **All text** — `text-stone-900/700/500/400/300` → `text-brand-primary` with opacity variants (`/50`, `/40`, `/30`, `/20`)
+- **All buttons** — `bg-stone-900 rounded-lg` → `bg-brand-primary rounded-full hover:bg-forest-light` (brand spec)
+- **LMN modal** — `bg-white` → `bg-brand-cream`, emerald accents → `bg-mint`/`bg-brand-primary`, download button now `rounded-full`
+- **LMN count badge** — `bg-emerald-500` → `bg-sage text-brand-primary`
+- **Peptide FAQ icon** — `bg-teal-100 text-teal-700` → `bg-mint text-brand-primary` (brand accent)
+- **Provider Resources upgrade messages** — Fixed "Curated" → "Concierge" (correct tier name)
+
+### ConsultationCard Branding
+- Card background `bg-white` → `bg-cream-dark` to match dashboard cards
+- Unknown status fallback `bg-gray-100 text-gray-600` → `bg-brand-primary/5 text-brand-primary/60`
+- Exported `ConsultationCardData` interface for reuse
+
+### Consultation Config
+- `cancelled` status in `CONSULTATION_STATUSES` — `bg-gray-100 text-gray-600` → `bg-brand-primary/5 text-brand-primary/60`
+
+### Files Modified
+- `app/dashboard/page.tsx` — Page background, header, spinner branding
+- `components/library/MemberDashboard.tsx` — Full rebrand (~75 class changes)
+- `components/consultations/ConsultationCard.tsx` — Card background, fallback status, exported interface
+- `lib/config/consultations.ts` — Cancelled status brand colors
+
+---
+
 ## [2026-03-29] - Payment Providers + Admin Orders Overhaul + Creator Labs Dashboard
 
 ### New Payment Providers
