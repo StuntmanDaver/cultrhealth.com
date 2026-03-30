@@ -38,7 +38,7 @@ export default function PricingPage() {
       {/* Hero */}
       <MarketingHero
         badge={{ icon: Sparkles, label: 'HSA/FSA Eligible' }}
-        title="Choose the level of support that fits your goals."
+        title={<>Choose the level of support<br className="hidden md:block" /> that fits your goals.</>}
         subtitle="Clinician-guided programs for body composition, performance, recovery, confidence, and long-term optimization. Transparent membership pricing."
         proofLine="HSA/FSA eligible. Pay with your Health Savings Account or Flexible Spending Account."
         ctas={[
@@ -60,7 +60,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: FlaskConical, label: '28–59 Biomarkers', sublabel: 'Provided by SiPho Health' },
+              { icon: FlaskConical, label: '33 Biomarkers', sublabel: 'SiPhox EasyDraw Core' },
               { icon: MessageCircle, label: 'Direct Access', sublabel: 'Provider messaging' },
               { icon: Dna, label: 'Peptide Protocols', sublabel: 'Personalized plans' },
               { icon: Shield, label: 'HIPAA Compliant', sublabel: 'Secure platform' },
@@ -176,7 +176,7 @@ export default function PricingPage() {
                   {[
                     { feature: 'Monthly Price', values: ['$149*', '$499', '$1,049'] },
                     { feature: 'At Home Lab Test', values: ['$135', '$135', 'Included'], hasBiomarkerLink: true },
-                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 4 months', 'Every 6 months'] },
+                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 4 months', 'Every 2 months'] },
                     { feature: 'Foundation Therapies', values: ['1', '1', '2'] },
                     { feature: 'Add-On Therapies', values: ['—', '2', 'Up to 4'] },
                     { feature: 'Protocol Library', values: [true, true, true] },
@@ -315,7 +315,7 @@ export default function PricingPage() {
               },
               {
                 title: 'Comprehensive Lab Panels',
-                desc: '28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — analyzed with provider interpretation and recommendations.',
+                desc: '33 biomarkers per test (SiPhox EasyDraw Core) — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers analyzed with provider interpretation and recommendations.',
                 hasBiomarkerLink: true,
               },
               {
