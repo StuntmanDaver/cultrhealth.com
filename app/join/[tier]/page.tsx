@@ -15,6 +15,7 @@ import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/Author
 import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED, COREPAY_ENABLED, NOWPAYMENTS_ENABLED } from '@/lib/config/payments';
 import { CorePayForm } from '@/components/payments/CorePayForm';
 import { CryptoPaymentWidget, type CryptoPaymentData } from '@/components/payments/CryptoPaymentWidget';
+import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 
 // Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
@@ -486,7 +487,10 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     </p>
                     <div className="space-y-2 pl-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-cultr-text">At-home blood test kit</span>
+                        <span className="text-sm text-cultr-text">
+                          At-home blood test kit{' '}
+                          <BiomarkerExplainerLink label="See what we test ›" />
+                        </span>
                         <span className="text-sm font-medium text-cultr-forest">
                           {isConcierge ? 'included' : `$${BLOOD_TEST_ADDON.price}`}
                         </span>

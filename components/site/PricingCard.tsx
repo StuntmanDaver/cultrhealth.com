@@ -181,6 +181,13 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
           {plan.cardDisclaimer}
         </p>
       )}
+
+      {/* Onboarding fees disclaimer — Core & Catalyst+ only (Concierge has them included) */}
+      {plan.slug !== 'concierge' && plan.slug !== 'club' && plan.price > 0 && (
+        <p className={`text-[10px] text-center mt-2 ${plan.isFeatured ? 'text-white/35' : 'text-cultr-textMuted/50'}`}>
+          Onboarding fees (at-home blood test + doctor visit) not included in monthly price.
+        </p>
+      )}
     </div>
   );
 }
