@@ -2545,51 +2545,6 @@ export async function logAdminAction(
 // ─── Club Order Fulfillment ─────────────────────────────
 
 /**
- * Update a club order's status with optional tracking info.
- * Valid transitions: invoice_sent/approved→paid, paid→shipped, shipped→fulfilled
- */
-export async function updateClubOrderStatus(
-  orderId: string,
-  action: 'mark_paid' | 'mark_shipped' | 'mark_fulfilled',
-  extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }
-): Promise<{ success: boolean; newStatus: string }> {
-  const validTransitions: Record<string, { from: string[]; to: string; timestampCol: string }> = {
-    mark_paid: { from: ['approved', 'invoice_sent'], to: 'paid', timestampCol: 'paid_at' },
-    mark_shipped: { from: ['paid'], to: 'shipped', timestampCol: 'shipped_at' },
-    mark_fulfilled: { from: ['shipped'], to: 'fulfilled', timestampCol: 'fulfilled_at' },
-  }
-
-  const transition = validTransitions[action]
-  if (!transition) throw new DatabaseError(`Invalid action: ${action}`)
-
-  const placeholders = transition.from.map((_, i) => `$${i + 3}`).join(', ')
-
-  // Build SET clause dynamically based on action
-  let setClauses = `status = $1, ${transition.timestampCol} = NOW(), updated_at = NOW()`
-  const params: (string | null)[] = [transition.to, orderId, ...transition.from]
-
-  if (action === 'mark_shipped' && extra) {
-    const nextIdx = params.length + 1
-    setClauses += `, tracking_carrier = $${nextIdx}, tracking_number = $${nextIdx + 1}, tracking_url = $${nextIdx + 2}`
-    params.push(extra.carrier || null, extra.trackingNumber || null, extra.trackingUrl || null)
-  }
-
-  try {
-    const result = await sql.query(
-      `UPDATE club_orders SET ${setClauses} WHERE id = $2::uuid AND status IN (${placeholders})`,
-      params
-    )
-    if ((result.rowCount ?? 0) === 0) {
-      return { success: false, newStatus: transition.to }
-    }
-    return { success: true, newStatus: transition.to }
-  } catch (error) {
-    console.error('Database error updating club order status:', error)
-    throw new DatabaseError('Failed to update club order status', error)
-  }
-}
-
-/**
  * Get club order fulfillment counts by status for pipeline visualization.
  */
 export async function getClubOrderFulfillmentCounts(): Promise<Record<string, number>> {

@@ -3,12 +3,14 @@ import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
 
 // Allowed transitions: fromStatus → toStatus[]
+// Note: pending_approval → approved/invoice_sent is handled by the approve endpoint
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   pending_approval: ['cancelled'],
-  approved:         ['paid', 'cancelled'],
+  approved:         ['invoice_sent', 'paid', 'cancelled'],
   invoice_sent:     ['paid', 'cancelled'],
   paid:             ['shipped', 'fulfilled', 'cancelled'],
   shipped:          ['fulfilled'],
+  fulfilled:        [],  // terminal state
 }
 
 export async function POST(

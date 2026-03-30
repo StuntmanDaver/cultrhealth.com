@@ -41,7 +41,8 @@ interface ClubOrder {
 // Pipeline stages in order
 const PIPELINE_STAGES = [
   { key: 'pending_approval', label: 'Pending', icon: Clock, color: 'yellow' },
-  { key: 'invoice_sent', label: 'Invoice Sent', icon: FileText, color: 'indigo' },
+  { key: 'approved', label: 'Approved', icon: Check, color: 'blue' },
+  { key: 'invoice_sent', label: 'Invoiced', icon: FileText, color: 'indigo' },
   { key: 'paid', label: 'Paid', icon: DollarSign, color: 'green' },
   { key: 'shipped', label: 'Shipped', icon: Truck, color: 'blue' },
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
@@ -153,7 +154,7 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
         <h3 className="text-sm font-medium text-brand-primary/60 uppercase tracking-wide mb-3">Fulfillment Pipeline</h3>
         <div className="flex items-center gap-1">
           {PIPELINE_STAGES.map((stage, idx) => {
-            const count = (counts[stage.key] || 0) + (stage.key === 'invoice_sent' ? (counts['approved'] || 0) : 0)
+            const count = counts[stage.key] || 0
             const Icon = stage.icon
             const colorMap: Record<string, string> = {
               yellow: count > 0 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
