@@ -277,6 +277,18 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
                           {order.tracking_carrier} {order.tracking_number}
                         </span>
                       )}
+                      {(() => {
+                        if (['fulfilled', 'rejected', 'cancelled', 'dismissed'].includes(order.status)) return null
+                        const latestTs = order.shipped_at || order.paid_at || order.approved_at || order.created_at
+                        const hoursStale = (Date.now() - new Date(latestTs).getTime()) / (1000 * 60 * 60)
+                        if (hoursStale < 48) return null
+                        const days = Math.floor(hoursStale / 24)
+                        return (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hoursStale > 96 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                            {days}d stale
+                          </span>
+                        )
+                      })()}
                     </div>
                     <p className="text-sm font-medium text-brand-primary mt-1">{order.member_name}</p>
                     <p className="text-xs text-brand-primary/50">{order.member_email}</p>
@@ -374,7 +386,7 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
                       </div>
                     )}
 
-                    {/* ═══ Timeline ═══ */}
+                    {/* ═══ Timeline + Activity Log ═══ */}
                     <div className="bg-white rounded-lg border border-brand-primary/10 p-4 mb-4">
                       <h4 className="text-xs font-medium text-brand-primary/50 uppercase tracking-wide mb-3">Timeline</h4>
                       <div className="space-y-2">
@@ -389,6 +401,8 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
                         <TimelineStep label="Shipped" timestamp={order.shipped_at} active={!!order.shipped_at} />
                         <TimelineStep label="Fulfilled" timestamp={order.fulfilled_at} active={!!order.fulfilled_at} />
                       </div>
+                      {/* Activity log (audit trail) */}
+                      <ActivityLog orderId={order.id} />
                     </div>
 
                     {/* ═══ Context-Aware Actions ═══ */}
@@ -530,6 +544,61 @@ function TimelineStep({ label, timestamp, active }: { label: string; timestamp: 
           {new Date(timestamp).toLocaleDateString()} {new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       )}
+    </div>
+  )
+}
+
+// ── Activity Log Component (audit trail, loads on demand) ──
+interface ActivityEntry {
+  id: string
+  admin_email: string
+  action_type: string
+  reason: string | null
+  metadata: { from?: string; to?: string; method?: string; carrier?: string; trackingNumber?: string } | null
+  created_at: string
+}
+
+function ActivityLog({ orderId }: { orderId: string }) {
+  const [entries, setEntries] = useState<ActivityEntry[]>([])
+  const [loaded, setLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  async function load() {
+    if (loaded) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/activity`)
+      const data = await res.json()
+      if (res.ok) setEntries(data.entries || [])
+    } catch {
+      // non-critical
+    } finally {
+      setLoading(false)
+      setLoaded(true)
+    }
+  }
+
+  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) return <p className="text-xs text-brand-primary/30 mt-3 pt-3 border-t border-brand-primary/5">Loading activity...</p>
+  if (loaded && entries.length === 0) return null
+
+  return (
+    <div className="mt-3 pt-3 border-t border-brand-primary/5">
+      <h5 className="text-xs font-medium text-brand-primary/40 uppercase tracking-wide mb-2">Activity Log</h5>
+      <div className="space-y-1.5">
+        {entries.map((e) => (
+          <div key={e.id} className="flex items-start gap-2 text-xs">
+            <span className="text-brand-primary/30 shrink-0 w-28">
+              {new Date(e.created_at).toLocaleDateString()} {new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+            <span className="text-brand-primary/60">
+              {e.reason || e.action_type}
+              <span className="text-brand-primary/30"> — {e.admin_email === 'email_link' ? 'via email' : e.admin_email}</span>
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
