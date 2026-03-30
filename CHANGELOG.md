@@ -1,3 +1,86 @@
+## [2026-03-29] - Telehealth Consultations (Cal.com + Daily.co + S3)
+
+### Video Consultation System
+- Full telehealth integration: Cal.com scheduling embed + Daily.co video rooms + AWS S3 recording storage
+- Patient self-service booking at `/members/consultations` with tier-gated limits (Club=0, Core=1/mo, Catalyst+=2/mo, Concierge=unlimited)
+- Hybrid video: patients join embedded branded room, providers get direct Daily.co link via email
+- Recording with consent: checkbox required before join, declined consent disables recording via API
+- Post-call provider notes form (reason, outcome, next steps, internal notes)
+
+### Database & Backend
+- Migration 029: extends `consult_requests` with 17 columns, new `consultation_recordings`, `consultation_notes`, `consultation_webhook_events` tables
+- Migration 030: removes ON DELETE CASCADE for HIPAA record retention (RESTRICT)
+- 19 database query functions in `lib/consultations-db.ts`
+- API clients: `lib/cal.ts`, `lib/daily.ts`, `lib/s3-recordings.ts`
+- 5 branded email functions: booking confirmation (patient + provider), 1hr reminder, completion, recording ready
+
+### Webhooks & Cron
+- Cal.com webhook: BOOKING_CREATED (creates room + DB + emails), BOOKING_CANCELLED, BOOKING_RESCHEDULED (atomic update)
+- Daily.co webhook: meeting.ended (completion + email), recording.ready-to-download (S3 upload + Daily.co delete)
+- HMAC signature verification with buffer length check (prevents timingSafeEqual crash)
+- Idempotency tracking via `consultation_webhook_events` table
+- Cron: `/api/cron/consultation-reminders` every 15 min (requires CRON_SECRET)
+
+### API Routes (12 new)
+- Patient: list, book eligibility, detail + meeting token, cancel, notes, recording presigned URL
+- Provider: list schedule, mark complete + notes
+- Admin: list with filters, detail with recording metadata
+- Meeting token generated for both `scheduled` and `in_progress` status (allows rejoin)
+
+### Frontend
+- 9 components: BookingEmbed, ConsultationTypeSelector, TierGateConsultation, VideoRoom, WaitingRoom, PostCallSummary, ProviderNotesForm, ConsultationCard, RecordingPlayer
+- Pages: `/members/consultations` (booking), `/members/consultations/[id]` (video room with state machine), `/members/consultations/history`, provider schedule + detail, admin overview
+- Admin sidebar: "Consultations" under CUSTOMERS group
+- Member dashboard: upcoming consultation card + "Book Consultation" CTA
+
+### Security & HIPAA
+- All routes auth-gated (JWT session + ownership check)
+- Webhook HMAC verification with timing-safe comparison
+- S3 SSE-S3 encryption, presigned URLs with 1hr expiry
+- No PHI in console.error — error.message extraction only
+- Recording consent timestamp stored, room recording disabled via API on decline
+
+### Environment Variables (new)
+- CALCOM_API_KEY, CALCOM_WEBHOOK_SECRET, NEXT_PUBLIC_CALCOM_ORG_SLUG
+- DAILY_API_KEY, DAILY_WEBHOOK_SECRET
+- CONSULTATION_S3_BUCKET, CONSULTATION_S3_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+
+### Dependencies
+- @calcom/embed-react, @daily-co/daily-react, @daily-co/daily-js, jotai
+- @aws-sdk/client-s3, @aws-sdk/s3-request-presigner
+
+## [2026-03-29] - Protocol Builder: All-Tier Access
+
+### Tiered Access Model
+- Protocol Builder available to ALL members (was provider-only)
+- Club/Core: browse mode — view templates, goal recommendations, protocol previews
+- Catalyst+/Concierge: full builder — configure parameters, N=1 tracking, submit protocols
+- Providers: always full access with "Provider" badge
+- TierGate wraps parameter configuration section with upgrade CTA overlay
+- Patient ID input hidden in browse mode, submit replaced with "Upgrade to Build Protocols"
+
+### Members Area Integration
+- Moved from PROVIDER sidebar section to TOOLS (visible to all tiers)
+- Header rebranded: cream bg, brand-primary text, rounded cards (was dark provider theme)
+- `protocolBuilder: 'browse' | 'full' | false` added to `LibraryAccess` type
+- Layout passes tier through shell → sidebar for TierGate evaluation
+- `email` prop now included in protocol submit payload as `generatedBy`
+
+### Pricing Updates
+- Pricing comparison table: new "Protocol Builder" row — Browse (Core), Full Builder (Catalyst+/Concierge)
+- Plan feature strings: "Protocol Builder (browse)" for Club/Core, "Full Protocol Builder" for Catalyst+/Concierge
+
+### Fixes
+- `getLibraryAccess` fallback in auth.ts updated with `protocolBuilder: false`
+- Dashboard DEFAULT_ACCESS updated
+- All test LibraryAccess objects updated (library-content.test.ts, plans.test.ts)
+- plans.test.ts now validates `protocolBuilder` value per tier
+- handleSubmit typed as React.SyntheticEvent (was FormEvent, used as onClick)
+
+## [2026-03-29] - Asher Med Portal URL Fix
+- Updated Patient Portal link from `asherweightloss.com` (Cloudflare Error 1000) to `partners.joinasher.com`
+- Updated in: `components/library/MyProviders.tsx`, `lib/config/links.ts`, `lib/config/asher-med.ts`
+
 ## [2026-03-29] - Provider Dashboard Phase A: Dashboard + Patients + Schedule
 
 ### Provider Dashboard Home (`/provider`)
