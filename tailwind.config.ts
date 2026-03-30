@@ -72,6 +72,8 @@ const config: Config = {
         'blur-in': 'blurIn 0.6s ease-out forwards',
         'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
         'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+        'marquee-left': 'marqueeLeft 60s linear infinite',
+        'marquee-right': 'marqueeRight 60s linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -109,6 +111,14 @@ const config: Config = {
         aurora: {
           from: { backgroundPosition: '50% 50%, 50% 50%' },
           to: { backgroundPosition: '350% 50%, 350% 50%' },
+        },
+        marqueeLeft: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' },
+        },
+        marqueeRight: {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
     },
