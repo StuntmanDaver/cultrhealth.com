@@ -1,3 +1,53 @@
+## [2026-03-30] - Gold-Standard Club Order Fulfillment Pipeline
+
+### Full Lifecycle Tracking (Migration 033)
+- New DB columns on `club_orders`: `paid_at`, `fulfilled_at`, `tracking_carrier`, `tracking_number`, `tracking_url`
+- Status pipeline: pending_approval → approved → invoice_sent → paid → shipped → fulfilled
+- Status update API (`/api/admin/club-orders/[orderId]/status`) with validated transitions and concurrent-safety
+
+### Admin Dashboard — Fulfillment Pipeline UI
+- Pipeline visualization bar with clickable stage counts and arrows
+- Status filter pills (All / Active / Cancelled / Completed / per-stage)
+- Context-aware action buttons: Approve → Mark Paid → Mark Shipped (with tracking form) → Mark Fulfilled
+- Order timeline with green dots and timestamps for each lifecycle stage
+- Aging badges: yellow (>48h) and red (>96h) stale indicators on order rows
+- Activity log (audit trail) in expanded order view — who changed status, when, via dashboard or email
+
+### HMAC Email Action Links — Full Lifecycle from Inbox
+- Partner can advance orders through entire pipeline via email buttons (same HMAC pattern as existing approve link)
+- Admin emails include next-action button at every stage: Mark Paid → Mark Shipped → Mark Fulfilled
+- 48-hour token expiry, timing-safe verification, GET handler for email link clicks
+
+### Customer Status Notification Emails
+- Branded emails at each transition: "Payment Confirmed", "Your Order Has Shipped" (with tracking link + carrier), "Order Complete"
+- Uses existing CULTR email design system (Playfair Display headers, branded footer)
+
+### Stale Order Alerts (Cron)
+- `/api/cron/stale-orders` — daily digest email (12:00 UTC / 8am ET) listing all orders stuck >48h in any active status
+- Orders grouped by stage, >96h highlighted in red
+- Activated in `vercel.json` cron schedule
+
+### Audit Trail
+- Every status change logged to `admin_actions` table with actor (email or `email_link`), transition details, and method
+- Activity log API: `GET /api/admin/club-orders/[orderId]/activity`
+- Analytics API now returns `clubOrderFulfillment` counts for dashboard pipeline
+
+### Files Added
+- `migrations/033_club_order_fulfillment.sql` — fulfillment tracking columns
+- `app/api/admin/club-orders/[orderId]/activity/route.ts` — activity log endpoint
+- `app/api/cron/stale-orders/route.ts` — stale order detection + digest email
+
+### Files Modified
+- `app/admin/orders/PendingApprovalTab.tsx` — complete rewrite: pipeline UI, actions, timeline, activity log, aging badges
+- `app/api/admin/club-orders/[orderId]/status/route.ts` — HMAC auth, email notifications, audit logging
+- `app/api/admin/club-orders/route.ts` — returns tracking/fulfillment columns, improved sort
+- `app/api/admin/analytics/route.ts` — added fulfillment counts
+- `lib/db.ts` — added `getClubOrderFulfillmentCounts()`
+- `lib/admin-types.ts` — added `clubOrderFulfillment` to `AnalyticsData`
+- `vercel.json` — added stale-orders cron (daily 12:00 UTC)
+
+---
+
 ## [2026-03-30] - Pricing Layout + Hero Copy Fixes
 
 ### Homepage & Pricing
