@@ -262,6 +262,7 @@ export function getLibraryAccess(tier: PlanTier | null | undefined): LibraryAcce
     stackingGuides: false,
     providerNotes: false,
     customRequests: false,
+    protocolBuilder: false,
   } as LibraryAccess
 }
 
