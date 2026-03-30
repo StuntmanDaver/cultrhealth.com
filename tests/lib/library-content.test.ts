@@ -74,8 +74,9 @@ describe('Library Access Filtering', () => {
         stackingGuides: false,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: false,
       }
-      
+
       expect(coreAccess.advancedProtocols).toBe(false)
     })
 
@@ -87,8 +88,9 @@ describe('Library Access Filtering', () => {
         stackingGuides: false,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: 'browse',
       }
-      
+
       expect(creatorAccess.advancedProtocols).toBe(true)
     })
 
@@ -100,6 +102,7 @@ describe('Library Access Filtering', () => {
         stackingGuides: true,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: 'full',
       }
       
       expect(catalystAccess.stackingGuides).toBe(true)

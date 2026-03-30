@@ -178,11 +178,12 @@ describe('Plans Configuration', () => {
       stackingGuides: boolean
       providerNotes: boolean
       customRequests: boolean
+      protocolBuilder: 'browse' | 'full' | false
     }> = [
-      { tier: 'club', masterIndex: 'full', advancedProtocols: false, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
-      { tier: 'core', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
-      { tier: 'catalyst', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false },
-      { tier: 'concierge', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: true, customRequests: false },
+      { tier: 'club', masterIndex: 'full', advancedProtocols: false, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false, protocolBuilder: 'browse' },
+      { tier: 'core', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false, protocolBuilder: 'browse' },
+      { tier: 'catalyst', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: false, customRequests: false, protocolBuilder: 'full' },
+      { tier: 'concierge', masterIndex: 'full', advancedProtocols: true, dosingCalculators: true, stackingGuides: true, providerNotes: true, customRequests: false, protocolBuilder: 'full' },
     ]
 
     for (const expected of accessMatrix) {
@@ -196,6 +197,7 @@ describe('Plans Configuration', () => {
         expect(access?.stackingGuides).toBe(expected.stackingGuides)
         expect(access?.providerNotes).toBe(expected.providerNotes)
         expect(access?.customRequests).toBe(expected.customRequests)
+        expect(access?.protocolBuilder).toBe(expected.protocolBuilder)
       })
     }
   })

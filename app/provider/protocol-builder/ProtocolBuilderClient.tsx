@@ -227,7 +227,7 @@ export function ProtocolBuilderClient({ email, mode: accessMode, tier, isProvide
     return `${PROTOCOL_ENGINE_VERSION}-${templatePart}-${timestamp}`
   }
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.SyntheticEvent) => {
     event.preventDefault()
     setErrorMessage(null)
     setResultMessage(null)
@@ -251,10 +251,11 @@ export function ProtocolBuilderClient({ email, mode: accessMode, tier, isProvide
     try {
       const protocolVersion = generateProtocolVersion()
       
-      const payload = builderMode === 'template' 
+      const payload = builderMode === 'template'
         ? {
             templateId: template?.id,
             patientId: patientId,
+            generatedBy: email,
             parameters,
             // N=1 Trial Tracking Fields
             protocolVersion,
@@ -265,6 +266,7 @@ export function ProtocolBuilderClient({ email, mode: accessMode, tier, isProvide
         : {
             symptomIds: selectedSymptoms.map(s => s.id),
             patientId: patientId,
+            generatedBy: email,
             // N=1 Trial Tracking Fields
             protocolVersion,
             engineVersion: PROTOCOL_ENGINE_VERSION,
