@@ -117,7 +117,7 @@ const MEDICATION_MAP: Record<string, { id: string; name: string; description: st
 
 const TIER_INFO: Record<string, { name: string; price: number }> = {
   club: { name: 'CULTR Club', price: 0 },
-  core: { name: 'CULTR Core', price: 199 },
+  core: { name: 'CULTR Core', price: 149 },
   catalyst: { name: 'CULTR Catalyst+', price: 499 },
   concierge: { name: 'CULTR Concierge', price: 1049 },
 };

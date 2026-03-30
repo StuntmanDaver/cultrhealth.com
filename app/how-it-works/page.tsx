@@ -245,7 +245,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'Can I cancel my membership?',
-                    answer: 'Yes, memberships are month-to-month with no long-term contracts. You can cancel at any time before your next renewal date through your member portal. There are no cancellation fees, and your access continues until the end of your current billing period.',
+                    answer: 'Yes, memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date. You can cancel through your member portal with no cancellation fees, and your access continues until the end of your current billing period.',
                   },
                   {
                     question: 'Can I switch plans?',

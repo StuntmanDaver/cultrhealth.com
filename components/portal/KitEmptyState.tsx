@@ -19,7 +19,7 @@ export function KitEmptyState({ tier, hasKitOrder }: KitEmptyStateProps) {
           Blood Testing Available on Paid Plans
         </h2>
         <p className="text-sm text-brand-primary/60 mb-6">
-          Blood testing is available on Core ($199/mo) and above. Upgrade to get
+          Blood testing is available on Core ($149/mo) and above. Upgrade to get
           comprehensive biomarker analysis.
         </p>
         <Link href="/pricing">

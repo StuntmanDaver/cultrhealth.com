@@ -121,7 +121,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
           >
             <div>
               <p className="font-display font-bold text-cultr-forest">See Plans</p>
-              <p className="text-sm text-cultr-textMuted">Starting from $199/mo — HSA/FSA eligible</p>
+              <p className="text-sm text-cultr-textMuted">Starting from $149/mo — HSA/FSA eligible</p>
             </div>
             <ArrowRight className="w-5 h-5 text-stone-300 group-hover:text-cultr-forest transition-colors" />
           </Link>

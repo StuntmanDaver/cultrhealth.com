@@ -231,7 +231,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <SectionHeading>Cost & Coverage</SectionHeading>
 
         <SubHeading>&quot;How much does it cost?&quot;</SubHeading>
-        <CopyBlock>{`Plans start at $199/mo for the Starter tier. Higher tiers ($299-$499/mo) include more frequent consultations and advanced features. There's also a free Club tier for access to educational resources. All plans are month-to-month with no long-term contracts.`}</CopyBlock>
+        <CopyBlock>{`Plans start at $149/mo for the Core tier. Higher tiers ($499-$1,049/mo) include more frequent consultations and advanced features. There's also a free Club tier for access to educational resources. All plans renew month-to-month after initial 2-month protocol.`}</CopyBlock>
 
         <SubHeading>&quot;Does insurance cover this?&quot;</SubHeading>
         <CopyBlock>{`CULTR doesn't bill insurance directly, but memberships are HSA/FSA eligible. Many members use their health savings accounts to cover the cost. Lab draw fees through Quest/Labcorp may also be submitted to insurance separately.`}</CopyBlock>

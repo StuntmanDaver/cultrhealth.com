@@ -20,7 +20,7 @@ export const PRODUCTS: Product[] = [
     slug: 'retatrutide',
     name: 'Compounded Retatrutide (RTA)',
     description: 'The most potent metabolic compound available. Triple-action formula targeting GLP-1, GIP, and Glucagon receptors for maximum results.',
-    priceTeaser: 'As low as $199/mo*',
+    priceTeaser: 'As low as $149/mo*',
     features: [
       'Triple GLP-1/GIP/Glucagon receptor targeting',
       'Up to 24% body weight reduction in trials',
@@ -36,7 +36,7 @@ export const PRODUCTS: Product[] = [
     slug: 'tirzepatide',
     name: 'Compounded Tirzepatide',
     description: 'The most effective dual-agonist GLP-1 for sustainable weight loss. Dual-action formula targeting both GLP-1 and GIP receptors.',
-    priceTeaser: 'As low as $199/mo*',
+    priceTeaser: 'As low as $149/mo*',
     features: [
       'Dual GLP-1/GIP receptor targeting',
       'Clinically proven efficacy',

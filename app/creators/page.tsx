@@ -508,7 +508,7 @@ export default function CreatorsPage() {
       {/* ─── Member CTA ─── */}
       <CTASection
         title="Not a creator? Join as a member."
-        subtitle="Plans from $199/mo with provider access and peptide protocols."
+        subtitle="Plans from $149/mo with provider access and peptide protocols."
         ctaText="View Plans"
         ctaLink="/pricing"
       />
