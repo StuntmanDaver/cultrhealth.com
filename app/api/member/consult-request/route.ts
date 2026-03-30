@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken } from '@/lib/auth';
-import { escapeHtml } from '@/lib/resend';
+import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend';
 
 /**
  * POST /api/member/consult-request
@@ -81,26 +81,28 @@ export async function POST(request: NextRequest) {
             subject: `New Consult Request from ${email}`,
             html: `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
-  <div style="max-width: 600px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0; color: #fff;">CULTR</span>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">${EMAIL_FONT_IMPORT}</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #F5F0E8; color: #2A4542; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 600px; margin: 0 auto; background: #FDFBF7; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(42,69,66,0.08);">
+    ${brandedEmailHeader('dark')}
+    <div style="padding: 32px 24px;">
+      <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 22px; text-align: center; margin: 0 0 28px; color: #2A4542;">New Consultation Request</h1>
+      <div style="background: #FDFBF7; border-radius: 12px; padding: 20px; border: 1px solid #D4DBD9; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A; width: 140px;">Member</td><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${escapeHtml(email)}</td></tr>
+          <tr><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${escapeHtml(preferredDate)}</td></tr>
+          <tr><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${escapeHtml(preferredTime)}</td></tr>
+          <tr><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A;">Reason</td><td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${escapeHtml(reason)}</td></tr>
+          ${notes ? `<tr><td style="padding: 12px 0; color: #7E8D8A;">Notes</td><td style="padding: 12px 0; color: #2A4542;">${escapeHtml(notes)}</td></tr>` : ''}
+        </table>
+      </div>
+      <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center;">
+        <p style="margin: 0; font-weight: 600; font-size: 14px; color: #2A4542;">Action Required</p>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #3A5956;">Contact the member within 24 hours to confirm appointment.</p>
+      </div>
     </div>
-    <h1 style="font-size: 24px; font-weight: 300; color: #fff; margin-bottom: 24px;">New Consultation Request</h1>
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Member</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(email)}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredDate)}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredTime)}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Reason</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(reason)}</td></tr>
-        ${notes ? `<tr><td style="padding: 12px 0; color: #888;">Notes</td><td style="padding: 12px 0; color: #fff;">${escapeHtml(notes)}</td></tr>` : ''}
-      </table>
-    </div>
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 16px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 13px; margin: 0;"><strong style="color: #c9a962;">Action Required:</strong> Contact the member within 24 hours to confirm appointment.</p>
-    </div>
+    ${brandedEmailFooter()}
   </div>
 </body>
 </html>`,
@@ -114,30 +116,42 @@ export async function POST(request: NextRequest) {
           subject: 'Consultation Request Received — CULTR Health',
           html: `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
-  <div style="max-width: 600px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: 40px;">
-      <span style="font-size: 28px; font-weight: 300; letter-spacing: 0; color: #fff;">CULTR</span>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light">${EMAIL_FONT_IMPORT}</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #F5F0E8; color: #2A4542; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 600px; margin: 0 auto; background: #FDFBF7; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(42,69,66,0.08);">
+    ${brandedEmailHeader('dark')}
+    <div style="padding: 32px 24px;">
+      <h1 style="font-family: 'Playfair Display', Georgia, 'Times New Roman', serif; font-size: 22px; text-align: center; margin: 0 0 4px; color: #2A4542;">Consultation Request Received</h1>
+      <p style="text-align: center; color: #7E8D8A; font-size: 13px; margin: 0 0 28px;">We're on it.</p>
+
+      <p style="margin: 0 0 24px; font-size: 14px; color: #546E6B; line-height: 1.6;">
+        We've received your consultation request. Our care team will contact you within 24 hours to confirm your appointment.
+      </p>
+
+      <div style="background: #FDFBF7; border-radius: 12px; padding: 20px; border: 1px solid #D4DBD9; margin-bottom: 24px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <tr>
+            <td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A; width: 140px;">Preferred Date</td>
+            <td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${new Date(preferredDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #7E8D8A;">Preferred Time</td>
+            <td style="padding: 12px 0; border-bottom: 1px solid #D4DBD9; color: #2A4542; font-weight: 500;">${escapeHtml(preferredTime)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 12px 0; color: #7E8D8A;">Reason</td>
+            <td style="padding: 12px 0; color: #2A4542; font-weight: 500;">${escapeHtml(reason)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: #D8F3DC; border-radius: 12px; padding: 16px; text-align: center;">
+        <p style="margin: 0; font-weight: 600; font-size: 14px; color: #2A4542;">Status: Awaiting Confirmation</p>
+        <p style="margin: 8px 0 0; font-size: 13px; color: #3A5956;">You'll hear from us within 24 hours.</p>
+      </div>
     </div>
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">Consultation Request Received</h1>
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      We've received your consultation request. Our care team will contact you within 24 hours to confirm your appointment.
-    </p>
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Preferred Date</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${new Date(preferredDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>
-        <tr><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Preferred Time</td><td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${escapeHtml(preferredTime)}</td></tr>
-        <tr><td style="padding: 12px 0; color: #888;">Reason</td><td style="padding: 12px 0; color: #fff;">${escapeHtml(reason)}</td></tr>
-      </table>
-    </div>
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 13px; margin: 0;">Questions? Reply to this email or contact <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">support@cultrhealth.com</a></p>
-    </div>
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #222;">
-      <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">CULTR Health — Personalized Longevity Medicine</p>
-    </div>
+    ${brandedEmailFooter()}
   </div>
 </body>
 </html>`,

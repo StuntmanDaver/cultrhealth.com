@@ -36,6 +36,13 @@ function getFromEmail(): string {
   return process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
 }
 
+// Get public site URL for email assets — localhost is unreachable from email clients
+function getEmailSiteUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  if (!envUrl || envUrl.includes('localhost')) return 'https://staging.cultrhealth.com'
+  return envUrl
+}
+
 // ===========================================
 // BRANDED EMAIL COMPONENTS
 // ===========================================
@@ -55,7 +62,7 @@ export function brandedEmailHeader(variant: 'dark' | 'light' = 'dark'): string {
   const bg = variant === 'dark' ? '#2A4542' : '#FDFBF7'
   const textColor = variant === 'dark' ? '#FDFBF7' : '#2A4542'
   const accentGreen = '#B7E4C7'
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const siteUrl = getEmailSiteUrl()
   // Official logo: public/cultr-health-logo.png (forest green on transparent)
   // Cream variant: public/images/email-logo-cream.png (generated via scripts/generate-cream-logo.mjs)
   // Dark header → cream version so logo is visible on dark bg
@@ -1525,7 +1532,7 @@ interface SubscriptionExpiringEmailData {
 export async function sendSubscriptionExpiringEmail(data: SubscriptionExpiringEmailData): Promise<EmailResult> {
   const { name, email } = data
   const firstName = name.split(' ')[0]
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const siteUrl = getEmailSiteUrl()
 
   const content = `
     <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
@@ -1644,7 +1651,7 @@ export async function sendKitFulfillmentEmail(params: {
   address: { street1: string; city: string; state: string; zip: string }
 }): Promise<EmailResult> {
   const { name, email, address } = params
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const siteUrl = getEmailSiteUrl()
 
   const formattedAddress = `${address.street1}, ${address.city}, ${address.state} ${address.zip}`
 
@@ -1665,7 +1672,7 @@ export async function sendKitFulfillmentEmail(params: {
       </p>
       <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
         You'll receive tracking info once it ships. In the meantime, check out our
-        <a href="${siteUrl}/library" style="color: #B7E4C7; text-decoration: underline;">labs guide in the member library</a>.
+        <a href="${siteUrl}/members" style="color: #B7E4C7; text-decoration: underline;">labs guide in the member library</a>.
       </p>
     </div>
   `
@@ -1701,7 +1708,7 @@ export async function sendResultsReadyEmail(params: {
   summary: { totalBiomarkers: number; optimalCount: number; needsAttentionCount: number }
 }): Promise<EmailResult> {
   const { name, email, summary } = params
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const siteUrl = getEmailSiteUrl()
   const safeName = escapeHtml(name)
 
   const content = `
@@ -1855,7 +1862,7 @@ export async function sendSiphoxFailureAlert(params: {
   retryCount: number
 }): Promise<EmailResult> {
   const supportEmail = process.env.FROM_EMAIL || 'admin@cultrhealth.com'
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const siteUrl = getEmailSiteUrl()
 
   const content = `
     <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
