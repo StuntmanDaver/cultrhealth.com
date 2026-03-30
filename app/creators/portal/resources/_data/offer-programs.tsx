@@ -231,7 +231,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
         <CopyBlock>{`"You track your macros, your steps, your sleep — but when's the last time you tracked your actual biomarkers? CULTR's Longevity Lab Loop tests 50+ markers and retests quarterly so you can see what's actually improving. Data, not guesswork. [LINK]"`}</CopyBlock>
 
         <SubHeading>For Budget-Conscious Audiences</SubHeading>
-        <CopyBlock>{`"Start with the free CULTR Club — access the protocol library, calculators, and educational content at no cost. When you're ready for labs and a provider, Core starts at $199/mo (less than most people spend on random supplements). [LINK]"`}</CopyBlock>
+        <CopyBlock>{`"Start with the free CULTR Club — access the protocol library, calculators, and educational content at no cost. When you're ready for labs and a provider, Core starts at $149/mo (less than most people spend on random supplements). [LINK]"`}</CopyBlock>
 
         <SectionHeading>Conversion Tips</SectionHeading>
         <BulletList items={[

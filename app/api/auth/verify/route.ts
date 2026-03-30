@@ -60,17 +60,17 @@ export async function GET(request: NextRequest) {
       'http://localhost:3000')
 
     // Validate redirect is a safe relative path (prevent open redirect)
-    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/library'
+    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
 
     if (!token) {
-      return NextResponse.redirect(`${baseUrl}/library?error=invalid_link`)
+      return NextResponse.redirect(`${baseUrl}/members?error=invalid_link`)
     }
 
     // Verify the magic link token
     const verified = await verifyMagicLinkToken(token)
 
     if (!verified) {
-      return NextResponse.redirect(`${baseUrl}/library?error=expired_link`)
+      return NextResponse.redirect(`${baseUrl}/members?error=expired_link`)
     }
 
     const { email } = verified
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (customers.data.length === 0) {
-        return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+        return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
       }
 
       const customer = customers.data[0]
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
-        return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+        return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
       }
 
       customerId = customer.id
@@ -142,6 +142,6 @@ export async function GET(request: NextRequest) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
 
-    return NextResponse.redirect(`${baseUrl}/library?error=verification_failed`)
+    return NextResponse.redirect(`${baseUrl}/members?error=verification_failed`)
   }
 }

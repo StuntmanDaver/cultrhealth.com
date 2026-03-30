@@ -77,7 +77,7 @@ export function ConsultationCard({ consultation, showPatient, showActions = true
           <div className="flex items-center gap-2 shrink-0">
             {isJoinable && (
               <Link
-                href={`/library/consultations/${consultation.id}`}
+                href={`/members/consultations/${consultation.id}`}
                 className="flex items-center gap-1 px-3 py-1.5 bg-brand-primary text-white rounded-full text-xs font-medium hover:bg-forest-light transition-colors"
               >
                 <Video className="w-3.5 h-3.5" />
@@ -86,7 +86,7 @@ export function ConsultationCard({ consultation, showPatient, showActions = true
             )}
             {isUpcoming && !isJoinable && (
               <Link
-                href={`/library/consultations/${consultation.id}`}
+                href={`/members/consultations/${consultation.id}`}
                 className="flex items-center gap-1 px-3 py-1.5 bg-brand-primary/5 text-brand-primary rounded-full text-xs font-medium hover:bg-brand-primary/10 transition-colors"
               >
                 View
@@ -95,7 +95,7 @@ export function ConsultationCard({ consultation, showPatient, showActions = true
             {consultation.status === 'completed' && (
               <>
                 <Link
-                  href={`/library/consultations/${consultation.id}`}
+                  href={`/members/consultations/${consultation.id}`}
                   className="flex items-center gap-1 px-3 py-1.5 bg-brand-primary/5 text-brand-primary rounded-full text-xs font-medium hover:bg-brand-primary/10 transition-colors"
                 >
                   <FileText className="w-3.5 h-3.5" />

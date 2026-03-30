@@ -247,7 +247,7 @@ function MediaKitDocument() {
             <View style={{ flexDirection: 'row', marginBottom: 8 }}>
               {[
                 { name: 'Club', price: 'Free', best: 'Education & discovery', featured: false },
-                { name: 'Core', price: '$199', interval: '/mo', best: 'Single therapy focus', featured: false },
+                { name: 'Core', price: '$149', interval: '/mo', best: 'Single therapy focus', featured: false },
                 { name: 'Catalyst+', price: '$499', interval: '/mo', best: 'Multi-therapy stacking', featured: true },
                 { name: 'Concierge', price: '$1,049', interval: '/mo', best: 'White-glove care', featured: false },
               ].map((tier, i) => (

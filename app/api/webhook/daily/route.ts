@@ -73,8 +73,8 @@ export async function POST(request: NextRequest) {
             patientEmail: consultation.customer_email,
             providerName: consultation.provider_email || 'Your provider',
             durationMins: durationMins || 0,
-            notesUrl: `${siteUrl}/library/consultations/${consultation.id}`,
-            bookFollowUpUrl: `${siteUrl}/library/consultations`,
+            notesUrl: `${siteUrl}/members/consultations/${consultation.id}`,
+            bookFollowUpUrl: `${siteUrl}/members/consultations`,
           })
         } catch (emailErr) {
           console.error('Failed to send completion email:', emailErr instanceof Error ? emailErr.message : 'Unknown error')

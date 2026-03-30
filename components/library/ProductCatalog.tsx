@@ -25,7 +25,7 @@ export function ProductCatalog() {
       {/* Header */}
       <div className="grad-dark text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <Link href="/library" className="text-white/60 hover:text-white transition-colors mb-4 inline-flex items-center text-sm">
+          <Link href="/members" className="text-white/60 hover:text-white transition-colors mb-4 inline-flex items-center text-sm">
             ← Back to Library
           </Link>
           <h1 className="text-4xl font-display font-bold mb-4">Product Catalog</h1>
@@ -104,7 +104,7 @@ export function ProductCatalog() {
           <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "space-y-4"}>
             {filteredProducts.map(product => (
               <Link 
-                href={`/library/shop/${product.sku}`} 
+                href={`/members/shop/${product.sku}`} 
                 key={product.sku}
                 className={`bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-xl hover:border-cultr-mint/50 transition-all group ${
                   viewMode === 'list' ? 'flex items-center gap-6 p-4' : 'flex flex-col'

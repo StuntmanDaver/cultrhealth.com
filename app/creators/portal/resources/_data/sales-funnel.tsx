@@ -92,7 +92,7 @@ export const salesFunnel: Record<string, ResourceEntry> = {
         <CopyBlock label="Template">{`HEADLINE: [Outcome-focused statement]
 Examples:
 - "Stop guessing about your health. Start testing."
-- "The protocols elite athletes use — now from $199/mo."
+- "The protocols elite athletes use — now from $149/mo."
 - "28–59 biomarkers. Licensed providers. Personalized protocols."
 
 SUBHEADLINE: [Supporting context]
@@ -125,7 +125,7 @@ KEY DIFFERENTIATORS:
 - 28–59 biomarkers (vs. the 5-10 your doctor tests)
 - Licensed, board-certified providers
 - Peptides, GLP-1s, and hormone optimization
-- From $199/mo (less than most gym memberships)`}</CopyBlock>
+- From $149/mo (less than most gym memberships)`}</CopyBlock>
 
         <SectionHeading>Section 4: Social Proof</SectionHeading>
         <CopyBlock label="Template">{`HEADING: "Real results from real members"
@@ -148,7 +148,7 @@ TRUST ELEMENTS:
 COMPARISON:
 - Single specialist visit: $300-500
 - Concierge medicine: $5,000-10,000/year
-- CULTR: From $199/mo (comprehensive labs + provider + protocols included)
+- CULTR: From $149/mo (comprehensive labs + provider + protocols included)
 
 ADDITIONAL: "HSA/FSA eligible. Renews month-to-month after initial 2-month protocol."
 
@@ -242,7 +242,7 @@ P.S. Hit reply and tell me — what's your #1 health goal right now?`}</CopyBloc
         <CopyBlock label="Subject: Every month you wait is a month of data you're missing">{`[Frame urgency around opportunity cost, not fake scarcity. "You can't optimize what you don't measure." Reiterate the offer.]`}</CopyBlock>
 
         <SubHeading>Day 14 — Final Push</SubHeading>
-        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "28–59 biomarkers + licensed provider + personalized protocol from $199/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
+        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "28–59 biomarkers + licensed provider + personalized protocol from $149/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
 
         <SectionHeading>Tips for the Sequence</SectionHeading>
         <BulletList items={[

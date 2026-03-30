@@ -37,7 +37,7 @@ export function MasterIndex() {
       {/* Header */}
       <div className="grad-dark text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <Link href="/library" className="text-white/60 hover:text-white transition-colors mb-4 inline-flex items-center text-sm">
+          <Link href="/members" className="text-white/60 hover:text-white transition-colors mb-4 inline-flex items-center text-sm">
             ← Back to Library
           </Link>
           <h1 className="text-4xl font-display font-bold mb-4">Master Index</h1>
@@ -127,7 +127,7 @@ export function MasterIndex() {
                           </td>
                           <td className="p-4 text-stone-400 font-mono text-xs">{product.sku}</td>
                           <td className="p-4 text-right">
-                            <Link href={`/library/shop/${product.sku}`} className="opacity-0 group-hover:opacity-100 text-cultr-forest hover:text-cultr-forestDark transition-all">
+                            <Link href={`/members/shop/${product.sku}`} className="opacity-0 group-hover:opacity-100 text-cultr-forest hover:text-cultr-forestDark transition-all">
                               <ExternalLink className="w-4 h-4" />
                             </Link>
                           </td>

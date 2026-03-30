@@ -1,13 +1,9 @@
-import { redirect } from 'next/navigation'
-import { getSession, isProviderEmail } from '@/lib/auth'
+import { getSession } from '@/lib/auth'
 import { ProviderConsultationsClient } from './ProviderConsultationsClient'
 
 export const metadata = { title: 'Provider Schedule — CULTR Health' }
 
 export default async function ProviderConsultationsPage() {
   const session = await getSession()
-  if (!session) redirect('/login')
-  if (!isProviderEmail(session.email)) redirect('/library')
-
-  return <ProviderConsultationsClient providerEmail={session.email} />
+  return <ProviderConsultationsClient providerEmail={session!.email} />
 }

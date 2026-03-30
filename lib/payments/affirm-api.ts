@@ -71,7 +71,7 @@ export function buildAffirmCheckoutConfig(params: {
         sku: item.sku,
         unit_price: item.unitPriceCents,
         qty: item.quantity,
-        item_url: `${baseUrl}/library/shop/${encodeURIComponent(item.sku)}`,
+        item_url: `${baseUrl}/members/shop/${encodeURIComponent(item.sku)}`,
       }))
     : [
         {

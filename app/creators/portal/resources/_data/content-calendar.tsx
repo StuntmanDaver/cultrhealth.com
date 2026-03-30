@@ -25,7 +25,7 @@ export const contentCalendar: Record<string, ResourceEntry> = {
             ['3', '"Normal" vs. "Optimal" — what the difference means', 'Longevity', 'Reel / TikTok'],
             ['4', 'My top 3 lab findings (personal story)', 'Metabolic', 'Story series'],
             ['5', 'What GLP-1 medications actually are (myth-bust)', 'Metabolic', 'Reel / TikTok'],
-            ['6', 'The $199/mo that changed my health approach', 'General', 'Caption post'],
+            ['6', 'The $149/mo that changed my health approach', 'General', 'Caption post'],
             ['7', 'Weekly recap + Q&A prompt', 'All', 'Story Q&A'],
           ]}
         />

@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useState, type ReactNode } from 'react'
 
-const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin', '/portal', '/library']
+const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin', '/portal', '/members', '/provider']
 const HIDE_CHROME_EXACT = ['/join']
 const HIDE_CHROME_HOSTNAMES = ['join.cultrhealth.com']
 

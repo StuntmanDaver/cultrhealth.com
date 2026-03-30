@@ -12,7 +12,7 @@ function getStripe() {
 /**
  * Core Tier Checkout Session
  *
- * Creates a Stripe Checkout Session for Core tier with the $199/mo subscription
+ * Creates a Stripe Checkout Session for Core tier with the $149/mo subscription
  * as a line item and the $135 blood test as an optional add-on.
  *
  * This route handles Core only. Catalyst+ and Concierge continue using Payment Links.

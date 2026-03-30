@@ -88,7 +88,7 @@ export const compliance: Record<string, ResourceEntry> = {
 \u2705 "Licensed, board-certified providers"
 \u2705 "All medications from licensed US pharmacies"
 \u2705 "HIPAA-compliant platform"
-\u2705 "Plans starting at $199/mo"
+\u2705 "Plans starting at $149/mo"
 \u2705 "HSA/FSA eligible"
 \u2705 "Telehealth consultations available within 24-48 hours"
 \u2705 "Personalized protocols based on your lab results"
@@ -124,7 +124,7 @@ export const compliance: Record<string, ResourceEntry> = {
         <StatusBadge status="green">&quot;CULTR matched me with a provider who actually listened.&quot;</StatusBadge>
         <StatusBadge status="green">&quot;My labs revealed things my annual physical never caught.&quot;</StatusBadge>
         <StatusBadge status="green">&quot;I feel like myself again &mdash; individual results may vary.&quot;</StatusBadge>
-        <StatusBadge status="green">&quot;Plans start at $199/mo with licensed providers.&quot;</StatusBadge>
+        <StatusBadge status="green">&quot;Plans start at $149/mo with licensed providers.&quot;</StatusBadge>
 
         <SubHeading>Yellow Light &mdash; Reword Before Using</SubHeading>
         <StatusBadge status="yellow">&quot;This will change your life&quot; &rarr; &quot;This changed MY life &mdash; individual results vary.&quot;</StatusBadge>

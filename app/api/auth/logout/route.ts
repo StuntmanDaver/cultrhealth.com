@@ -10,7 +10,7 @@ export async function POST() {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
       'http://localhost:3000')
     
-    return NextResponse.json({ success: true, redirect: `${baseUrl}/library` })
+    return NextResponse.json({ success: true, redirect: `${baseUrl}/members` })
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json({ error: 'Logout failed' }, { status: 500 })
@@ -26,7 +26,7 @@ export async function GET() {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
       'http://localhost:3000')
     
-    return NextResponse.redirect(`${baseUrl}/library`)
+    return NextResponse.redirect(`${baseUrl}/members`)
   } catch (error) {
     console.error('Logout error:', error)
     
@@ -35,6 +35,6 @@ export async function GET() {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
       'http://localhost:3000')
     
-    return NextResponse.redirect(`${baseUrl}/library`)
+    return NextResponse.redirect(`${baseUrl}/members`)
   }
 }

@@ -1,4 +1,4 @@
-import { CalorieCalculatorClient } from '@/app/library/calorie-calculator/CalorieCalculatorClient'
+import { CalorieCalculatorClient } from '@/app/members/calorie-calculator/CalorieCalculatorClient'
 
 export const metadata = {
   title: 'Calorie & Macro Calculator | CULTR Health',

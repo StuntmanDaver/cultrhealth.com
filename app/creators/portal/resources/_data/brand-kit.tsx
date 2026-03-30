@@ -165,7 +165,7 @@ export const brandKit: Record<string, ResourceEntry> = {
         <CopyBlock label="\u2705 DO">{`"Stop guessing. Start optimizing."
 "Your doctor tests 5 markers. We test 50+."
 "Lab-tested protocols. Licensed providers. Real results."
-"Peptides that work. From $199/mo."`}</CopyBlock>
+"Peptides that work. From $149/mo."`}</CopyBlock>
 
         <CopyBlock label="\u274C DON'T">{`"We might be able to help you feel a bit better."
 "Our revolutionary, groundbreaking, world-class solution..."

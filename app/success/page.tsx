@@ -355,7 +355,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
                     </div>
                     <p className="text-xs text-cultr-textMuted mt-3">
                       Submit this letter to your HSA/FSA administrator for tax-free reimbursement. 
-                      The document is also available in your <Link href="/library" className="text-emerald-600 hover:underline">member portal</Link>.
+                      The document is also available in your <Link href="/members" className="text-emerald-600 hover:underline">member portal</Link>.
                     </p>
                   </div>
                 </div>
@@ -372,13 +372,13 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href="/library/shop"
+                  href="/members/shop"
                   className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white font-bold rounded-lg hover:bg-cultr-forest/90 transition-colors"
                 >
                   Continue Shopping
                 </Link>
                 <Link
-                  href="/library"
+                  href="/members"
                   className="inline-flex items-center gap-2 px-6 py-3 grad-light text-cultr-forest font-bold rounded-lg hover:bg-cultr-sage/30 transition-colors border border-cultr-sage"
                 >
                   <FileText className="w-4 h-4" />

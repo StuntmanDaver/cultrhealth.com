@@ -23,7 +23,7 @@ export const messagingPlaybook: Record<string, ResourceEntry> = {
 
 Why it works: Specific numbers, no medical claim, positions CULTR as more thorough.`}</CopyBlock>
 
-        <CopyBlock label="Claim 2 — The Accessibility Play">{`"The same protocols used by executives and elite athletes — now from $199/mo with a licensed provider."
+        <CopyBlock label="Claim 2 — The Accessibility Play">{`"The same protocols used by executives and elite athletes — now from $149/mo with a licensed provider."
 
 Why it works: Aspirational framing without guaranteeing outcomes.`}</CopyBlock>
 
@@ -51,7 +51,7 @@ Why it works: Addresses skepticism directly, educational tone.`}</CopyBlock>
 
 Why it works: Reframes category, no specific disease prevention claim.`}</CopyBlock>
 
-        <CopyBlock label="Claim 9 — The Cost Comparison">{`"A single specialist visit: $300-500. Concierge medicine: $5K-10K/year. CULTR: $199/mo with comprehensive labs, licensed providers, and personalized protocols."
+        <CopyBlock label="Claim 9 — The Cost Comparison">{`"A single specialist visit: $300-500. Concierge medicine: $5K-10K/year. CULTR: $149/mo with comprehensive labs, licensed providers, and personalized protocols."
 
 Why it works: Tangible price anchoring, all numbers are verifiable.`}</CopyBlock>
 
@@ -215,7 +215,7 @@ Focus Seekers → Cognitive optimization, energy data, productivity metrics`}</C
         <SectionHeading>Universal Objections (All Segments)</SectionHeading>
 
         <SubHeading>&quot;It&apos;s too expensive&quot;</SubHeading>
-        <CopyBlock label="Response Framework">{`Reframe: "I hear you — $199/mo sounds like a lot until you compare it to what you're already spending."
+        <CopyBlock label="Response Framework">{`Reframe: "I hear you — $149/mo sounds like a lot until you compare it to what you're already spending."
 
 Context: "A single specialist visit is $300-500. Most people spend $200+/mo on supplements that aren't tested against their actual labs. Concierge medicine runs $5K-10K/year."
 

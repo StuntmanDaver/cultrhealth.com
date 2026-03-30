@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
           patientEmail: consultation.customer_email,
           providerName: consultation.provider_email || 'Your provider',
           scheduledAt: new Date(consultation.scheduled_at!),
-          joinUrl: `${siteUrl}/library/consultations/${consultation.id}`,
+          joinUrl: `${siteUrl}/members/consultations/${consultation.id}`,
         })
         await markReminderSent(consultation.id)
         sent++

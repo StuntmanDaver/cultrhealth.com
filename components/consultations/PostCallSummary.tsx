@@ -41,14 +41,14 @@ export function PostCallSummary({ consultationId, providerName, durationMins, ha
       <div className="flex flex-col gap-3">
         {hasNotes && (
           <Link
-            href={`/library/consultations/${consultationId}`}
+            href={`/members/consultations/${consultationId}`}
             className="w-full py-2.5 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors text-center"
           >
             View Notes
           </Link>
         )}
         <Link
-          href="/library/consultations"
+          href="/members/consultations"
           className="w-full py-2.5 bg-brand-primary/5 text-brand-primary rounded-full text-sm font-medium hover:bg-brand-primary/10 transition-colors text-center flex items-center justify-center gap-2"
         >
           <CalendarPlus className="w-4 h-4" />

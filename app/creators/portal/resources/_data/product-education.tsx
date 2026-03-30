@@ -65,7 +65,7 @@ export const productEducation: Record<string, ResourceEntry> = {
         <CopyBlock label="Key Messages">{`\u2192 GLP-1s are FDA-recognized medications, not a "diet pill" or supplement
 \u2192 They work WITH your biology, not against it
 \u2192 Provider supervision is critical \u2014 this isn't a DIY approach
-\u2192 CULTR makes these protocols accessible from $199/mo
+\u2192 CULTR makes these protocols accessible from $149/mo
 \u2192 Always frame as "may help" or "can support" \u2014 never "guarantees" weight loss`}</CopyBlock>
       </>
     ),
@@ -147,7 +147,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           'Best for: People exploring health optimization who want to learn before committing',
         ]} />
 
-        <SectionHeading>CULTR Starter ($199/mo)</SectionHeading>
+        <SectionHeading>CULTR Core ($149/mo)</SectionHeading>
         <BulletList items={[
           'Quarterly telehealth consultations',
           'Comprehensive lab panel (28–59 biomarkers)',
@@ -190,7 +190,7 @@ export const productEducation: Record<string, ResourceEntry> = {
 
         <SectionHeading>Helping Your Audience Choose</SectionHeading>
         <CopyBlock label="Recommendation Framework">{`\u2192 "Just curious?" \u2192 CULTR Club (Free)
-\u2192 "Ready to get started" \u2192 Starter ($199/mo)
+\u2192 "Ready to get started" \u2192 Core ($149/mo)
 \u2192 "Want regular check-ins" \u2192 Creator ($299/mo)
 \u2192 "Managing complex goals" \u2192 Cognition ($399/mo)
 \u2192 "Want maximum access" \u2192 Confidante ($499/mo)
@@ -220,7 +220,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <SectionHeading>General Questions</SectionHeading>
 
         <SubHeading>&quot;What is CULTR Health?&quot;</SubHeading>
-        <CopyBlock>{`CULTR is a telehealth platform that combines comprehensive lab testing (28–59 biomarkers), licensed providers, and personalized protocols including peptides and GLP-1 medications. Plans start at $199/mo.`}</CopyBlock>
+        <CopyBlock>{`CULTR is a telehealth platform that combines comprehensive lab testing (28–59 biomarkers), licensed providers, and personalized protocols including peptides and GLP-1 medications. Plans start at $149/mo.`}</CopyBlock>
 
         <SubHeading>&quot;Is this legit / a scam?&quot;</SubHeading>
         <CopyBlock>{`CULTR is a licensed medical practice with board-certified providers. All medications come from licensed US pharmacies. The platform is HIPAA compliant. It's real healthcare, delivered through telehealth.`}</CopyBlock>
@@ -237,7 +237,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <CopyBlock>{`CULTR doesn't bill insurance directly, but memberships are HSA/FSA eligible. Many members use their health savings accounts to cover the cost. Lab draw fees through Quest/Labcorp may also be submitted to insurance separately.`}</CopyBlock>
 
         <SubHeading>&quot;Is it worth the price?&quot;</SubHeading>
-        <CopyBlock>{`Consider this: a single specialist visit costs $300-500. A concierge doctor runs $5,000-10,000/year. CULTR gives you comprehensive labs, licensed providers, and personalized protocols from $199/mo \u2014 less than most gym memberships.`}</CopyBlock>
+        <CopyBlock>{`Consider this: a single specialist visit costs $300-500. A concierge doctor runs $5,000-10,000/year. CULTR gives you comprehensive labs, licensed providers, and personalized protocols from $149/mo \u2014 less than most gym memberships.`}</CopyBlock>
 
         <SectionHeading>Treatment Questions</SectionHeading>
 

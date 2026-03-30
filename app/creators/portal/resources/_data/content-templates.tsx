@@ -57,7 +57,7 @@ This is the difference between standard care and actual optimization.`}</CopyBlo
         <SubHeading>General CULTR Hooks</SubHeading>
         <CopyBlock label="Hook 7 — The Simplicity Hook">{`What if getting access to the same protocols celebrities use cost less than your gym membership?
 
-No waitlists. No $500 doctor visits. Just science, from $199/mo.`}</CopyBlock>
+No waitlists. No $500 doctor visits. Just science, from $149/mo.`}</CopyBlock>
 
         <CopyBlock label="Hook 8 — The Social Proof">{`5,000+ people have already optimized their health through CULTR.
 
@@ -99,7 +99,7 @@ SECTION 2: WHAT CULTR DOES DIFFERENTLY (3:00-5:00)
 - 28–59 biomarkers tested vs. standard 5-10
 - Licensed providers who specialize in optimization
 - Access to peptide protocols, GLP-1s, and hormone optimization
-- Plans from $199/mo — less than most gym memberships
+- Plans from $149/mo — less than most gym memberships
 
 SECTION 3: MY EXPERIENCE (5:00-8:00)
 - Walk through your signup process
@@ -138,7 +138,7 @@ KEY POINTS TO COVER
 
 4. The democratization of longevity medicine
    - This used to cost $5,000-$10,000/year through concierge doctors
-   - CULTR makes it accessible from $199/mo
+   - CULTR makes it accessible from $149/mo
    - Telehealth removes geographic barriers
 
 CLOSER
@@ -171,7 +171,7 @@ I don't usually recommend health products in my newsletter — but this one is d
 
 I recently started working with CULTR Health. They're a telehealth platform that does comprehensive lab testing (28–59 biomarkers, not the basic 5 your doctor runs) and matches you with licensed providers who build personalized protocols.
 
-I'm talking peptides, hormone optimization, GLP-1 protocols — the kind of stuff that used to cost $5K+ per year at concierge clinics. CULTR starts at $199/mo.
+I'm talking peptides, hormone optimization, GLP-1 protocols — the kind of stuff that used to cost $5K+ per year at concierge clinics. CULTR starts at $149/mo.
 
 Here's what sold me: [INSERT YOUR PERSONAL EXPERIENCE — e.g., "I got my labs back and found out my testosterone was technically 'normal' but way below optimal. My provider built a protocol and within 8 weeks I had more energy than I've had in years."]
 
@@ -220,7 +220,7 @@ Yes — CULTR is a licensed medical practice with board-certified providers. All
 Your doctor typically tests 5-10 basic markers. CULTR tests 50+ including hormones, inflammation, metabolic markers, and nutrients. Plus you get a provider who specializes in optimization, not just disease treatment.
 
 "What about the cost?"
-Plans start at $199/mo. Compare that to a single specialist visit ($300-500) or concierge medicine ($5,000-10,000/year). HSA/FSA eligible too.
+Plans start at $149/mo. Compare that to a single specialist visit ($300-500) or concierge medicine ($5,000-10,000/year). HSA/FSA eligible too.
 
 "Do I need to stop seeing my regular doctor?"
 No. CULTR complements your existing care. Think of it as adding an optimization specialist to your health team.
@@ -264,7 +264,7 @@ Use code [YOUR CODE] for [discount].
 
 This isn't guesswork. It's data-driven protocols from licensed providers, personalized to MY body.
 
-Plans start at $199/mo. Take the quiz to find yours \u2192 link in bio
+Plans start at $149/mo. Take the quiz to find yours \u2192 link in bio
 
 #partner #cultrhealth #healthjourney #peptidetherapy #glp1`}</CopyBlock>
 
@@ -292,7 +292,7 @@ CULTR: "Here are 3 things we found that explain why you feel like garbage"
 
 #ad @cultrhealth`}</CopyBlock>
 
-        <CopyBlock label="Tweet 2">{`The same longevity protocols celebrities pay $10K/year for — now from $199/mo.
+        <CopyBlock label="Tweet 2">{`The same longevity protocols celebrities pay $10K/year for — now from $149/mo.
 
 Licensed providers. Personalized peptide protocols. 28–59 biomarker testing (SiPho Health).
 

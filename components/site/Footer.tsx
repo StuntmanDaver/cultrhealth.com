@@ -10,7 +10,7 @@ const productLinks = [
 const learnLinks = [
   { href: '/science', label: 'Science' },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/library', label: 'Resources' },
+  { href: '/members', label: 'Resources' },
   { href: '/how-it-works#faq', label: 'FAQ' },
 ];
 

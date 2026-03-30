@@ -73,7 +73,7 @@ Use code {CODE} for a discount.
       },
       {
         label: 'Progress Update',
-        text: `The same protocols celebrities pay $10K/year for — now from $199/mo.
+        text: `The same protocols celebrities pay $10K/year for — now from $149/mo.
 
 Licensed providers. Personalized peptide protocols. 28–59 biomarker testing (SiPho Health).
 
@@ -122,7 +122,7 @@ Provider-supervised. Licensed pharmacy. Real science.
 
 They test 28–59 biomarkers (not the basic 5 your doctor runs) and match you with a licensed provider who builds a personalized protocol.
 
-Plans start at $199/mo — less than most gym memberships.
+Plans start at $149/mo — less than most gym memberships.
 
 If you've ever felt like something's off but your doctor says "you're fine," this is worth looking into.
 

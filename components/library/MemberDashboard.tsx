@@ -162,7 +162,7 @@ export function MemberDashboard({
           </Link>
 
           <Link
-            href="/library/shop"
+            href="/members/shop"
             className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
           >
             <ShoppingCart className="w-6 h-6 text-white/80" />
@@ -274,7 +274,7 @@ export function MemberDashboard({
               upgradeMessage="Upgrade to Core to access the product shop."
             >
               <Link
-                href="/library/shop"
+                href="/members/shop"
                 className="group flex items-center gap-4 px-6 py-5 bg-brand-primary text-white rounded-2xl hover:bg-forest-light transition-all"
               >
                 <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white/20 transition-colors">

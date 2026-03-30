@@ -461,7 +461,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planSlug: plan.slug,
-          amountCents: plan.price * 100,
+          amountCents: todayTotal * 100,
           email: authNetEmail || '',
         }),
       });
@@ -535,8 +535,8 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-cultr-text">
                       {plan.slug === 'core' && coreTherapy
-                        ? `CULTR Core with ${coreTherapy.name} (2 months)`
-                        : `${plan.name} membership (2 months)`}
+                        ? `CULTR Core with ${coreTherapy.name} for the first 2 months`
+                        : `${plan.name} membership for the first 2 months`}
                     </span>
                     <span className="text-sm font-medium text-cultr-forest">${twoMonthCost.toLocaleString()}</span>
                   </div>

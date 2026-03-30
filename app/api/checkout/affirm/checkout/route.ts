@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const orderId = `CULTR-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const isSubscription = !!planSlug;
-    const cancelPath = isSubscription ? '/pricing' : '/library/cart';
+    const cancelPath = isSubscription ? '/pricing' : '/members/cart';
 
     const checkoutConfig = buildAffirmCheckoutConfig({
       orderId,

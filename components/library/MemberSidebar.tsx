@@ -26,37 +26,37 @@ const NAV_GROUPS = [
   {
     label: null,
     items: [
-      { label: 'Dashboard', href: '/library', icon: LayoutDashboard },
+      { label: 'Dashboard', href: '/members', icon: LayoutDashboard },
     ],
   },
   {
     label: 'MY CARE',
     items: [
       { label: 'Intake Form', href: '/intake', icon: ClipboardList },
-      { label: 'Consultations', href: '/library/consultations', icon: Video },
-      { label: 'Labs & Results', href: '/library/labs', icon: TestTube2 },
+      { label: 'Consultations', href: '/members/consultations', icon: Video },
+      { label: 'Labs & Results', href: '/members/labs', icon: TestTube2 },
       { label: 'Renewal', href: '/renewal', icon: RefreshCw },
     ],
   },
   {
     label: 'LEARN',
     items: [
-      { label: 'Peptide Library', href: '/library/index', icon: Library },
-      { label: 'Peptide FAQ', href: '/library/peptide-faq', icon: HelpCircle },
+      { label: 'Peptide Library', href: '/members/index', icon: Library },
+      { label: 'Peptide FAQ', href: '/members/peptide-faq', icon: HelpCircle },
     ],
   },
   {
     label: 'TOOLS',
     items: [
-      { label: 'Dosing Calculator', href: '/library/dosing-calculator', icon: Calculator },
-      { label: 'Calorie Calculator', href: '/library/calorie-calculator', icon: Flame },
+      { label: 'Dosing Calculator', href: '/members/dosing-calculator', icon: Calculator },
+      { label: 'Calorie Calculator', href: '/members/calorie-calculator', icon: Flame },
     ],
   },
   {
     label: 'SHOP',
     items: [
-      { label: 'Browse Products', href: '/library/shop', icon: ShoppingBag },
-      { label: 'Cart', href: '/library/cart', icon: ShoppingCart },
+      { label: 'Browse Products', href: '/members/shop', icon: ShoppingBag },
+      { label: 'Cart', href: '/members/cart', icon: ShoppingCart },
     ],
   },
   {
@@ -71,8 +71,8 @@ const NAV_GROUPS = [
 const PROVIDER_NAV_GROUP = {
   label: 'PROVIDER',
   items: [
-    { label: 'Protocol Builder', href: '/library/protocol-builder', icon: FlaskConical },
-    { label: 'Provider Schedule', href: '/library/provider-schedule', icon: CalendarClock },
+    { label: 'Protocol Builder', href: '/members/protocol-builder', icon: FlaskConical },
+    { label: 'Provider Schedule', href: '/members/provider-schedule', icon: CalendarClock },
   ],
 }
 
@@ -101,7 +101,7 @@ export function MemberSidebar({ mobileOpen, onClose, isProvider }: MemberSidebar
   }
 
   const isActive = (href: string) => {
-    if (href === '/library') return pathname === '/library'
+    if (href === '/members') return pathname === '/members'
     return pathname === href || pathname.startsWith(href + '/')
   }
 

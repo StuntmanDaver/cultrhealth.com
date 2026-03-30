@@ -1,4 +1,4 @@
-import { PeptideFAQContent } from '@/app/library/peptide-faq/PeptideFAQContent'
+import { PeptideFAQContent } from '@/app/members/peptide-faq/PeptideFAQContent'
 
 export const metadata = {
   title: 'Peptide FAQ | CULTR Health',

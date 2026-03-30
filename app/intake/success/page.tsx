@@ -86,7 +86,7 @@ export default function IntakeSuccessPage() {
             </Link>
 
             <Link
-              href="/library"
+              href="/members"
               className="flex items-center justify-center gap-2 w-full py-3 bg-stone-100 text-stone-700 rounded-xl font-medium hover:bg-stone-200 transition-all"
             >
               Explore Our Library

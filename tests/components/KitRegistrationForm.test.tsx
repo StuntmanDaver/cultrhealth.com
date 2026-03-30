@@ -10,6 +10,12 @@ describe('KitRegistrationForm', () => {
     global.fetch = vi.fn()
   })
 
+  /** Check all required-reading checkboxes so the form becomes active */
+  function checkAllGuides() {
+    const checkboxes = screen.getAllByRole('checkbox')
+    checkboxes.forEach((cb) => fireEvent.click(cb))
+  }
+
   it('renders input field and Register Kit button', () => {
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
     expect(screen.getByPlaceholderText('e.g., KIT-XXXXX')).toBeTruthy()
@@ -23,6 +29,7 @@ describe('KitRegistrationForm', () => {
     })
 
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
+    checkAllGuides()
     const input = screen.getByPlaceholderText('e.g., KIT-XXXXX')
     fireEvent.change(input, { target: { value: 'INVALID-123' } })
     fireEvent.click(screen.getByText('Register Kit'))
@@ -39,6 +46,7 @@ describe('KitRegistrationForm', () => {
     })
 
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
+    checkAllGuides()
     fireEvent.change(screen.getByPlaceholderText('e.g., KIT-XXXXX'), { target: { value: 'KIT-REG' } })
     fireEvent.click(screen.getByText('Register Kit'))
 
@@ -54,6 +62,7 @@ describe('KitRegistrationForm', () => {
     })
 
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
+    checkAllGuides()
     fireEvent.change(screen.getByPlaceholderText('e.g., KIT-XXXXX'), { target: { value: 'KIT-EXP' } })
     fireEvent.click(screen.getByText('Register Kit'))
 
@@ -74,6 +83,7 @@ describe('KitRegistrationForm', () => {
       })
 
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
+    checkAllGuides()
     fireEvent.change(screen.getByPlaceholderText('e.g., KIT-XXXXX'), { target: { value: 'KIT-OK' } })
     fireEvent.click(screen.getByText('Register Kit'))
 
@@ -88,6 +98,7 @@ describe('KitRegistrationForm', () => {
 
   it('shows client-side error for empty input', async () => {
     render(<KitRegistrationForm onSuccess={mockOnSuccess} />)
+    checkAllGuides()
     fireEvent.click(screen.getByText('Register Kit'))
 
     await waitFor(() => {

@@ -46,6 +46,19 @@ const nextConfig = {
           },
         ],
       },
+      // Video consultation pages: allow camera + microphone for Daily.co
+      {
+        source: '/members/consultations/:id*',
+        headers: [
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
+        ],
+      },
+      {
+        source: '/provider/consultations/:id*',
+        headers: [
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
+        ],
+      },
       // Marketing pages: 5min edge cache, 1min stale window
       {
         source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz|therapies|tools)',
@@ -68,7 +81,7 @@ const nextConfig = {
       },
       // Authenticated/dynamic pages: never cache (HIPAA compliance)
       {
-        source: '/(dashboard|library|intake|renewal|admin|creators/portal|join)/:path*',
+        source: '/(dashboard|members|intake|renewal|admin|creators/portal|join|provider)/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -124,12 +137,22 @@ const nextConfig = {
       },
       {
         source: '/consultations',
-        destination: '/library/consultations',
+        destination: '/members/consultations',
         permanent: true,
       },
       {
         source: '/consultations/:path*',
-        destination: '/library/consultations/:path*',
+        destination: '/members/consultations/:path*',
+        permanent: true,
+      },
+      {
+        source: '/library',
+        destination: '/members',
+        permanent: true,
+      },
+      {
+        source: '/library/:path*',
+        destination: '/members/:path*',
         permanent: true,
       },
     ];

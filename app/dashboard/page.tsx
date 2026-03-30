@@ -83,7 +83,7 @@ export default function DashboardPage() {
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg text-brand-primary">Consultations</h3>
-            <Link href="/library/consultations" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+            <Link href="/members/consultations" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
               Book consultation
             </Link>
           </div>
@@ -93,7 +93,7 @@ export default function DashboardPage() {
             <div className="bg-cream-dark rounded-xl p-4 text-center">
               <p className="text-sm text-brand-primary/60 mb-3">No upcoming consultations.</p>
               <Link
-                href="/library/consultations"
+                href="/members/consultations"
                 className="inline-flex px-5 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
               >
                 Book Now

@@ -45,7 +45,7 @@ export function CategoryGrid() {
       {/* Primary Tools */}
       <div className="grid md:grid-cols-3 gap-6">
         <Link
-          href="/library/index"
+          href="/members/index"
           className="group relative overflow-hidden bg-white border border-stone-200 rounded-2xl p-8 hover:shadow-xl hover:border-cultr-mint/50 transition-all"
         >
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -66,7 +66,7 @@ export function CategoryGrid() {
         </Link>
 
         <Link
-          href="/library/products"
+          href="/members/products"
           className="group relative overflow-hidden bg-white border border-stone-200 rounded-2xl p-8 hover:shadow-xl hover:border-cultr-mint/50 transition-all"
         >
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -87,7 +87,7 @@ export function CategoryGrid() {
         </Link>
 
         <Link
-          href="/library/stack-guides"
+          href="/members/stack-guides"
           className="group relative overflow-hidden bg-white border border-stone-200 rounded-2xl p-8 hover:shadow-xl hover:border-orange-200/50 transition-all"
         >
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -117,7 +117,7 @@ export function CategoryGrid() {
             return (
               <Link 
                 key={category.id}
-                href={`/library/${category.id}`}
+                href={`/members/${category.id}`}
                 className="group bg-white border border-stone-200 rounded-2xl p-6 hover:shadow-lg hover:border-stone-300 transition-all"
               >
                 <div className="flex items-start gap-4">

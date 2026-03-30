@@ -17,9 +17,9 @@ describe('KitEmptyState', () => {
     expect(screen.getByText('Add Blood Test Kit')).toBeTruthy()
   })
 
-  it('shows $199/mo in club tier text', () => {
+  it('shows $149/mo in club tier text', () => {
     render(<KitEmptyState tier="club" hasKitOrder={false} />)
-    expect(screen.getByText(/\$199\/mo/)).toBeTruthy()
+    expect(screen.getByText(/\$149\/mo/)).toBeTruthy()
   })
 
   it('shows $135 in core tier text', () => {

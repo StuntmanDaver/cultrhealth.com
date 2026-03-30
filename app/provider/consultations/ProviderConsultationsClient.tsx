@@ -32,18 +32,18 @@ export function ProviderConsultationsClient({ providerEmail }: ProviderConsultat
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <p className="text-brand-primary/40">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-brand-cream">
-      <section className="py-12 px-6 bg-brand-primary text-white">
+    <div>
+      <section className="py-8 px-6 border-b border-brand-primary/10">
         <div className="max-w-4xl mx-auto">
-          <h1 className="font-display text-3xl font-bold mb-1">Provider Schedule</h1>
-          <p className="text-white/70">{providerEmail}</p>
+          <h1 className="font-display text-2xl font-bold text-brand-primary mb-1">Provider Schedule</h1>
+          <p className="text-sm text-brand-primary/50">{providerEmail}</p>
         </div>
       </section>
 

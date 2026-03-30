@@ -1,4 +1,4 @@
-import { DosingCalculatorClient } from '@/app/library/dosing-calculator/DosingCalculatorClient'
+import { DosingCalculatorClient } from '@/app/members/dosing-calculator/DosingCalculatorClient'
 
 export const metadata = {
   title: 'Peptide Dosing Calculator | CULTR Health',

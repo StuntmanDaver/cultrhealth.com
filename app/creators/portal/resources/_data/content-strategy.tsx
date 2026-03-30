@@ -139,7 +139,7 @@ TRUTH: Your provider selects specific peptides, dosages, and timing based on YOU
 
         <SectionHeading>CTA Variants for This Pillar</SectionHeading>
         <CopyBlock>{`→ "Your body knows how to heal — peptides help it do it faster. Learn more: [LINK]"
-→ "Provider-supervised peptide protocols from $199/mo. Take the quiz: [LINK]"
+→ "Provider-supervised peptide protocols from $149/mo. Take the quiz: [LINK]"
 → "Stop guessing about recovery. Start measuring: [LINK]"
 → "Use code [CODE] for [discount] on your first month: [LINK]"`}</CopyBlock>
       </>
@@ -194,7 +194,7 @@ MYTH: "I only need labs once a year."
 TRUTH: Annual labs give you a single snapshot. Quarterly testing reveals trends — are your markers improving, declining, or stable? Trends tell the story.
 
 MYTH: "Longevity medicine is only for wealthy people."
-TRUTH: CULTR starts at $199/mo with comprehensive labs included. Compare that to the $5K-10K/year traditional longevity clinics charge.
+TRUTH: CULTR starts at $149/mo with comprehensive labs included. Compare that to the $5K-10K/year traditional longevity clinics charge.
 
 MYTH: "Supplements can replace lab testing."
 TRUTH: Without labs, you're guessing which supplements you need. Most people are taking things they don't need while missing actual deficiencies.`}</CopyBlock>

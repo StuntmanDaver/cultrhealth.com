@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
         customer_email: email,
       },
       success_url: `${baseUrl}/success?provider=stripe&type=product&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/library/cart`,
+      cancel_url: `${baseUrl}/members/cart`,
     });
 
     return NextResponse.json({
