@@ -82,10 +82,10 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Choose your membership
+              Transparent pricing built around an initial 2-month clinical protocol.
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto mb-4">
-              All plans include access to our platform, provider consultations, and core features. Upgrade or downgrade anytime.
+              Choose the membership that matches your goals. All paid plans begin with a 2-month starting protocol so your provider has enough time to evaluate your labs, personalize your protocol, and adjust care when appropriate.
             </p>
             <Link href="/quiz" className="text-sm text-cultr-forest font-medium hover:underline">
               Not sure which plan? Take the quiz →
@@ -104,6 +104,16 @@ export default function PricingPage() {
                 <PricingCard plan={plan} />
               </ScrollReveal>
             ))}
+          </div>
+
+          {/* Global Microcopy */}
+          <div className="mt-10 text-center space-y-2 max-w-2xl mx-auto">
+            <p className="text-xs text-cultr-textMuted leading-relaxed">
+              All paid memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date.
+            </p>
+            <p className="text-xs text-cultr-textMuted/70 leading-relaxed">
+              Medication, protocol eligibility, and refills are subject to clinical review and approval.
+            </p>
           </div>
         </div>
       </section>
@@ -157,16 +167,16 @@ export default function PricingPage() {
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text">Feature</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Curated</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {[
-                    { feature: 'Monthly Price', values: ['$199', '$499', '$1,099'] },
-                    { feature: 'At Home Lab Test', values: ['$135', '$135', '$135'], hasBiomarkerLink: true },
+                    { feature: 'Monthly Price', values: ['$149*', '$499', '$1,049'] },
+                    { feature: 'At Home Lab Test', values: ['$135', '$135', 'Included'], hasBiomarkerLink: true },
                     { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 6 months', 'Every 6 months'] },
-                    { feature: 'CORE Therapies', values: ['1', '1', '2'] },
-                    { feature: 'Enhancement Therapies', values: ['—', '2', 'Up to 4'] },
+                    { feature: 'Foundation Therapies', values: ['1', '1', '2'] },
+                    { feature: 'Add-On Therapies', values: ['—', '2', 'Up to 4'] },
                     { feature: 'Protocol Library', values: [true, true, true] },
                     { feature: 'Peptide Calculator', values: [true, true, true] },
                     { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
@@ -248,7 +258,7 @@ export default function PricingPage() {
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text text-sm">Therapy Category</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Curated</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -348,24 +358,24 @@ export default function PricingPage() {
 
           <FAQAccordion items={[
             {
-              question: 'Can I upgrade or downgrade my plan?',
-              answer: 'Yes, you can change your plan at any time from your member portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
+              question: 'Why do memberships start with a 2-month clinical protocol?',
+              answer: 'Our memberships begin with a 2-month starting protocol so your provider has enough time to review your intake, assess labs when needed, personalize your protocol, and evaluate your response before ongoing month-to-month care.',
             },
             {
-              question: 'What payment methods do you accept?',
-              answer: 'We accept all major credit cards, debit cards, and HSA/FSA cards through our secure Stripe payment system. We also provide superbills for insurance reimbursement.',
+              question: 'Am I charged monthly or all at once?',
+              answer: 'We display pricing as a monthly rate for easy comparison. Your initial purchase covers your first 2-month clinical protocol. After that, your membership renews monthly at your plan rate unless canceled.',
             },
             {
-              question: 'Is there a commitment period?',
-              answer: 'No long-term contracts required. All memberships are month-to-month. We recommend a 3-month commitment to see meaningful physiological changes, but you can cancel anytime.',
+              question: 'Can I cancel?',
+              answer: 'You can cancel future renewals anytime before your next renewal date. Your initial 2-month clinical protocol is the minimum starting term for paid memberships.',
             },
             {
-              question: 'What if I need to cancel?',
-              answer: 'You can cancel your membership at any time from your member portal. Your access continues until the end of your current billing period. No cancellation fees.',
+              question: 'Why is there an asterisk next to Core pricing?',
+              answer: brandify('CULTR Core starts at $149 per month, and the exact price depends on the selected therapy option.'),
             },
             {
-              question: 'Are medications and products included?',
-              answer: 'Membership covers telehealth consultations, platform access, and listed features. Medications, peptides, labs, and products are billed separately at cost through our partner pharmacies and labs.',
+              question: 'Are medications guaranteed?',
+              answer: 'No. Treatment recommendations, prescriptions, and refills are always subject to provider review, clinical appropriateness, and applicable pharmacy and state requirements.',
             },
             {
               question: 'Can I use HSA/FSA funds?',
