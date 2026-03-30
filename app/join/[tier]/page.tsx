@@ -386,13 +386,13 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
         <div className="max-w-3xl mx-auto">
           <div className={`flex items-center gap-8 ${coreTherapy ? '' : 'justify-center text-center'}`}>
             {coreTherapy && (
-              <div className="hidden sm:block w-36 h-36 md:w-44 md:h-44 relative shrink-0 rounded-2xl overflow-hidden bg-white/10 border border-white/20">
+              <div className="hidden sm:block w-52 h-52 md:w-64 md:h-64 relative shrink-0 rounded-2xl overflow-hidden bg-white/10 border border-white/20">
                 <Image
                   src={coreTherapy.productImage}
                   alt={coreTherapy.name}
                   fill
-                  className="object-contain p-3"
-                  sizes="176px"
+                  className="object-contain p-4"
+                  sizes="256px"
                 />
               </div>
             )}
@@ -421,13 +421,13 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
           {coreTherapy && (
             <div className="grad-mint rounded-2xl p-6 md:p-8 mb-8 border border-cultr-sage">
               {/* Mobile-only product image (hidden on sm+ since it's in hero) */}
-              <div className="sm:hidden w-24 h-24 relative shrink-0 rounded-xl overflow-hidden bg-white/60 border border-cultr-sage/30 mx-auto mb-4">
+              <div className="sm:hidden w-40 h-40 relative shrink-0 rounded-xl overflow-hidden bg-white/60 border border-cultr-sage/30 mx-auto mb-4">
                 <Image
                   src={coreTherapy.productImage}
                   alt={coreTherapy.name}
                   fill
-                  className="object-contain p-2"
-                  sizes="96px"
+                  className="object-contain p-3"
+                  sizes="160px"
                 />
               </div>
               <h2 className="text-lg font-display font-bold text-cultr-forest mb-2">{coreTherapy.name}</h2>
