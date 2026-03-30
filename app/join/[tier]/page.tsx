@@ -297,7 +297,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   const doctorCost = isConcierge ? 0 : DOCTOR_CONSULTATION_ADDON.price;
   const todayTotal = twoMonthCost + labsCost + doctorCost;
 
-  const amountCents = plan.price * 100;
+  const amountCents = todayTotal * 100;
 
   // Handle checkout success
   const handleCheckoutSuccess = (redirectUrl: string) => {
@@ -625,14 +625,8 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   <AuthorizeNetForm
                     onTokenReceived={handleAuthorizeNetCheckout}
                     onError={handleCheckoutError}
-                    loading={isLoading}
-                    submitText={(() => {
-                      const addons = (BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0);
-                      const total = plan.price + addons;
-                      return addons > 0
-                        ? `Join ${plan.name} - $${total} today, then $${plan.price}/mo`
-                        : `Join ${plan.name} - $${plan.price}/${plan.interval}`;
-                    })()}
+                    loading={isLoading || !consentChecked}
+                    submitText={`Start my protocol — $${todayTotal.toLocaleString()} today`}
                     collectBillingAddress={true}
                   />
                 </div>
@@ -724,13 +718,19 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     required
                   />
                 </div>
-                <CorePayForm
-                  planSlug={plan.slug}
-                  amountCents={amountCents}
-                  email={authNetEmail}
-                  onSuccess={handleCheckoutSuccess}
-                  onError={handleCheckoutError}
-                />
+                {consentChecked ? (
+                  <CorePayForm
+                    planSlug={plan.slug}
+                    amountCents={amountCents}
+                    email={authNetEmail}
+                    onSuccess={handleCheckoutSuccess}
+                    onError={handleCheckoutError}
+                  />
+                ) : (
+                  <p className="text-xs text-cultr-textMuted text-center py-4">
+                    Please accept the membership terms above to proceed.
+                  </p>
+                )}
               </div>
             )}
 
