@@ -58,7 +58,6 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[provider/dashboard] Error:', error)
     return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 })
   }
 }

@@ -4,7 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  LayoutDashboard,
   Video,
+  Users,
   FlaskConical,
   X,
   LogOut,
@@ -14,7 +16,9 @@ const NAV_GROUPS = [
   {
     label: null,
     items: [
+      { label: 'Dashboard', href: '/provider', icon: LayoutDashboard },
       { label: 'Consultations', href: '/provider/consultations', icon: Video },
+      { label: 'Patients', href: '/provider/patients', icon: Users },
       { label: 'Protocol Builder', href: '/provider/protocol-builder', icon: FlaskConical },
     ],
   },
@@ -41,13 +45,14 @@ export function ProviderSidebar({ mobileOpen, onClose }: ProviderSidebarProps) {
   }
 
   const isActive = (href: string) => {
+    if (href === '/provider') return pathname === '/provider'
     return pathname === href || pathname.startsWith(href + '/')
   }
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-6 pb-4">
-        <Link href="/provider/consultations" className="flex items-center gap-2">
+        <Link href="/provider" className="flex items-center gap-2">
           <img src="/cultr-health-logo.png" alt="CULTR Health" className="h-16 w-auto" />
         </Link>
         {onClose && (

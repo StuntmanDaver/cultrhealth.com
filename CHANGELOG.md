@@ -1,3 +1,51 @@
+## [2026-03-29] - Provider Dashboard Phase A: Dashboard + Patients + Schedule
+
+### Provider Dashboard Home (`/provider`)
+- New `ProviderDashboardClient.tsx` with 4 metric cards (Today's Consults, Pending Intakes, Patients This Month, Active Patients)
+- Today's Agenda section with linked ConsultationCards
+- Recent Intakes table showing pending intake submissions
+- Quick Actions row: Consultations, Patient Records, Protocol Builder
+
+### Provider Context
+- New `lib/contexts/ProviderContext.tsx` following CreatorContext pattern
+- Parallel data fetching via `Promise.all()` for metrics, consultations, intakes
+- `useProvider()` hook for shared state across provider pages
+- `ProviderLayoutClient` now wraps children in `ProviderProvider`
+
+### Patient Management
+- New `/provider/patients` page with searchable, filterable, paginated patient list
+- Tier filter dropdown (Core, Catalyst, Concierge, Club)
+- Patient names extracted from intake_data JSONB
+- New `/provider/patients/[id]` detail page with 5 sections:
+  - Intake data viewer (structured rendering of JSONB: personal info, address, measurements, goals, medications)
+  - Order history table from `asher_orders`
+  - Consultation history with inline provider notes
+  - Lab results from SiPhox (if available)
+
+### API Routes (4 new)
+- `GET /api/provider/dashboard` — 4 parallel metric queries
+- `GET /api/provider/intakes` — pending intakes with status/limit filters
+- `GET /api/provider/patients` — patient list with search, tier filter, LATERAL JOINs for latest order/consultation
+- `GET /api/provider/patients/[id]` — composite patient record (membership + intakes + orders + consultations + labs)
+
+### Consultation Enhancements
+- Day/Week toggle on `/provider/consultations` (segment control UI)
+- Week view groups consultations by date with today highlighted (`border-l-4 border-cultr-forest`)
+- Added `?days=` param to provider consultations API for date range queries
+- ConsultationCard: new `providerView` prop routes links to `/provider/consultations/[id]`
+
+### Sidebar Updates
+- Provider sidebar expanded from 2 to 4 items: Dashboard, Consultations, Patients, Protocol Builder
+- Dashboard active state only matches exact `/provider` path
+- Logo links to `/provider` (was `/provider/consultations`)
+
+### HIPAA Compliance
+- All 4 new API routes gated by `verifyAuth()` + `isProviderEmail()`
+- No PHI in console.error — removed raw error logging from new routes
+- Patient detail uses internal membership IDs in URLs, not emails
+- Parameterized SQL via `@vercel/postgres` tagged templates
+- `COUNT(*)::integer` casts to avoid NUMERIC string coercion
+
 ## [2026-03-29] - Members Area Route Rename & Provider Sidebar
 
 ### Route Rename: /library → /members

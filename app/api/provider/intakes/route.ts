@@ -78,7 +78,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, intakes: result.rows })
   } catch (error) {
-    console.error('[provider/intakes] Error:', error)
     return NextResponse.json({ success: false, error: 'Internal error' }, { status: 500 })
   }
 }
