@@ -31,7 +31,9 @@ interface ClubMember {
   email: string
   phone: string
   socialHandle: string
-  signupType: 'membership' | 'products'
+  signupType: 'creator' | 'membership' | 'products'
+  gender: 'male' | 'female'
+  age: number
   address?: {
     street: string
     city: string
@@ -75,7 +77,7 @@ function JoinLandingInner() {
   useEffect(() => {
     try {
       if (window.location.hostname === 'localhost') {
-        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products' })
+        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products', gender: 'male', age: 30 })
         setShowSignup(false)
         return
       }
@@ -477,7 +479,9 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [zip, setZip] = useState('')
-  const [signupType, setSignupType] = useState<'membership' | 'products' | ''>('')
+  const [age, setAge] = useState('')
+  const [gender, setGender] = useState<'male' | 'female' | ''>('')
+  const [signupType, setSignupType] = useState<'creator' | 'membership' | 'products' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -492,8 +496,16 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
       setError('Full address is required.')
       return
     }
+    if (!age.trim() || isNaN(Number(age)) || Number(age) < 18 || Number(age) > 120) {
+      setError('Please enter a valid age (18+).')
+      return
+    }
+    if (!gender) {
+      setError('Please select your gender.')
+      return
+    }
     if (!signupType) {
-      setError('Please select if you\'re signing up for a membership or buying products.')
+      setError('Please select what you\'re interested in.')
       return
     }
     setLoading(true)
@@ -508,6 +520,8 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           email: email.trim(),
           phone: phone.trim(),
           socialHandle: socialHandle.trim(),
+          age: Number(age),
+          gender,
           signupType,
           address,
         }),
@@ -520,6 +534,8 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
         email: email.trim(),
         phone: phone.trim(),
         socialHandle: socialHandle.trim(),
+        age: Number(age),
+        gender,
         signupType,
         address,
       })
@@ -565,14 +581,68 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
             </div>
             <input type="text" value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@social handle (optional)" className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
 
-            {/* Signup Type Selector */}
+            {/* Age + Gender row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs font-medium text-brand-primary/70 mb-1.5">Age</p>
+                <input
+                  type="number"
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  placeholder="Your age"
+                  min={18}
+                  max={120}
+                  className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-brand-primary/70 mb-1.5">Gender</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setGender('male')}
+                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                      gender === 'male'
+                        ? 'bg-brand-primary text-white border-brand-primary'
+                        : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
+                    }`}
+                  >
+                    Male
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setGender('female')}
+                    className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                      gender === 'female'
+                        ? 'bg-brand-primary text-white border-brand-primary'
+                        : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
+                    }`}
+                  >
+                    Female
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Interest Selector */}
             <div className="pt-1">
-              <p className="text-xs font-medium text-brand-primary/70 mb-2">I&apos;m signing up for:</p>
-              <div className="grid grid-cols-2 gap-2">
+              <p className="text-xs font-medium text-brand-primary/70 mb-2">I&apos;m interested in:</p>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSignupType('creator')}
+                  className={`px-2 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                    signupType === 'creator'
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
+                  }`}
+                >
+                  Creator
+                </button>
                 <button
                   type="button"
                   onClick={() => setSignupType('membership')}
-                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                  className={`px-2 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                     signupType === 'membership'
                       ? 'bg-brand-primary text-white border-brand-primary'
                       : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
@@ -583,13 +653,13 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
                 <button
                   type="button"
                   onClick={() => setSignupType('products')}
-                  className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                  className={`px-2 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                     signupType === 'products'
                       ? 'bg-brand-primary text-white border-brand-primary'
                       : 'bg-brand-cream text-brand-primary/70 border-brand-secondary/12 hover:border-brand-primary/30'
                   }`}
                 >
-                  Products Only
+                  Products
                 </button>
               </div>
             </div>

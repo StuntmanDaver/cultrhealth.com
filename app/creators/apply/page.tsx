@@ -9,6 +9,8 @@ function ApplyForm() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [age, setAge] = useState('')
+  const [gender, setGender] = useState<'male' | 'female' | ''>('')
   const [socialHandle, setSocialHandle] = useState('')
   const [bio, setBio] = useState('')
   const [recruiterCode, setRecruiterCode] = useState('')
@@ -41,6 +43,8 @@ function ApplyForm() {
           full_name: fullName,
           email,
           phone,
+          age: age ? Number(age) : undefined,
+          gender: gender || undefined,
           social_handle: socialHandle,
           bio,
           recruiter_code: recruiterCode,
@@ -159,6 +163,48 @@ function ApplyForm() {
               placeholder="(555) 123-4567"
               className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-cultr-forest/70 mb-1.5">Age</label>
+              <input
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="Your age"
+                min={18}
+                max={120}
+                className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-cultr-forest/70 mb-1.5">Gender</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGender('male')}
+                  className={`py-3 rounded-lg border text-sm font-medium transition-all ${
+                    gender === 'male'
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-white text-cultr-forest/70 border-brand-primary/20 hover:border-brand-primary/50'
+                  }`}
+                >
+                  Male
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGender('female')}
+                  className={`py-3 rounded-lg border text-sm font-medium transition-all ${
+                    gender === 'female'
+                      ? 'bg-brand-primary text-white border-brand-primary'
+                      : 'bg-white text-cultr-forest/70 border-brand-primary/20 hover:border-brand-primary/50'
+                  }`}
+                >
+                  Female
+                </button>
+              </div>
+            </div>
           </div>
 
           <div>

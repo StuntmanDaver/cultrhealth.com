@@ -170,6 +170,8 @@ export interface CustomerAdminRow {
   created_at: string
   order_count: number
   total_spent: number
+  age: number | null
+  gender: string | null
 }
 
 export interface DashboardCounts {

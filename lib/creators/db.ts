@@ -28,12 +28,14 @@ export interface CreateCreatorInput {
   social_handle?: string
   bio?: string
   recruiter_id?: string
+  age?: number
+  gender?: string
 }
 
 export async function createCreator(input: CreateCreatorInput): Promise<Creator> {
   try {
     const result = await sql`
-      INSERT INTO creators (email, full_name, phone, social_handle, bio, recruiter_id, status, created_at, updated_at)
+      INSERT INTO creators (email, full_name, phone, social_handle, bio, recruiter_id, age, gender, status, created_at, updated_at)
       VALUES (
         ${input.email.toLowerCase()},
         ${input.full_name},
@@ -41,6 +43,8 @@ export async function createCreator(input: CreateCreatorInput): Promise<Creator>
         ${input.social_handle || null},
         ${input.bio || null},
         ${input.recruiter_id || null},
+        ${input.age || null},
+        ${input.gender || null},
         'pending',
         NOW(), NOW()
       )
@@ -50,6 +54,8 @@ export async function createCreator(input: CreateCreatorInput): Promise<Creator>
         phone = COALESCE(EXCLUDED.phone, creators.phone),
         social_handle = COALESCE(EXCLUDED.social_handle, creators.social_handle),
         bio = COALESCE(EXCLUDED.bio, creators.bio),
+        age = COALESCE(EXCLUDED.age, creators.age),
+        gender = COALESCE(EXCLUDED.gender, creators.gender),
         updated_at = NOW()
       RETURNING *
     `
@@ -130,7 +136,7 @@ export async function updateCreatorEmailVerified(id: string): Promise<boolean> {
     `
     return (result.rowCount ?? 0) > 0
   } catch (error) {
-    console.error('Database error verifying creator email:', error)
+    console.error('Database error verifying creator account:', error instanceof Error ? error.message : 'unknown')
     throw new DatabaseError('Failed to verify creator email', error)
   }
 }

@@ -4,10 +4,40 @@ import { useState, useEffect, useCallback } from 'react'
 import type { AnalyticsData, CustomerAdminRow, CustomerProfile } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor, filterByDateRange } from '@/lib/admin-utils'
 
+type SortField = 'name' | 'email' | 'address_city' | 'address_state' | 'signup_type' | 'source' | 'order_count' | 'total_spent' | 'created_at' | 'age' | 'gender'
+type SortDir = 'asc' | 'desc'
+
+function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
+  if (!active) return <span className="ml-1 text-brand-primary/20">↕</span>
+  return <span className="ml-1 text-brand-primary">{dir === 'asc' ? '↑' : '↓'}</span>
+}
+
+function sortCustomers(customers: CustomerAdminRow[], field: SortField, dir: SortDir): CustomerAdminRow[] {
+  return [...customers].sort((a, b) => {
+    let av: string | number | null = a[field] as string | number | null
+    let bv: string | number | null = b[field] as string | number | null
+    // Nulls last
+    if (av === null || av === undefined) return 1
+    if (bv === null || bv === undefined) return -1
+    if (typeof av === 'number' && typeof bv === 'number') {
+      return dir === 'asc' ? av - bv : bv - av
+    }
+    av = String(av).toLowerCase()
+    bv = String(bv).toLowerCase()
+    if (av < bv) return dir === 'asc' ? -1 : 1
+    if (av > bv) return dir === 'asc' ? 1 : -1
+    return 0
+  })
+}
+
 export default function CustomersClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [periodDays, setPeriodDays] = useState(30)
+
+  // Sorting
+  const [sortField, setSortField] = useState<SortField>('created_at')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   // Search & date range filters
   const [customerSearch, setCustomerSearch] = useState('')
@@ -74,18 +104,28 @@ export default function CustomersClient() {
     if (!data) return
     const filtered = getFilteredCustomers(data.allCustomers)
     downloadCSV('cultr-customers',
-      ['Name', 'Email', 'Phone', 'City', 'State', 'Type', 'Source', 'Orders', 'Total Spent', 'Joined'],
-      filtered.map(c => [c.name, c.email, c.phone, c.address_city, c.address_state, c.signup_type, c.source, c.order_count, c.total_spent, c.created_at])
+      ['Name', 'Email', 'Phone', 'Age', 'Gender', 'City', 'State', 'Type', 'Source', 'Orders', 'Total Spent', 'Joined'],
+      filtered.map(c => [c.name, c.email, c.phone, c.age, c.gender, c.address_city, c.address_state, c.signup_type, c.source, c.order_count, c.total_spent, c.created_at])
     )
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, startDate, endDate, customerSearch])
 
+  function toggleSort(field: SortField) {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDir('asc')
+    }
+  }
+
   function getFilteredCustomers(customers: CustomerAdminRow[]): CustomerAdminRow[] {
-    return filterByDateRange(customers, startDate, endDate)
+    const filtered = filterByDateRange(customers, startDate, endDate)
       .filter(c =>
         c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
         c.email.toLowerCase().includes(customerSearch.toLowerCase())
       )
+    return sortCustomers(filtered, sortField, sortDir)
   }
 
   if (loading) {
@@ -169,15 +209,29 @@ export default function CustomersClient() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Name</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Email</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Phone</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Location</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Type</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Source</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Orders</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Total Spent</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Joined</th>
+                  {([
+                    { label: 'Name', field: 'name', align: 'left' },
+                    { label: 'Email', field: 'email', align: 'left' },
+                    { label: 'Phone', field: null, align: 'left' },
+                    { label: 'Age', field: 'age', align: 'right' },
+                    { label: 'Gender', field: 'gender', align: 'left' },
+                    { label: 'City', field: 'address_city', align: 'left' },
+                    { label: 'State', field: 'address_state', align: 'left' },
+                    { label: 'Type', field: 'signup_type', align: 'left' },
+                    { label: 'Source', field: 'source', align: 'left' },
+                    { label: 'Orders', field: 'order_count', align: 'right' },
+                    { label: 'Total Spent', field: 'total_spent', align: 'right' },
+                    { label: 'Joined', field: 'created_at', align: 'left' },
+                  ] as { label: string; field: SortField | null; align: string }[]).map(col => (
+                    <th
+                      key={col.label}
+                      className={`py-3 px-4 text-brand-primary/60 font-medium text-sm text-${col.align} ${col.field ? 'cursor-pointer select-none hover:text-brand-primary transition-colors' : ''}`}
+                      onClick={col.field ? () => toggleSort(col.field as SortField) : undefined}
+                    >
+                      {col.label}
+                      {col.field && <SortIcon active={sortField === col.field} dir={sortDir} />}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -190,9 +244,16 @@ export default function CustomersClient() {
                     <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.name}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{c.phone || '\u2014'}</td>
+                    <td className="py-3 px-4 text-sm text-right text-brand-primary/60">{c.age ?? '\u2014'}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">
-                      {c.address_city && c.address_state ? `${c.address_city}, ${c.address_state}` : '\u2014'}
+                      {c.gender ? (
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.gender === 'male' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
+                          {c.gender === 'male' ? 'M' : 'F'}
+                        </span>
+                      ) : '\u2014'}
                     </td>
+                    <td className="py-3 px-4 text-sm text-brand-primary/60">{c.address_city || '\u2014'}</td>
+                    <td className="py-3 px-4 text-sm text-brand-primary/60">{c.address_state || '\u2014'}</td>
                     <td className="py-3 px-4">
                       {c.signup_type && (
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.signup_type === 'membership' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>

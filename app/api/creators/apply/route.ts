@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { email, full_name, phone, social_handle, bio, recruiter_code } = body
+    const { email, full_name, phone, social_handle, bio, recruiter_code, age, gender } = body
 
     if (!email || !full_name) {
       return NextResponse.json(
@@ -110,6 +110,8 @@ export async function POST(request: NextRequest) {
       phone,
       social_handle,
       bio,
+      age: age && Number(age) >= 18 ? Number(age) : undefined,
+      gender: gender === 'male' || gender === 'female' ? gender : undefined,
       recruiter_id: recruiterId,
     })
 

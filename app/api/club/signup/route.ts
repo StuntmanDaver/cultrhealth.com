@@ -7,7 +7,7 @@ import { syncContactToMailchimp } from '@/lib/mailchimp'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, phone, socialHandle, address, signupType } = body
+    const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
 
     if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
@@ -24,10 +24,12 @@ export async function POST(request: Request) {
         const addressCity = address?.city?.trim() || null
         const addressState = address?.state?.trim() || null
         const addressZip = address?.zip?.trim() || null
-        const validSignupType = signupType === 'membership' ? 'membership' : 'products'
+        const validSignupType = ['creator', 'membership', 'products'].includes(signupType) ? signupType : 'products'
+        const memberAge = age && Number(age) >= 18 && Number(age) <= 120 ? Number(age) : null
+        const memberGender = gender === 'male' || gender === 'female' ? gender : null
         const result = await sql`
-          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source, signup_type)
-          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing', ${validSignupType})
+          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source, signup_type, age, gender)
+          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing', ${validSignupType}, ${memberAge}, ${memberGender})
           ON CONFLICT (LOWER(email))
           DO UPDATE SET
             name = ${name.trim()},
@@ -38,6 +40,8 @@ export async function POST(request: Request) {
             address_state = COALESCE(${addressState}, club_members.address_state),
             address_zip = COALESCE(${addressZip}, club_members.address_zip),
             signup_type = ${validSignupType},
+            age = COALESCE(${memberAge}, club_members.age),
+            gender = COALESCE(${memberGender}, club_members.gender),
             updated_at = NOW()
           RETURNING id
         `
@@ -87,12 +91,12 @@ export async function POST(request: Request) {
 
     // Send welcome email (fire-and-forget)
     sendClubWelcomeEmail(firstName.trim(), normalizedEmail).catch((err) =>
-      console.error('[club/signup] Email error (non-fatal):', err)
+      console.error('[club/signup] welcome send failed:', err instanceof Error ? err.message : 'unknown')
     )
 
     return response
   } catch (error) {
-    console.error('[club/signup] Error:', error)
+    console.error('[club/signup] Error:', error instanceof Error ? error.message : 'unknown')
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }
