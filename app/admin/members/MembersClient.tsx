@@ -459,7 +459,7 @@ export default function MembersClient() {
                   <option value="">Select tier...</option>
                   {['core', 'catalyst', 'concierge'].filter(t => t !== upgradeTarget.currentTier).map(t => (
                     <option key={t} value={t}>
-                      {t === 'core' ? 'Core ($199/mo)' : t === 'catalyst' ? 'Catalyst+ ($499/mo)' : 'Concierge ($1,099/mo)'}
+                      {t === 'core' ? 'Core ($149/mo)' : t === 'catalyst' ? 'Catalyst+ ($499/mo)' : 'Concierge ($1,049/mo)'}
                     </option>
                   ))}
                 </select>
