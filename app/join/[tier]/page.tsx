@@ -4,9 +4,10 @@ import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { PLANS, MEMBERSHIP_DISCLAIMER, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON } from '@/lib/config/plans';
+import { PLANS, MEMBERSHIP_DISCLAIMER, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON, CORE_THERAPIES } from '@/lib/config/plans';
 import Button from '@/components/ui/Button';
 import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types';
 import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types';
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
@@ -41,10 +42,12 @@ const CARD_ELEMENT_OPTIONS = {
 };
 
 // Inner form component that uses Stripe hooks
-function CheckoutForm({ plan, onSuccess, onError }: {
+function CheckoutForm({ plan, onSuccess, onError, todayTotal, consentChecked }: {
   plan: NonNullable<typeof PLANS[number]>;
   onSuccess: (redirectUrl: string) => void;
   onError: (error: string) => void;
+  todayTotal: number;
+  consentChecked: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -214,7 +217,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isLoading || !stripe}
+        disabled={isLoading || !stripe || !consentChecked}
         className="w-full text-lg py-6"
       >
         {isLoading ? (
@@ -223,13 +226,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
             Processing...
           </>
         ) : (
-          (() => {
-            const addons = (BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0);
-            const total = plan.price + addons;
-            return addons > 0
-              ? `Join ${plan.name} - $${total} today, then $${plan.price}/mo`
-              : `Join ${plan.name} - $${plan.price}/${plan.interval}`;
-          })()
+          `Start my protocol — $${todayTotal.toLocaleString()} today`
         )}
       </Button>
     </form>
@@ -238,6 +235,7 @@ function CheckoutForm({ plan, onSuccess, onError }: {
 
 export default function JoinPage({ params }: { params: { tier: string } }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>(COREPAY_ENABLED ? 'corepay' : 'stripe');
 
@@ -261,6 +259,10 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   // Authorize.net state
   const [authNetEmail, setAuthNetEmail] = useState('');
 
+  // Consent checkboxes
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [marketingChecked, setMarketingChecked] = useState(false);
+
   // Find the plan based on the tier slug
   const plan = PLANS.find((p) => p.slug === params.tier);
 
@@ -274,6 +276,26 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       </div>
     );
   }
+
+  // Core therapy lookup from search params
+  const therapySlug = searchParams.get('therapy');
+  const coreTherapy = plan.slug === 'core' && therapySlug
+    ? CORE_THERAPIES.find(t => t.slug === therapySlug)
+    : null;
+
+  // If Core tier but no valid therapy selected, redirect to pricing
+  if (plan.slug === 'core' && !coreTherapy) {
+    router.push('/pricing');
+    return null;
+  }
+
+  // Dynamic pricing computation
+  const monthlyPrice = plan.slug === 'core' && coreTherapy ? coreTherapy.price : plan.price;
+  const twoMonthCost = monthlyPrice * 2;
+  const isConcierge = plan.slug === 'concierge';
+  const labsCost = isConcierge ? 0 : BLOOD_TEST_ADDON.price;
+  const doctorCost = isConcierge ? 0 : DOCTOR_CONSULTATION_ADDON.price;
+  const todayTotal = twoMonthCost + labsCost + doctorCost;
 
   const amountCents = plan.price * 100;
 
@@ -459,14 +481,16 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       <section className="py-16 px-6 grad-dark text-white">
         <div className="max-w-2xl mx-auto text-center">
           <span className="inline-block text-xs font-bold text-cultr-sage tracking-widest mb-4">
-            {plan.tagline.toUpperCase()}
+            YOUR INITIAL 2-MONTH CLINICAL PROTOCOL
           </span>
           <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
-            {plan.name}
+            {plan.slug === 'core' && coreTherapy
+              ? `${plan.name} with ${coreTherapy.name}`
+              : plan.name}
           </h1>
           <div className="flex items-baseline justify-center gap-2">
-            <span className="text-5xl font-bold">${plan.price}</span>
-            <span className="text-white/70">/ {plan.interval}</span>
+            <span className="text-5xl font-bold">${monthlyPrice}</span>
+            <span className="text-white/70">/ month</span>
           </div>
         </div>
       </section>
@@ -501,49 +525,71 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               <p className="text-cultr-text font-medium">{plan.bestFor}</p>
             </div>
 
-            {/* One-Time Fees Summary */}
-            {plan.price > 0 && (BLOOD_TEST_ADDON.stripePriceId || DOCTOR_CONSULTATION_ADDON.stripePriceId) && (
+            {/* Order Summary */}
+            {plan.price > 0 && (
               <div className="bg-cultr-offwhite rounded-xl p-6 mb-8 border border-cultr-sage/30">
                 <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase mb-4">
-                  First-Time Fees <span className="font-normal text-cultr-textMuted normal-case">(one-time, not recurring)</span>
+                  Your initial 2-month clinical protocol
                 </p>
                 <div className="space-y-3">
-                  {BLOOD_TEST_ADDON.stripePriceId && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-cultr-forest" />
-                        <span className="text-sm text-cultr-text">{BLOOD_TEST_ADDON.name}</span>
-                      </div>
-                      <span className="text-sm font-medium text-cultr-forest">${BLOOD_TEST_ADDON.price}</span>
-                    </div>
-                  )}
-                  {DOCTOR_CONSULTATION_ADDON.stripePriceId && (
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-cultr-forest" />
-                        <span className="text-sm text-cultr-text">{DOCTOR_CONSULTATION_ADDON.name}</span>
-                      </div>
-                      <span className="text-sm font-medium text-cultr-forest">${DOCTOR_CONSULTATION_ADDON.price}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-cultr-text">
+                      {plan.slug === 'core' && coreTherapy
+                        ? `CULTR Core with ${coreTherapy.name} (2 months)`
+                        : `${plan.name} membership (2 months)`}
+                    </span>
+                    <span className="text-sm font-medium text-cultr-forest">${twoMonthCost.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-cultr-text">At-home blood test kit</span>
+                    <span className="text-sm font-medium text-cultr-forest">
+                      {isConcierge ? 'included' : `$${BLOOD_TEST_ADDON.price}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-cultr-text">First doctor visit</span>
+                    <span className="text-sm font-medium text-cultr-forest">
+                      {isConcierge ? 'included' : `$${DOCTOR_CONSULTATION_ADDON.price}`}
+                    </span>
+                  </div>
                   <div className="border-t border-cultr-sage/30 pt-3 mt-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-cultr-textMuted">Monthly membership</span>
-                      <span className="text-sm font-medium text-cultr-forest">${plan.price}/mo</span>
-                    </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-cultr-textMuted">+ One-time first visit fees</span>
-                      <span className="text-sm font-medium text-cultr-forest">
-                        ${(BLOOD_TEST_ADDON.stripePriceId ? BLOOD_TEST_ADDON.price : 0) + (DOCTOR_CONSULTATION_ADDON.stripePriceId ? DOCTOR_CONSULTATION_ADDON.price : 0)}
-                      </span>
+                      <span className="text-sm font-bold text-cultr-text">Today&apos;s total</span>
+                      <span className="text-lg font-bold text-cultr-forest">${todayTotal.toLocaleString()}</span>
                     </div>
                   </div>
                   <p className="text-[11px] text-cultr-textMuted mt-2">
-                    You can remove these fees at checkout if you&apos;ve already completed them.
+                    Renews at ${monthlyPrice}/month after your initial 2-month protocol unless canceled before your next renewal date.
                   </p>
                 </div>
               </div>
             )}
+
+            {/* Consent Checkboxes */}
+            <div className="space-y-4 mb-6">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={consentChecked}
+                  onChange={(e) => setConsentChecked(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-cultr-sage text-cultr-forest focus:ring-cultr-forest/20 shrink-0"
+                />
+                <span className="text-xs text-cultr-textMuted leading-relaxed">
+                  I understand that I am enrolling in an initial 2-month membership protocol and will be charged the total shown at checkout. After my initial protocol, my membership will renew monthly at the rate shown unless I cancel before my next renewal date.
+                </span>
+              </label>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={marketingChecked}
+                  onChange={(e) => setMarketingChecked(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-cultr-sage text-cultr-forest focus:ring-cultr-forest/20 shrink-0"
+                />
+                <span className="text-xs text-cultr-textMuted leading-relaxed">
+                  I&apos;d like to receive updates, offers, and educational content from CULTR Health.
+                </span>
+              </label>
+            </div>
 
             {/* Payment Method Selector */}
             <div className="mb-6">
@@ -593,10 +639,12 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               ) : (
                 /* Stripe Elements */
                 <Elements stripe={stripePromise}>
-                  <CheckoutForm 
+                  <CheckoutForm
                     plan={plan}
                     onSuccess={handleCheckoutSuccess}
                     onError={handleCheckoutError}
+                    todayTotal={todayTotal}
+                    consentChecked={consentChecked}
                   />
                 </Elements>
               )
@@ -616,6 +664,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             {paymentMethod === 'klarna' && !klarnaClientToken && !klarnaSessionLoading && (
               <Button
                 onClick={handleKlarnaCheckout}
+                disabled={!consentChecked}
                 className="w-full text-lg py-6 mb-6"
               >
                 Continue with Klarna
@@ -633,6 +682,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             {paymentMethod === 'affirm' && !affirmConfig && !affirmLoading && (
               <Button
                 onClick={handleAffirmCheckout}
+                disabled={!consentChecked}
                 className="w-full text-lg py-6 mb-6"
               >
                 Continue with Affirm
@@ -705,7 +755,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   onClick={handleNowPaymentsCheckout}
                   isLoading={nowPaymentsLoading}
                   className="w-full text-lg py-6"
-                  disabled={!authNetEmail}
+                  disabled={!consentChecked || !authNetEmail}
                 >
                   Continue with Bitcoin
                 </Button>
