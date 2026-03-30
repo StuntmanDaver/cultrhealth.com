@@ -35,15 +35,35 @@ export type Plan = {
   bnplEnabled: boolean;
   /** Number of telehealth consultations included per month (0 = none, Infinity = unlimited) */
   consultationsPerMonth: number;
+  /** Custom price label for display (e.g. "$149*") */
+  priceLabel?: string;
+  /** Disclaimer shown on pricing card (e.g. "2 month commitment required") */
+  cardDisclaimer?: string;
+  /** Asterisk or footnote microcopy */
+  priceNote?: string;
 };
+
+export type CoreTherapy = {
+  slug: string;
+  name: string;
+  price: number;
+  image: string;
+};
+
+export const CORE_THERAPIES: CoreTherapy[] = [
+  { slug: 'semaglutide', name: 'Semaglutide', price: 149, image: '/images/therapies/semaglutide.png' },
+  { slug: 'tirzepatide', name: 'Tirzepatide', price: 199, image: '/images/therapies/tirzepatide.png' },
+  { slug: 'retatrutide', name: 'Retatrutide', price: 239, image: '/images/therapies/retatrutide.png' },
+];
 
 /**
  * Membership Disclaimer
  * Display this on pricing pages and checkout flows
  */
-export const MEMBERSHIP_DISCLAIMER = 
-  'Membership includes telehealth consultations, platform access, and listed features only. ' +
-  'Medications, peptides, labs, and products are billed separately at cost. ' +
+export const MEMBERSHIP_DISCLAIMER =
+  'All paid memberships begin with an initial 2-month clinical protocol. ' +
+  'After that, your membership renews month-to-month unless canceled before your next renewal date. ' +
+  'Medications, peptides, and products are billed separately at cost. ' +
   'All prescriptions and treatments are subject to medical eligibility and provider approval. ' +
   'Membership does not guarantee any specific treatment or prescription.';
 
@@ -113,15 +133,18 @@ export const PLANS: Plan[] = [
   {
     slug: 'core',
     name: 'CULTR Core',
-    price: 199,
+    price: 149,
     interval: 'month',
-    tagline: 'Foundation therapy',
-    bestFor: 'GLP-1 or TRT focused',
+    tagline: 'Foundational care for members getting started.',
+    bestFor: 'GLP-1 focused',
     features: [
-      'One CORE Therapy included',
-      'At-home blood test kit — $135 (included at checkout, one-time)',
-      "Doctor's consultation — $75 (included at checkout, first visit only)"
+      '1 Foundation Therapy',
+      'Personalized protocol review',
+      'Ongoing provider-guided care',
     ],
+    priceLabel: '$149*',
+    cardDisclaimer: '2 month commitment required',
+    priceNote: '*Starting price. Final monthly amount depends on selected therapy.',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -134,7 +157,7 @@ export const PLANS: Plan[] = [
     stripePriceId: 'price_1StZtWC1JUIZB7aRFsP1WVxI',
     paymentLink: 'https://buy.stripe.com/fZu9AS56zeWVbQOc926J208',
     isFeatured: false,
-    ctaLabel: 'Join Core',
+    ctaLabel: 'Learn more',
     bnplEnabled: true,
     consultationsPerMonth: 1,
   },
@@ -143,13 +166,15 @@ export const PLANS: Plan[] = [
     name: 'CULTR Catalyst+',
     price: 499,
     interval: 'month',
-    tagline: 'Multi-therapy optimization',
+    tagline: 'Multi-therapy optimization for members who want more customization.',
     bestFor: 'Peptide stacking & optimization',
     features: [
-      'One Core Therapy included + Two Enhancements',
-      'At-home blood test kit — $135 (included at checkout, one-time)',
-      "Doctor's consultation — $75 (included at checkout, first visit only)"
+      '1 Foundation Therapy',
+      '2 Add-Ons',
+      'Personalized protocol review',
+      'Ongoing provider-guided care',
     ],
+    cardDisclaimer: '2 month commitment required',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -168,16 +193,19 @@ export const PLANS: Plan[] = [
   },
   {
     slug: 'concierge',
-    name: 'CULTR Curated',
-    price: 1099,
+    name: 'CULTR Concierge',
+    price: 1049,
     interval: 'month',
-    tagline: 'Complete care',
+    tagline: 'All-inclusive premium care with diagnostics included.',
     bestFor: 'Regenerative & executive care',
     features: [
-      'Two CORE Therapy included + up to 4 enhancements',
-      'At-home blood test kit — $135 (included at checkout, one-time)',
-      "Doctor's consultation — $75 (included at checkout, first visit only)"
+      '2 Foundation Therapies',
+      'Up to 4 Add-Ons',
+      'At-home blood test kit included',
+      'First doctor visit included',
+      'Priority support',
     ],
+    cardDisclaimer: '2 month commitment required',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -190,7 +218,7 @@ export const PLANS: Plan[] = [
     stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK',
     paymentLink: 'https://buy.stripe.com/9B6dR8aqTaGF1ca8WQ6J20b',
     isFeatured: false,
-    ctaLabel: 'Join Curated',
+    ctaLabel: 'Join Concierge',
     bnplEnabled: true,
     consultationsPerMonth: Infinity,
   },
