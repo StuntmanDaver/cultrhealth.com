@@ -25,7 +25,7 @@ export async function POST(
     const result = await sql`
       UPDATE club_orders
       SET status = 'dismissed'
-      WHERE id = ${orderId} AND status IS DISTINCT FROM 'dismissed' AND status IS DISTINCT FROM 'paid'
+      WHERE id = ${orderId} AND status NOT IN ('dismissed', 'paid', 'needs_shipment', 'shipped_complete')
       RETURNING id, order_number
     `
 

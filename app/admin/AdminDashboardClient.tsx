@@ -543,7 +543,7 @@ export default function AdminDashboardClient() {
                     const isExpanded = expandedInvoiceId === inv.id
                     const statusStyle = ORDER_STATUS_STYLES[inv.status] || { label: inv.status, bg: 'bg-gray-100', text: 'text-gray-600' }
                     const items = parseOrderItems(inv.items)
-                    const isPaid = inv.status === 'paid'
+                    const isPaid = ['paid', 'needs_shipment', 'shipped_complete'].includes(inv.status)
 
                     return (
                       <div key={inv.id} className="border-b border-brand-primary/10 last:border-b-0">
