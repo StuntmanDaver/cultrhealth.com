@@ -134,7 +134,7 @@ export async function processOrderAttribution(params: {
   if (isSubscription) {
     const portfolio = await getPortfolioEntry(attribution.creatorId, customerEmail)
     if (portfolio && !portfolio.attribution_active) {
-      console.log(`Attribution blocked: re-signup for ${customerEmail} (creator ${attribution.creatorId})`)
+      console.log(`Attribution blocked: re-signup (creator ${attribution.creatorId})`)
       return null
     }
   }

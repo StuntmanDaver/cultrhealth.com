@@ -2357,7 +2357,7 @@ export async function sendRecordingReadyNotification(
       return { success: false, error: error.message }
     }
 
-    console.log('Recording ready notification sent:', { consultationId, toEmail })
+    console.log('Recording ready notification sent:', { consultationId })
     return { success: true }
   } catch (err) {
     console.error('Failed to send recording ready notification:', err)

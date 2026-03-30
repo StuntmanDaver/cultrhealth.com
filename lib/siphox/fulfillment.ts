@@ -206,7 +206,7 @@ export async function triggerSiphoxFulfillment(params: {
         fulfillmentStatus: 'pending_intake',
         stripeSubscriptionId,
       })
-      console.log('SiPhox fulfillment: queued as pending_intake (no intake data)', customerEmail)
+      console.log('SiPhox fulfillment: queued as pending_intake (no intake data)')
       return
     }
 
@@ -221,7 +221,7 @@ export async function triggerSiphoxFulfillment(params: {
         fulfillmentStatus: 'needs_credits',
         stripeSubscriptionId,
       })
-      console.log('SiPhox fulfillment: queued as needs_credits', customerEmail)
+      console.log('SiPhox fulfillment: queued as needs_credits')
       return
     }
 
@@ -309,7 +309,7 @@ export async function triggerSiphoxFulfillment(params: {
         console.error('SiPhox fulfillment: confirmation email failed (non-fatal):', emailError)
       }
 
-      console.log('SiPhox fulfillment: order placed successfully', { orderId: order._id, customerEmail })
+      console.log('SiPhox fulfillment: order placed successfully', { orderId: order._id })
     } catch (orderError) {
       // Handle specific error types
       if (orderError instanceof SiphoxApiError && (orderError.statusCode === 402 || orderError.message?.toLowerCase().includes('credit'))) {
@@ -322,7 +322,7 @@ export async function triggerSiphoxFulfillment(params: {
           fulfillmentStatus: 'needs_credits',
           stripeSubscriptionId,
         })
-        console.log('SiPhox fulfillment: queued as needs_credits (API 402)', customerEmail)
+        console.log('SiPhox fulfillment: queued as needs_credits (API 402)')
       } else {
         // Generic API failure -- queue for retry
         await insertFulfillmentOrder({
