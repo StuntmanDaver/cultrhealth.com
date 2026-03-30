@@ -225,12 +225,13 @@ function JoinLandingInner() {
       </section>
 
       {/* Main Content */}
-      <main className="flex-1 pb-28 lg:pb-8">
+      <main className="flex-1 pb-32 lg:pb-12">
         <div className="max-w-7xl mx-auto md:px-6 py-4 md:py-10">
-          <div className={`grid gap-4 md:gap-10 ${hasItems ? 'lg:grid-cols-5' : ''}`}>
+          {/* Always 5-col grid on lg — prevents layout shift when cart fills */}
+          <div className="grid gap-4 md:gap-10 lg:grid-cols-5">
 
-            {/* Left Column — Therapy Carousels */}
-            <div className={hasItems ? 'lg:col-span-3' : ''}>
+            {/* Left Column — Therapy Carousels (always col-span-3 on lg) */}
+            <div className="lg:col-span-3">
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx] || Flame
                 return (
@@ -250,21 +251,29 @@ function JoinLandingInner() {
               </div>
             </div>
 
-            {/* Right Column — Sticky Cart Summary (desktop only) */}
-            {hasItems && (
-              <div className="lg:col-span-2 hidden lg:block">
-                <div className="sticky top-8">
+            {/* Right Column — Always rendered on lg; cart fills in when items added */}
+            <div className="lg:col-span-2 hidden lg:block">
+              <div className="sticky top-8">
+                {hasItems ? (
                   <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} />
-                </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center min-h-[280px] rounded-2xl border-2 border-dashed border-brand-primary/10 p-8 text-center gap-3">
+                    <Package className="w-10 h-10 text-brand-primary/15" />
+                    <div>
+                      <p className="text-sm font-semibold text-brand-secondary/40">Your stack</p>
+                      <p className="text-xs text-brand-secondary/30 mt-1">Add therapies to build your order</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </main>
 
       {/* Mobile Cart Bar — fixed bottom */}
       {cart.getItemCount() > 0 && !showMobileCart && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-brand-primary/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 safe-area-bottom">
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden z-40 bg-brand-primary/95 backdrop-blur-xl border-t border-white/10 px-4 pt-3 pb-3" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' }}>
           <button
             onClick={() => setShowMobileCart(true)}
             className="w-full flex items-center justify-between"
@@ -992,7 +1001,7 @@ function MobileCartOverlay({ member, onClose, onOrderSubmitted }: { member: Club
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       <div className="absolute inset-0 bg-brand-primary/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl overflow-y-auto p-6 shadow-2xl border-t border-brand-secondary/10">
+      <div className="absolute inset-x-0 bottom-0 top-12 bg-white rounded-t-3xl overflow-y-auto p-6 shadow-2xl border-t border-brand-secondary/10" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-display font-bold text-brand-primary">Your Order</h2>
           <button onClick={onClose} className="p-2 hover:bg-brand-primary/5 rounded-full transition-colors">
