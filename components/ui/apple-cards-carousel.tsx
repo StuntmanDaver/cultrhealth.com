@@ -493,8 +493,8 @@ export const Card = ({
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
           compact
-            ? "h-[300px] w-[180px] md:h-[400px] md:w-[260px]"
-            : "h-[380px] w-[260px] md:h-[480px] md:w-[320px]",
+            ? "h-[340px] w-[180px] md:h-[460px] md:w-[260px]"
+            : "h-[420px] w-[260px] md:h-[540px] md:w-[320px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
           "shadow-lg transition-shadow duration-300",
           "group cursor-pointer"
@@ -544,14 +544,14 @@ export const Card = ({
               }}
               className={cn(
                 "relative w-full drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-                compact ? "h-[100px] md:h-[160px]" : "h-[170px] md:h-[220px]"
+                compact ? "h-[130px] md:h-[200px]" : "h-[210px] md:h-[280px]"
               )}
             >
               <Image
                 src={card.src}
                 alt={card.title}
                 fill
-                sizes={compact ? "(max-width: 768px) 140px, 200px" : "(max-width: 768px) 200px, 260px"}
+                sizes={compact ? "(max-width: 768px) 160px, 240px" : "(max-width: 768px) 240px, 300px"}
                 className="object-contain"
                 priority={index === 0}
               />
@@ -563,7 +563,7 @@ export const Card = ({
         {card.description && (
           <div className={cn(
             "absolute inset-x-0 top-0 z-20 rounded-t-3xl bg-brand-primary/90 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none hidden md:flex flex-col justify-center px-6 py-5",
-            compact ? "bottom-[50px]" : "bottom-[60px]"
+            compact ? "bottom-[60px]" : "bottom-[72px]"
           )}>
             <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 font-semibold mb-1">
               {card.category}
@@ -583,7 +583,12 @@ export const Card = ({
         {/* Bottom: Price + Quick Add */}
         <div className={cn("relative z-10 flex items-end justify-between", compact ? "px-3.5 pb-3.5" : "px-5 pb-5")}>
           {card.price ? (
-            <span className={cn("font-display font-bold text-white", compact ? "text-lg" : "text-xl")}>{card.price}</span>
+            <div>
+              <span className={cn("block uppercase tracking-widest text-white/40 font-semibold", compact ? "text-[8px] mb-0.5" : "text-[9px] mb-0.5")}>
+                Starting at
+              </span>
+              <span className={cn("font-display font-bold text-white", compact ? "text-lg" : "text-xl")}>{card.price}</span>
+            </div>
           ) : (
             <span className="text-xs text-white/40 font-medium">Consultation</span>
           )}
