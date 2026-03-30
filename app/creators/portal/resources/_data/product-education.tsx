@@ -203,7 +203,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
           'All medications from licensed US pharmacies',
           'HIPAA-compliant platform',
           'HSA/FSA eligible',
-          'Month-to-month, cancel anytime \u2014 no long-term contracts',
+          'Renews month-to-month after initial 2-month protocol \u2014 cancel before next renewal date',
           'Plans can be upgraded or downgraded at any time',
         ]} />
       </>

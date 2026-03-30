@@ -93,7 +93,7 @@ export const compliance: Record<string, ResourceEntry> = {
 \u2705 "Telehealth consultations available within 24-48 hours"
 \u2705 "Personalized protocols based on your lab results"
 \u2705 "Access to peptide protocols and GLP-1 medications"
-\u2705 "Month-to-month, cancel anytime"`}</CopyBlock>
+\u2705 "Renews month-to-month after initial protocol. Cancel before next renewal date."`}</CopyBlock>
 
         <CopyBlock label="About Your Personal Experience">{`\u2705 "I personally experienced [specific result]"
 \u2705 "My energy levels improved after starting my protocol"

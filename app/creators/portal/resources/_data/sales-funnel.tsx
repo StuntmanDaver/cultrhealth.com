@@ -150,7 +150,7 @@ COMPARISON:
 - Concierge medicine: $5,000-10,000/year
 - CULTR: From $199/mo (comprehensive labs + provider + protocols included)
 
-ADDITIONAL: "HSA/FSA eligible. Month-to-month. Cancel anytime."
+ADDITIONAL: "HSA/FSA eligible. Renews month-to-month after initial 2-month protocol."
 
 YOUR CODE: "Use code [YOUR CODE] for [discount details]"
 
