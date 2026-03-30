@@ -21,7 +21,7 @@ export const salesFunnel: Record<string, ResourceEntry> = {
           'Format: 5-7 question quiz hosted on your landing page or social bio link',
           'Questions cover: energy levels, weight history, sleep quality, diet patterns, exercise frequency',
           'Output: A "Metabolic Readiness Score" (1-10) with a personalized recommendation',
-          'CTA at the end: "Want to know your REAL metabolic markers? CULTR tests 33 biomarkers → [LINK]"',
+          'CTA at the end: "Want to know your REAL metabolic markers? CULTR tests 33 biomarkers (upgradable to 59+) → [LINK]"',
           'Best for: Weight Loss Seekers, Busy Professionals',
         ]} />
 
@@ -93,14 +93,14 @@ export const salesFunnel: Record<string, ResourceEntry> = {
 Examples:
 - "Stop guessing about your health. Start testing."
 - "The protocols elite athletes use — now from $149/mo."
-- "33 biomarkers. Licensed providers. Personalized protocols."
+- "33 biomarkers (upgradable to 59+). Licensed providers. Personalized protocols."
 
 SUBHEADLINE: [Supporting context]
 - "CULTR Health combines comprehensive lab testing with provider-supervised protocols to optimize your health — not just treat disease."
 
 CTA BUTTON: "Take the Quiz" or "See Your Plan" → [YOUR LINK]
 
-TRUST BADGES: "Licensed Providers" | "33 Biomarkers" | "HIPAA Compliant" | "HSA/FSA Eligible"`}</CopyBlock>
+TRUST BADGES: "Licensed Providers" | "33 Biomarkers (upgradable to 59+)" | "HIPAA Compliant" | "HSA/FSA Eligible"`}</CopyBlock>
 
         <SectionHeading>Section 2: Problem Statement</SectionHeading>
         <CopyBlock label="Template">{`HEADING: "Sound familiar?"

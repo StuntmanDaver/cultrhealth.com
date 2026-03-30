@@ -159,7 +159,7 @@ function BiomarkerModal({ onClose }: { onClose: () => void }) {
             <div className="flex items-center gap-2">
               <FlaskConical className="w-5 h-5 text-cultr-forest" />
               <h3 className="font-display font-bold text-cultr-forest text-lg">
-                SiPhox EasyDraw Core — {totalMarkers} Biomarkers
+                SiPhox EasyDraw Core — {totalMarkers} Biomarkers (upgradable to 59+)
               </h3>
             </div>
             <button

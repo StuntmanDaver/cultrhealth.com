@@ -144,7 +144,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
             <Shield className="w-3 h-3" /> Licensed Providers
           </span>
           <span>·</span>
-          <span>33 Biomarkers</span>
+          <span>33 Biomarkers (up to 59+)</span>
           <span>·</span>
           <span>HIPAA Compliant</span>
         </div>

@@ -29,7 +29,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
 
         <SubHeading>What&apos;s Included</SubHeading>
         <BulletList items={[
-          'Comprehensive metabolic lab panel (33 biomarkers)',
+          'Comprehensive metabolic lab panel (33 biomarkers, upgradable to 59+)',
           'Provider evaluation and GLP-1 eligibility assessment',
           'Personalized GLP-1 protocol with dose titration schedule',
           'Bi-weekly check-ins for the first 4 weeks, monthly thereafter',
@@ -90,7 +90,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
 
         <SubHeading>What&apos;s Included</SubHeading>
         <BulletList items={[
-          'Comprehensive longevity panel (33 biomarkers including hs-CRP, homocysteine, insulin, full hormone profile)',
+          'Comprehensive longevity panel (33 biomarkers, upgradable to 59+, including hs-CRP, homocysteine, insulin, full hormone profile)',
           'Biological age baseline assessment',
           'Personalized optimization protocol (may include peptides, hormone support, metabolic interventions)',
           'Quarterly retesting to measure progress objectively',
@@ -228,7 +228,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
         <CopyBlock>{`"Recovery is the bottleneck for most athletes. CULTR's Recovery & Resilience program uses peptide protocols (BPC-157, TB-500) supervised by licensed providers to support tissue repair and reduce inflammation. It's not a supplement — it's provider-supervised medicine. [LINK]"`}</CopyBlock>
 
         <SubHeading>For Data-Driven Audiences</SubHeading>
-        <CopyBlock>{`"You track your macros, your steps, your sleep — but when's the last time you tracked your actual biomarkers? CULTR's Longevity Lab Loop tests 33 markers and retests quarterly so you can see what's actually improving. Data, not guesswork. [LINK]"`}</CopyBlock>
+        <CopyBlock>{`"You track your macros, your steps, your sleep — but when's the last time you tracked your actual biomarkers? CULTR's Longevity Lab Loop tests 33 markers (upgradable to 59+) and retests quarterly so you can see what's actually improving. Data, not guesswork. [LINK]"`}</CopyBlock>
 
         <SubHeading>For Budget-Conscious Audiences</SubHeading>
         <CopyBlock>{`"Start with the free CULTR Club — access the protocol library, calculators, and educational content at no cost. When you're ready for labs and a provider, Core starts at $149/mo (less than most people spend on random supplements). [LINK]"`}</CopyBlock>
