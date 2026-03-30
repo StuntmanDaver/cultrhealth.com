@@ -45,6 +45,7 @@ export default function PricingPage() {
           { label: 'View Plans', href: '#plans' },
           { label: 'How It Works', href: '/how-it-works', variant: 'ghost' },
         ]}
+        backgroundImage="/images/hero-wellness-walk.jpg"
       >
         <ScrollReveal delay={500} direction="none" duration={800}>
           <div className="mt-4">

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
@@ -21,6 +22,7 @@ interface MarketingHeroProps {
   size?: 'default' | 'tall' | 'compact';
   children?: ReactNode;
   className?: string;
+  backgroundImage?: string;
 }
 
 export function MarketingHero({
@@ -32,6 +34,7 @@ export function MarketingHero({
   size = 'default',
   children,
   className,
+  backgroundImage,
 }: MarketingHeroProps) {
   const paddingMap = {
     compact: 'py-16 md:py-20',
@@ -40,8 +43,21 @@ export function MarketingHero({
   };
 
   return (
-    <section className={cn('px-6 grad-dark-glow text-white', paddingMap[size], className)}>
-      <div className="max-w-4xl mx-auto text-center">
+    <section className={cn('relative px-6 text-white overflow-hidden', !backgroundImage && 'grad-dark-glow', paddingMap[size], className)}>
+      {backgroundImage && (
+        <>
+          <Image
+            src={backgroundImage}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-brand-primary/65" />
+        </>
+      )}
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
         {badge && (
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
