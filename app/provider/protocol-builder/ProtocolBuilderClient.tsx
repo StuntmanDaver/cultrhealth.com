@@ -16,9 +16,15 @@ import {
 } from '@/lib/protocol-templates'
 import { Search, Plus, X, Activity, Pill, AlertCircle, FileText, Zap, Star, Circle, Target, ChevronDown, ChevronUp, DollarSign, Shield, FlaskConical, TrendingUp, Clock, Beaker } from 'lucide-react'
 import { BIOMARKER_DEFINITIONS } from '@/lib/resilience'
+import { TierGate } from '@/components/library/TierGate'
+import type { PlanTier } from '@/lib/config/plans'
+import Link from 'next/link'
 
 type ProtocolBuilderClientProps = {
-  providerEmail: string
+  email: string
+  mode: 'browse' | 'full'
+  tier?: PlanTier | null
+  isProvider?: boolean
 }
 
 type BuilderMode = 'template' | 'symptom'
@@ -60,8 +66,8 @@ const OUTCOME_PRESETS: Record<string, Partial<ExpectedOutcome>[]> = {
   ],
 }
 
-export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientProps) {
-  const [mode, setMode] = useState<BuilderMode>('template')
+export function ProtocolBuilderClient({ email, mode: accessMode, tier, isProvider }: ProtocolBuilderClientProps) {
+  const [builderMode, setBuilderMode] = useState<BuilderMode>('template')
   
   // Template Mode State
   const defaultTemplateId = PROTOCOL_TEMPLATES[0]?.id ?? ''
@@ -216,7 +222,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
 
   // Generate protocol version string
   const generateProtocolVersion = () => {
-    const templatePart = mode === 'template' ? template?.id || 'custom' : 'symptom-stack'
+    const templatePart = builderMode === 'template' ? template?.id || 'custom' : 'symptom-stack'
     const timestamp = Date.now().toString(36)
     return `${PROTOCOL_ENGINE_VERSION}-${templatePart}-${timestamp}`
   }
@@ -231,12 +237,12 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
       return
     }
 
-    if (mode === 'template' && !template) {
+    if (builderMode === 'template' && !template) {
       setErrorMessage('Please select a protocol template.')
       return
     }
 
-    if (mode === 'symptom' && selectedSymptoms.length === 0) {
+    if (builderMode === 'symptom' && selectedSymptoms.length === 0) {
       setErrorMessage('Please select at least one symptom.')
       return
     }
@@ -245,7 +251,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
     try {
       const protocolVersion = generateProtocolVersion()
       
-      const payload = mode === 'template' 
+      const payload = builderMode === 'template' 
         ? {
             templateId: template?.id,
             patientId: patientId,
@@ -280,7 +286,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
 
       setResultMessage('Protocol created successfully.')
       // Optional: Clear selection after success
-      if (mode === 'symptom') {
+      if (builderMode === 'symptom') {
         setSelectedSymptoms([])
       }
     } catch (error) {
@@ -291,26 +297,34 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
   }
 
   return (
-    <div className="min-h-screen grad-light">
-      <section className="grad-dark text-white sticky top-0 z-10 shadow-md">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+    <div className="min-h-screen bg-brand-cream">
+      <section className="bg-white border-b border-brand-primary/10 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-5 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-display font-bold">Protocol Engine</h1>
-            <p className="text-white/80 text-sm">Provider: {providerEmail}</p>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-display font-bold text-brand-primary">Protocol Builder</h1>
+              {isProvider && (
+                <span className="px-2.5 py-0.5 bg-brand-primary/10 text-brand-primary rounded-full text-xs font-medium">Provider</span>
+              )}
+              {accessMode === 'browse' && (
+                <span className="px-2.5 py-0.5 bg-yellow-50 text-yellow-700 rounded-full text-xs font-medium">Browse Mode</span>
+              )}
+            </div>
+            <p className="text-brand-primary/50 text-sm mt-0.5">Explore protocol templates and peptide recommendations</p>
           </div>
-          <div className="flex bg-white/10 p-1 rounded-lg">
+          <div className="flex bg-brand-primary/5 p-1 rounded-xl">
             <button
-              onClick={() => setMode('template')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                mode === 'template' ? 'bg-white text-cultr-forest shadow-sm' : 'text-white hover:bg-white/10'
+              onClick={() => setBuilderMode('template')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                builderMode === 'template' ? 'bg-brand-primary text-white shadow-sm' : 'text-brand-primary hover:bg-brand-primary/10'
               }`}
             >
               Templates
             </button>
             <button
-              onClick={() => setMode('symptom')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                mode === 'symptom' ? 'bg-white text-cultr-forest shadow-sm' : 'text-white hover:bg-white/10'
+              onClick={() => setBuilderMode('symptom')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                builderMode === 'symptom' ? 'bg-brand-primary text-white shadow-sm' : 'text-brand-primary hover:bg-brand-primary/10'
               }`}
             >
               Symptom Stack
@@ -323,17 +337,19 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
         
         {/* Left Column: Input Controls */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-cultr-sage/20">
-            <label className="block text-sm font-medium text-cultr-text mb-2">Asher Med Patient ID</label>
-            <input
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              className="w-full rounded-xl border border-cultr-sage/50 grad-light px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
-              placeholder="e.g. patient_123"
-            />
-          </div>
+          {accessMode === 'full' && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-cultr-sage/20">
+              <label className="block text-sm font-medium text-cultr-text mb-2">Asher Med Patient ID</label>
+              <input
+                value={patientId}
+                onChange={(e) => setPatientId(e.target.value)}
+                className="w-full rounded-xl border border-cultr-sage/50 bg-brand-cream px-4 py-3 text-sm focus:ring-2 focus:ring-cultr-forest/20 outline-none"
+                placeholder="e.g. patient_123"
+              />
+            </div>
+          )}
 
-          {mode === 'template' ? (
+          {builderMode === 'template' ? (
             <>
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-cultr-sage/20 space-y-6">
                 <div>
@@ -350,7 +366,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                 </div>
 
                 {template?.parameters.length ? (
-                  <div className="space-y-4">
+                  <TierGate requiredTier="catalyst" currentTier={tier || 'club'} upgradeMessage="Upgrade to Catalyst+ to configure protocol parameters"><div className="space-y-4">
                     <h3 className="text-sm font-bold text-cultr-forest border-b border-cultr-sage/20 pb-2">Configuration</h3>
                     {template.parameters.map((param) => {
                       const value = parameters[param.id] ?? param.defaultValue
@@ -391,7 +407,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                         </div>
                       )
                     })}
-                  </div>
+                  </div></TierGate>
                 ) : null}
               </div>
 
@@ -643,13 +659,21 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
             </div>
           )}
 
-          <Button 
-            onClick={handleSubmit} 
-            isLoading={isSubmitting} 
-            className="w-full py-4 text-base shadow-lg hover:shadow-xl transition-all"
-          >
-            Generate Protocol
-          </Button>
+          {accessMode === 'full' ? (
+            <Button
+              onClick={handleSubmit}
+              isLoading={isSubmitting}
+              className="w-full py-4 text-base shadow-lg hover:shadow-xl transition-all"
+            >
+              Generate Protocol
+            </Button>
+          ) : (
+            <Link href="/pricing" className="block">
+              <Button className="w-full py-4 text-base" variant="primary">
+                Upgrade to Build Protocols
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Right Column: Preview */}
@@ -662,7 +686,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
           </div>
           
           <div className="p-6 overflow-y-auto flex-1 space-y-8">
-            {mode === 'template' && templatePreview ? (
+            {builderMode === 'template' && templatePreview ? (
               <>
                 <div>
                   <h3 className="text-xl font-bold text-cultr-forest mb-2">{templatePreview.name}</h3>
@@ -986,7 +1010,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
                   </div>
                 </div>
               </>
-            ) : mode === 'symptom' && combinedProtocol ? (
+            ) : builderMode === 'symptom' && combinedProtocol ? (
               <>
                 <div>
                   <h3 className="text-xl font-bold text-cultr-forest mb-2">Custom Symptom Stack</h3>
@@ -1135,7 +1159,7 @@ export function ProtocolBuilderClient({ providerEmail }: ProtocolBuilderClientPr
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-cultr-textMuted">
                 <FileText className="h-12 w-12 mb-4 opacity-20" />
-                <p>Select {mode === 'template' ? 'a template' : 'symptoms'} to generate preview</p>
+                <p>Select {builderMode === 'template' ? 'a template' : 'symptoms'} to generate preview</p>
               </div>
             )}
           </div>

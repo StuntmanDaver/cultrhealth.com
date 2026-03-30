@@ -1,7 +1,8 @@
 import { Metadata } from 'next'
 import { CartProvider } from '@/lib/cart-context'
 import { LibrarySidebarShell } from './LibrarySidebarShell'
-import { getSession, isProviderEmail } from '@/lib/auth'
+import { getSession, isProviderEmail, getMembershipTier } from '@/lib/auth'
+import type { PlanTier } from '@/lib/config/plans'
 
 export const metadata: Metadata = {
   title: 'Peptide Library | CULTR Health',
@@ -15,10 +16,14 @@ export default async function LibraryLayout({
 }) {
   const session = await getSession()
   const isProvider = session ? isProviderEmail(session.email) : false
+  let tier: PlanTier | null = null
+  if (session?.customerId) {
+    tier = await getMembershipTier(session.customerId, session.email)
+  }
 
   return (
     <CartProvider>
-      <LibrarySidebarShell isProvider={isProvider}>
+      <LibrarySidebarShell isProvider={isProvider} tier={tier}>
         {children}
       </LibrarySidebarShell>
     </CartProvider>

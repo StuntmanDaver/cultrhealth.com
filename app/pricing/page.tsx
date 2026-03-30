@@ -178,6 +178,7 @@ export default function PricingPage() {
                     { feature: 'Foundation Therapies', values: ['1', '1', '2'] },
                     { feature: 'Add-On Therapies', values: ['—', '2', 'Up to 4'] },
                     { feature: 'Protocol Library', values: [true, true, true] },
+                    { feature: 'Protocol Builder', values: ['Browse', 'Browse', 'Full Builder'] },
                     { feature: 'Peptide Calculator', values: [true, true, true] },
                     { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (

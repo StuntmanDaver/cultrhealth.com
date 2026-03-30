@@ -13,6 +13,7 @@ const DEFAULT_ACCESS: LibraryAccess = {
   stackingGuides: false,
   providerNotes: false,
   customRequests: false,
+  protocolBuilder: false,
 }
 
 export default function DashboardPage() {

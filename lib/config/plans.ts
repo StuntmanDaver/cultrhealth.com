@@ -12,6 +12,8 @@ export type LibraryAccess = {
   stackingGuides: boolean;
   providerNotes: boolean;
   customRequests: boolean;
+  /** Protocol Builder access: 'browse' = read-only, 'full' = configure + submit, false = no access */
+  protocolBuilder: 'browse' | 'full' | false;
 };
 
 export type Plan = {
@@ -112,6 +114,7 @@ export const PLANS: Plan[] = [
       'Peptide calculator access',
       'Cycle guides & safety info',
       'Instruction video library',
+      'Protocol Builder (browse)',
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -120,6 +123,7 @@ export const PLANS: Plan[] = [
       stackingGuides: true,
       providerNotes: false,
       customRequests: false,
+      protocolBuilder: 'browse',
     },
     stripeProductId: 'prod_TrIU16tOaJsSVw',
     stripePriceId: 'price_1StZtZC1JUIZB7aRJoIeKtGy',
@@ -141,6 +145,7 @@ export const PLANS: Plan[] = [
       '1 Foundation Therapy',
       'Personalized protocol review',
       'Ongoing provider-guided care',
+      'Protocol Builder (browse)',
     ],
     priceLabel: '$149*',
     cardDisclaimer: '2 month commitment required',
@@ -152,6 +157,7 @@ export const PLANS: Plan[] = [
       stackingGuides: true,
       providerNotes: false,
       customRequests: false,
+      protocolBuilder: 'browse',
     },
     stripeProductId: 'prod_TrIUWZzUIZYfIP',
     stripePriceId: 'price_1StZtWC1JUIZB7aRFsP1WVxI',
@@ -173,6 +179,7 @@ export const PLANS: Plan[] = [
       '2 Add-Ons',
       'Personalized protocol review',
       'Ongoing provider-guided care',
+      'Full Protocol Builder',
     ],
     cardDisclaimer: '2 month commitment required',
     libraryAccess: {
@@ -182,6 +189,7 @@ export const PLANS: Plan[] = [
       stackingGuides: true,
       providerNotes: false,
       customRequests: false,
+      protocolBuilder: 'full',
     },
     stripeProductId: 'prod_TrIUf4gB4l9G70',
     stripePriceId: 'price_1StZtYC1JUIZB7aR2nEziKX8',
@@ -204,6 +212,7 @@ export const PLANS: Plan[] = [
       'At-home blood test kit included',
       'First doctor visit included',
       'Priority support',
+      'Full Protocol Builder',
     ],
     cardDisclaimer: '2 month commitment required',
     libraryAccess: {
@@ -213,6 +222,7 @@ export const PLANS: Plan[] = [
       stackingGuides: true,
       providerNotes: true,
       customRequests: false,
+      protocolBuilder: 'full',
     },
     stripeProductId: 'prod_TrIUHNyu0DIyUV',
     stripePriceId: 'price_1StZtYC1JUIZB7aR9gTXMWjK',

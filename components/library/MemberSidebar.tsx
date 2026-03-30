@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import type { PlanTier } from '@/lib/config/plans'
 import {
   LayoutDashboard,
   ClipboardList,
@@ -48,6 +49,7 @@ const NAV_GROUPS = [
   {
     label: 'TOOLS',
     items: [
+      { label: 'Protocol Builder', href: '/members/protocol-builder', icon: FlaskConical },
       { label: 'Dosing Calculator', href: '/members/dosing-calculator', icon: Calculator },
       { label: 'Calorie Calculator', href: '/members/calorie-calculator', icon: Flame },
     ],
@@ -71,7 +73,6 @@ const NAV_GROUPS = [
 const PROVIDER_NAV_GROUP = {
   label: 'PROVIDER',
   items: [
-    { label: 'Protocol Builder', href: '/members/protocol-builder', icon: FlaskConical },
     { label: 'Provider Schedule', href: '/members/provider-schedule', icon: CalendarClock },
   ],
 }
@@ -80,9 +81,10 @@ interface MemberSidebarProps {
   mobileOpen?: boolean
   onClose?: () => void
   isProvider?: boolean
+  tier?: PlanTier | null
 }
 
-export function MemberSidebar({ mobileOpen, onClose, isProvider }: MemberSidebarProps) {
+export function MemberSidebar({ mobileOpen, onClose, isProvider, tier }: MemberSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)

@@ -3,5 +3,5 @@ import { ProtocolBuilderClient } from './ProtocolBuilderClient'
 
 export default async function ProtocolBuilderPage() {
   const session = await getSession()
-  return <ProtocolBuilderClient providerEmail={session!.email} />
+  return <ProtocolBuilderClient email={session!.email} mode="full" isProvider={true} />
 }

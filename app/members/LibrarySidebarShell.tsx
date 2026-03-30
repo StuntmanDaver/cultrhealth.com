@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { Menu } from 'lucide-react'
 import { MemberSidebar } from '@/components/library/MemberSidebar'
+import type { PlanTier } from '@/lib/config/plans'
 
-export function LibrarySidebarShell({ children, isProvider }: { children: React.ReactNode; isProvider?: boolean }) {
+export function LibrarySidebarShell({ children, isProvider, tier }: { children: React.ReactNode; isProvider?: boolean; tier?: PlanTier | null }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
     <div className="min-h-screen">
-      <MemberSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} isProvider={isProvider} />
+      <MemberSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} isProvider={isProvider} tier={tier} />
 
       {/* Mobile top bar with hamburger */}
       <div className="md:hidden sticky top-0 z-20 flex items-center gap-3 px-4 py-3 bg-white border-b border-stone-200">
