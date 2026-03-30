@@ -40,17 +40,22 @@ export function middleware(request: NextRequest) {
   if (isAuthRoute) {
     const sessionCookie = request.cookies.get('cultr_session')
     const lastActivity = request.cookies.get('cultr_last_activity')?.value
+    const domain = request.headers.get('host')?.includes('cultrhealth.com')
+      ? '.cultrhealth.com'
+      : undefined
 
     if (sessionCookie && lastActivity) {
       const elapsed = Date.now() - parseInt(lastActivity, 10)
       if (elapsed > IDLE_TIMEOUT_MS) {
         // Session idle too long -- clear and redirect to login
         const loginUrl = new URL('/login', request.url)
-        loginUrl.searchParams.set('reason', 'session_timeout')
+        loginUrl.searchParams.set('error', 'session_timeout')
         loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
         const response = NextResponse.redirect(loginUrl)
-        response.cookies.delete('cultr_session')
-        response.cookies.delete('cultr_last_activity')
+        // Must specify domain to match how cookies were set, otherwise delete is a no-op
+        const cookieOpts = { path: '/', ...(domain ? { domain } : {}) }
+        response.cookies.set('cultr_session', '', { ...cookieOpts, maxAge: 0 })
+        response.cookies.set('cultr_last_activity', '', { ...cookieOpts, maxAge: 0 })
         return response
       }
     }
@@ -58,9 +63,6 @@ export function middleware(request: NextRequest) {
     // Update last activity timestamp
     if (sessionCookie) {
       const response = NextResponse.next()
-      const domain = request.headers.get('host')?.includes('cultrhealth.com')
-        ? '.cultrhealth.com'
-        : undefined
       response.cookies.set('cultr_last_activity', Date.now().toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

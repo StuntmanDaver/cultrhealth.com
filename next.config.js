@@ -46,7 +46,7 @@ const nextConfig = {
           },
           { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
           {
-            key: 'Content-Security-Policy',
+            key: 'Content-Security-Policy-Report-Only',
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://cdn1.affirm.com https://x.klarnacdn.net https://cdn.daily.co",

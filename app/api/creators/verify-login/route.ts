@@ -34,6 +34,15 @@ function setCookieOnResponse(response: NextResponse, token: string) {
     path: '/',
     ...(domain ? { domain } : {}),
   })
+  // Reset idle-timeout cookie so middleware doesn't immediately expire fresh sessions
+  response.cookies.set('cultr_last_activity', Date.now().toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+    ...(domain ? { domain } : {}),
+  })
 }
 
 export async function GET(request: NextRequest) {

@@ -21,6 +21,13 @@ export async function GET() {
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
+  response.cookies.set('cultr_last_activity', Date.now().toString(), {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+  })
 
   return response
 }

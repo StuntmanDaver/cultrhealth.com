@@ -11,6 +11,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   expired_link: 'Your link has expired. Please request a new one.',
   no_subscription: 'No active subscription found. Please join to access the library.',
   verification_failed: 'Verification failed. Please try again.',
+  session_timeout: 'Your session timed out. Please log in again.',
 }
 
 export function LibraryLogin({ error }: { error?: string }) {
