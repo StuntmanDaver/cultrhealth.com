@@ -24,6 +24,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 // Next action after each status for admin email buttons
 const NEXT_ACTIONS: Record<string, { status: string; label: string; color: string }> = {
+  approved: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
+  invoice_sent: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
   paid: { status: 'shipped', label: 'Mark Shipped', color: '#2563eb' },
   shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 }
@@ -208,10 +210,14 @@ export async function POST(
     // Send emails (non-fatal — status already committed)
     try {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://staging.cultrhealth.com'
-      await Promise.allSettled([
+      const emailResults = await Promise.allSettled([
         sendAdminStatusEmail(order, newStatus, siteUrl, orderId),
         sendCustomerStatusEmail(order, newStatus, carrier, trackingNumber, trackingUrl),
       ])
+      const adminResult = emailResults[0]
+      const notifyResult = emailResults[1]
+      if (adminResult.status === 'rejected') console.warn('[club-orders/status] admin notification send failed')
+      if (notifyResult.status === 'rejected') console.warn('[club-orders/status] status notification send failed')
     } catch {
       // Email failures are non-fatal
     }
@@ -259,7 +265,7 @@ async function sendAdminStatusEmail(
   let actionButtonHtml = ''
   if (nextAction) {
     const { token, expiresAt } = generateStatusToken(orderId, nextAction.status)
-    const actionUrl = `${siteUrl}/api/admin/club-orders/${orderId}/status?token=${token}&expires=${expiresAt}&status=${nextAction.status}`
+    const actionUrl = `${siteUrl}/api/admin/club-orders/${orderId}/status?token=${token}&amp;expires=${expiresAt}&amp;status=${nextAction.status}`
     actionButtonHtml = `
       <div style="text-align: center; margin: 28px 0;">
         <a href="${actionUrl}" style="display: inline-block; background: ${nextAction.color}; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">

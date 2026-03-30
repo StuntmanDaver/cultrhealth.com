@@ -34,9 +34,9 @@ export async function GET(request: NextRequest) {
         id, order_number, member_name, member_email, status,
         subtotal_usd, created_at, approved_at, paid_at, shipped_at,
         EXTRACT(EPOCH FROM (NOW() - GREATEST(
-          COALESCE(shipped_at, '1970-01-01'),
-          COALESCE(paid_at, '1970-01-01'),
-          COALESCE(approved_at, '1970-01-01'),
+          COALESCE(shipped_at, '1970-01-01'::timestamptz),
+          COALESCE(paid_at, '1970-01-01'::timestamptz),
+          COALESCE(approved_at, '1970-01-01'::timestamptz),
           created_at
         ))) / 3600 AS hours_in_status
       FROM club_orders
