@@ -1,3 +1,12 @@
+## [2026-03-30] - Pricing Layout + Hero Copy Fixes
+
+### Homepage & Pricing
+- Moved CULTR Club banner above paid plan cards on homepage pricing section (was below)
+- Removed trailing phrase "and advanced support when appropriate" from hero subtitle
+- CULTR Club already correctly positioned above plans on `/pricing` page — no change needed there
+
+---
+
 ## [2026-03-30] - Cursor AI Rules File (.cursorrules)
 
 ### New File
