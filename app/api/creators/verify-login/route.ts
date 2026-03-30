@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
         creatorId = creator.id
         creatorStatus = 'active'
 
-        console.log('Auto-created staging creator:', { email, creatorId, membershipCode, productCode })
+        console.log('Auto-created staging creator:', { creatorId, membershipCode, productCode })
       } catch (err) {
         console.error('Failed to auto-create staging creator (DB may be unavailable):', err)
         // DB failed but they're a staging email — grant access with staging ID
@@ -141,7 +141,6 @@ export async function GET(request: NextRequest) {
     setCookieOnResponse(response, sessionToken)
 
     console.log('Creator session created:', {
-      email,
       creatorId,
       timestamp: new Date().toISOString(),
     })

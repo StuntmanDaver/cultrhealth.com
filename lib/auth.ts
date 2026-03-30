@@ -371,14 +371,14 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
       return { authenticated: true, email: auth.email, creatorId: creator.id }
     }
   } catch (dbError) {
-    console.error('[auth] Creator DB lookup failed for:', auth.email, dbError)
+    console.error('[auth] Creator DB lookup failed', dbError instanceof Error ? dbError.message : 'Unknown')
   }
 
   // Team emails always get creator access (staging_creator is a placeholder —
   // dashboard queries will fail since it's not a valid UUID. The login route
   // should have created a real creator record; this fallback means DB was down.)
   if (TEAM_EMAILS.includes(auth.email.toLowerCase())) {
-    console.warn('[auth] staging_creator fallback for team email:', auth.email, '— dashboard will show no real data')
+    console.warn('[auth] staging_creator fallback used -- dashboard will show no real data')
     return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
   }
 

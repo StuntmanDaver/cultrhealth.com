@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
       const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
       setSessionOnResponse(response, sessionToken)
-      console.log('Staging admin access granted:', { email, timestamp: new Date().toISOString() })
+      console.log('Staging admin access granted:', { timestamp: new Date().toISOString() })
       return response
     } else {
       // Double-check customer still has active subscription
@@ -127,7 +127,6 @@ export async function GET(request: NextRequest) {
     setSessionOnResponse(response, sessionToken)
 
     console.log('Session created:', {
-      email,
       customerId,
       timestamp: new Date().toISOString(),
     })

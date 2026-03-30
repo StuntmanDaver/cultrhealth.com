@@ -113,7 +113,7 @@ export async function POST(
             estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : undefined,
             items: itemsList,
           });
-          console.log('Shipping notification sent:', { email: order.customer_email, orderNumber });
+          console.log('Shipping notification sent:', { orderNumber });
         } catch (emailError) {
           console.error('Failed to send shipping notification:', emailError);
           // Don't fail the request - shipping was successful

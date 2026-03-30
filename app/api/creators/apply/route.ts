@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         `)
       )
 
-      console.log(`Creator auto-approved: ${email}`)
+      console.log('Creator auto-approved:', creator.id)
 
       return NextResponse.json({
         success: true,
@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
       `)
     )
 
-    console.log(`Creator application submitted: ${email}`)
+    console.log('Creator application submitted:', creator.id)
 
     return NextResponse.json({
       success: true,
