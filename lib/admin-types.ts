@@ -337,6 +337,7 @@ export interface AnalyticsData {
   intakeFunnel: IntakeFunnel
   revenueTimeSeries: RevenueTimeSeriesPoint[]
   creatorLinkPerformance: CreatorLinkPerformanceRow[]
+  clubOrderFulfillment: Record<string, number>
   periodDays: number
   generatedAt: string
 }

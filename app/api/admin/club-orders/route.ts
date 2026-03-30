@@ -26,17 +26,24 @@ export async function GET() {
       SELECT
         co.id, co.order_number, co.member_name, co.member_email, co.member_phone,
         co.items, co.subtotal_usd, co.notes, co.status,
-        co.created_at, co.approved_at,
+        co.created_at, co.approved_at, co.paid_at, co.shipped_at, co.fulfilled_at,
         co.qb_invoice_id, co.qb_invoice_url,
         co.coupon_code, co.discount_percent,
+        co.tracking_carrier, co.tracking_number, co.tracking_url,
         co.attributed_creator_id, co.attribution_method,
         c.full_name as creator_name
       FROM club_orders co
       LEFT JOIN creators c ON co.attributed_creator_id = c.id
       ORDER BY
-        CASE WHEN co.status = 'pending_approval' THEN 0 ELSE 1 END,
+        CASE
+          WHEN co.status = 'pending_approval' THEN 0
+          WHEN co.status IN ('approved', 'invoice_sent') THEN 1
+          WHEN co.status = 'paid' THEN 2
+          WHEN co.status = 'shipped' THEN 3
+          ELSE 4
+        END,
         co.created_at DESC
-      LIMIT 100
+      LIMIT 200
     `
 
     return NextResponse.json({ orders: result.rows })

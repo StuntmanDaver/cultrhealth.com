@@ -4,12 +4,11 @@ import { getSession, isProviderEmail } from '@/lib/auth'
 
 // Allowed transitions: fromStatus → toStatus[]
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending_approval: ['needs_invoice', 'cancelled'],
+  pending_approval: ['cancelled'],
   approved:         ['paid', 'cancelled'],
   invoice_sent:     ['paid', 'cancelled'],
-  needs_invoice:    ['paid', 'cancelled'],
-  paid:             ['needs_shipment', 'cancelled'],
-  needs_shipment:   ['shipped_complete', 'cancelled'],
+  paid:             ['shipped', 'fulfilled', 'cancelled'],
+  shipped:          ['fulfilled'],
 }
 
 export async function POST(
@@ -36,10 +35,19 @@ export async function POST(
     }
 
     const body = await request.json()
-    const newStatus: string = body.status
+    const { status: newStatus, carrier, trackingNumber, trackingUrl } = body as {
+      status: string
+      carrier?: string
+      trackingNumber?: string
+      trackingUrl?: string
+    }
 
     if (!newStatus) {
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
+    }
+
+    if (newStatus === 'shipped' && !carrier && !trackingNumber) {
+      return NextResponse.json({ error: 'Carrier and tracking number required for shipping' }, { status: 400 })
     }
 
     // Fetch current status
@@ -60,20 +68,36 @@ export async function POST(
       )
     }
 
-    // Apply transition atomically
-    // For shipped_complete, also set shipped_at
+    // Apply transition atomically with appropriate timestamp
     let result
-    if (newStatus === 'shipped_complete') {
+    if (newStatus === 'paid') {
       result = await sql`
         UPDATE club_orders
-        SET status = ${newStatus}, shipped_at = NOW()
+        SET status = ${newStatus}, paid_at = NOW(), updated_at = NOW()
+        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
+        RETURNING id, status
+      `
+    } else if (newStatus === 'shipped') {
+      result = await sql`
+        UPDATE club_orders
+        SET status = ${newStatus}, shipped_at = NOW(), updated_at = NOW(),
+            tracking_carrier = ${carrier || null},
+            tracking_number = ${trackingNumber || null},
+            tracking_url = ${trackingUrl || null}
+        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
+        RETURNING id, status
+      `
+    } else if (newStatus === 'fulfilled') {
+      result = await sql`
+        UPDATE club_orders
+        SET status = ${newStatus}, fulfilled_at = NOW(), updated_at = NOW()
         WHERE id = ${orderId}::uuid AND status = ${currentStatus}
         RETURNING id, status
       `
     } else {
       result = await sql`
         UPDATE club_orders
-        SET status = ${newStatus}
+        SET status = ${newStatus}, updated_at = NOW()
         WHERE id = ${orderId}::uuid AND status = ${currentStatus}
         RETURNING id, status
       `
@@ -85,7 +109,7 @@ export async function POST(
 
     return NextResponse.json({ success: true, status: newStatus })
   } catch (err) {
-    console.error('[status route] error:', err)
+    console.error('[club-orders/status] Error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
