@@ -23,6 +23,7 @@ interface MarketingHeroProps {
   children?: ReactNode;
   className?: string;
   backgroundImage?: string;
+  align?: 'center' | 'left';
 }
 
 export function MarketingHero({
@@ -35,6 +36,7 @@ export function MarketingHero({
   children,
   className,
   backgroundImage,
+  align = 'center',
 }: MarketingHeroProps) {
   const paddingMap = {
     compact: 'py-16 md:py-20',
@@ -57,7 +59,7 @@ export function MarketingHero({
           <div className="absolute inset-0 bg-brand-primary/65" />
         </>
       )}
-      <div className="relative z-10 max-w-4xl mx-auto text-center">
+      <div className={cn('relative z-10 max-w-4xl mx-auto', align === 'center' ? 'text-center' : 'text-left')}>
         {badge && (
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
@@ -75,7 +77,7 @@ export function MarketingHero({
 
         {subtitle && (
           <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-6 max-w-2xl mx-auto">
+            <p className={cn('text-xl text-white/80 mb-6 max-w-2xl', align === 'center' && 'mx-auto')}>
               {subtitle}
             </p>
           </ScrollReveal>
@@ -83,7 +85,7 @@ export function MarketingHero({
 
         {proofLine && (
           <ScrollReveal delay={300} direction="none" duration={800}>
-            <p className="text-sm text-cultr-sage font-medium tracking-wide mb-8 max-w-xl mx-auto">
+            <p className={cn('text-sm text-cultr-sage font-medium tracking-wide mb-8 max-w-xl', align === 'center' && 'mx-auto')}>
               {proofLine}
             </p>
           </ScrollReveal>
@@ -91,7 +93,7 @@ export function MarketingHero({
 
         {ctas && ctas.length > 0 && (
           <ScrollReveal delay={400} direction="up" duration={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className={cn('flex flex-col sm:flex-row gap-4', align === 'center' ? 'justify-center' : 'justify-start')}>
               {ctas.map((cta) => (
                 <Link key={cta.label} href={cta.href}>
                   <Button

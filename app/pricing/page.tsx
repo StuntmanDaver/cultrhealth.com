@@ -46,6 +46,7 @@ export default function PricingPage() {
           { label: 'How It Works', href: '/how-it-works', variant: 'ghost' },
         ]}
         backgroundImage="/images/hero-wellness-walk.jpg"
+        align="left"
       >
         <ScrollReveal delay={500} direction="none" duration={800}>
           <div className="mt-4">
