@@ -1,0 +1,1 @@
+ALTER TABLE club_orders ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMPTZ;

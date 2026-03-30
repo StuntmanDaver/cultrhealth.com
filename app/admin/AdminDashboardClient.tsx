@@ -39,6 +39,8 @@ export default function AdminDashboardClient() {
   const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null)
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('')
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [approvingOrder, setApprovingOrder] = useState<string | null>(null)
   // Cron status
   const [cronStatuses, setCronStatuses] = useState<CronStatus[]>([])
   const [cronLoading, setCronLoading] = useState(false)
@@ -102,6 +104,52 @@ export default function AdminDashboardClient() {
       // silent
     } finally {
       setDismissingInvoice(null)
+    }
+  }
+
+  async function handleStatusUpdate(orderId: string, newStatus: string) {
+    setUpdatingStatus(orderId)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (res.ok && data) {
+        const updatedInvoices = data.invoiceAging.map(inv =>
+          inv.id === orderId ? { ...inv, status: newStatus } : inv
+        )
+        setData({ ...data, invoiceAging: updatedInvoices })
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert(err.error || 'Failed to update status')
+      }
+    } catch {
+      alert('Failed to update status')
+    } finally {
+      setUpdatingStatus(null)
+    }
+  }
+
+  async function handleApproveOrder(orderId: string) {
+    if (!confirm('Approve this order? This will create a QuickBooks invoice and email the customer.')) return
+    setApprovingOrder(orderId)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/approve`, { method: 'POST' })
+      const json = await res.json()
+      if (res.ok && data) {
+        const newStatus = json.status || 'approved'
+        const updatedInvoices = data.invoiceAging.map(inv =>
+          inv.id === orderId ? { ...inv, status: newStatus } : inv
+        )
+        setData({ ...data, invoiceAging: updatedInvoices })
+      } else {
+        alert(json.error || 'Failed to approve order')
+      }
+    } catch {
+      alert('Failed to approve order')
+    } finally {
+      setApprovingOrder(null)
     }
   }
 
@@ -588,6 +636,64 @@ export default function AdminDashboardClient() {
                                 <span>Total: <strong className="text-brand-primary">{formatCurrency(Number(inv.subtotal_usd) + Number(inv.tax_amount_usd))}</strong></span>
                               )}
                               <span className="text-brand-primary/40">{inv.days_pending}d ago</span>
+                            </div>
+
+                            {/* Actions row */}
+                            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
+                              {inv.status === 'pending_approval' && (
+                                <>
+                                  <button
+                                    onClick={() => handleStatusUpdate(inv.id, 'needs_invoice')}
+                                    disabled={updatingStatus === inv.id}
+                                    className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+                                  >
+                                    {updatingStatus === inv.id ? '...' : 'Skip Approval'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleApproveOrder(inv.id)}
+                                    disabled={approvingOrder === inv.id}
+                                    className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                  >
+                                    {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
+                                  </button>
+                                </>
+                              )}
+                              {['approved', 'invoice_sent', 'needs_invoice'].includes(inv.status) && (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv.id, 'paid')}
+                                  disabled={updatingStatus === inv.id}
+                                  className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {updatingStatus === inv.id ? '...' : 'Mark Paid'}
+                                </button>
+                              )}
+                              {inv.status === 'paid' && (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv.id, 'needs_shipment')}
+                                  disabled={updatingStatus === inv.id}
+                                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {updatingStatus === inv.id ? '...' : 'Mark Needs Shipment'}
+                                </button>
+                              )}
+                              {inv.status === 'needs_shipment' && (
+                                <button
+                                  onClick={() => handleStatusUpdate(inv.id, 'shipped_complete')}
+                                  disabled={updatingStatus === inv.id}
+                                  className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {updatingStatus === inv.id ? '...' : 'Mark Shipped / Complete'}
+                                </button>
+                              )}
+                              {!['cancelled', 'shipped_complete', 'rejected', 'dismissed'].includes(inv.status) && (
+                                <button
+                                  onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
+                                  disabled={updatingStatus === inv.id}
+                                  className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                >
+                                  Cancel Order
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}

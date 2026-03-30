@@ -54,12 +54,15 @@ export function getStatusColor(status: string): string {
 }
 
 export const ORDER_STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
-  pending_approval: { label: 'Pending', bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  approved: { label: 'Approved', bg: 'bg-blue-100', text: 'text-blue-800' },
-  invoice_sent: { label: 'Invoice Sent', bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  paid: { label: 'Paid', bg: 'bg-green-100', text: 'text-green-800' },
-  rejected: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-800' },
-  cancelled: { label: 'Cancelled', bg: 'bg-gray-100', text: 'text-gray-600' },
+  pending_approval: { label: 'Needs Approval', bg: 'bg-yellow-100', text: 'text-yellow-800' },
+  approved:         { label: 'Needs Invoice',  bg: 'bg-blue-100',   text: 'text-blue-800' },
+  invoice_sent:     { label: 'Needs Invoice',  bg: 'bg-blue-100',   text: 'text-blue-800' },
+  needs_invoice:    { label: 'Needs Invoice',  bg: 'bg-blue-100',   text: 'text-blue-800' },
+  paid:             { label: 'Paid',            bg: 'bg-green-100',  text: 'text-green-800' },
+  needs_shipment:   { label: 'Needs Shipment', bg: 'bg-orange-100', text: 'text-orange-800' },
+  shipped_complete: { label: 'Shipped / Complete', bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  cancelled:        { label: 'Canceled',        bg: 'bg-gray-100',   text: 'text-gray-600' },
+  rejected:         { label: 'Rejected',        bg: 'bg-red-100',    text: 'text-red-800' },
 }
 
 export const INTERNAL_COUPON_LABELS: Record<string, string> = {
