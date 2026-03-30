@@ -238,11 +238,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto w-full">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-display font-bold text-cultr-forest">
-              Three steps to <span className="italic">rebrand</span> yourself.
+              Four steps to <span className="italic">rebrand</span> yourself.
             </h2>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-3 gap-10">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
                 step: '01',
@@ -252,12 +252,18 @@ export default function HomePage() {
               },
               {
                 step: '02',
-                title: 'Meet Your Provider',
-                desc: 'A licensed clinician reviews your history, goals, and labs.',
-                icon: Stethoscope,
+                title: 'Complete Your Blood Test',
+                desc: '33 biomarkers tested at home — heart, metabolic, hormonal, thyroid, and more.',
+                icon: FlaskConical,
               },
               {
                 step: '03',
+                title: 'Meet Your Provider',
+                desc: 'A licensed clinician reviews your results, history, and goals.',
+                icon: Stethoscope,
+              },
+              {
+                step: '04',
                 title: 'Your Protocol Arrives',
                 desc: 'Personalized treatment shipped to your door fast.',
                 icon: TrendingUp,
@@ -279,9 +285,11 @@ export default function HomePage() {
             ))}
           </div>
 
-          <ScrollReveal delay={450} className="text-center mt-12">
-            <Link href="/how-it-works" className="inline-flex items-center text-cultr-forest hover:text-cultr-forestDark font-medium transition-colors">
-              Learn more <ArrowRight className="w-4 h-4 ml-2" />
+          <ScrollReveal delay={600} className="text-center mt-12">
+            <Link href="/how-it-works">
+              <Button variant="primary" size="lg">
+                Learn More <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </Link>
           </ScrollReveal>
         </div>
