@@ -46,18 +46,18 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
         <span className="text-cultr-sage text-xs font-display font-bold tracking-widest uppercase mb-4 block animate-pulse-slow">Most Popular</span>
       )}
       <h3 className={`text-2xl font-display font-bold mb-2 transition-transform duration-300 group-hover:translate-x-0.5 ${plan.isFeatured ? 'text-white' : 'text-cultr-text'}`}>{brandify(plan.name)}</h3>
-      <div className="flex items-baseline gap-1 mb-1 flex-wrap">
-        {plan.pricePrefix && (
-          <span className={`text-sm font-medium mr-0.5 ${plan.isFeatured ? 'text-white/70' : 'text-cultr-textMuted'}`}>
-            {plan.pricePrefix}
-          </span>
-        )}
+      {plan.pricePrefix && (
+        <p className={`text-xs font-medium tracking-wide uppercase mb-0.5 ${plan.isFeatured ? 'text-white/60' : 'text-cultr-textMuted'}`}>
+          {plan.pricePrefix}
+        </p>
+      )}
+      <div className="flex items-baseline gap-1 mb-1">
         {plan.priceLabel ? (
           <>
             <span className={`text-4xl font-bold transition-transform duration-300 group-hover:scale-105 origin-left ${plan.isFeatured ? 'text-white' : 'text-cultr-forest'}`}>
               {plan.priceLabel}
             </span>
-            <span className={`text-xs align-super -ml-0.5 ${plan.isFeatured ? 'text-white/40' : 'text-cultr-textMuted/50'}`}>*</span>
+            <span className={`text-lg font-bold leading-none -ml-0.5 relative -top-3 ${plan.isFeatured ? 'text-white/50' : 'text-cultr-textMuted/60'}`}>*</span>
           </>
         ) : (
           <>

@@ -383,18 +383,33 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
     <div className="min-h-screen grad-light">
       {/* Hero */}
       <section className="py-16 px-6 grad-dark text-white">
-        <div className="max-w-2xl mx-auto text-center">
-          <span className="inline-block text-xs font-bold text-cultr-sage tracking-widest mb-4">
-            YOUR INITIAL 2-MONTH CLINICAL PROTOCOL
-          </span>
-          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
-            {plan.slug === 'core' && coreTherapy
-              ? `${plan.name} with ${coreTherapy.name}`
-              : plan.name}
-          </h1>
-          <div className="flex items-baseline justify-center gap-2">
-            <span className="text-5xl font-bold">${monthlyPrice}</span>
-            <span className="text-white/70">/ month</span>
+        <div className="max-w-3xl mx-auto">
+          <div className={`flex items-center gap-8 ${coreTherapy ? '' : 'justify-center text-center'}`}>
+            {coreTherapy && (
+              <div className="hidden sm:block w-36 h-36 md:w-44 md:h-44 relative shrink-0 rounded-2xl overflow-hidden bg-white/10 border border-white/20">
+                <Image
+                  src={coreTherapy.productImage}
+                  alt={coreTherapy.name}
+                  fill
+                  className="object-contain p-3"
+                  sizes="176px"
+                />
+              </div>
+            )}
+            <div className={coreTherapy ? '' : 'text-center'}>
+              <span className="inline-block text-xs font-bold text-cultr-sage tracking-widest mb-4">
+                YOUR INITIAL 2-MONTH CLINICAL PROTOCOL
+              </span>
+              <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
+                {plan.slug === 'core' && coreTherapy
+                  ? `${plan.name} with ${coreTherapy.name}`
+                  : plan.name}
+              </h1>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold">${monthlyPrice}</span>
+                <span className="text-white/70">/ month</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -402,33 +417,30 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       {/* Main Content */}
       <section className="py-12 px-6 section-veil">
         <div className="max-w-2xl mx-auto">
-          {/* Product Detail (Core therapies only) */}
+          {/* Product Detail (Core therapies only) — mint/sage palette */}
           {coreTherapy && (
-            <div className="bg-white border border-cultr-sage rounded-2xl p-8 md:p-10 shadow-sm mb-8">
-              <div className="flex flex-col sm:flex-row gap-6 items-start">
-                <div className="w-32 h-32 sm:w-40 sm:h-40 relative shrink-0 rounded-xl overflow-hidden bg-cultr-offwhite border border-cultr-sage/30 mx-auto sm:mx-0">
-                  <Image
-                    src={coreTherapy.productImage}
-                    alt={coreTherapy.name}
-                    fill
-                    className="object-contain p-2"
-                    sizes="160px"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-display font-bold text-cultr-forest mb-2">{coreTherapy.name}</h2>
-                  <p className="text-sm text-cultr-textMuted mb-4">{coreTherapy.description}</p>
-                  <ul className="space-y-2 mb-4">
-                    {coreTherapy.benefits.map((benefit, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <Check className="w-4 h-4 text-cultr-forest shrink-0 mt-0.5" />
-                        <span className="text-cultr-text">{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="text-[11px] text-cultr-textMuted/70 leading-relaxed">{coreTherapy.disclaimer}</p>
-                </div>
+            <div className="grad-mint rounded-2xl p-6 md:p-8 mb-8 border border-cultr-sage">
+              {/* Mobile-only product image (hidden on sm+ since it's in hero) */}
+              <div className="sm:hidden w-24 h-24 relative shrink-0 rounded-xl overflow-hidden bg-white/60 border border-cultr-sage/30 mx-auto mb-4">
+                <Image
+                  src={coreTherapy.productImage}
+                  alt={coreTherapy.name}
+                  fill
+                  className="object-contain p-2"
+                  sizes="96px"
+                />
               </div>
+              <h2 className="text-lg font-display font-bold text-cultr-forest mb-2">{coreTherapy.name}</h2>
+              <p className="text-sm text-cultr-textMuted mb-4">{coreTherapy.description}</p>
+              <ul className="space-y-2 mb-4">
+                {coreTherapy.benefits.map((benefit, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="w-4 h-4 text-cultr-forest shrink-0 mt-0.5" />
+                    <span className="text-cultr-text">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[11px] text-cultr-textMuted/70 leading-relaxed">{coreTherapy.disclaimer}</p>
             </div>
           )}
 
@@ -449,14 +461,6 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            {/* Best For */}
-            <div className="grad-mint rounded-xl p-6 mb-8 border border-cultr-sage">
-              <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase mb-2">
-                Best For
-              </p>
-              <p className="text-cultr-text font-medium">{plan.bestFor}</p>
             </div>
 
             {/* Order Summary */}

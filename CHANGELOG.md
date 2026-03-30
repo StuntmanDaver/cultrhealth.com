@@ -1,3 +1,29 @@
+## [2026-03-30] - Pricing & Checkout Flow Overhaul
+
+### Pricing Cards
+- Core price: "Starting at" label above `$149*` with discrete superscript asterisk
+- "Final monthly amount depends on selected therapy." note below price
+- "2 Add-Ons" → "2 Add-on Therapies" on Catalyst and Concierge cards
+- Doctor visit frequency disclaimers added: Core every 6 months, Catalyst every 4 months, Concierge every 6 months
+- Therapy selection hover text changed from "Select →" to "Join →"
+
+### Checkout Flow
+- Product image moved into dark hero banner next to title (desktop), mobile fallback in product section
+- Product detail section uses mint/sage (`grad-mint`) color palette with description, benefits, and disclaimer per therapy
+- "Best For" section removed from checkout page
+- Blood test kit + doctor visit grouped under "Onboarding Fee" subheading in order summary
+- Each Core therapy page (Semaglutide, Tirzepatide, Retatrutide) shows individualized content
+
+### Payment Methods
+- Klarna and Affirm removed from payment selector and all checkout handler code
+- Coinbase Commerce removed from payment selector
+- Cherry Financing renamed to "Financing - by Cherry"
+
+### Pricing Page
+- Comparison table: Catalyst physician follow-up updated from "Every 6 months" to "Every 4 months"
+
+---
+
 ## [2026-03-30] - Gold-Standard Club Order Fulfillment Pipeline
 
 ### Full Lifecycle Tracking (Migration 033)
