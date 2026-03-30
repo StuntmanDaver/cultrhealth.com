@@ -58,6 +58,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
               {plan.priceLabel}
             </span>
             <span className={`text-lg font-bold leading-none -ml-0.5 relative -top-3 ${plan.isFeatured ? 'text-white/50' : 'text-cultr-textMuted/60'}`}>*</span>
+            <span className={`text-sm ml-1 ${plan.isFeatured ? 'text-white/70' : 'text-cultr-textMuted'}`}>/{plan.interval}</span>
           </>
         ) : (
           <>
