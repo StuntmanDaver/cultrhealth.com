@@ -1,3 +1,69 @@
+## [2026-03-29] - Email Branding & Logo Fix
+
+### Consultation Email Rebranding
+- Consultation request emails (customer + admin) rebranded from old black/dark theme to CULTR design system
+- Now uses `brandedEmailHeader('dark')`, `brandedEmailFooter()`, `EMAIL_FONT_IMPORT` — matching order confirmation emails
+- Playfair Display headings, Inter body text, forest/cream/sage/mint color palette
+- Mint status badges replacing old gold-on-black action boxes
+
+### Email Logo Localhost Fix
+- **Bug:** `brandedEmailHeader()` used `NEXT_PUBLIC_SITE_URL` directly for logo image URLs — on local dev this resolved to `http://localhost:3000`, causing broken logos in all emails sent from local/dev environments
+- **Fix:** Added `getEmailSiteUrl()` helper in `lib/resend.ts` that falls back to `https://staging.cultrhealth.com` when URL is localhost or missing
+- All 5 occurrences of the pattern across `lib/resend.ts` updated to use the new helper
+- Affects: branded header logo, subscription expiring email, kit fulfillment email, results ready email, SiPhox failure alert
+
+## [2026-03-29] - Core Selection Flow & Pricing Overhaul
+
+### Pricing Model Changes
+- **CULTR Core** — Price changed from $199 to $149* (starting price, varies by therapy)
+- **CULTR Concierge** — Renamed from "CULTR Curated", price changed from $1,099 to $1,049
+- **All paid plans** — Now begin with an initial 2-month clinical protocol (minimum commitment)
+- **Core therapy options** — Semaglutide ($149/mo), Tirzepatide ($199/mo), Retatrutide ($239/mo)
+- **Concierge** — Blood test + doctor visit now included (not add-on)
+
+### Expandable Core Pricing Card
+- Core card shows `$149*` with asterisk microcopy explaining variable pricing
+- "Learn more" button expands card to reveal 3 therapy options with CULTR-branded vial images
+- Each therapy card links to `/join/core?therapy=[slug]` for direct checkout
+- Smooth CSS transition (max-height + opacity) on expand/collapse
+- Non-Core cards unchanged — direct checkout CTA
+
+### Checkout Redesign
+- Order summary reframed as "Your initial 2-month clinical protocol"
+- Dynamic totals: Core $508-$688 (by therapy), Catalyst+ $1,208, Concierge $2,098
+- Concierge shows blood test + doctor visit as "included" (not additive)
+- Required consent checkbox for 2-month commitment acknowledgment
+- Optional marketing opt-in checkbox
+- Submit button: "Start my protocol — $X today"
+- Consent gate on all payment methods (Stripe, Authorize.net, CorePay, Klarna, Affirm, NOWPayments)
+- `amountCents` corrected to use `todayTotal` instead of `plan.price`
+
+### Terminology & Copy
+- All "CULTR Curated" → "CULTR Concierge" across 15+ files
+- All "clinical cycle" → "clinical protocol"
+- All "cancel anytime" replaced with protocol-aware language
+- All "no long-term contracts" removed from FAQ/How It Works
+- Pricing page FAQ replaced with 6 new entries matching 2-month protocol model
+- Global microcopy added below pricing cards
+- Comparison table updated: $149*, $499, $1,049; Concierge lab test "Included"
+- Creator resources updated with correct pricing and cancel language
+
+### Files Modified (20+)
+- `lib/config/plans.ts` — CORE_THERAPIES, plan prices/names/features/disclaimers
+- `components/site/PricingCard.tsx` — Expand/collapse, therapy cards, disclaimer
+- `app/join/[tier]/page.tsx` — Order summary, consent, dynamic totals, therapy param
+- `app/pricing/page.tsx` — Section copy, comparison table, FAQ, microcopy
+- `lib/config/quiz.ts`, `lib/config/social-proof.ts`, `lib/config/products.ts` — Price updates
+- `components/site/ComparisonTable.tsx` — Curated → Concierge
+- `app/faq/page.tsx`, `app/how-it-works/page.tsx` — Cancel language aligned
+- `app/creators/page.tsx`, `app/creators/[slug]/page.tsx` — Price + name updates
+- `app/creators/portal/resources/_data/` — 4 files: cancel language, pricing
+- `app/science/page.tsx`, `scripts/generate-media-kit.tsx` — Name + price updates
+- `app/admin/members/MembersClient.tsx`, `components/portal/KitEmptyState.tsx` — Price updates
+- `public/images/therapies/` — 3 vial images added (semaglutide, tirzepatide, retatrutide)
+
+---
+
 ## [2026-03-29] - Members Dashboard Brand Alignment
 
 ### Dashboard Rebranding
