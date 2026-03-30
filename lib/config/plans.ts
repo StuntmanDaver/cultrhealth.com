@@ -37,12 +37,16 @@ export type Plan = {
   bnplEnabled: boolean;
   /** Number of telehealth consultations included per month (0 = none, Infinity = unlimited) */
   consultationsPerMonth: number;
-  /** Custom price label for display (e.g. "$149*") */
+  /** Custom price label for display (e.g. "$149") */
   priceLabel?: string;
+  /** Small prefix before the price (e.g. "Starting at") — rendered smaller than the price */
+  pricePrefix?: string;
   /** Disclaimer shown on pricing card (e.g. "2 month commitment required") */
   cardDisclaimer?: string;
   /** Asterisk or footnote microcopy */
   priceNote?: string;
+  /** Doctor visit frequency disclaimer (e.g. "Doctor visit every 6 months") */
+  visitFrequency?: string;
 };
 
 export type CoreTherapy = {
@@ -50,12 +54,43 @@ export type CoreTherapy = {
   name: string;
   price: number;
   image: string;
+  productImage: string;
+  description: string;
+  benefits: string[];
+  disclaimer: string;
 };
 
 export const CORE_THERAPIES: CoreTherapy[] = [
-  { slug: 'semaglutide', name: 'Semaglutide', price: 149, image: '/images/therapies/semaglutide.png' },
-  { slug: 'tirzepatide', name: 'Tirzepatide', price: 199, image: '/images/therapies/tirzepatide.png' },
-  { slug: 'retatrutide', name: 'Retatrutide', price: 239, image: '/images/therapies/retatrutide.png' },
+  {
+    slug: 'semaglutide',
+    name: 'Semaglutide',
+    price: 149,
+    image: '/images/therapies/semaglutide.png',
+    productImage: '/images/products/semaglutide-glp1.png',
+    description: 'GLP-1 receptor agonist for appetite suppression, blood sugar regulation, and sustainable weight loss.',
+    benefits: ['Reduces appetite and cravings', 'Supports steady weight loss', 'Improves blood sugar regulation', 'Once-weekly injection'],
+    disclaimer: 'Prescription required. Individual results may vary. Common side effects include nausea, which typically resolves with dose titration.',
+  },
+  {
+    slug: 'tirzepatide',
+    name: 'Tirzepatide',
+    price: 199,
+    image: '/images/therapies/tirzepatide.png',
+    productImage: '/images/products/tirzepatide-glp1-gip.png',
+    description: 'Dual GIP/GLP-1 receptor agonist for powerful appetite suppression, enhanced metabolic function, and significant weight management.',
+    benefits: ['Dual-action GLP-1 + GIP targeting', 'Enhanced appetite suppression', 'Improved insulin sensitivity', 'Once-weekly injection'],
+    disclaimer: 'Prescription required. Individual results may vary. Common side effects include nausea and GI discomfort during dose titration.',
+  },
+  {
+    slug: 'retatrutide',
+    name: 'Retatrutide',
+    price: 239,
+    image: '/images/therapies/retatrutide.png',
+    productImage: '/images/products/r3ta-glp1-gip-gcg.png',
+    description: 'Triple-agonist GLP-1/GIP/glucagon receptor peptide for advanced metabolic support and significant weight management.',
+    benefits: ['Triple-action metabolic targeting', 'Most aggressive weight management option', 'Advanced metabolic optimization', 'Once-weekly injection'],
+    disclaimer: 'Prescription required. Individual results may vary. This is a newer therapy — your provider will determine clinical appropriateness.',
+  },
 ];
 
 /**
@@ -147,9 +182,11 @@ export const PLANS: Plan[] = [
       'Ongoing provider-guided care',
       'Protocol Builder (browse)',
     ],
-    priceLabel: '$149*',
+    pricePrefix: 'Starting at',
+    priceLabel: '$149',
     cardDisclaimer: '2 month commitment required',
-    priceNote: '*Starting price. Final monthly amount depends on selected therapy.',
+    priceNote: 'Final monthly amount depends on selected therapy.',
+    visitFrequency: 'Doctor visit every 6 months',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -176,12 +213,13 @@ export const PLANS: Plan[] = [
     bestFor: 'Peptide stacking & optimization',
     features: [
       '1 Foundation Therapy',
-      '2 Add-Ons',
+      '2 Add-on Therapies',
       'Personalized protocol review',
       'Ongoing provider-guided care',
       'Full Protocol Builder',
     ],
     cardDisclaimer: '2 month commitment required',
+    visitFrequency: 'Doctor visit every 4 months',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,
@@ -208,13 +246,14 @@ export const PLANS: Plan[] = [
     bestFor: 'Regenerative & executive care',
     features: [
       '2 Foundation Therapies',
-      'Up to 4 Add-Ons',
+      'Up to 4 Add-on Therapies',
       'At-home blood test kit included',
       'First doctor visit included',
       'Priority support',
       'Full Protocol Builder',
     ],
     cardDisclaimer: '2 month commitment required',
+    visitFrequency: 'Doctor visit every 6 months',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,

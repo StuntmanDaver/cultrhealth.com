@@ -2,13 +2,9 @@
 
 import type { PaymentProvider } from '@/lib/payments/payment-types';
 import {
-  KLARNA_ENABLED,
-  AFFIRM_ENABLED,
   COREPAY_ENABLED,
   NOWPAYMENTS_ENABLED,
   CHERRY_ENABLED,
-  COINBASE_COMMERCE_ENABLED,
-  isAmountEligible,
 } from '@/lib/config/payments';
 import { CreditCard, Bitcoin } from 'lucide-react';
 
@@ -68,64 +64,13 @@ export function PaymentMethodSelector({
     comingSoon: true,
   });
 
-  if (bnplEnabled && isAmountEligible('klarna', amountCents)) {
-    options.push({
-      id: 'klarna',
-      label: 'Klarna',
-      sublabel: 'Pay in 4 interest-free installments',
-      icon: <KlarnaLogo />,
-      enabled: KLARNA_ENABLED,
-      comingSoon: !KLARNA_ENABLED,
-    });
-  } else if (KLARNA_ENABLED) {
-    // show even outside amount range when enabled
-  } else {
-    options.push({
-      id: 'klarna',
-      label: 'Klarna',
-      sublabel: 'Pay in 4 interest-free installments',
-      icon: <KlarnaLogo />,
-      enabled: false,
-      comingSoon: true,
-    });
-  }
-
-  if (bnplEnabled && isAmountEligible('affirm', amountCents)) {
-    options.push({
-      id: 'affirm',
-      label: 'Affirm',
-      sublabel: 'Pay over time',
-      icon: <AffirmLogo />,
-      enabled: AFFIRM_ENABLED,
-      comingSoon: !AFFIRM_ENABLED,
-    });
-  } else if (!AFFIRM_ENABLED) {
-    options.push({
-      id: 'affirm',
-      label: 'Affirm',
-      sublabel: 'Pay over time',
-      icon: <AffirmLogo />,
-      enabled: false,
-      comingSoon: true,
-    });
-  }
-
   options.push({
     id: 'cherry',
-    label: 'Cherry Financing',
+    label: 'Financing - by Cherry',
     sublabel: 'Healthcare payment plans',
     icon: <CherryLogo />,
     enabled: CHERRY_ENABLED,
     comingSoon: !CHERRY_ENABLED,
-  });
-
-  options.push({
-    id: 'coinbase_commerce',
-    label: 'Coinbase Commerce',
-    sublabel: 'Pay with crypto',
-    icon: <CoinbaseLogo />,
-    enabled: COINBASE_COMMERCE_ENABLED,
-    comingSoon: !COINBASE_COMMERCE_ENABLED,
   });
 
   // Always show the selector — we have Coming Soon providers
@@ -199,34 +144,10 @@ function BitcoinIcon() {
   );
 }
 
-function KlarnaLogo() {
-  return (
-    <span className="inline-flex items-center justify-center w-12 h-5 bg-pink-50 rounded text-[10px] font-bold text-pink-600 tracking-wide">
-      Klarna
-    </span>
-  );
-}
-
-function AffirmLogo() {
-  return (
-    <span className="inline-flex items-center justify-center w-12 h-5 bg-blue-50 rounded text-[10px] font-bold text-blue-700 tracking-wide">
-      affirm
-    </span>
-  );
-}
-
 function CherryLogo() {
   return (
     <span className="inline-flex items-center justify-center w-12 h-5 bg-red-50 rounded text-[10px] font-bold text-red-600 tracking-wide">
       Cherry
-    </span>
-  );
-}
-
-function CoinbaseLogo() {
-  return (
-    <span className="inline-flex items-center justify-center w-12 h-5 bg-blue-50 rounded text-[10px] font-bold text-blue-600 tracking-wide">
-      Coinbase
     </span>
   );
 }

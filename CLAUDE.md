@@ -1063,6 +1063,24 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 
 ---
 
+## Cursor IDE Rules (`.cursorrules`)
+
+An exhaustive `.cursorrules` file exists at the project root with 23 sections of guardrails for Cursor AI. It is automatically loaded by Cursor for all AI interactions and covers:
+
+- **Tech stack lock** — explicit "DO NOT introduce" list preventing dependency drift
+- **HIPAA compliance** — mandatory rules with correct/incorrect code examples
+- **Database rules** — @vercel/postgres NUMERIC coercion, SQL patterns (make_interval, IS DISTINCT FROM, COUNT(*)::integer, ::float8)
+- **Brand design system** — color tokens, typography, undefined tokens to avoid (cultr-copper, cultr-charcoal)
+- **Deployment safety** — `vercel --prod` incident prevention, branch strategy
+- **Code patterns** — server/client split, imports, Button usage, cn() utility, API route template, auth functions
+- **Known bugs** — 8 previously fixed bugs with "DO NOT reintroduce" warnings
+- **Common mistakes** — explicit DO/DON'T guardrails checklist
+- **Domain-specific** — membership tiers/pricing, creator affiliate system, consultations, QuickBooks, email rules
+
+**Keep `.cursorrules` in sync with CLAUDE.md** — when adding new patterns or fixing bugs, update both files.
+
+---
+
 ## Known Technical Debt
 
 ### Legacy/Deprecated Code

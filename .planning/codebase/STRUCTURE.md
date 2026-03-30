@@ -149,6 +149,13 @@ project-root/
 - `middleware.ts`: Edge middleware for subdomain routing
 - `vercel.json`: Cron job schedules
 
+**AI Tool Configuration:**
+- `CLAUDE.md`: Claude Code instructions (canonical project rules)
+- `AGENTS.md`: OpenAI Codex instructions (mirrors CLAUDE.md)
+- `.cursorrules`: Cursor IDE AI guardrails (23 sections — HIPAA, brand, DB, deploy, security, patterns)
+- `.claude/settings.local.json`: Claude Code permissions + PostToolUse hooks (tests, type-check, code-audit)
+- `.claude/commands/pre-deploy.md`: `/pre-deploy` slash command (12-step deployment checklist)
+
 **Auth:**
 - `lib/auth.ts`: Member/creator/admin JWT auth + `getMembershipTier()`
 - `lib/portal-auth.ts`: Phone OTP portal dual-token auth

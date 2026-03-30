@@ -51,6 +51,20 @@ If you're setting up a new CULTR Health instance:
 - **Stripe:** https://support.stripe.com
 - **Code Issues:** Check GitHub issues or create new one
 
+## AI Tooling Configuration
+
+The project includes configuration files for multiple AI coding assistants:
+
+| File | Tool | Purpose |
+|------|------|---------|
+| `CLAUDE.md` | Claude Code | Canonical project instructions — tech stack, patterns, HIPAA rules, architecture |
+| `AGENTS.md` | OpenAI Codex | Mirrors CLAUDE.md for Codex CLI integration |
+| `.cursorrules` | Cursor IDE | 23-section guardrail ruleset (HIPAA, brand, DB, deploy, security, patterns) |
+| `.claude/settings.local.json` | Claude Code | Permissions + PostToolUse hooks (tests, type-check, code-audit) |
+| `.claude/commands/pre-deploy.md` | Claude Code | `/pre-deploy` slash command (12-step deployment checklist) |
+
+When updating project conventions, keep all three instruction files (`CLAUDE.md`, `AGENTS.md`, `.cursorrules`) in sync.
+
 ## Contributing
 
 When adding new integrations or features:

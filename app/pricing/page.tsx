@@ -174,7 +174,7 @@ export default function PricingPage() {
                   {[
                     { feature: 'Monthly Price', values: ['$149*', '$499', '$1,049'] },
                     { feature: 'At Home Lab Test', values: ['$135', '$135', 'Included'], hasBiomarkerLink: true },
-                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 6 months', 'Every 6 months'] },
+                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 4 months', 'Every 6 months'] },
                     { feature: 'Foundation Therapies', values: ['1', '1', '2'] },
                     { feature: 'Add-On Therapies', values: ['—', '2', 'Up to 4'] },
                     { feature: 'Protocol Library', values: [true, true, true] },

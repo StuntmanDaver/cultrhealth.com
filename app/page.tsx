@@ -138,7 +138,7 @@ export default function HomePage() {
           </div>
           <ScrollReveal className="text-center mb-12 mt-2 md:mt-0">
             <h2 className="text-xl md:text-3xl lg:text-4xl font-display font-bold text-cultr-forest">
-              Get matched to a personalized care path built around your goals, symptoms, and lab data — with licensed providers and advanced support when appropriate.
+              Get matched to a personalized care path built around your goals, symptoms, and lab data — with licensed providers.
             </h2>
           </ScrollReveal>
 
@@ -385,14 +385,14 @@ export default function HomePage() {
             </h2>
           </ScrollReveal>
 
+          <div className="max-w-5xl mx-auto mb-10">
+            <ClubBanner />
+          </div>
+
           <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {PLANS.filter((p) => p.slug !== 'club').map((plan) => (
               <PricingCard key={plan.slug} plan={plan} />
             ))}
-          </div>
-
-          <div className="max-w-5xl mx-auto mb-10 mt-12">
-            <ClubBanner />
           </div>
 
           <div className="text-center mt-12 space-y-4">

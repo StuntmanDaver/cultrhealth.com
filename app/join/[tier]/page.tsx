@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { PLANS, MEMBERSHIP_DISCLAIMER, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON, CORE_THERAPIES } from '@/lib/config/plans';
@@ -9,10 +10,7 @@ import Button from '@/components/ui/Button';
 import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types';
-import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types';
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
-import { KlarnaWidget } from '@/components/payments/KlarnaWidget';
-import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton';
 import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm';
 import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED, COREPAY_ENABLED, NOWPAYMENTS_ENABLED } from '@/lib/config/payments';
 import { CorePayForm } from '@/components/payments/CorePayForm';
@@ -247,14 +245,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   const primaryProvider = getPrimaryPaymentProvider();
   const useAuthorizeNet = primaryProvider === 'authorize_net' && AUTHORIZE_NET_ENABLED;
 
-  // Klarna state
-  const [klarnaClientToken, setKlarnaClientToken] = useState<string | null>(null);
-  const [klarnaSessionLoading, setKlarnaSessionLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Affirm state
-  const [affirmConfig, setAffirmConfig] = useState<AffirmCheckoutConfig | null>(null);
-  const [affirmLoading, setAffirmLoading] = useState(false);
 
   // Authorize.net state
   const [authNetEmail, setAuthNetEmail] = useState('');
@@ -359,97 +350,10 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   const handleSelectPaymentMethod = (provider: PaymentProvider) => {
     setPaymentMethod(provider);
     setError(null);
-    // Reset tokens when switching methods
-    if (provider !== 'klarna') {
-      setKlarnaClientToken(null);
-    }
-    if (provider !== 'affirm') {
-      setAffirmConfig(null);
-    }
     if (provider !== 'nowpayments') {
       setNowPaymentsData(null);
     }
   };
-
-  // Klarna: create session when user clicks checkout button
-  const handleKlarnaCheckout = async () => {
-    if (klarnaClientToken) return; // Already have a session
-    
-    setKlarnaSessionLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/checkout/klarna/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planSlug: plan.slug }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session');
-      setKlarnaClientToken(data.client_token);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load Klarna');
-    } finally {
-      setKlarnaSessionLoading(false);
-    }
-  };
-
-  // Affirm: create checkout config when user clicks checkout button
-  const handleAffirmCheckout = async () => {
-    if (affirmConfig) return; // Already have config
-    
-    setAffirmLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/checkout/affirm/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planSlug: plan.slug }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout');
-      setAffirmConfig(data.checkout);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load Affirm');
-    } finally {
-      setAffirmLoading(false);
-    }
-  };
-
-  // Klarna: after user authorizes in widget
-  const handleKlarnaAuthorized = useCallback(async (authorizationToken: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/checkout/klarna/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authorizationToken,
-          planSlug: plan.slug,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Klarna order failed');
-
-      if (data.fraud_status === 'ACCEPTED') {
-        router.push(`/success?provider=klarna&order_id=${data.order_id}`);
-      } else if (data.fraud_status === 'PENDING') {
-        router.push(`/success?provider=klarna&order_id=${data.order_id}&pending=true`);
-      } else {
-        setError('Klarna order was not approved. Please try another payment method.');
-        setPaymentMethod(COREPAY_ENABLED ? 'corepay' : 'stripe');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Klarna payment failed');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [plan.slug, router]);
-
-  const handleBnplError = useCallback((msg: string) => {
-    setError(msg);
-    setPaymentMethod(COREPAY_ENABLED ? 'corepay' : 'stripe');
-  }, []);
 
   // NOWPayments: create Bitcoin payment
   const handleNowPaymentsCheckout = async () => {
@@ -498,6 +402,36 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
       {/* Main Content */}
       <section className="py-12 px-6 section-veil">
         <div className="max-w-2xl mx-auto">
+          {/* Product Detail (Core therapies only) */}
+          {coreTherapy && (
+            <div className="bg-white border border-cultr-sage rounded-2xl p-8 md:p-10 shadow-sm mb-8">
+              <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="w-32 h-32 sm:w-40 sm:h-40 relative shrink-0 rounded-xl overflow-hidden bg-cultr-offwhite border border-cultr-sage/30 mx-auto sm:mx-0">
+                  <Image
+                    src={coreTherapy.productImage}
+                    alt={coreTherapy.name}
+                    fill
+                    className="object-contain p-2"
+                    sizes="160px"
+                  />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-display font-bold text-cultr-forest mb-2">{coreTherapy.name}</h2>
+                  <p className="text-sm text-cultr-textMuted mb-4">{coreTherapy.description}</p>
+                  <ul className="space-y-2 mb-4">
+                    {coreTherapy.benefits.map((benefit, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <Check className="w-4 h-4 text-cultr-forest shrink-0 mt-0.5" />
+                        <span className="text-cultr-text">{benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="text-[11px] text-cultr-textMuted/70 leading-relaxed">{coreTherapy.disclaimer}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Plan Card */}
           <div className="bg-white border border-cultr-sage rounded-2xl p-8 md:p-10 shadow-sm mb-8">
             {/* Features */}
@@ -540,18 +474,28 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     </span>
                     <span className="text-sm font-medium text-cultr-forest">${twoMonthCost.toLocaleString()}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-cultr-text">At-home blood test kit</span>
-                    <span className="text-sm font-medium text-cultr-forest">
-                      {isConcierge ? 'included' : `$${BLOOD_TEST_ADDON.price}`}
-                    </span>
+
+                  {/* Onboarding Fee */}
+                  <div className="border-t border-cultr-sage/20 pt-3 mt-1">
+                    <p className="text-[10px] font-bold text-cultr-forest tracking-widest uppercase mb-2">
+                      Onboarding Fee
+                    </p>
+                    <div className="space-y-2 pl-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-cultr-text">At-home blood test kit</span>
+                        <span className="text-sm font-medium text-cultr-forest">
+                          {isConcierge ? 'included' : `$${BLOOD_TEST_ADDON.price}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-cultr-text">First doctor visit</span>
+                        <span className="text-sm font-medium text-cultr-forest">
+                          {isConcierge ? 'included' : `$${DOCTOR_CONSULTATION_ADDON.price}`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-cultr-text">First doctor visit</span>
-                    <span className="text-sm font-medium text-cultr-forest">
-                      {isConcierge ? 'included' : `$${DOCTOR_CONSULTATION_ADDON.price}`}
-                    </span>
-                  </div>
+
                   <div className="border-t border-cultr-sage/30 pt-3 mt-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-cultr-text">Today&apos;s total</span>
@@ -642,62 +586,6 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   />
                 </Elements>
               )
-            )}
-
-            {/* Klarna Widget (shown when Klarna is selected) */}
-            {paymentMethod === 'klarna' && klarnaClientToken && (
-              <div className="mb-6">
-                <KlarnaWidget
-                  clientToken={klarnaClientToken}
-                  onAuthorized={handleKlarnaAuthorized}
-                  onError={handleBnplError}
-                />
-              </div>
-            )}
-
-            {paymentMethod === 'klarna' && !klarnaClientToken && !klarnaSessionLoading && (
-              <Button
-                onClick={handleKlarnaCheckout}
-                disabled={!consentChecked}
-                className="w-full text-lg py-6 mb-6"
-              >
-                Continue with Klarna
-              </Button>
-            )}
-
-            {paymentMethod === 'klarna' && klarnaSessionLoading && (
-              <div className="flex items-center justify-center py-6 mb-6">
-                <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
-                <span className="ml-2 text-sm text-cultr-textMuted">Loading Klarna...</span>
-              </div>
-            )}
-
-            {/* Affirm Button (shown when Affirm is selected) */}
-            {paymentMethod === 'affirm' && !affirmConfig && !affirmLoading && (
-              <Button
-                onClick={handleAffirmCheckout}
-                disabled={!consentChecked}
-                className="w-full text-lg py-6 mb-6"
-              >
-                Continue with Affirm
-              </Button>
-            )}
-
-            {paymentMethod === 'affirm' && affirmConfig && (
-              <div className="mb-6">
-                <AffirmCheckoutButton
-                  checkoutConfig={affirmConfig}
-                  onError={handleBnplError}
-                  loading={affirmLoading}
-                />
-              </div>
-            )}
-
-            {paymentMethod === 'affirm' && affirmLoading && (
-              <div className="flex items-center justify-center py-6 mb-6">
-                <Loader2 className="w-5 h-5 animate-spin text-cultr-forest" />
-                <span className="ml-2 text-sm text-cultr-textMuted">Loading Affirm...</span>
-              </div>
             )}
 
             {/* CorePay Card Form */}

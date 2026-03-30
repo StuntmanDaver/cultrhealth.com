@@ -1,3 +1,26 @@
+## [2026-03-30] - Cursor AI Rules File (.cursorrules)
+
+### New File
+- Created `.cursorrules` — exhaustive 23-section guardrail ruleset for Cursor IDE AI
+- Synthesized from CLAUDE.md, CHANGELOG.md, and `.planning/codebase/` analysis documents
+
+### Sections
+- Project identity, tech stack lock (DO NOT introduce list), HIPAA compliance (mandatory PHI rules)
+- File naming conventions, code patterns (server/client split, imports, Button, cn(), API routes, auth functions)
+- Database rules (@vercel/postgres NUMERIC coercion, make_interval(), IS DISTINCT FROM, COUNT(*)::integer)
+- Tailwind brand design system (color tokens, undefined tokens to avoid, typography rules)
+- Deployment safety (vercel --prod incident prevention, branch strategy)
+- Membership tiers & pricing (current as of Mar 29: Core $149*, Catalyst+ $499, Concierge $1,049)
+- Creator affiliate system (commission model, active coupons, attribution cookies)
+- Known bugs & tech debt (8 fixed bugs to never reintroduce, dead code warnings, TEAM_EMAILS duplication)
+- Testing, email, middleware, env vars, performance, security rules
+- Join page (overflow-x-hidden Carousel), Provider tools (Protocol Builder tiers), Consultations (Cal.com/Daily.co/S3), QuickBooks (token rotation)
+
+### Files Added
+- `.cursorrules` — 23 guardrail sections (~350 lines)
+
+---
+
 ## [2026-03-29] - Telehealth Consultations (Cal.com + Daily.co + S3)
 
 ### Video Consultation System

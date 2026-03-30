@@ -394,7 +394,18 @@ For technical issues or questions:
 
 ---
 
+## AI Tooling
+
+This project includes configuration for multiple AI coding assistants:
+
+- **[CLAUDE.md](./CLAUDE.md)** — Claude Code instructions (canonical project rules)
+- **[AGENTS.md](./AGENTS.md)** — OpenAI Codex instructions
+- **[.cursorrules](./.cursorrules)** — Cursor IDE AI guardrails (23 sections: HIPAA, brand, DB, deploy, security, patterns)
+
+When updating conventions, keep all three files in sync.
+
+---
+
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md) for detailed version history.
-# Build fix
