@@ -96,7 +96,7 @@ SECTION 1: THE PROBLEM (1:00-3:00)
 
 SECTION 2: WHAT CULTR DOES DIFFERENTLY (3:00-5:00)
 - Explain the CULTR model: telehealth + comprehensive labs + personalized protocols
-- 33 biomarkers tested vs. standard 5-10
+- 33 biomarkers tested (upgradable to 59+) vs. standard 5-10
 - Licensed providers who specialize in optimization
 - Access to peptide protocols, GLP-1s, and hormone optimization
 - Plans from $149/mo — less than most gym memberships
@@ -129,7 +129,7 @@ KEY POINTS TO COVER
 
 2. Why comprehensive lab testing matters
    - Standard panels miss inflammation, hormonal imbalances, nutrient deficiencies
-   - CULTR tests 33 biomarkers to find the root cause, not just treat symptoms
+   - CULTR tests 33 biomarkers (upgradable to 59+) to find the root cause, not just treat symptoms
 
 3. Peptides are not steroids
    - Explain what peptides actually are (short chains of amino acids)
@@ -169,7 +169,7 @@ CLOSER
 
 I don't usually recommend health products in my newsletter — but this one is different enough that I had to tell you about it.
 
-I recently started working with CULTR Health. They're a telehealth platform that does comprehensive lab testing (33 biomarkers, not the basic 5 your doctor runs) and matches you with licensed providers who build personalized protocols.
+I recently started working with CULTR Health. They're a telehealth platform that does comprehensive lab testing (33 biomarkers, upgradable to 59+ — not the basic 5 your doctor runs) and matches you with licensed providers who build personalized protocols.
 
 I'm talking peptides, hormone optimization, GLP-1 protocols — the kind of stuff that used to cost $5K+ per year at concierge clinics. CULTR starts at $149/mo.
 
@@ -294,7 +294,7 @@ CULTR: "Here are 3 things we found that explain why you feel like garbage"
 
         <CopyBlock label="Tweet 2">{`The same longevity protocols celebrities pay $10K/year for — now from $149/mo.
 
-Licensed providers. Personalized peptide protocols. 33 biomarker testing (SiPhox Health).
+Licensed providers. Personalized peptide protocols. 33 biomarker testing, upgradable to 59+ (SiPhox Health).
 
 Not a supplement company. An actual medical practice. @cultrhealth
 

@@ -19,7 +19,7 @@ export const messagingPlaybook: Record<string, ResourceEntry> = {
         <SectionHeading>The 10 Core Claims</SectionHeading>
         <Paragraph>Each claim can be used across short-form, long-form, captions, and email. Always pair with your personal experience and an FTC disclosure.</Paragraph>
 
-        <CopyBlock label="Claim 1 — The Data Advantage">{`"Your doctor tests 5 markers. CULTR tests 33. That's the difference between 'you're fine' and actually knowing what's going on."
+        <CopyBlock label="Claim 1 — The Data Advantage">{`"Your doctor tests 5 markers. CULTR tests 33 (upgradable to 59+). That's the difference between 'you're fine' and actually knowing what's going on."
 
 Why it works: Specific numbers, no medical claim, positions CULTR as more thorough.`}</CopyBlock>
 

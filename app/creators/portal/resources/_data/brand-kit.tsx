@@ -176,7 +176,7 @@ export const brandKit: Record<string, ResourceEntry> = {
         <BulletList items={[
           'Use sentence case for headlines (capitalize first word only)',
           'Short sentences. Short paragraphs. White space is your friend.',
-          'Numbers are more powerful than adjectives ("33 biomarkers" > "comprehensive testing")',
+          'Numbers are more powerful than adjectives ("33 biomarkers, upgradable to 59+" > "comprehensive testing")',
           'Avoid exclamation marks in professional copy (one per piece maximum)',
           'CULTR is always written in all-caps. "CULTR Health" on first reference, "CULTR" thereafter.',
           'Never abbreviate to "CH" or "Cultr" (lowercase)',

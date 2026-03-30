@@ -122,7 +122,7 @@ PAIN POINTS (pick 3-4 that match your audience):
 3. Get Optimized — "Personalized protocols delivered to your door. Quarterly retesting to track progress."
 
 KEY DIFFERENTIATORS:
-- 33 biomarkers (vs. the 5-10 your doctor tests)
+- 33 biomarkers, upgradable to 59+ (vs. the 5-10 your doctor tests)
 - Licensed, board-certified providers
 - Peptides, GLP-1s, and hormone optimization
 - From $149/mo (less than most gym memberships)`}</CopyBlock>
@@ -134,7 +134,7 @@ YOUR TESTIMONIAL: Share your personal experience with specific details.
 
 STATS (use actual CULTR stats when available):
 - "5,000+ members optimizing their health"
-- "33 biomarkers tested per panel"
+- "33 biomarkers tested per panel (upgradable to 59+)"
 - "Licensed providers in [X] states"
 
 TRUST ELEMENTS:
@@ -242,7 +242,7 @@ P.S. Hit reply and tell me — what's your #1 health goal right now?`}</CopyBloc
         <CopyBlock label="Subject: Every month you wait is a month of data you're missing">{`[Frame urgency around opportunity cost, not fake scarcity. "You can't optimize what you don't measure." Reiterate the offer.]`}</CopyBlock>
 
         <SubHeading>Day 14 — Final Push</SubHeading>
-        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "33 biomarkers + licensed provider + personalized protocol from $149/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
+        <CopyBlock label="Subject: Last chance for [discount]">{`[Final email with clear CTA. Summarize the value: "33 biomarkers (upgradable to 59+) + licensed provider + personalized protocol from $149/mo." Discount code expires soon. FTC disclosure.]`}</CopyBlock>
 
         <SectionHeading>Tips for the Sequence</SectionHeading>
         <BulletList items={[
