@@ -67,10 +67,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to check renewal eligibility:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to check eligibility';
-
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: 'Unable to check eligibility. Please try again.' },
       { status: 500 }
     );
   }

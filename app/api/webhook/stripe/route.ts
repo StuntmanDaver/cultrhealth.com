@@ -345,7 +345,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           planName: session.metadata?.plan_tier || 'Membership',
           dashboardUrl,
         });
-        console.log('Welcome email sent to:', custEmail);
+        console.log('Welcome email sent for subscription');
 
         // Sync to Mailchimp with tier tag (non-blocking)
         const planTier = session.metadata?.plan_tier || 'unknown'
@@ -596,7 +596,7 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
           lmnNumber: lmnData.lmnNumber,
           lmnPdfBuffer: pdfBuffer,
         });
-        console.log('Order confirmation with LMN sent:', { email: customerEmail });
+        console.log('Order confirmation with LMN sent');
       }
     } else {
       // No LMN-eligible items - send regular confirmation
@@ -615,7 +615,7 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
           currency: session.currency?.toUpperCase() || 'USD',
           paymentMethod: 'Credit Card',
         });
-        console.log('Order confirmation sent:', { email: customerEmail });
+        console.log('Order confirmation sent');
       }
     }
   } catch (lmnError) {

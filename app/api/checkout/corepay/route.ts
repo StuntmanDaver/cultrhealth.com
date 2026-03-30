@@ -111,7 +111,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('CorePay subscription checkout error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to process payment';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: 'Payment processing failed. Please try again.' }, { status: 500 });
   }
 }

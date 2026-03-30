@@ -383,10 +383,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to submit intake form';
-
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: 'Unable to submit intake form. Please try again or contact support.' },
       { status: 500 }
     );
   }

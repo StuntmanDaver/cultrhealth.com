@@ -111,10 +111,8 @@ export async function POST(request: NextRequest) {
       hasApiKey: !!process.env.ASHER_MED_API_KEY,
     });
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to get upload URL';
-
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: 'File upload failed. Please try again.' },
       { status: 500 }
     );
   }

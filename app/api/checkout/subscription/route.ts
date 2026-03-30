@@ -131,9 +131,9 @@ export async function POST(request: NextRequest) {
       redirectUrl: session.url,
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Checkout session creation failed'
+    console.error('Subscription checkout error:', error)
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Unable to create checkout session. Please try again.' },
       { status: 500 }
     )
   }

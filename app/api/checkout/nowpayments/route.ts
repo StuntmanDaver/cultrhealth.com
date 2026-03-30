@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('NOWPayments checkout error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Failed to create Bitcoin payment';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: 'Unable to create payment. Please try again.' }, { status: 500 });
   }
 }

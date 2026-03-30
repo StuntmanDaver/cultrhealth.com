@@ -178,7 +178,7 @@ describe('Protocol Generate API', () => {
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.error).toBe('Asher Med API error')
+      expect(data.error).toBe('Protocol generation failed. Please try again.')
     })
   })
 

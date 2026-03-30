@@ -153,10 +153,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to submit renewal order:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to submit renewal order';
-
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: 'Unable to submit renewal. Please try again.' },
       { status: 500 }
     );
   }

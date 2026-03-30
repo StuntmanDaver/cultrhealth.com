@@ -203,10 +203,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Authorize.net product checkout error:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to process payment';
-
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Payment processing failed. Please try again.' },
       { status: 500 }
     );
   }

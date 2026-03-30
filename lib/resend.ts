@@ -327,7 +327,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailRes
       return { success: false, error: error.message }
     }
 
-    console.log('Welcome email sent:', { email, planName })
+    console.log('Welcome email sent:', { planName })
     return { success: true }
   } catch (err) {
     console.error('Failed to send welcome email:', err)
@@ -453,7 +453,7 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       return { success: false, error: error.message }
     }
 
-    console.log('Booking confirmation sent:', { email, appointmentDate })
+    console.log('Booking confirmation sent:', { appointmentDate })
     return { success: true }
   } catch (err) {
     console.error('Failed to send booking confirmation:', err)
@@ -560,7 +560,7 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
       return { success: false, error: error.message }
     }
 
-    console.log('Appointment reminder sent:', { email, hoursUntil })
+    console.log('Appointment reminder sent:', { hoursUntil })
     return { success: true }
   } catch (err) {
     console.error('Failed to send appointment reminder:', err)
@@ -709,7 +709,7 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
       return { success: false, error: error.message }
     }
 
-    console.log('Post-visit follow-up sent:', { email, appointmentType })
+    console.log('Post-visit follow-up sent:', { appointmentType })
     return { success: true }
   } catch (err) {
     console.error('Failed to send post-visit follow-up:', err)
@@ -863,7 +863,7 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
       return { success: false, error: error.message }
     }
 
-    console.log('Quote request notification sent:', { quoteId, email, totalItems })
+    console.log('Quote request notification sent:', { quoteId, totalItems })
     return { success: true }
   } catch (err) {
     console.error('Failed to send quote notification:', err)
@@ -1020,7 +1020,7 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
       return { success: false, error: error.message }
     }
 
-    console.log('Order confirmation with LMN sent:', { email, orderNumber, lmnNumber })
+    console.log('Order confirmation with LMN sent:', { orderNumber, lmnNumber })
     return { success: true }
   } catch (err) {
     console.error('Failed to send order confirmation with LMN:', err)
@@ -1163,7 +1163,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
       return { success: false, error: error.message }
     }
 
-    console.log('Order confirmation sent:', { email, orderNumber })
+    console.log('Order confirmation sent:', { orderNumber })
     return { success: true }
   } catch (err) {
     console.error('Failed to send order confirmation:', err)
@@ -1299,7 +1299,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
       return { success: false, error: error.message }
     }
 
-    console.log('Shipping notification sent:', { email, orderNumber, carrier, trackingNumber })
+    console.log('Shipping notification sent:', { orderNumber, carrier, trackingNumber })
     return { success: true }
   } catch (err) {
     console.error('Failed to send shipping notification:', err)

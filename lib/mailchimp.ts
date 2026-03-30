@@ -66,7 +66,7 @@ export async function syncContactToMailchimp(opts: SyncContactOptions): Promise<
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('[mailchimp] Sync failed:', { email: opts.email, error })
+      console.error('[mailchimp] Sync failed:', { error })
     }
   } catch (err) {
     console.error('[mailchimp] Sync error:', err)
@@ -99,7 +99,7 @@ export async function addTagsToContact(email: string, tags: string[]): Promise<v
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('[mailchimp] Tag failed:', { email, tags, error })
+      console.error('[mailchimp] Tag failed:', { tags, error })
     }
   } catch (err) {
     console.error('[mailchimp] Tag error:', err)

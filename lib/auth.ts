@@ -43,7 +43,7 @@ export async function verifyMagicLinkToken(token: string): Promise<{ email: stri
   }
 }
 
-// Session token (long-lived, 7 days)
+// Session token (24 hours -- reduced from 7d for HIPAA compliance)
 export async function createSessionToken(
   email: string,
   customerId: string,
@@ -59,7 +59,7 @@ export async function createSessionToken(
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('24h')
     .sign(SESSION_SECRET)
 }
 
@@ -99,7 +99,7 @@ export async function setSessionCookie(token: string): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24, // 24 hours (HIPAA)
     path: '/',
     ...(domain ? { domain } : {}),
   })
@@ -371,14 +371,14 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
       return { authenticated: true, email: auth.email, creatorId: creator.id }
     }
   } catch (dbError) {
-    console.error('[auth] Creator DB lookup failed for:', auth.email, dbError)
+    console.error('[auth] Creator DB lookup failed', dbError instanceof Error ? dbError.message : 'Unknown')
   }
 
   // Team emails always get creator access (staging_creator is a placeholder —
   // dashboard queries will fail since it's not a valid UUID. The login route
   // should have created a real creator record; this fallback means DB was down.)
   if (TEAM_EMAILS.includes(auth.email.toLowerCase())) {
-    console.warn('[auth] staging_creator fallback for team email:', auth.email, '— dashboard will show no real data')
+    console.warn('[auth] staging_creator fallback used -- dashboard will show no real data')
     return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
   }
 

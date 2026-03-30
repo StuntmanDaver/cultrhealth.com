@@ -216,7 +216,7 @@ export async function findOrCreateCustomer(
       const data = await emailSearchRes.json() as { QueryResponse?: { Customer?: Array<{ Id: string }> } }
       const existing = data.QueryResponse?.Customer?.[0]
       if (existing?.Id) {
-        console.log('[quickbooks] Found existing customer by email:', existing.Id)
+        console.log('[quickbooks] Found existing customer:', existing.Id)
         return existing.Id
       }
     }
@@ -235,7 +235,7 @@ export async function findOrCreateCustomer(
     }
 
     // Create new customer
-    console.log('[quickbooks] Creating new customer for:', email)
+    console.log('[quickbooks] Creating new customer')
     const [givenName, ...familyNameParts] = displayName.split(' ')
 
     const createRes = await qbFetch(accessToken, '/customer', {
@@ -470,7 +470,7 @@ export async function sendInvoice(
       console.log('[quickbooks] Failed to parse send response, using fallback:', fallbackLink)
     }
 
-    console.log('[quickbooks] Invoice sent successfully:', invoiceId, 'to:', customerEmail)
+    console.log('[quickbooks] Invoice sent successfully:', invoiceId)
     return { payNowLink }
   } catch (error) {
     console.error('[quickbooks] sendInvoice error:', error)
