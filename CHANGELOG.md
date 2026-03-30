@@ -1,3 +1,32 @@
+## [2026-03-29] - Members Area Route Rename & Provider Sidebar
+
+### Route Rename: /library → /members
+- Renamed `app/library/` → `app/members/` — all member-facing pages now live under `/members`
+- Updated ~100 route references across 40+ files (sidebar nav, page links, API auth redirects, webhook email URLs, payment cancel URLs, Affirm item URLs, Resend email links)
+- Added 301 permanent redirects: `/library` → `/members` and `/library/:path*` → `/members/:path*`
+- HIPAA no-cache headers, robots.txt disallow, and LayoutShell HIDE_CHROME all updated
+
+### Consultations Integrated into Members Area
+- Moved orphaned `app/consultations/` into `app/members/consultations/` — now renders within MemberSidebar
+- Updated all internal links, email URLs (Cal.com webhook, Daily.co webhook, cron reminders), and ConsultationCard action links
+- Added 301 redirect: `/consultations/:path*` → `/members/consultations/:path*`
+
+### Provider Sidebar & Layout
+- New `components/provider/ProviderSidebar.tsx` with Consultations + Protocol Builder nav
+- New `components/provider/ProviderLayoutClient.tsx` with mobile hamburger + email display
+- New `app/provider/layout.tsx` with server-side auth gating (redirects non-providers)
+- Added `/provider` to HIDE_CHROME_PREFIXES and HIPAA no-cache headers
+- Simplified provider page files (auth now handled by layout)
+
+### Video Consultation Camera/Mic Fix
+- Fixed `Permissions-Policy` header: global rule blocked `camera=()` and `microphone=()`
+- Added override rules for `/members/consultations/:id*` and `/provider/consultations/:id*` allowing `camera=(self), microphone=(self)` for Daily.co video calls
+
+### Test Fixes
+- Fixed `KitEmptyState` test: updated expected price from `$199/mo` to `$149/mo` (Core pricing change)
+- Fixed `KitRegistrationForm` tests: added required-reading checkbox interactions before form submission
+- Result: 50/50 test files, 666/666 tests passing
+
 ## [2026-03-29] - Email Branding & Logo Fix
 
 ### Consultation Email Rebranding
