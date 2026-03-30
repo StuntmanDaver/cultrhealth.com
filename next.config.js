@@ -44,6 +44,23 @@ const nextConfig = {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
           },
+          { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://cdn1.affirm.com https://x.klarnacdn.net https://cdn.daily.co",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https: http:",
+              "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io https://*.daily.co https://*.siphox.com wss://*.daily.co",
+              "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com https://cdn1.affirm.com https://x.klarnacdn.net https://*.daily.co",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self' https://checkout.stripe.com",
+              "frame-ancestors 'none'",
+            ].join('; '),
+          },
         ],
       },
       // Video consultation pages: allow camera + microphone for Daily.co

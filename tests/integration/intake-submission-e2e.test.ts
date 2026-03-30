@@ -431,7 +431,7 @@ describe('Intake Submission E2E', () => {
 
       expect(res.status).toBe(500)
       expect(json.success).toBe(false)
-      expect(json.error).toContain('Asher Med API unreachable')
+      expect(json.error).toContain('Unable to submit intake form')
     })
 
     it('succeeds even when partner note PATCH fails (non-fatal)', async () => {

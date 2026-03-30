@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request state' }, { status: 400 })
 
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unexpected error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('Protocol generation error:', error)
+    return NextResponse.json({ error: 'Protocol generation failed. Please try again.' }, { status: 500 })
   }
 }

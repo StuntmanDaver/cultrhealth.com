@@ -28,10 +28,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Failed to fetch intake questions:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch questions';
-
     return NextResponse.json(
-      { success: false, error: errorMessage },
+      { success: false, error: 'Unable to load questions. Please refresh.' },
       { status: 500 }
     );
   }

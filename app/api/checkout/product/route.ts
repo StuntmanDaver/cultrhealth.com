@@ -126,10 +126,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Product checkout error:', error);
 
-    const errorMessage = error instanceof Error ? error.message : 'Checkout failed';
-
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Checkout failed. Please try again.' },
       { status: 400 }
     );
   }

@@ -152,10 +152,9 @@ export async function POST(request: NextRequest) {
       redirectUrl,
     });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Checkout failed';
-
+    console.error('Checkout error:', error);
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'Checkout failed. Please try again.' },
       { status: 400 }
     );
   }

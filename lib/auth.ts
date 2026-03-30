@@ -43,7 +43,7 @@ export async function verifyMagicLinkToken(token: string): Promise<{ email: stri
   }
 }
 
-// Session token (long-lived, 7 days)
+// Session token (24 hours -- reduced from 7d for HIPAA compliance)
 export async function createSessionToken(
   email: string,
   customerId: string,
@@ -59,7 +59,7 @@ export async function createSessionToken(
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7d')
+    .setExpirationTime('24h')
     .sign(SESSION_SECRET)
 }
 
@@ -99,7 +99,7 @@ export async function setSessionCookie(token: string): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24, // 24 hours (HIPAA)
     path: '/',
     ...(domain ? { domain } : {}),
   })
