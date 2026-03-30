@@ -88,7 +88,7 @@ export default function HomePage() {
               Physician-supervised optimization with lab testing, personalized protocols, and peptide therapy when appropriate.
             </p>
             <p className="text-xs text-cultr-sage font-medium tracking-wide mb-5 drop-shadow">
-              50+ biomarker panel · Licensed providers · Delivered to your door
+              33-biomarker panel · Licensed providers · Delivered to your door
             </p>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
@@ -307,7 +307,7 @@ export default function HomePage() {
                 <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold">CULTR</span></div>
               </div>
               {[
-                { cells: ['Comprehensive lab panels', '5-10 markers', '50+ markers'], hasBiomarkerLink: true },
+                { cells: ['Comprehensive lab panels', '5-10 markers', '33 biomarkers'], hasBiomarkerLink: true },
                 { cells: ['Wait time for appointments', '2-4 weeks', '24-48 hours'] },
                 { cells: ['Provider messaging', 'Limited', 'Unlimited'] },
                 { cells: ['Peptide protocols', 'Not available', 'Full access'] },

@@ -19,7 +19,7 @@ export const messagingPlaybook: Record<string, ResourceEntry> = {
         <SectionHeading>The 10 Core Claims</SectionHeading>
         <Paragraph>Each claim can be used across short-form, long-form, captions, and email. Always pair with your personal experience and an FTC disclosure.</Paragraph>
 
-        <CopyBlock label="Claim 1 — The Data Advantage">{`"Your doctor tests 5 markers. CULTR tests 50+. That's the difference between 'you're fine' and actually knowing what's going on."
+        <CopyBlock label="Claim 1 — The Data Advantage">{`"Your doctor tests 5 markers. CULTR tests 33. That's the difference between 'you're fine' and actually knowing what's going on."
 
 Why it works: Specific numbers, no medical claim, positions CULTR as more thorough.`}</CopyBlock>
 
@@ -112,7 +112,7 @@ Why it works: Relatable experience, includes disclaimer, curiosity-driven.`}</Co
 
         <SubHeading>Middle of Funnel (Consideration)</SubHeading>
         <Paragraph>Introduce CULTR as the solution. Use proof mechanisms.</Paragraph>
-        <CopyBlock>{`"I got 28–59 biomarkers tested through CULTR — here are the 3 things that surprised me."
+        <CopyBlock>{`"I got 33 biomarkers tested through CULTR — here are the 3 things that surprised me."
 "My provider built a protocol based on MY data, not a generic one-size-fits-all plan."`}</CopyBlock>
 
         <SubHeading>Bottom of Funnel (Conversion)</SubHeading>
@@ -226,7 +226,7 @@ Close: "CULTR gives you comprehensive labs, a licensed provider, and personalize
 
 Reframe: "CULTR doesn't replace your PCP. It complements them. Your doctor focuses on disease treatment; CULTR focuses on optimization. Think of it as adding a specialist to your team."
 
-Proof: "My doctor tested 5 markers and said I was fine. CULTR tested 50+ and found [X]. Both are valuable — they just serve different purposes."`}</CopyBlock>
+Proof: "My doctor tested 5 markers and said I was fine. CULTR tested 33 and found [X]. Both are valuable — they just serve different purposes."`}</CopyBlock>
 
         <SubHeading>&quot;Is this legit / a scam?&quot;</SubHeading>
         <CopyBlock label="Response Framework">{`Credentials: "Licensed medical practice. Board-certified providers. All medications from licensed US pharmacies. HIPAA compliant."

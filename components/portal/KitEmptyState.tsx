@@ -38,7 +38,7 @@ export function KitEmptyState({ tier, hasKitOrder }: KitEmptyStateProps) {
           Add Blood Testing to Your Plan
         </h2>
         <p className="text-sm text-brand-primary/60 mb-6">
-          Add a blood test kit to your plan for $135. Get 50+ biomarkers analyzed
+          Add a blood test kit to your plan for $135. Get 33 biomarkers analyzed
           from the comfort of your home.
         </p>
         <Link href="/join/core">

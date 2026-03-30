@@ -123,7 +123,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'What labs are included?',
-                  answer: 'We test 28 biomarkers per test (upgradeable up to 59), provided by SiPho Health — including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
+                  answer: 'We test 33 critical biomarkers through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
                 },
                 {
                   question: 'Where do medications come from?',

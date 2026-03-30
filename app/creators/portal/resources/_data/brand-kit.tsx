@@ -163,7 +163,7 @@ export const brandKit: Record<string, ResourceEntry> = {
 
         <SubHeading>Voice Examples</SubHeading>
         <CopyBlock label="\u2705 DO">{`"Stop guessing. Start optimizing."
-"Your doctor tests 5 markers. We test 50+."
+"Your doctor tests 5 markers. We test 33."
 "Lab-tested protocols. Licensed providers. Real results."
 "Peptides that work. From $149/mo."`}</CopyBlock>
 
@@ -176,7 +176,7 @@ export const brandKit: Record<string, ResourceEntry> = {
         <BulletList items={[
           'Use sentence case for headlines (capitalize first word only)',
           'Short sentences. Short paragraphs. White space is your friend.',
-          'Numbers are more powerful than adjectives ("28–59 biomarkers" > "comprehensive testing")',
+          'Numbers are more powerful than adjectives ("33 biomarkers" > "comprehensive testing")',
           'Avoid exclamation marks in professional copy (one per piece maximum)',
           'CULTR is always written in all-caps. "CULTR Health" on first reference, "CULTR" thereafter.',
           'Never abbreviate to "CH" or "Cultr" (lowercase)',

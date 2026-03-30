@@ -236,7 +236,7 @@ export default function ProductsPage() {
                 </p>
                 <ul className="space-y-4 mb-8">
                   {[
-                    'Analyzes 28–59 biomarkers (SiPho Health)',
+                    'Analyzes 33 biomarkers (SiPhox EasyDraw Core)',
                     'Considers your health history',
                     'Optimizes for your specific goals',
                     'Adjusts based on progress',

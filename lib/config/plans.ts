@@ -149,7 +149,7 @@ export const PLANS: Plan[] = [
       'Peptide calculator access',
       'Cycle guides & safety info',
       'Instruction video library',
-      'Protocol Builder (browse)',
+      'Protocol Builder',
     ],
     libraryAccess: {
       masterIndex: 'full',
@@ -180,7 +180,7 @@ export const PLANS: Plan[] = [
       '1 Foundation Therapy',
       'Personalized protocol review',
       'Ongoing provider-guided care',
-      'Protocol Builder (browse)',
+      'Protocol Builder',
     ],
     pricePrefix: 'Starting at',
     priceLabel: '$149',
@@ -253,7 +253,7 @@ export const PLANS: Plan[] = [
       'Full Protocol Builder',
     ],
     cardDisclaimer: '2 month commitment required',
-    visitFrequency: 'Doctor visit every 6 months',
+    visitFrequency: 'Doctor visit every 2 months',
     libraryAccess: {
       masterIndex: 'full',
       advancedProtocols: true,

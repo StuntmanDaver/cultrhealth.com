@@ -479,10 +479,10 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     <span className="text-sm font-medium text-cultr-forest">${twoMonthCost.toLocaleString()}</span>
                   </div>
 
-                  {/* Onboarding Fee */}
+                  {/* Onboarding Fees */}
                   <div className="border-t border-cultr-sage/20 pt-3 mt-1">
                     <p className="text-[10px] font-bold text-cultr-forest tracking-widest uppercase mb-2">
-                      Onboarding Fee
+                      Onboarding Fees
                     </p>
                     <div className="space-y-2 pl-3">
                       <div className="flex items-center justify-between">
