@@ -59,7 +59,7 @@ export function MarketingHero({
           <div className="absolute inset-0 bg-brand-primary/65" />
         </>
       )}
-      <div className={cn('relative z-10 max-w-4xl mx-auto', align === 'center' ? 'text-center' : 'text-left')}>
+      <div className={cn('relative z-10', align === 'center' ? 'max-w-4xl mx-auto text-center' : 'max-w-7xl mx-auto text-left')}>
         {badge && (
           <ScrollReveal direction="none" duration={800}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
