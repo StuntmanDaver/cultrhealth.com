@@ -249,7 +249,7 @@ function MediaKitDocument() {
                 { name: 'Club', price: 'Free', best: 'Education & discovery', featured: false },
                 { name: 'Core', price: '$199', interval: '/mo', best: 'Single therapy focus', featured: false },
                 { name: 'Catalyst+', price: '$499', interval: '/mo', best: 'Multi-therapy stacking', featured: true },
-                { name: 'Curated', price: '$1,099', interval: '/mo', best: 'White-glove care', featured: false },
+                { name: 'Concierge', price: '$1,049', interval: '/mo', best: 'White-glove care', featured: false },
               ].map((tier, i) => (
                 <View
                   key={i}

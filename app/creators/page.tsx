@@ -87,7 +87,7 @@ export default function CreatorsPage() {
                 icon: CreditCard,
                 title: 'Membership Direct',
                 rate: `${COMMISSION_CONFIG.directRate}%`,
-                desc: 'Earn on every subscription referral — Core, Catalyst+, or Curated.',
+                desc: 'Earn on every subscription referral — Core, Catalyst+, or Concierge.',
                 color: 'bg-emerald-500/10 text-emerald-700',
               },
               {

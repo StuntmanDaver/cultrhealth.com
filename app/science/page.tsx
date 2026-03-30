@@ -199,7 +199,7 @@ export default async function SciencePage({
               <h2 className="text-2xl font-display font-bold text-cultr-forest mb-2">
                 Start here
               </h2>
-              <p className="text-sm text-cultr-textMuted">Curated reading paths based on your interests.</p>
+              <p className="text-sm text-cultr-textMuted">Concierge reading paths based on your interests.</p>
             </ScrollReveal>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

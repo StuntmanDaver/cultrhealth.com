@@ -90,7 +90,7 @@ const RESOURCE_SECTIONS = [
     items: [
       { title: 'GLP-1 Overview', desc: 'How GLP-1 medications work, benefits, and eligibility', type: 'doc', slug: 'glp-1-overview' },
       { title: 'Peptide Protocols', desc: 'Introduction to peptide therapy and stacking', type: 'doc', slug: 'peptide-protocols' },
-      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Curated explained', type: 'doc', slug: 'membership-tiers' },
+      { title: 'Membership Tiers', desc: 'Core, Catalyst+, and Concierge explained', type: 'doc', slug: 'membership-tiers' },
       { title: 'FAQ Cheat Sheet', desc: 'Common questions your audience will ask', type: 'doc', slug: 'faq-cheat-sheet' },
     ],
   },
