@@ -220,7 +220,7 @@ Yes — CULTR is a licensed medical practice with board-certified providers. All
 Your doctor typically tests 5-10 basic markers. CULTR tests 29 including hormones, inflammation, metabolic markers, and nutrients. Plus you get a provider who specializes in optimization, not just disease treatment.
 
 "What about the cost?"
-Plans start at $149/mo. Compare that to a single specialist visit ($300-500) or concierge medicine ($5,000-10,000/year). HSA/FSA eligible too.
+Plans start at $149/mo. Compare that to a single specialist visit ($300-500) or concierge medicine ($5,000-10,000/year).
 
 "Do I need to stop seeing my regular doctor?"
 No. CULTR complements your existing care. Think of it as adding an optimization specialist to your health team.

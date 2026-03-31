@@ -40,7 +40,7 @@ export default function HowItWorksPage() {
       <MarketingHero
         title="From quiz to clinician-guided plan in a few simple steps."
         subtitle="We use your goals, health history, and biomarker data to build a personalized plan for body composition, performance, recovery, and long-term optimization."
-        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 29-biomarker panel (upgradeable up to 60+) · HSA/FSA eligible · Delivered to your door`}
+        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 29-biomarker panel (upgradeable up to 60+) · Delivered to your door`}
         ctas={[
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
@@ -250,10 +250,6 @@ export default function HowItWorksPage() {
                   {
                     question: 'Can I switch plans?',
                     answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
-                  },
-                  {
-                    question: 'Do you accept HSA/FSA?',
-                    answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.'),
                   },
                 ]} />
               </div>

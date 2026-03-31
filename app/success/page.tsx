@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { LINKS } from '@/lib/config/links';
-import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock, Download, Receipt } from 'lucide-react';
+import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock, Download } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Welcome to CULTR — CULTR Health',
@@ -303,65 +303,6 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       {isProductPurchase && (
         <section className="py-16 px-6 grad-white">
           <div className="max-w-2xl mx-auto">
-            {/* HSA/FSA LMN Section */}
-            {lmnNumber && (
-              <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Receipt className="w-6 h-6 text-emerald-600" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="text-lg font-display font-bold text-cultr-forest">
-                        HSA/FSA Documentation Ready
-                      </h3>
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full uppercase tracking-wide">
-                        Tax-Free
-                      </span>
-                    </div>
-                    <p className="text-sm text-cultr-textMuted mb-4">
-                      Your Letter of Medical Necessity has been generated. Use this document to get reimbursed from your HSA or FSA account.
-                    </p>
-                    <div className="bg-white rounded-lg p-4 border border-emerald-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <p className="text-xs text-cultr-textMuted uppercase tracking-wide">LMN Reference</p>
-                          <p className="font-mono text-sm text-cultr-forest font-medium">{lmnNumber}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-cultr-textMuted uppercase tracking-wide">Eligible Amount</p>
-                          <p className="text-lg font-bold text-emerald-600">
-                            {lmnEligibleTotal ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(lmnEligibleTotal) : '—'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="bg-emerald-50 rounded-lg p-3 flex items-start gap-3">
-                        <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <Check className="w-4 h-4 text-emerald-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-emerald-800">LMN Sent to Your Email</p>
-                          <p className="text-xs text-emerald-700 mt-1">
-                            Check your inbox{customerEmail ? ` at ${customerEmail}` : ''} for the PDF attachment. 
-                            You can also download it anytime from your member portal.
-                          </p>
-                        </div>
-                      </div>
-                      {lmnIssueDate && (
-                        <p className="text-xs text-cultr-textMuted mt-2 text-right">
-                          Issued {lmnIssueDate}
-                        </p>
-                      )}
-                    </div>
-                    <p className="text-xs text-cultr-textMuted mt-3">
-                      Submit this letter to your HSA/FSA administrator for tax-free reimbursement. 
-                      The document is also available in your <Link href="/members" className="text-emerald-600 hover:underline">member portal</Link>.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* What happens next */}
             <div className="text-center">
               <h3 className="text-xl font-display font-bold text-cultr-forest mb-4">

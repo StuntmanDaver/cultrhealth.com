@@ -49,7 +49,7 @@ export const contentCalendar: Record<string, ResourceEntry> = {
           headers={['Day', 'Topic', 'Pillar', 'Format']}
           rows={[
             ['15', '"Is CULTR legit?" — here\'s the answer', 'General', 'Reel / TikTok'],
-            ['16', 'FAQ: cost, insurance, HSA/FSA', 'General', 'Carousel'],
+            ['16', 'FAQ: cost, insurance, billing', 'General', 'Carousel'],
             ['17', 'My [X]-week progress update', 'Metabolic / Recovery', 'Reel / TikTok'],
             ['18', 'Why I chose CULTR over [generic alternative]', 'General', 'Caption post'],
             ['19', 'Brain fog isn\'t normal — it\'s a signal', 'Cognitive', 'Reel / TikTok'],

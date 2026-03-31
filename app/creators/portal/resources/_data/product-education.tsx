@@ -202,7 +202,6 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
           'All tiers include licensed providers and comprehensive lab testing',
           'All medications from licensed US pharmacies',
           'HIPAA-compliant platform',
-          'HSA/FSA eligible',
           'Renews month-to-month after initial 2-month protocol \u2014 cancel before next renewal date',
           'Plans can be upgraded or downgraded at any time',
         ]} />
@@ -234,7 +233,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <CopyBlock>{`Plans start at $149/mo for the Core tier. Higher tiers ($499-$1,049/mo) include more frequent consultations and advanced features. There's also a free Club tier for access to educational resources. All plans renew month-to-month after initial 2-month protocol.`}</CopyBlock>
 
         <SubHeading>&quot;Does insurance cover this?&quot;</SubHeading>
-        <CopyBlock>{`CULTR doesn't bill insurance directly, but memberships are HSA/FSA eligible. Many members use their health savings accounts to cover the cost. Lab draw fees through Quest/Labcorp may also be submitted to insurance separately.`}</CopyBlock>
+        <CopyBlock>{`CULTR doesn't bill insurance directly. Lab draw fees through Quest/Labcorp may be submitted to insurance separately.`}</CopyBlock>
 
         <SubHeading>&quot;Is it worth the price?&quot;</SubHeading>
         <CopyBlock>{`Consider this: a single specialist visit costs $300-500. A concierge doctor runs $5,000-10,000/year. CULTR gives you comprehensive labs, licensed providers, and personalized protocols from $149/mo \u2014 less than most gym memberships.`}</CopyBlock>

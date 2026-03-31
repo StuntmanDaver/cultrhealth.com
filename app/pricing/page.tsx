@@ -14,7 +14,6 @@ import {
   Check,
   X,
   ArrowRight,
-  Sparkles,
   Shield,
   MessageCircle,
   FlaskConical,
@@ -37,10 +36,8 @@ export default function PricingPage() {
     <div className="flex flex-col">
       {/* Hero */}
       <MarketingHero
-        badge={{ icon: Sparkles, label: 'HSA/FSA Eligible' }}
         title={<>Choose the level of support<br className="hidden md:block" /> that fits your goals.</>}
         subtitle="Clinician-guided programs for body composition, performance, recovery, confidence, and long-term optimization. Transparent membership pricing."
-        proofLine="HSA/FSA eligible. Pay with your Health Savings Account or Flexible Spending Account."
         ctas={[
           { label: 'View Plans', href: '#plans' },
           { label: 'How It Works', href: '/how-it-works', variant: 'ghost' },
@@ -379,10 +376,6 @@ export default function PricingPage() {
             {
               question: 'Are medications guaranteed?',
               answer: 'No. Treatment recommendations, prescriptions, and refills are always subject to provider review, clinical appropriateness, and applicable pharmacy and state requirements.',
-            },
-            {
-              question: 'Can I use HSA/FSA funds?',
-              answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We provide all necessary documentation for reimbursement from your health savings account.'),
             },
           ]} />
 

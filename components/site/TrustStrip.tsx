@@ -3,7 +3,6 @@ import {
   FlaskConical,
   Shield,
   Truck,
-  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +11,6 @@ const TRUST_ITEMS = [
   { icon: FlaskConical, label: '29 biomarkers (up to 60+)' },
   { icon: Shield, label: 'HIPAA-compliant' },
   { icon: Truck, label: 'Delivered to your door' },
-  { icon: CreditCard, label: 'HSA/FSA eligible' },
 ];
 
 interface TrustStripProps {

@@ -67,10 +67,6 @@ export default function FAQPage() {
                   question: 'Can I switch plans?',
                   answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
                 },
-                {
-                  question: 'Do you accept HSA/FSA?',
-                  answer: brandify('Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.'),
-                },
               ]} />
             </div>
           </ScrollReveal>

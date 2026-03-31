@@ -100,7 +100,7 @@ SUBHEADLINE: [Supporting context]
 
 CTA BUTTON: "Take the Quiz" or "See Your Plan" → [YOUR LINK]
 
-TRUST BADGES: "Licensed Providers" | "29 Biomarkers (upgradeable up to 60+)" | "HIPAA Compliant" | "HSA/FSA Eligible"`}</CopyBlock>
+TRUST BADGES: "Licensed Providers" | "29 Biomarkers (upgradeable up to 60+)" | "HIPAA Compliant"`}</CopyBlock>
 
         <SectionHeading>Section 2: Problem Statement</SectionHeading>
         <CopyBlock label="Template">{`HEADING: "Sound familiar?"
@@ -150,7 +150,7 @@ COMPARISON:
 - Concierge medicine: $5,000-10,000/year
 - CULTR: From $149/mo (comprehensive labs + provider + protocols included)
 
-ADDITIONAL: "HSA/FSA eligible. Renews month-to-month after initial 2-month protocol."
+ADDITIONAL: "Renews month-to-month after initial 2-month protocol."
 
 YOUR CODE: "Use code [YOUR CODE] for [discount details]"
 

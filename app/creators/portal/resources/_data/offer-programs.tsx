@@ -238,7 +238,6 @@ export const offerPrograms: Record<string, ResourceEntry> = {
           'Always end with a specific CTA (quiz link, not just "check it out")',
           'Include your coupon code — discounts remove the last objection',
           'Mention "cancel future renewals anytime before your next renewal date" to reduce commitment anxiety',
-          'Use "HSA/FSA eligible" as a closing argument for cost-conscious prospects',
         ]} />
       </>
     ),

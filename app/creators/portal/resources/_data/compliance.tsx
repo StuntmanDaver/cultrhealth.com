@@ -89,7 +89,6 @@ export const compliance: Record<string, ResourceEntry> = {
 \u2705 "All medications from licensed US pharmacies"
 \u2705 "HIPAA-compliant platform"
 \u2705 "Plans starting at $149/mo"
-\u2705 "HSA/FSA eligible"
 \u2705 "Telehealth consultations available within 24-48 hours"
 \u2705 "Personalized protocols based on your lab results"
 \u2705 "Access to peptide protocols and GLP-1 medications"

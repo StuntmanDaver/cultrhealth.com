@@ -219,7 +219,7 @@ Focus Seekers → Cognitive optimization, energy data, productivity metrics`}</C
 
 Context: "A single specialist visit is $300-500. Most people spend $200+/mo on supplements that aren't tested against their actual labs. Concierge medicine runs $5K-10K/year."
 
-Close: "CULTR gives you comprehensive labs, a licensed provider, and personalized protocols for less than most gym memberships. Plus it's HSA/FSA eligible."`}</CopyBlock>
+Close: "CULTR gives you comprehensive labs, a licensed provider, and personalized protocols for less than most gym memberships."`}</CopyBlock>
 
         <SubHeading>&quot;I already have a doctor&quot;</SubHeading>
         <CopyBlock label="Response Framework">{`Validate: "That's great — you should keep seeing your doctor."
