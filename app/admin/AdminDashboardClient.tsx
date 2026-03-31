@@ -41,6 +41,9 @@ export default function AdminDashboardClient() {
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('')
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [approvingOrder, setApprovingOrder] = useState<string | null>(null)
+  // Bulk selection
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
   // Cron status
   const [cronStatuses, setCronStatuses] = useState<CronStatus[]>([])
   const [cronLoading, setCronLoading] = useState(false)
@@ -150,6 +153,42 @@ export default function AdminDashboardClient() {
       alert('Failed to approve order')
     } finally {
       setApprovingOrder(null)
+    }
+  }
+
+  async function handleBulkStatusUpdate(newStatus: string) {
+    if (selectedOrders.size === 0) return
+    const ids = Array.from(selectedOrders)
+    setBulkUpdating(true)
+    let successCount = 0
+    let failCount = 0
+    for (const orderId of ids) {
+      try {
+        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        })
+        if (res.ok) {
+          successCount++
+        } else {
+          failCount++
+        }
+      } catch {
+        failCount++
+      }
+    }
+    // Refresh data to show updated statuses
+    if (successCount > 0 && data) {
+      const updatedInvoices = data.invoiceAging.map(inv =>
+        selectedOrders.has(inv.id) ? { ...inv, status: newStatus } : inv
+      )
+      setData({ ...data, invoiceAging: updatedInvoices })
+    }
+    setSelectedOrders(new Set())
+    setBulkUpdating(false)
+    if (failCount > 0) {
+      alert(`${successCount} updated, ${failCount} failed`)
     }
   }
 
@@ -593,20 +632,90 @@ export default function AdminDashboardClient() {
                   })}
                 </div>
 
+                {/* Bulk action bar */}
+                {selectedOrders.size > 0 && (
+                  <div className="flex items-center gap-3 mb-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <span className="text-sm font-medium text-amber-800">{selectedOrders.size} selected</span>
+                    <select
+                      disabled={bulkUpdating}
+                      value=""
+                      onChange={(e) => {
+                        const target = e.target.value
+                        if (!target) return
+                        const LABELS: Record<string, string> = { approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled', cancelled: 'Cancelled' }
+                        if (confirm(`Move ${selectedOrders.size} order(s) to "${LABELS[target] || target}"?\n\nAll intermediate timestamps will be set automatically.`)) {
+                          handleBulkStatusUpdate(target)
+                        }
+                        e.target.value = ''
+                      }}
+                      className="px-3 py-1.5 text-sm rounded-lg border border-amber-300 bg-white text-amber-900 cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="">Move to…</option>
+                      <option value="approved">Approved</option>
+                      <option value="invoice_sent">Invoiced</option>
+                      <option value="paid">Paid</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="fulfilled">Fulfilled</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <button
+                      onClick={() => setSelectedOrders(new Set())}
+                      className="text-sm text-amber-600 hover:text-amber-800 ml-auto"
+                    >
+                      Clear
+                    </button>
+                    {bulkUpdating && <span className="text-xs text-amber-600 animate-pulse">Updating...</span>}
+                  </div>
+                )}
+
                 {/* Orders list */}
                 <div className="border border-brand-primary/10 rounded-lg overflow-hidden">
+                  {/* Select all header */}
+                  {filteredOrders.length > 0 && (
+                    <div className="flex items-center gap-3 px-4 py-2 bg-brand-primary/[0.03] border-b border-brand-primary/10">
+                      <input
+                        type="checkbox"
+                        checked={filteredOrders.length > 0 && filteredOrders.every(inv => selectedOrders.has(inv.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedOrders(new Set([...Array.from(selectedOrders), ...filteredOrders.map(inv => inv.id)]))
+                          } else {
+                            const remaining = new Set(selectedOrders)
+                            filteredOrders.forEach(inv => remaining.delete(inv.id))
+                            setSelectedOrders(remaining)
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/20 cursor-pointer"
+                      />
+                      <span className="text-xs text-brand-primary/50 uppercase tracking-wide font-medium">Select all ({filteredOrders.length})</span>
+                    </div>
+                  )}
                   {filteredOrders.map((inv) => {
                     const isExpanded = expandedInvoiceId === inv.id
                     const statusStyle = ORDER_STATUS_STYLES[inv.status] || { label: inv.status, bg: 'bg-gray-100', text: 'text-gray-600' }
                     const items = parseOrderItems(inv.items)
                     const isPaid = ['paid', 'shipped', 'fulfilled'].includes(inv.status)
+                    const isSelected = selectedOrders.has(inv.id)
 
                     return (
-                      <div key={inv.id} className="border-b border-brand-primary/10 last:border-b-0">
+                      <div key={inv.id} className={`border-b border-brand-primary/10 last:border-b-0 ${isSelected ? 'bg-amber-50/50' : ''}`}>
                         <div
                           className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-brand-cream/30 transition-colors"
                           onClick={() => setExpandedInvoiceId(isExpanded ? null : inv.id)}
                         >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              const next = new Set(selectedOrders)
+                              if (e.target.checked) next.add(inv.id)
+                              else next.delete(inv.id)
+                              setSelectedOrders(next)
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/20 cursor-pointer shrink-0"
+                          />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-mono text-sm text-brand-primary">{inv.order_number}</span>
