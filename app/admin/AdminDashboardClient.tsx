@@ -468,6 +468,62 @@ export default function AdminDashboardClient() {
             )
           })()}
 
+          {/* Fulfillment Pipeline Summary */}
+          {data.clubOrderFulfillment && Object.values(data.clubOrderFulfillment).some(c => c > 0) && (() => {
+            const OVERVIEW_PIPELINE = [
+              { key: 'pending_approval', label: 'Pending', color: 'yellow' },
+              { key: 'approved', label: 'Approved', color: 'blue' },
+              { key: 'invoice_sent', label: 'Invoiced', color: 'indigo' },
+              { key: 'paid', label: 'Paid', color: 'green' },
+              { key: 'shipped', label: 'Shipped', color: 'blue' },
+              { key: 'fulfilled', label: 'Fulfilled', color: 'emerald' },
+            ]
+            const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
+              yellow:  { bg: 'bg-yellow-50',  text: 'text-yellow-700',  activeBg: 'bg-yellow-100' },
+              blue:    { bg: 'bg-blue-50',    text: 'text-blue-700',    activeBg: 'bg-blue-100' },
+              indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  activeBg: 'bg-indigo-100' },
+              green:   { bg: 'bg-green-50',   text: 'text-green-700',   activeBg: 'bg-green-100' },
+              emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', activeBg: 'bg-emerald-100' },
+            }
+            const totalActive = OVERVIEW_PIPELINE.reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
+
+            return (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-display text-xl text-brand-primary">Fulfillment Pipeline</h2>
+                    <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders across all stages</p>
+                  </div>
+                  <Link href="/admin/orders?tab=pending" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+                    View details →
+                  </Link>
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                  {OVERVIEW_PIPELINE.map((stage, idx) => {
+                    const count = data.clubOrderFulfillment[stage.key] || 0
+                    const colors = colorMap[stage.color] || colorMap.blue
+                    const isActive = count > 0
+                    return (
+                      <div key={stage.key} className="flex items-center">
+                        <div className={`flex flex-col items-center justify-center rounded-lg px-4 py-3 min-w-[90px] transition-colors ${isActive ? colors.activeBg : 'bg-gray-50'}`}>
+                          <span className={`text-2xl font-bold ${isActive ? colors.text : 'text-gray-300'}`}>
+                            {count}
+                          </span>
+                          <span className={`text-xs font-medium mt-0.5 ${isActive ? colors.text : 'text-gray-400'}`}>
+                            {stage.label}
+                          </span>
+                        </div>
+                        {idx < OVERVIEW_PIPELINE.length - 1 && (
+                          <span className="text-brand-primary/20 mx-1 text-lg shrink-0">→</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* External Tools */}
           <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
             <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
@@ -543,7 +599,7 @@ export default function AdminDashboardClient() {
                     const isExpanded = expandedInvoiceId === inv.id
                     const statusStyle = ORDER_STATUS_STYLES[inv.status] || { label: inv.status, bg: 'bg-gray-100', text: 'text-gray-600' }
                     const items = parseOrderItems(inv.items)
-                    const isPaid = ['paid', 'needs_shipment', 'shipped_complete'].includes(inv.status)
+                    const isPaid = ['paid', 'shipped', 'fulfilled'].includes(inv.status)
 
                     return (
                       <div key={inv.id} className="border-b border-brand-primary/10 last:border-b-0">
@@ -641,24 +697,15 @@ export default function AdminDashboardClient() {
                             {/* Actions row */}
                             <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
                               {inv.status === 'pending_approval' && (
-                                <>
-                                  <button
-                                    onClick={() => handleStatusUpdate(inv.id, 'needs_invoice')}
-                                    disabled={updatingStatus === inv.id}
-                                    className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                                  >
-                                    {updatingStatus === inv.id ? '...' : 'Skip Approval'}
-                                  </button>
-                                  <button
-                                    onClick={() => handleApproveOrder(inv.id)}
-                                    disabled={approvingOrder === inv.id}
-                                    className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                  >
-                                    {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
-                                  </button>
-                                </>
+                                <button
+                                  onClick={() => handleApproveOrder(inv.id)}
+                                  disabled={approvingOrder === inv.id}
+                                  className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                >
+                                  {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
+                                </button>
                               )}
-                              {['approved', 'invoice_sent', 'needs_invoice'].includes(inv.status) && (
+                              {['approved', 'invoice_sent'].includes(inv.status) && (
                                 <button
                                   onClick={() => handleStatusUpdate(inv.id, 'paid')}
                                   disabled={updatingStatus === inv.id}
@@ -668,24 +715,33 @@ export default function AdminDashboardClient() {
                                 </button>
                               )}
                               {inv.status === 'paid' && (
-                                <button
-                                  onClick={() => handleStatusUpdate(inv.id, 'needs_shipment')}
-                                  disabled={updatingStatus === inv.id}
-                                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                >
-                                  {updatingStatus === inv.id ? '...' : 'Mark Needs Shipment'}
-                                </button>
+                                <>
+                                  <button
+                                    onClick={() => handleStatusUpdate(inv.id, 'shipped')}
+                                    disabled={updatingStatus === inv.id}
+                                    className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                                  >
+                                    {updatingStatus === inv.id ? '...' : 'Mark Shipped'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusUpdate(inv.id, 'fulfilled')}
+                                    disabled={updatingStatus === inv.id}
+                                    className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+                                  >
+                                    {updatingStatus === inv.id ? '...' : 'Mark Fulfilled'}
+                                  </button>
+                                </>
                               )}
-                              {inv.status === 'needs_shipment' && (
+                              {inv.status === 'shipped' && (
                                 <button
-                                  onClick={() => handleStatusUpdate(inv.id, 'shipped_complete')}
+                                  onClick={() => handleStatusUpdate(inv.id, 'fulfilled')}
                                   disabled={updatingStatus === inv.id}
                                   className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
                                 >
-                                  {updatingStatus === inv.id ? '...' : 'Mark Shipped / Complete'}
+                                  {updatingStatus === inv.id ? '...' : 'Mark Fulfilled'}
                                 </button>
                               )}
-                              {!['cancelled', 'shipped_complete', 'rejected', 'dismissed'].includes(inv.status) && (
+                              {!['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status) && (
                                 <button
                                   onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
                                   disabled={updatingStatus === inv.id}
@@ -749,6 +805,7 @@ export default function AdminDashboardClient() {
                     'update-tiers': 'Tier Recalculation',
                     'asher-sync': 'Asher Med Sync',
                     'siphox-status-sync': 'SiPhox Status Sync',
+                    'stale-orders': 'Stale Order Alerts',
                   }
 
                   return (
