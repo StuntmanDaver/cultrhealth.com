@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 /**
@@ -82,7 +83,7 @@ export default function BiomarkerScroll() {
           <strong>tracking &amp; understanding your biomarkers.</strong>
         </h2>
         <p className="text-sm text-brand-secondary/60 max-w-xl mx-auto">
-          33 biomarkers tested at home — heart, metabolic, hormonal, nutritional, inflammation, and thyroid health. Upgradable to 59+.
+          29 biomarkers tested at home — heart, metabolic, hormonal, nutritional, inflammation, and thyroid health. Upgradeable up to 60+.
         </p>
       </div>
 
@@ -108,7 +109,47 @@ export default function BiomarkerScroll() {
         <div className="w-px h-16 bg-brand-secondary/15" />
       </div>
 
-      {/* ─── EasyDraw Blood Test Section ─── */}
+      {/* ─── EasyDraw Blood Test Section (scroll-triggered) ─── */}
+      <EasyDrawSection />
+    </section>
+  );
+}
+
+// ─── Scroll-triggered EasyDraw animation ───────────────────
+
+function EasyDrawSection() {
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const [phase, setPhase] = useState<'idle' | 'bg' | 'empty' | 'full'>('idle');
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          // Phase 1: background fades in
+          setPhase('bg');
+          // Phase 2: empty device appears
+          const t1 = setTimeout(() => setPhase('empty'), 600);
+          // Phase 3: blood fills — swap to full device
+          const t2 = setTimeout(() => setPhase('full'), 1800);
+          return () => { clearTimeout(t1); clearTimeout(t2); };
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const bgVisible = phase !== 'idle';
+  const emptyVisible = phase === 'empty' || phase === 'full';
+  const fullVisible = phase === 'full';
+
+  return (
+    <div ref={sectionRef}>
       <div className="max-w-4xl mx-auto text-center px-6 mb-8">
         <h2 className="text-2xl md:text-3xl font-display font-bold text-brand-primary mb-2">
           Test comprehensive panels{' '}
@@ -117,31 +158,42 @@ export default function BiomarkerScroll() {
       </div>
 
       <div className="max-w-3xl mx-auto px-6">
-        <div className="relative rounded-2xl overflow-hidden aspect-[4/3] md:aspect-[16/9]">
-          {/* Lifestyle background image */}
+        <div className="relative rounded-2xl overflow-hidden aspect-[4/3] md:aspect-[16/9] bg-brand-cream">
+          {/* Lifestyle background — fades in on scroll */}
           <Image
             src="/images/easydraw-lifestyle.jpg"
             alt="Woman using SiPhox EasyDraw at-home blood test"
             fill
-            className="object-cover object-center"
+            className="object-cover object-center transition-opacity duration-1000 ease-out"
+            style={{ opacity: bgVisible ? 1 : 0 }}
             sizes="(max-width: 768px) 100vw, 768px"
           />
 
-          {/* EasyDraw device overlay — centered */}
+          {/* EasyDraw device overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative w-[120px] h-[200px] md:w-[160px] md:h-[280px]">
-              {/* Full device (with blood sample) */}
+              {/* Empty device — appears first */}
               <Image
-                src="/images/easydraw-full.png"
+                src="/images/easydraw-empty.png"
                 alt="SiPhox EasyDraw device"
                 fill
-                className="object-contain drop-shadow-2xl"
+                className="object-contain drop-shadow-2xl transition-opacity duration-700 ease-out"
+                style={{ opacity: emptyVisible && !fullVisible ? 1 : 0 }}
+                sizes="160px"
+              />
+              {/* Full device (blood sample filled) — fades in over empty */}
+              <Image
+                src="/images/easydraw-full.png"
+                alt="SiPhox EasyDraw device with blood sample"
+                fill
+                className="object-contain drop-shadow-2xl transition-opacity duration-700 ease-out"
+                style={{ opacity: fullVisible ? 1 : 0 }}
                 sizes="160px"
               />
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
