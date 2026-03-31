@@ -122,9 +122,8 @@ export async function POST(
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
     }
 
-    if (newStatus === 'shipped' && authMethod !== 'email_link' && !carrier && !trackingNumber) {
-      return NextResponse.json({ error: 'Carrier and tracking number required for shipping' }, { status: 400 })
-    }
+    // Tracking info is optional — admin can update it later via the full orders tab
+    // Previously this blocked the transition, but the overview page doesn't collect tracking fields
 
     // Fetch current order
     const current = await sql`
@@ -175,15 +174,22 @@ export async function POST(
       timestampSets.push(STAGE_TIMESTAMPS[newStatus])
     }
 
+    // Build timestamp values — only set if the stage is in timestampSets (being skipped through or targeted)
+    const now = new Date().toISOString()
+    const paidAtVal = timestampSets.includes('paid_at') ? now : null
+    const shippedAtVal = timestampSets.includes('shipped_at') ? now : null
+    const fulfilledAtVal = timestampSets.includes('fulfilled_at') ? now : null
+
     let result
     if (newStatus === 'shipped' || (isSkip && timestampSets.includes('shipped_at'))) {
       // Shipping transition — include tracking fields
+      // COALESCE(existing, new) pattern: preserve existing timestamp, only set if currently null
       result = await sql`
         UPDATE club_orders
         SET status = ${newStatus}, updated_at = NOW(),
-            paid_at = COALESCE(paid_at, ${timestampSets.includes('paid_at') ? new Date().toISOString() : null}::timestamptz, paid_at),
-            shipped_at = COALESCE(${timestampSets.includes('shipped_at') ? new Date().toISOString() : null}::timestamptz, shipped_at),
-            fulfilled_at = COALESCE(${timestampSets.includes('fulfilled_at') ? new Date().toISOString() : null}::timestamptz, fulfilled_at),
+            paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
+            shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
+            fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz),
             tracking_carrier = COALESCE(${carrier || null}, tracking_carrier),
             tracking_number = COALESCE(${trackingNumber || null}, tracking_number),
             tracking_url = COALESCE(${trackingUrl || null}, tracking_url)
@@ -192,12 +198,13 @@ export async function POST(
       `
     } else if (timestampSets.length > 0) {
       // Non-shipping forward transition — set all intermediate + target timestamps
+      // COALESCE(existing, new) pattern: preserve existing, only set if currently null
       result = await sql`
         UPDATE club_orders
         SET status = ${newStatus}, updated_at = NOW(),
-            paid_at = COALESCE(${timestampSets.includes('paid_at') ? new Date().toISOString() : null}::timestamptz, paid_at),
-            shipped_at = COALESCE(${timestampSets.includes('shipped_at') ? new Date().toISOString() : null}::timestamptz, shipped_at),
-            fulfilled_at = COALESCE(${timestampSets.includes('fulfilled_at') ? new Date().toISOString() : null}::timestamptz, fulfilled_at)
+            paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
+            shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
+            fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz)
         WHERE id = ${orderId}::uuid AND status = ${currentStatus}
         RETURNING id, status, order_number
       `
