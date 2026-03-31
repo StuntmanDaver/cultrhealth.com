@@ -8,9 +8,10 @@ import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT }
 const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'] as const
 
 // Allowed transitions: fromStatus → toStatus[]
-// Note: pending_approval → approved/invoice_sent is handled by the approve endpoint
+// pending_approval can go forward to any stage (skip when work was done manually outside the system)
+// The approve endpoint (QB invoice + emails) remains the primary path, but this allows bypassing it
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending_approval: ['cancelled'],
+  pending_approval: ['approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled', 'cancelled'],
   approved:         ['invoice_sent', 'paid', 'shipped', 'fulfilled', 'cancelled'],
   invoice_sent:     ['paid', 'shipped', 'fulfilled', 'cancelled'],
   paid:             ['shipped', 'fulfilled', 'cancelled'],
@@ -20,6 +21,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 
 // Timestamp columns for each pipeline stage (used when skipping stages)
 const STAGE_TIMESTAMPS: Record<string, string> = {
+  approved: 'approved_at',
   paid: 'paid_at',
   shipped: 'shipped_at',
   fulfilled: 'fulfilled_at',
@@ -176,9 +178,12 @@ export async function POST(
 
     // Build timestamp values — only set if the stage is in timestampSets (being skipped through or targeted)
     const now = new Date().toISOString()
+    const approvedAtVal = timestampSets.includes('approved_at') ? now : null
     const paidAtVal = timestampSets.includes('paid_at') ? now : null
     const shippedAtVal = timestampSets.includes('shipped_at') ? now : null
     const fulfilledAtVal = timestampSets.includes('fulfilled_at') ? now : null
+    // When skipping past approval, record who did it
+    const approvedByVal = approvedAtVal ? actorEmail : null
 
     let result
     if (newStatus === 'shipped' || (isSkip && timestampSets.includes('shipped_at'))) {
@@ -187,6 +192,8 @@ export async function POST(
       result = await sql`
         UPDATE club_orders
         SET status = ${newStatus}, updated_at = NOW(),
+            approved_at = COALESCE(approved_at, ${approvedAtVal}::timestamptz),
+            approved_by = COALESCE(approved_by, ${approvedByVal}),
             paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
             shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
             fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz),
@@ -202,6 +209,8 @@ export async function POST(
       result = await sql`
         UPDATE club_orders
         SET status = ${newStatus}, updated_at = NOW(),
+            approved_at = COALESCE(approved_at, ${approvedAtVal}::timestamptz),
+            approved_by = COALESCE(approved_by, ${approvedByVal}),
             paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
             shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
             fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz)

@@ -702,8 +702,13 @@ export default function AdminDashboardClient() {
                               }
                               const currentIdx = PIPELINE.indexOf(inv.status)
                               const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null
-                              // Skip targets: all stages beyond the next one (if any exist)
-                              const skipTargets = currentIdx >= 0 ? PIPELINE.slice(currentIdx + 2).filter(s => s !== nextStatus) : []
+                              // Skip targets: for pending_approval, show ALL forward stages (skip the approve endpoint entirely)
+                              // For other statuses, show stages beyond the immediate next one
+                              const skipTargets = currentIdx >= 0
+                                ? inv.status === 'pending_approval'
+                                  ? PIPELINE.slice(currentIdx + 1)  // all forward stages
+                                  : PIPELINE.slice(currentIdx + 2)  // stages past the next one
+                                : []
 
                               return (
                                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
@@ -730,16 +735,20 @@ export default function AdminDashboardClient() {
                                       {updatingStatus === inv.id ? '...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
                                     </button>
                                   )}
-                                  {/* Skip to — jump ahead past intermediate stages */}
-                                  {skipTargets.length > 0 && inv.status !== 'pending_approval' && (
+                                  {/* Skip to — jump ahead past intermediate stages, or bypass approve for pending orders */}
+                                  {skipTargets.length > 0 && (
                                     <select
-                                      disabled={updatingStatus === inv.id}
+                                      disabled={updatingStatus === inv.id || approvingOrder === inv.id}
                                       value=""
                                       onChange={(e) => {
                                         const target = e.target.value
                                         if (!target) return
-                                        const skippedStages = PIPELINE.slice(currentIdx + 1, PIPELINE.indexOf(target)).map(s => PIPELINE_LABELS[s] || s).join(' → ')
-                                        if (confirm(`Skip to "${PIPELINE_LABELS[target]}"?\n\nThis will skip: ${skippedStages}\n\nAll skipped stage timestamps will be set automatically.`)) {
+                                        const skippedStages = PIPELINE.slice(currentIdx + 1, PIPELINE.indexOf(target)).map(s => PIPELINE_LABELS[s] || s)
+                                        const skipNote = inv.status === 'pending_approval'
+                                          ? `This will NOT create a QuickBooks invoice or send approval emails.\n\nUse this when the order was already handled manually.`
+                                          : `All skipped stage timestamps will be set automatically.`
+                                        const skippedText = skippedStages.length > 0 ? `\n\nSkipping: ${skippedStages.join(' → ')}` : ''
+                                        if (confirm(`Skip to "${PIPELINE_LABELS[target]}"?${skippedText}\n\n${skipNote}`)) {
                                           handleStatusUpdate(inv.id, target)
                                         }
                                         e.target.value = ''
