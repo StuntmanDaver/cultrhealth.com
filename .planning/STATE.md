@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 Phase: 4 of 4 (Labs Dashboard) -- COMPLETE
 Plan: 3 of 3 in current phase -- 04-03 COMPLETE
 Status: All 4 phases complete, all 9 plans complete
-Last activity: 2026-03-30 - Completed quick task 260330-i46: Club order fulfillment pipeline in admin dashboard
+Last activity: 2026-03-31 - Completed quick task 260331-fpi: Admin dashboard fulfillment pipeline fix
 
 Progress: [██████████] 100%
 
@@ -106,10 +106,11 @@ None.
 | 7 | Site health-check system: HTTP script (24 endpoints) + Vitest smoke tests (21 imports) | 2026-03-24 | 99501bf | [7-create-a-methodical-system-to-check-the-](./quick/7-create-a-methodical-system-to-check-the-/) |
 | 260329-upf | HIPAA hardening: PHI-safe logging, sanitized error responses, CSP headers, 30-min idle timeout, 24h JWT | 2026-03-30 | a1b948e, 1d94410 | [260329-upf-make-the-entire-website-extremely-hipaa-](./quick/260329-upf-make-the-entire-website-extremely-hipaa-/) |
 | 260330-i46 | Club order fulfillment pipeline: full lifecycle tracking (paid/shipped/fulfilled), pipeline UI, tracking fields | 2026-03-30 | d060b26 | [260330-i46-club-order-fulfillment-pipeline-in-admin](./quick/260330-i46-club-order-fulfillment-pipeline-in-admin/) |
+| 260331-fpi | Admin dashboard fulfillment fix: removed stale statuses, aligned action buttons with canonical pipeline | 2026-03-31 | dfc96da | [260331-fpi-audit-admin-dashboard-fix-fulfillment-sy](./quick/260331-fpi-audit-admin-dashboard-fix-fulfillment-sy/) |
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:02:00Z
-Stopped at: Completed quick task 260330-i46: Club order fulfillment pipeline
+Last session: 2026-03-31T15:31:00Z
+Stopped at: Completed quick task 260331-fpi: Admin dashboard fulfillment pipeline fix
 Resume file: None
 Next: SiPhox integration v1 complete. v2 work (LNG-01, DSH-02, DSH-03) tracked in REQUIREMENTS.md.
