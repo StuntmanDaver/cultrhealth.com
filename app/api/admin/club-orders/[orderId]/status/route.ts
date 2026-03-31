@@ -7,17 +7,17 @@ import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT }
 // Pipeline order — index determines which forward skips are allowed
 const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'] as const
 
-// Allowed transitions: fromStatus → toStatus[]
-// pending_approval can go forward to any stage (skip when work was done manually outside the system)
-// The approve endpoint (QB invoice + emails) remains the primary path, but this allows bypassing it
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending_approval: ['approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled', 'cancelled'],
-  approved:         ['invoice_sent', 'paid', 'shipped', 'fulfilled', 'cancelled'],
-  invoice_sent:     ['paid', 'shipped', 'fulfilled', 'cancelled'],
-  paid:             ['shipped', 'fulfilled', 'cancelled'],
-  shipped:          ['fulfilled'],
-  fulfilled:        [],  // terminal state
-}
+// Any pipeline status can move to any other pipeline status (forward skip or backward rollback).
+// cancelled can be reopened to any stage. Only fulfilled blocks cancel (must roll back first).
+const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
+const ALL_PIPELINE_AND_CANCEL = [...PIPELINE_STATUSES, 'cancelled']
+
+const ALLOWED_TRANSITIONS: Record<string, string[]> = Object.fromEntries(
+  ALL_PIPELINE_AND_CANCEL.map(status => [
+    status,
+    ALL_PIPELINE_AND_CANCEL.filter(s => s !== status), // can go to any other status
+  ])
+)
 
 // Timestamp columns for each pipeline stage (used when skipping stages)
 const STAGE_TIMESTAMPS: Record<string, string> = {
@@ -157,74 +157,77 @@ export async function POST(
       )
     }
 
-    // Determine if this is a forward skip (jumping past intermediate stages)
+    // Determine direction: forward (set timestamps) or backward (clear timestamps)
     const fromIdx = PIPELINE_ORDER.indexOf(currentStatus as typeof PIPELINE_ORDER[number])
     const toIdx = PIPELINE_ORDER.indexOf(newStatus as typeof PIPELINE_ORDER[number])
-    const isSkip = fromIdx >= 0 && toIdx >= 0 && toIdx - fromIdx > 1
+    const isForward = fromIdx >= 0 && toIdx >= 0 && toIdx > fromIdx
+    const isBackward = fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx
+    const isSkip = isForward && toIdx - fromIdx > 1
 
-    // Apply transition atomically — set timestamps for target stage AND any skipped intermediate stages
     const actorEmail = session?.email || 'email_link'
-
-    // Build SET clause: always set status + updated_at, then add timestamps for all stages between current and target
-    const timestampSets: string[] = []
-    if (fromIdx >= 0 && toIdx >= 0) {
-      for (let i = fromIdx + 1; i <= toIdx; i++) {
-        const col = STAGE_TIMESTAMPS[PIPELINE_ORDER[i]]
-        if (col) timestampSets.push(col)
-      }
-    } else if (STAGE_TIMESTAMPS[newStatus]) {
-      timestampSets.push(STAGE_TIMESTAMPS[newStatus])
-    }
-
-    // Build timestamp values — only set if the stage is in timestampSets (being skipped through or targeted)
     const now = new Date().toISOString()
-    const approvedAtVal = timestampSets.includes('approved_at') ? now : null
-    const paidAtVal = timestampSets.includes('paid_at') ? now : null
-    const shippedAtVal = timestampSets.includes('shipped_at') ? now : null
-    const fulfilledAtVal = timestampSets.includes('fulfilled_at') ? now : null
-    // When skipping past approval, record who did it
-    const approvedByVal = approvedAtVal ? actorEmail : null
 
-    let result
-    if (newStatus === 'shipped' || (isSkip && timestampSets.includes('shipped_at'))) {
-      // Shipping transition — include tracking fields
-      // COALESCE(existing, new) pattern: preserve existing timestamp, only set if currently null
-      result = await sql`
-        UPDATE club_orders
-        SET status = ${newStatus}, updated_at = NOW(),
-            approved_at = COALESCE(approved_at, ${approvedAtVal}::timestamptz),
-            approved_by = COALESCE(approved_by, ${approvedByVal}),
-            paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
-            shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
-            fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz),
-            tracking_carrier = COALESCE(${carrier || null}, tracking_carrier),
-            tracking_number = COALESCE(${trackingNumber || null}, tracking_number),
-            tracking_url = COALESCE(${trackingUrl || null}, tracking_url)
-        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
-        RETURNING id, status, order_number
-      `
-    } else if (timestampSets.length > 0) {
-      // Non-shipping forward transition — set all intermediate + target timestamps
-      // COALESCE(existing, new) pattern: preserve existing, only set if currently null
-      result = await sql`
-        UPDATE club_orders
-        SET status = ${newStatus}, updated_at = NOW(),
-            approved_at = COALESCE(approved_at, ${approvedAtVal}::timestamptz),
-            approved_by = COALESCE(approved_by, ${approvedByVal}),
-            paid_at = COALESCE(paid_at, ${paidAtVal}::timestamptz),
-            shipped_at = COALESCE(shipped_at, ${shippedAtVal}::timestamptz),
-            fulfilled_at = COALESCE(fulfilled_at, ${fulfilledAtVal}::timestamptz)
-        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
-        RETURNING id, status, order_number
-      `
-    } else {
-      result = await sql`
-        UPDATE club_orders
-        SET status = ${newStatus}, updated_at = NOW()
-        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
-        RETURNING id, status, order_number
-      `
+    // Forward: set timestamps for all stages between current and target (inclusive)
+    // Backward: CLEAR timestamps for all stages after the target (rolling back)
+    let approvedAtVal: string | null = null
+    let approvedByVal: string | null = null
+    let paidAtVal: string | null = null
+    let shippedAtVal: string | null = null
+    let fulfilledAtVal: string | null = null
+    // Sentinel: use 'CLEAR' to null out a timestamp on rollback
+    const CLEAR = '__CLEAR__'
+
+    if (isForward) {
+      // Set timestamps for skipped + target stages
+      for (let i = fromIdx + 1; i <= toIdx; i++) {
+        const stage = PIPELINE_ORDER[i]
+        if (stage === 'approved') { approvedAtVal = now; approvedByVal = actorEmail }
+        if (stage === 'paid') paidAtVal = now
+        if (stage === 'shipped') shippedAtVal = now
+        if (stage === 'fulfilled') fulfilledAtVal = now
+      }
+    } else if (isBackward) {
+      // Clear timestamps for all stages AFTER the target (they're being undone)
+      for (let i = toIdx + 1; i < PIPELINE_ORDER.length; i++) {
+        const stage = PIPELINE_ORDER[i]
+        if (stage === 'approved') { approvedAtVal = CLEAR; approvedByVal = CLEAR }
+        if (stage === 'paid') paidAtVal = CLEAR
+        if (stage === 'shipped') shippedAtVal = CLEAR
+        if (stage === 'fulfilled') fulfilledAtVal = CLEAR
+      }
     }
+
+    // Build the SQL — forward sets via COALESCE(existing, new), backward nulls out
+    let result
+    result = await sql`
+      UPDATE club_orders
+      SET status = ${newStatus}, updated_at = NOW(),
+          approved_at = CASE
+            WHEN ${approvedAtVal === CLEAR}::boolean THEN NULL
+            ELSE COALESCE(approved_at, ${approvedAtVal !== CLEAR ? approvedAtVal : null}::timestamptz)
+          END,
+          approved_by = CASE
+            WHEN ${approvedByVal === CLEAR}::boolean THEN NULL
+            ELSE COALESCE(approved_by, ${approvedByVal !== CLEAR ? approvedByVal : null})
+          END,
+          paid_at = CASE
+            WHEN ${paidAtVal === CLEAR}::boolean THEN NULL
+            ELSE COALESCE(paid_at, ${paidAtVal !== CLEAR ? paidAtVal : null}::timestamptz)
+          END,
+          shipped_at = CASE
+            WHEN ${shippedAtVal === CLEAR}::boolean THEN NULL
+            ELSE COALESCE(shipped_at, ${shippedAtVal !== CLEAR ? shippedAtVal : null}::timestamptz)
+          END,
+          fulfilled_at = CASE
+            WHEN ${fulfilledAtVal === CLEAR}::boolean THEN NULL
+            ELSE COALESCE(fulfilled_at, ${fulfilledAtVal !== CLEAR ? fulfilledAtVal : null}::timestamptz)
+          END,
+          tracking_carrier = COALESCE(${carrier || null}, tracking_carrier),
+          tracking_number = COALESCE(${trackingNumber || null}, tracking_number),
+          tracking_url = COALESCE(${trackingUrl || null}, tracking_url)
+      WHERE id = ${orderId}::uuid AND status = ${currentStatus}
+        RETURNING id, status, order_number
+      `
 
     if (result.rowCount === 0) {
       if (authMethod === 'email_link') {
@@ -243,8 +246,8 @@ export async function POST(
           ${'status_change'},
           ${'club_order'},
           ${orderId},
-          ${`${currentStatus} → ${newStatus}${isSkip ? ' (skip)' : ''}`},
-          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, skippedTimestamps: isSkip ? timestampSets : undefined, carrier, trackingNumber })}
+          ${`${currentStatus} → ${newStatus}${isSkip ? ' (skip)' : ''}${isBackward ? ' (rollback)' : ''}`},
+          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, rollback: isBackward, carrier, trackingNumber })}
         )
       `
     } catch {

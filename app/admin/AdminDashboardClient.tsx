@@ -806,21 +806,20 @@ export default function AdminDashboardClient() {
                             {/* Actions row */}
                             {(() => {
                               const PIPELINE = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
-                              const PIPELINE_LABELS: Record<string, string> = {
-                                approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled',
+                              const LABELS: Record<string, string> = {
+                                pending_approval: 'Pending', approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled', cancelled: 'Cancelled',
                               }
                               const currentIdx = PIPELINE.indexOf(inv.status)
                               const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null
-                              // Skip targets: for pending_approval, show ALL forward stages (skip the approve endpoint entirely)
-                              // For other statuses, show stages beyond the immediate next one
-                              const skipTargets = currentIdx >= 0
-                                ? inv.status === 'pending_approval'
-                                  ? PIPELINE.slice(currentIdx + 1)  // all forward stages
-                                  : PIPELINE.slice(currentIdx + 2)  // stages past the next one
-                                : []
+                              // All other pipeline stages (forward + backward) excluding current
+                              const moveTargets = currentIdx >= 0
+                                ? PIPELINE.filter((_, i) => i !== currentIdx)
+                                : inv.status === 'cancelled' ? PIPELINE : [] // cancelled can reopen to any stage
+                              const isTerminal = ['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status)
 
                               return (
                                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
+                                  {/* Primary action: Approve for pending, next step for others */}
                                   {inv.status === 'pending_approval' && (
                                     <button
                                       onClick={() => handleApproveOrder(inv.id)}
@@ -841,36 +840,41 @@ export default function AdminDashboardClient() {
                                         : 'bg-brand-primary hover:bg-brand-primaryHover'
                                       }`}
                                     >
-                                      {updatingStatus === inv.id ? '...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
+                                      {updatingStatus === inv.id ? '...' : `Mark ${LABELS[nextStatus] || nextStatus}`}
                                     </button>
                                   )}
-                                  {/* Skip to — jump ahead past intermediate stages, or bypass approve for pending orders */}
-                                  {skipTargets.length > 0 && (
+                                  {/* Move to — forward skip OR backward rollback */}
+                                  {moveTargets.length > 0 && (
                                     <select
                                       disabled={updatingStatus === inv.id || approvingOrder === inv.id}
                                       value=""
                                       onChange={(e) => {
                                         const target = e.target.value
                                         if (!target) return
-                                        const skippedStages = PIPELINE.slice(currentIdx + 1, PIPELINE.indexOf(target)).map(s => PIPELINE_LABELS[s] || s)
-                                        const skipNote = inv.status === 'pending_approval'
-                                          ? `This will NOT create a QuickBooks invoice or send approval emails.\n\nUse this when the order was already handled manually.`
-                                          : `All skipped stage timestamps will be set automatically.`
-                                        const skippedText = skippedStages.length > 0 ? `\n\nSkipping: ${skippedStages.join(' → ')}` : ''
-                                        if (confirm(`Skip to "${PIPELINE_LABELS[target]}"?${skippedText}\n\n${skipNote}`)) {
+                                        const targetIdx = PIPELINE.indexOf(target)
+                                        const goingBack = currentIdx >= 0 && targetIdx >= 0 && targetIdx < currentIdx
+                                        const note = goingBack
+                                          ? `Rolling back to "${LABELS[target]}". Timestamps for later stages will be cleared.`
+                                          : inv.status === 'pending_approval'
+                                            ? `This will NOT create a QuickBooks invoice or send approval emails.\nUse this when the order was already handled manually.`
+                                            : `All skipped stage timestamps will be set automatically.`
+                                        if (confirm(`Move to "${LABELS[target]}"?\n\n${note}`)) {
                                           handleStatusUpdate(inv.id, target)
                                         }
                                         e.target.value = ''
                                       }}
-                                      className="px-3 py-2 text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-800 cursor-pointer disabled:opacity-50 transition-colors hover:bg-amber-100"
+                                      className="px-3 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary cursor-pointer disabled:opacity-50 transition-colors hover:bg-brand-primary/10"
                                     >
-                                      <option value="">Skip to…</option>
-                                      {skipTargets.map(s => (
-                                        <option key={s} value={s}>{PIPELINE_LABELS[s] || s}</option>
-                                      ))}
+                                      <option value="">Move to…</option>
+                                      {moveTargets.map(s => {
+                                        const targetIdx = PIPELINE.indexOf(s)
+                                        const isBack = currentIdx >= 0 && targetIdx >= 0 && targetIdx < currentIdx
+                                        return <option key={s} value={s}>{isBack ? '← ' : ''}{LABELS[s] || s}</option>
+                                      })}
+                                      {!isTerminal && <option value="cancelled">Cancel</option>}
                                     </select>
                                   )}
-                                  {!['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status) && (
+                                  {!isTerminal && (
                                     <button
                                       onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
                                       disabled={updatingStatus === inv.id}
