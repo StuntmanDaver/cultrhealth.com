@@ -61,7 +61,7 @@ const SOCIAL_POSTS = [
         label: 'Lab Results Post',
         text: `Just got my comprehensive lab panel back from @cultrhealth 🧪
 
-33 biomarkers tested. Turns out my regular doctor was only checking 5.
+29 biomarkers tested. Turns out my regular doctor was only checking 5.
 
 This is why "you're fine" isn't enough.
 
@@ -75,7 +75,7 @@ Use code {CODE} for a discount.
         label: 'Progress Update',
         text: `The same protocols celebrities pay $10K/year for — now from $149/mo.
 
-Licensed providers. Personalized peptide protocols. 33 biomarker testing, upgradable to 59+ (SiPhox Health).
+Licensed providers. Personalized peptide protocols. 29 biomarker testing, upgradeable up to 60+ (SiPhox Health).
 
 Not a supplement company. An actual medical practice.
 
@@ -94,7 +94,7 @@ Take the quiz → {LINK}
         text: `My doctor: "Your labs are normal"
 CULTR: "Here are 3 things that explain why you feel off"
 
-33 biomarkers > the basic 5.
+29 biomarkers > the basic 5.
 
 {LINK}
 
@@ -120,7 +120,7 @@ Provider-supervised. Licensed pharmacy. Real science.
         label: 'Personal Story',
         text: `I've been working with CULTR Health for the past few months and wanted to share my experience.
 
-They test 33 biomarkers (upgradable to 59+) — not the basic 5 your doctor runs — and match you with a licensed provider who builds a personalized protocol.
+They test 29 biomarkers (upgradeable up to 60+) — not the basic 5 your doctor runs — and match you with a licensed provider who builds a personalized protocol.
 
 Plans start at $149/mo — less than most gym memberships.
 

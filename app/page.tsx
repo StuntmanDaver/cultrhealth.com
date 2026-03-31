@@ -92,7 +92,7 @@ export default function HomePage() {
               Physician-supervised optimization with lab testing, personalized protocols, and peptide therapy when appropriate.
             </p>
             <p className="text-xs text-cultr-sage font-medium tracking-wide mb-5 drop-shadow">
-              33-biomarker panel (upgradable to 59+) · Licensed providers · Delivered to your door
+              29-biomarker panel (upgradeable up to 60+) · Licensed providers · Delivered to your door
             </p>
             <div className="flex flex-row items-center gap-3">
               <Link href="/quiz">
@@ -257,7 +257,7 @@ export default function HomePage() {
               {
                 step: '02',
                 title: 'Complete Your Blood Test',
-                desc: '33 biomarkers tested at home — heart, metabolic, hormonal, thyroid, and more.',
+                desc: '29 biomarkers tested at home — heart, metabolic, hormonal, thyroid, and more.',
                 icon: FlaskConical,
               },
               {
@@ -319,7 +319,7 @@ export default function HomePage() {
                 <div className="p-4 font-medium text-center" style={{ background: 'rgba(0,0,0,0.15)' }}><span className="font-display font-bold">CULTR</span></div>
               </div>
               {[
-                { cells: ['Comprehensive lab panels', '5-10 markers', '33 biomarkers (up to 59+)'], hasBiomarkerLink: true },
+                { cells: ['Comprehensive lab panels', '5-10 markers', '29 biomarkers (up to 60+)'], hasBiomarkerLink: true },
                 { cells: ['Wait time for appointments', '2-4 weeks', '24-48 hours'] },
                 { cells: ['Provider messaging', 'Limited', 'Unlimited'] },
                 { cells: ['Peptide protocols', 'Not available', 'Full access'] },

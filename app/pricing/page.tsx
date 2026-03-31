@@ -60,7 +60,7 @@ export default function PricingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: FlaskConical, label: '33 Biomarkers', sublabel: 'Upgradable to 59+' },
+              { icon: FlaskConical, label: '29 Biomarkers', sublabel: 'Upgradeable up to 60+' },
               { icon: MessageCircle, label: 'Direct Access', sublabel: 'Provider messaging' },
               { icon: Dna, label: 'Peptide Protocols', sublabel: 'Personalized plans' },
               { icon: Shield, label: 'HIPAA Compliant', sublabel: 'Secure platform' },
@@ -315,7 +315,7 @@ export default function PricingPage() {
               },
               {
                 title: 'Comprehensive Lab Panels',
-                desc: '33 biomarkers per test (upgradable to 59+) via SiPhox EasyDraw Core — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers analyzed with provider interpretation and recommendations.',
+                desc: '29 biomarkers per test (upgradeable up to 60+) via SiPhox EasyDraw Core — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers analyzed with provider interpretation and recommendations.',
                 hasBiomarkerLink: true,
               },
               {

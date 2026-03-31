@@ -40,7 +40,7 @@ export default function HowItWorksPage() {
       <MarketingHero
         title="From quiz to clinician-guided plan in a few simple steps."
         subtitle="We use your goals, health history, and biomarker data to build a personalized plan for body composition, performance, recovery, and long-term optimization."
-        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 33-biomarker panel (upgradable to 59+) · HSA/FSA eligible · Delivered to your door`}
+        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 29-biomarker panel (upgradeable up to 60+) · HSA/FSA eligible · Delivered to your door`}
         ctas={[
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
@@ -59,7 +59,7 @@ export default function HowItWorksPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { icon: Clock, label: '24-48 hrs', sublabel: 'First appointment' },
-              { icon: FlaskConical, label: '33', sublabel: 'Biomarkers (SiPhox Health)' },
+              { icon: FlaskConical, label: '29', sublabel: 'Biomarkers (SiPhox Health)' },
               { icon: Dna, label: '60+', sublabel: 'Peptide protocols' },
               { icon: MessageCircle, label: 'Unlimited', sublabel: 'Provider messaging' },
             ].map((stat, i) => (
@@ -170,7 +170,7 @@ export default function HowItWorksPage() {
               {
                 icon: FlaskConical,
                 title: 'Comprehensive Lab Testing',
-                desc: '33 biomarkers per test (upgradable to 59+) via SiPhox EasyDraw Core — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers.',
+                desc: '29 biomarkers per test (upgradeable up to 60+) via SiPhox EasyDraw Core — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers.',
                 hasBiomarkerLink: true,
               },
               {
@@ -307,7 +307,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'What labs are included?',
-                    answer: 'We test 33 critical biomarkers (upgradable to 59+) through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
+                    answer: 'We test 29 critical biomarkers (upgradeable up to 60+) through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
                   },
                   {
                     question: 'Where do medications come from?',

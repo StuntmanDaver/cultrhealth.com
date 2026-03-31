@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 const TRUST_ITEMS = [
   { icon: Stethoscope, label: 'Licensed providers' },
-  { icon: FlaskConical, label: '33 biomarkers (up to 59+)' },
+  { icon: FlaskConical, label: '29 biomarkers (up to 60+)' },
   { icon: Shield, label: 'HIPAA-compliant' },
   { icon: Truck, label: 'Delivered to your door' },
   { icon: CreditCard, label: 'HSA/FSA eligible' },

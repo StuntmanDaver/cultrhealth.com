@@ -169,8 +169,8 @@ function EasyDrawSection() {
             sizes="(max-width: 768px) 100vw, 768px"
           />
 
-          {/* EasyDraw device overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* EasyDraw device overlay — offset right to align with arm */}
+          <div className="absolute inset-0 flex items-center justify-center translate-x-[15%] md:translate-x-[12%]">
             <div className="relative w-[120px] h-[200px] md:w-[160px] md:h-[280px]">
               {/* Empty device — appears first */}
               <Image

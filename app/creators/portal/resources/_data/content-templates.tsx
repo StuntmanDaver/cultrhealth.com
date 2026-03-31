@@ -33,7 +33,7 @@ Once I got my labs done through CULTR and started the right protocol, everything
 
         <CopyBlock label="Hook 3 — The Question">{`What if the reason you can't lose weight has nothing to do with willpower?
 
-I got 33 biomarkers tested — here's what they found.
+I got 29 biomarkers tested — here's what they found.
 
 [Show/discuss results and how CULTR matched you to a protocol]`}</CopyBlock>
 
@@ -50,7 +50,7 @@ Then my provider walked me through the science and I realized — this is just m
 
         <CopyBlock label="Hook 6 — The Comparison">{`My doctor ran 5 blood markers and said "you're fine."
 
-CULTR ran 33 and found 3 things that explained why I felt like garbage every afternoon.
+CULTR ran 29 and found 3 things that explained why I felt like garbage every afternoon.
 
 This is the difference between standard care and actual optimization.`}</CopyBlock>
 
@@ -85,7 +85,7 @@ Here's why I joined them — and why I think you should too.`}</CopyBlock>
         <SectionHeading>Video Outline: &quot;Why I Switched to CULTR&quot; (8-12 min)</SectionHeading>
         <CopyBlock label="Script Outline">{`INTRO (0:00-1:00)
 - Personal hook: Share your frustration with traditional healthcare
-- "I'm going to show you exactly what happened when I got 33 biomarkers tested"
+- "I'm going to show you exactly what happened when I got 29 biomarkers tested"
 - Quick mention: This video is sponsored by / in partnership with CULTR
 
 SECTION 1: THE PROBLEM (1:00-3:00)
@@ -96,7 +96,7 @@ SECTION 1: THE PROBLEM (1:00-3:00)
 
 SECTION 2: WHAT CULTR DOES DIFFERENTLY (3:00-5:00)
 - Explain the CULTR model: telehealth + comprehensive labs + personalized protocols
-- 33 biomarkers tested (upgradable to 59+) vs. standard 5-10
+- 29 biomarkers tested (upgradeable up to 60+) vs. standard 5-10
 - Licensed providers who specialize in optimization
 - Access to peptide protocols, GLP-1s, and hormone optimization
 - Plans from $149/mo — less than most gym memberships
@@ -129,7 +129,7 @@ KEY POINTS TO COVER
 
 2. Why comprehensive lab testing matters
    - Standard panels miss inflammation, hormonal imbalances, nutrient deficiencies
-   - CULTR tests 33 biomarkers (upgradable to 59+) to find the root cause, not just treat symptoms
+   - CULTR tests 29 biomarkers (upgradeable up to 60+) to find the root cause, not just treat symptoms
 
 3. Peptides are not steroids
    - Explain what peptides actually are (short chains of amino acids)
@@ -169,7 +169,7 @@ CLOSER
 
 I don't usually recommend health products in my newsletter — but this one is different enough that I had to tell you about it.
 
-I recently started working with CULTR Health. They're a telehealth platform that does comprehensive lab testing (33 biomarkers, upgradable to 59+ — not the basic 5 your doctor runs) and matches you with licensed providers who build personalized protocols.
+I recently started working with CULTR Health. They're a telehealth platform that does comprehensive lab testing (29 biomarkers, upgradeable up to 60+ — not the basic 5 your doctor runs) and matches you with licensed providers who build personalized protocols.
 
 I'm talking peptides, hormone optimization, GLP-1 protocols — the kind of stuff that used to cost $5K+ per year at concierge clinics. CULTR starts at $149/mo.
 
@@ -190,7 +190,7 @@ P.S. This is a paid partnership with CULTR Health. I only partner with companies
 
 Quick update on my CULTR Health journey — I got my comprehensive lab panel back.
 
-33 biomarkers tested. Here's what stood out:
+29 biomarkers tested. Here's what stood out:
 
 - [Biomarker 1]: [Your finding and what it means]
 - [Biomarker 2]: [Your finding and what it means]
@@ -217,7 +217,7 @@ Got a bunch of replies after my last email about CULTR Health, so let me answer 
 Yes — CULTR is a licensed medical practice with board-certified providers. All medications come from licensed US pharmacies. It's fully HIPAA compliant.
 
 "How is this different from my regular doctor?"
-Your doctor typically tests 5-10 basic markers. CULTR tests 33 including hormones, inflammation, metabolic markers, and nutrients. Plus you get a provider who specializes in optimization, not just disease treatment.
+Your doctor typically tests 5-10 basic markers. CULTR tests 29 including hormones, inflammation, metabolic markers, and nutrients. Plus you get a provider who specializes in optimization, not just disease treatment.
 
 "What about the cost?"
 Plans start at $149/mo. Compare that to a single specialist visit ($300-500) or concierge medicine ($5,000-10,000/year). HSA/FSA eligible too.
@@ -244,7 +244,7 @@ Disclosure: Paid partnership with CULTR Health.`}</CopyBlock>
         <SectionHeading>Instagram Captions</SectionHeading>
         <CopyBlock label="Caption 1 — Lab Results Post">{`Just got my comprehensive lab panel back from @cultrhealth and WOW. \u{1F9EA}
 
-33 biomarkers tested. Turns out [your finding — e.g., "my vitamin D was in the tank and my cortisol was through the roof"].
+29 biomarkers tested. Turns out [your finding — e.g., "my vitamin D was in the tank and my cortisol was through the roof"].
 
 This is why "you're fine" from your regular doctor isn't enough.
 
@@ -269,7 +269,7 @@ Plans start at $149/mo. Take the quiz to find yours \u2192 link in bio
 #partner #cultrhealth #healthjourney #peptidetherapy #glp1`}</CopyBlock>
 
         <CopyBlock label="Caption 3 — Educational">{`Your doctor tests 5-10 blood markers.
-CULTR tests 33.
+CULTR tests 29.
 
 Here's what most panels miss:
 \u2192 Comprehensive hormone profile
@@ -288,13 +288,13 @@ Link in bio to take the quiz and find your plan.
         <CopyBlock label="Tweet 1">{`My doctor: "Your labs are normal"
 CULTR: "Here are 3 things we found that explain why you feel like garbage"
 
-33 biomarkers > the basic 5. Link in bio.
+29 biomarkers > the basic 5. Link in bio.
 
 #ad @cultrhealth`}</CopyBlock>
 
         <CopyBlock label="Tweet 2">{`The same longevity protocols celebrities pay $10K/year for — now from $149/mo.
 
-Licensed providers. Personalized peptide protocols. 33 biomarker testing, upgradable to 59+ (SiPhox Health).
+Licensed providers. Personalized peptide protocols. 29 biomarker testing, upgradeable up to 60+ (SiPhox Health).
 
 Not a supplement company. An actual medical practice. @cultrhealth
 
