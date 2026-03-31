@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { revalidatePath } from 'next/cache'
 import { getSession, isProviderEmail } from '@/lib/auth'
 
 async function verifyAdmin() {
@@ -77,6 +78,10 @@ export async function PUT(request: Request) {
         updated_at = NOW(),
         updated_by = ${session.email}
     `
+
+    // Bust caches so the public /api/stock endpoint and join page reflect changes immediately
+    revalidatePath('/api/stock')
+    revalidatePath('/join-club')
 
     return NextResponse.json({ success: true })
   } catch (err) {

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 
-export const revalidate = 60 // ISR: revalidate every 60 seconds
+export const dynamic = 'force-dynamic' // Always read fresh from DB — admin changes must reflect immediately
 
 /** GET — Public endpoint returning stock status for all join therapies */
 export async function GET() {
@@ -25,7 +25,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ stock }, {
-      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30' },
+      headers: { 'Cache-Control': 'no-store' },
     })
   } catch (err) {
     console.error('[api/stock] GET error:', err)
