@@ -958,31 +958,6 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
       </table>
     </div>
     
-    <!-- HSA/FSA Section -->
-    <div style="background: linear-gradient(135deg, #1a3d1a 0%, #0f2a0f 100%); border-radius: 8px; padding: 24px; margin-bottom: 24px; border: 1px solid #2d5a2d;">
-      <div style="display: flex; align-items: center; margin-bottom: 16px;">
-        <span style="display: inline-block; background: #c9a962; color: #000; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-          HSA/FSA Eligible
-        </span>
-      </div>
-      
-      <h3 style="color: #fff; font-size: 16px; margin: 0 0 12px 0;">
-        Letter of Medical Necessity Included
-      </h3>
-      
-      <p style="color: #a0a0a0; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;">
-        Your order qualifies for HSA/FSA reimbursement. We've attached a Letter of Medical Necessity (LMN) 
-        to this email. Submit this document to your HSA/FSA administrator for tax-free reimbursement.
-      </p>
-      
-      <div style="background-color: rgba(0,0,0,0.3); border-radius: 6px; padding: 12px; display: flex; align-items: center; gap: 12px;">
-        <span style="color: #c9a962;">📄</span>
-        <div>
-          <p style="color: #fff; font-size: 14px; margin: 0;">CULTR-LMN-${lmnNumber}.pdf</p>
-          <p style="color: #888; font-size: 12px; margin: 4px 0 0 0;">Attached to this email</p>
-        </div>
-      </div>
-    </div>
     
     <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
       <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
@@ -1005,7 +980,7 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
     const { error } = await client.emails.send({
       from: getFromEmail(),
       to: email,
-      subject: `Order Confirmed: ${orderNumber} — HSA/FSA Letter Attached`,
+      subject: `Order Confirmed: ${orderNumber}`,
       html: baseEmailTemplate(content, 'Thank you for choosing CULTR Health.'),
       attachments: [
         {

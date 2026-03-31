@@ -444,7 +444,6 @@ function MediaKitDocument() {
                 'Integrated pharmacy fulfillment via licensed partner (Asher Med)',
                 'Member dashboard with order tracking & health progress',
                 'Subscription billing via Stripe with BNPL options (Affirm, Klarna)',
-                'HSA/FSA eligible across all paid membership tiers',
                 'Calorie calculator & daily tracking tools',
                 'Science blog with 12+ peer-reviewed content articles',
                 'Interactive recommendation quiz for therapy matching',
@@ -547,7 +546,6 @@ function MediaKitDocument() {
                 'HIPAA Compliant',
                 'Licensed Providers',
                 'Licensed Pharmacy',
-                'HSA/FSA Eligible',
               ].map((b, i) => (
                 <View
                   key={i}

@@ -235,7 +235,6 @@ GLP-1 agonists remain expensive:
 - Brand pricing: $800-1500/month without insurance
 - Compounded options may be more accessible
 - Insurance coverage varies widely
-- HSA/FSA may cover with prescription
 
 ## Who Benefits Most?
 

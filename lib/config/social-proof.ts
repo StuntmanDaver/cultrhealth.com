@@ -101,5 +101,4 @@ export const TRUST_BADGES = [
   { label: 'HIPAA Compliant', icon: 'Shield' as const },
   { label: 'Licensed Providers', icon: 'Stethoscope' as const },
   { label: 'Licensed Pharmacy', icon: 'Building' as const },
-  { label: 'HSA/FSA Eligible', icon: 'CreditCard' as const },
 ];
