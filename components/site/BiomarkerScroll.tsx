@@ -1,8 +1,10 @@
 'use client';
 
+import Image from 'next/image';
+
 /**
- * Vertical auto-scrolling biomarker card list — replicating SiPhox EasyDraw Core animation.
- * Cards scroll upward continuously in a fixed-height container with fade edges.
+ * Vertical auto-scrolling biomarker card list + EasyDraw blood test section.
+ * Replicates SiPhox programs page animation style.
  */
 
 const BIOMARKER_DATA = [
@@ -97,6 +99,46 @@ export default function BiomarkerScroll() {
             {cards.map((b, i) => (
               <BiomarkerCard key={i} name={b.name} desc={b.desc} value={b.value} status={b.status as Status} />
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Connector line ─── */}
+      <div className="flex justify-center py-6">
+        <div className="w-px h-16 bg-brand-secondary/15" />
+      </div>
+
+      {/* ─── EasyDraw Blood Test Section ─── */}
+      <div className="max-w-4xl mx-auto text-center px-6 mb-8">
+        <h2 className="text-2xl md:text-3xl font-display font-bold text-brand-primary mb-2">
+          Test comprehensive panels{' '}
+          <strong>painlessly from home.</strong>
+        </h2>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-6">
+        <div className="relative rounded-2xl overflow-hidden aspect-[4/3] md:aspect-[16/9]">
+          {/* Lifestyle background image */}
+          <Image
+            src="/images/easydraw-lifestyle.jpg"
+            alt="Woman using SiPhox EasyDraw at-home blood test"
+            fill
+            className="object-cover object-center"
+            sizes="(max-width: 768px) 100vw, 768px"
+          />
+
+          {/* EasyDraw device overlay — centered */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="relative w-[120px] h-[200px] md:w-[160px] md:h-[280px]">
+              {/* Full device (with blood sample) */}
+              <Image
+                src="/images/easydraw-full.png"
+                alt="SiPhox EasyDraw device"
+                fill
+                className="object-contain drop-shadow-2xl"
+                sizes="160px"
+              />
+            </div>
           </div>
         </div>
       </div>
