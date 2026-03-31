@@ -1,8 +1,8 @@
 'use client';
 
 /**
- * Auto-scrolling biomarker card animation — inspired by SiPhox EasyDraw Core.
- * Infinite horizontal marquee of biomarker result cards with colored status dots.
+ * Vertical auto-scrolling biomarker card list — replicating SiPhox EasyDraw Core animation.
+ * Cards scroll upward continuously in a fixed-height container with fade edges.
  */
 
 const BIOMARKER_DATA = [
@@ -49,12 +49,12 @@ const STATUS_COLORS: Record<Status, string> = {
 
 function BiomarkerCard({ name, desc, value, status }: { name: string; desc: string; value: string; status: Status }) {
   return (
-    <div className="flex items-center justify-between min-w-[320px] md:min-w-[360px] px-5 py-4 bg-white rounded-xl border border-brand-secondary/10 shrink-0">
+    <div className="flex items-center justify-between px-5 py-4 border-b border-brand-secondary/8 last:border-b-0">
       <div className="min-w-0 mr-4">
-        <p className="text-sm font-semibold text-brand-primary truncate">{name}</p>
-        <p className="text-xs text-brand-secondary/50 truncate">{desc}</p>
+        <p className="text-sm font-semibold text-brand-primary">{name}</p>
+        <p className="text-xs text-brand-secondary/50">{desc}</p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2.5 shrink-0">
         <span className="text-sm font-medium text-brand-primary tabular-nums">{value}</span>
         <span
           className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -66,45 +66,36 @@ function BiomarkerCard({ name, desc, value, status }: { name: string; desc: stri
 }
 
 export default function BiomarkerScroll() {
-  // Duplicate data for seamless infinite scroll
+  // Duplicate for seamless infinite vertical scroll
   const cards = [...BIOMARKER_DATA, ...BIOMARKER_DATA];
 
   return (
-    <section className="py-12 md:py-16 overflow-hidden bg-brand-cream">
+    <section className="py-12 md:py-16 bg-brand-cream">
       <div className="max-w-4xl mx-auto text-center px-6 mb-8">
         <p className="text-[10px] md:text-xs uppercase tracking-widest text-brand-secondary/50 font-semibold mb-2">
           SiPhox EasyDraw Core
         </p>
         <h2 className="text-2xl md:text-3xl font-display font-bold text-brand-primary mb-3">
           Preventing chronic disease starts with{' '}
-          <span className="text-brand-primary">tracking &amp; understanding your biomarkers.</span>
+          <strong>tracking &amp; understanding your biomarkers.</strong>
         </h2>
         <p className="text-sm text-brand-secondary/60 max-w-xl mx-auto">
           33 biomarkers tested at home — heart, metabolic, hormonal, nutritional, inflammation, and thyroid health. Upgradable to 59+.
         </p>
       </div>
 
-      {/* Auto-scrolling marquee — two rows scrolling in opposite directions */}
-      <div className="space-y-3">
-        {/* Row 1 — scrolls left */}
-        <div className="relative">
-          {/* Fade edges */}
-          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-brand-cream to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-brand-cream to-transparent z-10 pointer-events-none" />
-          <div className="flex gap-3 animate-marquee-left">
-            {cards.slice(0, 30).map((b, i) => (
-              <BiomarkerCard key={`r1-${i}`} name={b.name} desc={b.desc} value={b.value} status={b.status as Status} />
-            ))}
-          </div>
-        </div>
+      {/* Vertical auto-scroll container */}
+      <div className="max-w-2xl mx-auto px-6">
+        <div className="relative rounded-2xl bg-white border border-brand-secondary/10 shadow-sm overflow-hidden" style={{ height: '420px' }}>
+          {/* Top fade */}
+          <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none" />
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
 
-        {/* Row 2 — scrolls right */}
-        <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-r from-brand-cream to-transparent z-10 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-32 bg-gradient-to-l from-brand-cream to-transparent z-10 pointer-events-none" />
-          <div className="flex gap-3 animate-marquee-right">
-            {cards.slice(15, 45).map((b, i) => (
-              <BiomarkerCard key={`r2-${i}`} name={b.name} desc={b.desc} value={b.value} status={b.status as Status} />
+          {/* Scrolling track */}
+          <div className="animate-marquee-up">
+            {cards.map((b, i) => (
+              <BiomarkerCard key={i} name={b.name} desc={b.desc} value={b.value} status={b.status as Status} />
             ))}
           </div>
         </div>
