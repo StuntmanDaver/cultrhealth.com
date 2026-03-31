@@ -18,6 +18,7 @@ import {
   X,
   LogOut,
   Video,
+  PackageSearch,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -31,6 +32,7 @@ const NAV_GROUPS = [
     label: 'REVENUE',
     items: [
       { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+      { label: 'Inventory', href: '/admin/inventory', icon: PackageSearch },
     ],
   },
   {

@@ -6,7 +6,9 @@ import {
   Loader2, Flame, Zap, Shield, Package, ArrowRight, ArrowLeft, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
-import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, getStockStatus, getMaxOrderQuantity, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+
+type StockData = Record<string, { status: string; quantity: number | null }>
 import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
@@ -50,8 +52,17 @@ function JoinLandingInner() {
   const [showLogin, setShowLogin] = useState(false)
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
+  const [stockData, setStockData] = useState<StockData>({})
   const cart = useJoinCart()
   const hasItems = cart.getItemCount() > 0
+
+  // Fetch live stock data from DB
+  useEffect(() => {
+    fetch('/api/stock')
+      .then((r) => r.ok ? r.json() : { stock: {} })
+      .then((d) => setStockData(d.stock || {}))
+      .catch(() => {})
+  }, [])
 
   // Prevent ALL zoom: trackpad pinch (Safari gesturestart), Ctrl+scroll, double-tap
   useEffect(() => {
@@ -235,7 +246,7 @@ function JoinLandingInner() {
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx] || Flame
                 return (
-                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} />
+                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} stockData={stockData} />
                 )
               })}
 
@@ -301,15 +312,16 @@ function JoinLandingInner() {
 // THERAPY CAROUSEL SECTION
 // =============================================
 
-function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection; Icon: typeof Flame }) {
+function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinTherapySection; Icon: typeof Flame; stockData: StockData }) {
   const cart = useJoinCart()
   const isTwoRow = section.therapies.length > 5
 
   const buildCard = (therapy: JoinTherapy, index: number) => {
     const inCart = cart.isInCart(therapy.id)
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
-    const stockStatus = getStockStatus(therapy)
-    const maxQty = getMaxOrderQuantity(therapy)
+    const sd = stockData[therapy.id]
+    const stockStatus = sd?.status || 'in_stock'
+    const maxQty = stockStatus === 'out_of_stock' ? 0 : (sd?.quantity ?? Infinity)
     const currentQty = cartItem?.quantity || 0
     const isOutOfStock = stockStatus === 'out_of_stock'
     const atMaxQty = currentQty >= maxQty
@@ -318,8 +330,8 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
     let stockLabel: string | undefined
     if (isOutOfStock) {
       stockLabel = 'Out of Stock'
-    } else if (stockStatus === 'low_stock' && therapy.stockQuantity != null) {
-      stockLabel = `Only ${therapy.stockQuantity} left`
+    } else if (stockStatus === 'low_stock' && sd?.quantity != null) {
+      stockLabel = `Only ${sd.quantity} left`
     }
 
     const handleAdd = () => {
