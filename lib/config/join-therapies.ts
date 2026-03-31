@@ -7,6 +7,8 @@
  * Updated Feb 2026 — all therapies now have fixed pricing.
  */
 
+export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+
 export interface JoinTherapy {
   id: string
   name: string
@@ -26,6 +28,10 @@ export interface JoinTherapy {
   image?: string
   /** ID of a product this bundles with for a discount */
   bundleWith?: string
+  /** Stock status. Defaults to 'in_stock' when omitted. */
+  stockStatus?: JoinStockStatus
+  /** Remaining units available. Used for max-quantity enforcement when set. */
+  stockQuantity?: number
 }
 
 export interface JoinTherapySection {
@@ -155,6 +161,8 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'SELANK-SEMAX-5MG-3ML',
         image: '/images/products/semax-selank.png',
+        stockStatus: 'low_stock',
+        stockQuantity: 3,
       },
       {
         id: 'bpc157-tb500',
@@ -218,4 +226,15 @@ export function getAllJoinTherapies(): JoinTherapy[] {
 /** Find a therapy by ID */
 export function getJoinTherapyById(id: string): JoinTherapy | undefined {
   return getAllJoinTherapies().find((t) => t.id === id)
+}
+
+/** Get effective stock status (defaults to 'in_stock' when not set) */
+export function getStockStatus(therapy: JoinTherapy): JoinStockStatus {
+  return therapy.stockStatus || 'in_stock'
+}
+
+/** Get max orderable quantity for a therapy. Returns Infinity when unlimited. */
+export function getMaxOrderQuantity(therapy: JoinTherapy): number {
+  if (therapy.stockStatus === 'out_of_stock') return 0
+  return therapy.stockQuantity ?? Infinity
 }

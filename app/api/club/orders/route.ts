@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
-import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies'
+import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinTherapyById, getStockStatus, getMaxOrderQuantity } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
@@ -42,6 +42,20 @@ export async function POST(request: Request) {
     }
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
+    }
+
+    // Stock validation — reject out-of-stock or over-limit items
+    for (const item of items) {
+      const therapy = getJoinTherapyById(item.therapyId)
+      if (!therapy) continue
+      const status = getStockStatus(therapy)
+      if (status === 'out_of_stock') {
+        return NextResponse.json({ error: `${therapy.name} is currently out of stock.` }, { status: 400 })
+      }
+      const maxQty = getMaxOrderQuantity(therapy)
+      if (item.quantity > maxQty) {
+        return NextResponse.json({ error: `${therapy.name} is limited to ${maxQty} units. Please reduce the quantity.` }, { status: 400 })
+      }
     }
 
     const normalizedEmail = email.trim().toLowerCase()

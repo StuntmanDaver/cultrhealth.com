@@ -10,7 +10,7 @@ import React, {
 } from "react"
 import { createPortal } from "react-dom"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useOutsideClick } from "@/hooks/use-outside-click"
@@ -318,6 +318,8 @@ export const Card = ({
   inCart,
   cartQty,
   compact = false,
+  stockLabel,
+  disableAdd,
 }: {
   card: CarouselCard
   index: number
@@ -326,6 +328,10 @@ export const Card = ({
   inCart?: boolean
   cartQty?: number
   compact?: boolean
+  /** e.g. "Only 3 left" or "Out of Stock" */
+  stockLabel?: string
+  /** When true, add button is disabled (out of stock or at max qty) */
+  disableAdd?: boolean
 }) => {
   const [open, setOpen] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
@@ -456,16 +462,21 @@ export const Card = ({
                     </div>
                     {onAdd && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); onAdd() }}
+                        onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
+                        disabled={disableAdd}
                         className={cn(
                           "flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all",
-                          inCart
-                            ? "bg-sage/30 text-brand-primary"
-                            : "bg-brand-primary text-white hover:bg-brand-primaryHover active:scale-95"
+                          disableAdd
+                            ? "bg-brand-secondary/10 text-brand-secondary/40 cursor-not-allowed"
+                            : inCart
+                              ? "bg-sage/30 text-brand-primary"
+                              : "bg-brand-primary text-white hover:bg-brand-primaryHover active:scale-95"
                         )}
                       >
-                        {inCart ? (
-                          <><Check className="w-4 h-4" /> Added ({cartQty})</>
+                        {disableAdd && !inCart ? (
+                          <>Out of Stock</>
+                        ) : inCart ? (
+                          <><Check className="w-4 h-4" /> Added ({cartQty}){stockLabel ? ` · ${stockLabel}` : ''}</>
                         ) : (
                           <><Plus className="w-4 h-4" /> Add to Cart</>
                         )}
@@ -580,6 +591,21 @@ export const Card = ({
           </div>
         )}
 
+        {/* Stock badge */}
+        {stockLabel && (
+          <div className={cn("absolute z-20", compact ? "top-2.5 left-2.5" : "top-3 left-3")}>
+            <span className={cn(
+              "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-sm",
+              disableAdd && !inCart
+                ? "bg-red-500/80 text-white"
+                : "bg-amber-400/90 text-brand-primary"
+            )}>
+              <AlertTriangle className="w-2.5 h-2.5" />
+              {stockLabel}
+            </span>
+          </div>
+        )}
+
         {/* Bottom: Price + Quick Add */}
         <div className={cn("relative z-10 flex items-end justify-between", compact ? "px-3.5 pb-3.5" : "px-5 pb-5")}>
           {card.price ? (
@@ -594,15 +620,21 @@ export const Card = ({
           )}
           {onAdd && (
             <button
-              onClick={(e) => { e.stopPropagation(); onAdd() }}
+              onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
+              disabled={disableAdd}
               className={cn(
                 "flex items-center gap-1.5 rounded-full text-xs font-bold transition-all duration-200",
-                inCart
-                  ? "bg-white/15 text-white backdrop-blur-sm px-3.5 py-2"
-                  : "bg-white text-brand-primary px-4 py-2 hover:scale-105 active:scale-95 shadow-sm"
+                disableAdd
+                  ? "bg-white/10 text-white/30 cursor-not-allowed"
+                  : inCart
+                    ? "bg-white/15 text-white backdrop-blur-sm px-3.5 py-2"
+                    : "bg-white text-brand-primary px-4 py-2 hover:scale-105 active:scale-95 shadow-sm",
+                !disableAdd && (inCart ? "px-3.5 py-2" : "px-4 py-2")
               )}
             >
-              {inCart ? (
+              {disableAdd && !inCart ? (
+                <>Sold Out</>
+              ) : inCart ? (
                 <><Check className="w-3 h-3" /> {cartQty}</>
               ) : (
                 <><Plus className="w-3 h-3" /> Add</>

@@ -6,7 +6,7 @@ import {
   Loader2, Flame, Zap, Shield, Package, ArrowRight, ArrowLeft, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
-import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, getStockStatus, getMaxOrderQuantity, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
 import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
 
 // =============================================
@@ -308,8 +308,22 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
   const buildCard = (therapy: JoinTherapy, index: number) => {
     const inCart = cart.isInCart(therapy.id)
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
+    const stockStatus = getStockStatus(therapy)
+    const maxQty = getMaxOrderQuantity(therapy)
+    const currentQty = cartItem?.quantity || 0
+    const isOutOfStock = stockStatus === 'out_of_stock'
+    const atMaxQty = currentQty >= maxQty
+    const disableAdd = isOutOfStock || atMaxQty
+
+    let stockLabel: string | undefined
+    if (isOutOfStock) {
+      stockLabel = 'Out of Stock'
+    } else if (stockStatus === 'low_stock' && therapy.stockQuantity != null) {
+      stockLabel = `Only ${therapy.stockQuantity} left`
+    }
 
     const handleAdd = () => {
+      if (disableAdd) return
       if (inCart && cartItem) {
         cart.updateQuantity(therapy.id, cartItem.quantity + 1)
       } else {
@@ -359,6 +373,8 @@ function TherapyCarouselSection({ section, Icon }: { section: JoinTherapySection
         inCart={inCart}
         cartQty={cartItem?.quantity}
         compact={isTwoRow}
+        stockLabel={stockLabel}
+        disableAdd={disableAdd}
       />
     )
   }
