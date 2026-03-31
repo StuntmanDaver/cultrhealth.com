@@ -161,8 +161,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'SELANK-SEMAX-5MG-3ML',
         image: '/images/products/semax-selank.png',
-        stockStatus: 'low_stock',
-        stockQuantity: 3,
       },
       {
         id: 'bpc157-tb500',
@@ -238,3 +236,4 @@ export function getMaxOrderQuantity(therapy: JoinTherapy): number {
   if (therapy.stockStatus === 'out_of_stock') return 0
   return therapy.stockQuantity ?? Infinity
 }
+

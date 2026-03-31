@@ -4,15 +4,25 @@ import crypto from 'crypto'
 import { getSession, isProviderEmail } from '@/lib/auth'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 
+// Pipeline order — index determines which forward skips are allowed
+const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'] as const
+
 // Allowed transitions: fromStatus → toStatus[]
 // Note: pending_approval → approved/invoice_sent is handled by the approve endpoint
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   pending_approval: ['cancelled'],
-  approved:         ['invoice_sent', 'paid', 'cancelled'],
-  invoice_sent:     ['paid', 'cancelled'],
+  approved:         ['invoice_sent', 'paid', 'shipped', 'fulfilled', 'cancelled'],
+  invoice_sent:     ['paid', 'shipped', 'fulfilled', 'cancelled'],
   paid:             ['shipped', 'fulfilled', 'cancelled'],
   shipped:          ['fulfilled'],
   fulfilled:        [],  // terminal state
+}
+
+// Timestamp columns for each pipeline stage (used when skipping stages)
+const STAGE_TIMESTAMPS: Record<string, string> = {
+  paid: 'paid_at',
+  shipped: 'shipped_at',
+  fulfilled: 'fulfilled_at',
 }
 
 // Status labels for emails
@@ -146,30 +156,48 @@ export async function POST(
       )
     }
 
-    // Apply transition atomically with appropriate timestamp
+    // Determine if this is a forward skip (jumping past intermediate stages)
+    const fromIdx = PIPELINE_ORDER.indexOf(currentStatus as typeof PIPELINE_ORDER[number])
+    const toIdx = PIPELINE_ORDER.indexOf(newStatus as typeof PIPELINE_ORDER[number])
+    const isSkip = fromIdx >= 0 && toIdx >= 0 && toIdx - fromIdx > 1
+
+    // Apply transition atomically — set timestamps for target stage AND any skipped intermediate stages
     const actorEmail = session?.email || 'email_link'
+
+    // Build SET clause: always set status + updated_at, then add timestamps for all stages between current and target
+    const timestampSets: string[] = []
+    if (fromIdx >= 0 && toIdx >= 0) {
+      for (let i = fromIdx + 1; i <= toIdx; i++) {
+        const col = STAGE_TIMESTAMPS[PIPELINE_ORDER[i]]
+        if (col) timestampSets.push(col)
+      }
+    } else if (STAGE_TIMESTAMPS[newStatus]) {
+      timestampSets.push(STAGE_TIMESTAMPS[newStatus])
+    }
+
     let result
-    if (newStatus === 'paid') {
+    if (newStatus === 'shipped' || (isSkip && timestampSets.includes('shipped_at'))) {
+      // Shipping transition — include tracking fields
       result = await sql`
         UPDATE club_orders
-        SET status = ${newStatus}, paid_at = NOW(), updated_at = NOW()
+        SET status = ${newStatus}, updated_at = NOW(),
+            paid_at = COALESCE(paid_at, ${timestampSets.includes('paid_at') ? new Date().toISOString() : null}::timestamptz, paid_at),
+            shipped_at = COALESCE(${timestampSets.includes('shipped_at') ? new Date().toISOString() : null}::timestamptz, shipped_at),
+            fulfilled_at = COALESCE(${timestampSets.includes('fulfilled_at') ? new Date().toISOString() : null}::timestamptz, fulfilled_at),
+            tracking_carrier = COALESCE(${carrier || null}, tracking_carrier),
+            tracking_number = COALESCE(${trackingNumber || null}, tracking_number),
+            tracking_url = COALESCE(${trackingUrl || null}, tracking_url)
         WHERE id = ${orderId}::uuid AND status = ${currentStatus}
         RETURNING id, status, order_number
       `
-    } else if (newStatus === 'shipped') {
+    } else if (timestampSets.length > 0) {
+      // Non-shipping forward transition — set all intermediate + target timestamps
       result = await sql`
         UPDATE club_orders
-        SET status = ${newStatus}, shipped_at = NOW(), updated_at = NOW(),
-            tracking_carrier = ${carrier || null},
-            tracking_number = ${trackingNumber || null},
-            tracking_url = ${trackingUrl || null}
-        WHERE id = ${orderId}::uuid AND status = ${currentStatus}
-        RETURNING id, status, order_number
-      `
-    } else if (newStatus === 'fulfilled') {
-      result = await sql`
-        UPDATE club_orders
-        SET status = ${newStatus}, fulfilled_at = NOW(), updated_at = NOW()
+        SET status = ${newStatus}, updated_at = NOW(),
+            paid_at = COALESCE(${timestampSets.includes('paid_at') ? new Date().toISOString() : null}::timestamptz, paid_at),
+            shipped_at = COALESCE(${timestampSets.includes('shipped_at') ? new Date().toISOString() : null}::timestamptz, shipped_at),
+            fulfilled_at = COALESCE(${timestampSets.includes('fulfilled_at') ? new Date().toISOString() : null}::timestamptz, fulfilled_at)
         WHERE id = ${orderId}::uuid AND status = ${currentStatus}
         RETURNING id, status, order_number
       `
@@ -199,8 +227,8 @@ export async function POST(
           ${'status_change'},
           ${'club_order'},
           ${orderId},
-          ${`${currentStatus} → ${newStatus}`},
-          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, carrier, trackingNumber })}
+          ${`${currentStatus} → ${newStatus}${isSkip ? ' (skip)' : ''}`},
+          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, skippedTimestamps: isSkip ? timestampSets : undefined, carrier, trackingNumber })}
         )
       `
     } catch {

@@ -44,17 +44,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
-    // Stock validation — reject out-of-stock or over-limit items
-    for (const item of items) {
-      const therapy = getJoinTherapyById(item.therapyId)
-      if (!therapy) continue
-      const status = getStockStatus(therapy)
-      if (status === 'out_of_stock') {
-        return NextResponse.json({ error: `${therapy.name} is currently out of stock.` }, { status: 400 })
-      }
-      const maxQty = getMaxOrderQuantity(therapy)
-      if (item.quantity > maxQty) {
-        return NextResponse.json({ error: `${therapy.name} is limited to ${maxQty} units. Please reduce the quantity.` }, { status: 400 })
+    // Stock validation from DB — reject out-of-stock or over-limit items
+    if (process.env.POSTGRES_URL) {
+      const stockResult = await sql`SELECT therapy_id, therapy_name, stock_status, stock_quantity FROM product_inventory`
+      const stockMap = new Map(stockResult.rows.map((r) => [r.therapy_id, r]))
+      for (const item of items) {
+        const inv = stockMap.get(item.therapyId)
+        if (!inv) continue
+        if (inv.stock_status === 'out_of_stock') {
+          return NextResponse.json({ error: `${inv.therapy_name} is currently out of stock.` }, { status: 400 })
+        }
+        if (inv.stock_quantity != null && item.quantity > Number(inv.stock_quantity)) {
+          return NextResponse.json({ error: `${inv.therapy_name} is limited to ${Number(inv.stock_quantity)} units. Please reduce the quantity.` }, { status: 400 })
+        }
       }
     }
 

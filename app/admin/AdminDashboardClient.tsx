@@ -695,62 +695,75 @@ export default function AdminDashboardClient() {
                             </div>
 
                             {/* Actions row */}
-                            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
-                              {inv.status === 'pending_approval' && (
-                                <button
-                                  onClick={() => handleApproveOrder(inv.id)}
-                                  disabled={approvingOrder === inv.id}
-                                  className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                >
-                                  {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
-                                </button>
-                              )}
-                              {['approved', 'invoice_sent'].includes(inv.status) && (
-                                <button
-                                  onClick={() => handleStatusUpdate(inv.id, 'paid')}
-                                  disabled={updatingStatus === inv.id}
-                                  className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                >
-                                  {updatingStatus === inv.id ? '...' : 'Mark Paid'}
-                                </button>
-                              )}
-                              {inv.status === 'paid' && (
-                                <>
-                                  <button
-                                    onClick={() => handleStatusUpdate(inv.id, 'shipped')}
-                                    disabled={updatingStatus === inv.id}
-                                    className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                                  >
-                                    {updatingStatus === inv.id ? '...' : 'Mark Shipped'}
-                                  </button>
-                                  <button
-                                    onClick={() => handleStatusUpdate(inv.id, 'fulfilled')}
-                                    disabled={updatingStatus === inv.id}
-                                    className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-                                  >
-                                    {updatingStatus === inv.id ? '...' : 'Mark Fulfilled'}
-                                  </button>
-                                </>
-                              )}
-                              {inv.status === 'shipped' && (
-                                <button
-                                  onClick={() => handleStatusUpdate(inv.id, 'fulfilled')}
-                                  disabled={updatingStatus === inv.id}
-                                  className="px-4 py-2 text-sm rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-                                >
-                                  {updatingStatus === inv.id ? '...' : 'Mark Fulfilled'}
-                                </button>
-                              )}
-                              {!['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status) && (
-                                <button
-                                  onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
-                                  disabled={updatingStatus === inv.id}
-                                  className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
-                                >
-                                  Cancel Order
-                                </button>
-                              )}
-                            </div>
+                            {(() => {
+                              const PIPELINE = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
+                              const PIPELINE_LABELS: Record<string, string> = {
+                                approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled',
+                              }
+                              const currentIdx = PIPELINE.indexOf(inv.status)
+                              const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null
+                              // Skip targets: all stages beyond the next one (if any exist)
+                              const skipTargets = currentIdx >= 0 ? PIPELINE.slice(currentIdx + 2).filter(s => s !== nextStatus) : []
+
+                              return (
+                                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
+                                  {inv.status === 'pending_approval' && (
+                                    <button
+                                      onClick={() => handleApproveOrder(inv.id)}
+                                      disabled={approvingOrder === inv.id}
+                                      className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                                    >
+                                      {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
+                                    </button>
+                                  )}
+                                  {nextStatus && inv.status !== 'pending_approval' && (
+                                    <button
+                                      onClick={() => handleStatusUpdate(inv.id, nextStatus)}
+                                      disabled={updatingStatus === inv.id}
+                                      className={`px-4 py-2 text-sm rounded-lg text-white disabled:opacity-50 transition-colors ${
+                                        nextStatus === 'paid' ? 'bg-green-600 hover:bg-green-700'
+                                        : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
+                                        : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
+                                        : 'bg-brand-primary hover:bg-brand-primaryHover'
+                                      }`}
+                                    >
+                                      {updatingStatus === inv.id ? '...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
+                                    </button>
+                                  )}
+                                  {/* Skip to — jump ahead past intermediate stages */}
+                                  {skipTargets.length > 0 && inv.status !== 'pending_approval' && (
+                                    <select
+                                      disabled={updatingStatus === inv.id}
+                                      value=""
+                                      onChange={(e) => {
+                                        const target = e.target.value
+                                        if (!target) return
+                                        const skippedStages = PIPELINE.slice(currentIdx + 1, PIPELINE.indexOf(target)).map(s => PIPELINE_LABELS[s] || s).join(' → ')
+                                        if (confirm(`Skip to "${PIPELINE_LABELS[target]}"?\n\nThis will skip: ${skippedStages}\n\nAll skipped stage timestamps will be set automatically.`)) {
+                                          handleStatusUpdate(inv.id, target)
+                                        }
+                                        e.target.value = ''
+                                      }}
+                                      className="px-3 py-2 text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-800 cursor-pointer disabled:opacity-50 transition-colors hover:bg-amber-100"
+                                    >
+                                      <option value="">Skip to…</option>
+                                      {skipTargets.map(s => (
+                                        <option key={s} value={s}>{PIPELINE_LABELS[s] || s}</option>
+                                      ))}
+                                    </select>
+                                  )}
+                                  {!['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status) && (
+                                    <button
+                                      onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
+                                      disabled={updatingStatus === inv.id}
+                                      className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
+                                    >
+                                      Cancel Order
+                                    </button>
+                                  )}
+                                </div>
+                              )
+                            })()}
                           </div>
                         )}
                       </div>
