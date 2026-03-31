@@ -620,7 +620,7 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
         COALESCE(SUM(subtotal_usd), 0) as total_revenue
       FROM club_orders
       WHERE created_at >= NOW() - make_interval(days => ${days})
-        AND status IN ('invoice_sent', 'paid')
+        AND status IN ('invoice_sent', 'paid', 'shipped', 'fulfilled')
     `
 
     // Get orders by status
