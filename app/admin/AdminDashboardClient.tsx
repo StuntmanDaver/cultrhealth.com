@@ -514,7 +514,7 @@ export default function AdminDashboardClient() {
               { key: 'approved', label: 'Approved', color: 'blue' },
               { key: 'invoice_sent', label: 'Invoiced', color: 'indigo' },
               { key: 'paid', label: 'Paid', color: 'green' },
-              { key: 'shipped', label: 'Shipped', color: 'blue' },
+              { key: 'shipped', label: 'Waiting to Ship', color: 'blue' },
               { key: 'fulfilled', label: 'Fulfilled', color: 'emerald' },
             ]
             const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
@@ -642,7 +642,7 @@ export default function AdminDashboardClient() {
                       onChange={(e) => {
                         const target = e.target.value
                         if (!target) return
-                        const LABELS: Record<string, string> = { approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled', cancelled: 'Cancelled' }
+                        const LABELS: Record<string, string> = { approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Waiting to Ship', fulfilled: 'Fulfilled', cancelled: 'Cancelled' }
                         if (confirm(`Move ${selectedOrders.size} order(s) to "${LABELS[target] || target}"?\n\nAll intermediate timestamps will be set automatically.`)) {
                           handleBulkStatusUpdate(target)
                         }
@@ -654,7 +654,7 @@ export default function AdminDashboardClient() {
                       <option value="approved">Approved</option>
                       <option value="invoice_sent">Invoiced</option>
                       <option value="paid">Paid</option>
-                      <option value="shipped">Shipped</option>
+                      <option value="shipped">Waiting to Ship</option>
                       <option value="fulfilled">Fulfilled</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
@@ -807,7 +807,7 @@ export default function AdminDashboardClient() {
                             {(() => {
                               const PIPELINE = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
                               const LABELS: Record<string, string> = {
-                                pending_approval: 'Pending', approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Shipped', fulfilled: 'Fulfilled', cancelled: 'Cancelled',
+                                pending_approval: 'Pending', approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Waiting to Ship', fulfilled: 'Fulfilled', cancelled: 'Cancelled',
                               }
                               const currentIdx = PIPELINE.indexOf(inv.status)
                               const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null

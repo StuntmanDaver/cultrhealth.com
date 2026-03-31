@@ -63,7 +63,7 @@ export const ORDER_STATUS_STYLES: Record<string, { label: string; bg: string; te
   approved:         { label: 'Approved',          bg: 'bg-blue-100',   text: 'text-blue-800' },
   invoice_sent:     { label: 'Invoice Sent',      bg: 'bg-indigo-100', text: 'text-indigo-800' },
   paid:             { label: 'Paid',              bg: 'bg-green-100',  text: 'text-green-800' },
-  shipped:          { label: 'Shipped',           bg: 'bg-blue-100',   text: 'text-blue-800' },
+  shipped:          { label: 'Waiting to Ship',   bg: 'bg-blue-100',   text: 'text-blue-800' },
   fulfilled:        { label: 'Fulfilled',         bg: 'bg-emerald-100', text: 'text-emerald-800' },
   cancelled:        { label: 'Cancelled',         bg: 'bg-gray-100',   text: 'text-gray-600' },
   rejected:         { label: 'Rejected',          bg: 'bg-red-100',    text: 'text-red-800' },
