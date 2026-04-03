@@ -98,25 +98,9 @@ export default function DashboardClient() {
     return () => { cancelled = true }
   }, [])
 
-  // Fetch renewal/supply data for prompt
+  // Renewal/supply prefill removed — Healthie owns intake and renewal flows now
   useEffect(() => {
-    let cancelled = false
-    fetch('/api/portal/prefill')
-      .then(async (res) => {
-        if (cancelled || !res.ok) return
-        const data = await res.json()
-        if (cancelled) return
-        if (data.success && data.prefill) {
-          setSupplyData(data.prefill.supply)
-          setRenewalEligible(data.prefill.renewalEligible)
-          const firstName = data.prefill.renewal?.firstName || data.prefill.intake?.firstName
-          if (firstName) setPatientFirstName(firstName)
-        }
-      })
-      .catch(() => {
-        // Fail silently -- renewal prompt is a nice-to-have
-      })
-    return () => { cancelled = true }
+    return () => {}
   }, [])
 
   // Kit status fetch
@@ -406,7 +390,7 @@ export default function DashboardClient() {
           <p className="text-brand-primary/60 mb-6">
             Start your journey by completing your medical intake.
           </p>
-          <Link href="/portal/intake">
+          <Link href="/intake">
             <Button variant="primary" size="lg">
               Start Intake
             </Button>
@@ -476,7 +460,7 @@ export default function DashboardClient() {
                 Start your renewal now to avoid a gap in treatment.
               </p>
               <Link
-                href="/portal/renewal"
+                href="/members/consultations"
                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-amber-600 text-white rounded-full text-sm font-medium hover:bg-amber-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -529,7 +513,7 @@ export default function DashboardClient() {
         </h3>
         <div className="space-y-3">
           <Link
-            href="/portal/intake"
+            href="/intake"
             className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
           >
             <FileText className="w-5 h-5 text-brand-primary/40" />
@@ -543,7 +527,7 @@ export default function DashboardClient() {
             </div>
           </Link>
           <Link
-            href="/portal/renewal"
+            href="/members/consultations"
             className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
           >
             <RefreshCw className="w-5 h-5 text-brand-primary/40" />

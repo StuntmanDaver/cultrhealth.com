@@ -46,6 +46,8 @@ export interface CreateMembershipInput {
   plan_tier: string
   subscription_status: string
   asher_patient_id?: number | string
+  ehr_patient_id?: string
+  ehr_provider?: string
   email?: string
 }
 
@@ -150,7 +152,7 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
 // ===========================================
 
 export async function createMembership(input: CreateMembershipInput): Promise<{ id: string }> {
-  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id, email } = input
+  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id, ehr_patient_id, ehr_provider, email } = input
 
   try {
     const result = await sql`
@@ -160,6 +162,8 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         plan_tier,
         subscription_status,
         asher_patient_id,
+        ehr_patient_id,
+        ehr_provider,
         email,
         created_at,
         updated_at
@@ -170,6 +174,8 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         ${plan_tier},
         ${subscription_status},
         ${asher_patient_id || null},
+        ${ehr_patient_id || null},
+        ${ehr_provider || null},
         ${email || null},
         NOW(),
         NOW()
@@ -179,6 +185,8 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
         subscription_status = EXCLUDED.subscription_status,
         plan_tier = EXCLUDED.plan_tier,
         email = COALESCE(EXCLUDED.email, memberships.email),
+        ehr_patient_id = COALESCE(EXCLUDED.ehr_patient_id, memberships.ehr_patient_id),
+        ehr_provider = COALESCE(EXCLUDED.ehr_provider, memberships.ehr_provider),
         updated_at = NOW()
       RETURNING id
     `

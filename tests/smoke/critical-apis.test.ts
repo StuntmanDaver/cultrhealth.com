@@ -35,12 +35,6 @@ describe('Critical API Route Smoke Tests', () => {
     expect(typeof mod.GET).toBe('function')
   })
 
-  it('intake questions route exports GET handler', async () => {
-    const mod = await import('@/app/api/intake/questions/route')
-    expect(mod.GET).toBeDefined()
-    expect(typeof mod.GET).toBe('function')
-  })
-
   it('intake submit route exports POST handler', async () => {
     const mod = await import('@/app/api/intake/submit/route')
     expect(mod.POST).toBeDefined()

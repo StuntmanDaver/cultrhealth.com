@@ -23,13 +23,8 @@ import { useCart } from '@/lib/cart-context'
 import { getCategoryDisplayName } from '@/lib/config/product-catalog'
 import { isSupplementSku } from '@/lib/config/vitamin-catalog'
 import type { PlanTier } from '@/lib/config/plans'
-import type { PaymentProvider, AuthorizeNetOpaqueData } from '@/lib/payments/payment-types'
-import type { AffirmCheckoutConfig } from '@/lib/payments/payment-types'
+import type { PaymentProvider } from '@/lib/payments/payment-types'
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector'
-import { KlarnaWidget } from '@/components/payments/KlarnaWidget'
-import { AffirmCheckoutButton } from '@/components/payments/AffirmCheckoutButton'
-import { AuthorizeNetForm, type BillingInfo } from '@/components/payments/AuthorizeNetForm'
-import { getPrimaryPaymentProvider, AUTHORIZE_NET_ENABLED } from '@/lib/config/payments'
 
 // Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
@@ -209,16 +204,8 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
   const [supplementSubmitted, setSupplementSubmitted] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Determine primary card payment provider (Stripe vs Authorize.net)
-  const primaryProvider = getPrimaryPaymentProvider()
-  const useAuthorizeNet = primaryProvider === 'authorize_net' && AUTHORIZE_NET_ENABLED
-
   // Payment method state (for priced items)
   const [paymentMethod, setPaymentMethod] = useState<PaymentProvider>('stripe')
-  const [klarnaClientToken, setKlarnaClientToken] = useState<string | null>(null)
-  const [klarnaSessionLoading, setKlarnaSessionLoading] = useState(false)
-  const [affirmConfig, setAffirmConfig] = useState<AffirmCheckoutConfig | null>(null)
-  const [affirmLoading, setAffirmLoading] = useState(false)
 
   // Split items into peptides and supplements
   const peptideItems = items.filter(i => !isSupplementSku(i.sku))
@@ -335,146 +322,11 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
     setError(errorMsg)
   }
 
-  // Authorize.net product checkout handler
-  const handleAuthorizeNetCheckout = async (
-    opaqueData: AuthorizeNetOpaqueData,
-    billing: BillingInfo
-  ) => {
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/checkout/authorize-net/product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          items: peptideItems.map(item => ({
-            sku: item.sku,
-            quantity: item.quantity,
-          })),
-          opaqueData,
-          billing: billing.firstName ? billing : undefined,
-        }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Failed to process payment')
-
-      // Only remove peptide items
-      peptideItems.forEach(item => removeItem(item.sku))
-      if (data.redirectUrl) {
-        router.push(data.redirectUrl)
-      } else if (data.success) {
-        router.push(`/success?provider=authorize_net&order_id=${data.orderId}&type=product`)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  // Payment method selection with BNPL session creation
-  const handleSelectPaymentMethod = async (provider: PaymentProvider) => {
+  // Payment method selection
+  const handleSelectPaymentMethod = (provider: PaymentProvider) => {
     setPaymentMethod(provider)
     setError(null)
-
-    if (provider === 'klarna' && !klarnaClientToken) {
-      setKlarnaSessionLoading(true)
-      try {
-        const checkoutItems = peptideItems.map(item => ({
-          sku: item.sku,
-          name: item.product.name,
-          quantity: item.quantity,
-          unitPriceCents: Math.round((item.product.priceUsd || 0) * 100),
-        }))
-
-        const response = await fetch('/api/checkout/klarna/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountCents: peptideTotalCents, items: checkoutItems }),
-        })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.error || 'Failed to create Klarna session')
-        setKlarnaClientToken(data.client_token)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load Klarna')
-        setPaymentMethod('stripe')
-      } finally {
-        setKlarnaSessionLoading(false)
-      }
-    }
-
-    if (provider === 'affirm' && !affirmConfig) {
-      setAffirmLoading(true)
-      try {
-        const checkoutItems = peptideItems.map(item => ({
-          sku: item.sku,
-          name: item.product.name,
-          quantity: item.quantity,
-          unitPriceCents: Math.round((item.product.priceUsd || 0) * 100),
-        }))
-
-        const response = await fetch('/api/checkout/affirm/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amountCents: peptideTotalCents, items: checkoutItems }),
-        })
-        const data = await response.json()
-        if (!response.ok) throw new Error(data.error || 'Failed to build Affirm checkout')
-        setAffirmConfig(data.checkout)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load Affirm')
-        setPaymentMethod('stripe')
-      } finally {
-        setAffirmLoading(false)
-      }
-    }
   }
-
-  // Klarna authorized callback
-  const handleKlarnaAuthorized = useCallback(async (authorizationToken: string) => {
-    setIsSubmitting(true)
-    setError(null)
-    try {
-      const checkoutItems = peptideItems.map(item => ({
-        sku: item.sku,
-        name: item.product.name,
-        quantity: item.quantity,
-        unitPriceCents: Math.round((item.product.priceUsd || 0) * 100),
-      }))
-
-      const response = await fetch('/api/checkout/klarna/order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authorizationToken,
-          amountCents: peptideTotalCents,
-          items: checkoutItems,
-        }),
-      })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Klarna order failed')
-
-      // Only remove peptide items
-      peptideItems.forEach(item => removeItem(item.sku))
-      if (data.fraud_status === 'ACCEPTED') {
-        router.push(`/success?provider=klarna&order_id=${data.order_id}&type=product`)
-      } else {
-        router.push(`/success?provider=klarna&order_id=${data.order_id}&pending=true&type=product`)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Klarna payment failed')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [peptideItems, peptideTotalCents, removeItem, router])
-
-  const handleBnplError = useCallback((msg: string) => {
-    setError(msg)
-    setPaymentMethod('stripe')
-  }, [])
 
   // Helper to render a cart item row
   const renderCartItem = (item: typeof items[0]) => {
@@ -775,58 +627,17 @@ export function CartClient({ email, tier }: { email: string; tier: PlanTier | nu
                     )}
 
                     {/* Card Checkout Form */}
-                    {canDirectCheckout && paymentMethod === 'stripe' && (
-                      useAuthorizeNet ? (
-                        <div className="space-y-4">
-                          <AuthorizeNetForm
-                            onTokenReceived={handleAuthorizeNetCheckout}
-                            onError={handleCheckoutError}
-                            loading={isSubmitting}
-                            submitText={`Pay $${peptideTotal.toFixed(2)}`}
-                            collectBillingAddress={true}
-                          />
-                        </div>
-                      ) : (
-                        <Elements stripe={stripePromise}>
-                          <ProductCheckoutForm
-                            email={email}
-                            items={peptideItems.map(item => ({ sku: item.sku, quantity: item.quantity }))}
-                            cartTotal={peptideTotal}
-                            onSuccess={handleCheckoutSuccess}
-                            onError={handleCheckoutError}
-                            clearCart={() => peptideItems.forEach(item => removeItem(item.sku))}
-                          />
-                        </Elements>
-                      )
-                    )}
-
-                    {/* Klarna Widget */}
-                    {canDirectCheckout && paymentMethod === 'klarna' && klarnaClientToken && (
-                      <div className="mb-4">
-                        <KlarnaWidget
-                          clientToken={klarnaClientToken}
-                          onAuthorized={handleKlarnaAuthorized}
-                          onError={handleBnplError}
+                    {canDirectCheckout && (paymentMethod === 'stripe' || paymentMethod === 'corepay') && (
+                      <Elements stripe={stripePromise}>
+                        <ProductCheckoutForm
+                          email={email}
+                          items={peptideItems.map(item => ({ sku: item.sku, quantity: item.quantity }))}
+                          cartTotal={peptideTotal}
+                          onSuccess={handleCheckoutSuccess}
+                          onError={handleCheckoutError}
+                          clearCart={() => peptideItems.forEach(item => removeItem(item.sku))}
                         />
-                      </div>
-                    )}
-
-                    {canDirectCheckout && paymentMethod === 'klarna' && klarnaSessionLoading && (
-                      <div className="flex items-center justify-center py-4 mb-4">
-                        <Loader2 className="w-5 h-5 animate-spin text-brand-primary/60" />
-                        <span className="ml-2 text-sm text-brand-primary/50">Loading Klarna...</span>
-                      </div>
-                    )}
-
-                    {/* Affirm Button */}
-                    {canDirectCheckout && paymentMethod === 'affirm' && (
-                      <div className="mb-4">
-                        <AffirmCheckoutButton
-                          checkoutConfig={affirmConfig}
-                          onError={handleBnplError}
-                          loading={affirmLoading}
-                        />
-                      </div>
+                      </Elements>
                     )}
 
                     {/* Quote Submit Button (non-priced peptide items) */}

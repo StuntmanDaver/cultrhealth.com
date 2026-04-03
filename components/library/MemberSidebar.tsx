@@ -9,7 +9,6 @@ import {
   ClipboardList,
   Video,
   TestTube2,
-  RefreshCw,
   Library,
   HelpCircle,
   Calculator,
@@ -19,8 +18,6 @@ import {
   CreditCard,
   X,
   LogOut,
-  CalendarClock,
-  FlaskConical,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -36,7 +33,6 @@ const NAV_GROUPS = [
       { label: 'Intake Form', href: '/intake', icon: ClipboardList },
       { label: 'Consultations', href: '/members/consultations', icon: Video },
       { label: 'Labs & Results', href: '/members/labs', icon: TestTube2 },
-      { label: 'Renewal', href: '/renewal', icon: RefreshCw },
     ],
   },
   {
@@ -49,7 +45,6 @@ const NAV_GROUPS = [
   {
     label: 'TOOLS',
     items: [
-      { label: 'Protocol Builder', href: '/members/protocol-builder', icon: FlaskConical },
       { label: 'Dosing Calculator', href: '/members/dosing-calculator', icon: Calculator },
       { label: 'Calorie Calculator', href: '/members/calorie-calculator', icon: Flame },
     ],
@@ -69,13 +64,7 @@ const NAV_GROUPS = [
   },
 ]
 
-// Provider-only nav items (shown when isProvider is true)
-const PROVIDER_NAV_GROUP = {
-  label: 'PROVIDER',
-  items: [
-    { label: 'Provider Schedule', href: '/members/provider-schedule', icon: CalendarClock },
-  ],
-}
+// Provider nav group removed — providers now use Healthie dashboard directly
 
 interface MemberSidebarProps {
   mobileOpen?: boolean
@@ -89,8 +78,7 @@ export function MemberSidebar({ mobileOpen, onClose, isProvider, tier }: MemberS
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
 
-  // Build nav groups — include provider section if user is a provider
-  const navGroups = isProvider ? [...NAV_GROUPS, PROVIDER_NAV_GROUP] : NAV_GROUPS
+  const navGroups = NAV_GROUPS
 
   const handleLogout = async () => {
     setLoggingOut(true)

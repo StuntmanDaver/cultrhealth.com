@@ -203,6 +203,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           email: memberEmail?.toLowerCase(),
         });
         console.log('Membership record created/updated');
+
+        // Create Healthie patient record (non-fatal — membership already saved above)
+        const { USE_HEALTHIE } = await import('@/lib/config/feature-flags');
+        if (USE_HEALTHIE && memberEmail) {
+          try {
+            const { ensureHealthiePatient } = await import('@/lib/healthie/patient-sync');
+            const firstName = session.customer_details?.name?.split(' ')[0] || '';
+            const lastName = session.customer_details?.name?.split(' ').slice(1).join(' ') || '';
+            const healthiePatient = await ensureHealthiePatient(memberEmail, firstName, lastName);
+            if (healthiePatient) {
+              const { sql } = await import('@vercel/postgres');
+              await sql`
+                UPDATE memberships
+                SET ehr_patient_id = ${healthiePatient.id},
+                    ehr_provider = 'healthie'
+                WHERE stripe_customer_id = ${custId}
+              `;
+              // Healthie patient linked to membership
+            }
+          } catch (healthieError) {
+            console.error('Healthie EHR sync failed (non-fatal)');
+            // Non-fatal — Healthie sync can be retried later
+          }
+        }
       }
     } catch (dbError) {
       console.error('Failed to update membership database:', dbError);
@@ -242,7 +266,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           ON CONFLICT (stripe_payment_intent_id)
           DO UPDATE SET updated_at = NOW()
         `;
-        console.log('Pending intake record created for:', checkoutEmail);
+        console.log('Pending intake record created');
       } catch (intakeError) {
         console.error('Failed to create pending intake (non-fatal):', intakeError);
         // Non-fatal — intake form submission will still work via direct insert fallback

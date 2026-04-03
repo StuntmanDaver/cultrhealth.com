@@ -40,6 +40,8 @@ export interface PortalSession {
   phone: string
   /** Patient ID from Asher Med — may be numeric or a UUID string */
   asherPatientId: number | string | null
+  /** Generic EHR patient ID (Healthie or future vendor) */
+  ehrPatientId?: string | null
 }
 
 // ===========================================
@@ -52,11 +54,13 @@ export interface PortalSession {
  */
 export async function createPortalAccessToken(
   phone: string,
-  patientId: number | string | null
+  patientId: number | string | null,
+  ehrPatientId?: string | null,
 ): Promise<string> {
   return new SignJWT({
     phone,
     asherPatientId: patientId,
+    ehrPatientId: ehrPatientId || null,
     type: 'portal_access',
   })
     .setProtectedHeader({ alg: 'HS256' })
@@ -71,11 +75,13 @@ export async function createPortalAccessToken(
  */
 export async function createPortalRefreshToken(
   phone: string,
-  patientId: number | string | null
+  patientId: number | string | null,
+  ehrPatientId?: string | null,
 ): Promise<string> {
   return new SignJWT({
     phone,
     asherPatientId: patientId,
+    ehrPatientId: ehrPatientId || null,
     type: 'portal_refresh',
   })
     .setProtectedHeader({ alg: 'HS256' })
@@ -106,6 +112,8 @@ export async function verifyPortalAccessToken(
         typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
           ? payload.asherPatientId
           : null,
+      ehrPatientId:
+        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId : null,
     }
   } catch {
     return null
@@ -133,6 +141,8 @@ export async function verifyPortalRefreshToken(
         typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
           ? payload.asherPatientId
           : null,
+      ehrPatientId:
+        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId : null,
     }
   } catch {
     return null

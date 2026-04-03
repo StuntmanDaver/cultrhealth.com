@@ -152,12 +152,12 @@ export function MemberDashboard({
           </Link>
 
           <Link
-            href="/renewal"
+            href="/members/consultations"
             className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/20 text-white hover:bg-white/30 transition-all"
           >
             <RefreshCw className="w-6 h-6 text-white/80" />
             <span className="text-xs font-medium text-center leading-tight">
-              Renewal
+              Consultations
             </span>
           </Link>
 

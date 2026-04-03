@@ -49,31 +49,18 @@ const nextConfig = {
             key: 'Content-Security-Policy-Report-Only',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://cdn1.affirm.com https://x.klarnacdn.net https://cdn.daily.co",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://jstest.authorize.net https://js.authorize.net",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https: http:",
-              "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io https://*.daily.co https://*.siphox.com wss://*.daily.co",
-              "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com https://cdn1.affirm.com https://x.klarnacdn.net https://*.daily.co",
+              "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io https://*.siphox.com",
+              "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self' https://checkout.stripe.com",
               "frame-ancestors 'none'",
             ].join('; '),
           },
-        ],
-      },
-      // Video consultation pages: allow camera + microphone for Daily.co
-      {
-        source: '/members/consultations/:id*',
-        headers: [
-          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
-        ],
-      },
-      {
-        source: '/provider/consultations/:id*',
-        headers: [
-          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
         ],
       },
       // Marketing pages: 5min edge cache, 1min stale window

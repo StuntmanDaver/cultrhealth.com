@@ -23,7 +23,7 @@ export default async function CartPage() {
     redirect('/pricing?upgrade=core')
   }
 
-  // PaymentProviderLoader only loads Klarna/Affirm SDKs on checkout pages
+  // PaymentProviderLoader loads CorePay Accept.js SDK when enabled
   return (
     <PaymentProviderLoader>
       <CartClient email={session.email} tier={tier} />

@@ -49,12 +49,38 @@ interface MemberData {
 // ============================================================
 
 /**
- * Resolve shipping address from intake form data.
- * Queries pending_intakes table by email (case-insensitive) for the latest intake_data.
- * Returns null if no intake data or no address found.
+ * Resolve shipping address for a member.
+ * Priority: 1) memberships.shipping_address (Healthie migration path)
+ *           2) pending_intakes.intake_data (legacy Asher path)
+ * Returns null if no address found in either source.
  */
 async function resolveShippingAddress(customerEmail: string): Promise<ShippingAddress | null> {
   try {
+    // Try memberships table first (post-Healthie migration path)
+    const memberResult = await sql`
+      SELECT shipping_address
+      FROM memberships
+      WHERE LOWER(email) = LOWER(${customerEmail})
+        AND shipping_address IS NOT NULL
+      ORDER BY updated_at DESC
+      LIMIT 1
+    `
+    if (memberResult.rows[0]?.shipping_address) {
+      const addr = memberResult.rows[0].shipping_address
+      const parsed = typeof addr === 'string' ? JSON.parse(addr) : addr
+      if (parsed.street1 && parsed.city && parsed.state && parsed.zip) {
+        return {
+          street1: parsed.street1,
+          street2: parsed.street2 || undefined,
+          city: parsed.city,
+          state: parsed.state,
+          zip: parsed.zip,
+          country: parsed.country || 'US',
+        }
+      }
+    }
+
+    // Fallback: pending_intakes (legacy Asher intake data)
     const result = await sql`
       SELECT intake_data
       FROM pending_intakes
@@ -68,14 +94,10 @@ async function resolveShippingAddress(customerEmail: string): Promise<ShippingAd
     const intakeData = result.rows[0].intake_data
     if (!intakeData) return null
 
-    // Parse intake_data if it's a string
     const data = typeof intakeData === 'string' ? JSON.parse(intakeData) : intakeData
-
-    // Extract shipping address from intake_data
     const shipping = data.shippingAddress
     if (!shipping) return null
 
-    // Map intake form field names to SiPhox address fields
     const address: ShippingAddress = {
       street1: shipping.address1 || shipping.street1 || '',
       street2: shipping.address2 || shipping.street2 || undefined,
@@ -85,7 +107,6 @@ async function resolveShippingAddress(customerEmail: string): Promise<ShippingAd
       country: shipping.country || 'US',
     }
 
-    // Validate required fields are present
     if (!address.street1 || !address.city || !address.state || !address.zip) {
       return null
     }

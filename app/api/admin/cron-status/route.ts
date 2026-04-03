@@ -8,7 +8,6 @@ const CRON_SCHEDULES: Record<string, { schedule: string; maxStaleMinutes: number
   'siphox-results': { schedule: 'Every hour', maxStaleMinutes: 120 },
   'approve-commissions': { schedule: '2 AM daily', maxStaleMinutes: 1500 },
   'update-tiers': { schedule: '3 AM daily', maxStaleMinutes: 1500 },
-  'asher-sync': { schedule: 'Every 30 min', maxStaleMinutes: 60 },
   'siphox-status-sync': { schedule: 'Every 30 min', maxStaleMinutes: 60 },
 }
 

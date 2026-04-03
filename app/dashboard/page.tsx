@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
-import { ConsultationCard, type ConsultationCardData } from '@/components/consultations/ConsultationCard'
+
 import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 
 const DEFAULT_ACCESS: LibraryAccess = {
@@ -21,8 +21,6 @@ export default function DashboardPage() {
   const [email, setEmail] = useState('')
   const [libraryAccess, setLibraryAccess] = useState<LibraryAccess>(DEFAULT_ACCESS)
   const [loading, setLoading] = useState(true)
-  const [upcomingConsultation, setUpcomingConsultation] = useState<ConsultationCardData | null>(null)
-
   useEffect(() => {
     async function fetchProfile() {
       try {
@@ -44,14 +42,6 @@ export default function DashboardPage() {
       } catch {
         // Profile fetch failed — show dashboard with defaults
       }
-
-      try {
-        const consultRes = await fetch('/api/consultations?status=scheduled')
-        const consultData = await consultRes.json()
-        if (consultData.success && consultData.consultations?.length > 0) {
-          setUpcomingConsultation(consultData.consultations[0])
-        }
-      } catch { /* ignore */ }
 
       setLoading(false)
     }
@@ -88,19 +78,15 @@ export default function DashboardPage() {
               Book consultation
             </Link>
           </div>
-          {upcomingConsultation ? (
-            <ConsultationCard consultation={upcomingConsultation} />
-          ) : (
-            <div className="bg-cream-dark rounded-xl p-4 text-center">
-              <p className="text-sm text-brand-primary/60 mb-3">No upcoming consultations.</p>
-              <Link
-                href="/members/consultations"
-                className="inline-flex px-5 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
-              >
-                Book Now
-              </Link>
-            </div>
-          )}
+          <div className="bg-cream-dark rounded-xl p-4 text-center">
+            <p className="text-sm text-brand-primary/60 mb-3">Schedule a consultation with your provider.</p>
+            <Link
+              href="/members/consultations"
+              className="inline-flex px-5 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-forest-light transition-colors"
+            >
+              Book Now
+            </Link>
+          </div>
         </div>
       </main>
     </div>

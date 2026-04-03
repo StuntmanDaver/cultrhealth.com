@@ -1,19 +1,14 @@
 'use client';
 
 import type { PaymentProvider } from '@/lib/payments/payment-types';
-import {
-  COREPAY_ENABLED,
-  NOWPAYMENTS_ENABLED,
-  CHERRY_ENABLED,
-} from '@/lib/config/payments';
-import { CreditCard, Bitcoin } from 'lucide-react';
+import { COREPAY_ENABLED } from '@/lib/config/payments';
+import { CreditCard } from 'lucide-react';
 
 interface PaymentMethodSelectorProps {
   selected: PaymentProvider;
   onSelect: (provider: PaymentProvider) => void;
   amountCents: number;
   isSubscription?: boolean;
-  bnplEnabled?: boolean;
 }
 
 interface ProviderOption {
@@ -30,11 +25,9 @@ export function PaymentMethodSelector({
   onSelect,
   amountCents,
   isSubscription = false,
-  bnplEnabled = true,
 }: PaymentMethodSelectorProps) {
   const options: ProviderOption[] = [];
 
-  // --- Active providers ---
   if (COREPAY_ENABLED) {
     options.push({
       id: 'corepay',
@@ -45,35 +38,28 @@ export function PaymentMethodSelector({
     });
   }
 
-  if (NOWPAYMENTS_ENABLED) {
+  if (!COREPAY_ENABLED) {
+    // Stripe is shown as primary when CorePay is not yet enabled
     options.push({
-      id: 'nowpayments',
-      label: 'Pay with Bitcoin',
-      sublabel: 'BTC via NOWPayments',
-      icon: <BitcoinIcon />,
+      id: 'stripe',
+      label: 'Credit / Debit Card',
+      sublabel: 'Powered by Stripe',
+      icon: <CreditCard className="w-5 h-5" />,
+      enabled: true,
+    });
+  } else {
+    // When CorePay is active, Stripe is a fallback
+    options.push({
+      id: 'stripe',
+      label: 'Credit Card (Stripe)',
+      icon: <CreditCard className="w-5 h-5" />,
       enabled: true,
     });
   }
 
-  // --- Coming Soon providers ---
-  options.push({
-    id: 'stripe',
-    label: 'Credit Card (Stripe)',
-    icon: <CreditCard className="w-5 h-5" />,
-    enabled: false,
-    comingSoon: true,
-  });
+  // If only one option, no need to show selector
+  if (options.length <= 1) return null;
 
-  options.push({
-    id: 'cherry',
-    label: 'Financing - by Cherry',
-    sublabel: 'Healthcare payment plans',
-    icon: <CherryLogo />,
-    enabled: CHERRY_ENABLED,
-    comingSoon: !CHERRY_ENABLED,
-  });
-
-  // Always show the selector — we have Coming Soon providers
   return (
     <div className="space-y-3">
       <p className="text-xs font-bold text-cultr-forest tracking-widest uppercase">
@@ -85,22 +71,22 @@ export function PaymentMethodSelector({
           <button
             key={option.id}
             type="button"
-            onClick={() => !option.comingSoon && option.enabled && onSelect(option.id)}
-            disabled={option.comingSoon || !option.enabled}
+            onClick={() => option.enabled && onSelect(option.id)}
+            disabled={!option.enabled}
             className={`
               w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left
-              ${selected === option.id && !option.comingSoon
+              ${selected === option.id
                 ? 'border-cultr-forest bg-cultr-mint/30 ring-1 ring-cultr-forest'
                 : 'border-cultr-sage bg-white'
               }
-              ${option.comingSoon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-cultr-forest/40'}
+              cursor-pointer hover:border-cultr-forest/40
             `}
           >
             <div className={`
               w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0
-              ${selected === option.id && !option.comingSoon ? 'border-cultr-forest' : 'border-cultr-sage'}
+              ${selected === option.id ? 'border-cultr-forest' : 'border-cultr-sage'}
             `}>
-              {selected === option.id && !option.comingSoon && (
+              {selected === option.id && (
                 <div className="w-2 h-2 rounded-full bg-cultr-forest" />
               )}
             </div>
@@ -113,41 +99,9 @@ export function PaymentMethodSelector({
                 <span className="block text-xs text-cultr-textMuted">{option.sublabel}</span>
               )}
             </div>
-
-            {option.comingSoon && (
-              <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-cultr-sage/40 text-cultr-forest border border-cultr-sage">
-                Coming Soon
-              </span>
-            )}
           </button>
         ))}
       </div>
-
-      {isSubscription && selected === 'nowpayments' && (
-        <p className="text-xs text-cultr-textMuted bg-cultr-mint/50 rounded-lg p-2 border border-cultr-sage">
-          Bitcoin payments cover your first month. You&apos;ll receive a monthly invoice by email for renewals.
-        </p>
-      )}
     </div>
-  );
-}
-
-// ---------------------
-// Provider Logos / Icons
-// ---------------------
-
-function BitcoinIcon() {
-  return (
-    <span className="inline-flex items-center justify-center w-6 h-6 bg-orange-50 rounded-full">
-      <Bitcoin className="w-4 h-4 text-orange-500" />
-    </span>
-  );
-}
-
-function CherryLogo() {
-  return (
-    <span className="inline-flex items-center justify-center w-12 h-5 bg-red-50 rounded text-[10px] font-bold text-red-600 tracking-wide">
-      Cherry
-    </span>
   );
 }

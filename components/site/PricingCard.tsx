@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Check, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
-import { BNPLBadge } from '@/components/payments/BNPLBadge';
+
 import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 import { CORE_THERAPIES } from '@/lib/config/plans';
 import { brandify } from '@/lib/utils';
@@ -22,7 +22,6 @@ interface PlanProps {
   paymentLink: string;
   isFeatured?: boolean;
   ctaLabel: string;
-  bnplEnabled?: boolean;
   priceLabel?: string;
   pricePrefix?: string;
   cardDisclaimer?: string;
@@ -73,12 +72,6 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
         </p>
       )}
       <p className={`text-sm mb-2 min-h-[40px] ${plan.isFeatured ? 'text-white/80' : 'text-cultr-textMuted'}`}>{plan.tagline}</p>
-      {plan.bnplEnabled && !isCore && (
-        <BNPLBadge
-          priceUsd={plan.price}
-          className={`mb-4 ${plan.isFeatured ? '!text-white/60' : ''}`}
-        />
-      )}
 
       <div className="flex-grow mb-6">
         <ul className="space-y-4">

@@ -24,16 +24,8 @@
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cron/asher-sync",
-      "schedule": "*/30 * * * *"
-    },
-    {
       "path": "/api/cron/siphox-status-sync",
       "schedule": "*/30 * * * *"
-    },
-    {
-      "path": "/api/cron/consultation-reminders",
-      "schedule": "*/15 * * * *"
     },
     {
       "path": "/api/cron/stale-orders",

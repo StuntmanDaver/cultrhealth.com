@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PLANS } from '@/lib/config/plans';
 import { COREPAY_ENABLED, COREPAY_CONFIG } from '@/lib/config/payments';
 import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
-import { createSubscription } from '@/lib/payments/authorize-net-api';
+import { createSubscription } from '@/lib/payments/corepay-gateway';
 import type { AuthorizeNetOpaqueData } from '@/lib/payments/payment-types';
 import { createMembership } from '@/lib/db';
 

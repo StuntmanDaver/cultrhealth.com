@@ -14,7 +14,6 @@ export default function robots(): MetadataRoute.Robots {
           '/members/',
           '/dashboard/',
           '/track/',
-          '/provider/',
           '/join/',
           '/success/',
         ],

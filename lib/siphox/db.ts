@@ -79,17 +79,19 @@ export async function upsertSiphoxCustomer(
   siphoxCustomerId: string,
   firstName?: string,
   lastName?: string,
-  email?: string
+  email?: string,
+  ehrPatientId?: string,
 ): Promise<void> {
   try {
     await sql`
-      INSERT INTO siphox_customers (phone_e164, siphox_customer_id, external_id, first_name, last_name, email)
-      VALUES (${phoneE164}, ${siphoxCustomerId}, ${phoneE164}, ${firstName || null}, ${lastName || null}, ${email || null})
+      INSERT INTO siphox_customers (phone_e164, siphox_customer_id, external_id, first_name, last_name, email, ehr_patient_id)
+      VALUES (${phoneE164}, ${siphoxCustomerId}, ${phoneE164}, ${firstName || null}, ${lastName || null}, ${email || null}, ${ehrPatientId || null})
       ON CONFLICT (phone_e164) DO UPDATE SET
         siphox_customer_id = EXCLUDED.siphox_customer_id,
         first_name = COALESCE(EXCLUDED.first_name, siphox_customers.first_name),
         last_name = COALESCE(EXCLUDED.last_name, siphox_customers.last_name),
         email = COALESCE(EXCLUDED.email, siphox_customers.email),
+        ehr_patient_id = COALESCE(EXCLUDED.ehr_patient_id, siphox_customers.ehr_patient_id),
         updated_at = NOW()
     `
   } catch (error) {
@@ -503,6 +505,7 @@ export interface UnnotifiedCustomer {
   first_name: string | null
   last_name: string | null
   email: string
+  ehr_patient_id: string | null
   latest_report_id: string
   report_data: unknown
   suggestions: unknown
@@ -524,6 +527,7 @@ export async function getCustomersWithUnnotifiedReports(
         c.first_name,
         c.last_name,
         c.email,
+        c.ehr_patient_id,
         r.siphox_report_id AS latest_report_id,
         r.report_data,
         r.suggestions

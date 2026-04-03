@@ -51,32 +51,6 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
     }
   }
 
-  // Affirm: authorize + capture charge server-side when checkout_token is present
-  let affirmCaptureError = false;
-  if (
-    provider === 'affirm' &&
-    checkoutToken &&
-    process.env.NEXT_PUBLIC_AFFIRM_PUBLIC_KEY &&
-    process.env.AFFIRM_PRIVATE_API_KEY
-  ) {
-    try {
-      const { authorizeAffirmCharge, captureAffirmCharge } = await import(
-        '@/lib/payments/affirm-api'
-      );
-      const charge = await authorizeAffirmCharge(checkoutToken);
-      await captureAffirmCharge(charge.id, orderId || undefined);
-      console.log('Affirm charge captured on success page:', {
-        charge_id: charge.id,
-        order_id: orderId,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error('Failed to capture Affirm charge:', error);
-      affirmCaptureError = true;
-      isPending = true;
-    }
-  }
-
   // Fetch LMN data for product purchases
   let lmnNumber: string | null = null;
   let lmnIssueDate: string | null = null;
@@ -153,17 +127,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
       badge: 'Payment confirmed',
       note: '',
     },
-    klarna: {
-      badge: isPending ? 'Payment pending review' : 'Klarna payment approved',
-      note: isPending
-        ? 'Klarna is reviewing your payment. You will receive a confirmation email shortly.'
-        : 'Your Klarna payment has been processed. You will receive a confirmation from Klarna.',
-    },
-    affirm: {
-      badge: affirmCaptureError ? 'Payment processing' : 'Affirm payment approved',
-      note: affirmCaptureError
-        ? 'We encountered an issue capturing your Affirm payment. Our team will follow up shortly to resolve this.'
-        : 'Your Affirm payment plan is active. You will receive payment schedule details from Affirm.',
+    corepay: {
+      badge: 'Payment confirmed',
+      note: 'Your card payment has been processed successfully.',
     },
   };
 

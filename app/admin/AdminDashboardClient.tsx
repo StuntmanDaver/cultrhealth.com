@@ -567,8 +567,8 @@ export default function AdminDashboardClient() {
           <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
             <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
             <div className="flex flex-wrap gap-3">
-              <a href="https://partners.joinasher.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Asher Med Portal →
+              <a href="https://app.gethealthie.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Healthie Dashboard →
               </a>
               <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
                 Stripe Dashboard →
@@ -938,7 +938,6 @@ export default function AdminDashboardClient() {
                     'siphox-results': 'SiPhox Results',
                     'approve-commissions': 'Commission Approval',
                     'update-tiers': 'Tier Recalculation',
-                    'asher-sync': 'Asher Med Sync',
                     'siphox-status-sync': 'SiPhox Status Sync',
                     'stale-orders': 'Stale Order Alerts',
                   }

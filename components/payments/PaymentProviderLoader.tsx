@@ -1,129 +1,54 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import Script from 'next/script';
-import { KLARNA_ENABLED, AFFIRM_ENABLED, KLARNA_CONFIG, AFFIRM_CONFIG } from '@/lib/config/payments';
+import { COREPAY_ENABLED, COREPAY_CONFIG } from '@/lib/config/payments';
 
 // ---------------------
 // SDK Ready State
 // ---------------------
 
 interface ProviderState {
-  klarnaReady: boolean;
-  affirmReady: boolean;
-  klarnaError: boolean;
-  affirmError: boolean;
+  corepayReady: boolean;
+  corepayError: boolean;
 }
 
 const ProviderContext = createContext<ProviderState>({
-  klarnaReady: false,
-  affirmReady: false,
-  klarnaError: false,
-  affirmError: false,
+  corepayReady: false,
+  corepayError: false,
 });
 
-export function useKlarnaReady() {
+export function useCorepayReady() {
   const ctx = useContext(ProviderContext);
-  return { ready: ctx.klarnaReady, error: ctx.klarnaError };
-}
-
-export function useAffirmReady() {
-  const ctx = useContext(ProviderContext);
-  return { ready: ctx.affirmReady, error: ctx.affirmError };
+  return { ready: ctx.corepayReady, error: ctx.corepayError };
 }
 
 // ---------------------
-// Script Loader with Timeout + Retry
+// Script Loader for CorePay (Accept.js)
 // ---------------------
-
-const SDK_TIMEOUT_MS = 10000;
-const SDK_RETRY_DELAY_MS = 2000;
 
 export function PaymentProviderLoader({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ProviderState>({
-    klarnaReady: false,
-    affirmReady: false,
-    klarnaError: false,
-    affirmError: false,
+    corepayReady: false,
+    corepayError: false,
   });
 
-  const [klarnaRetried, setKlarnaRetried] = useState(false);
-  const [affirmRetried, setAffirmRetried] = useState(false);
-
-  // Klarna timeout handler
-  useEffect(() => {
-    if (!KLARNA_ENABLED || state.klarnaReady || state.klarnaError) return;
-
-    const timer = setTimeout(() => {
-      if (!state.klarnaReady && !klarnaRetried) {
-        // Retry once
-        setKlarnaRetried(true);
-      } else if (!state.klarnaReady) {
-        setState((s) => ({ ...s, klarnaError: true }));
-      }
-    }, SDK_TIMEOUT_MS);
-
-    return () => clearTimeout(timer);
-  }, [state.klarnaReady, state.klarnaError, klarnaRetried]);
-
-  // Affirm timeout handler
-  useEffect(() => {
-    if (!AFFIRM_ENABLED || state.affirmReady || state.affirmError) return;
-
-    const timer = setTimeout(() => {
-      if (!state.affirmReady && !affirmRetried) {
-        setAffirmRetried(true);
-      } else if (!state.affirmReady) {
-        setState((s) => ({ ...s, affirmError: true }));
-      }
-    }, SDK_TIMEOUT_MS);
-
-    return () => clearTimeout(timer);
-  }, [state.affirmReady, state.affirmError, affirmRetried]);
-
-  const handleKlarnaLoad = useCallback(() => {
-    setState((s) => ({ ...s, klarnaReady: true }));
+  const handleCorepayLoad = useCallback(() => {
+    setState((s) => ({ ...s, corepayReady: true }));
   }, []);
 
-  const handleKlarnaError = useCallback(() => {
-    if (!klarnaRetried) {
-      setKlarnaRetried(true);
-    } else {
-      setState((s) => ({ ...s, klarnaError: true }));
-    }
-  }, [klarnaRetried]);
-
-  const handleAffirmLoad = useCallback(() => {
-    setState((s) => ({ ...s, affirmReady: true }));
+  const handleCorepayError = useCallback(() => {
+    setState((s) => ({ ...s, corepayError: true }));
   }, []);
-
-  const handleAffirmError = useCallback(() => {
-    if (!affirmRetried) {
-      setAffirmRetried(true);
-    } else {
-      setState((s) => ({ ...s, affirmError: true }));
-    }
-  }, [affirmRetried]);
 
   return (
     <ProviderContext.Provider value={state}>
-      {KLARNA_ENABLED && KLARNA_CONFIG.clientId && (
+      {COREPAY_ENABLED && COREPAY_CONFIG.apiLoginId && (
         <Script
-          key={klarnaRetried ? 'klarna-retry' : 'klarna'}
-          src={`https://x.klarnacdn.net/kp/lib/v1/api.js`}
+          src={COREPAY_CONFIG.acceptJsUrl}
           strategy="lazyOnload"
-          onLoad={handleKlarnaLoad}
-          onError={handleKlarnaError}
-        />
-      )}
-
-      {AFFIRM_ENABLED && AFFIRM_CONFIG.scriptUrl && AFFIRM_CONFIG.publicKey && (
-        <Script
-          key={affirmRetried ? 'affirm-retry' : 'affirm'}
-          src={AFFIRM_CONFIG.scriptUrl}
-          strategy="lazyOnload"
-          onLoad={handleAffirmLoad}
-          onError={handleAffirmError}
+          onLoad={handleCorepayLoad}
+          onError={handleCorepayError}
         />
       )}
 

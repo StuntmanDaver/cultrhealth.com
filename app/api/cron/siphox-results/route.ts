@@ -57,6 +57,17 @@ export async function GET(request: NextRequest) {
         await markResultsNotified(customer.siphox_customer_id, customer.latest_report_id)
         sent++
 
+        // Push lab results to Healthie (non-blocking, don't count as failure)
+        if (customer.ehr_patient_id) {
+          import('@/lib/healthie/lab-sync').then(({ pushLabResultsToHealthie }) =>
+            pushLabResultsToHealthie(
+              customer.ehr_patient_id,
+              customer.latest_report_id,
+              new Date().toISOString().split('T')[0],
+            ).catch((err) => console.error('[siphox-results] Healthie sync error (non-fatal)'))
+          ).catch(() => {})
+        }
+
         // Tag Mailchimp contact (non-blocking, don't count as failure)
         if (customer.email) {
           addTagsToContact(customer.email, ['labs-results-ready']).catch((err) =>
