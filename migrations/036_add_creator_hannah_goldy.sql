@@ -20,7 +20,7 @@ ON CONFLICT ((lower(email))) DO NOTHING;
 INSERT INTO tracking_links (creator_id, slug, destination_path, is_default)
 SELECT id, 'hannahgoldy', '/', TRUE
 FROM creators WHERE lower(email) = 'hannahgoldy11@gmail.com'
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT ((lower(slug))) DO NOTHING;
 
 -- Create membership code GOLDY (10% off)
 INSERT INTO affiliate_codes (creator_id, code, is_primary, discount_type, discount_value, code_type)
