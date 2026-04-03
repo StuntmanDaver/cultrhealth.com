@@ -2300,6 +2300,38 @@ NEXT_PUBLIC_ENABLE_AFFIRM - Enable/disable Affirm
 
 ---
 
+## [2026-04-03] - Healthie EMR Integration + Production Migration
+
+### Added
+- **Healthie GraphQL Client** (`lib/healthie/`) — 8-file integration library with client, mutations, queries, schemas, types, webhooks, patient sync, and lab sync
+- **Calendly Webhook** (`app/api/webhook/calendly/`) — HMAC-SHA256 verified, creates Healthie appointments
+- **Healthie Webhook** (`app/api/webhook/healthie/`) — handles form completion, appointment, and document events
+- **Onboarding Flow** (`app/onboarding/`) — 5-step post-checkout wizard (Welcome, Blood Test, Intake, Schedule, Complete)
+- **Onboarding API** (`app/api/onboarding/status/`) — tracks member progress through onboarding
+- **Feature Flags** (`lib/config/feature-flags.ts`) — `USE_HEALTHIE` toggle for dual-running during transition
+- **CorePay Gateway** (`lib/payments/corepay-gateway.ts`) — extracted Authorize.Net ARB subscription logic for CorePay
+- **4 Database Migrations** (037-040): generic EHR identity columns, membership shipping address, SiPhox EHR linkage, member onboarding table
+
+### Removed
+- **Provider Portal** — entire `app/provider/` directory (dashboard, patients, consultations, protocol builder). Providers now use Healthie dashboard directly.
+- **Custom Intake System** — 14 components in `components/intake/`, IntakeFormClient, intake-form-context. Replaced with Healthie SDK embed placeholder.
+- **Custom Consultation System** — 9 components in `components/consultations/`, Cal.com/Daily.co integration (BookingEmbed, VideoRoom, etc.), 6 API routes, webhooks, libs (cal.ts, daily.ts, consultations-db.ts, s3-recordings.ts). Replaced with Calendly.
+- **Dead Payment Providers** — Cherry, Klarna, Affirm, Authorize.Net (legacy), NOWPayments, Coinbase Commerce. ~18 files deleted. CorePay + Stripe remain.
+- **Renewal Flow** — `app/renewal/` directory and API routes (Healthie handles renewals)
+- **npm packages** — `@calcom/embed-react`, `@daily-co/daily-js`, `@daily-co/daily-react`
+- **Cron jobs** — `asher-sync`, `consultation-reminders` removed from vercel.json
+
+### Changed
+- **Product Catalog** — curated from 58 to 30 peptides (top GLP-1s, repair, growth, blends, neuropeptides + accessories)
+- **Member Sidebar** — removed Renewal, Protocol Builder, Provider Schedule links
+- **Dashboard** — removed consultation fetch/display (uses Calendly placeholder now)
+- **CSP Headers** — removed Affirm, Klarna, Daily.co domains
+- **Portal Dashboard** — updated dead links (/portal/intake → /intake, /portal/renewal → /members/consultations)
+- **SiPhox Fulfillment** — address resolution now checks memberships.shipping_address first, falls back to pending_intakes
+- **SiPhox Results Cron** — pushes lab results to Healthie after notification
+
+---
+
 ## [2026-01-27] - Initial Full Application Release
 
 ### Commit: `316c14a` - Add full Cultr Health Website application
