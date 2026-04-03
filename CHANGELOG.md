@@ -1,3 +1,20 @@
+## [2026-04-03] - Add Bacteriostatic Water to join.cultrhealth.com
+
+### New Product
+- **Bacteriostatic Water (30 ML) — $29.99** added to Enhancement section on join.cultrhealth.com
+- Product image upscaled to 2040x2040 PNG to match existing product images
+- Links to existing catalog SKU `BACWATER-30ML`
+
+### Bug Fix
+- **Card price display:** `.toFixed(0)` rounded $29.99 to $30 on product cards. Now shows decimals for non-whole prices while keeping whole-number display ($340, $225, etc.) for existing products.
+
+### Files Changed
+- `lib/config/join-therapies.ts` — added bacteriostatic-water entry in Enhancement section
+- `app/join/JoinLandingClient.tsx` — fixed price formatting for decimal prices
+- `public/images/products/bacteriostatic-water.png` — product image (2040x2040)
+
+---
+
 ## [2026-04-01] - Full Website Audit + 3 Bug Fixes + HIPAA Hardening
 
 ### Bug Fixes

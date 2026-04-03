@@ -184,6 +184,18 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         image: '/images/products/melanotan2-mt2.png',
       },
+      {
+        id: 'bacteriostatic-water',
+        name: 'Bacteriostatic Water',
+        badge: '',
+        note: '30 ML',
+        description:
+          'Sterile water with 0.9% benzyl alcohol for safe reconstitution of lyophilized peptides. Essential supply for injectable therapies.',
+        price: 29.99,
+        category: 'peptide',
+        catalogSku: 'BACWATER-30ML',
+        image: '/images/products/bacteriostatic-water.png',
+      },
     ],
   },
 ]

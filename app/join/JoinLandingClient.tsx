@@ -349,7 +349,7 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
       src: therapy.image || '',
       title: therapy.name,
       category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
-      price: therapy.price !== null ? `$${therapy.price.toFixed(0)}` : therapy.pricingNote || 'TBD',
+      price: therapy.price !== null ? `$${therapy.price % 1 === 0 ? therapy.price.toFixed(0) : therapy.price.toFixed(2)}` : therapy.pricingNote || 'TBD',
       note: therapy.note,
       description: therapy.description,
       badge: therapy.bundleWith ? (
