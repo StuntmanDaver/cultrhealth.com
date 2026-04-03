@@ -275,9 +275,9 @@ export function DosingCalculatorClient() {
   const hasValidResult = !isNaN(result.drawUnitsU100) && result.warnings.filter(w => !w.includes('Syringe')).length === 0
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen" style={{ background: 'radial-gradient(ellipse 60% 60% at 20% 80%, rgba(215,243,220,0.08) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCF9 40%, #FCFBF7 100%)' }}>
       {/* Header */}
-      <section className="py-12 px-6 bg-brand-primary text-white">
+      <section className="py-12 px-6 text-white" style={{ background: 'radial-gradient(ellipse 80% 50% at 70% 20%, rgba(61,94,91,0.5) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 20% 80%, rgba(31,53,51,0.6) 0%, transparent 60%), linear-gradient(160deg, #1A2E2B 0%, #2B4542 35%, #34524F 65%, #243C39 100%)' }}>
         <div className="max-w-4xl mx-auto">
           <Link
             href="/"
@@ -299,13 +299,13 @@ export function DosingCalculatorClient() {
       </section>
 
       {/* Calculator Content */}
-      <section className="py-10 px-6 bg-brand-cream/80 backdrop-blur-sm">
+      <section className="py-10 px-6" style={{ background: 'rgba(253, 251, 247, 0.82)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Inputs Panel */}
             <div className="space-y-8">
               {/* Vial Amount */}
-              <div className="bg-cream-dark border border-cultr-sage rounded-2xl p-6">
+              <div className="border border-cultr-sage rounded-2xl p-6" style={{ background: 'radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 40%, #FCFBF7 100%)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <FlaskConical className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Vial Amount</h3>
@@ -341,7 +341,7 @@ export function DosingCalculatorClient() {
               </div>
 
               {/* Diluent (Water) */}
-              <div className="bg-cream-dark border border-cultr-sage rounded-2xl p-6">
+              <div className="border border-cultr-sage rounded-2xl p-6" style={{ background: 'radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 40%, #FCFBF7 100%)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <Droplets className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Bacteriostatic Water</h3>
@@ -370,7 +370,7 @@ export function DosingCalculatorClient() {
               </div>
 
               {/* Desired Dose */}
-              <div className="bg-cream-dark border border-cultr-sage rounded-2xl p-6">
+              <div className="border border-cultr-sage rounded-2xl p-6" style={{ background: 'radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 40%, #FCFBF7 100%)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <Syringe className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Desired Dose</h3>
@@ -460,7 +460,7 @@ export function DosingCalculatorClient() {
               </div>
 
               {/* Syringe Size */}
-              <div className="bg-cream-dark border border-cultr-sage rounded-2xl p-6">
+              <div className="border border-cultr-sage rounded-2xl p-6" style={{ background: 'radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 40%, #FCFBF7 100%)' }}>
                 <div className="flex items-center gap-3 mb-4">
                   <Syringe className="w-5 h-5 text-cultr-forest" />
                   <h3 className="font-display font-bold text-cultr-text">Syringe Size (Optional)</h3>
@@ -492,7 +492,7 @@ export function DosingCalculatorClient() {
             {/* Results Panel */}
             <div className="lg:sticky lg:top-24 h-fit space-y-6">
               {/* Main Result with Syringe Visual */}
-              <div className="bg-brand-primary text-white rounded-2xl p-8">
+              <div className="text-white rounded-2xl p-8" style={{ background: 'radial-gradient(ellipse 80% 50% at 70% 20%, rgba(61,94,91,0.5) 0%, transparent 60%), radial-gradient(ellipse 60% 60% at 20% 80%, rgba(31,53,51,0.6) 0%, transparent 60%), linear-gradient(160deg, #1A2E2B 0%, #2B4542 35%, #34524F 65%, #243C39 100%)' }}>
                 <h3 className="font-display font-bold text-lg mb-6 text-white/80">Draw Amount</h3>
 
                 {hasValidResult ? (
@@ -553,7 +553,7 @@ export function DosingCalculatorClient() {
 
               {/* Additional Stats */}
               {hasValidResult && (
-                <div className="bg-cream-dark border border-cultr-sage rounded-2xl p-6 space-y-4">
+                <div className="border border-cultr-sage rounded-2xl p-6 space-y-4" style={{ background: 'radial-gradient(ellipse 70% 50% at 80% 20%, rgba(215,243,220,0.12) 0%, transparent 70%), linear-gradient(180deg, #FCFBF7 0%, #FDFCFA 40%, #FCFBF7 100%)' }}>
                   <h4 className="font-display font-bold text-cultr-text">Reconstitution Details</h4>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -582,7 +582,7 @@ export function DosingCalculatorClient() {
               )}
 
               {/* Info Card */}
-              <div className="bg-mint border border-cultr-sage rounded-2xl p-5">
+              <div className="border border-cultr-sage rounded-2xl p-5" style={{ background: 'radial-gradient(ellipse 50% 50% at 80% 30%, rgba(255,255,255,0.6) 0%, transparent 70%), linear-gradient(150deg, #D7F3DC 0%, #E8F7EB 30%, #FCFBF7 70%, #FFFFFF 100%)' }}>
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   <strong className="text-cultr-text">Note:</strong> This calculator uses the U-100 insulin syringe scale
                   where 100 units = 1 mL. Always verify calculations with your healthcare provider before administration.
