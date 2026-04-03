@@ -19,7 +19,7 @@ import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
 
 // Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'pk_test_fAj7WlTrG0uc5Z9WHKQDdoTq'
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ''
 );
 
 // Card Element styling

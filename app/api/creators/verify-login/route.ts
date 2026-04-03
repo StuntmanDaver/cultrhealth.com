@@ -121,10 +121,23 @@ export async function GET(request: NextRequest) {
 
         console.log('Auto-created staging creator:', { creatorId, membershipCode, productCode })
       } catch (err) {
-        console.error('Failed to auto-create staging creator (DB may be unavailable):', err)
-        // DB failed but they're a staging email — grant access with staging ID
-        creatorId = 'staging_creator'
-        creatorStatus = 'active'
+        console.error('Failed to auto-create staging creator:', err)
+        // Auto-create failed — retry lookup in case the record exists from a prior session
+        try {
+          const { getCreatorByEmail: retryLookup } = await import('@/lib/creators/db')
+          const existing = await retryLookup(email)
+          if (existing) {
+            creatorId = existing.id
+            creatorStatus = existing.status
+          }
+        } catch {
+          // DB truly unavailable
+        }
+        if (!creatorId) {
+          // Last resort: staging placeholder (profile route handles this via email fallback)
+          creatorId = 'staging_creator'
+          creatorStatus = 'active'
+        }
       }
     }
 

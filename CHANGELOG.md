@@ -1,3 +1,44 @@
+## [2026-04-01] - Full Website Audit + 3 Bug Fixes + HIPAA Hardening
+
+### Bug Fixes
+- **ID Upload broken on staging (CRITICAL):** `app/api/intake/upload/route.ts` — `shouldMock` logic required `!ASHER_MED_API_KEY` but staging has the key set for other Asher Med calls. The presigned URL endpoint specifically fails on staging. Changed to mock on `isDevelopment || isStaging` regardless of API key presence. Previous fix (commit e63d89a) was reverted; this restores and improves it.
+- **Creator login loop for team emails (CRITICAL):** `staging_creator` placeholder (non-UUID string) caused `getCreatorById()` to throw a Postgres type error → profile 500 → portal redirects to login → infinite loop. Fixed in 3 places:
+  - `app/api/creators/profile/route.ts` — GET/PUT now resolve `staging_creator` via email lookup instead of crashing
+  - `app/api/creators/verify-login/route.ts` — Retries DB email lookup before falling back to `staging_creator`
+- **HIPAA: PHI in intake error logs:** `app/api/intake/submit/route.ts` — Removed `asherError.response` from console.error (Asher Med API error responses may contain patient data)
+- **Hardcoded Stripe test key:** `app/join/[tier]/page.tsx` — Removed hardcoded `pk_test_*` fallback; now uses empty string if env var not set
+
+### Critical Path Audit (all PASS)
+- Member auth (magic link + staging bypass + idle timeout)
+- Creator auth (magic link + auto-provisioning)
+- Stripe checkout + webhook (signature verification + idempotency)
+- Club signup/login/orders (transactional writes, stock validation, HMAC tokens, commission attribution)
+- Intake form (12 steps, upload, consent, submit to Asher Med)
+- PHI logging scan across all API routes
+- join.cultrhealth.com (middleware rewrite, cookies, full flow)
+
+### Build Verification
+- TypeScript: 0 errors
+- Tests: 666/666 passing
+- Build: clean, no warnings
+
+### Audit Findings (documented, not yet fixed)
+- Intake submit missing field format validation (email, phone, DOB not validated before Asher Med)
+- In-memory rate limiting won't distribute across serverless instances
+- TEAM_EMAILS list duplicated across 5 files
+- Intake form data in localStorage (PHI accessible via XSS)
+- Member magic link email uses off-brand copper color (#B87333)
+- No ESLint config file
+
+### Files Changed
+- `app/api/intake/upload/route.ts` — staging mock logic
+- `app/api/creators/profile/route.ts` — staging_creator email fallback
+- `app/api/creators/verify-login/route.ts` — retry DB lookup before placeholder
+- `app/api/intake/submit/route.ts` — PHI removed from error logs
+- `app/join/[tier]/page.tsx` — hardcoded Stripe key removed
+
+---
+
 ## [2026-03-30] - Pricing & Checkout Flow Overhaul
 
 ### Pricing Cards

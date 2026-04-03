@@ -1,20 +1,64 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
-import { QUIZ_QUESTIONS, calculateRecommendation, type QuizResult } from '@/lib/config/quiz';
+import { getActiveQuestions, calculateRecommendation, type QuizResult } from '@/lib/config/quiz';
 import { PLANS } from '@/lib/config/plans';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 
 export function QuizClient() {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const router = useRouter();
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
+  const sessionId = useRef(crypto.randomUUID());
 
-  const question = QUIZ_QUESTIONS[currentQuestion];
-  const progress = ((currentQuestion + 1) / QUIZ_QUESTIONS.length) * 100;
-  const isLastQuestion = currentQuestion === QUIZ_QUESTIONS.length - 1;
+  // Compute active questions based on current answers
+  const activeQuestions = getActiveQuestions(answers);
+  // Clamp index if active questions shrunk (e.g., conditional Q4 hidden after going back)
+  const safeIndex = Math.min(currentIndex, Math.max(0, activeQuestions.length - 1));
+  const question = activeQuestions[safeIndex];
+  const progress = ((safeIndex + 1) / activeQuestions.length) * 100;
+  const isLastQuestion = safeIndex === activeQuestions.length - 1;
+
+  // Sync currentIndex state if it drifted out of bounds
+  useEffect(() => {
+    if (currentIndex !== safeIndex) {
+      setCurrentIndex(safeIndex);
+    }
+  }, [currentIndex, safeIndex]);
+
+  // Fire-and-forget save when results are computed
+  useEffect(() => {
+    if (!result) return;
+    fetch('/api/quiz/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: sessionId.current,
+        answers,
+        recommendedTier: result.recommendedTier,
+        recommendedTherapy: result.coreTherapy?.slug ?? null,
+      }),
+    }).catch(() => { /* fire-and-forget */ });
+  }, [result]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Clear answers for questions that are no longer visible (e.g., Q4 hidden after changing Q1/Q2)
+  const clearStaleAnswers = useCallback((updatedAnswers: Record<string, string | string[]>) => {
+    const active = getActiveQuestions(updatedAnswers);
+    const activeIds = new Set(active.map(q => q.id));
+    const cleaned = { ...updatedAnswers };
+    let hadStale = false;
+    for (const key of Object.keys(cleaned)) {
+      if (!activeIds.has(key)) {
+        delete cleaned[key];
+        hadStale = true;
+      }
+    }
+    return hadStale ? cleaned : updatedAnswers;
+  }, []);
 
   const handleSelect = useCallback((optionId: string) => {
     if (!question) return;
@@ -24,39 +68,70 @@ export function QuizClient() {
       const updated = current.includes(optionId)
         ? current.filter(id => id !== optionId)
         : [...current, optionId];
-      setAnswers(prev => ({ ...prev, [question.id]: updated }));
+      const newAnswers = clearStaleAnswers({ ...answers, [question.id]: updated });
+      setAnswers(newAnswers);
     } else {
-      const newAnswers = { ...answers, [question.id]: optionId };
+      const newAnswers = clearStaleAnswers({ ...answers, [question.id]: optionId });
       setAnswers(newAnswers);
 
-      // Auto-advance on single select
-      if (isLastQuestion) {
+      // Recompute active questions with the cleaned answer set
+      const nextActive = getActiveQuestions(newAnswers);
+      const nextIsLast = safeIndex === nextActive.length - 1;
+
+      if (nextIsLast) {
         const rec = calculateRecommendation(newAnswers);
         setResult(rec);
       } else {
-        setTimeout(() => setCurrentQuestion(prev => prev + 1), 300);
+        setTimeout(() => setCurrentIndex(safeIndex + 1), 300);
       }
     }
-  }, [question, answers, isLastQuestion]);
+  }, [question, answers, safeIndex, clearStaleAnswers]);
 
   const handleMultiContinue = () => {
-    if (isLastQuestion) {
-      const rec = calculateRecommendation(answers);
+    const cleaned = clearStaleAnswers(answers);
+    if (cleaned !== answers) setAnswers(cleaned);
+    const nextActive = getActiveQuestions(cleaned);
+    const nextIsLast = safeIndex === nextActive.length - 1;
+
+    if (nextIsLast) {
+      const rec = calculateRecommendation(cleaned);
       setResult(rec);
     } else {
-      setCurrentQuestion(prev => prev + 1);
+      setCurrentIndex(safeIndex + 1);
     }
   };
 
   const handleBack = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
+    if (safeIndex > 0) {
+      setCurrentIndex(safeIndex - 1);
     }
+  };
+
+  const handleJoinClick = (href: string) => {
+    // Track join click (fire-and-forget)
+    fetch('/api/quiz/submit', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId: sessionId.current }),
+    }).catch(() => { /* fire-and-forget */ });
+    router.push(href);
   };
 
   // ─── Results View ───
   if (result) {
     const plan = PLANS.find(p => p.slug === result.recommendedTier);
+    const displayPrice = result.coreTherapy?.price ?? plan?.price ?? 0;
+    const displayName = result.coreTherapy
+      ? `${plan?.name} — ${result.coreTherapy.name}`
+      : plan?.name ?? result.tierName;
+    const pricePrefix = !result.coreTherapy && result.recommendedTier === 'core'
+      ? 'Starting at'
+      : undefined;
+    // Core tier always needs a therapy param — join page redirects to /pricing without one
+    // Default to semaglutide (cheapest at $149) when no specific therapy was recommended
+    const joinHref = result.recommendedTier === 'core'
+      ? `/join/core?therapy=${result.coreTherapy?.slug ?? 'semaglutide'}`
+      : `/join/${result.recommendedTier}`;
 
     return (
       <div className="min-h-screen grad-light">
@@ -67,7 +142,7 @@ export function QuizClient() {
               <span className="text-sm font-display font-medium text-cultr-forest">Your personalized match</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-display font-bold text-cultr-forest mb-4">
-              We recommend {result.tierName}.
+              We recommend {plan?.name ?? result.tierName}.
             </h1>
             <p className="text-cultr-textMuted max-w-md mx-auto">
               Based on your goal to <span className="lowercase">{result.primaryGoal}</span>, here&apos;s your matched plan and protocols.
@@ -80,11 +155,14 @@ export function QuizClient() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <p className="text-xs font-display font-bold text-cultr-sage tracking-widest mb-1">RECOMMENDED PLAN</p>
-                  <h2 className="text-2xl font-display font-bold text-cultr-forest">{plan.name}</h2>
+                  <h2 className="text-2xl font-display font-bold text-cultr-forest">{displayName}</h2>
                   <p className="text-cultr-textMuted text-sm">{plan.bestFor}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-3xl font-bold text-cultr-forest">${plan.price}</span>
+                  {pricePrefix && (
+                    <span className="text-xs text-cultr-textMuted block mb-1">{pricePrefix}</span>
+                  )}
+                  <span className="text-3xl font-bold text-cultr-forest">${displayPrice}</span>
                   <span className="text-cultr-textMuted text-sm">/mo</span>
                 </div>
               </div>
@@ -96,9 +174,13 @@ export function QuizClient() {
                   </li>
                 ))}
               </ul>
-              <Link href={`/join/${plan.slug}`}>
-                <Button size="lg" className="w-full">Join {plan.name}</Button>
-              </Link>
+              <Button
+                size="lg"
+                className="w-full"
+                onClick={() => handleJoinClick(joinHref)}
+              >
+                Join {plan.name}
+              </Button>
             </div>
           )}
 
@@ -123,7 +205,7 @@ export function QuizClient() {
               <Button variant="secondary">See all plans</Button>
             </Link>
             <button
-              onClick={() => { setResult(null); setCurrentQuestion(0); setAnswers({}); }}
+              onClick={() => { setResult(null); setCurrentIndex(0); setAnswers({}); sessionId.current = crypto.randomUUID(); }}
               className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors"
             >
               Retake quiz
@@ -135,6 +217,8 @@ export function QuizClient() {
   }
 
   // ─── Quiz View ───
+  if (!question) return null;
+
   return (
     <div className="min-h-screen grad-light flex flex-col">
       {/* Progress Bar */}
@@ -142,16 +226,16 @@ export function QuizClient() {
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <button
             onClick={handleBack}
-            disabled={currentQuestion === 0}
+            disabled={safeIndex === 0}
             className={`flex items-center gap-1 text-sm font-medium transition-colors ${
-              currentQuestion === 0 ? 'text-cultr-textMuted/40 cursor-not-allowed' : 'text-cultr-forest hover:text-cultr-forestDark'
+              safeIndex === 0 ? 'text-cultr-textMuted/40 cursor-not-allowed' : 'text-cultr-forest hover:text-cultr-forestDark'
             }`}
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
           <span className="text-xs text-cultr-textMuted">
-            {currentQuestion + 1} of {QUIZ_QUESTIONS.length}
+            {safeIndex + 1} of {activeQuestions.length}
           </span>
           <Link href="/" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
             Exit

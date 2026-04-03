@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Clock, Trophy, ChevronRight } from 'lucide-react'
+import { Clock, Trophy, ChevronRight, UserPlus } from 'lucide-react'
 import { getTierName } from '@/lib/config/affiliate'
 import { downloadCSV, formatCurrency, formatDate, getStatusColor, filterByDateRange } from '@/lib/admin-utils'
 import type { AnalyticsData, CreatorAdminRow } from '@/lib/admin-types'
@@ -27,6 +27,12 @@ export default function CreatorsClient() {
   const [creatorEditError, setCreatorEditError] = useState<string | null>(null)
   const [deletingCreator, setDeletingCreator] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  // Add creator modal
+  const [showAddCreator, setShowAddCreator] = useState(false)
+  const [addCreatorForm, setAddCreatorForm] = useState({ full_name: '', email: '', phone: '', social_handle: '', commission_rate: '10', custom_code: '', discount_percent: '10' })
+  const [addingCreator, setAddingCreator] = useState(false)
+  const [addCreatorError, setAddCreatorError] = useState<string | null>(null)
+  const [addCreatorSuccess, setAddCreatorSuccess] = useState<string | null>(null)
 
   // Sync date range when periodDays changes
   useEffect(() => {
@@ -102,6 +108,36 @@ export default function CreatorsClient() {
     }
   }
 
+  async function handleAddCreator() {
+    setAddingCreator(true)
+    setAddCreatorError(null)
+    setAddCreatorSuccess(null)
+    try {
+      const res = await fetch('/api/admin/creators/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: addCreatorForm.full_name,
+          email: addCreatorForm.email,
+          phone: addCreatorForm.phone || undefined,
+          social_handle: addCreatorForm.social_handle || undefined,
+          commission_rate: parseFloat(addCreatorForm.commission_rate),
+          custom_code: addCreatorForm.custom_code || undefined,
+          discount_percent: parseFloat(addCreatorForm.discount_percent),
+        }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to add creator')
+      setAddCreatorSuccess(`Added ${result.message}. Codes: ${result.membershipCode}, ${result.productCode}`)
+      setAddCreatorForm({ full_name: '', email: '', phone: '', social_handle: '', commission_rate: '10', custom_code: '', discount_percent: '10' })
+      fetchAnalytics()
+    } catch (err) {
+      setAddCreatorError(err instanceof Error ? err.message : 'Failed')
+    } finally {
+      setAddingCreator(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -129,16 +165,25 @@ export default function CreatorsClient() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl text-brand-primary">Creator Network</h1>
-        <select
-          value={periodDays}
-          onChange={(e) => setPeriodDays(Number(e.target.value))}
-          className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-        >
-          <option value={7}>Last 7 days</option>
-          <option value={30}>Last 30 days</option>
-          <option value={90}>Last 90 days</option>
-          <option value={365}>Last 365 days</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setShowAddCreator(true); setAddCreatorError(null); setAddCreatorSuccess(null) }}
+            className="flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Add Creator
+          </button>
+          <select
+            value={periodDays}
+            onChange={(e) => setPeriodDays(Number(e.target.value))}
+            className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+            <option value={365}>Last 365 days</option>
+          </select>
+        </div>
       </div>
 
       {/* Quick Links */}
@@ -317,6 +362,109 @@ export default function CreatorsClient() {
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ========== ADD CREATOR MODAL ========== */}
+      {showAddCreator && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddCreator(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg text-brand-primary">Add Creator</h3>
+              <button onClick={() => setShowAddCreator(false)} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  value={addCreatorForm.full_name}
+                  onChange={(e) => setAddCreatorForm(f => ({ ...f, full_name: e.target.value }))}
+                  placeholder="Hannah Goldy"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={addCreatorForm.email}
+                  onChange={(e) => setAddCreatorForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="creator@example.com"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Phone</label>
+                <input
+                  type="tel"
+                  value={addCreatorForm.phone}
+                  onChange={(e) => setAddCreatorForm(f => ({ ...f, phone: e.target.value }))}
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Social Handle</label>
+                <input
+                  type="text"
+                  value={addCreatorForm.social_handle}
+                  onChange={(e) => setAddCreatorForm(f => ({ ...f, social_handle: e.target.value }))}
+                  placeholder="@handle"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Commission Rate (%)</label>
+                  <input
+                    type="number"
+                    value={addCreatorForm.commission_rate}
+                    onChange={(e) => setAddCreatorForm(f => ({ ...f, commission_rate: e.target.value }))}
+                    min="0" max="50" step="0.5"
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Coupon Discount (%)</label>
+                  <input
+                    type="number"
+                    value={addCreatorForm.discount_percent}
+                    onChange={(e) => setAddCreatorForm(f => ({ ...f, discount_percent: e.target.value }))}
+                    min="0" max="60" step="1"
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Custom Coupon Code</label>
+                <input
+                  type="text"
+                  value={addCreatorForm.custom_code}
+                  onChange={(e) => setAddCreatorForm(f => ({ ...f, custom_code: e.target.value.toUpperCase() }))}
+                  placeholder="Auto-generated from last name if blank"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm uppercase"
+                />
+                <p className="text-xs text-brand-primary/40 mt-1">Two codes created: CODE (membership) + CODE10 (product)</p>
+              </div>
+            </div>
+
+            {addCreatorError && <p className="mt-3 text-sm text-red-600">{addCreatorError}</p>}
+            {addCreatorSuccess && <p className="mt-3 text-sm text-green-600">{addCreatorSuccess}</p>}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleAddCreator}
+                disabled={addingCreator || !addCreatorForm.full_name.trim() || !addCreatorForm.email.trim()}
+                className="flex-1 px-4 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
+              >
+                {addingCreator ? 'Adding...' : 'Add & Activate Creator'}
+              </button>
+              <button onClick={() => setShowAddCreator(false)} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

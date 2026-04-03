@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
     const isStaging = siteUrl.includes('staging');
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const shouldMock = (!process.env.ASHER_MED_API_KEY) && (isDevelopment || isStaging);
+    const shouldMock = isDevelopment || isStaging;
 
     if (shouldMock) {
       // Generate mock key for development/staging

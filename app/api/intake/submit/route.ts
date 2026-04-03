@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
     console.error('[intake/submit] Failed:', {
       message: error instanceof Error ? error.message : String(error),
       statusCode: asherError.statusCode,
-      response: asherError.response,
+      // Do NOT log asherError.response — may contain PHI from Asher Med
       apiUrl: process.env.ASHER_MED_API_URL || 'derived from ASHER_MED_ENVIRONMENT',
       environment: process.env.ASHER_MED_ENVIRONMENT || 'production',
       hasApiKey: !!process.env.ASHER_MED_API_KEY,

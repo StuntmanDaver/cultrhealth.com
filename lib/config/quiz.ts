@@ -1,7 +1,9 @@
 // Recommendation Quiz Configuration
 // Client-side quiz that recommends a plan tier + medications
+// 7 questions with conditional GLP-1 history question for weight-loss users
 
-import type { PlanTier } from './plans';
+import type { PlanTier, CoreTherapy } from './plans';
+import { CORE_THERAPIES } from './plans';
 
 export interface QuizOption {
   id: string;
@@ -16,6 +18,8 @@ export interface QuizQuestion {
   subtitle?: string;
   type: 'visual' | 'single' | 'multi';
   options: QuizOption[];
+  /** If set, question is only shown when this condition returns true */
+  showCondition?: (answers: Record<string, string | string[]>) => boolean;
 }
 
 export interface QuizResult {
@@ -24,6 +28,8 @@ export interface QuizResult {
   tierPrice: number;
   recommendedMedications: { id: string; name: string; description: string }[];
   primaryGoal: string;
+  /** Specific GLP-1 therapy recommendation when tier is core and determinable */
+  coreTherapy?: CoreTherapy;
 }
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -42,27 +48,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     ],
   },
   {
-    id: 'experience',
-    question: 'Have you used peptides or hormone therapy before?',
-    type: 'single',
-    options: [
-      { id: 'never', label: 'Never — I\'m new to this', scores: { club: 2, core: 3 } },
-      { id: 'some', label: 'Some experience', scores: { catalyst: 3, core: 2 } },
-      { id: 'experienced', label: 'Very experienced', scores: { catalyst: 4, concierge: 2 } },
-    ],
-  },
-  {
-    id: 'provider-access',
-    question: 'How much provider access do you want?',
-    type: 'single',
-    options: [
-      { id: 'minimal', label: 'Self-guided is fine', scores: { club: 5 } },
-      { id: 'monthly', label: 'Monthly check-ins', scores: { core: 3, catalyst: 3 } },
-      { id: 'frequent', label: 'Frequent access', scores: { catalyst: 3, concierge: 2 } },
-      { id: 'vip', label: 'White-glove, weekly', scores: { concierge: 5 } },
-    ],
-  },
-  {
     id: 'symptoms',
     question: 'What are you experiencing?',
     subtitle: 'Select all that apply',
@@ -78,14 +63,63 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     ],
   },
   {
-    id: 'budget',
-    question: 'What monthly investment feels right?',
+    id: 'therapy-depth',
+    question: 'How many areas do you want to address?',
     type: 'single',
     options: [
-      { id: 'budget', label: 'Under $500/mo', scores: { club: 5 } },
-      { id: 'moderate', label: '$500 – $800/mo', scores: { core: 3, catalyst: 2 } },
-      { id: 'invested', label: '$800 – $1,000/mo', scores: { concierge: 4 } },
-      { id: 'premium', label: '$1,000+/mo', scores: { concierge: 5 } },
+      { id: 'learning-only', label: 'Just learning for now', scores: { club: 5 } },
+      { id: 'single-therapy', label: 'Just one thing', scores: { core: 4 } },
+      { id: 'multi-therapy', label: '2–3 areas', scores: { catalyst: 4 } },
+      { id: 'full-protocol', label: 'Full optimization — as many as it takes', scores: { concierge: 5 } },
+    ],
+  },
+  {
+    id: 'glp1-history',
+    question: 'Have you tried GLP-1 weight loss medications before?',
+    type: 'single',
+    showCondition: (answers) => {
+      const goal = answers['primary-goal'];
+      const symptoms = answers['symptoms'] as string[] | undefined;
+      return goal === 'weight-loss' || (symptoms?.includes('weight') ?? false);
+    },
+    options: [
+      { id: 'never-glp1', label: "No, I'm brand new", scores: { semaglutide: 5 } },
+      { id: 'tried-sema', label: "Yes, I've tried one before", scores: { tirzepatide: 5 } },
+      { id: 'tried-multiple', label: "Yes, I've tried multiple", scores: { retatrutide: 5 } },
+      { id: 'not-sure', label: 'Not sure', scores: { semaglutide: 3 } },
+    ],
+  },
+  {
+    id: 'provider-access',
+    question: 'How much provider access do you want?',
+    type: 'single',
+    options: [
+      { id: 'self-guided', label: "I'll handle it myself", scores: { club: 5 } },
+      { id: 'light-touch', label: 'Check-ins when I need them', scores: { core: 3 } },
+      { id: 'regular', label: 'Regular guidance (2x/month)', scores: { catalyst: 4 } },
+      { id: 'white-glove', label: 'Unlimited — I want a full care team', scores: { concierge: 5 } },
+    ],
+  },
+  {
+    id: 'budget',
+    question: 'How much are you willing to invest in your health monthly?',
+    type: 'single',
+    options: [
+      { id: 'free', label: '$0 — just exploring', scores: { club: 5 } },
+      { id: 'starter', label: '$149 – $239/mo', scores: { core: 4 } },
+      { id: 'committed', label: '$499/mo', scores: { catalyst: 4 } },
+      { id: 'all-in', label: '$1,049/mo', scores: { concierge: 5 } },
+    ],
+  },
+  {
+    id: 'values',
+    question: 'What matters most to you?',
+    type: 'single',
+    options: [
+      { id: 'affordability', label: 'Keeping costs low', scores: { core: 3, club: 2, semaglutide: 2 } },
+      { id: 'results', label: 'Getting the best results', scores: { catalyst: 3, retatrutide: 2 } },
+      { id: 'convenience', label: 'Having everything handled for me', scores: { concierge: 4 } },
+      { id: 'education', label: 'Understanding what I\'m putting in my body', scores: { club: 3 } },
     ],
   },
 ];
@@ -122,9 +156,29 @@ const TIER_INFO: Record<string, { name: string; price: number }> = {
   concierge: { name: 'CULTR Concierge', price: 1049 },
 };
 
+// Tier priority for tie-breaking (higher index = preferred)
+const TIER_PRIORITY: string[] = ['club', 'core', 'catalyst', 'concierge'];
+
+// GLP-1 therapy score keys
+const GLP1_KEYS = ['semaglutide', 'tirzepatide', 'retatrutide'];
+
+/**
+ * Returns the list of questions that should be shown based on current answers.
+ * Filters out conditional questions whose showCondition is not met.
+ */
+export function getActiveQuestions(answers: Record<string, string | string[]>): QuizQuestion[] {
+  return QUIZ_QUESTIONS.filter(q => {
+    if (q.showCondition) {
+      return q.showCondition(answers);
+    }
+    return true;
+  });
+}
+
 export function calculateRecommendation(answers: Record<string, string | string[]>): QuizResult {
   const tierScores: Record<string, number> = { club: 0, core: 0, catalyst: 0, concierge: 0 };
   const medScores: Record<string, number> = {};
+  const glp1Scores: Record<string, number> = { semaglutide: 0, tirzepatide: 0, retatrutide: 0 };
 
   for (const [questionId, answer] of Object.entries(answers)) {
     const question = QUIZ_QUESTIONS.find(q => q.id === questionId);
@@ -139,6 +193,8 @@ export function calculateRecommendation(answers: Record<string, string | string[
       for (const [key, score] of Object.entries(option.scores)) {
         if (key in tierScores) {
           tierScores[key] += score;
+        } else if (GLP1_KEYS.includes(key)) {
+          glp1Scores[key] += score;
         } else {
           medScores[key] = (medScores[key] || 0) + score;
         }
@@ -146,9 +202,27 @@ export function calculateRecommendation(answers: Record<string, string | string[
     }
   }
 
-  // Find best tier
+  // Find best tier (tie-break: higher tier wins)
   const bestTier = Object.entries(tierScores)
-    .sort(([, a], [, b]) => b - a)[0][0] as PlanTier;
+    .sort(([tierA, a], [tierB, b]) => {
+      if (b !== a) return b - a;
+      return TIER_PRIORITY.indexOf(tierB) - TIER_PRIORITY.indexOf(tierA);
+    })[0][0] as PlanTier;
+
+  // GLP-1 therapy recommendation (only for core tier)
+  let coreTherapy: CoreTherapy | undefined;
+  if (bestTier === 'core') {
+    const hasGlp1Answer = answers['glp1-history'] !== undefined;
+    if (hasGlp1Answer) {
+      const bestGlp1 = Object.entries(glp1Scores)
+        .sort(([, a], [, b]) => b - a)[0];
+      if (bestGlp1 && bestGlp1[1] > 0) {
+        coreTherapy = CORE_THERAPIES.find(t => t.slug === bestGlp1[0]);
+      }
+    }
+    // If no GLP-1 answer or no scores, coreTherapy stays undefined
+    // Results page will show "Starting at $149" with all options
+  }
 
   // Find top 2-3 medication categories
   const topMedCategories = Object.entries(medScores)
@@ -174,8 +248,9 @@ export function calculateRecommendation(answers: Record<string, string | string[
   return {
     recommendedTier: bestTier,
     tierName: TIER_INFO[bestTier]?.name || 'CULTR Core',
-    tierPrice: TIER_INFO[bestTier]?.price || 199,
+    tierPrice: coreTherapy?.price ?? TIER_INFO[bestTier]?.price ?? 149,
     recommendedMedications,
     primaryGoal: goalOption?.label || 'Optimize your health',
+    coreTherapy,
   };
 }
