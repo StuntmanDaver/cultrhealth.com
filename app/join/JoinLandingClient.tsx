@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
-  Loader2, Flame, Zap, Shield, Package, ArrowRight, ArrowLeft, Tag,
+  Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
@@ -316,7 +316,9 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
   const cart = useJoinCart()
   const isTwoRow = section.therapies.length > 5
 
-  const buildCard = (therapy: JoinTherapy, index: number) => {
+  const buildCard = (therapy: JoinTherapy, index: number, opts?: { compact?: boolean; fluid?: boolean }) => {
+    const isCompact = opts?.compact ?? false
+    const isFluid = opts?.fluid ?? false
     const inCart = cart.isInCart(therapy.id)
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
     const sd = stockData[therapy.id]
@@ -384,14 +386,17 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
         onAdd={handleAdd}
         inCart={inCart}
         cartQty={cartItem?.quantity}
-        compact={isTwoRow}
+        compact={isCompact}
+        fluid={isFluid}
         stockLabel={stockLabel}
         disableAdd={disableAdd}
       />
     )
   }
 
-  const cards = section.therapies.map(buildCard)
+  const mid = Math.ceil(section.therapies.length / 2)
+  const mobileCards = section.therapies.map((t, i) => buildCard(t, i, { compact: isTwoRow }))
+  const desktopCards = section.therapies.map((t, i) => buildCard(t, i, { compact: false, fluid: true }))
 
   return (
     <div className="py-2 md:py-4">
@@ -408,99 +413,26 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
         </div>
       </div>
 
-      {isTwoRow ? (
-        <TwoRowLayout items={cards} />
-      ) : (
-        <Carousel items={cards} />
-      )}
+      {/* Mobile: swipe carousel */}
+      <div className="md:hidden">
+        {isTwoRow ? (
+          <>
+            <Carousel items={mobileCards.slice(0, mid)} />
+            <Carousel items={mobileCards.slice(mid)} />
+          </>
+        ) : (
+          <Carousel items={mobileCards} />
+        )}
+      </div>
+
+      {/* Desktop: 3-column grid — all products fully visible, no horizontal scroll */}
+      <div className="hidden md:grid md:grid-cols-3 gap-4 px-6 py-4">
+        {desktopCards}
+      </div>
     </div>
   )
 }
 
-// =============================================
-// TWO-ROW LAYOUT (for sections with many items)
-// Mobile: two stacked Carousels (uses translateX, not overflow-x — works inside overflow-x-hidden parent)
-// Desktop: 2-row horizontal scroll grid with arrow controls
-// =============================================
-
-function TwoRowLayout({ items }: { items: JSX.Element[] }) {
-  const mid = Math.ceil(items.length / 2)
-  const topRow = items.slice(0, mid)
-  const bottomRow = items.slice(mid)
-
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(true)
-
-  const checkScroll = useCallback(() => {
-    if (scrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
-      setCanScrollLeft(scrollLeft > 0)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
-    }
-  }, [])
-
-  useEffect(() => { checkScroll() }, [checkScroll])
-
-  const scroll = (dir: number) => {
-    scrollRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
-  }
-
-  // Pair items into columns for desktop: [0,1], [2,3], [4,5], [6,7]
-  const columns: JSX.Element[][] = []
-  for (let i = 0; i < items.length; i += 2) {
-    columns.push(items.slice(i, i + 2))
-  }
-
-  return (
-    <>
-      {/* Mobile: two stacked carousels */}
-      <div className="md:hidden">
-        <Carousel items={topRow} />
-        <Carousel items={bottomRow} />
-      </div>
-
-      {/* Desktop: 2-row horizontal scroll */}
-      <div className="hidden md:block relative">
-        <div
-          ref={scrollRef}
-          onScroll={checkScroll}
-          className="overflow-x-scroll py-6 px-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <div className="flex gap-4">
-            {columns.map((col, ci) => (
-              <div key={ci} className="shrink-0 flex flex-col gap-4">
-                {col.map((item, ri) => (
-                  <div key={ri}>{item}</div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll arrows */}
-        <div className="flex justify-end gap-2 px-6 mt-1">
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-            onClick={() => scroll(-1)}
-            disabled={!canScrollLeft}
-            aria-label="Scroll left"
-          >
-            <ArrowLeft className="h-5 w-5 text-brand-primary" />
-          </button>
-          <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary/5 hover:bg-brand-primary/10 disabled:opacity-30 transition-all"
-            onClick={() => scroll(1)}
-            disabled={!canScrollRight}
-            aria-label="Scroll right"
-          >
-            <ArrowRight className="h-5 w-5 text-brand-primary" />
-          </button>
-        </div>
-      </div>
-    </>
-  )
-}
 
 // =============================================
 // SIGNUP MODAL

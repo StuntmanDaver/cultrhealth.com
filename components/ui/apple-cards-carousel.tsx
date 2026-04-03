@@ -318,6 +318,7 @@ export const Card = ({
   inCart,
   cartQty,
   compact = false,
+  fluid = false,
   stockLabel,
   disableAdd,
 }: {
@@ -328,6 +329,8 @@ export const Card = ({
   inCart?: boolean
   cartQty?: number
   compact?: boolean
+  /** When true, card fills its grid cell width (w-full) instead of fixed width */
+  fluid?: boolean
   /** e.g. "Only 3 left" or "Out of Stock" */
   stockLabel?: string
   /** When true, add button is disabled (out of stock or at max qty) */
@@ -503,9 +506,11 @@ export const Card = ({
         whileTap={isTouch ? undefined : { scale: 0.97 }}
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
-          compact
-            ? "h-[340px] w-[180px] md:h-[460px] md:w-[260px]"
-            : "h-[420px] w-[260px] md:h-[540px] md:w-[320px]",
+          fluid
+            ? "h-[420px] w-full"
+            : compact
+              ? "h-[340px] w-[180px] md:h-[460px] md:w-[260px]"
+              : "h-[420px] w-[260px] md:h-[540px] md:w-[320px]",
           "bg-gradient-to-br from-brand-primary via-[#2d4d4a] to-[#1a332f]",
           "shadow-lg transition-shadow duration-300",
           "group cursor-pointer"
@@ -555,7 +560,9 @@ export const Card = ({
               }}
               className={cn(
                 "relative w-full drop-shadow-[0_8px_30px_rgba(0,0,0,0.35)]",
-                compact ? "h-[130px] md:h-[200px]" : "h-[210px] md:h-[280px]"
+                fluid
+                  ? "h-full"
+                  : compact ? "h-[130px] md:h-[200px]" : "h-[210px] md:h-[280px]"
               )}
             >
               <Image
