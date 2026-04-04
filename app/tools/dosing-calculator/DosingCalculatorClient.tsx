@@ -287,14 +287,14 @@ export function DosingCalculatorClient() {
             Back to Home
           </Link>
           <div>
-            <img
-              src="/cultr-health-logo.png"
-              alt="CULTR Health"
-              width={220}
-              height={111}
-              className="mb-3"
-              style={{ filter: 'brightness(0) invert(1)' }}
-            />
+            <div className="inline-block bg-white/95 rounded-2xl px-6 py-4 mb-4">
+              <img
+                src="/cultr-health-logo.png"
+                alt="CULTR Health"
+                width={200}
+                height={101}
+              />
+            </div>
             <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
           </div>
         </div>
