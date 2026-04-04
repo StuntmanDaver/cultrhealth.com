@@ -185,6 +185,17 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         image: '/images/products/melanotan2-mt2.png',
       },
       {
+        id: 'igf1-lr3',
+        name: 'IGF-1 LR3',
+        badge: '',
+        note: '1 MG | 3 ML',
+        description:
+          'Long-acting insulin-like growth factor for enhanced muscle protein synthesis, recovery acceleration, and anabolic support.',
+        price: 150,
+        category: 'peptide',
+        image: '/images/products/igf1-lr3.png',
+      },
+      {
         id: 'bacteriostatic-water',
         name: 'Bacteriostatic Water',
         badge: '',
