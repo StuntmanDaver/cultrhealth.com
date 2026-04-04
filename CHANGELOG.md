@@ -1,3 +1,18 @@
+## [2026-04-04] - Bac Water Shipping Upsell (Stock-Aware)
+
+### Shipping Warning Banner on join.cultrhealth.com
+- When cart contains **only** bacteriostatic water (qty < 4), an amber warning banner appears: "Shipping: ~$15".
+- If stock >= 4: shows "Upgrade to 4x Bac Water" button ($119.96 for free shipping). Button sets qty to exactly 4.
+- If stock < 4: shows informational message ("Only N available — free shipping requires 4+") with no upgrade button.
+- Banner hidden when: other products in cart, qty already >= 4, or bac water is out of stock.
+- Works on both desktop sidebar cart and mobile cart overlay (shared `CartSummaryPanel`).
+- `stockData` prop threaded from `JoinLandingInner` → `CartSummaryPanel` and `MobileCartOverlay`.
+
+### Files Changed
+- `app/join/JoinLandingClient.tsx` — AlertTriangle import, stockData prop plumbing, shipping warning banner with inventory-aware branching
+
+---
+
 ## [2026-04-04] - Cole Sidner Code Cleanup + Admin Coupons UX + Club Session Persistence
 
 ### Cole Sidner Creator Code Cleanup
