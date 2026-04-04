@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { ArrowLeft, AlertTriangle, Syringe, Droplets, FlaskConical } from 'lucide-react'
 import { calcPeptide, formatNumber, type DoseUnit } from '@/lib/peptide-calculator'
 
@@ -288,13 +287,13 @@ export function DosingCalculatorClient() {
             Back to Home
           </Link>
           <div>
-            <Image
+            <img
               src="/cultr-health-logo.png"
               alt="CULTR Health"
-              width={200}
-              height={67}
-              className="brightness-0 invert mb-2"
-              priority
+              width={220}
+              height={111}
+              className="mb-3"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
             <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
           </div>
