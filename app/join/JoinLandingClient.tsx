@@ -426,7 +426,7 @@ function JoinLandingInner() {
             <div className="lg:col-span-2 hidden lg:block">
               <div className="sticky top-8">
                 {hasItems ? (
-                  <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
+                  <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} stockData={stockData} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
                     const ctx = visitorCtxRef.current
                     if (ctx) trackVisitorEvent(ctx.sessionId, eventType, eventData, memberIdRef.current || undefined)
                   }} />
@@ -465,7 +465,7 @@ function JoinLandingInner() {
 
       {/* Mobile Cart Full-Screen Overlay */}
       {showMobileCart && (
-        <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
+        <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} stockData={stockData} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
           const ctx = visitorCtxRef.current
           if (ctx) trackVisitorEvent(ctx.sessionId, eventType, eventData, memberIdRef.current || undefined)
         }} />
@@ -912,7 +912,7 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // CART SUMMARY PANEL
 // =============================================
 
-function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: ClubMember | null; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void }) {
+function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }: { member: ClubMember | null; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void; stockData?: StockData }) {
   const cart = useJoinCart()
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -924,7 +924,10 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: 
 
   const isBacWaterOnly = cart.items.length > 0 && cart.items.every(i => i.therapyId === 'bacteriostatic-water')
   const bacWaterQty = cart.items.find(i => i.therapyId === 'bacteriostatic-water')?.quantity ?? 0
-  const showShippingWarning = isBacWaterOnly && bacWaterQty < 4
+  const bacWaterStock = stockData?.['bacteriostatic-water']
+  const bacWaterMaxQty = bacWaterStock?.status === 'out_of_stock' ? 0 : (bacWaterStock?.quantity ?? Infinity)
+  const bacWaterUpgradeQty = Math.min(4, bacWaterMaxQty)
+  const showShippingWarning = isBacWaterOnly && bacWaterQty < 4 && bacWaterQty < bacWaterMaxQty
 
   async function handleApplyCoupon() {
     const code = couponInput.trim().toUpperCase()
@@ -1133,15 +1136,23 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: 
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="text-amber-800 font-medium text-sm">Shipping: ~$15</p>
-                  <p className="text-amber-700/80 text-xs leading-relaxed mt-0.5">
-                    Get 4x Bac Water ($119.96) for <span className="font-semibold">free shipping</span>.
-                  </p>
-                  <button
-                    onClick={() => cart.updateQuantity('bacteriostatic-water', 4)}
-                    className="mt-2 px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors"
-                  >
-                    Upgrade to 4x Bac Water
-                  </button>
+                  {bacWaterUpgradeQty >= 4 ? (
+                    <>
+                      <p className="text-amber-700/80 text-xs leading-relaxed mt-0.5">
+                        Get 4x Bac Water ($119.96) for <span className="font-semibold">free shipping</span>.
+                      </p>
+                      <button
+                        onClick={() => cart.updateQuantity('bacteriostatic-water', 4)}
+                        className="mt-2 px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors"
+                      >
+                        Upgrade to 4x Bac Water
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-amber-700/80 text-xs leading-relaxed mt-0.5">
+                      Only {bacWaterMaxQty} Bac Water available — free shipping requires 4+.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1178,7 +1189,7 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: 
 // MOBILE CART OVERLAY
 // =============================================
 
-function MobileCartOverlay({ member, onClose, onOrderSubmitted, onTrackEvent }: { member: ClubMember | null; onClose: () => void; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void }) {
+function MobileCartOverlay({ member, onClose, onOrderSubmitted, onTrackEvent, stockData }: { member: ClubMember | null; onClose: () => void; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void; stockData?: StockData }) {
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       <div className="absolute inset-0 bg-brand-primary/30 backdrop-blur-sm" onClick={onClose} />
@@ -1189,7 +1200,7 @@ function MobileCartOverlay({ member, onClose, onOrderSubmitted, onTrackEvent }: 
             <X className="w-5 h-5 text-brand-secondary/60" />
           </button>
         </div>
-        <CartSummaryPanel member={member} onOrderSubmitted={onOrderSubmitted} onTrackEvent={onTrackEvent} />
+        <CartSummaryPanel member={member} onOrderSubmitted={onOrderSubmitted} onTrackEvent={onTrackEvent} stockData={stockData} />
       </div>
     </div>
   )
