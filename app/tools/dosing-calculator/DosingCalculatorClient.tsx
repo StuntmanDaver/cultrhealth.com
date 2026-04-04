@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, AlertTriangle, Syringe, Droplets, FlaskConical, Calculator } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowLeft, AlertTriangle, Syringe, Droplets, FlaskConical } from 'lucide-react'
 import { calcPeptide, formatNumber, type DoseUnit } from '@/lib/peptide-calculator'
 
 const VIAL_OPTIONS = [5, 10, 15, 50, 100] as const
@@ -286,14 +287,16 @@ export function DosingCalculatorClient() {
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center">
-              <Calculator className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold"><span className="">CULTR</span> Calculator</h1>
-              <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
-            </div>
+          <div>
+            <Image
+              src="/cultr-health-logo.png"
+              alt="CULTR Health"
+              width={200}
+              height={67}
+              className="brightness-0 invert mb-2"
+              priority
+            />
+            <p className="text-white/70">Peptide reconstitution & dosing calculator</p>
           </div>
         </div>
       </section>
