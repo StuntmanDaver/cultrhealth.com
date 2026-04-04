@@ -83,12 +83,14 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
       }
 
       // Creator-owned code — validate creator status
+      // Creator coupons disable bundle discount (no stacking)
       const creator = await getCreatorById(affiliateCode.creator_id)
       if (creator && creator.status === 'active') {
         return {
           discount: Math.floor(Number(affiliateCode.discount_value)),
           label: `${creator.full_name}'s Code`,
           isCreatorCode: true,
+          noBundleStack: true,
           creatorId: creator.id,
           creatorName: creator.full_name,
           codeId: affiliateCode.id,
@@ -102,6 +104,7 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
           discount: Math.floor(Number(affiliateCode.discount_value)),
           label: `${creator.full_name}'s Code`,
           isCreatorCode: false,
+          noBundleStack: true,
           codeId: affiliateCode.id,
           codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
         }
