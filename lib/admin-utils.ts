@@ -79,6 +79,7 @@ export const INTERNAL_COUPON_LABELS: Record<string, string> = {
   'MARY20': 'Promo',
   'LOYALTY15': 'Returning',
   'CULTR30': 'Owner Promo',
+  'BUTCH10': 'Promo',
 }
 
 export function filterByDateRange<T extends { created_at: string }>(items: T[], startDate: string, endDate: string): T[] {

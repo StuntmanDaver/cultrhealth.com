@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
-  Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
+  Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag, AlertTriangle,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
@@ -266,6 +266,7 @@ function JoinLandingInner() {
           return
         }
         document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
+        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
       }
       const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
       if (hasOrdered) {
@@ -306,7 +307,9 @@ function JoinLandingInner() {
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('cultr_club_member')
+    // Clear cookie with and without domain to cover both production and local
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
+    document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
     setMember(null)
     setShowSignup(true)
     setOrderSubmitted(false)
@@ -919,6 +922,10 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: 
   const [couponError, setCouponError] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
 
+  const isBacWaterOnly = cart.items.length > 0 && cart.items.every(i => i.therapyId === 'bacteriostatic-water')
+  const bacWaterQty = cart.items.find(i => i.therapyId === 'bacteriostatic-water')?.quantity ?? 0
+  const showShippingWarning = isBacWaterOnly && bacWaterQty < 4
+
   async function handleApplyCoupon() {
     const code = couponInput.trim().toUpperCase()
     if (!code) return
@@ -1118,6 +1125,27 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: 
               </p>
             )}
           </div>
+
+          {/* Bac Water Shipping Warning */}
+          {showShippingWarning && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-amber-800 font-medium text-sm">Shipping: ~$15</p>
+                  <p className="text-amber-700/80 text-xs leading-relaxed mt-0.5">
+                    Get 4x Bac Water ($119.96) for <span className="font-semibold">free shipping</span>.
+                  </p>
+                  <button
+                    onClick={() => cart.updateQuantity('bacteriostatic-water', 4)}
+                    className="mt-2 px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors"
+                  >
+                    Upgrade to 4x Bac Water
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Notes */}
           <textarea
