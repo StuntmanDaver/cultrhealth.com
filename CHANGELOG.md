@@ -1,3 +1,34 @@
+## [2026-04-04] - Visitor Tracking + Admin Customer Enhancements
+
+### Admin Customer Table — 4 New Columns
+- **Converted** — green "Yes" / amber "No" badge. Excludes cancelled/rejected orders (consistent with revenue queries).
+- **AOV (Average Order Value)** — computed from valid orders only. Uses `::float8` cast for @vercel/postgres.
+- **Browser** — Chrome, Safari, Firefox, Edge, Opera (parsed from User-Agent on signup).
+- **Device Type** — mobile / tablet / desktop badge (blue / indigo / gray).
+- All 4 columns are sortable and included in CSV export.
+- Sort function now handles boolean fields explicitly (was falling through to string comparison).
+
+### Visitor Tracking Data Pipeline — Deployed
+- **Migration 045** was already run (14 columns on `club_members`, `visitor_events` table, 7 indexes). But the **code that writes to those columns was never deployed** — it was sitting in uncommitted local changes.
+- Now deployed: signup route captures browser/device/UTM/IP hash, client collects visitor context on mount, middleware sets first-touch `cultr_visitor_ctx` cookie, event API writes to `visitor_events`.
+- Existing 120 members have NULL browser/device — new signups will populate correctly.
+
+### SQL Query Improvements
+- `getAllCustomersForAdmin()` refactored from correlated subqueries to a single LEFT JOIN subquery (more efficient).
+- `converted` and `avg_order_value` use `COUNT/SUM FILTER (WHERE status NOT IN ('cancelled', 'rejected'))` — only counts real orders.
+- `order_count` and `total_spent` unchanged (still count all orders for backward compatibility).
+
+### Files Changed
+- `lib/admin-types.ts` — 4 new fields on `CustomerAdminRow`
+- `lib/db.ts` — `getAllCustomersForAdmin()` LEFT JOIN + FILTER rewrite
+- `app/admin/customers/CustomersClient.tsx` — 4 columns, boolean sort, CSV export
+- `app/api/club/signup/route.ts` — visitor context extraction + DB write (deployed)
+- `app/join/JoinLandingClient.tsx` — visitor context collection (deployed)
+- `middleware.ts` — `cultr_visitor_ctx` cookie (deployed)
+- `app/api/club/event/route.ts` — visitor_events POST endpoint (deployed)
+
+---
+
 ## [2026-04-03] - Add Bacteriostatic Water to join.cultrhealth.com
 
 ### New Product

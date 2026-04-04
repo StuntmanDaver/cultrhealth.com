@@ -172,6 +172,10 @@ export interface CustomerAdminRow {
   total_spent: number
   age: number | null
   gender: string | null
+  converted: boolean
+  avg_order_value: number | null
+  browser: string | null
+  device_type: string | null
 }
 
 export interface DashboardCounts {

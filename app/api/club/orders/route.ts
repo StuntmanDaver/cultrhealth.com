@@ -179,6 +179,23 @@ export async function POST(request: Request) {
           throw new Error('club_order_insert_missing_id')
         }
 
+        // Decrement inventory for each ordered item (only where stock_quantity is tracked)
+        for (const item of items) {
+          await client.query(
+            `UPDATE product_inventory
+             SET stock_quantity = GREATEST(stock_quantity - $1, 0),
+                 stock_status = CASE
+                   WHEN GREATEST(stock_quantity - $1, 0) = 0 THEN 'out_of_stock'
+                   WHEN GREATEST(stock_quantity - $1, 0) <= 5 THEN 'low_stock'
+                   ELSE stock_status
+                 END,
+                 updated_at = NOW(),
+                 updated_by = 'system:order'
+             WHERE therapy_id = $2 AND stock_quantity IS NOT NULL`,
+            [item.quantity, item.therapyId]
+          )
+        }
+
         await client.query('COMMIT')
       } catch (err) {
         await client.query('ROLLBACK')

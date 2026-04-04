@@ -1,14 +1,49 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import crypto from 'crypto'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { getCookieDomain } from '@/lib/utils'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
 
+function hashIp(ip: string): string {
+  return crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16)
+}
+
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender } = body
+    const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender, visitorContext } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
+
+    // Extract visitor tracking data
+    const vc = visitorContext || {}
+    const utmSource = typeof vc.utmSource === 'string' ? vc.utmSource.slice(0, 255) || null : null
+    const utmMedium = typeof vc.utmMedium === 'string' ? vc.utmMedium.slice(0, 255) || null : null
+    const utmCampaign = typeof vc.utmCampaign === 'string' ? vc.utmCampaign.slice(0, 255) || null : null
+    const utmTerm = typeof vc.utmTerm === 'string' ? vc.utmTerm.slice(0, 255) || null : null
+    const utmContent = typeof vc.utmContent === 'string' ? vc.utmContent.slice(0, 255) || null : null
+    const referrerUrl = typeof vc.referrerUrl === 'string' ? vc.referrerUrl.slice(0, 2048) || null : null
+    const landingPage = typeof vc.landingPage === 'string' ? vc.landingPage.slice(0, 2048) || null : null
+    const userAgent = typeof vc.userAgent === 'string' ? vc.userAgent.slice(0, 512) || null : null
+    const screenResolution = typeof vc.screenResolution === 'string' ? vc.screenResolution.slice(0, 20) || null : null
+    const deviceType = typeof vc.deviceType === 'string' ? vc.deviceType.slice(0, 20) || null : null
+    const browser = typeof vc.browser === 'string' ? vc.browser.slice(0, 50) || null : null
+    const os = typeof vc.os === 'string' ? vc.os.slice(0, 50) || null : null
+    // Validate ISO timestamp — reject anything that doesn't parse to a real date
+    let firstVisitAt: string | null = null
+    if (typeof vc.firstVisitAt === 'string') {
+      const d = new Date(vc.firstVisitAt)
+      if (!isNaN(d.getTime())) firstVisitAt = d.toISOString()
+    }
+    const ipHash = hashIp(getClientIp(request))
 
     if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !phone?.trim()) {
       return NextResponse.json({ error: 'First name, last name, email, and phone are required.' }, { status: 400 })
@@ -28,8 +63,23 @@ export async function POST(request: Request) {
         const memberAge = age && Number(age) >= 18 && Number(age) <= 120 ? Number(age) : null
         const memberGender = gender === 'male' || gender === 'female' ? gender : null
         const result = await sql`
-          INSERT INTO club_members (name, email, phone, social_handle, address_street, address_city, address_state, address_zip, source, signup_type, age, gender)
-          VALUES (${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null}, ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip}, 'join_landing', ${validSignupType}, ${memberAge}, ${memberGender})
+          INSERT INTO club_members (
+            name, email, phone, social_handle,
+            address_street, address_city, address_state, address_zip,
+            source, signup_type, age, gender,
+            utm_source, utm_medium, utm_campaign, utm_term, utm_content,
+            referrer_url, landing_page, user_agent, ip_hash,
+            device_type, browser, os, screen_resolution, first_visit_at
+          )
+          VALUES (
+            ${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null},
+            ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip},
+            'join_landing', ${validSignupType}, ${memberAge}, ${memberGender},
+            ${utmSource}, ${utmMedium}, ${utmCampaign}, ${utmTerm}, ${utmContent},
+            ${referrerUrl}, ${landingPage}, ${userAgent}, ${ipHash},
+            ${deviceType}, ${browser}, ${os}, ${screenResolution},
+            ${firstVisitAt ? firstVisitAt : null}::timestamptz
+          )
           ON CONFLICT (LOWER(email))
           DO UPDATE SET
             name = ${name.trim()},
@@ -42,6 +92,20 @@ export async function POST(request: Request) {
             signup_type = ${validSignupType},
             age = COALESCE(${memberAge}, club_members.age),
             gender = COALESCE(${memberGender}, club_members.gender),
+            utm_source = COALESCE(club_members.utm_source, ${utmSource}),
+            utm_medium = COALESCE(club_members.utm_medium, ${utmMedium}),
+            utm_campaign = COALESCE(club_members.utm_campaign, ${utmCampaign}),
+            utm_term = COALESCE(club_members.utm_term, ${utmTerm}),
+            utm_content = COALESCE(club_members.utm_content, ${utmContent}),
+            referrer_url = COALESCE(club_members.referrer_url, ${referrerUrl}),
+            landing_page = COALESCE(club_members.landing_page, ${landingPage}),
+            user_agent = ${userAgent},
+            ip_hash = ${ipHash},
+            device_type = COALESCE(${deviceType}, club_members.device_type),
+            browser = COALESCE(${browser}, club_members.browser),
+            os = COALESCE(${os}, club_members.os),
+            screen_resolution = COALESCE(${screenResolution}, club_members.screen_resolution),
+            first_visit_at = COALESCE(club_members.first_visit_at, ${firstVisitAt ? firstVisitAt : null}::timestamptz),
             updated_at = NOW()
           RETURNING id
         `

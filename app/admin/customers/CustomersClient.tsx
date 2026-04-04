@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { AnalyticsData, CustomerAdminRow, CustomerProfile } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor, filterByDateRange } from '@/lib/admin-utils'
 
-type SortField = 'name' | 'email' | 'address_city' | 'address_state' | 'signup_type' | 'source' | 'order_count' | 'total_spent' | 'created_at' | 'age' | 'gender'
+type SortField = 'name' | 'email' | 'address_city' | 'address_state' | 'signup_type' | 'source' | 'order_count' | 'total_spent' | 'created_at' | 'age' | 'gender' | 'converted' | 'avg_order_value' | 'browser' | 'device_type'
 type SortDir = 'asc' | 'desc'
 
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
@@ -14,18 +14,23 @@ function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
 
 function sortCustomers(customers: CustomerAdminRow[], field: SortField, dir: SortDir): CustomerAdminRow[] {
   return [...customers].sort((a, b) => {
-    let av: string | number | null = a[field] as string | number | null
-    let bv: string | number | null = b[field] as string | number | null
+    const av = a[field]
+    const bv = b[field]
     // Nulls last
     if (av === null || av === undefined) return 1
     if (bv === null || bv === undefined) return -1
+    // Booleans: true > false
+    if (typeof av === 'boolean' && typeof bv === 'boolean') {
+      if (av === bv) return 0
+      return dir === 'asc' ? (av ? 1 : -1) : (av ? -1 : 1)
+    }
     if (typeof av === 'number' && typeof bv === 'number') {
       return dir === 'asc' ? av - bv : bv - av
     }
-    av = String(av).toLowerCase()
-    bv = String(bv).toLowerCase()
-    if (av < bv) return dir === 'asc' ? -1 : 1
-    if (av > bv) return dir === 'asc' ? 1 : -1
+    const as = String(av).toLowerCase()
+    const bs = String(bv).toLowerCase()
+    if (as < bs) return dir === 'asc' ? -1 : 1
+    if (as > bs) return dir === 'asc' ? 1 : -1
     return 0
   })
 }
@@ -104,8 +109,8 @@ export default function CustomersClient() {
     if (!data) return
     const filtered = getFilteredCustomers(data.allCustomers)
     downloadCSV('cultr-customers',
-      ['Name', 'Email', 'Phone', 'Age', 'Gender', 'City', 'State', 'Type', 'Source', 'Orders', 'Total Spent', 'Joined'],
-      filtered.map(c => [c.name, c.email, c.phone, c.age, c.gender, c.address_city, c.address_state, c.signup_type, c.source, c.order_count, c.total_spent, c.created_at])
+      ['Name', 'Email', 'Phone', 'Age', 'Gender', 'City', 'State', 'Type', 'Source', 'Converted', 'Orders', 'Total Spent', 'AOV', 'Browser', 'Device', 'Joined'],
+      filtered.map(c => [c.name, c.email, c.phone, c.age, c.gender, c.address_city, c.address_state, c.signup_type, c.source, c.converted ? 'Yes' : 'No', c.order_count, c.total_spent, c.avg_order_value, c.browser, c.device_type, c.created_at])
     )
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, startDate, endDate, customerSearch])
@@ -219,8 +224,12 @@ export default function CustomersClient() {
                     { label: 'State', field: 'address_state', align: 'left' },
                     { label: 'Type', field: 'signup_type', align: 'left' },
                     { label: 'Source', field: 'source', align: 'left' },
+                    { label: 'Converted', field: 'converted', align: 'left' },
                     { label: 'Orders', field: 'order_count', align: 'right' },
                     { label: 'Total Spent', field: 'total_spent', align: 'right' },
+                    { label: 'AOV', field: 'avg_order_value', align: 'right' },
+                    { label: 'Browser', field: 'browser', align: 'left' },
+                    { label: 'Device', field: 'device_type', align: 'left' },
                     { label: 'Joined', field: 'created_at', align: 'left' },
                   ] as { label: string; field: SortField | null; align: string }[]).map(col => (
                     <th
@@ -262,8 +271,22 @@ export default function CustomersClient() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{c.source || '\u2014'}</td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.converted ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {c.converted ? 'Yes' : 'No'}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.order_count}</td>
                     <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_spent))}</td>
+                    <td className="py-3 px-4 text-sm text-right text-brand-primary">{c.avg_order_value != null ? formatCurrency(c.avg_order_value) : '\u2014'}</td>
+                    <td className="py-3 px-4 text-sm text-brand-primary/60">{c.browser || '\u2014'}</td>
+                    <td className="py-3 px-4">
+                      {c.device_type ? (
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${c.device_type === 'mobile' ? 'bg-blue-100 text-blue-800' : c.device_type === 'tablet' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {c.device_type}
+                        </span>
+                      ) : '\u2014'}
+                    </td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
                   </tr>
                 ))}

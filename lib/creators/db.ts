@@ -1390,22 +1390,19 @@ export async function getCreatorDashboardStats(creatorId: string): Promise<{
   thisMonthCommission: number
 }> {
   try {
-    const monthStart = new Date()
-    monthStart.setDate(1)
-    monthStart.setHours(0, 0, 0, 0)
-    const monthStartStr = monthStart.toISOString()
-
+    // Use SQL date_trunc for month boundary — matches getCreatorEarningsTrend()
+    // and avoids JS/SQL timezone mismatches on Vercel edge
     const result = await sql`
       SELECT
         (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId}) as total_clicks,
-        (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId} AND clicked_at >= ${monthStartStr}) as month_clicks,
+        (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId} AND clicked_at >= date_trunc('month', NOW())) as month_clicks,
         (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_orders,
-        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= ${monthStartStr}) as month_orders,
+        (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= date_trunc('month', NOW())) as month_orders,
         (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_revenue,
-        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= ${monthStartStr}) as month_revenue,
+        (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= date_trunc('month', NOW())) as month_revenue,
         (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed') as total_commission,
         (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status = 'pending') as pending_commission,
-        (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed' AND created_at >= ${monthStartStr}) as month_commission
+        (SELECT COALESCE(SUM(commission_amount), 0) FROM commission_ledger WHERE beneficiary_creator_id = ${creatorId} AND status != 'reversed' AND created_at >= date_trunc('month', NOW())) as month_commission
     `
 
     const row = result.rows[0]

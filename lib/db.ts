@@ -1212,9 +1212,24 @@ export async function getAllCustomersForAdmin() {
     const result = await sql`
       SELECT
         cm.*,
-        (SELECT COUNT(*)::int FROM club_orders co WHERE co.member_id = cm.id) as order_count,
-        (SELECT COALESCE(SUM(co.subtotal_usd), 0) FROM club_orders co WHERE co.member_id = cm.id) as total_spent
+        COALESCE(os.order_count, 0)::int as order_count,
+        COALESCE(os.total_spent, 0) as total_spent,
+        COALESCE(os.valid_order_count, 0) > 0 as converted,
+        CASE WHEN COALESCE(os.valid_order_count, 0) > 0
+          THEN ROUND((os.valid_spent / os.valid_order_count)::numeric, 2)::float8
+          ELSE NULL
+        END as avg_order_value
       FROM club_members cm
+      LEFT JOIN (
+        SELECT
+          member_id,
+          COUNT(*)::int as order_count,
+          COALESCE(SUM(subtotal_usd), 0)::float8 as total_spent,
+          COUNT(*) FILTER (WHERE status NOT IN ('cancelled', 'rejected'))::int as valid_order_count,
+          COALESCE(SUM(subtotal_usd) FILTER (WHERE status NOT IN ('cancelled', 'rejected')), 0)::float8 as valid_spent
+        FROM club_orders
+        GROUP BY member_id
+      ) os ON os.member_id = cm.id
       ORDER BY cm.created_at DESC
     `
     return result.rows

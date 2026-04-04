@@ -29,7 +29,41 @@ export function middleware(request: NextRequest) {
 
     // Rewrite root and all other paths to /join
     url.pathname = url.pathname === '/' ? '/join' : `/join${url.pathname}`
-    return NextResponse.rewrite(url)
+    const response = NextResponse.rewrite(url)
+
+    // Capture visitor context on first visit (UTM params + referrer)
+    // Only set once — don't overwrite if already exists (preserves first-touch attribution)
+    if (!request.cookies.get('cultr_visitor_ctx')) {
+      const utmSource = (request.nextUrl.searchParams.get('utm_source') || '').slice(0, 255)
+      const utmMedium = (request.nextUrl.searchParams.get('utm_medium') || '').slice(0, 255)
+      const utmCampaign = (request.nextUrl.searchParams.get('utm_campaign') || '').slice(0, 255)
+      const utmTerm = (request.nextUrl.searchParams.get('utm_term') || '').slice(0, 255)
+      const utmContent = (request.nextUrl.searchParams.get('utm_content') || '').slice(0, 255)
+      const referrer = (request.headers.get('referer') || '').slice(0, 2048)
+
+      const visitorCtx = JSON.stringify({
+        s: utmSource,
+        m: utmMedium,
+        c: utmCampaign,
+        t: utmTerm,
+        n: utmContent,
+        r: referrer,
+        l: request.nextUrl.pathname + request.nextUrl.search,
+        ts: Date.now(),
+      })
+
+      const domain = hostname.includes('cultrhealth.com') ? '.cultrhealth.com' : undefined
+      response.cookies.set('cultr_visitor_ctx', encodeURIComponent(visitorCtx), {
+        httpOnly: false, // Client-side readable so JS can send with signup
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+        ...(domain ? { domain } : {}),
+      })
+    }
+
+    return response
   }
 
   // Session idle timeout for HIPAA compliance (30 min inactivity)

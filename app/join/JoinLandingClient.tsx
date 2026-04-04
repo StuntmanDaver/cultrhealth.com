@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   ShoppingCart, X, Plus, Minus, Trash2, ChevronRight, Check,
   Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag,
@@ -10,6 +10,141 @@ import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type 
 
 type StockData = Record<string, { status: string; quantity: number | null }>
 import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
+
+// =============================================
+// VISITOR TRACKING HELPERS
+// =============================================
+
+interface VisitorContext {
+  sessionId: string
+  utmSource: string
+  utmMedium: string
+  utmCampaign: string
+  utmTerm: string
+  utmContent: string
+  referrerUrl: string
+  landingPage: string
+  userAgent: string
+  screenResolution: string
+  deviceType: string
+  browser: string
+  os: string
+  firstVisitAt: string
+}
+
+function generateSessionId(): string {
+  try {
+    const arr = new Uint8Array(12)
+    crypto.getRandomValues(arr)
+    return Array.from(arr, (b) => b.toString(16).padStart(2, '0')).join('')
+  } catch {
+    // Fallback for environments without crypto.getRandomValues
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 14)
+  }
+}
+
+function parseUserAgent(ua: string): { deviceType: string; browser: string; os: string } {
+  const isMobile = /iPhone|iPad|iPod|Android.*Mobile|webOS|BlackBerry|Opera Mini|IEMobile/i.test(ua)
+  const isTablet = /iPad|Android(?!.*Mobile)|Tablet/i.test(ua)
+  const deviceType = isTablet ? 'tablet' : isMobile ? 'mobile' : 'desktop'
+
+  let browser = 'unknown'
+  if (/Edg\//i.test(ua)) browser = 'Edge'
+  else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) browser = 'Chrome'
+  else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari'
+  else if (/Firefox\//i.test(ua)) browser = 'Firefox'
+  else if (/Opera|OPR\//i.test(ua)) browser = 'Opera'
+
+  let os = 'unknown'
+  if (/Windows/i.test(ua)) os = 'Windows'
+  else if (/Mac OS X|macOS/i.test(ua)) os = 'macOS'
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = 'iOS'
+  else if (/Android/i.test(ua)) os = 'Android'
+  else if (/Linux/i.test(ua)) os = 'Linux'
+
+  return { deviceType, browser, os }
+}
+
+/** Collect all visitor context on first load. Reads middleware cookie for UTMs + referrer. */
+function getVisitorContext(): VisitorContext {
+  const SESSION_KEY = 'cultr_visitor_session'
+
+  // Session ID — persist in sessionStorage so it survives page reloads but not tab close
+  let sessionId = ''
+  try {
+    sessionId = sessionStorage.getItem(SESSION_KEY) || ''
+    if (!sessionId) {
+      sessionId = generateSessionId()
+      sessionStorage.setItem(SESSION_KEY, sessionId)
+    }
+  } catch {
+    sessionId = generateSessionId()
+  }
+
+  // Read middleware-set cookie for UTM + referrer (first-touch)
+  let utmSource = '', utmMedium = '', utmCampaign = '', utmTerm = '', utmContent = '', referrerUrl = '', landingPage = '', firstVisitAt = ''
+  try {
+    const ctxCookie = document.cookie.split('; ').find((c) => c.startsWith('cultr_visitor_ctx='))
+    if (ctxCookie) {
+      const data = JSON.parse(decodeURIComponent(ctxCookie.substring('cultr_visitor_ctx='.length)))
+      utmSource = data.s || ''
+      utmMedium = data.m || ''
+      utmCampaign = data.c || ''
+      utmTerm = data.t || ''
+      utmContent = data.n || ''
+      referrerUrl = data.r || ''
+      landingPage = data.l || ''
+      firstVisitAt = data.ts ? new Date(data.ts).toISOString() : ''
+    }
+  } catch { /* ignore malformed cookie */ }
+
+  // Fallback: read UTM from current URL if cookie wasn't set (e.g., localhost)
+  if (!utmSource) {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      utmSource = params.get('utm_source') || ''
+      utmMedium = params.get('utm_medium') || ''
+      utmCampaign = params.get('utm_campaign') || ''
+      utmTerm = params.get('utm_term') || ''
+      utmContent = params.get('utm_content') || ''
+    } catch { /* ignore */ }
+  }
+  if (!referrerUrl) {
+    try { referrerUrl = document.referrer || '' } catch { /* ignore */ }
+  }
+  if (!landingPage) {
+    try { landingPage = window.location.pathname + window.location.search } catch { /* ignore */ }
+  }
+  if (!firstVisitAt) {
+    firstVisitAt = new Date().toISOString()
+  }
+
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  const { deviceType, browser, os } = parseUserAgent(ua)
+  const screenResolution = typeof screen !== 'undefined' ? `${screen.width}x${screen.height}` : ''
+
+  return {
+    sessionId, utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
+    referrerUrl, landingPage, userAgent: ua, screenResolution, deviceType, browser, os, firstVisitAt,
+  }
+}
+
+/** Fire-and-forget server-side event */
+function trackVisitorEvent(
+  sessionId: string,
+  eventType: string,
+  eventData?: Record<string, unknown>,
+  memberId?: string,
+) {
+  try {
+    fetch('/api/club/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionId, eventType, eventData, memberId, pageUrl: window.location.pathname }),
+      keepalive: true, // survives page unload
+    }).catch(() => {})
+  } catch { /* ignore */ }
+}
 
 // =============================================
 // MAIN WRAPPER
@@ -55,6 +190,25 @@ function JoinLandingInner() {
   const [stockData, setStockData] = useState<StockData>({})
   const cart = useJoinCart()
   const hasItems = cart.getItemCount() > 0
+  const visitorCtxRef = useRef<VisitorContext | null>(null)
+  const memberIdRef = useRef<string | null>(null)
+
+  // Capture visitor context on mount and fire page_view event
+  useEffect(() => {
+    const ctx = getVisitorContext()
+    visitorCtxRef.current = ctx
+    trackVisitorEvent(ctx.sessionId, 'page_view', {
+      landingPage: ctx.landingPage,
+      utmSource: ctx.utmSource,
+      utmMedium: ctx.utmMedium,
+      utmCampaign: ctx.utmCampaign,
+      referrerUrl: ctx.referrerUrl,
+      deviceType: ctx.deviceType,
+      browser: ctx.browser,
+      os: ctx.os,
+      screenResolution: ctx.screenResolution,
+    })
+  }, [])
 
   // Fetch live stock data from DB — cache-bust to ensure admin changes reflect immediately
   useEffect(() => {
@@ -104,7 +258,7 @@ function JoinLandingInner() {
       }
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
-        const data = JSON.parse(decodeURIComponent(stored.split('=')[1]))
+        const data = JSON.parse(decodeURIComponent(stored.substring('cultr_club_visitor='.length)))
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
           setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
@@ -165,7 +319,7 @@ function JoinLandingInner() {
       {showLogin && !member && <LoginModal onComplete={handleSignupComplete} onSignUpInstead={() => { setShowLogin(false); setShowSignup(true) }} />}
 
       {/* Signup Modal */}
-      {showSignup && !member && <SignupModal onComplete={handleSignupComplete} />}
+      {showSignup && !member && <SignupModal onComplete={handleSignupComplete} visitorCtxRef={visitorCtxRef} memberIdRef={memberIdRef} />}
 
       {/* Order Success Banner */}
       {orderSubmitted && (
@@ -246,7 +400,10 @@ function JoinLandingInner() {
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx] || Flame
                 return (
-                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} stockData={stockData} />
+                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} stockData={stockData} onAddToCart={(therapyId: string, therapyName: string, price: number | null) => {
+                    const ctx = visitorCtxRef.current
+                    if (ctx) trackVisitorEvent(ctx.sessionId, 'add_to_cart', { therapyId, therapyName, price }, memberIdRef.current || undefined)
+                  }} />
                 )
               })}
 
@@ -266,7 +423,10 @@ function JoinLandingInner() {
             <div className="lg:col-span-2 hidden lg:block">
               <div className="sticky top-8">
                 {hasItems ? (
-                  <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} />
+                  <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
+                    const ctx = visitorCtxRef.current
+                    if (ctx) trackVisitorEvent(ctx.sessionId, eventType, eventData, memberIdRef.current || undefined)
+                  }} />
                 ) : (
                   <div className="flex flex-col items-center justify-center min-h-[280px] rounded-2xl border-2 border-dashed border-brand-primary/10 p-8 text-center gap-3">
                     <Package className="w-10 h-10 text-brand-primary/15" />
@@ -302,7 +462,10 @@ function JoinLandingInner() {
 
       {/* Mobile Cart Full-Screen Overlay */}
       {showMobileCart && (
-        <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} />
+        <MobileCartOverlay member={member} onClose={() => setShowMobileCart(false)} onOrderSubmitted={handleOrderSubmitted} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
+          const ctx = visitorCtxRef.current
+          if (ctx) trackVisitorEvent(ctx.sessionId, eventType, eventData, memberIdRef.current || undefined)
+        }} />
       )}
     </div>
   )
@@ -312,7 +475,7 @@ function JoinLandingInner() {
 // THERAPY CAROUSEL SECTION
 // =============================================
 
-function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinTherapySection; Icon: typeof Flame; stockData: StockData }) {
+function TherapyCarouselSection({ section, Icon, stockData, onAddToCart }: { section: JoinTherapySection; Icon: typeof Flame; stockData: StockData; onAddToCart?: (therapyId: string, therapyName: string, price: number | null) => void }) {
   const cart = useJoinCart()
   const isTwoRow = section.therapies.length > 5
 
@@ -343,6 +506,7 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
       } else {
         cart.addItem({ therapyId: therapy.id, name: therapy.name, price: therapy.price, pricingNote: therapy.pricingNote, note: therapy.note })
       }
+      onAddToCart?.(therapy.id, therapy.name, therapy.price)
     }
 
     const cardData: CarouselCard = {
@@ -438,7 +602,7 @@ function TherapyCarouselSection({ section, Icon, stockData }: { section: JoinThe
 // SIGNUP MODAL
 // =============================================
 
-function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void }) {
+function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (data: ClubMember) => void; visitorCtxRef: React.MutableRefObject<VisitorContext | null>; memberIdRef: React.MutableRefObject<string | null> }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -479,6 +643,7 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
     }
     setLoading(true)
     const address = { street: street.trim(), city: city.trim(), state: state.trim(), zip: zip.trim() }
+    const ctx = visitorCtxRef.current
     try {
       const res = await fetch('/api/club/signup', {
         method: 'POST',
@@ -493,10 +658,31 @@ function SignupModal({ onComplete }: { onComplete: (data: ClubMember) => void })
           gender,
           signupType,
           address,
+          // Visitor tracking context
+          visitorContext: ctx ? {
+            sessionId: ctx.sessionId,
+            utmSource: ctx.utmSource,
+            utmMedium: ctx.utmMedium,
+            utmCampaign: ctx.utmCampaign,
+            utmTerm: ctx.utmTerm,
+            utmContent: ctx.utmContent,
+            referrerUrl: ctx.referrerUrl,
+            landingPage: ctx.landingPage,
+            userAgent: ctx.userAgent,
+            screenResolution: ctx.screenResolution,
+            deviceType: ctx.deviceType,
+            browser: ctx.browser,
+            os: ctx.os,
+            firstVisitAt: ctx.firstVisitAt,
+          } : undefined,
         }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Something went wrong.'); setLoading(false); return }
+      // Store memberId for subsequent event tracking
+      if (data.memberId) memberIdRef.current = data.memberId
+      // Fire signup event
+      if (ctx) trackVisitorEvent(ctx.sessionId, 'signup', { email: email.trim(), signupType }, data.memberId)
       onComplete({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -723,7 +909,7 @@ function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMe
 // CART SUMMARY PANEL
 // =============================================
 
-function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | null; onOrderSubmitted: () => void }) {
+function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent }: { member: ClubMember | null; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void }) {
   const cart = useJoinCart()
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -749,6 +935,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
         setAppliedCoupon({ code, discount: data.discount, label: data.label, isCreatorCode: data.isCreatorCode, noBundleStack: data.noBundleStack, creatorName: data.creatorName, creatorId: data.creatorId })
         setCouponInput('')
         setCouponError('')
+        onTrackEvent?.('apply_coupon', { code, discount: data.discount, isCreatorCode: data.isCreatorCode, creatorName: data.creatorName })
       } else {
         setCouponError(data.error || 'Invalid coupon code.')
         setAppliedCoupon(null)
@@ -761,6 +948,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
   }
 
   function handleRemoveCoupon() {
+    if (appliedCoupon) onTrackEvent?.('remove_coupon', { code: appliedCoupon.code })
     setAppliedCoupon(null)
     setCouponError('')
   }
@@ -769,6 +957,9 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
     if (!member || cart.items.length === 0) return
     setError('')
     setSubmitting(true)
+    const cartItems = cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity }))
+    // Track begin_checkout
+    onTrackEvent?.('begin_checkout', { itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null })
     try {
       const res = await fetch('/api/club/orders', {
         method: 'POST',
@@ -776,13 +967,15 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
         body: JSON.stringify({
           email: member.email, name: `${member.firstName} ${member.lastName}`, phone: member.phone,
           address: member.address,
-          items: cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity })),
+          items: cartItems,
           notes: notes.trim() || undefined,
           couponCode: appliedCoupon?.code,
         }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Failed to submit order.'); setSubmitting(false); return }
+      // Track order_submitted
+      onTrackEvent?.('order_submitted', { orderNumber: data.orderNumber, itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null })
       cart.clearCart()
       onOrderSubmitted()
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -813,7 +1006,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
                   {isBundleActive && (
                     <span className="text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded shrink-0">Bundle</span>
                   )}
-                  <button onClick={() => cart.removeItem(item.therapyId)} className="text-brand-secondary/30 hover:text-red-500 transition-colors shrink-0">
+                  <button onClick={() => { cart.removeItem(item.therapyId); onTrackEvent?.('remove_from_cart', { therapyId: item.therapyId, therapyName: item.name }) }} className="text-brand-secondary/30 hover:text-red-500 transition-colors shrink-0">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
@@ -957,7 +1150,7 @@ function CartSummaryPanel({ member, onOrderSubmitted }: { member: ClubMember | n
 // MOBILE CART OVERLAY
 // =============================================
 
-function MobileCartOverlay({ member, onClose, onOrderSubmitted }: { member: ClubMember | null; onClose: () => void; onOrderSubmitted: () => void }) {
+function MobileCartOverlay({ member, onClose, onOrderSubmitted, onTrackEvent }: { member: ClubMember | null; onClose: () => void; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void }) {
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       <div className="absolute inset-0 bg-brand-primary/30 backdrop-blur-sm" onClick={onClose} />
@@ -968,7 +1161,7 @@ function MobileCartOverlay({ member, onClose, onOrderSubmitted }: { member: Club
             <X className="w-5 h-5 text-brand-secondary/60" />
           </button>
         </div>
-        <CartSummaryPanel member={member} onOrderSubmitted={onOrderSubmitted} />
+        <CartSummaryPanel member={member} onOrderSubmitted={onOrderSubmitted} onTrackEvent={onTrackEvent} />
       </div>
     </div>
   )
