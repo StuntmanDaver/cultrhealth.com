@@ -417,7 +417,7 @@ export const Card = ({
                     className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6 flex items-center justify-center"
                   >
                     <div className="relative w-full h-[140px] md:h-[180px] drop-shadow-lg">
-                      <Image
+                      <ProductImage
                         src={card.src}
                         alt={card.title}
                         fill
@@ -565,7 +565,7 @@ export const Card = ({
                   : compact ? "h-[130px] md:h-[200px]" : "h-[210px] md:h-[280px]"
               )}
             >
-              <Image
+              <ProductImage
                 src={card.src}
                 alt={card.title}
                 fill
@@ -651,6 +651,46 @@ export const Card = ({
         </div>
       </motion.div>
     </>
+  )
+}
+
+// ─── ProductImage (with broken-image fallback) ─────────────
+
+function ProductImage({ src, alt, fill, sizes, className, priority }: {
+  src: string
+  alt: string
+  fill?: boolean
+  sizes?: string
+  className?: string
+  priority?: boolean
+}) {
+  const [failed, setFailed] = useState(false)
+
+  if (failed || !src) {
+    return (
+      <div className={cn("flex items-center justify-center bg-brand-primary/5 rounded-xl", fill ? "absolute inset-0" : "w-full h-full", className)}>
+        <div className="text-center px-4">
+          <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-brand-primary/10 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand-primary/40">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <span className="text-[11px] text-brand-primary/40 font-medium">Image coming soon</span>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      sizes={sizes}
+      className={className}
+      priority={priority}
+      onError={() => setFailed(true)}
+    />
   )
 }
 
