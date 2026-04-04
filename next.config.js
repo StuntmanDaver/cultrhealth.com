@@ -83,6 +83,19 @@ const nextConfig = {
           },
         ],
       },
+      // API routes: never cache (admin inventory changes must reflect immediately)
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'private, no-cache, no-store, must-revalidate',
+          },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'CDN-Cache-Control', value: 'no-store' },
+          { key: 'Vercel-CDN-Cache-Control', value: 'no-store' },
+        ],
+      },
       // Authenticated/dynamic pages: never cache (HIPAA compliance)
       {
         source: '/(dashboard|members|intake|renewal|admin|creators/portal|join|provider)/:path*',

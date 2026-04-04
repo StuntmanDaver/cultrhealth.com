@@ -51,8 +51,9 @@ export async function PUT(request: Request) {
     if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { therapyId, stockStatus, stockQuantity } = body as {
+    const { therapyId, therapyName, stockStatus, stockQuantity } = body as {
       therapyId: string
+      therapyName?: string
       stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock'
       stockQuantity: number | null
     }
@@ -69,9 +70,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 })
     }
 
+    const displayName = therapyName || therapyId
+
     await sql`
       INSERT INTO product_inventory (therapy_id, therapy_name, stock_status, stock_quantity, updated_at, updated_by)
-      VALUES (${therapyId}, ${therapyId}, ${stockStatus}, ${stockQuantity}, NOW(), ${session.email})
+      VALUES (${therapyId}, ${displayName}, ${stockStatus}, ${stockQuantity}, NOW(), ${session.email})
       ON CONFLICT (therapy_id) DO UPDATE SET
         stock_status = ${stockStatus},
         stock_quantity = ${stockQuantity},
@@ -79,9 +82,18 @@ export async function PUT(request: Request) {
         updated_by = ${session.email}
     `
 
-    // Bust caches so the public /api/stock endpoint and join page reflect changes immediately
-    revalidatePath('/api/stock')
+    // Bust Next.js ISR cache for the join page
+    revalidatePath('/join')
     revalidatePath('/join-club')
+
+    // Verify the write persisted by reading it back
+    const verify = await sql`
+      SELECT stock_status, stock_quantity FROM product_inventory WHERE therapy_id = ${therapyId}
+    `
+    if (verify.rows.length === 0 || verify.rows[0].stock_status !== stockStatus) {
+      console.error('[admin/inventory] PUT verification failed for', therapyId)
+      return NextResponse.json({ error: 'Save appeared to succeed but verification failed' }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (err) {

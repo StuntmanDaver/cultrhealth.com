@@ -79,6 +79,7 @@ export default function InventoryClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           therapyId,
+          therapyName: row.therapyName,
           stockStatus: edited.stockStatus,
           stockQuantity: edited.stockQuantity,
         }),

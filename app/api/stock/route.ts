@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 
-export const dynamic = 'force-dynamic' // Always read fresh from DB — admin changes must reflect immediately
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-/** GET — Public endpoint returning stock status for all join therapies */
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'private, no-cache, no-store, must-revalidate, max-age=0',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+  'CDN-Cache-Control': 'no-store',
+  'Vercel-CDN-Cache-Control': 'no-store',
+}
+
+/** GET — Public endpoint returning stock status for all products */
 export async function GET() {
   try {
     if (!process.env.POSTGRES_URL) {
-      // No DB — default everything to in_stock
-      return NextResponse.json({ stock: {} })
+      return NextResponse.json({ stock: {} }, { headers: NO_CACHE_HEADERS })
     }
 
     const result = await sql`
@@ -24,11 +32,9 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ stock }, {
-      headers: { 'Cache-Control': 'no-store' },
-    })
+    return NextResponse.json({ stock }, { headers: NO_CACHE_HEADERS })
   } catch (err) {
     console.error('[api/stock] GET error:', err)
-    return NextResponse.json({ stock: {} })
+    return NextResponse.json({ stock: {} }, { headers: NO_CACHE_HEADERS })
   }
 }

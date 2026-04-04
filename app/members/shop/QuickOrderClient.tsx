@@ -653,7 +653,26 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
   const [vitaminSearchQuery, setVitaminSearchQuery] = useState('')
   const [selectedVitaminCategory, setSelectedVitaminCategory] = useState<VitaminCategory | 'all'>('all')
   const [mobileCartExpanded, setMobileCartExpanded] = useState(false)
+  const [liveStock, setLiveStock] = useState<Record<string, { status: string; quantity: number | null }>>({})
   const { getItemCount } = useCart()
+
+  // Fetch live stock data from DB so admin inventory changes reflect immediately
+  useEffect(() => {
+    fetch(`/api/stock?t=${Date.now()}`, { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : { stock: {} })
+      .then((d) => setLiveStock(d.stock || {}))
+      .catch(() => {})
+  }, [])
+
+  // Merge hardcoded catalog with live DB stock status
+  const stockAwareCatalog = useMemo(() => {
+    if (Object.keys(liveStock).length === 0) return PRODUCT_CATALOG
+    return PRODUCT_CATALOG.map((p) => {
+      const live = liveStock[p.sku]
+      if (!live) return p
+      return { ...p, stockStatus: live.status as StockStatus }
+    })
+  }, [liveStock])
 
   const categories = getCategoriesWithCounts()
   const vialTypes = getUniqueVialTypes()
@@ -677,9 +696,9 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
     ...vialTypes.map(v => ({ value: v, label: v })),
   ]
 
-  // Filter and sort products
+  // Filter and sort products (uses live stock data from DB)
   const filteredProducts = useMemo(() => {
-    let products = [...PRODUCT_CATALOG]
+    let products = [...stockAwareCatalog]
 
     if (selectedCategory !== 'all') {
       products = products.filter(p => p.category === selectedCategory)
@@ -714,7 +733,7 @@ export function QuickOrderClient({ email, tier }: { email: string; tier: PlanTie
     }
 
     return products
-  }, [searchQuery, selectedCategory, selectedStock, selectedVial, sortBy])
+  }, [stockAwareCatalog, searchQuery, selectedCategory, selectedStock, selectedVial, sortBy])
 
   // Filter vitamin products
   const vitaminCategories = getVitaminCategoriesWithCounts()

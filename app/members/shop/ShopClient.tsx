@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -142,29 +142,51 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all')
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false)
+  const [liveStock, setLiveStock] = useState<Record<string, { status: string; quantity: number | null }>>({})
   const { getItemCount } = useCart()
-  
+
+  // Fetch live stock data from DB
+  useEffect(() => {
+    fetch(`/api/stock?t=${Date.now()}`, { cache: 'no-store' })
+      .then((r) => r.ok ? r.json() : { stock: {} })
+      .then((d) => setLiveStock(d.stock || {}))
+      .catch(() => {})
+  }, [])
+
+  // Merge hardcoded catalog with live DB stock status
+  const stockAwareCatalog = useMemo(() => {
+    if (Object.keys(liveStock).length === 0) return PRODUCT_CATALOG
+    return PRODUCT_CATALOG.map((p) => {
+      const live = liveStock[p.sku]
+      if (!live) return p
+      return { ...p, stockStatus: live.status as ShopProduct['stockStatus'] }
+    })
+  }, [liveStock])
+
   const categories = getCategoriesWithCounts()
   const cartCount = getItemCount()
 
   // Filter products based on search and category
   const filteredProducts = useMemo(() => {
     let products: ShopProduct[] = []
-    
+
     if (selectedCategory === 'all') {
-      products = [...PRODUCT_CATALOG]
+      products = [...stockAwareCatalog]
     } else {
-      products = getProductsByCategory(selectedCategory)
+      products = stockAwareCatalog.filter(p => p.category === selectedCategory)
     }
-    
+
     if (searchQuery.trim()) {
-      const searchResults = searchProducts(searchQuery)
-      products = products.filter(p => searchResults.some(sr => sr.sku === p.sku))
+      const q = searchQuery.toLowerCase()
+      products = products.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q)
+      )
     }
-    
+
     // Sort by name
     return products.sort((a, b) => a.name.localeCompare(b.name))
-  }, [searchQuery, selectedCategory])
+  }, [stockAwareCatalog, searchQuery, selectedCategory])
 
   return (
     <div className="min-h-screen grad-light">

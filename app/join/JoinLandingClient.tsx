@@ -56,9 +56,9 @@ function JoinLandingInner() {
   const cart = useJoinCart()
   const hasItems = cart.getItemCount() > 0
 
-  // Fetch live stock data from DB
+  // Fetch live stock data from DB — cache-bust to ensure admin changes reflect immediately
   useEffect(() => {
-    fetch('/api/stock')
+    fetch(`/api/stock?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.ok ? r.json() : { stock: {} })
       .then((d) => setStockData(d.stock || {}))
       .catch(() => {})
