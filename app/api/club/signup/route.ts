@@ -148,7 +148,7 @@ export async function POST(request: Request) {
       httpOnly: false, // Client-side readable for personalization
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 90, // 90 days
       path: '/',
       ...(domain ? { domain } : {}),
     })

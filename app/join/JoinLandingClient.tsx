@@ -281,7 +281,8 @@ function JoinLandingInner() {
   const handleSignupComplete = useCallback((data: ClubMember) => {
     localStorage.setItem('cultr_club_member', JSON.stringify(data))
     const cookieData = encodeURIComponent(JSON.stringify(data))
-    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
+    const domainPart = window.location.hostname.includes('cultrhealth.com') ? '; domain=.cultrhealth.com' : ''
+    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 90}${domainPart}; SameSite=Lax`
     setMember(data)
     setShowSignup(false)
     setShowLogin(false)
@@ -299,8 +300,7 @@ function JoinLandingInner() {
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
     setShowMobileCart(false)
-    localStorage.removeItem('cultr_club_member')
-    document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
+    // Keep member data — don't force re-auth on next visit
     localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
 

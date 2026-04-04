@@ -34,8 +34,8 @@ export default function CouponsClient() {
     setTableEndDate(end.toISOString().split('T')[0])
   }, [periodDays])
 
-  const fetchAnalytics = useCallback(() => {
-    setLoading(true)
+  const fetchAnalytics = useCallback((showLoader = false) => {
+    if (showLoader) setLoading(true)
     fetch(`/api/admin/analytics?days=${periodDays}`)
       .then(r => r.json())
       .then(result => { if (result.data) setData(result.data) })
@@ -44,7 +44,7 @@ export default function CouponsClient() {
   }, [periodDays])
 
   useEffect(() => {
-    fetchAnalytics()
+    fetchAnalytics(true)
   }, [fetchAnalytics])
 
   const exportCoupons = useCallback(() => {
@@ -235,35 +235,37 @@ export default function CouponsClient() {
       )}
 
       {/* All Tracking Links */}
-      {data.allTrackingLinks.length > 0 && (
-        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-display text-xl text-brand-primary">All Tracking Links</h2>
-            <div className="flex flex-wrap items-center gap-3">
+      <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-display text-xl text-brand-primary">All Tracking Links</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            {data.allTrackingLinks.length > 0 && (
               <button onClick={exportTrackingLinks} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-brand-primary/50">From</label>
-                <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-brand-primary/50">To</label>
-                <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search slugs or creators..."
-                value={linkSearch}
-                onChange={(e) => setLinkSearch(e.target.value)}
-                className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-48"
-              />
+            )}
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-brand-primary/50">From</label>
+              <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
             </div>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-brand-primary/50">To</label>
+              <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search slugs or creators..."
+              value={linkSearch}
+              onChange={(e) => setLinkSearch(e.target.value)}
+              className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-48"
+            />
           </div>
-          <div className="flex flex-wrap gap-3 mb-4">
-            <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allTrackingLinks.length}</span>
-            <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allTrackingLinks.filter(l => l.active).length}</span>
-            <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Clicks: {data.allTrackingLinks.reduce((s, l) => s + l.click_count, 0)}</span>
-            <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Conversions: {data.allTrackingLinks.reduce((s, l) => s + l.conversion_count, 0)}</span>
-          </div>
+        </div>
+        <div className="flex flex-wrap gap-3 mb-4">
+          <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allTrackingLinks.length}</span>
+          <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allTrackingLinks.filter(l => l.active).length}</span>
+          <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Clicks: {data.allTrackingLinks.reduce((s, l) => s + l.click_count, 0)}</span>
+          <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Conversions: {data.allTrackingLinks.reduce((s, l) => s + l.conversion_count, 0)}</span>
+        </div>
+        {data.allTrackingLinks.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -294,97 +296,101 @@ export default function CouponsClient() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-brand-primary/40 py-4 text-center">No tracking links yet. Creators can create links from their portal.</p>
+        )}
+      </div>
 
       {/* All Coupon Codes */}
-      {(data.allCouponCodes.length > 0 || showCouponForm) && (
-        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-display text-xl text-brand-primary">All Coupon Codes</h2>
-            <div className="flex flex-wrap items-center gap-3">
+      <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-display text-xl text-brand-primary">All Coupon Codes</h2>
+          <div className="flex flex-wrap items-center gap-3">
+            {data.allCouponCodes.length > 0 && (
               <button onClick={exportCoupons} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
-              <button
-                onClick={() => { setShowCouponForm(!showCouponForm); setCouponError(null) }}
-                className="px-4 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-brand-primaryHover transition-colors"
-              >
-                {showCouponForm ? 'Cancel' : '+ Create Coupon'}
-              </button>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-brand-primary/50">From</label>
-                <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-              </div>
-              <div className="flex items-center gap-1.5">
-                <label className="text-xs text-brand-primary/50">To</label>
-                <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search codes..."
-                value={couponSearch}
-                onChange={(e) => setCouponSearch(e.target.value)}
-                className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-40"
-              />
+            )}
+            <button
+              onClick={() => { setShowCouponForm(!showCouponForm); setCouponError(null) }}
+              className="px-4 py-2 bg-brand-primary text-white rounded-full text-sm font-medium hover:bg-brand-primaryHover transition-colors"
+            >
+              {showCouponForm ? 'Cancel' : '+ Create Coupon'}
+            </button>
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-brand-primary/50">From</label>
+              <input type="date" value={tableStartDate} onChange={(e) => setTableStartDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
             </div>
-          </div>
-
-          {/* Create Coupon Form */}
-          {showCouponForm && (
-            <div className="bg-brand-cream/50 rounded-lg p-4 mb-6 border border-brand-primary/10">
-              <h3 className="text-sm font-medium text-brand-primary mb-3">New Coupon Code</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-                <div>
-                  <label className="block text-xs text-brand-primary/60 mb-1">Code</label>
-                  <input
-                    type="text"
-                    value={couponForm.code}
-                    onChange={(e) => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
-                    placeholder="e.g. SUMMER25"
-                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-brand-primary/60 mb-1">Discount %</label>
-                  <input
-                    type="number"
-                    value={couponForm.discount_value}
-                    onChange={(e) => setCouponForm(f => ({ ...f, discount_value: e.target.value }))}
-                    min="1" max="100"
-                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-brand-primary/60 mb-1">Type</label>
-                  <select
-                    value={couponForm.code_type}
-                    onChange={(e) => setCouponForm(f => ({ ...f, code_type: e.target.value }))}
-                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-                  >
-                    <option value="membership">Membership</option>
-                    <option value="product">Product</option>
-                  </select>
-                </div>
-                <div>
-                  <button
-                    onClick={handleCreateCoupon}
-                    disabled={creatingCoupon || !couponForm.code.trim()}
-                    className="w-full px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
-                  >
-                    {creatingCoupon ? 'Creating...' : 'Create'}
-                  </button>
-                </div>
-              </div>
-              {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-brand-primary/50">To</label>
+              <input type="date" value={tableEndDate} onChange={(e) => setTableEndDate(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
             </div>
-          )}
-
-          <div className="flex flex-wrap gap-3 mb-4">
-            <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allCouponCodes.length}</span>
-            <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allCouponCodes.filter(c => c.active).length}</span>
-            <span className="px-3 py-1 bg-purple-50 rounded-full text-sm text-purple-700">Creator: {data.allCouponCodes.filter(c => c.program_type === 'creator').length}</span>
-            <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">Club: {data.allCouponCodes.filter(c => c.code_type === 'club' || c.program_type === 'club').length}</span>
-            <span className="px-3 py-1 bg-blue-50 rounded-full text-sm text-blue-700">Prelaunch: {data.allCouponCodes.filter(c => c.program_type === 'prelaunch').length}</span>
+            <input
+              type="text"
+              placeholder="Search codes..."
+              value={couponSearch}
+              onChange={(e) => setCouponSearch(e.target.value)}
+              className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-40"
+            />
           </div>
+        </div>
+
+        {/* Create Coupon Form */}
+        {showCouponForm && (
+          <div className="bg-brand-cream/50 rounded-lg p-4 mb-6 border border-brand-primary/10">
+            <h3 className="text-sm font-medium text-brand-primary mb-3">New Coupon Code</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Code</label>
+                <input
+                  type="text"
+                  value={couponForm.code}
+                  onChange={(e) => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
+                  placeholder="e.g. SUMMER25"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Discount %</label>
+                <input
+                  type="number"
+                  value={couponForm.discount_value}
+                  onChange={(e) => setCouponForm(f => ({ ...f, discount_value: e.target.value }))}
+                  min="1" max="100"
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Type</label>
+                <select
+                  value={couponForm.code_type}
+                  onChange={(e) => setCouponForm(f => ({ ...f, code_type: e.target.value }))}
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                >
+                  <option value="membership">Membership</option>
+                  <option value="product">Product</option>
+                </select>
+              </div>
+              <div>
+                <button
+                  onClick={handleCreateCoupon}
+                  disabled={creatingCoupon || !couponForm.code.trim()}
+                  className="w-full px-4 py-2 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-brand-primaryHover transition-colors disabled:opacity-50"
+                >
+                  {creatingCoupon ? 'Creating...' : 'Create'}
+                </button>
+              </div>
+            </div>
+            {couponError && <p className="mt-2 text-sm text-red-600">{couponError}</p>}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3 mb-4">
+          <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allCouponCodes.length}</span>
+          <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allCouponCodes.filter(c => c.active).length}</span>
+          <span className="px-3 py-1 bg-purple-50 rounded-full text-sm text-purple-700">Creator: {data.allCouponCodes.filter(c => c.program_type === 'creator').length}</span>
+          <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">Club: {data.allCouponCodes.filter(c => c.code_type === 'club' || c.program_type === 'club').length}</span>
+          <span className="px-3 py-1 bg-blue-50 rounded-full text-sm text-blue-700">Prelaunch: {data.allCouponCodes.filter(c => c.program_type === 'prelaunch').length}</span>
+        </div>
+        {data.allCouponCodes.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -433,8 +439,10 @@ export default function CouponsClient() {
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-brand-primary/40 py-4 text-center">No coupon codes yet. Click &quot;+ Create Coupon&quot; to add one.</p>
+        )}
+      </div>
     </div>
   )
 }

@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
       code,
       is_primary || false,
       discount_type || 'percentage',
-      discount_value || 10.00
+      discount_value || 10.00,
+      code_type || 'general'
     )
 
     // Sync to Stripe (non-blocking)
@@ -166,7 +167,19 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { sql } = await import('@vercel/postgres')
-    await sql`UPDATE affiliate_codes SET active = ${active}, updated_at = NOW() WHERE id = ${code_id}`
+    const result = await sql`UPDATE affiliate_codes SET active = ${active}, updated_at = NOW() WHERE id = ${code_id} RETURNING stripe_promotion_code_id`
+
+    // Sync active status to Stripe (non-blocking)
+    const stripePromoId = result.rows[0]?.stripe_promotion_code_id
+    if (stripePromoId && process.env.STRIPE_SECRET_KEY) {
+      try {
+        const Stripe = (await import('stripe')).default
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+        await stripe.promotionCodes.update(stripePromoId, { active })
+      } catch (stripeErr) {
+        console.error(`Failed to sync Stripe promotion code ${stripePromoId} active=${active} (non-fatal):`, stripeErr)
+      }
+    }
 
     await createAdminAction({
       admin_email: auth.email,
