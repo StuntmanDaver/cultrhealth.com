@@ -183,7 +183,7 @@ const SECTION_ICONS = [Flame, Zap] as const
 
 function JoinLandingInner() {
   const [member, setMember] = useState<ClubMember | null>(null)
-  const [showSignup, setShowSignup] = useState(true)
+  const [showSignup, setShowSignup] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
@@ -271,11 +271,13 @@ function JoinLandingInner() {
       const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
       if (hasOrdered) {
         setShowLogin(true)
-        setShowSignup(false)
         return
       }
+      // No returning member found — this is a new user
+      setShowSignup(true)
     } catch {
-      // showSignup stays true
+      // Error reading storage — show signup for new users
+      setShowSignup(true)
     }
   }, [])
 
