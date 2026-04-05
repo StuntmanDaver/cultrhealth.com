@@ -150,10 +150,22 @@ function trackVisitorEvent(
 // MAIN WRAPPER
 // =============================================
 
-export function JoinLandingClient() {
+interface ServerMember {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  socialHandle: string
+  signupType: string
+  age?: number
+  gender?: string
+  address?: { street: string; city: string; state: string; zip: string }
+}
+
+export function JoinLandingClient({ serverMember }: { serverMember?: ServerMember | null }) {
   return (
     <JoinCartProvider>
-      <JoinLandingInner />
+      <JoinLandingInner serverMember={serverMember ?? null} />
     </JoinCartProvider>
   )
 }
@@ -169,8 +181,8 @@ interface ClubMember {
   phone: string
   socialHandle: string
   signupType: 'creator' | 'membership' | 'products'
-  gender: 'male' | 'female'
-  age: number
+  gender?: 'male' | 'female'
+  age?: number
   address?: {
     street: string
     city: string
@@ -181,10 +193,11 @@ interface ClubMember {
 
 const SECTION_ICONS = [Flame, Zap] as const
 
-function JoinLandingInner() {
+function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null }) {
   const [member, setMember] = useState<ClubMember | null>(null)
   const [showSignup, setShowSignup] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [memberCheckDone, setMemberCheckDone] = useState(!!serverMember) // Skip loading if server already resolved
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
   const [stockData, setStockData] = useState<StockData>({})
@@ -240,52 +253,118 @@ function JoinLandingInner() {
   }, [])
 
   useEffect(() => {
+    // --- Priority 1: Server-side DB-verified member (cookie was present + DB confirmed) ---
+    if (serverMember) {
+      const memberData: ClubMember = {
+        firstName: serverMember.firstName,
+        lastName: serverMember.lastName,
+        email: serverMember.email,
+        phone: serverMember.phone,
+        socialHandle: serverMember.socialHandle || '',
+        signupType: (serverMember.signupType as ClubMember['signupType']) || 'products',
+        gender: serverMember.gender as ClubMember['gender'] || undefined,
+        age: serverMember.age || undefined,
+        address: serverMember.address,
+      }
+      setMember(memberData)
+      setShowSignup(false)
+      setMemberCheckDone(true)
+      // Re-hydrate localStorage so future client-side checks work
+      try { localStorage.setItem('cultr_club_member', JSON.stringify(memberData)) } catch { /* ignore */ }
+      return
+    }
+
     try {
+      // --- Priority 2: Localhost dev bypass ---
       if (window.location.hostname === 'localhost') {
         setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products', gender: 'male', age: 30 })
         setShowSignup(false)
+        setMemberCheckDone(true)
         return
       }
+
+      // --- Priority 3: Client-side localStorage ---
       const lsData = localStorage.getItem('cultr_club_member')
       if (lsData) {
         const data = JSON.parse(lsData)
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
           setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
+          setMemberCheckDone(true)
           return
         }
         localStorage.removeItem('cultr_club_member')
       }
+
+      // --- Priority 4: Client-side cookie ---
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
         const data = JSON.parse(decodeURIComponent(stored.substring('cultr_club_visitor='.length)))
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
           setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)
+          setMemberCheckDone(true)
           localStorage.setItem('cultr_club_member', JSON.stringify(data))
           return
         }
         document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
         document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
       }
+
+      // --- Priority 5: Previous order flag -> show login ---
       const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
       if (hasOrdered) {
         setShowLogin(true)
+        setMemberCheckDone(true)
         return
       }
-      // No returning member found — this is a new user
-      setShowSignup(true)
+
+      // --- Priority 6: Server-side fallback API check ---
+      // Cookie may exist (httpOnly=false, sent automatically) but localStorage
+      // was cleared. Ask the server to verify via DB lookup.
+      fetch('/api/club/check-member', { credentials: 'include' })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data?.member?.firstName && data?.member?.email && data?.member?.phone) {
+            const m: ClubMember = {
+              firstName: data.member.firstName,
+              lastName: data.member.lastName || '',
+              email: data.member.email,
+              phone: data.member.phone,
+              socialHandle: data.member.socialHandle || '',
+              signupType: data.member.signupType || 'products',
+              gender: data.member.gender || undefined,
+              age: data.member.age || undefined,
+              address: data.member.address,
+            }
+            setMember(m)
+            setShowSignup(false)
+            try { localStorage.setItem('cultr_club_member', JSON.stringify(m)) } catch { /* ignore */ }
+          } else {
+            // Truly a new visitor — no record anywhere
+            setShowSignup(true)
+          }
+        })
+        .catch(() => {
+          // Network error on fallback — show signup
+          setShowSignup(true)
+        })
+        .finally(() => {
+          setMemberCheckDone(true)
+        })
     } catch {
       // Error reading storage — show signup for new users
       setShowSignup(true)
+      setMemberCheckDone(true)
     }
-  }, [])
+  }, [serverMember])
 
   const handleSignupComplete = useCallback((data: ClubMember) => {
     localStorage.setItem('cultr_club_member', JSON.stringify(data))
     const cookieData = encodeURIComponent(JSON.stringify(data))
     const domainPart = window.location.hostname.includes('cultrhealth.com') ? '; domain=.cultrhealth.com' : ''
-    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 90}${domainPart}; SameSite=Lax`
+    const securePart = window.location.protocol === 'https:' ? '; Secure' : ''
+    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 90}${domainPart}; SameSite=Lax${securePart}`
     setMember(data)
     setShowSignup(false)
     setShowLogin(false)
@@ -317,6 +396,19 @@ function JoinLandingInner() {
     setOrderSubmitted(false)
     cart.clearCart()
   }, [cart])
+
+  // While checking member status (Priority 6 async fetch), show a brief loading overlay
+  // to prevent bare-page flash where neither signup nor content is visible
+  if (!memberCheckDone && !member && !showSignup && !showLogin) {
+    return (
+      <div className="flex flex-col min-h-screen bg-brand-cream items-center justify-center">
+        <div className="flex flex-col items-end leading-none animate-pulse">
+          <span className="font-display font-bold text-3xl uppercase text-brand-primary">CULTR</span>
+          <span className="font-display font-medium text-[10px] tracking-[0.14em] uppercase text-brand-primary/40 -mt-0.5">Health</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-brand-cream overflow-x-hidden" style={{ touchAction: 'manipulation' }}>
@@ -663,6 +755,32 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
   const [signupType, setSignupType] = useState<'creator' | 'membership' | 'products' | ''>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [emailChecked, setEmailChecked] = useState(false)
+  const [welcomeBack, setWelcomeBack] = useState(false)
+
+  // When user tabs out of email field, check if they're already a member.
+  // The API only returns firstName (no PII) for unauthenticated email lookups.
+  // We show a "Welcome back!" banner but don't auto-fill sensitive fields.
+  async function handleEmailBlur() {
+    const trimmed = email.trim().toLowerCase()
+    if (!trimmed || !trimmed.includes('@') || emailChecked) return
+    setEmailChecked(true)
+    try {
+      const res = await fetch(`/api/club/check-member?email=${encodeURIComponent(trimmed)}`)
+      if (!res.ok) { setWelcomeBack(false); return }
+      const data = await res.json()
+      if (data.member?.exists) {
+        // Only firstName is returned from unauthenticated email lookups (security)
+        if (data.member.firstName && !firstName) setFirstName(data.member.firstName)
+        setWelcomeBack(true)
+      } else {
+        // Different email, not a member — reset welcome state
+        setWelcomeBack(false)
+      }
+    } catch {
+      // Non-blocking
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -757,11 +875,17 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
 
         <form onSubmit={handleSubmit} className="px-6 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
           <h2 className="font-display text-xl font-bold text-brand-primary text-center mb-1">
-            Join CULTR Club
+            {welcomeBack ? 'Welcome Back!' : 'Join CULTR Club'}
           </h2>
           <p className="text-brand-secondary/60 text-sm text-center mb-5">
-            Browse therapies &amp; build your order
+            {welcomeBack ? 'We found your account — fill in your details to continue' : 'Browse therapies & build your order'}
           </p>
+
+          {welcomeBack && (
+            <div className="mb-4 p-3 bg-mint/60 border border-sage/40 rounded-xl text-sm text-brand-primary">
+              We recognized your email. Complete the form below to continue shopping.
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
@@ -772,7 +896,7 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
               <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
               <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             </div>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
+            <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailChecked(false) }} onBlur={handleEmailBlur} placeholder="Email" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Street Address" required className="w-full px-4 py-3 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40" />
             <div className="grid grid-cols-3 gap-2">

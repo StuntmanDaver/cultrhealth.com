@@ -128,13 +128,17 @@ export async function POST(request: Request) {
       console.error('[club/signup] Mailchimp sync error (non-fatal):', err)
     )
 
-    // Set visitor cookie (7 days)
+    // Set visitor cookie (90 days)
+    const validSignupTypeForCookie = ['creator', 'membership', 'products'].includes(signupType) ? signupType : 'products'
     const cookieData = JSON.stringify({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: normalizedEmail,
       phone: phone.trim(),
       socialHandle: socialHandle?.trim() || '',
+      signupType: validSignupTypeForCookie,
+      age: age && Number(age) >= 18 && Number(age) <= 120 ? Number(age) : undefined,
+      gender: gender === 'male' || gender === 'female' ? gender : undefined,
       address: address?.street ? { street: address.street.trim(), city: address.city?.trim() || '', state: address.state?.trim() || '', zip: address.zip?.trim() || '' } : undefined,
     })
 

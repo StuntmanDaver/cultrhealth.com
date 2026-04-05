@@ -28,7 +28,8 @@ export async function POST(request: Request) {
 
     try {
       const result = await sql`
-        SELECT *
+        SELECT name, email, phone, social_handle, signup_type, age, gender,
+               address_street, address_city, address_state, address_zip
         FROM club_members
         WHERE LOWER(email) = LOWER(${normalizedEmail})
         LIMIT 1
@@ -53,10 +54,10 @@ export async function POST(request: Request) {
       }
 
       // Return member data and set cookie
-      const nameParts = member.name.split(' ');
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(' ');
-      
+      const nameParts = (member.name || '').split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
       const memberData = {
         firstName,
         lastName,
@@ -64,6 +65,8 @@ export async function POST(request: Request) {
         phone: member.phone || '',
         socialHandle: member.social_handle || '',
         signupType: member.signup_type || 'products',
+        age: member.age ? Number(member.age) : undefined,
+        gender: member.gender || undefined,
         address: member.address_street ? {
           street: member.address_street,
           city: member.address_city || '',
@@ -74,7 +77,7 @@ export async function POST(request: Request) {
 
       const response = NextResponse.json(memberData, { status: 200 })
 
-      // Set visitor cookie (7 days)
+      // Set visitor cookie (90 days)
       const cookieData = encodeURIComponent(JSON.stringify(memberData))
       const domain = getCookieDomain()
       response.cookies.set('cultr_club_visitor', cookieData, {
