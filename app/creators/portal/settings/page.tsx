@@ -12,6 +12,7 @@ export default function SettingsPage() {
   const [bio, setBio] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [initialized, setInitialized] = useState(false)
 
   // Initialize form when creator loads
@@ -29,6 +30,7 @@ export default function SettingsPage() {
     e.preventDefault()
     setSaving(true)
     setSaved(false)
+    setSaveError(null)
 
     try {
       const res = await fetch('/api/creators/profile', {
@@ -46,9 +48,12 @@ export default function SettingsPage() {
         setSaved(true)
         await refreshAll()
         setTimeout(() => setSaved(false), 3000)
+      } else {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }))
+        setSaveError(data.error || 'Failed to save changes')
       }
     } catch (err) {
-      console.error('Failed to save profile:', err)
+      setSaveError('Network error — check your connection')
     } finally {
       setSaving(false)
     }
@@ -139,6 +144,11 @@ export default function SettingsPage() {
           {saved && (
             <span className="text-sm text-emerald-600 font-medium animate-fade-in">
               Changes saved
+            </span>
+          )}
+          {saveError && (
+            <span className="text-sm text-red-600 font-medium animate-fade-in">
+              {saveError}
             </span>
           )}
         </div>

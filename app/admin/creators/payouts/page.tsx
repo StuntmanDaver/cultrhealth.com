@@ -20,6 +20,7 @@ interface SkippedResult {
 
 export default function AdminPayoutsPage() {
   const [running, setRunning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<{
     payouts: PayoutResult[]
     skipped: SkippedResult[]
@@ -32,6 +33,7 @@ export default function AdminPayoutsPage() {
   const handleRunBatch = async () => {
     setRunning(true)
     setResults(null)
+    setError(null)
 
     try {
       const res = await fetch('/api/admin/creators/payouts/batch', {
@@ -43,9 +45,12 @@ export default function AdminPayoutsPage() {
       if (res.ok) {
         const data = await res.json()
         setResults(data)
+      } else {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }))
+        setError(data.error || `Payout batch failed (HTTP ${res.status})`)
       }
     } catch (err) {
-      console.error('Payout batch failed:', err)
+      setError(err instanceof Error ? err.message : 'Network error — check your connection')
     } finally {
       setRunning(false)
     }
@@ -104,6 +109,19 @@ export default function AdminPayoutsPage() {
             {running ? 'Processing...' : 'Run Payout Batch'}
           </button>
         </div>
+
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-red-800 text-sm">Payout batch failed</p>
+                <p className="text-sm text-red-700 mt-1">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Results */}
         {results && (
