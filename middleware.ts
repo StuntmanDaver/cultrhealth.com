@@ -4,31 +4,18 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
 
-  // Rewrite join.cultrhealth.com to /join route
+  // Serve the restored join landing page from /join only at the root hostname path.
   if (
     hostname === 'join.cultrhealth.com' ||
     hostname === 'join.staging.cultrhealth.com'
   ) {
     const url = request.nextUrl.clone()
 
-    // Pass through API calls, static assets, tracking links, creator pages, and /join paths unchanged
-    if (
-      url.pathname.startsWith('/api') ||
-      url.pathname.startsWith('/join') ||
-      url.pathname.startsWith('/r/') ||
-      url.pathname.startsWith('/creators/') ||
-      url.pathname.startsWith('/_next') ||
-      url.pathname.startsWith('/images') ||
-      url.pathname.startsWith('/favicon') ||
-      url.pathname.startsWith('/cultr-') ||
-      url.pathname === '/robots.txt' ||
-      url.pathname === '/sitemap.xml'
-    ) {
+    if (url.pathname !== '/') {
       return NextResponse.next()
     }
 
-    // Rewrite root and all other paths to /join
-    url.pathname = url.pathname === '/' ? '/join' : `/join${url.pathname}`
+    url.pathname = '/join'
     const response = NextResponse.rewrite(url)
 
     // Capture visitor context on first visit (UTM params + referrer)
