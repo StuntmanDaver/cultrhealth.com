@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
-import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, normalizeJoinCartItems } from '@/lib/config/join-therapies'
+import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
@@ -44,12 +44,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
+    const therapyIds = items.flatMap((item) =>
+      typeof item?.therapyId === 'string' && item.therapyId.trim()
+        ? [item.therapyId]
+        : []
+    )
+    if (new Set(therapyIds).size !== therapyIds.length) {
+      return NextResponse.json(
+        { error: 'Cart contains duplicate therapies. Please refresh your cart.' },
+        { status: 400 }
+      )
+    }
+
     const orderItems = normalizeJoinCartItems(items)
     if (orderItems.length !== items.length) {
       return NextResponse.json(
         { error: 'One or more selected therapies are no longer available. Please refresh your cart.' },
         { status: 400 }
       )
+    }
+
+    const couponPolicy = getJoinCouponPolicy(orderItems)
+    if (couponCode && !couponPolicy.couponAllowed) {
+      return NextResponse.json({ error: couponPolicy.couponError }, { status: 400 })
     }
 
     // Stock validation from DB — reject out-of-stock or over-limit items
@@ -76,7 +93,10 @@ export async function POST(request: Request) {
     }, 0)
     // Bundle discount: 10% off items whose bundleWith partner is in the cart
     // OWNER and noBundleStack coupons override bundle discount (they don't stack)
-    const skipBundle = couponCode?.trim().toUpperCase() === 'OWNER' || couponResult?.noBundleStack
+    const skipBundle =
+      couponCode?.trim().toUpperCase() === 'OWNER' ||
+      couponResult?.noBundleStack ||
+      couponPolicy.forceNoBundleStack
     const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(orderItems)
     const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
     // Coupon discount applied after bundle discount

@@ -50,6 +50,12 @@ export interface JoinCatalogCartItem {
   quantity: number
 }
 
+export interface JoinCouponPolicy {
+  couponAllowed: boolean
+  couponError: string | null
+  forceNoBundleStack: boolean
+}
+
 export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
   {
     title: 'Cut — Weight Loss',
@@ -281,6 +287,27 @@ export function normalizeJoinCartItems(
       },
     ]
   })
+}
+
+/** Join-only coupon rules derived from the active cart composition. */
+export function getJoinCouponPolicy(
+  items: Array<{ therapyId: string; quantity: number }>
+): JoinCouponPolicy {
+  const orderItems = normalizeJoinCartItems(items)
+  const therapyIds = new Set(orderItems.map((item) => item.therapyId))
+
+  const isBacWaterOnly =
+    orderItems.length > 0 &&
+    therapyIds.size === 1 &&
+    therapyIds.has('bacteriostatic-water')
+
+  return {
+    couponAllowed: !isBacWaterOnly,
+    couponError: isBacWaterOnly
+      ? 'Coupons require another therapy in the cart. Bacteriostatic water alone is not eligible.'
+      : null,
+    forceNoBundleStack: therapyIds.has('ghk-cu') && therapyIds.has('glutathione'),
+  }
 }
 
 /** Get effective stock status (defaults to 'in_stock' when not set) */

@@ -6,7 +6,7 @@ import {
   Loader2, Flame, Zap, Shield, Package, ArrowRight, Tag, AlertTriangle,
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
-import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
 import { parseCookieJson } from '@/lib/utils'
 
 type StockData = Record<string, { status: string; quantity: number | null }>
@@ -881,7 +881,7 @@ function SignupModal({ onComplete, onExistingMemberDetected, visitorCtxRef, memb
       // Store memberId for subsequent event tracking
       if (data.memberId) memberIdRef.current = data.memberId
       // Fire signup event
-      if (ctx) trackVisitorEvent(ctx.sessionId, 'signup', { email: email.trim(), signupType }, data.memberId)
+      if (ctx) trackVisitorEvent(ctx.sessionId, 'signup', { signupType }, data.memberId)
       onComplete({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -1124,17 +1124,36 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
   const bacWaterMaxQty = bacWaterStock?.status === 'out_of_stock' ? 0 : (bacWaterStock?.quantity ?? Infinity)
   const bacWaterUpgradeQty = Math.min(4, bacWaterMaxQty)
   const showShippingWarning = isBacWaterOnly && bacWaterQty < 4 && bacWaterQty < bacWaterMaxQty
+  const joinCouponPolicy = getJoinCouponPolicy(cart.items)
+
+  useEffect(() => {
+    if (appliedCoupon && !joinCouponPolicy.couponAllowed) {
+      setAppliedCoupon(null)
+      setCouponError(joinCouponPolicy.couponError || 'Coupon is no longer valid for this cart.')
+    }
+  }, [appliedCoupon, joinCouponPolicy.couponAllowed, joinCouponPolicy.couponError])
 
   async function handleApplyCoupon() {
     const code = couponInput.trim().toUpperCase()
     if (!code) return
+    if (!joinCouponPolicy.couponAllowed) {
+      setAppliedCoupon(null)
+      setCouponError(joinCouponPolicy.couponError || 'Coupon is not valid for this cart.')
+      return
+    }
     setCouponError('')
     setCouponApplying(true)
     try {
       const res = await fetch('/api/club/validate-coupon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({
+          code,
+          items: cart.items.map((item) => ({
+            therapyId: item.therapyId,
+            quantity: item.quantity,
+          })),
+        }),
       })
       const data = await res.json()
       if (data.valid) {
@@ -1163,6 +1182,12 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
     if (!member || cart.items.length === 0) return
     setError('')
     setSubmitting(true)
+    if (appliedCoupon && !joinCouponPolicy.couponAllowed) {
+      setAppliedCoupon(null)
+      setError(joinCouponPolicy.couponError || 'Coupon is no longer valid for this cart.')
+      setSubmitting(false)
+      return
+    }
     const cartItems = cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity }))
     // Track begin_checkout
     onTrackEvent?.('begin_checkout', { itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null })
@@ -1275,7 +1300,7 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
           <div className="pt-2 pb-4">
             {(() => {
               const rawSubtotal = cart.getCartTotal()
-              const bundleDisc = (appliedCoupon?.code === 'OWNER' || appliedCoupon?.noBundleStack) ? 0 : cart.getBundleDiscount()
+              const bundleDisc = (appliedCoupon?.code === 'OWNER' || appliedCoupon?.noBundleStack || joinCouponPolicy.forceNoBundleStack) ? 0 : cart.getBundleDiscount()
               const subtotalAfterBundle = rawSubtotal - bundleDisc
               const couponAmt = appliedCoupon && subtotalAfterBundle > 0
                 ? Math.round(subtotalAfterBundle * appliedCoupon.discount) / 100

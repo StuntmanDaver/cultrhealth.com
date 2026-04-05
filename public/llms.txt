@@ -5,7 +5,7 @@
 CULTR Health is a longevity and health optimization clinic offering:
 - Diagnostic lab testing and biomarker tracking
 - Hormone optimization therapy (TRT, HRT)
-- Peptide therapy protocols
+- Clinician-guided metabolic care
 - Personalized health protocols
 - Data-driven wellness optimization
 
@@ -16,13 +16,11 @@ CULTR Health is a longevity and health optimization clinic offering:
 - **Curated Membership**: VIP access with provider notes and custom requests
 
 ## Products
-We offer research-grade peptides and compounds including:
-- Growth factors (CJC-1295, Ipamorelin, Sermorelin, Tesamorelin)
-- Repair peptides (BPC-157, TB-500, GHK-Cu)
-- Metabolic compounds (GLP-1 variants, AOD-9604, MOTS-c)
-- Bioregulators (Epitalon, DSIP, Pinealon)
-- Neuropeptides (Selank, Semax, Oxytocin)
-- Immune support (Thymosin Alpha-1, LL-37, KPV)
+We offer clinician-reviewed wellness categories including:
+- Metabolic support protocols
+- Hormone optimization therapies
+- Antioxidant and recovery support
+- Personalized provider-guided care
 
 ## Contact
 Website: https://cultrhealth.com

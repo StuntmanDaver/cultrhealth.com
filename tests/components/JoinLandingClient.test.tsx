@@ -13,7 +13,9 @@ type JsonResponse = {
   json: () => Promise<unknown>
 }
 
-const fetchMock = vi.fn<(input: string | URL | Request) => Promise<JsonResponse>>()
+const fetchMock = vi.fn<
+  (input: string | URL | Request, init?: RequestInit) => Promise<JsonResponse>
+>()
 
 function createStorage() {
   const storage = new Map<string, string>()
@@ -168,5 +170,77 @@ describe('JoinLandingClient', () => {
 
     expect(screen.getByPlaceholderText('Email')).toHaveValue('existing@example.com')
     expect(screen.queryByText('Join CULTR Club')).not.toBeInTheDocument()
+  })
+
+  it('omits raw email from signup tracking payloads', async () => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input)
+
+      if (url.startsWith('/api/stock')) {
+        return jsonResponse({ stock: {} })
+      }
+
+      if (url === '/api/club/event') {
+        return jsonResponse({})
+      }
+
+      if (url === '/api/club/check-member') {
+        return jsonResponse({ member: null }, false)
+      }
+
+      if (url === '/api/club/signup') {
+        return jsonResponse({
+          success: true,
+          memberId: '11111111-1111-1111-1111-111111111111',
+        })
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
+
+    render(<JoinLandingClient />)
+
+    const firstNameInput = await screen.findByPlaceholderText('First Name')
+    fireEvent.change(firstNameInput, { target: { value: 'Taylor' } })
+    fireEvent.change(screen.getByPlaceholderText('Last Name'), { target: { value: 'Member' } })
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'taylor@example.com' } })
+    fireEvent.change(screen.getByPlaceholderText('Phone Number'), { target: { value: '555-222-3333' } })
+    fireEvent.change(screen.getByPlaceholderText('Street Address'), { target: { value: '123 Main St' } })
+    fireEvent.change(screen.getByPlaceholderText('City'), { target: { value: 'Miami' } })
+    fireEvent.change(screen.getByPlaceholderText('State'), { target: { value: 'FL' } })
+    fireEvent.change(screen.getByPlaceholderText('ZIP'), { target: { value: '33101' } })
+    fireEvent.change(screen.getByPlaceholderText('Your age'), { target: { value: '30' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Female' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Products' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Join Free & Start Shopping' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Welcome, Taylor')).toBeInTheDocument()
+    })
+
+    const signupEventCall = fetchMock.mock.calls.find(([input, init]) => {
+      if (String(input) !== '/api/club/event' || !init?.body) {
+        return false
+      }
+
+      const payload = JSON.parse(String(init.body)) as {
+        eventType?: string
+      }
+
+      return payload.eventType === 'signup'
+    })
+
+    expect(signupEventCall).toBeDefined()
+
+    const signupPayload = JSON.parse(
+      String((signupEventCall?.[1] as RequestInit | undefined)?.body)
+    ) as {
+      eventData?: Record<string, unknown>
+    }
+
+    expect(signupPayload.eventData).toEqual({
+      signupType: 'products',
+    })
+    expect(signupPayload.eventData).not.toHaveProperty('email')
   })
 })
