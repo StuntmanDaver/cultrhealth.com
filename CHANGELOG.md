@@ -1,3 +1,52 @@
+## [2026-04-04] - LegitScript Compliance Foundation + Asher Med Removal
+
+### Asher Med Integration Removed
+- Deleted 9 core files: API client (`lib/asher-med-api.ts`), config (`lib/config/asher-med.ts`), product mapping, documentation, scripts, admin dashboard section, cron sync route
+- Refactored 14 API routes to use local DB only — no external Asher Med API calls
+- Extracted reusable utilities to `lib/utils/phone.ts`, `lib/utils/health.ts`, `lib/config/us-states.ts`
+- Updated 12 test files to match new local-DB-only behavior
+- Database columns (`asher_patient_id`, `asher_orders`) retained — no destructive migration
+- 61 files changed, net -2,045 lines removed
+
+### New Pharmacy Partner: St. Luke Compounding Pharmacy
+- **Address:** 9338 Little Rd, New Port Richey, FL 34654
+- **Phone:** (727) 416-2006 · **Fax:** (727) 416-2007 · **Toll-Free:** (877) 310-5668
+- **FL Pharmacy License:** PH 32747 (expires Feb 28, 2027)
+- Centralized in `lib/config/compliance.ts` — single source of truth
+
+### LegitScript Compliance Components
+- `components/compliance/FDAStatusBadge.tsx` — color-coded FDA status per therapy
+- `components/compliance/DispensingPharmacyInfo.tsx` — full + compact variants with fax/toll-free
+- `components/compliance/TestimonialDisclaimer.tsx` — standardized disclaimer text
+- Footer: dispensing pharmacy info section added (LegitScript Standard 4 requirement)
+- Footer: "Provider Credentials" link added to legal links
+- Footer: compounded medication disclaimer clause added
+- Testimonials section: disclaimer wired below scrolling columns
+
+### Therapy & Product Claim Qualification
+- All 11 therapy descriptions qualified with "not FDA-approved" and clinical trial citations
+- Semaglutide: STEP 1 trial citation, "14.9% body weight reduction"
+- Tirzepatide: SURMOUNT-1 trial citation, "up to 22.5% body weight reduction"
+- Retatrutide: flagged as "investigational", Phase 2 trial citation
+- Melanotan 2: flagged with "FDA has issued consumer warnings"
+- Removed superlatives: "most potent", "powerhouse", "clinically proven", "maximum results"
+- Fixed "FDA-studied" language on Tesamorelin to accurate regulatory disclosure
+- All descriptions include "individual results vary" and "prescribed when clinically appropriate"
+
+### Legal Pages Rewritten
+- **Medical Disclaimer** (`/legal/medical-disclaimer`): comprehensive rewrite with St. Luke pharmacy block, compounded medication section, FDA MedWatch reporting link, educational content disclaimer
+- **Privacy Policy** (`/legal/privacy`): rewritten with HIPAA compliance sections, data processor table (St. Luke, Healthie, Stripe, Vercel/Neon, Resend, SiPhox, Cloudflare) with BAA status, breach notification, data retention (7-year), user rights (access, correction, restriction, accounting, deletion, portability)
+- **Provider Credentials** (`/legal/provider-credentials`): new page with provider profiles, pharmacy license PH 32747, FL DOH verification link
+
+### LegitScript Audit Plan
+- Created `docs/LEGITSCRIPT-AUDIT-PLAN.md` — exhaustive 17-section audit covering all 9 LegitScript standards, page-by-page checklist for 77+ pages, FDA status matrix for all medications, risk register, 6-week implementation timeline
+
+### Files Changed
+- 9 files deleted, 43 files modified, 8 new files created
+- 48/48 test files passing, 608/608 tests, 0 TypeScript errors
+
+---
+
 ## [2026-04-04] - Trust Strip on join.cultrhealth.com
 
 ### Pharmaceutical credentialing strip added to join page hero zone
