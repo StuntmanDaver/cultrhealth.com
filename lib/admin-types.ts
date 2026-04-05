@@ -319,6 +319,14 @@ export interface MembershipAdminRow {
   cancellation_reason: string | null
 }
 
+export interface InventoryAlertRow {
+  therapyId: string
+  therapyName: string
+  stockStatus: 'low_stock' | 'out_of_stock'
+  stockQuantity: number | null
+  updatedAt: string
+}
+
 export interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -342,6 +350,7 @@ export interface AnalyticsData {
   revenueTimeSeries: RevenueTimeSeriesPoint[]
   creatorLinkPerformance: CreatorLinkPerformanceRow[]
   clubOrderFulfillment: Record<string, number>
+  inventoryAlerts: InventoryAlertRow[]
   periodDays: number
   generatedAt: string
 }

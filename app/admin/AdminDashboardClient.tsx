@@ -305,6 +305,59 @@ export default function AdminDashboardClient() {
             />
           </div>
 
+          {/* Inventory Alerts */}
+          {data.inventoryAlerts && data.inventoryAlerts.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">⚠️</span>
+                  <h2 className="font-display text-lg text-amber-900">Inventory Alerts</h2>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-200 text-amber-800">
+                    {data.inventoryAlerts.length}
+                  </span>
+                </div>
+                <Link href="/admin/inventory" className="text-sm text-amber-700 hover:text-amber-900 underline">
+                  Manage inventory →
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {data.inventoryAlerts.map((item) => {
+                  const isOut = item.stockStatus === 'out_of_stock'
+                  return (
+                    <div
+                      key={item.therapyId}
+                      className={`flex items-center justify-between rounded-lg px-4 py-3 ${
+                        isOut
+                          ? 'bg-red-100 border border-red-200'
+                          : 'bg-amber-100 border border-amber-200'
+                      }`}
+                    >
+                      <div className="min-w-0">
+                        <p className={`text-sm font-semibold truncate ${isOut ? 'text-red-800' : 'text-amber-800'}`}>
+                          {item.therapyName}
+                        </p>
+                        <p className={`text-xs ${isOut ? 'text-red-600' : 'text-amber-600'}`}>
+                          {isOut
+                            ? 'Out of Stock'
+                            : item.stockQuantity != null
+                              ? `Only ${item.stockQuantity} left`
+                              : 'Low Stock'}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 ml-3 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        isOut
+                          ? 'bg-red-200 text-red-800'
+                          : 'bg-amber-200 text-amber-800'
+                      }`}>
+                        {isOut ? 'OUT' : 'LOW'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Revenue Trend Chart */}
           {data.revenueTimeSeries && data.revenueTimeSeries.length > 0 && (
             <div className="bg-white rounded-xl border border-brand-primary/10 p-6">

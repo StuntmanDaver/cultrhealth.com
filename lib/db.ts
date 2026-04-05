@@ -2587,3 +2587,35 @@ export async function getClubOrderFulfillmentCounts(): Promise<Record<string, nu
     throw new DatabaseError('Failed to fetch fulfillment counts', error)
   }
 }
+
+/**
+ * Get inventory items that are low_stock or out_of_stock for dashboard alerts.
+ */
+export async function getInventoryAlerts(): Promise<{
+  therapyId: string
+  therapyName: string
+  stockStatus: 'low_stock' | 'out_of_stock'
+  stockQuantity: number | null
+  updatedAt: string
+}[]> {
+  try {
+    const result = await sql`
+      SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at
+      FROM product_inventory
+      WHERE stock_status IN ('low_stock', 'out_of_stock')
+      ORDER BY
+        CASE stock_status WHEN 'out_of_stock' THEN 0 ELSE 1 END,
+        stock_quantity ASC NULLS LAST
+    `
+    return result.rows.map(r => ({
+      therapyId: r.therapy_id,
+      therapyName: r.therapy_name,
+      stockStatus: r.stock_status as 'low_stock' | 'out_of_stock',
+      stockQuantity: r.stock_quantity != null ? Number(r.stock_quantity) : null,
+      updatedAt: r.updated_at,
+    }))
+  } catch (error) {
+    console.error('Database error fetching inventory alerts:', error)
+    throw new DatabaseError('Failed to fetch inventory alerts', error)
+  }
+}
