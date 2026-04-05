@@ -4,11 +4,8 @@ import { getCronStatuses } from '@/lib/cron-logger'
 
 /** Expected cron schedule for health assessment */
 const CRON_SCHEDULES: Record<string, { schedule: string; maxStaleMinutes: number }> = {
-  'siphox-fulfillment': { schedule: 'Every 15 min', maxStaleMinutes: 30 },
-  'siphox-results': { schedule: 'Every hour', maxStaleMinutes: 120 },
   'approve-commissions': { schedule: '2 AM daily', maxStaleMinutes: 1500 },
   'update-tiers': { schedule: '3 AM daily', maxStaleMinutes: 1500 },
-  'siphox-status-sync': { schedule: 'Every 30 min', maxStaleMinutes: 60 },
 }
 
 export async function GET() {

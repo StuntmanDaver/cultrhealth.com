@@ -13,10 +13,6 @@ import {
   Circle,
   Timer,
   UserPlus,
-  TestTube2,
-  ChevronRight,
-  CheckCircle,
-  AlertTriangle,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
@@ -241,124 +237,6 @@ function GettingStartedCard({
   )
 }
 
-function LabsStatusCard() {
-  const [kitStatusMessage, setKitStatusMessage] = useState<string | null>(null)
-  const [kitStatusLoading, setKitStatusLoading] = useState(true)
-  const [needsPhone, setNeedsPhone] = useState(false)
-  const [resultsSummary, setResultsSummary] = useState<{
-    totalBiomarkers: number
-    optimalCount: number
-    needsAttentionCount: number
-  } | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    const KIT_STATUS_MESSAGES: Record<string, string> = {
-      no_kit: 'Get started with biomarker testing',
-      ordered: 'Kit ordered — preparing to ship',
-      shipped: 'Kit shipped — register when it arrives',
-      registered: 'Kit registered — collect your sample',
-      sample_mailed: 'Sample in transit to lab',
-      processing: 'Lab processing your sample',
-      results_ready: 'Results ready — view your biomarkers',
-    }
-    fetch('/api/creators/labs')
-      .then(async (res) => {
-        if (cancelled || !res.ok) return
-        const data = await res.json()
-        if (cancelled) return
-
-        if (data.needsPhone) {
-          setNeedsPhone(true)
-          setKitStatusMessage('Add your phone number to access blood testing')
-          return
-        }
-
-        if (data.kitOrders && data.kitOrders.length > 0) {
-          const state = data.kitOrders[0].lifecycleState || 'no_kit'
-          setKitStatusMessage(KIT_STATUS_MESSAGES[state] || KIT_STATUS_MESSAGES.no_kit)
-
-          if (state === 'results_ready') {
-            fetch('/api/creators/results')
-              .then(async (rRes) => {
-                if (cancelled || !rRes.ok) return
-                const rData = await rRes.json()
-                if (cancelled) return
-                if (rData.report?.summary) {
-                  setResultsSummary({
-                    totalBiomarkers: rData.report.summary.totalBiomarkers,
-                    optimalCount: rData.report.summary.optimalCount,
-                    needsAttentionCount: rData.report.summary.needsAttentionCount,
-                  })
-                }
-              })
-              .catch(() => {})
-          }
-        } else {
-          setKitStatusMessage(KIT_STATUS_MESSAGES.no_kit)
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setKitStatusLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  if (kitStatusLoading) {
-    return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-5 animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-stone-100" />
-          <div className="flex-1">
-            <div className="h-4 bg-stone-100 rounded w-1/3 mb-2" />
-            <div className="h-3 bg-stone-100 rounded w-1/2" />
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!kitStatusMessage) return null
-
-  return (
-    <Link
-      href={needsPhone ? '/creators/portal/settings' : '/creators/portal/labs'}
-      className="block rounded-2xl border border-stone-200 bg-white p-5 hover:border-cultr-forest/20 transition-colors"
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-cultr-mint flex items-center justify-center">
-            <TestTube2 className="w-5 h-5 text-cultr-forest" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-cultr-forest">Blood Test Kit</p>
-            <p className="text-xs text-cultr-textMuted">{kitStatusMessage}</p>
-          </div>
-        </div>
-        <ChevronRight className="w-4 h-4 text-cultr-textMuted" />
-      </div>
-      {resultsSummary && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-stone-100">
-          <span className="inline-flex items-center gap-1 rounded-full bg-cultr-forest/5 px-2.5 py-1 text-xs font-medium text-cultr-forest">
-            {resultsSummary.totalBiomarkers} Tested
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-            <CheckCircle className="w-3 h-3" />
-            {resultsSummary.optimalCount} Optimal
-          </span>
-          {resultsSummary.needsAttentionCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-              <AlertTriangle className="w-3 h-3" />
-              {resultsSummary.needsAttentionCount} Attention
-            </span>
-          )}
-        </div>
-      )}
-    </Link>
-  )
-}
-
 export default function CreatorDashboardPage() {
   const { metrics, creator, links, codes, linkStats, earningsTrend, loading } = useCreator()
 
@@ -406,9 +284,6 @@ export default function CreatorDashboardPage() {
         hasClicks={(metrics?.totalClicks ?? 0) > 0}
         hasOrders={(metrics?.totalOrders ?? 0) > 0}
       />
-
-      {/* ─── LABS STATUS ─── */}
-      <LabsStatusCard />
 
       {/* ─── PERFORMANCE ─── */}
       <section>

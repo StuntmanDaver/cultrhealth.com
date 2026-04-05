@@ -53,7 +53,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https: http:",
-              "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io https://*.siphox.com",
+              "connect-src 'self' https://api.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io",
               "frame-src 'self' https://js.stripe.com https://challenges.cloudflare.com",
               "object-src 'none'",
               "base-uri 'self'",

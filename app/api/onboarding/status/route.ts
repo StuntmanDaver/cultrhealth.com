@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // Look up onboarding record by email
     const result = await sql`
       SELECT step, blood_test_ordered, intake_completed, appointment_scheduled,
-             healthie_patient_id, siphox_customer_id, completed_at
+             healthie_patient_id, completed_at
       FROM member_onboarding
       WHERE LOWER(email) = LOWER(${session.email})
       ORDER BY created_at DESC

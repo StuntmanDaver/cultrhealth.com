@@ -925,11 +925,8 @@ export default function AdminDashboardClient() {
                     never_run: 'bg-gray-400',
                   }
                   const labelMap: Record<string, string> = {
-                    'siphox-fulfillment': 'SiPhox Fulfillment',
-                    'siphox-results': 'SiPhox Results',
                     'approve-commissions': 'Commission Approval',
                     'update-tiers': 'Tier Recalculation',
-                    'siphox-status-sync': 'SiPhox Status Sync',
                     'stale-orders': 'Stale Order Alerts',
                   }
 

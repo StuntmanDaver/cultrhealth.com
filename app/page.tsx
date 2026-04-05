@@ -36,9 +36,6 @@ const NewsletterSignup = dynamic(() => import('@/components/site/NewsletterSignu
   loading: () => <div className="h-48 grad-light animate-pulse" />,
 });
 
-const BiomarkerScroll = dynamic(() => import('@/components/site/BiomarkerScroll'), {
-  loading: () => <div className="h-64 bg-brand-cream animate-pulse" />,
-});
 
 const TrustMarquee = dynamic(() => import('@/components/site/TrustMarquee'), {
   loading: () => <div className="h-24 bg-brand-primary animate-pulse" />,
@@ -344,9 +341,6 @@ export default function HomePage() {
 
       {/* ─── Trust Logo Marquee ─── */}
       <TrustMarquee />
-
-      {/* ─── Biomarker Scroll — SiPhox EasyDraw Core ─── */}
-      <BiomarkerScroll />
 
       {/* Bridge: light → dark */}
       <div className="hidden md:block h-28 bridge-light-to-dark" />
