@@ -1,3 +1,16 @@
+## [2026-04-05] - Restore Legacy join.cultrhealth.com Product Catalog
+
+### Legacy join catalog restored
+- Restored `lib/config/join-therapies.ts` to the exact legacy lineup that matched the previously restored `join.cultrhealth.com` site.
+- Replaced the Apr 2026 curated join catalog entries (`sermorelin`, `lipo-c`, `pt-141`, `oxytocin`) with the legacy therapies (`retatrutide`, `ghk-cu`, `tesa-ipa`, `cjc1295-ipa`, `semax-selank`, `bpc157-tb500`, `melanotan-2`, `igf1-lr3`) and restored legacy pricing, notes, ordering, and bundle pairing.
+- Kept the existing restored join host routing, persistence, attribution, and admin sync fixes unchanged.
+
+### Regression coverage
+- Added `tests/lib/join-therapies.test.ts` to lock the exact legacy `join.cultrhealth.com` therapy ID order and prevent the catalog from drifting away from the restored old site again.
+
+### Memory update
+- Codified in repo instructions that `join.cultrhealth.com` product cards are sourced from `lib/config/join-therapies.ts`; restoring `/join` UI files alone does not restore the legacy join catalog.
+
 ## [2026-04-04] - Server-Side Returning Member Recognition (join.cultrhealth.com)
 
 ### Problem

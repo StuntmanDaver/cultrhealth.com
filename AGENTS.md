@@ -779,7 +779,7 @@ npm run setup:stripe
 | `staging` | Staging | staging.cultrhealth.com + join.cultrhealth.com |
 | `main` | Base branch (for PRs) | — |
 
-**Note:** `join.cultrhealth.com` is a Vercel domain alias for the `staging` deployment. The `middleware.ts` rewrites `join.*` hostname requests to `/join-club` internally.
+**Note:** `join.cultrhealth.com` is a Vercel domain alias for the `staging` deployment. The `middleware.ts` rewrites the join host root path (`/`) to `/join` and lets non-root join paths pass through unchanged.
 
 ### Deployment Flow
 1. Push to `staging` or `production` branch
@@ -1006,6 +1006,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **API route pattern:** All API routes in `app/api/` follow Next.js App Router convention (`route.ts` with named exports `GET`, `POST`, etc.)
 - **Markdown content:** Blog and library content stored as `.md` files in `content/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify
 - **Social proof data:** Testimonials, providers, trust metrics, trust badges centralized in `lib/config/social-proof.ts`
+- **Join catalog source:** `join.cultrhealth.com` product cards are driven by `lib/config/join-therapies.ts`; restoring `/join` page components alone does not restore the legacy join catalog.
 
 ### HIPAA Compliance
 - Never log PHI (Protected Health Information)

@@ -391,7 +391,7 @@ app/api/creators/verify-login/route.ts
 # ============================================================================
 
 ## middleware.ts handles:
-- Subdomain rewriting: join.* → /join-club internally
+- Subdomain rewriting: join.* root path (`/`) → `/join` internally; non-root join paths pass through unchanged
 - HIPAA no-cache headers on authenticated routes
 - Content-Security-Policy headers
 - Camera/microphone permissions for consultation video routes
@@ -492,6 +492,7 @@ any file containing API keys, secrets, or tokens
 - Horizontal scrolling MUST use translateX-based Carousel, NOT CSS overflow
 - Card faces use motion.div with role="button" (NOT motion.button — causes hydration errors)
 - Products show "Compounded in the USA" badge across all product views
+- `join.cultrhealth.com` product cards are sourced from `lib/config/join-therapies.ts`; restoring `/join` UI files alone does NOT restore the legacy join catalog
 
 # ============================================================================
 # 20. PROVIDER TOOLS
