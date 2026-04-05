@@ -188,4 +188,86 @@ describe('club orders catalog sync', () => {
     ])
     expect(insertedParams[6]).toBe(225)
   })
+
+  it('accepts bac water orders using the restored join catalog pricing and notes', async () => {
+    mockSql.mockResolvedValue({
+      rows: [
+        {
+          therapy_id: 'bacteriostatic-water',
+          therapy_name: 'Bacteriostatic Water',
+          stock_status: 'in_stock',
+          stock_quantity: 12,
+        },
+      ],
+    })
+
+    const mockQuery = vi.fn(async (query: string) => {
+      if (query === 'BEGIN' || query === 'COMMIT') {
+        return { rows: [] }
+      }
+
+      if (query.includes('INSERT INTO club_members')) {
+        return { rows: [{ id: 'member_1' }] }
+      }
+
+      if (query.includes('INSERT INTO club_orders')) {
+        return { rows: [{ id: 'order_1' }] }
+      }
+
+      if (query.includes('UPDATE product_inventory')) {
+        return { rows: [] }
+      }
+
+      throw new Error(`Unexpected query: ${query}`)
+    })
+
+    mockConnect.mockResolvedValue({
+      query: mockQuery,
+      release: vi.fn(),
+    })
+
+    const { POST } = await import('@/app/api/club/orders/route')
+
+    const request = new Request('http://localhost:3000/api/club/orders', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      body: JSON.stringify({
+        email: 'member@example.com',
+        name: 'Member Example',
+        items: [
+          {
+            therapyId: 'bacteriostatic-water',
+            name: 'Legacy Bac Water',
+            price: 999,
+            note: 'Wrong note',
+            quantity: 4,
+          },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+
+    const orderInsertCall = mockQuery.mock.calls.find(
+      ([query]) => typeof query === 'string' && query.includes('INSERT INTO club_orders')
+    )
+
+    expect(orderInsertCall).toBeDefined()
+
+    const insertedParams = orderInsertCall?.[1] as unknown[]
+    const insertedItems = JSON.parse(String(insertedParams[5]))
+
+    expect(insertedItems).toEqual([
+      {
+        therapyId: 'bacteriostatic-water',
+        name: 'Bacteriostatic Water',
+        price: 29.99,
+        note: '30 ML',
+        quantity: 4,
+      },
+    ])
+    expect(Number(insertedParams[6])).toBeCloseTo(119.96, 2)
+  })
 })

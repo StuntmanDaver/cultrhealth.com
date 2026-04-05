@@ -212,6 +212,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   const [member, setMember] = useState<ClubMember | null>(null)
   const [showSignup, setShowSignup] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [loginEmail, setLoginEmail] = useState('')
   const [memberCheckDone, setMemberCheckDone] = useState(!!serverMember) // Skip loading if server already resolved
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [orderSubmitted, setOrderSubmitted] = useState(false)
@@ -326,13 +327,10 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
         document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
       }
 
-      // --- Priority 5: Previous order flag -> show login ---
-      const hasOrdered = localStorage.getItem('cultr_club_has_ordered')
-      if (hasOrdered) {
-        setShowLogin(true)
-        setMemberCheckDone(true)
-        return
-      }
+      // --- Priority 5: Previous order flag ---
+      // Preserve this signal, but only use it if the server cannot recover
+      // the member from the existing cookie/session.
+      const hasOrdered = !!localStorage.getItem('cultr_club_has_ordered')
 
       // --- Priority 6: Server-side fallback API check ---
       // Cookie may exist (httpOnly=false, sent automatically) but localStorage
@@ -354,15 +352,29 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
             }
             setMember(m)
             setShowSignup(false)
+            setShowLogin(false)
+            setLoginEmail('')
             try { localStorage.setItem('cultr_club_member', JSON.stringify(m)) } catch { /* ignore */ }
           } else {
-            // Truly a new visitor — no record anywhere
-            setShowSignup(true)
+            if (hasOrdered) {
+              setShowSignup(false)
+              setShowLogin(true)
+            } else {
+              // Truly a new visitor — no record anywhere
+              setShowLogin(false)
+              setShowSignup(true)
+            }
           }
         })
         .catch(() => {
-          // Network error on fallback — show signup
-          setShowSignup(true)
+          if (hasOrdered) {
+            setShowSignup(false)
+            setShowLogin(true)
+          } else {
+            // Network error on fallback — show signup
+            setShowLogin(false)
+            setShowSignup(true)
+          }
         })
         .finally(() => {
           setMemberCheckDone(true)
@@ -383,6 +395,12 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
     setMember(data)
     setShowSignup(false)
     setShowLogin(false)
+  }, [])
+
+  const handleExistingMemberDetected = useCallback((email: string) => {
+    setLoginEmail(email)
+    setShowSignup(false)
+    setShowLogin(true)
   }, [])
 
   useEffect(() => {
@@ -428,10 +446,27 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   return (
     <div className="flex flex-col min-h-screen bg-brand-cream overflow-x-hidden" style={{ touchAction: 'manipulation' }}>
       {/* Login Modal for Returning Members */}
-      {showLogin && !member && <LoginModal onComplete={handleSignupComplete} onSignUpInstead={() => { setShowLogin(false); setShowSignup(true) }} />}
+      {showLogin && !member && (
+        <LoginModal
+          initialEmail={loginEmail}
+          onComplete={handleSignupComplete}
+          onSignUpInstead={() => {
+            setLoginEmail('')
+            setShowLogin(false)
+            setShowSignup(true)
+          }}
+        />
+      )}
 
       {/* Signup Modal */}
-      {showSignup && !member && <SignupModal onComplete={handleSignupComplete} visitorCtxRef={visitorCtxRef} memberIdRef={memberIdRef} />}
+      {showSignup && !member && (
+        <SignupModal
+          onComplete={handleSignupComplete}
+          onExistingMemberDetected={handleExistingMemberDetected}
+          visitorCtxRef={visitorCtxRef}
+          memberIdRef={memberIdRef}
+        />
+      )}
 
       {/* Order Success Banner */}
       {orderSubmitted && (
@@ -746,7 +781,7 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
 // SIGNUP MODAL
 // =============================================
 
-function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (data: ClubMember) => void; visitorCtxRef: React.MutableRefObject<VisitorContext | null>; memberIdRef: React.MutableRefObject<string | null> }) {
+function SignupModal({ onComplete, onExistingMemberDetected, visitorCtxRef, memberIdRef }: { onComplete: (data: ClubMember) => void; onExistingMemberDetected: (email: string) => void; visitorCtxRef: React.MutableRefObject<VisitorContext | null>; memberIdRef: React.MutableRefObject<string | null> }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -762,26 +797,20 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [emailChecked, setEmailChecked] = useState(false)
-  const [welcomeBack, setWelcomeBack] = useState(false)
 
   // When user tabs out of email field, check if they're already a member.
   // The API only returns firstName (no PII) for unauthenticated email lookups.
-  // We show a "Welcome back!" banner but don't auto-fill sensitive fields.
+  // Existing members should authenticate instead of filling the signup form again.
   async function handleEmailBlur() {
     const trimmed = email.trim().toLowerCase()
     if (!trimmed || !trimmed.includes('@') || emailChecked) return
     setEmailChecked(true)
     try {
       const res = await fetch(`/api/club/check-member?email=${encodeURIComponent(trimmed)}`)
-      if (!res.ok) { setWelcomeBack(false); return }
+      if (!res.ok) return
       const data = await res.json()
       if (data.member?.exists) {
-        // Only firstName is returned from unauthenticated email lookups (security)
-        if (data.member.firstName && !firstName) setFirstName(data.member.firstName)
-        setWelcomeBack(true)
-      } else {
-        // Different email, not a member — reset welcome state
-        setWelcomeBack(false)
+        onExistingMemberDetected(trimmed)
       }
     } catch {
       // Non-blocking
@@ -881,17 +910,11 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
 
         <form onSubmit={handleSubmit} className="px-6 pb-8 pt-5 sm:px-8 sm:pb-10 sm:pt-7">
           <h2 className="font-display text-xl font-bold text-brand-primary text-center mb-1">
-            {welcomeBack ? 'Welcome Back!' : 'Join CULTR Club'}
+            Join CULTR Club
           </h2>
           <p className="text-brand-secondary/60 text-sm text-center mb-5">
-            {welcomeBack ? 'We found your account — fill in your details to continue' : 'Browse therapies & build your order'}
+            Browse therapies & build your order
           </p>
-
-          {welcomeBack && (
-            <div className="mb-4 p-3 bg-mint/60 border border-sage/40 rounded-xl text-sm text-brand-primary">
-              We recognized your email. Complete the form below to continue shopping.
-            </div>
-          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
@@ -1009,8 +1032,8 @@ function SignupModal({ onComplete, visitorCtxRef, memberIdRef }: { onComplete: (
 // LOGIN MODAL
 // =============================================
 
-function LoginModal({ onComplete, onSignUpInstead }: { onComplete: (data: ClubMember) => void; onSignUpInstead: () => void }) {
-  const [email, setEmail] = useState('')
+function LoginModal({ initialEmail = '', onComplete, onSignUpInstead }: { initialEmail?: string; onComplete: (data: ClubMember) => void; onSignUpInstead: () => void }) {
+  const [email, setEmail] = useState(initialEmail)
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
