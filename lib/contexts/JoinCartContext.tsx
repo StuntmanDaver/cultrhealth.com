@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react'
-import { calculateBundleDiscount } from '@/lib/config/join-therapies'
+import { calculateBundleDiscount, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 
 // =============================================
 // TYPES
@@ -117,7 +117,7 @@ export function JoinCartProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored) as JoinCartItem[]
-        dispatch({ type: 'LOAD', payload: parsed })
+        dispatch({ type: 'LOAD', payload: normalizeJoinCartItems(parsed) })
       } else {
         dispatch({ type: 'LOAD', payload: [] })
       }

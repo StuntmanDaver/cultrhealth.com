@@ -41,6 +41,15 @@ export interface JoinTherapySection {
   therapies: JoinTherapy[]
 }
 
+export interface JoinCatalogCartItem {
+  therapyId: string
+  name: string
+  price: number | null
+  pricingNote?: string
+  note?: string
+  quantity: number
+}
+
 export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
   {
     title: 'Cut — Weight Loss',
@@ -247,6 +256,31 @@ export function getAllJoinTherapies(): JoinTherapy[] {
 /** Find a therapy by ID */
 export function getJoinTherapyById(id: string): JoinTherapy | undefined {
   return getAllJoinTherapies().find((t) => t.id === id)
+}
+
+/** Rebuild cart/order items from the current join catalog source of truth. */
+export function normalizeJoinCartItems(
+  items: Array<{ therapyId: string; quantity: number }>
+): JoinCatalogCartItem[] {
+  return items.flatMap((item) => {
+    const therapy = getJoinTherapyById(item.therapyId)
+    const quantity = Number(item.quantity)
+
+    if (!therapy || !Number.isInteger(quantity) || quantity <= 0) {
+      return []
+    }
+
+    return [
+      {
+        therapyId: therapy.id,
+        name: therapy.name,
+        price: therapy.price,
+        pricingNote: therapy.pricingNote,
+        note: therapy.note,
+        quantity,
+      },
+    ]
+  })
 }
 
 /** Get effective stock status (defaults to 'in_stock' when not set) */

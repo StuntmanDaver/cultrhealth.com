@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
-import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinTherapyById, getStockStatus, getMaxOrderQuantity } from '@/lib/config/join-therapies'
+import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
@@ -44,11 +44,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
+    const orderItems = normalizeJoinCartItems(items)
+    if (orderItems.length !== items.length) {
+      return NextResponse.json(
+        { error: 'One or more selected therapies are no longer available. Please refresh your cart.' },
+        { status: 400 }
+      )
+    }
+
     // Stock validation from DB — reject out-of-stock or over-limit items
     if (process.env.POSTGRES_URL) {
       const stockResult = await sql`SELECT therapy_id, therapy_name, stock_status, stock_quantity FROM product_inventory`
       const stockMap = new Map(stockResult.rows.map((r) => [r.therapy_id, r]))
-      for (const item of items) {
+      for (const item of orderItems) {
         const inv = stockMap.get(item.therapyId)
         if (!inv) continue
         if (inv.stock_status === 'out_of_stock') {
@@ -63,13 +71,13 @@ export async function POST(request: Request) {
     const normalizedEmail = email.trim().toLowerCase()
 
     // Calculate subtotal (only items with prices)
-    const rawSubtotal = items.reduce((sum, item) => {
+    const rawSubtotal = orderItems.reduce((sum, item) => {
       return item.price ? sum + item.price * item.quantity : sum
     }, 0)
     // Bundle discount: 10% off items whose bundleWith partner is in the cart
     // OWNER and noBundleStack coupons override bundle discount (they don't stack)
     const skipBundle = couponCode?.trim().toUpperCase() === 'OWNER' || couponResult?.noBundleStack
-    const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(items)
+    const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(orderItems)
     const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
     // Coupon discount applied after bundle discount
     const couponDiscountAmount = discountPercent > 0 ? Math.round(subtotalAfterBundle * discountPercent) / 100 : 0
@@ -161,7 +169,7 @@ export async function POST(request: Request) {
             name.trim(),
             normalizedEmail,
             phone?.trim() || null,
-            JSON.stringify(items),
+            JSON.stringify(orderItems),
             subtotal > 0 ? subtotal : null,
             notes || null,
             approvalToken,
@@ -180,7 +188,7 @@ export async function POST(request: Request) {
         }
 
         // Decrement inventory for each ordered item (only where stock_quantity is tracked)
-        for (const item of items) {
+        for (const item of orderItems) {
           await client.query(
             `UPDATE product_inventory
              SET stock_quantity = GREATEST(stock_quantity - $1, 0),
@@ -299,7 +307,7 @@ export async function POST(request: Request) {
         name: name.trim(),
         email: normalizedEmail,
         orderNumber,
-        items,
+        items: orderItems,
         subtotalBeforeDiscount: rawSubtotal,
         bundleDiscountAmount,
         discountAmount: couponDiscountAmount,
@@ -322,7 +330,7 @@ export async function POST(request: Request) {
         address,
         orderNumber,
         orderId: orderId || orderNumber,
-        items,
+        items: orderItems,
         subtotalBeforeDiscount: rawSubtotal,
         bundleDiscountAmount,
         discountAmount: couponDiscountAmount,
@@ -351,7 +359,7 @@ export async function POST(request: Request) {
     }
 
     // Sync to Mailchimp with order tags (non-blocking)
-    const therapyNames = items
+    const therapyNames = orderItems
       .map((item: OrderItem) => item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'))
       .map((slug: string) => `therapy-${slug}`)
     const firstName = name.trim().split(' ')[0]
@@ -363,7 +371,7 @@ export async function POST(request: Request) {
       phone: phone?.trim() || undefined,
       tags: ['club-order-placed', ...therapyNames],
       mergeFields: {
-        THERAPY: items[0]?.name || '',
+        THERAPY: orderItems[0]?.name || '',
         ORDER_NUM: orderNumber,
         ORDER_DATE: new Date().toISOString().split('T')[0],
       },
