@@ -80,7 +80,7 @@ export default function RootLayout({
     '@type': 'MedicalOrganization',
     name: 'CULTR Health',
     url: 'https://www.cultrhealth.com',
-    logo: 'https://www.cultrhealth.com/cultr-logo-black.png',
+    logo: 'https://www.cultrhealth.com/cultr-health-logo.png',
     description: 'Personalized longevity medicine with comprehensive lab testing, peptide protocols, and provider-supervised hormone optimization.',
     medicalSpecialty: 'Preventive Medicine',
     contactPoint: {

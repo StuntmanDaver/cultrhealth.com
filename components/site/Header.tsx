@@ -20,13 +20,12 @@ export function Header() {
     <>
       <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-cultr-sage">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex flex-col">
-            <span className="text-2xl font-display font-bold text-cultr-forest">
-              CULTR
-            </span>
-            <span className="text-[10px] text-cultr-textMuted tracking-widest uppercase">
-              Health | Wellness
-            </span>
+          <Link href="/" className="flex items-center shrink-0">
+            <img
+              src="/cultr-health-logo.png"
+              alt="CULTR Health"
+              className="w-auto h-[60px]"
+            />
           </Link>
 
           {/* Desktop Navigation */}
