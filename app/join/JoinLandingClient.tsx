@@ -530,15 +530,14 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
       {/* Main Content */}
       <main className="flex-1 pb-32 lg:pb-12">
         <div className="max-w-7xl mx-auto md:px-6 py-4 md:py-10">
-          {/* Always 5-col grid on lg — prevents layout shift when cart fills */}
-          <div className="grid gap-4 md:gap-10 lg:grid-cols-5">
+          <div className={`grid gap-4 md:gap-10 ${hasItems ? 'lg:grid-cols-5' : ''}`}>
 
-            {/* Left Column — Therapy Carousels (always col-span-3 on lg) */}
-            <div className="lg:col-span-3">
+            {/* Left Column — Therapy Carousels (full-width when cart empty, 3/5 when cart open) */}
+            <div className={hasItems ? 'lg:col-span-3' : ''}>
               {JOIN_THERAPY_SECTIONS.map((section, sectionIdx) => {
                 const Icon = SECTION_ICONS[sectionIdx] || Flame
                 return (
-                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} stockData={stockData} onAddToCart={(therapyId: string, therapyName: string, price: number | null) => {
+                  <TherapyCarouselSection key={section.title} section={section} Icon={Icon} stockData={stockData} cartOpen={hasItems} onAddToCart={(therapyId: string, therapyName: string, price: number | null) => {
                     const ctx = visitorCtxRef.current
                     if (ctx) trackVisitorEvent(ctx.sessionId, 'add_to_cart', { therapyId, therapyName, price }, memberIdRef.current || undefined)
                   }} />
@@ -557,25 +556,17 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
               </div>
             </div>
 
-            {/* Right Column — Always rendered on lg; cart fills in when items added */}
-            <div className="lg:col-span-2 hidden lg:block">
-              <div className="sticky top-8">
-                {hasItems ? (
+            {/* Right Column — Only visible on desktop when cart has items */}
+            {hasItems && (
+              <div className="lg:col-span-2 hidden lg:block animate-fade-in">
+                <div className="sticky top-8">
                   <CartSummaryPanel member={member} onOrderSubmitted={handleOrderSubmitted} stockData={stockData} onTrackEvent={(eventType: string, eventData?: Record<string, unknown>) => {
                     const ctx = visitorCtxRef.current
                     if (ctx) trackVisitorEvent(ctx.sessionId, eventType, eventData, memberIdRef.current || undefined)
                   }} />
-                ) : (
-                  <div className="flex flex-col items-center justify-center min-h-[280px] rounded-2xl border-2 border-dashed border-brand-primary/10 p-8 text-center gap-3">
-                    <Package className="w-10 h-10 text-brand-primary/15" />
-                    <div>
-                      <p className="text-sm font-semibold text-brand-secondary/40">Your stack</p>
-                      <p className="text-xs text-brand-secondary/30 mt-1">Add therapies to build your order</p>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
@@ -613,7 +604,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
 // THERAPY CAROUSEL SECTION
 // =============================================
 
-function TherapyCarouselSection({ section, Icon, stockData, onAddToCart }: { section: JoinTherapySection; Icon: typeof Flame; stockData: StockData; onAddToCart?: (therapyId: string, therapyName: string, price: number | null) => void }) {
+function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCart }: { section: JoinTherapySection; Icon: typeof Flame; stockData: StockData; cartOpen?: boolean; onAddToCart?: (therapyId: string, therapyName: string, price: number | null) => void }) {
   const cart = useJoinCart()
   const isTwoRow = section.therapies.length > 5
 
@@ -727,8 +718,8 @@ function TherapyCarouselSection({ section, Icon, stockData, onAddToCart }: { sec
         )}
       </div>
 
-      {/* Desktop: 3-column grid — all products fully visible, no horizontal scroll */}
-      <div className="hidden md:grid md:grid-cols-3 gap-4 px-6 py-4">
+      {/* Desktop: grid expands to 4 cols when cart is hidden, 3 cols when cart is open */}
+      <div className={`hidden md:grid gap-4 px-6 py-4 ${cartOpen ? 'md:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'}`}>
         {desktopCards}
       </div>
     </div>
