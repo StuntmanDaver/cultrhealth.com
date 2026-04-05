@@ -66,6 +66,13 @@ export function middleware(request: NextRequest) {
     return response
   }
 
+  // Block /join on non-join hostnames — redirect to join.cultrhealth.com
+  if (request.nextUrl.pathname.startsWith('/join')) {
+    const joinUrl = new URL(request.nextUrl.pathname.replace(/^\/join\/?/, '/'), 'https://join.cultrhealth.com')
+    joinUrl.search = request.nextUrl.search
+    return NextResponse.redirect(joinUrl, 301)
+  }
+
   // Session idle timeout for HIPAA compliance (30 min inactivity)
   const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
   const authenticatedPrefixes = ['/members', '/intake', '/dashboard', '/admin', '/provider', '/creators/portal']
