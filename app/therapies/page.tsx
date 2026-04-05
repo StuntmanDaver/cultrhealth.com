@@ -3,6 +3,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { THERAPY_PRODUCTS } from '@/lib/config/therapies';
 import { CTASection } from '@/components/site/CTASection';
+import { PrescriptionDisclaimer } from '@/components/compliance/PrescriptionDisclaimer';
 import { MarketingHero } from '@/components/site/MarketingHero';
 import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
@@ -114,6 +115,10 @@ export default function TherapiesPage() {
           </ScrollReveal>
 
           <TherapiesClient products={THERAPY_PRODUCTS} />
+
+          <div className="mt-8 text-center">
+            <PrescriptionDisclaimer />
+          </div>
         </div>
       </section>
 

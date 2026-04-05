@@ -5,6 +5,7 @@ import { PricingCard } from '@/components/site/PricingCard';
 import { ClubBanner } from '@/components/site/ClubBanner';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
+import { PrescriptionDisclaimer } from '@/components/compliance/PrescriptionDisclaimer';
 import { MarketingHero } from '@/components/site/MarketingHero';
 import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import TrustMarquee from '@/components/site/TrustMarquee';
@@ -113,6 +114,10 @@ export default function PricingPage() {
             <p className="text-xs text-cultr-textMuted/70 leading-relaxed">
               Medication, protocol eligibility, and refills are subject to clinical review and approval.
             </p>
+          </div>
+
+          <div className="mt-6 text-center">
+            <PrescriptionDisclaimer />
           </div>
         </div>
       </section>
@@ -382,6 +387,16 @@ export default function PricingPage() {
       {/* Membership & Medical Disclaimer */}
       <section className="py-12 px-6 grad-white border-y border-cultr-sage">
         <div className="max-w-4xl mx-auto space-y-6">
+          <ScrollReveal>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <h4 className="font-display font-bold text-amber-800 text-sm mb-2">
+                Subscription & Renewal Terms
+              </h4>
+              <p className="text-sm text-amber-900 leading-relaxed">
+                All memberships include an initial 2-month clinical protocol. After your initial period, your membership renews monthly at the listed price until you cancel. You may cancel anytime after your initial protocol by contacting support@cultrhealth.com or through your Stripe billing portal.
+              </p>
+            </div>
+          </ScrollReveal>
           <ScrollReveal>
             <div className="flex items-start gap-4">
               <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />

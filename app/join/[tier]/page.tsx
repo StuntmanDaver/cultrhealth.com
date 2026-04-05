@@ -7,7 +7,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { PLANS, MEMBERSHIP_DISCLAIMER, BLOOD_TEST_ADDON, DOCTOR_CONSULTATION_ADDON, CORE_THERAPIES } from '@/lib/config/plans';
 import Button from '@/components/ui/Button';
-import { Check, Loader2, ArrowLeft, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
+import { ConsentModal } from '@/components/compliance/ConsentModal';
+import { Check, Loader2, ArrowLeft, ArrowRight, Shield, CreditCard, AlertCircle, Lock } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import type { PaymentProvider } from '@/lib/payments/payment-types';
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
@@ -39,12 +40,13 @@ const CARD_ELEMENT_OPTIONS = {
 };
 
 // Inner form component that uses Stripe hooks
-function CheckoutForm({ plan, onSuccess, onError, todayTotal, consentChecked }: {
+function CheckoutForm({ plan, onSuccess, onError, todayTotal, consentChecked, consentGiven }: {
   plan: NonNullable<typeof PLANS[number]>;
   onSuccess: (redirectUrl: string) => void;
   onError: (error: string) => void;
   todayTotal: number;
   consentChecked: boolean;
+  consentGiven: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -214,7 +216,7 @@ function CheckoutForm({ plan, onSuccess, onError, todayTotal, consentChecked }: 
       {/* Submit Button */}
       <Button
         type="submit"
-        disabled={isLoading || !stripe || !consentChecked}
+        disabled={isLoading || !stripe || !consentChecked || !consentGiven}
         className="w-full text-lg py-6"
       >
         {isLoading ? (
@@ -241,6 +243,10 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
   // Consent checkboxes
   const [consentChecked, setConsentChecked] = useState(false);
   const [marketingChecked, setMarketingChecked] = useState(false);
+
+  // Informed consent modal
+  const [showConsent, setShowConsent] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   // Find the plan based on the tier slug
   const plan = PLANS.find((p) => p.slug === params.tier);
@@ -456,6 +462,25 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
               </label>
             </div>
 
+            {/* Informed Consent */}
+            <div className="mb-6">
+              {consentGiven ? (
+                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+                  <Check className="w-4 h-4 shrink-0" />
+                  <span>Informed consent completed</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowConsent(true)}
+                  className="w-full text-sm font-medium text-brand-primary bg-brand-cream border border-brand-primary/20 rounded-lg px-4 py-3 hover:bg-brand-primary/5 transition-colors text-left flex items-center justify-between"
+                >
+                  <span>Review & sign informed consent</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
             {/* Payment Method Selector */}
             <div className="mb-6">
               <PaymentMethodSelector
@@ -475,6 +500,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   onError={handleCheckoutError}
                   todayTotal={todayTotal}
                   consentChecked={consentChecked}
+                  consentGiven={consentGiven}
                 />
               </Elements>
             )}
@@ -482,7 +508,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
             {/* CorePay Card Form */}
             {paymentMethod === 'corepay' && (
               <div className="space-y-4 mb-6">
-                {consentChecked ? (
+                {consentChecked && consentGiven ? (
                   <CorePayForm
                     planSlug={plan.slug}
                     amountCents={amountCents}
@@ -492,7 +518,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                   />
                 ) : (
                   <p className="text-xs text-cultr-textMuted text-center py-4">
-                    Please accept the membership terms above to proceed.
+                    Please accept the membership terms and informed consent above to proceed.
                   </p>
                 )}
               </div>
@@ -569,6 +595,16 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
           </div>
         </div>
       </section>
+
+      <ConsentModal
+        isOpen={showConsent}
+        onClose={() => setShowConsent(false)}
+        onConsent={() => {
+          setConsentGiven(true);
+          setShowConsent(false);
+        }}
+        tierSlug={plan.slug}
+      />
     </div>
   );
 }

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { ChevronDown, ArrowRight, Tag } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
+import { FDAStatusBadge } from '@/components/compliance/FDAStatusBadge';
+import { CLINICAL_CITATIONS } from '@/lib/config/compliance';
 import type { TherapyProduct } from '@/lib/config/therapies';
 import { BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies';
 
@@ -79,12 +81,22 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   <span className="text-[10px] font-semibold text-cultr-forest/70 bg-mint/40 rounded-full px-2 py-0.5">
                     Compounded in the USA
                   </span>
+                  {product.fdaStatusId && (
+                    <FDAStatusBadge therapyId={product.fdaStatusId} className="mt-1" />
+                  )}
                 </div>
 
                 {/* Short description */}
                 <p className="text-xs text-cultr-textMuted leading-relaxed">
                   {product.shortDescription}
                 </p>
+
+                {/* Clinical citation */}
+                {product.citationKey && CLINICAL_CITATIONS[product.citationKey] && (
+                  <p className="text-[10px] text-brand-primary/40 leading-tight mt-1.5 italic">
+                    {CLINICAL_CITATIONS[product.citationKey]}
+                  </p>
+                )}
 
                 {/* Expand indicator */}
                 <div className="flex items-center justify-center mt-3 pt-3 border-t border-cultr-sage/20">

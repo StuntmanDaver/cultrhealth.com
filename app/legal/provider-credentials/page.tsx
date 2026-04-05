@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PROVIDERS } from '@/lib/config/social-proof';
-import { DISPENSING_PHARMACY } from '@/lib/config/compliance';
+import { DISPENSING_PHARMACY, PROVIDER_CREDENTIALS } from '@/lib/config/compliance';
 
 export const metadata: Metadata = {
   title: 'Provider Credentials — CULTR Health',
@@ -59,6 +59,23 @@ export default function ProviderCredentialsPage() {
                   )}
                 </div>
               ))}
+
+              {/* Medical Director */}
+              <div className="bg-white border border-brand-primary/10 rounded-xl p-6 mt-4">
+                <h3 className="text-lg font-display font-bold text-brand-primary">
+                  {PROVIDER_CREDENTIALS.medical_director.name}
+                </h3>
+                <p className="text-sm text-brand-primary/60 mt-1">
+                  {PROVIDER_CREDENTIALS.medical_director.specialty} · Medical Director
+                </p>
+                {PROVIDER_CREDENTIALS.medical_director.npi ? (
+                  <p className="text-sm text-brand-primary/60 mt-1">
+                    <strong>NPI:</strong> {PROVIDER_CREDENTIALS.medical_director.npi}
+                  </p>
+                ) : (
+                  <p className="text-sm text-amber-600 mt-1 italic">NPI: Pending verification</p>
+                )}
+              </div>
             </div>
           </div>
 

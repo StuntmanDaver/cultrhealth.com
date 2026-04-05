@@ -185,8 +185,21 @@ export function Footer() {
             <DispensingPharmacyInfo className="text-white/40" />
           </div>
 
+          {/* LegitScript Seal */}
+          {process.env.NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID && (
+            <div className="pt-4 flex justify-center" id="legitscript-seal">
+              {/* LegitScript official verification seal renders here */}
+            </div>
+          )}
+
           {/* Bottom Section */}
           <div className="pt-4 border-t border-white/10">
+            <p className="text-xs text-white/40 mb-3">
+              CULTR Health telehealth services are available in 48 states.{' '}
+              <Link href="/legal/medical-disclaimer#availability" className="underline hover:text-cultr-sage transition-colors">
+                Restrictions apply
+              </Link>.
+            </p>
             <p className="text-xs text-white/40 mb-4">
               <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice. Compounded medications are not FDA-approved but are prepared by licensed pharmacies in compliance with applicable regulations.
             </p>
