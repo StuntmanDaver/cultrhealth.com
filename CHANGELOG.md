@@ -1,3 +1,23 @@
+## [2026-04-05] - Inventory Alerts on Admin Dashboard
+
+### Added
+- **Inventory alerts section on admin overview** — Surfaces low-stock and out-of-stock products from join.cultrhealth.com in a prominent amber alert banner after the key metrics grid. Red cards for out-of-stock items, amber for low-stock with quantity remaining. "Manage inventory →" link to `/admin/inventory`.
+- `getInventoryAlerts()` DB function in `lib/db.ts` — queries `product_inventory` for `low_stock`/`out_of_stock` items, ordered by severity (out-of-stock first, then by lowest quantity).
+- `InventoryAlertRow` type in `lib/admin-types.ts` + `inventoryAlerts` field on `AnalyticsData`.
+- Analytics API (`/api/admin/analytics`) now includes `inventoryAlerts` in the response payload.
+
+### Verified
+- Product card stock badges on join.cultrhealth.com confirmed working end-to-end: `/api/stock` → `stockData` → `Card` component renders amber "ONLY N LEFT" or red "OUT OF STOCK" badge with disabled add-to-cart button.
+- Therapy IDs match between `lib/config/join-therapies.ts` and `product_inventory` table.
+
+### Files Changed
+- `lib/admin-types.ts` — Added `InventoryAlertRow` interface, `inventoryAlerts` field on `AnalyticsData`
+- `lib/db.ts` — Added `getInventoryAlerts()` function
+- `app/api/admin/analytics/route.ts` — Wired into import, Promise.all, and response
+- `app/admin/AdminDashboardClient.tsx` — Added inventory alerts UI section
+
+---
+
 ## [2026-04-05] - Restore Legacy join.cultrhealth.com Product Catalog
 
 ### Legacy join catalog restored
