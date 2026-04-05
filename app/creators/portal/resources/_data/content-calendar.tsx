@@ -37,7 +37,7 @@ export const contentCalendar: Record<string, ResourceEntry> = {
             ['8', 'Peptides are NOT steroids — here\'s the truth', 'Recovery', 'Reel / TikTok'],
             ['9', 'What my CULTR provider told me on the first call', 'General', 'Story series'],
             ['10', '3 signs your weight loss plateau is hormonal', 'Metabolic', 'Carousel'],
-            ['11', 'How BPC-157 works (simple explanation)', 'Recovery', 'Reel / TikTok'],
+            ['11', 'How Sermorelin works (simple explanation)', 'Recovery', 'Reel / TikTok'],
             ['12', 'My energy before vs. after optimization', 'Longevity', 'Before/after (feelings, not photos)'],
             ['13', 'The supplement I stopped taking after getting labs', 'Longevity', 'Caption post'],
             ['14', 'Weekly recap + audience poll', 'All', 'Story poll'],

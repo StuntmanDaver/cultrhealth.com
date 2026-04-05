@@ -201,7 +201,7 @@ export const compliance: Record<string, ResourceEntry> = {
 
         {/* ─── GTM Enhancement: Discussing Trending Compounds Safely ─── */}
         <SectionHeading>Discussing Trending Compounds Safely</SectionHeading>
-        <Paragraph>When a peptide or compound is trending on social media (e.g., &quot;What is BPC-157?&quot; or &quot;Is semaglutide safe?&quot;), use this 4-step template to discuss it compliantly:</Paragraph>
+        <Paragraph>When a peptide or compound is trending on social media (e.g., &quot;What is PT-141?&quot; or &quot;Is semaglutide safe?&quot;), use this 4-step template to discuss it compliantly:</Paragraph>
 
         <SubHeading>Step 1: Acknowledge Interest</SubHeading>
         <CopyBlock label="Template">{`"A lot of people are asking about [compound]. Here's what you should know..."`}</CopyBlock>

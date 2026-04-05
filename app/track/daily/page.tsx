@@ -156,8 +156,8 @@ const COMMON_SUPPLEMENTS = [
 ]
 
 const COMMON_PEPTIDES = [
-  'BPC-157', 'TB-500', 'Semax', 'Selank', 'DSIP', 'Epitalon',
-  'Thymosin Alpha-1', 'GHK-Cu', 'MOTS-c', 'SS-31'
+  'Tirzepatide/Niacinamide', 'Semaglutide/Pyridoxine', 'Sermorelin', 'NAD+',
+  'PT-141', 'Oxytocin', 'Glutathione', 'L-Carnitine'
 ]
 
 function ItemTracker({

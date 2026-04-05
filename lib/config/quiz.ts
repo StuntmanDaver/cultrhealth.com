@@ -127,12 +127,10 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
 // Medication category → specific medication recommendations
 const MEDICATION_MAP: Record<string, { id: string; name: string; description: string }[]> = {
   metabolic: [
-    { id: 'tirzepatide', name: 'Tirzepatide', description: 'Dual GIP/GLP-1 for significant weight loss' },
-    { id: 'semaglutide', name: 'Semaglutide', description: 'GLP-1 receptor agonist for weight management' },
-  ],
-  repair: [
-    { id: 'bpc157-tb500', name: 'BPC-157 / TB-500', description: 'Recovery and healing peptide stack' },
-    { id: 'ghk-cu', name: 'GHK-Cu', description: 'Copper peptide for tissue repair' },
+    { id: 'tirzepatide', name: 'Tirzepatide/Niacinamide', description: 'Dual GIP/GLP-1 for significant weight loss' },
+    { id: 'semaglutide', name: 'Semaglutide/Pyridoxine', description: 'GLP-1 receptor agonist for weight management' },
+    { id: 'lipo-c', name: 'Lipo-C', description: 'Lipotropic injection for fat metabolism and energy' },
+    { id: 'l-carnitine', name: 'L-Carnitine', description: 'Amino acid for fat metabolism and exercise performance' },
   ],
   growth_factor: [
     { id: 'sermorelin', name: 'Sermorelin', description: 'Growth hormone releasing peptide' },
@@ -140,8 +138,13 @@ const MEDICATION_MAP: Record<string, { id: string; name: string; description: st
   bioregulator: [
     { id: 'nad-plus', name: 'NAD+', description: 'Cellular energy and longevity support' },
   ],
-  neuropeptide: [
-    { id: 'semax-selank', name: 'Semax / Selank', description: 'Nootropic peptides for cognitive enhancement' },
+  immune: [
+    { id: 'glutathione', name: 'Glutathione', description: 'Master antioxidant for detox and immune defense' },
+    { id: 'ascorbic-acid', name: 'Ascorbic Acid', description: 'High-dose injectable vitamin C for immune support' },
+  ],
+  sexual_wellness: [
+    { id: 'pt-141', name: 'PT-141 (Bremelanotide)', description: 'Melanocortin agonist for sexual wellness' },
+    { id: 'oxytocin', name: 'Oxytocin', description: 'Neuropeptide for bonding and sexual well-being' },
   ],
   hormonal: [
     { id: 'sermorelin', name: 'Sermorelin', description: 'Growth hormone releasing peptide' },

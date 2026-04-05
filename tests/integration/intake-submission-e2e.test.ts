@@ -61,7 +61,7 @@ const VALID_INTAKE = {
     state: 'FL',
     zipCode: '32601',
   },
-  selectedMedications: ['tirzepatide', 'ghk-cu'],
+  selectedMedications: ['tirzepatide', 'sermorelin'],
   heightFeet: '5',
   heightInches: '6',
   weightLbs: '155',

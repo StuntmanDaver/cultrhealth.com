@@ -41,40 +41,30 @@ export const FDA_STATUSES: Record<string, FDAStatusInfo> = {
     label: 'FDA-Approved Active Ingredient',
     disclaimer: 'Tirzepatide is the active ingredient in FDA-approved Mounjaro and Zepbound. CULTR Health offers compounded tirzepatide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
   },
-  'ghk-cu': {
-    status: 'not-fda-approved',
-    label: 'Not FDA-Approved',
-    disclaimer: 'GHK-Cu is a research peptide. It has not been approved by the FDA for the treatment of any medical condition. Prescribed when clinically appropriate by a licensed provider.',
-  },
   glutathione: {
     status: 'not-fda-approved',
     label: 'Compounded',
     disclaimer: 'Injectable glutathione is a compounded preparation. It has not been evaluated by the FDA for the treatment of any specific condition.',
-  },
-  'tesa-ipa': {
-    status: 'not-fda-approved',
-    label: 'Not FDA-Approved',
-    disclaimer: 'Tesamorelin/Ipamorelin is a compounded peptide combination. While tesamorelin (Egrifta) has FDA approval for a specific indication, this compounded combination is not FDA-approved.',
-  },
-  'cjc1295-ipa': {
-    status: 'not-fda-approved',
-    label: 'Not FDA-Approved',
-    disclaimer: 'CJC-1295/Ipamorelin is a compounded research peptide combination not approved by the FDA for any indication.',
   },
   'nad-plus': {
     status: 'not-fda-approved',
     label: 'Not FDA-Approved',
     disclaimer: 'NAD+ injection is a compounded preparation. NAD+ has not been approved by the FDA as a drug for any medical condition.',
   },
-  'semax-selank': {
+  sermorelin: {
     status: 'not-fda-approved',
-    label: 'Not FDA-Approved',
-    disclaimer: 'Semax/Selank is a compounded neuropeptide combination not approved by the FDA in the United States.',
+    label: 'Previously FDA-Approved',
+    disclaimer: 'Sermorelin (Geref) previously had FDA approval but was discontinued for commercial reasons. This compounded preparation is not FDA-approved. Prescribed when clinically appropriate by a licensed provider.',
   },
-  'bpc157-tb500': {
-    status: 'not-fda-approved',
-    label: 'Not FDA-Approved',
-    disclaimer: 'BPC-157/TB-500 is a compounded research peptide combination not approved by the FDA for any indication.',
+  'pt-141': {
+    status: 'fda-approved-compounded',
+    label: 'FDA-Approved Active Ingredient',
+    disclaimer: 'Bremelanotide is the active ingredient in FDA-approved Vyleesi, indicated for hypoactive sexual desire disorder. CULTR Health offers compounded bremelanotide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
+  },
+  oxytocin: {
+    status: 'fda-approved-compounded',
+    label: 'FDA-Approved Active Ingredient',
+    disclaimer: 'Oxytocin (Pitocin) is an FDA-approved medication. CULTR Health offers compounded oxytocin formulations (troches, RDTs) prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved for these specific delivery formats.',
   },
 } as const;
 
@@ -168,13 +158,13 @@ export const TIER_THERAPY_IDS: Record<string, string[]> = {
   core: ['semaglutide', 'tirzepatide'], // Foundation therapies
   catalyst: [
     'semaglutide', 'tirzepatide',
-    'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
-    'nad-plus', 'semax-selank', 'bpc157-tb500',
+    'glutathione', 'nad-plus', 'sermorelin',
+    'pt-141', 'oxytocin',
   ],
   concierge: [
     'semaglutide', 'tirzepatide',
-    'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
-    'nad-plus', 'semax-selank', 'bpc157-tb500',
+    'glutathione', 'nad-plus', 'sermorelin',
+    'pt-141', 'oxytocin',
   ],
 };
 
@@ -184,5 +174,4 @@ export const CLINICAL_CITATIONS: Record<string, string> = {
   'semaglutide-weight-loss': 'Wilding JPH, et al. Once-Weekly Semaglutide in Adults with Overweight or Obesity. N Engl J Med. 2021;384(11):989-1002. (STEP 1 trial)',
   'tirzepatide-weight-loss': 'Jastreboff AM, et al. Tirzepatide Once Weekly for the Treatment of Obesity. N Engl J Med. 2022;387(3):205-216. (SURMOUNT-1 trial)',
   'nad-decline': 'Massudi H, et al. Age-Associated Changes In Oxidative Stress and NAD+ Metabolism In Human Tissue. PLoS One. 2012;7(7):e42357.',
-  'ghk-cu-genes': 'Pickart L, et al. GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration. Biomed Res Int. 2015;2015:648108.',
 } as const;

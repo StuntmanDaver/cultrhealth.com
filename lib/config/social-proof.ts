@@ -34,11 +34,11 @@ export const TESTIMONIALS: Testimonial[] = [
     highlight: "50+ labs",
   },
   {
-    quote: "BPC-157 stack got me back in the gym in 3 weeks after my shoulder surgery. Provider was on point.",
+    quote: "Sermorelin protocol got me back on track — sleeping deeper, recovering faster, and lifts are up. Provider was on point.",
     name: "David L.",
     title: "Creator member, 4 months",
     rating: 5,
-    highlight: "3 weeks",
+    highlight: "Recovery",
   },
   {
     quote: "Went from 215 to 183. GLP-1 therapy + the protocol engine made it almost too easy.",

@@ -19,7 +19,7 @@ const CATEGORIES = [
     description: 'Tissue repair, tendon/ligament healing, wound recovery',
     icon: Heart,
     color: 'rose',
-    tags: ['BPC-157', 'TB-500', 'GHK-Cu', 'GLOW Blend']
+    tags: ['Glutathione', 'L-Carnitine', 'Lipo-C', 'B-Complex']
   },
   {
     id: 'metabolic',
@@ -27,7 +27,7 @@ const CATEGORIES = [
     description: 'Fat loss, appetite control, GLP-1 agonists, metabolic health',
     icon: Zap,
     color: 'amber',
-    tags: ['Cagrilintide', 'Semaglutide', 'AOD-9604']
+    tags: ['Tirzepatide', 'Semaglutide', 'Lipo-C']
   },
   {
     id: 'bioregulators',
@@ -35,7 +35,7 @@ const CATEGORIES = [
     description: 'Immune support, sleep, cognition, anti-aging',
     icon: Brain,
     color: 'indigo',
-    tags: ['Epitalon', 'DSIP', 'Thymosin', 'SEMAX']
+    tags: ['NAD+', 'Sermorelin', 'Methylene Blue']
   }
 ]
 

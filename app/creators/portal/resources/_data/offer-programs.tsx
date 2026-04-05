@@ -66,7 +66,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
         <BulletList items={[
           'Inflammation and recovery-focused lab panel',
           'Provider evaluation for peptide protocol eligibility',
-          'Personalized peptide protocol (BPC-157, TB-500, or combination)',
+          'Personalized peptide protocol (Sermorelin, NAD+, or combination)',
           'Recovery tracking: training readiness, inflammation markers, pain scores',
           'Lifestyle optimization recommendations (sleep, nutrition, movement)',
         ]} />
@@ -225,7 +225,7 @@ export const offerPrograms: Record<string, ResourceEntry> = {
         <CopyBlock>{`"If you've tried every diet and nothing sticks, the issue might be biological, not behavioral. CULTR's Metabolic Reset starts with comprehensive labs to find out what's actually going on — then builds a GLP-1 protocol matched to YOUR body. Not a generic plan. Not a diet. A medical protocol. [LINK]"`}</CopyBlock>
 
         <SubHeading>For Performance Audiences</SubHeading>
-        <CopyBlock>{`"Recovery is the bottleneck for most athletes. CULTR's Recovery & Resilience program uses peptide protocols (BPC-157, TB-500) supervised by licensed providers to support tissue repair and reduce inflammation. It's not a supplement — it's provider-supervised medicine. [LINK]"`}</CopyBlock>
+        <CopyBlock>{`"Recovery is the bottleneck for most athletes. CULTR's Recovery & Resilience program uses peptide protocols (Sermorelin, NAD+) supervised by licensed providers to support recovery and performance. It's not a supplement — it's provider-supervised medicine. [LINK]"`}</CopyBlock>
 
         <SubHeading>For Data-Driven Audiences</SubHeading>
         <CopyBlock>{`"You track your macros, your steps, your sleep — but when's the last time you tracked your actual biomarkers? CULTR's Longevity Lab Loop tests 29 markers (upgradeable up to 60+) and retests quarterly so you can see what's actually improving. Data, not guesswork. [LINK]"`}</CopyBlock>

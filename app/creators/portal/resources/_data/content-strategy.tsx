@@ -87,9 +87,9 @@ TRUTH: CULTR uses licensed 503A/503B pharmacies held to the same FDA standards a
         <SectionHeading>10 Evergreen Topics</SectionHeading>
         <BulletList items={[
           'What peptides actually are (and what they\'re not)',
-          'BPC-157 explained: gut health and tissue repair',
-          'TB-500 and wound healing: the science in plain language',
-          'Growth hormone secretagogues: CJC-1295, Ipamorelin, Sermorelin',
+          'Sermorelin explained: growth hormone support',
+          'NAD+ and cellular energy: the science in plain language',
+          'Growth hormone optimization with Sermorelin',
           'The difference between peptides and anabolic steroids',
           'How CULTR ensures peptide quality (503A/503B pharmacies)',
           'Recovery optimization beyond just "rest days"',
@@ -103,7 +103,7 @@ TRUTH: CULTR uses licensed 503A/503B pharmacies held to the same FDA standards a
 2. "Here's what my inflammation markers looked like before and after 8 weeks."`}</CopyBlock>
 
         <CopyBlock label="Mistake-Correction Hooks">{`3. "Stop buying peptides from random websites. Here's why source matters."
-4. "The biggest mistake people make with BPC-157 (and how to avoid it)."`}</CopyBlock>
+4. "The biggest mistake people make with peptide protocols (and how to avoid it)."`}</CopyBlock>
 
         <CopyBlock label="Metaphor Hooks">{`5. "Peptides are like text messages for your cells — telling them to repair, recover, and rebuild."
 6. "Taking peptides without labs is like taking a road trip without GPS."`}</CopyBlock>

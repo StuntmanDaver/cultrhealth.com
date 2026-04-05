@@ -615,10 +615,10 @@ export function classifyPhenotype(
 
   const interventions: Record<Phenotype, string[]> = {
     'high-inflammation-low-repair': [
-      'BPC-157 for tissue repair',
+      'Glutathione for antioxidant defense',
       'Omega-3 fatty acids (3-4g/day)',
       'Curcumin + Piperine',
-      'Thymosin Alpha-1 for immune modulation',
+      'Sermorelin for recovery support',
     ],
     'metabolic-dysfunction': [
       'Time-restricted eating (16:8)',

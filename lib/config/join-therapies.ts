@@ -1,10 +1,10 @@
 /**
  * Curated therapy list for join.cultrhealth.com landing page.
  *
- * This is a SEPARATE config from lib/config/therapies.ts (which remains
- * untouched for the main staging/production site).
+ * This is a SEPARATE config from lib/config/therapies.ts (which powers
+ * the main therapies page on staging/production).
  *
- * Updated Feb 2026 — all therapies now have fixed pricing.
+ * Updated Apr 2026 — aligned with new Customer Price Catalog.
  */
 
 export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
@@ -19,7 +19,7 @@ export interface JoinTherapy {
   price: number | null
   /** Displayed when price is null */
   pricingNote?: string
-  category: 'glp1' | 'peptide'
+  category: 'glp1' | 'peptide' | 'wellness' | 'sexual_wellness'
   /** When true, card spans full width across both columns */
   featured?: boolean
   /** Reference SKU in product-catalog.ts (for cross-reference only) */
@@ -50,25 +50,26 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
     therapies: [
       {
         id: 'semaglutide',
-        name: 'Semaglutide — GLP1',
+        name: 'Semaglutide/Pyridoxine (reconstituted)',
         badge: '',
-        note: '5 MG | 3 ML · 2-3 month supply',
+        note: '2.5–5 mg/mL | 1–5 mL',
         description:
-          'GLP-1 receptor agonist for appetite regulation, metabolic improvement, and sustained weight loss.',
-        price: 225,
+          'GLP-1 receptor agonist with pyridoxine (B6) for appetite regulation, metabolic improvement, and sustained weight loss.',
+        price: 104,
         category: 'glp1',
-        catalogSku: 'SEMA-5MG-3ML',
+        catalogSku: 'SMA-PYR-2.5MG-1ML',
         image: '/images/products/semaglutide-glp1.png',
       },
       {
         id: 'tirzepatide',
-        name: 'Tirzepatide — GLP1/GIP',
+        name: 'Tirzepatide/Niacinamide (reconstituted)',
         badge: '',
-        note: '20 MG | 3 ML · 2-3 month supply',
+        note: '10–20 mg/mL | 1–3 mL',
         description:
-          'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
-        price: 290,
+          'Dual GIP/GLP-1 agonist with niacinamide offering enhanced glycemic control and significant body composition changes.',
+        price: 130,
         category: 'glp1',
+        catalogSku: 'TRZ-NIA-10MG-1ML',
         image: '/images/products/tirzepatide-glp1-gip.png',
       },
     ],
@@ -80,97 +81,83 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       'Advanced peptide protocols for recovery, longevity, and performance optimization — tailored to your biomarkers.',
     therapies: [
       {
-        id: 'ghk-cu',
-        name: 'GHK-CU',
+        id: 'sermorelin',
+        name: 'Sermorelin (reconstituted)',
         badge: '',
-        note: '100 MG | 3 ML',
+        note: '3 mg/mL | 5 mL',
         description:
-          'Copper peptide complex supporting skin remodeling, wound healing, and tissue regeneration.',
-        price: 145,
+          'Growth hormone-releasing hormone analog that stimulates natural GH production for improved recovery, sleep, and body composition.',
+        price: 104,
         category: 'peptide',
-        catalogSku: 'GHKCU-100MG-3ML',
-        image: '/images/products/ghk-cu.png',
-        bundleWith: 'glutathione',
+        catalogSku: 'SERMORELIN-3MG-5ML',
+      },
+      {
+        id: 'nad-plus',
+        name: 'NAD+ (reconstituted)',
+        badge: '',
+        note: '200 mg/mL | 5 mL',
+        description:
+          'Essential coenzyme for cellular energy, DNA repair, and metabolic function — foundational to longevity.',
+        price: 88.40,
+        category: 'peptide',
+        catalogSku: 'NAD-200MG-5ML',
+        image: '/images/products/nad-plus.png',
       },
       {
         id: 'glutathione',
         name: 'Glutathione',
         badge: '',
-        note: '200 MG | 10 ML',
+        note: '200 mg/mL | 10–30 mL',
         description:
           'Master antioxidant supporting detoxification, immune defense, and cellular protection against oxidative stress.',
-        price: 125,
-        category: 'peptide',
+        price: 26,
+        category: 'wellness',
+        catalogSku: 'GLUTATHIONE-200MG-10ML',
         image: '/images/products/glutathione.png',
-        bundleWith: 'ghk-cu',
       },
       {
-        id: 'tesa-ipa',
-        name: 'TESA/IPA',
+        id: 'lipo-c',
+        name: 'Lipo-C',
         badge: '',
-        note: '12/6 MG | 3 ML',
+        note: '25/25/50/100 mg/mL | 10 mL',
         description:
-          'Tesamorelin/Ipamorelin blend for growth hormone optimization, visceral fat reduction, and lean body composition.',
-        price: 175,
-        category: 'peptide',
-        image: '/images/products/tesa-ipa.png',
+          'Lipotropic injection blend for fat metabolism and energy support.',
+        price: 26,
+        category: 'wellness',
+        catalogSku: 'LIPOC-10ML',
       },
       {
-        id: 'cjc1295-ipa',
-        name: 'CJC1295/IPA',
+        id: 'b-complex',
+        name: 'B-Complex',
         badge: '',
-        note: '10/10 MG | 3 ML',
+        note: '1200 mcg/mL | 10–30 mL',
         description:
-          'Growth hormone releasing hormone and secretagogue blend for sustained GH elevation, recovery, and body recomposition.',
-        price: 170,
-        category: 'peptide',
-        image: '/images/products/cjc1295-ipa.png',
+          'Comprehensive B-vitamin injectable blend for energy, metabolism, and nervous system support.',
+        price: 26,
+        category: 'wellness',
+        catalogSku: 'BCOMPLEX-1200MCG-10ML',
       },
       {
-        id: 'nad-plus',
-        name: 'NAD+',
+        id: 'pt-141',
+        name: 'PT-141 (Bremelanotide)',
         badge: '',
-        note: '1000 MG | 10 ML',
+        note: 'Multiple formats available',
         description:
-          'Essential coenzyme for cellular energy, DNA repair, and metabolic function — foundational to longevity.',
-        price: 175,
-        category: 'peptide',
-        catalogSku: 'NAD-1000MG-10ML',
-        image: '/images/products/nad-plus.png',
+          'Melanocortin receptor agonist for enhanced sexual arousal and desire. Available as nasal spray, capsule, and troche.',
+        price: 6.50,
+        category: 'sexual_wellness',
+        catalogSku: 'PT141-ORAL',
       },
       {
-        id: 'semax-selank',
-        name: 'Semax/Selank',
+        id: 'oxytocin',
+        name: 'Oxytocin',
         badge: '',
-        note: '5/5 MG | 3 ML',
+        note: '50–125 IU troche/RDT',
         description:
-          'Neuropeptide stack for cognitive enhancement, stress resilience, and focus without stimulant side effects.',
-        price: 115,
-        category: 'peptide',
-        catalogSku: 'SELANK-SEMAX-5MG-3ML',
-        image: '/images/products/semax-selank.png',
-      },
-      {
-        id: 'bpc157-tb500',
-        name: 'BPC157/TB500',
-        badge: '',
-        note: '10/10 MG | 3 ML',
-        description:
-          'Dual-peptide recovery stack combining gut healing and tendon repair (BPC-157) with systemic tissue regeneration (TB-500).',
-        price: 150,
-        category: 'peptide',
-        image: '/images/products/bpc157-tb500.png',
-      },
-      {
-        id: 'igf1-lr3',
-        name: 'IGF-1 LR3',
-        badge: '',
-        note: '1 MG | 3 ML',
-        description:
-          'Long-acting insulin-like growth factor for enhanced muscle protein synthesis, recovery acceleration, and anabolic support.',
-        price: 150,
-        category: 'peptide',
-        image: '/images/products/igf1-lr3.png',
+          'Neuropeptide promoting bonding, stress reduction, and sexual well-being.',
+        price: 2.60,
+        category: 'sexual_wellness',
+        catalogSku: 'OXYTOCIN-TROCHE',
       },
       {
         id: 'bacteriostatic-water',
@@ -194,7 +181,7 @@ export const BUNDLE_DISCOUNT_RATE = 0.10
 /**
  * Calculate total bundle discount for a set of cart items.
  * For each item whose bundleWith partner is also in the cart,
- * applies BUNDLE_DISCOUNT_RATE to that item's (price × quantity).
+ * applies BUNDLE_DISCOUNT_RATE to that item's (price * quantity).
  * Only applies to items with non-null prices.
  * Pure function — works on client and server.
  */
@@ -236,4 +223,3 @@ export function getMaxOrderQuantity(therapy: JoinTherapy): number {
   if (therapy.stockStatus === 'out_of_stock') return 0
   return therapy.stockQuantity ?? Infinity
 }
-

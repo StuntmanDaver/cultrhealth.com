@@ -94,23 +94,22 @@ export const productEducation: Record<string, ResourceEntry> = {
         <SubHeading>Growth Hormone Secretagogues</SubHeading>
         <Paragraph>These peptides stimulate your body&apos;s natural growth hormone production. Benefits may include improved body composition, better sleep quality, enhanced recovery, and skin health.</Paragraph>
         <BulletList items={[
-          'CJC-1295 / Ipamorelin \u2014 Most commonly prescribed combination',
           'Sermorelin \u2014 Growth hormone releasing hormone analog',
-          'Tesamorelin \u2014 Approved for reducing visceral fat',
         ]} />
 
-        <SubHeading>Healing & Recovery</SubHeading>
-        <Paragraph>These peptides support tissue repair, gut health, and injury recovery:</Paragraph>
+        <SubHeading>Sexual Wellness</SubHeading>
+        <Paragraph>These compounds support sexual health and well-being:</Paragraph>
         <BulletList items={[
-          'BPC-157 \u2014 Body Protection Compound, supports gut and tissue healing',
-          'TB-500 (Thymosin Beta-4) \u2014 Supports wound healing and reduces inflammation',
+          'PT-141 (Bremelanotide) \u2014 Melanocortin agonist for sexual arousal and desire',
+          'Oxytocin \u2014 Neuropeptide for bonding, stress reduction, and sexual wellness',
         ]} />
 
         <SubHeading>Metabolic & Weight Management</SubHeading>
-        <Paragraph>Beyond GLP-1s, other peptides can support metabolic health:</Paragraph>
+        <Paragraph>Beyond GLP-1s, other compounds support metabolic health:</Paragraph>
         <BulletList items={[
-          'AOD-9604 \u2014 Fragment of growth hormone that may support fat metabolism',
-          'MOTS-c \u2014 Mitochondrial peptide that may improve metabolic function',
+          'Lipo-C \u2014 Lipotropic injection blend for fat metabolism and energy support',
+          'L-Carnitine \u2014 Amino acid for fatty acid transport and exercise performance',
+          '7-Keto DHEA \u2014 Metabolite supporting thermogenesis without hormonal conversion',
         ]} />
 
         <SectionHeading>What Peptides Are NOT</SectionHeading>

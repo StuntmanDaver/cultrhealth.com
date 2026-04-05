@@ -264,9 +264,9 @@ export default function PricingPage() {
                 <tbody className="text-sm">
                   {[
                     { category: 'GLP-1 / Weight Management', values: [true, true, true] },
-                    { category: 'Recovery Peptides (BPC-157, TB-500)', values: [false, true, true] },
                     { category: 'NAD+ / Longevity', values: [false, true, true] },
-                    { category: 'Cognitive Support (Semax/Selank)', values: [false, true, true] },
+                    { category: 'Sexual Wellness (PT-141, Oxytocin)', values: [false, true, true] },
+                    { category: 'Sermorelin / Growth Hormone', values: [false, true, true] },
                     { category: 'Growth Hormone Support', values: [false, true, true] },
                     { category: 'Multi-therapy stacking', values: [false, true, true] },
                     { category: 'Concierge customization', values: [false, false, true] },
