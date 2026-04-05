@@ -66,11 +66,9 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // Block /join on non-join hostnames — redirect to join.cultrhealth.com
+  // Block /join on non-join hostnames (only accessible via join.cultrhealth.com)
   if (request.nextUrl.pathname.startsWith('/join')) {
-    const joinUrl = new URL(request.nextUrl.pathname.replace(/^\/join\/?/, '/'), 'https://join.cultrhealth.com')
-    joinUrl.search = request.nextUrl.search
-    return NextResponse.redirect(joinUrl, 301)
+    return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 
   // Session idle timeout for HIPAA compliance (30 min inactivity)
