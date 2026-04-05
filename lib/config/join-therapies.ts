@@ -127,17 +127,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         catalogSku: 'LIPOC-10ML',
       },
       {
-        id: 'b-complex',
-        name: 'B-Complex',
-        badge: '',
-        note: '1200 mcg/mL | 10–30 mL',
-        description:
-          'Comprehensive B-vitamin injectable blend for energy, metabolism, and nervous system support.',
-        price: 26,
-        category: 'wellness',
-        catalogSku: 'BCOMPLEX-1200MCG-10ML',
-      },
-      {
         id: 'pt-141',
         name: 'PT-141 (Bremelanotide)',
         badge: '',

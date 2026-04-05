@@ -140,7 +140,6 @@ const MEDICATION_MAP: Record<string, { id: string; name: string; description: st
   ],
   immune: [
     { id: 'glutathione', name: 'Glutathione', description: 'Master antioxidant for detox and immune defense' },
-    { id: 'ascorbic-acid', name: 'Ascorbic Acid', description: 'High-dose injectable vitamin C for immune support' },
   ],
   sexual_wellness: [
     { id: 'pt-141', name: 'PT-141 (Bremelanotide)', description: 'Melanocortin agonist for sexual wellness' },

@@ -109,7 +109,6 @@ export const productEducation: Record<string, ResourceEntry> = {
         <BulletList items={[
           'Lipo-C \u2014 Lipotropic injection blend for fat metabolism and energy support',
           'L-Carnitine \u2014 Amino acid for fatty acid transport and exercise performance',
-          '7-Keto DHEA \u2014 Metabolite supporting thermogenesis without hormonal conversion',
         ]} />
 
         <SectionHeading>What Peptides Are NOT</SectionHeading>
