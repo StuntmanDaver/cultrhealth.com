@@ -167,6 +167,14 @@ function isStaging(): boolean {
   return siteUrl.includes('staging')
 }
 
+function parseEmailAllowlist(raw: string | undefined): string[] {
+  if (!raw) return []
+  return raw
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 const PLAN_ALIASES: Record<string, PlanTier> = {
   starter: 'core',
   core: 'core',
@@ -277,13 +285,19 @@ export function hasFeatureAccess(tier: PlanTier | null | undefined, feature: key
 export function isProviderEmail(email: string): boolean {
   const lower = email.toLowerCase()
   if (TEAM_EMAILS.includes(lower)) return true
-  const allowlist = process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
-  const normalized = allowlist.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
+  const normalized = parseEmailAllowlist(process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS)
   if (normalized.includes(lower)) return true
   // Staging access emails also get provider/admin access
-  const stagingEmails = process.env.STAGING_ACCESS_EMAILS || ''
-  const stagingNormalized = stagingEmails.split(',').map((v) => v.trim().toLowerCase()).filter(Boolean)
+  const stagingNormalized = parseEmailAllowlist(process.env.STAGING_ACCESS_EMAILS)
   return stagingNormalized.includes(lower)
+}
+
+export function isAdminEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (isProviderEmail(lower)) return true
+
+  const adminAllowlist = parseEmailAllowlist(process.env.ADMIN_ALLOWED_EMAILS)
+  return adminAllowlist.includes(lower)
 }
 
 // ===========================================
@@ -359,12 +373,13 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
     return { authenticated: false, email: null, creatorId: null }
   }
 
-  // If creatorId is in the token, use it
-  if (auth.creatorId) {
+  // If creatorId is in the token and not the staging placeholder, use it
+  if (auth.creatorId && auth.creatorId !== 'staging_creator') {
     return { authenticated: true, email: auth.email, creatorId: auth.creatorId }
   }
 
-  // Otherwise look up creator by email
+  // Otherwise look up creator by email. This lets staging_creator placeholder
+  // sessions recover to a real creator record after staging auto-create succeeds.
   try {
     const { getCreatorByEmail } = await import('@/lib/creators/db')
     const creator = await getCreatorByEmail(auth.email)
@@ -373,6 +388,10 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
     }
   } catch (dbError) {
     console.error('[auth] Creator DB lookup failed', dbError instanceof Error ? dbError.message : 'Unknown')
+  }
+
+  if (auth.creatorId === 'staging_creator') {
+    return { authenticated: true, email: auth.email, creatorId: auth.creatorId }
   }
 
   // Team emails always get creator access (staging_creator is a placeholder —
@@ -407,7 +426,7 @@ export async function verifyAdminAuth(request: NextRequest): Promise<{
     return { authenticated: false, email: null }
   }
 
-  if (!isProviderEmail(auth.email) && auth.role !== 'admin') {
+  if (!isAdminEmail(auth.email) && auth.role !== 'admin') {
     return { authenticated: false, email: auth.email }
   }
 

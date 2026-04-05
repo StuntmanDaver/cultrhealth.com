@@ -1,4 +1,4 @@
-import { PeptideFAQContent } from '@/app/members/peptide-faq/PeptideFAQContent'
+import { redirect } from 'next/navigation'
 
 export const metadata = {
   title: 'Peptide FAQ | CULTR Health',
@@ -6,5 +6,5 @@ export const metadata = {
 }
 
 export default function PublicPeptideFAQPage() {
-  return <PeptideFAQContent tier={null} backHref="/tools" />
+  redirect('/tools')
 }

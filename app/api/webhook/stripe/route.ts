@@ -11,6 +11,69 @@ function getStripe() {
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+function extractDiscountReferenceId(value: unknown): string | undefined {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object' && typeof (value as { id?: unknown }).id === 'string') {
+    return (value as { id: string }).id;
+  }
+  return undefined;
+}
+
+async function resolveCouponCodeFromStripeDiscounts(
+  discounts: Array<{ discount?: unknown }> | undefined
+): Promise<string | undefined> {
+  if (!discounts?.length) {
+    return undefined;
+  }
+
+  const { getAffiliateCodeByStripeIds } = await import('@/lib/creators/db');
+  let fallbackCouponName: string | undefined;
+
+  for (const discountEntry of discounts) {
+    const discountObj = discountEntry.discount as Record<string, unknown> | undefined;
+    if (!discountObj) {
+      continue;
+    }
+
+    const promotionCode = discountObj.promotion_code;
+    if (
+      promotionCode &&
+      typeof promotionCode === 'object' &&
+      typeof (promotionCode as { code?: unknown }).code === 'string'
+    ) {
+      return (promotionCode as { code: string }).code;
+    }
+
+    const coupon = discountObj.coupon;
+    if (
+      !fallbackCouponName &&
+      coupon &&
+      typeof coupon === 'object' &&
+      typeof (coupon as { name?: unknown }).name === 'string'
+    ) {
+      fallbackCouponName = (coupon as { name: string }).name;
+    }
+
+    const stripePromotionCodeId = extractDiscountReferenceId(promotionCode);
+    const stripeCouponId = extractDiscountReferenceId(coupon);
+
+    if (!stripePromotionCodeId && !stripeCouponId) {
+      continue;
+    }
+
+    const affiliateCode = await getAffiliateCodeByStripeIds({
+      stripePromotionCodeId,
+      stripeCouponId,
+    });
+
+    if (affiliateCode?.code) {
+      return affiliateCode.code;
+    }
+  }
+
+  return fallbackCouponName;
+}
+
 /**
  * Stripe Webhook Handler (MVP+)
  * 
@@ -289,17 +352,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         attributionCookieValue = clientRefId.slice(5);
       }
 
-      // Check for coupon code from Stripe discount
-      let couponCode: string | undefined;
-      if (session.total_details?.breakdown?.discounts) {
-        for (const discount of session.total_details.breakdown.discounts) {
-          const discountObj = discount.discount as unknown as Record<string, unknown>;
-          const coupon = discountObj?.coupon as Record<string, unknown> | undefined;
-          if (coupon?.name && typeof coupon.name === 'string') {
-            couponCode = coupon.name;
-          }
-        }
-      }
+      const couponCode = await resolveCouponCodeFromStripeDiscounts(
+        session.total_details?.breakdown?.discounts as Array<{ discount?: unknown }> | undefined
+      );
 
       const attribution = await resolveAttribution({
         customerEmail,
@@ -493,17 +548,9 @@ async function handleProductCheckoutCompleted(session: Stripe.Checkout.Session) 
         attributionCookieValue = clientRefId.slice(5);
       }
 
-      // Check for coupon code from Stripe discount
-      let couponCode: string | undefined;
-      if (session.total_details?.breakdown?.discounts) {
-        for (const discount of session.total_details.breakdown.discounts) {
-          const discountObj = discount.discount as unknown as Record<string, unknown>;
-          const coupon = discountObj?.coupon as Record<string, unknown> | undefined;
-          if (coupon?.name && typeof coupon.name === 'string') {
-            couponCode = coupon.name;
-          }
-        }
-      }
+      const couponCode = await resolveCouponCodeFromStripeDiscounts(
+        session.total_details?.breakdown?.discounts as Array<{ discount?: unknown }> | undefined
+      );
 
       const attribution = await resolveAttribution({
         customerEmail,

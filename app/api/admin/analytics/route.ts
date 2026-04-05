@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession, isProviderEmail } from '@/lib/auth'
+import { getSession, isAdminEmail } from '@/lib/auth'
 import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts, getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel, getRevenueTimeSeries, getAllMembershipsForAdmin, getCreatorLinkPerformance, getClubOrderFulfillmentCounts } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
@@ -14,13 +14,8 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Check if user is an admin (using provider allowlist)
-    const adminEmails = process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
-    const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-    
-    // Also check against provider list
-    const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email) || session.role === 'admin'
-    
+    const isAdmin = isAdminEmail(session.email) || session.role === 'admin'
+
     if (!isAdmin) {
       return NextResponse.json(
         { error: 'Admin access required' },

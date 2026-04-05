@@ -310,6 +310,52 @@ export async function getAffiliateCodeByCode(code: string): Promise<AffiliateCod
   }
 }
 
+export async function getAffiliateCodeByStripeIds(params: {
+  stripePromotionCodeId?: string
+  stripeCouponId?: string
+}): Promise<AffiliateCode | null> {
+  const { stripePromotionCodeId, stripeCouponId } = params
+
+  if (stripePromotionCodeId) {
+    try {
+      const result = await sql`
+        SELECT * FROM affiliate_codes
+        WHERE stripe_promotion_code_id = ${stripePromotionCodeId}
+          AND active = TRUE
+          AND (expires_at IS NULL OR expires_at > NOW())
+          AND (max_uses IS NULL OR use_count < max_uses)
+        LIMIT 1
+      `
+
+      if (result.rows[0]) {
+        return result.rows[0] as AffiliateCode
+      }
+    } catch (error) {
+      console.error('Database error fetching affiliate code by Stripe promotion code ID:', error)
+      throw new DatabaseError('Failed to fetch affiliate code by Stripe promotion code ID', error)
+    }
+  }
+
+  if (!stripeCouponId) {
+    return null
+  }
+
+  try {
+    const result = await sql`
+      SELECT * FROM affiliate_codes
+      WHERE stripe_coupon_id = ${stripeCouponId}
+        AND active = TRUE
+        AND (expires_at IS NULL OR expires_at > NOW())
+        AND (max_uses IS NULL OR use_count < max_uses)
+      LIMIT 1
+    `
+    return (result.rows[0] as AffiliateCode) || null
+  } catch (error) {
+    console.error('Database error fetching affiliate code by Stripe coupon ID:', error)
+    throw new DatabaseError('Failed to fetch affiliate code by Stripe coupon ID', error)
+  }
+}
+
 export async function incrementCodeUsage(codeId: string, revenue: number): Promise<void> {
   try {
     await sql`
@@ -988,6 +1034,34 @@ export async function getApprovedCommissionsForPayout(
   } catch (error) {
     console.error('Database error fetching approved commissions:', error)
     throw new DatabaseError('Failed to fetch approved commissions', error)
+  }
+}
+
+export async function markCommissionsPaidForPayout(
+  commissionIds: string[],
+  payoutId: string
+): Promise<number> {
+  if (commissionIds.length === 0) return 0
+
+  try {
+    let updated = 0
+
+    for (const commissionId of commissionIds) {
+      const result = await sql`
+        UPDATE commission_ledger
+        SET
+          status = 'paid',
+          payout_id = ${payoutId},
+          updated_at = NOW()
+        WHERE id = ${commissionId}
+      `
+      updated += result.rowCount ?? 0
+    }
+
+    return updated
+  } catch (error) {
+    console.error('Database error marking commissions paid for payout:', error)
+    throw new DatabaseError('Failed to mark commissions paid for payout', error)
   }
 }
 
