@@ -97,6 +97,99 @@ export const DISCLAIMERS = {
   emergency: 'If you are experiencing a medical emergency, call 911 immediately. CULTR Health services are not intended for urgent or emergency care.',
 } as const;
 
+// --- Geographic scope ---
+
+export const EXCLUDED_STATES = ['NY', 'LA'] as const; // PLACEHOLDER — confirm with legal
+
+export const SERVED_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'MD', 'MA', 'ME',
+  'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
+  'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN',
+  'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+] as const;
+
+// --- Provider credentials ---
+
+export const PROVIDER_CREDENTIALS = {
+  medical_director: {
+    name: 'Dr. Ali Saberi, MD',
+    npi: '', // PLACEHOLDER — user to provide
+    specialty: 'Internal Medicine',
+    states_licensed: [] as string[], // PLACEHOLDER — user to provide
+  },
+} as const;
+
+// --- Informed consent document ---
+
+export const CONSENT_DOCUMENT = {
+  title: 'Informed Consent for Telehealth Services',
+  sections: [
+    {
+      heading: 'Nature of Services',
+      content:
+        'CULTR Health is a telehealth platform that connects you with independent, licensed healthcare providers. All prescriptions require a clinical evaluation by a licensed provider. CULTR Health does not itself provide medical services.',
+    },
+    {
+      heading: 'Compounded Medications',
+      content:
+        'Medications prescribed through CULTR Health may be compounded by St. Luke Compounding Pharmacy (Florida License PH 32747), a licensed 503A compounding pharmacy. Compounded medications are not FDA-approved but are prepared in compliance with applicable state and federal regulations.',
+    },
+    {
+      heading: 'Risks & Benefits',
+      content:
+        'Telehealth services carry risks including potential misdiagnosis due to limited physical examination, technology failures, and privacy risks inherent to electronic communication. Benefits include convenient access to licensed providers, reduced travel, and timely care. All medications carry potential side effects — your provider will discuss risks specific to your prescribed therapy.',
+    },
+    {
+      heading: 'Prescription Requirements',
+      content:
+        'Not all patients will qualify for all treatments. Your provider may determine that a requested treatment is not clinically appropriate for you. Prescriptions are issued only when medically justified following clinical evaluation.',
+    },
+    {
+      heading: 'No Guarantee of Results',
+      content:
+        'Individual results vary based on genetics, lifestyle, adherence to protocols, and underlying health conditions. Testimonials on this website reflect personal experiences and are not guaranteed outcomes.',
+    },
+    {
+      heading: 'Refund & Cancellation',
+      content:
+        'All paid memberships begin with an initial 2-month clinical protocol. After your initial protocol, your membership renews monthly at your plan rate until you cancel. You may cancel anytime after your initial protocol by contacting support@cultrhealth.com or through your Stripe billing portal. No partial-month refunds are issued.',
+    },
+    {
+      heading: 'Privacy',
+      content:
+        'Your protected health information (PHI) is handled in accordance with HIPAA regulations. For full details, see our Privacy Policy.',
+    },
+    {
+      heading: 'Emergency',
+      content:
+        'If you are experiencing a medical emergency, call 911 immediately. CULTR Health services are not intended for urgent or emergency care.',
+    },
+  ],
+  checkboxLabel: 'I have read and understand this informed consent document',
+  buttonLabel: 'I Agree & Continue to Payment',
+} as const;
+
+// --- Therapy-to-tier mapping (used by ConsentModal to show relevant FDA statuses) ---
+
+/** All therapy IDs from FDA_STATUSES, grouped by tier availability */
+export const TIER_THERAPY_IDS: Record<string, string[]> = {
+  club: [], // Education only — no therapies
+  core: ['semaglutide', 'tirzepatide', 'r3ta'], // Foundation therapies
+  catalyst: [
+    'semaglutide', 'tirzepatide', 'r3ta',
+    'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
+    'nad-plus', 'semax-selank', 'bpc157-tb500', 'melanotan-2',
+  ],
+  concierge: [
+    'semaglutide', 'tirzepatide', 'r3ta',
+    'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
+    'nad-plus', 'semax-selank', 'bpc157-tb500', 'melanotan-2',
+  ],
+};
+
+// --- Clinical citations ---
+
 export const CLINICAL_CITATIONS: Record<string, string> = {
   'semaglutide-weight-loss': 'Wilding JPH, et al. Once-Weekly Semaglutide in Adults with Overweight or Obesity. N Engl J Med. 2021;384(11):989-1002. (STEP 1 trial)',
   'tirzepatide-weight-loss': 'Jastreboff AM, et al. Tirzepatide Once Weekly for the Treatment of Obesity. N Engl J Med. 2022;387(3):205-216. (SURMOUNT-1 trial)',
