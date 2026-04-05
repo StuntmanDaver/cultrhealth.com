@@ -8,7 +8,6 @@ import {
   ShoppingCart,
   Users,
   CreditCard,
-  ClipboardList,
   Network,
   Tag,
   UserCheck,
@@ -17,7 +16,6 @@ import {
   Clock,
   X,
   LogOut,
-  Video,
   PackageSearch,
 } from 'lucide-react'
 
@@ -40,8 +38,6 @@ const NAV_GROUPS = [
     items: [
       { label: 'Customers', href: '/admin/customers', icon: Users },
       { label: 'Members', href: '/admin/members', icon: CreditCard },
-      { label: 'Intakes', href: '/admin/intakes', icon: ClipboardList },
-      { label: 'Consultations', href: '/admin/consultations', icon: Video },
     ],
   },
   {

@@ -110,29 +110,7 @@ export async function GET(request: NextRequest) {
       lastUpdated: intakeResult.rows[0].created_at,
     };
 
-    // Enrich with Asher Med patient data if available
-    const asherPatientId = intakeData.asher_patient_id as number | string | undefined;
-    if (process.env.ASHER_MED_API_KEY && asherPatientId) {
-      try {
-        const { getPatientById } = await import('@/lib/asher-med-api');
-        const patient = await getPatientById(asherPatientId);
-
-        if (patient) {
-          // Use Asher Med as source of truth for current measurements
-          records.personal.firstName = patient.firstName || records.personal.firstName;
-          records.personal.lastName = patient.lastName || records.personal.lastName;
-          records.personal.dateOfBirth = patient.dateOfBirth || records.personal.dateOfBirth;
-          records.personal.gender = patient.gender || records.personal.gender;
-
-          if (patient.height) records.measurements.height = patient.height;
-          if (patient.weight) records.measurements.weight = patient.weight;
-          if (patient.bmi) records.measurements.bmi = patient.bmi;
-          if (patient.currentBodyFat) records.measurements.bodyFat = patient.currentBodyFat;
-        }
-      } catch {
-        // Asher Med unavailable — use intake data
-      }
-    }
+    // TODO: Reconnect to new pharmacy partner for real-time patient data
 
     return NextResponse.json({ success: true, records });
   } catch (error) {

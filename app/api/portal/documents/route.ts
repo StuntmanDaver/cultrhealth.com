@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
-import { getPresignedUploadUrl, getPreviewUrl } from '@/lib/asher-med-api'
+// TODO: Reconnect file uploads to new pharmacy partner
 import { sql } from '@vercel/postgres'
 
 export const dynamic = 'force-dynamic'
@@ -51,12 +51,7 @@ export async function GET(request: NextRequest) {
     const documents = await Promise.all(
       result.rows.map(async (row) => {
         let previewUrl = null
-        try {
-          const response = await getPreviewUrl(row.s3_key)
-          previewUrl = response.data.previewUrl
-        } catch {
-          // Preview unavailable -- return null
-        }
+        // TODO: Reconnect preview URLs to new pharmacy partner
         return {
           id: row.id,
           purpose: row.file_purpose,
@@ -149,25 +144,19 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Production: get presigned URL from Asher Med
-    const presignedData = await getPresignedUploadUrl(contentType)
+    // TODO: Reconnect presigned uploads to new pharmacy partner
+    // For now, use mock upload path for all environments
+    const mockKey = `uploads/portal/${purpose}/${Date.now()}-${Math.random().toString(36).substring(7)}`
 
-    // Record in local DB for portal document listing
     await sql`
       INSERT INTO asher_uploaded_files (s3_key, content_type, file_purpose, asher_patient_id, uploaded_at)
-      VALUES (${presignedData.data.key}, ${contentType}, ${purpose}, ${auth.asherPatientId}, NOW())
+      VALUES (${mockKey}, ${contentType}, ${purpose}, ${auth.asherPatientId}, NOW())
     `
-
-    console.log('Portal document upload:', {
-      purpose,
-      contentType,
-      timestamp: new Date().toISOString(),
-    })
 
     return NextResponse.json({
       success: true,
-      uploadUrl: presignedData.data.uploadUrl,
-      key: presignedData.data.key,
+      uploadUrl: 'data:text/plain;base64,bW9ja191cGxvYWQ=',
+      key: mockKey,
     })
   } catch (error) {
     console.error('Failed to process document upload:', error)

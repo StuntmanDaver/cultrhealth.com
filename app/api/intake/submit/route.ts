@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
-import {
-  createNewOrder,
-  updateOrderApproval,
-  AsherNewOrderRequest,
-  AsherMedicationName,
-  AsherMedicationType,
-  calculateBMI,
-  formatPhoneNumber,
-} from '@/lib/asher-med-api';
-import { MEDICATION_OPTIONS } from '@/lib/config/asher-med';
-import { getAsherMedIdFromProductId } from '@/lib/config/product-to-asher-mapping';
+import { calculateBMI } from '@/lib/utils/health';
+import { formatPhoneNumber } from '@/lib/utils/phone';
 import { updatePortalPatientId } from '@/lib/portal-db';
 import { formatMedicationsList, buildPartnerNote } from '@/lib/intake-utils';
 import { addTagsToContact } from '@/lib/mailchimp';
@@ -18,8 +9,8 @@ import { addTagsToContact } from '@/lib/mailchimp';
 /**
  * POST /api/intake/submit
  *
- * Submits completed intake form to Asher Med to create a new order.
- * This is called after the user completes the multi-step intake form.
+ * Submits completed intake form and saves to local database.
+ * // TODO: Reconnect to new pharmacy partner
  *
  * The intake form collects:
  * - Personal information (name, DOB, gender, contact)
@@ -35,13 +26,9 @@ import { addTagsToContact } from '@/lib/mailchimp';
  */
 export async function POST(request: NextRequest) {
   try {
-    // Require authenticated session (skip on staging where Asher Med is not configured)
-    const asherConfigured = !!process.env.ASHER_MED_API_KEY;
-    if (asherConfigured) {
-      const auth = await verifyAuth(request);
-      if (!auth.authenticated) {
-        return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
-      }
+    const auth = await verifyAuth(request);
+    if (!auth.authenticated) {
+      return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -85,22 +72,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Map product IDs to Asher Med medication IDs using comprehensive mapping
-    const medications = selectedMedications
-      .map((productId: string) => {
-        const asherMedId = getAsherMedIdFromProductId(productId);
-        const found = asherMedId ? MEDICATION_OPTIONS.find(m => m.id === asherMedId) : null;
-        return found;
-      })
-      .filter(Boolean);
-
-    if (medications.length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid medication selection. Please try selecting medications again.' },
-        { status: 400 }
-      );
-    }
-
     // Calculate physical measurements
     const heightFeet = parseInt(body.heightFeet, 10);
     const heightInches = parseInt(body.heightInches, 10);
@@ -111,146 +82,37 @@ export async function POST(request: NextRequest) {
     // Build partner note from treatment preferences
     const partnerNote = buildPartnerNote(body);
 
-    // Construct the Asher Med order request with proper nested structure
-    const orderRequest: AsherNewOrderRequest = {
-      personalInformation: {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email.toLowerCase(),
-        phoneNumber: formatPhoneNumber(body.phone),
-        dateOfBirth: body.dateOfBirth, // YYYY-MM-DD format
-        gender: body.gender.toUpperCase() as 'MALE' | 'FEMALE',
-      },
-      shippingAddress: {
-        address1: body.shippingAddress.address1,
-        city: body.shippingAddress.city,
-        stateAbbreviation: body.shippingAddress.state,
-        zipCode: body.shippingAddress.zipCode,
-        country: 'US',
-        apartmentNumber: body.shippingAddress.address2 || undefined,
-      },
-      physicalMeasurements: {
-        height: totalHeightInches,
-        weight: weightLbs,
-        bmi,
-      },
-      medicationPackages: medications.map(medication => ({
-        name: medication.name as AsherMedicationName,
-        duration: medication.durations[0] || 30,
-        medicationType: (medication.types[0] || 'Injection') as AsherMedicationType,
-      })),
-      idDocumentUpload: {
-        frontIDFileS3Key: body.idDocumentKey,
-        isGovernmentIDConfirmed: true,
-      },
-      telehealthConsent: {
-        agreeTelehealthService: true,
-        telehealthSigS3Key: body.telehealthSignatureKey,
-      },
-      consentAcknowledgments: {
-        consentCompoundedSigS3Key: body.compoundedConsentKey,
-        consentHealthcareConsultation: true,
-      },
-      wellnessQuestionnaire: (() => {
-        const base = body.wellnessQuestionnaire || {};
-        if (!body.goalsMotivation) return base;
-        const g = body.goalsMotivation as Record<string, unknown>;
-        return {
-          ...base,
-          goals_primary_result: g.primaryGoal,
-          goals_why_seeking_help_now: g.whyNow,
-          goals_top_symptoms: Array.isArray(g.topSymptoms) ? (g.topSymptoms as string[]).join(', ') : g.topSymptoms,
-          goals_priority_problem_to_solve: g.priorityProblem,
-          goals_urgency_1_to_10: g.urgency,
-          goals_what_have_you_tried: g.previousAttempts,
-          goals_how_did_you_hear_about_us: g.discoverySource,
-          goals_what_made_you_trust_us: g.trustReason,
-          goals_barriers_to_follow_through: Array.isArray(g.barriers) ? (g.barriers as string[]).join(', ') : g.barriers,
-        };
-      })(),
-      glp1MedicationHistory: medications.some(m => m.isGLP1) && body.glp1History ? body.glp1History : undefined,
-      currentMedicationDetails: body.currentMedications ? {
-        which_medications_have_you_been_taking: formatMedicationsList(body.currentMedications),
-      } : undefined,
-      treatmentPreferences: {
-        providerCustomSolution: body.treatmentPreferences?.customSolution ? 'yes_custom' : 'no_custom',
-      },
-      medicationTypeSelection: medications.some(m => m.isGLP1) ? 'GLP1' : 'NonGLP1',
-    };
+    // Build medication packages for local storage
+    const medicationPackages = selectedMedications.map((productId: string) => ({
+      productId,
+      name: productId,
+      duration: 30,
+      medicationType: 'Injection',
+    }));
 
-    // Staging bypass: return mock success when Asher Med is not configured
-    const isStaging = !process.env.ASHER_MED_API_KEY;
-    if (isStaging) {
-      const mockPatientId = Date.now();
+    // Build wellness questionnaire with goals
+    const wellnessQuestionnaire = (() => {
+      const base = body.wellnessQuestionnaire || {};
+      if (!body.goalsMotivation) return base;
+      const g = body.goalsMotivation as Record<string, unknown>;
+      return {
+        ...base,
+        goals_primary_result: g.primaryGoal,
+        goals_why_seeking_help_now: g.whyNow,
+        goals_top_symptoms: Array.isArray(g.topSymptoms) ? (g.topSymptoms as string[]).join(', ') : g.topSymptoms,
+        goals_priority_problem_to_solve: g.priorityProblem,
+        goals_urgency_1_to_10: g.urgency,
+        goals_what_have_you_tried: g.previousAttempts,
+        goals_how_did_you_hear_about_us: g.discoverySource,
+        goals_what_made_you_trust_us: g.trustReason,
+        goals_barriers_to_follow_through: Array.isArray(g.barriers) ? (g.barriers as string[]).join(', ') : g.barriers,
+      };
+    })();
 
-      // Still update DB if available
-      if (process.env.POSTGRES_URL && body.stripeSessionId) {
-        try {
-          const { sql } = await import('@vercel/postgres');
-          await sql`
-            UPDATE pending_intakes
-            SET intake_status = 'completed', completed_at = NOW(),
-                intake_data = intake_data || ${JSON.stringify({
-                  asher_patient_id: mockPatientId,
-                  submitted_at: new Date().toISOString(),
-                  staging_bypass: true,
-                })}::jsonb
-            WHERE stripe_payment_intent_id = ${body.stripeSessionId}
-              OR intake_data->>'session_id' = ${body.stripeSessionId}
-          `;
-        } catch {
-          // Non-fatal
-        }
-      }
+    // Generate a local patient ID
+    const localPatientId = Date.now();
 
-      if (body.phone) {
-        try {
-          const phoneE164 = formatPhoneNumber(body.phone);
-          await updatePortalPatientId(phoneE164, mockPatientId);
-        } catch {
-          // Non-fatal
-        }
-      }
-
-      // Tag Mailchimp contact as intake complete (non-blocking)
-      if (body.email) {
-        addTagsToContact(body.email, ['intake-complete']).catch((err) =>
-          console.error('[intake/submit] Mailchimp tag error (non-fatal):', err)
-        )
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Intake form submitted successfully (staging)',
-        patientId: mockPatientId,
-      });
-    }
-
-    // Submit to Asher Med
-    const result = await createNewOrder(orderRequest);
-    const patientId = result.data?.id;
-
-    // Send partner note to Asher Med via PATCH (non-fatal)
-    // createNewOrder returns the patient ID, not the order ID.
-    // We need to fetch orders for this patient to get the actual order ID.
-    if (patientId && partnerNote) {
-      try {
-        const { getOrders } = await import('@/lib/asher-med-api');
-        const ordersResponse = await getOrders({ patientId });
-        // Most recent order for this patient is the one we just created
-        const latestOrder = ordersResponse.data?.[0];
-        if (latestOrder?.id) {
-          await updateOrderApproval(latestOrder.id, {
-            approvalStatus: 'PENDING',
-            partnerNote,
-          });
-        }
-      } catch {
-        // Non-fatal: partner note failed to send
-      }
-    }
-
-    // Update pending intake status in database
+    // Save intake to local database
     if (process.env.POSTGRES_URL && body.stripeSessionId) {
       try {
         const { sql } = await import('@vercel/postgres');
@@ -261,18 +123,28 @@ export async function POST(request: NextRequest) {
             intake_status = 'completed',
             completed_at = NOW(),
             intake_data = intake_data || ${JSON.stringify({
-              asher_patient_id: result.data?.id,
+              asher_patient_id: localPatientId,
               submitted_at: new Date().toISOString(),
               treatmentPreferences: body.treatmentPreferences || null,
               currentMedications: body.currentMedications || null,
               partnerNote: partnerNote || null,
               goalsMotivation: body.goalsMotivation || null,
+              wellnessQuestionnaire,
+              physicalMeasurements: {
+                height: totalHeightInches,
+                weight: weightLbs,
+                bmi,
+              },
+              firstName: body.firstName,
+              lastName: body.lastName,
+              phone: body.phone,
+              selectedMedications,
             })}::jsonb
           WHERE stripe_payment_intent_id = ${body.stripeSessionId}
             OR intake_data->>'session_id' = ${body.stripeSessionId}
         `;
 
-        // Create asher_orders record
+        // Create asher_orders record (table still used for local order tracking)
         await sql`
           INSERT INTO asher_orders (
             asher_order_id,
@@ -286,13 +158,13 @@ export async function POST(request: NextRequest) {
             created_at
           )
           VALUES (
-            ${result.data?.id || null},
-            ${result.data?.id || null},
+            ${localPatientId},
+            ${localPatientId},
             ${body.email.toLowerCase()},
             'new',
             'pending',
             ${partnerNote},
-            ${JSON.stringify(orderRequest.medicationPackages)},
+            ${JSON.stringify(medicationPackages)},
             ${body.stripeSessionId || null},
             NOW()
           )
@@ -300,27 +172,23 @@ export async function POST(request: NextRequest) {
 
       } catch (dbError) {
         console.error('Failed to update database:', dbError instanceof Error ? dbError.message : 'Unknown error');
-        // Don't fail the request - the order was created in Asher Med
       }
     }
 
-    // Auto-link portal session with new Asher Med patient ID (AUTH-07)
-    // If user came through portal login -> intake, their phone is in the portal_sessions table.
-    // Link their new patient ID so next dashboard visit shows full data without re-login.
-    if (result.data?.id && body.phone) {
+    // Auto-link portal session with patient ID
+    if (body.phone) {
       try {
-        const phoneE164 = formatPhoneNumber(body.phone)
-        await updatePortalPatientId(phoneE164, result.data.id)
+        const phoneE164 = formatPhoneNumber(body.phone);
+        await updatePortalPatientId(phoneE164, localPatientId);
       } catch {
         // Non-fatal: portal session link failed, user can still re-login to get linked
       }
     }
 
     // Log successful submission (no PHI)
-    console.log('Intake form submitted to Asher Med:', {
+    console.log('Intake form submitted:', {
       timestamp: new Date().toISOString(),
-      medications: medications.map(m => m.name),
-      medicationCount: medications.length,
+      medicationCount: selectedMedications.length,
     });
 
     // Tag Mailchimp contact as intake complete (non-blocking)
@@ -333,19 +201,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Intake form submitted successfully',
-      patientId: result.data?.id,
+      patientId: localPatientId,
     });
   } catch (error) {
-    // Log full Asher Med error details for debugging
-    const asherError = error as { statusCode?: number; response?: unknown };
     console.error('[intake/submit] Failed:', {
       message: error instanceof Error ? error.message : String(error),
-      statusCode: asherError.statusCode,
-      // Do NOT log asherError.response — may contain PHI from Asher Med
-      apiUrl: process.env.ASHER_MED_API_URL || 'derived from ASHER_MED_ENVIRONMENT',
-      environment: process.env.ASHER_MED_ENVIRONMENT || 'production',
-      hasApiKey: !!process.env.ASHER_MED_API_KEY,
-      hasPartnerId: !!process.env.ASHER_MED_PARTNER_ID,
     });
 
     // Still save intake to DB so it appears in admin dashboard
@@ -370,8 +230,7 @@ export async function POST(request: NextRequest) {
                 phone: body.phone,
                 selectedMedications: body.selectedMedications || [],
                 submitted_at: new Date().toISOString(),
-                asher_error: error instanceof Error ? error.message : String(error),
-                asher_status_code: asherError.statusCode,
+                error: error instanceof Error ? error.message : String(error),
               })}::jsonb,
               NOW(), NOW()
             )

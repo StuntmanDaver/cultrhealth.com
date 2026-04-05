@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
-import { US_STATES } from '@/lib/config/asher-med'
+import { US_STATES } from '@/lib/config/us-states'
 import {
   ArrowLeft,
   User,
@@ -286,14 +286,9 @@ export default function ProfileClient() {
           <h2 className="font-display text-2xl text-brand-primary mb-2">
             Complete Your Profile
           </h2>
-          <p className="text-brand-primary/60 mb-6">
-            Start your medical intake to set up your profile.
+          <p className="text-brand-primary/60">
+            Your profile information will appear here once set up by your care team.
           </p>
-          <Link href="/intake">
-            <Button variant="primary" size="lg">
-              Start Intake
-            </Button>
-          </Link>
         </div>
       )}
 

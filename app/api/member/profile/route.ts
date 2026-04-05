@@ -108,33 +108,7 @@ export async function GET(request: NextRequest) {
         shippingAddress: intakeData?.shippingAddress || null,
       };
 
-      // Optionally fetch real-time patient data from Asher Med
-      if (process.env.ASHER_MED_API_KEY && asherPatientId) {
-        try {
-          const { getPatientById } = await import('@/lib/asher-med-api');
-          const asherPatient = await getPatientById(asherPatientId);
-
-          if (asherPatient) {
-            // Merge with Asher Med data (prefer Asher Med as source of truth)
-            patient = {
-              ...patient,
-              firstName: asherPatient.firstName || patient.firstName,
-              lastName: asherPatient.lastName || patient.lastName,
-              email: asherPatient.email || patient.email,
-              phone: asherPatient.phoneNumber || patient.phone,
-              shippingAddress: asherPatient.address1 ? {
-                address1: asherPatient.address1,
-                address2: asherPatient.address2 || '',
-                city: asherPatient.city || '',
-                state: asherPatient.stateAbbreviation || '',
-                zipCode: asherPatient.zipcode || '',
-              } : patient.shippingAddress,
-            };
-          }
-        } catch {
-          // Non-fatal: continue with database data
-        }
-      }
+      // TODO: Reconnect to new pharmacy partner for real-time patient data
     }
 
     return NextResponse.json({
@@ -190,46 +164,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { phone, shippingAddress } = body;
 
-    // Update Asher Med patient if we have their ID
-    if (process.env.POSTGRES_URL) {
-      const { sql } = await import('@vercel/postgres');
-
-      // Get Asher patient ID
-      const intakeResult = await sql`
-        SELECT intake_data->>'asher_patient_id' as asher_patient_id
-        FROM pending_intakes
-        WHERE lower(customer_email) = ${email}
-          AND intake_status = 'completed'
-        ORDER BY created_at DESC
-        LIMIT 1
-      `;
-
-      const asherPatientId = intakeResult.rows[0]?.asher_patient_id;
-
-      if (asherPatientId) {
-        try {
-          const { updatePatient } = await import('@/lib/asher-med-api');
-
-          const updateData: Parameters<typeof updatePatient>[1] = {};
-
-          if (phone) {
-            updateData.phoneNumber = phone;
-          }
-
-          if (shippingAddress) {
-            updateData.address1 = shippingAddress.address1;
-            updateData.address2 = shippingAddress.address2 || null;
-            updateData.city = shippingAddress.city;
-            updateData.stateAbbreviation = shippingAddress.state;
-            updateData.zipcode = shippingAddress.zipCode;
-          }
-
-          await updatePatient(asherPatientId, updateData);
-        } catch {
-          // Non-fatal: Asher Med update failed, continue with local response
-        }
-      }
-    }
+    // TODO: Reconnect profile updates to new pharmacy partner
 
     return NextResponse.json({
       success: true,

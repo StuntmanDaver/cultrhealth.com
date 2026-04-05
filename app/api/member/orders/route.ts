@@ -60,33 +60,10 @@ export async function GET(request: NextRequest) {
       LIMIT 50
     `;
 
-    // Optionally fetch real-time status from Asher Med
-    let asherOrders: Record<string, { status: string; updatedAt: string }> = {};
+    // TODO: Reconnect to new pharmacy partner for real-time order status
+    const asherOrders: Record<string, { status: string; updatedAt: string }> = {};
 
-    if (process.env.ASHER_MED_API_KEY && result.rows.length > 0) {
-      try {
-        const { getOrders } = await import('@/lib/asher-med-api');
-        const patientId = result.rows[0]?.patientId;
-
-        if (patientId) {
-          const asherResponse = await getOrders({ patientId });
-          if (asherResponse.data && asherResponse.data.length > 0) {
-            // Map Asher Med orders by ID (string key) for quick lookup
-            asherResponse.data.forEach((order) => {
-              asherOrders[String(order.id)] = {
-                status: order.status,
-                updatedAt: order.updatedAt,
-              };
-            });
-          }
-        }
-      } catch (apiError) {
-        console.log('Unable to fetch real-time order status from Asher Med:', apiError);
-        // Continue with database data
-      }
-    }
-
-    // Transform orders for frontend, merging with real-time data
+    // Transform orders for frontend
     const orders = result.rows.map((row) => {
       const packages = row.medicationPackages as Array<{ name: string; medicationName?: string }> | null;
       const asherOrderId = row.orderNumber;

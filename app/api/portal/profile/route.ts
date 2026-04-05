@@ -3,8 +3,8 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
-import { getPatientById, updatePatient } from '@/lib/asher-med-api'
-import { US_STATES } from '@/lib/config/asher-med'
+import { US_STATES } from '@/lib/config/us-states'
+import { sql } from '@vercel/postgres'
 import { z } from 'zod'
 
 // Valid US state abbreviations for validation
@@ -26,7 +26,7 @@ const addressSchema = z.object({
 })
 
 // --------------------------------------------------
-// GET — Read patient profile from Asher Med
+// GET — Read patient profile from local DB
 // --------------------------------------------------
 
 export async function GET(request: NextRequest) {
@@ -38,32 +38,57 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Case C user: no Asher Med patient linked yet
+  // No patient linked yet
   if (!auth.asherPatientId) {
     return NextResponse.json({ success: true, profile: null })
   }
 
   try {
-    const patient = await getPatientById(auth.asherPatientId)
+    // Look up profile from local portal_sessions + pending_intakes
+    const sessionResult = await sql`
+      SELECT first_name, last_name, phone_e164
+      FROM portal_sessions
+      WHERE asher_patient_id = ${auth.asherPatientId}
+      LIMIT 1
+    `
+
+    // Get intake data for fuller profile
+    const intakeResult = await sql`
+      SELECT intake_data
+      FROM pending_intakes
+      WHERE intake_data->>'asher_patient_id' = ${String(auth.asherPatientId)}
+        AND intake_status = 'completed'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `
+
+    const session = sessionResult.rows[0]
+    const intakeData = intakeResult.rows[0]?.intake_data as Record<string, unknown> | null
+
+    if (!session && !intakeData) {
+      return NextResponse.json({ success: true, profile: null })
+    }
+
+    const shippingAddress = intakeData?.shippingAddress as Record<string, string> | undefined
 
     const profile = {
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      email: patient.email,
-      phone: patient.phoneNumber,
-      dateOfBirth: patient.dateOfBirth,
-      gender: patient.gender,
+      firstName: (intakeData?.firstName as string) || session?.first_name || '',
+      lastName: (intakeData?.lastName as string) || session?.last_name || '',
+      email: (intakeData?.email as string) || '',
+      phone: (intakeData?.phone as string) || session?.phone_e164 || '',
+      dateOfBirth: (intakeData?.dateOfBirth as string) || '',
+      gender: (intakeData?.gender as string) || '',
       address: {
-        address1: patient.address1 || '',
-        address2: patient.address2 || null,
-        city: patient.city || '',
-        state: patient.stateAbbreviation || '',
-        zipCode: patient.zipcode || '',
+        address1: shippingAddress?.address1 || '',
+        address2: shippingAddress?.address2 || null,
+        city: shippingAddress?.city || '',
+        state: shippingAddress?.state || '',
+        zipCode: shippingAddress?.zipCode || '',
       },
       measurements: {
-        height: patient.height ?? null,
-        weight: patient.weight ?? null,
-        bmi: patient.bmi ?? null,
+        height: (intakeData?.physicalMeasurements as Record<string, number> | undefined)?.height ?? null,
+        weight: (intakeData?.physicalMeasurements as Record<string, number> | undefined)?.weight ?? null,
+        bmi: (intakeData?.physicalMeasurements as Record<string, number> | undefined)?.bmi ?? null,
       },
     }
 
@@ -78,7 +103,8 @@ export async function GET(request: NextRequest) {
 }
 
 // --------------------------------------------------
-// PUT — Update shipping address, sync to Asher Med
+// PUT — Update shipping address in local DB
+// // TODO: Reconnect to new pharmacy partner
 // --------------------------------------------------
 
 export async function PUT(request: NextRequest) {
@@ -94,14 +120,22 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const parsed = addressSchema.parse(body.address)
 
-    await updatePatient(auth.asherPatientId, {
-      address1: parsed.address1,
-      address2: parsed.address2 || null,
-      city: parsed.city,
-      stateAbbreviation: parsed.state,
-      zipcode: parsed.zipCode,
-      country: 'US',
-    })
+    // Update the most recent completed intake with new address
+    await sql`
+      UPDATE pending_intakes
+      SET intake_data = intake_data || ${JSON.stringify({
+        shippingAddress: {
+          address1: parsed.address1,
+          address2: parsed.address2 || '',
+          city: parsed.city,
+          state: parsed.state,
+          zipCode: parsed.zipCode,
+        },
+      })}::jsonb,
+      updated_at = NOW()
+      WHERE intake_data->>'asher_patient_id' = ${String(auth.asherPatientId)}
+        AND intake_status = 'completed'
+    `
 
     return NextResponse.json({ success: true })
   } catch (err) {

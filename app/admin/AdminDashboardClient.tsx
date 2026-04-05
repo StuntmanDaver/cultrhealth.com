@@ -392,17 +392,8 @@ export default function AdminDashboardClient() {
           )}
 
           {/* Operational Health */}
-          {(data.intakeFunnel.totalStarted > 0 || data.refundStats.total > 0 || Object.keys(data.bnplAdoption).length > 0) && (
+          {(data.refundStats.total > 0 || Object.keys(data.bnplAdoption).length > 0) && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {data.intakeFunnel.totalStarted > 0 && (
-                <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-                  <h3 className="font-display text-sm text-brand-primary/60 mb-2">Intake Completion</h3>
-                  <p className={`text-3xl font-bold ${data.intakeFunnel.completionRate >= 70 ? 'text-green-600' : data.intakeFunnel.completionRate >= 40 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {data.intakeFunnel.completionRate}%
-                  </p>
-                  <p className="text-sm text-brand-primary/60 mt-1">{data.intakeFunnel.completed} of {data.intakeFunnel.totalStarted} completed</p>
-                </div>
-              )}
               {data.refundStats.total > 0 && (
                 <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
                   <h3 className="font-display text-sm text-brand-primary/60 mb-2">Refund Rate</h3>

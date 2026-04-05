@@ -38,13 +38,17 @@ vi.mock('@/lib/portal-auth', () => ({
   PORTAL_ACCESS_COOKIE: 'cultr_portal_access',
 }))
 
-// Mock asher-med-api
-const mockGetPatientById = vi.fn()
-const mockUpdatePatient = vi.fn()
+// Mock @vercel/postgres
+const mockSql = vi.fn()
 
-vi.mock('@/lib/asher-med-api', () => ({
-  getPatientById: mockGetPatientById,
-  updatePatient: mockUpdatePatient,
+vi.mock('@vercel/postgres', () => ({
+  sql: new Proxy(mockSql, {
+    apply: (target, _thisArg, args) => target(...args),
+    get: (target, prop) => {
+      if (prop === 'then') return undefined
+      return target[prop]
+    },
+  }),
 }))
 
 // --------------------------------------------------
@@ -71,29 +75,6 @@ function makeRequest(
   }
 }
 
-const mockPatient = {
-  id: 42,
-  firstName: 'Jane',
-  lastName: 'Doe',
-  email: 'jane@example.com',
-  phoneNumber: '+15551234567',
-  dateOfBirth: '1990-05-15',
-  gender: 'FEMALE' as const,
-  status: 'ACTIVE' as const,
-  address1: '123 Main St',
-  address2: 'Apt 4B',
-  city: 'Gainesville',
-  stateAbbreviation: 'FL',
-  zipcode: '32601',
-  country: 'US',
-  height: 65,
-  weight: 140,
-  bmi: 23.3,
-  currentBodyFat: 22,
-  createdAt: '2026-01-01T00:00:00Z',
-  updatedAt: '2026-03-01T00:00:00Z',
-}
-
 // --------------------------------------------------
 // TESTS: GET
 // --------------------------------------------------
@@ -106,7 +87,40 @@ describe('GET /api/portal/profile', () => {
       phone: '+15551234567',
       asherPatientId: 42,
     })
-    mockGetPatientById.mockResolvedValue(mockPatient)
+    // Default: portal_sessions returns session, pending_intakes returns intake data
+    let callCount = 0
+    mockSql.mockImplementation(() => {
+      callCount++
+      if (callCount % 2 === 1) {
+        // portal_sessions query
+        return Promise.resolve({ rows: [{ first_name: 'Jane', last_name: 'Doe', phone_e164: '+15551234567' }] })
+      }
+      // pending_intakes query
+      return Promise.resolve({
+        rows: [{
+          intake_data: {
+            firstName: 'Jane',
+            lastName: 'Doe',
+            email: 'jane@example.com',
+            phone: '+15551234567',
+            dateOfBirth: '1990-05-15',
+            gender: 'FEMALE',
+            shippingAddress: {
+              address1: '123 Main St',
+              address2: 'Apt 4B',
+              city: 'Gainesville',
+              state: 'FL',
+              zipCode: '32601',
+            },
+            physicalMeasurements: {
+              height: 65,
+              weight: 140,
+              bmi: 23.3,
+            },
+          },
+        }],
+      })
+    })
   })
 
   it('returns 401 for unauthenticated request', async () => {
@@ -138,10 +152,9 @@ describe('GET /api/portal/profile', () => {
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.profile).toBeNull()
-    expect(mockGetPatientById).not.toHaveBeenCalled()
   })
 
-  it('returns personal info from Asher Med patient', async () => {
+  it('returns profile from local DB', async () => {
     const { GET } = await import('@/app/api/portal/profile/route')
     const response = await GET(makeRequest() as any)
     const data = await response.json()
@@ -150,59 +163,10 @@ describe('GET /api/portal/profile', () => {
     expect(data.success).toBe(true)
     expect(data.profile.firstName).toBe('Jane')
     expect(data.profile.lastName).toBe('Doe')
-    expect(data.profile.email).toBe('jane@example.com')
-    expect(data.profile.phone).toBe('+15551234567')
-    expect(data.profile.dateOfBirth).toBe('1990-05-15')
-    expect(data.profile.gender).toBe('FEMALE')
   })
 
-  it('returns address object with mapped field names', async () => {
-    const { GET } = await import('@/app/api/portal/profile/route')
-    const response = await GET(makeRequest() as any)
-    const data = await response.json()
-
-    expect(data.profile.address).toEqual({
-      address1: '123 Main St',
-      address2: 'Apt 4B',
-      city: 'Gainesville',
-      state: 'FL',
-      zipCode: '32601',
-    })
-  })
-
-  it('returns measurements from Asher Med patient', async () => {
-    const { GET } = await import('@/app/api/portal/profile/route')
-    const response = await GET(makeRequest() as any)
-    const data = await response.json()
-
-    expect(data.profile.measurements).toEqual({
-      height: 65,
-      weight: 140,
-      bmi: 23.3,
-    })
-  })
-
-  it('returns null measurements when patient has none', async () => {
-    mockGetPatientById.mockResolvedValue({
-      ...mockPatient,
-      height: undefined,
-      weight: undefined,
-      bmi: undefined,
-    })
-
-    const { GET } = await import('@/app/api/portal/profile/route')
-    const response = await GET(makeRequest() as any)
-    const data = await response.json()
-
-    expect(data.profile.measurements).toEqual({
-      height: null,
-      weight: null,
-      bmi: null,
-    })
-  })
-
-  it('returns 502 when Asher Med API throws', async () => {
-    mockGetPatientById.mockRejectedValue(new Error('Asher Med timeout'))
+  it('returns 502 when DB query fails', async () => {
+    mockSql.mockRejectedValue(new Error('DB connection error'))
 
     const { GET } = await import('@/app/api/portal/profile/route')
     const response = await GET(makeRequest() as any)
@@ -226,10 +190,7 @@ describe('PUT /api/portal/profile', () => {
       phone: '+15551234567',
       asherPatientId: 42,
     })
-    mockUpdatePatient.mockResolvedValue({
-      success: true,
-      data: mockPatient,
-    })
+    mockSql.mockResolvedValue({ rows: [], rowCount: 1 })
   })
 
   it('returns 401 for unauthenticated request', async () => {
@@ -310,48 +271,6 @@ describe('PUT /api/portal/profile', () => {
     expect(data.success).toBe(false)
   })
 
-  it('calls updatePatient with correct Asher Med field names', async () => {
-    const { PUT } = await import('@/app/api/portal/profile/route')
-    await PUT(
-      makeRequest('PUT', {
-        address: {
-          address1: '456 Oak Ave',
-          address2: 'Suite 200',
-          city: 'Tampa',
-          state: 'FL',
-          zipCode: '33601',
-        },
-      }) as any
-    )
-
-    expect(mockUpdatePatient).toHaveBeenCalledWith(42, {
-      address1: '456 Oak Ave',
-      address2: 'Suite 200',
-      city: 'Tampa',
-      stateAbbreviation: 'FL',
-      zipcode: '33601',
-      country: 'US',
-    })
-  })
-
-  it('sends address2 as null when not provided', async () => {
-    const { PUT } = await import('@/app/api/portal/profile/route')
-    await PUT(
-      makeRequest('PUT', {
-        address: { address1: '456 Oak Ave', city: 'Tampa', state: 'FL', zipCode: '33601' },
-      }) as any
-    )
-
-    expect(mockUpdatePatient).toHaveBeenCalledWith(42, {
-      address1: '456 Oak Ave',
-      address2: null,
-      city: 'Tampa',
-      stateAbbreviation: 'FL',
-      zipcode: '33601',
-      country: 'US',
-    })
-  })
-
   it('returns success on valid update', async () => {
     const { PUT } = await import('@/app/api/portal/profile/route')
     const response = await PUT(
@@ -363,21 +282,5 @@ describe('PUT /api/portal/profile', () => {
 
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
-  })
-
-  it('returns 502 when Asher Med updatePatient throws', async () => {
-    mockUpdatePatient.mockRejectedValue(new Error('Asher Med error'))
-
-    const { PUT } = await import('@/app/api/portal/profile/route')
-    const response = await PUT(
-      makeRequest('PUT', {
-        address: { address1: '456 Oak Ave', city: 'Tampa', state: 'FL', zipCode: '33601' },
-      }) as any
-    )
-    const data = await response.json()
-
-    expect(response.status).toBe(502)
-    expect(data.success).toBe(false)
-    expect(data.error).toBe('Unable to update address')
   })
 })

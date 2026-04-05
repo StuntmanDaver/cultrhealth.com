@@ -4,6 +4,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Star } from 'lucide-react'
 import { TESTIMONIALS, TRUST_METRICS } from '@/lib/config/social-proof'
+import { TestimonialDisclaimer } from '@/components/compliance/TestimonialDisclaimer'
 
 const firstColumn = TESTIMONIALS.slice(0, 3)
 const secondColumn = TESTIMONIALS.slice(3, 6)
@@ -136,6 +137,11 @@ export default function TestimonialsSection() {
           <TestimonialsColumn testimonials={firstColumn} duration={15} />
           <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={19} />
           <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={17} />
+        </div>
+
+        {/* Compliance disclaimer — required for LegitScript */}
+        <div className="mt-8">
+          <TestimonialDisclaimer />
         </div>
       </motion.div>
     </section>

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
+import { DispensingPharmacyInfo } from '@/components/compliance/DispensingPharmacyInfo';
 
 const productLinks = [
   { href: '/pricing', label: 'Pricing' },
@@ -180,10 +181,15 @@ export function Footer() {
             </div>
           </div>
 
+          {/* Dispensing Pharmacy — Required by LegitScript */}
+          <div className="pt-8 border-t border-white/10 mb-6">
+            <DispensingPharmacyInfo className="text-white/40" />
+          </div>
+
           {/* Bottom Section */}
-          <div className="pt-8 border-t border-white/10">
+          <div className="pt-4 border-t border-white/10">
             <p className="text-xs text-white/40 mb-4">
-              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice.
+              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice. Compounded medications are not FDA-approved but are prepared by licensed pharmacies in compliance with applicable regulations.
             </p>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <p className="text-xs text-white/40">
@@ -198,6 +204,9 @@ export function Footer() {
                 </Link>
                 <Link href="/legal/medical-disclaimer" className="hover:text-cultr-sage transition-all duration-200">
                   Medical Disclaimer
+                </Link>
+                <Link href="/legal/provider-credentials" className="hover:text-cultr-sage transition-all duration-200">
+                  Provider Credentials
                 </Link>
               </div>
             </div>

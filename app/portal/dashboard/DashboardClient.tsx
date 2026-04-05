@@ -10,15 +10,12 @@ import { getStatusDisplay, isActiveStatus } from '@/lib/portal-orders'
 import type { PortalOrder } from '@/lib/portal-orders'
 import {
   LogOut,
-  ClipboardList,
-  FileText,
   CreditCard,
   HelpCircle,
   X,
   Check,
   Clock,
   RefreshCw,
-  AlertCircle,
   TestTube2,
   ChevronRight,
   CheckCircle,
@@ -46,9 +43,6 @@ export default function DashboardClient() {
     needsAttentionCount: number
   } | null>(null)
 
-  // Renewal prompt state
-  const [supplyData, setSupplyData] = useState<{ daysRemaining: number; isLow: boolean } | null>(null)
-  const [renewalEligible, setRenewalEligible] = useState(false)
   const [patientFirstName, setPatientFirstName] = useState<string | null>(null)
 
   const fetchOrders = useCallback(async () => {
@@ -383,18 +377,12 @@ export default function DashboardClient() {
       {/* Empty State */}
       {!isLoading && !error && orders.length === 0 && (
         <div className="text-center py-12">
-          <ClipboardList className="w-12 h-12 text-brand-primary/30 mx-auto mb-4" />
           <h2 className="font-display text-2xl text-brand-primary mb-2">
             Welcome to CULTR Health!
           </h2>
-          <p className="text-brand-primary/60 mb-6">
-            Start your journey by completing your medical intake.
+          <p className="text-brand-primary/60">
+            Your orders will appear here once placed.
           </p>
-          <Link href="/intake">
-            <Button variant="primary" size="lg">
-              Start Intake
-            </Button>
-          </Link>
         </div>
       )}
 
@@ -445,31 +433,6 @@ export default function DashboardClient() {
         </div>
       )}
 
-      {/* Renewal Prompt */}
-      {!isLoading && renewalEligible && supplyData?.isLow && (
-        <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="font-medium text-amber-900">
-                {supplyData.daysRemaining <= 0
-                  ? 'Your medication supply may have run out'
-                  : `${supplyData.daysRemaining} day${supplyData.daysRemaining === 1 ? '' : 's'} of medication remaining`}
-              </p>
-              <p className="text-sm text-amber-700 mt-1">
-                Start your renewal now to avoid a gap in treatment.
-              </p>
-              <Link
-                href="/members/consultations"
-                className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-amber-600 text-white rounded-full text-sm font-medium hover:bg-amber-700 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Start Renewal
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Order List */}
       {!isLoading && !error && listOrders.length > 0 && (
@@ -512,34 +475,6 @@ export default function DashboardClient() {
           Quick Links
         </h3>
         <div className="space-y-3">
-          <Link
-            href="/intake"
-            className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
-          >
-            <FileText className="w-5 h-5 text-brand-primary/40" />
-            <div>
-              <span className="font-medium text-brand-primary block">
-                Start Intake
-              </span>
-              <span className="text-xs text-brand-primary/40">
-                Complete your medical questionnaire
-              </span>
-            </div>
-          </Link>
-          <Link
-            href="/members/consultations"
-            className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
-          >
-            <RefreshCw className="w-5 h-5 text-brand-primary/40" />
-            <div>
-              <span className="font-medium text-brand-primary block">
-                Renew Prescription
-              </span>
-              <span className="text-xs text-brand-primary/40">
-                Renew with your info pre-filled
-              </span>
-            </div>
-          </Link>
           <a
             href={LINKS.stripeCustomerPortal}
             target="_blank"

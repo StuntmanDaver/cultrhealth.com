@@ -772,17 +772,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.error('Failed to send cancellation email:', emailError);
   }
 
-  // Update Asher Med patient status
-  const membership = await (await import('@/lib/db')).getMembershipBySubscriptionId(subscription.id);
-  if (membership?.asher_patient_id) {
-    try {
-      const { updatePatient } = await import('@/lib/asher-med-api');
-      await updatePatient(membership.asher_patient_id, { status: 'INACTIVE' });
-      console.log('Partner record deactivated for cancelled subscription');
-    } catch (asherError) {
-      console.error('Failed to deactivate partner record:', asherError instanceof Error ? asherError.message : 'unknown');
-    }
-  }
+  // TODO: Notify pharmacy partner of cancellation when integration is built
+  console.log('Subscription cancelled — pharmacy partner notification pending integration');
 }
 
 /**

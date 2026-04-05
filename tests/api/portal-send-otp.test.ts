@@ -66,8 +66,8 @@ vi.mock('@/lib/rate-limit', () => {
   }
 })
 
-// Mock asher-med-api
-vi.mock('@/lib/asher-med-api', () => ({
+// Mock phone utils
+vi.mock('@/lib/utils/phone', () => ({
   formatPhoneNumber: vi.fn((phone: string) => {
     const digits = phone.replace(/\D/g, '')
     if (digits.length === 10) return `+1${digits}`

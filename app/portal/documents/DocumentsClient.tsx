@@ -282,14 +282,9 @@ export default function DocumentsClient() {
           <h2 className="font-display text-2xl text-brand-primary mb-2">
             No Documents Yet
           </h2>
-          <p className="text-brand-primary/60 mb-6">
-            Upload your first document to get started, or complete your medical intake.
+          <p className="text-brand-primary/60">
+            Documents shared with your care team will appear here.
           </p>
-          <Link href="/intake">
-            <Button variant="primary" size="lg">
-              Start Intake
-            </Button>
-          </Link>
         </div>
       )}
 

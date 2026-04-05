@@ -602,7 +602,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
     volumeMl: 3,
     category: 'growth_factor',
     isBlend: false,
-    description: 'FDA-studied GHRH analog that reduces visceral fat and stimulates natural growth hormone release.',
+    description: 'GHRH analog studied for its role in growth hormone support. Tesamorelin (Egrifta) is FDA-approved for a specific indication; this compounded formulation is not FDA-approved.',
     priceUsd: 69.70,
     stockStatus: 'in_stock',
     bulkPrice: 61.20,

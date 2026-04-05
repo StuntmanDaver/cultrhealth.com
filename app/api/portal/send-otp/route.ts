@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { formatPhoneNumber, isValidPhoneNumber } from '@/lib/asher-med-api'
+import { formatPhoneNumber, isValidPhoneNumber } from '@/lib/utils/phone'
 
 // Rate limiters
 const ipLimiter = rateLimit({ limit: 5, windowMs: 60 * 60 * 1000, prefix: 'otp-send' })

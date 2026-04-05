@@ -5,8 +5,8 @@ import {
   getStatusDisplay,
   isActiveStatus,
   ACTIVE_STATUSES,
+  type OrderStatus,
 } from '@/lib/portal-orders'
-import type { AsherOrderStatus } from '@/lib/asher-med-api'
 
 // --------------------------------------------------
 // getStatusDisplay
@@ -80,7 +80,7 @@ describe('getStatusDisplay', () => {
   })
 
   it('falls back to PENDING display for unknown status', () => {
-    const display = getStatusDisplay('UNKNOWN_STATUS' as AsherOrderStatus)
+    const display = getStatusDisplay('UNKNOWN_STATUS' as OrderStatus)
     expect(display).toEqual({
       label: 'Submitted',
       explanation: 'Your order has been received and is being processed.',

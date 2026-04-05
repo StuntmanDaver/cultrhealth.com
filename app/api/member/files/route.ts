@@ -57,15 +57,8 @@ export async function GET(request: NextRequest) {
       result.rows.map(async (row) => {
         let previewUrl: string | null = null;
 
-        if (process.env.ASHER_MED_API_KEY && row.s3_key) {
-          try {
-            const { getPreviewUrl } = await import('@/lib/asher-med-api');
-            const response = await getPreviewUrl(row.s3_key);
-            previewUrl = response.data.previewUrl;
-          } catch {
-            // Preview URL unavailable — file still listed without view link
-          }
-        }
+        // TODO: Reconnect file preview to new pharmacy partner
+        // Preview URLs will be available once new integration is built
 
         return {
           id: row.id,

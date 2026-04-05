@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
-import AsherDashboardSection from './AsherDashboardSection'
 
 interface IntakeRecord {
   id: string
@@ -71,9 +70,6 @@ export default function IntakeViewerClient() {
             Refresh Intakes
           </button>
         </div>
-
-        {/* Asher Med Dashboard */}
-        <AsherDashboardSection />
 
         {/* Divider */}
         <div className="border-t border-gray-200 my-6" />

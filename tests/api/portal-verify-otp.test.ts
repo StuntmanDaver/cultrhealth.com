@@ -58,10 +58,8 @@ vi.mock('@/lib/rate-limit', () => ({
   }),
 }))
 
-// Mock asher-med-api
-const mockGetPatientByPhone = vi.fn()
-
-vi.mock('@/lib/asher-med-api', () => ({
+// Mock phone utils
+vi.mock('@/lib/utils/phone', () => ({
   formatPhoneNumber: vi.fn((phone: string) => {
     const digits = phone.replace(/\D/g, '')
     if (digits.length === 10) return `+1${digits}`
@@ -72,8 +70,10 @@ vi.mock('@/lib/asher-med-api', () => ({
     const digits = phone.replace(/\D/g, '')
     return digits.length >= 10 && digits.length <= 15
   }),
-  getPatientByPhone: mockGetPatientByPhone,
 }))
+
+// Stub for legacy test references — route no longer calls getPatientByPhone
+const mockGetPatientByPhone = vi.fn()
 
 // Mock portal-auth
 const mockCreatePortalAccessToken = vi.fn().mockResolvedValue('access-token-123')
@@ -325,18 +325,18 @@ describe('POST /api/portal/verify-otp', () => {
   // ---- upsertPortalSession called in all cases ----
   it('calls upsertPortalSession after successful verification (all cases)', async () => {
     mockGetPortalSessionByPhone.mockResolvedValue(null)
-    mockGetPatientByPhone.mockResolvedValue(mockPatient)
 
     const { POST } = await import('@/app/api/portal/verify-otp/route')
     const request = makeRequest({ phone: '5551234567', code: '789012' })
     await POST(request)
 
+    // With no existing session, patientId is null, names are undefined
     expect(mockUpsertPortalSession).toHaveBeenCalledWith(
       '5551234567',
       '+15551234567',
-      42,
-      'John',
-      'Doe'
+      null,
+      undefined,
+      undefined
     )
   })
 

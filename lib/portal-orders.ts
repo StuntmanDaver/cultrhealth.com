@@ -1,4 +1,5 @@
-import type { AsherOrderStatus } from '@/lib/asher-med-api'
+/** Order status from pharmacy/fulfillment partner */
+type OrderStatus = string
 
 // ===========================================
 // TYPES
@@ -18,7 +19,7 @@ export interface OrderStatusDisplay {
  */
 export interface PortalOrder {
   id: number | string
-  status: AsherOrderStatus
+  status: OrderStatus
   orderType: string | null
   doctorId: number | string | null
   partnerNote: string | null
@@ -137,7 +138,7 @@ const STATUS_MAP: Partial<Record<string, OrderStatusDisplay>> = {
  * Returns label, explanation, color, and Tailwind CSS classes.
  * Falls back to PENDING display for unknown statuses.
  */
-export function getStatusDisplay(status: AsherOrderStatus): OrderStatusDisplay {
+export function getStatusDisplay(status: OrderStatus): OrderStatusDisplay {
   return STATUS_MAP[status] ?? STATUS_MAP['PENDING']!
 }
 
@@ -149,7 +150,7 @@ export function getStatusDisplay(status: AsherOrderStatus): OrderStatusDisplay {
  * Statuses considered "active" — used to identify the hero card order.
  * In-flight pipeline statuses are active; COMPLETED, DENIED, and CANCELLED are terminal.
  */
-export const ACTIVE_STATUSES: AsherOrderStatus[] = [
+export const ACTIVE_STATUSES: OrderStatus[] = [
   'PENDING',
   'APPROVED',
   'WaitingRoom',
@@ -165,6 +166,6 @@ export const ACTIVE_STATUSES: AsherOrderStatus[] = [
 /**
  * Check if a given order status is active (non-terminal).
  */
-export function isActiveStatus(status: AsherOrderStatus): boolean {
+export function isActiveStatus(status: OrderStatus): boolean {
   return ACTIVE_STATUSES.includes(status)
 }

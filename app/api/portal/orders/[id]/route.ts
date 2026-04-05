@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
-import { getOrderDetail } from '@/lib/asher-med-api'
 import { sql } from '@vercel/postgres'
 import type { PortalOrder } from '@/lib/portal-orders'
 
@@ -44,58 +43,68 @@ export async function GET(
       )
     }
 
-    // 4. Fetch order detail from Asher Med
-    const order = await getOrderDetail(id)
+    // 4. Fetch order detail from local DB with ownership check
+    const result = await sql`
+      SELECT
+        id,
+        asher_order_id,
+        asher_patient_id,
+        order_type,
+        order_status,
+        partner_note,
+        medication_packages,
+        created_at,
+        updated_at
+      FROM asher_orders
+      WHERE (asher_order_id = ${id} OR id::text = ${id})
+      LIMIT 1
+    `
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Order not found' },
+        { status: 404 }
+      )
+    }
+
+    const row = result.rows[0]
 
     // 5. Ownership check — verify order belongs to authenticated patient
-    // Compare as strings to handle both numeric and UUID ID formats
-    if (String(order.patientId) !== String(auth.asherPatientId)) {
+    if (String(row.asher_patient_id) !== String(auth.asherPatientId)) {
       return NextResponse.json(
         { error: 'Not authorized' },
         { status: 403 }
       )
     }
 
-    // 6. Best-effort local DB enrichment for medication name
-    let medicationName = order.orderType || 'Medication'
+    // 6. Extract medication name from packages
+    let medicationName = row.order_type || 'Medication'
     try {
-      const localOrder = await sql`
-        SELECT medication_packages
-        FROM asher_orders
-        WHERE asher_order_id = ${id}
-        LIMIT 1
-      `
-      if (localOrder.rows.length > 0 && localOrder.rows[0].medication_packages) {
-        try {
-          const packages = typeof localOrder.rows[0].medication_packages === 'string'
-            ? JSON.parse(localOrder.rows[0].medication_packages)
-            : localOrder.rows[0].medication_packages
-          if (Array.isArray(packages) && packages.length > 0 && packages[0].name) {
-            medicationName = packages[0].name
-          }
-        } catch {
-          // Skip malformed medication_packages
-        }
+      const packages = typeof row.medication_packages === 'string'
+        ? JSON.parse(row.medication_packages)
+        : row.medication_packages
+      if (Array.isArray(packages) && packages.length > 0 && packages[0].name) {
+        medicationName = packages[0].name
       }
     } catch {
-      // Local DB enrichment is best-effort
+      // Skip malformed medication_packages
     }
 
     // 7. Return full order detail as PortalOrder shape
     const portalOrder: PortalOrder = {
-      id: order.id,
-      status: order.status,
-      orderType: order.orderType || null,
-      doctorId: order.doctorId || null,
-      partnerNote: order.partnerNote || null,
-      createdAt: order.createdAt,
-      updatedAt: order.updatedAt,
+      id: row.asher_order_id || row.id,
+      status: row.order_status || 'pending',
+      orderType: row.order_type || null,
+      doctorId: null,
+      partnerNote: row.partner_note || null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at || row.created_at,
       medicationName,
     }
 
     return NextResponse.json({ success: true, order: portalOrder })
   } catch {
-    // 8. Asher Med API error — return graceful 502
+    // 8. DB error — return graceful 502
     return NextResponse.json(
       { success: false, error: 'Unable to load order details' },
       { status: 502 }

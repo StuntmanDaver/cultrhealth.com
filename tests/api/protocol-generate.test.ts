@@ -7,11 +7,6 @@ vi.mock('@/lib/auth', () => ({
   isProviderEmail: vi.fn(),
 }))
 
-// Mock the asher-med-api module
-vi.mock('@/lib/asher-med-api', () => ({
-  getPatientById: vi.fn(),
-}))
-
 // Mock Vercel Postgres
 vi.mock('@vercel/postgres', () => ({
   sql: vi.fn(),
@@ -19,7 +14,6 @@ vi.mock('@vercel/postgres', () => ({
 
 import { POST } from '@/app/api/protocol/generate/route'
 import * as auth from '@/lib/auth'
-import * as asherApi from '@/lib/asher-med-api'
 
 describe('Protocol Generate API', () => {
   beforeEach(() => {
@@ -81,7 +75,6 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('returns 400 when templateId is missing', async () => {
@@ -122,7 +115,7 @@ describe('Protocol Generate API', () => {
     })
   })
 
-  describe('Asher Med Integration', () => {
+  describe('Protocol Generation', () => {
     beforeEach(() => {
       vi.mocked(auth.getSession).mockResolvedValue({
         email: 'provider@cultrhealth.com',
@@ -131,24 +124,7 @@ describe('Protocol Generate API', () => {
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
     })
 
-    it('returns 404 when patient is not found', async () => {
-      vi.mocked(asherApi.getPatientById).mockResolvedValue(null as any)
-
-      const request = createRequest({
-        templateId: 'glp1-standard',
-        patientId: '999',
-      })
-
-      const response = await POST(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(404)
-      expect(data.error).toBe('Patient not found')
-    })
-
-    it('generates protocol and stores in DB on success', async () => {
-      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
-
+    it('generates protocol and returns success', async () => {
       const request = createRequest({
         templateId: 'glp1-standard',
         patientId: '123',
@@ -165,21 +141,6 @@ describe('Protocol Generate API', () => {
       expect(data.success).toBe(true)
       expect(data.protocolName).toBe('GLP-1 Standard Protocol')
     })
-
-    it('handles API errors gracefully', async () => {
-      vi.mocked(asherApi.getPatientById).mockRejectedValue(new Error('Asher Med API error'))
-
-      const request = createRequest({
-        templateId: 'glp1-standard',
-        patientId: '123',
-      })
-
-      const response = await POST(request)
-      const data = await response.json()
-
-      expect(response.status).toBe(500)
-      expect(data.error).toBe('Protocol generation failed. Please try again.')
-    })
   })
 
   describe('Parameter Handling', () => {
@@ -189,7 +150,6 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('uses default parameters when none provided', async () => {
@@ -228,7 +188,6 @@ describe('Protocol Generate API', () => {
         customerId: 'cus_123',
       })
       vi.mocked(auth.isProviderEmail).mockReturnValue(true)
-      vi.mocked(asherApi.getPatientById).mockResolvedValue({ id: 123 } as any)
     })
 
     it('generates protocol from symptom IDs', async () => {

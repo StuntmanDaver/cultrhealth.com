@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Package,
-  Plus,
   RefreshCw,
-  ChevronRight,
   DollarSign,
   Download,
   Receipt,
@@ -140,27 +138,7 @@ export function MemberDashboard({
         </div>
 
         {/* Quick Action Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <Link
-            href="/intake"
-            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-brand-cream text-brand-primary hover:bg-cream-dark transition-all"
-          >
-            <Plus className="w-6 h-6 text-brand-primary" />
-            <span className="text-xs font-medium text-center leading-tight">
-              Start New Order
-            </span>
-          </Link>
-
-          <Link
-            href="/members/consultations"
-            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/20 text-white hover:bg-white/30 transition-all"
-          >
-            <RefreshCw className="w-6 h-6 text-white/80" />
-            <span className="text-xs font-medium text-center leading-tight">
-              Consultations
-            </span>
-          </Link>
-
+        <div className="grid grid-cols-1 gap-3">
           <Link
             href="/members/shop"
             className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
@@ -179,12 +157,6 @@ export function MemberDashboard({
           <h3 className="text-lg font-display font-bold text-brand-primary">
             Your Orders
           </h3>
-          <Link
-            href="/intake"
-            className="text-sm text-brand-primary/50 hover:text-brand-primary font-medium flex items-center gap-1"
-          >
-            New Order <ChevronRight className="w-4 h-4" />
-          </Link>
         </div>
 
         {ordersLoading ? (
@@ -248,16 +220,9 @@ export function MemberDashboard({
           <div className="bg-cream-dark border border-brand-primary/10 rounded-2xl p-8 text-center">
             <Package className="w-12 h-12 text-brand-primary/20 mx-auto mb-3" />
             <p className="text-brand-primary font-medium">No Orders Yet</p>
-            <p className="text-sm text-brand-primary/50 mt-1 mb-4">
-              Start your first order to begin your protocol.
+            <p className="text-sm text-brand-primary/50 mt-1">
+              Your orders will appear here once placed.
             </p>
-            <Link
-              href="/intake"
-              className="inline-flex items-center gap-2 px-5 py-2 bg-brand-primary text-white rounded-full font-medium hover:bg-forest-light transition-colors text-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Start New Order
-            </Link>
           </div>
         )}
       </div>

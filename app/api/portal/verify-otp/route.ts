@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import twilio from 'twilio'
 import { rateLimit, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { formatPhoneNumber, isValidPhoneNumber, getPatientByPhone } from '@/lib/asher-med-api'
+import { formatPhoneNumber, isValidPhoneNumber } from '@/lib/utils/phone'
 import {
   createPortalAccessToken,
   createPortalRefreshToken,
@@ -113,16 +113,8 @@ export async function POST(request: Request) {
     const existingSession = await getPortalSessionByPhone(phoneE164)
     const knownPhone = existingSession !== null
 
-    // b. Try Asher Med patient lookup
-    let asherPatient = null
-    try {
-      asherPatient = await getPatientByPhone(phoneE164)
-    } catch {
-      // Asher Med may be down -- fall back to cached data
-    }
-
-    // c. Determine patient ID: Asher Med takes priority, fall back to cached
-    const patientId = asherPatient?.id ?? existingSession?.asher_patient_id ?? null
+    // b. Determine patient ID from local DB cache
+    const patientId = existingSession?.asher_patient_id ?? null
 
     // 8. Create session tokens (always -- phone is verified regardless of patient status)
     const accessToken = await createPortalAccessToken(phoneE164, patientId)
@@ -136,15 +128,15 @@ export async function POST(request: Request) {
       phone,
       phoneE164,
       patientId,
-      asherPatient?.firstName,
-      asherPatient?.lastName
+      existingSession?.first_name,
+      existingSession?.last_name
     )
 
     // 11. Return response based on three cases
     const hasPatient = patientId !== null
 
     if (hasPatient) {
-      // Case A: Patient found (Asher Med or cached)
+      // Case A: Patient found (cached from previous intake)
       return NextResponse.json({
         success: true,
         hasPatient: true,
@@ -163,7 +155,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Case C: Never-seen phone (no local DB row AND no Asher Med patient)
+    // Case C: Never-seen phone (no local DB row)
     return NextResponse.json({
       success: true,
       hasPatient: false,

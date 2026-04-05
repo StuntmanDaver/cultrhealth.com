@@ -23,12 +23,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Template/Symptoms and patientId are required' }, { status: 400 })
     }
 
-    // Verify patient exists in Asher Med
-    const { getPatientById } = await import('@/lib/asher-med-api')
-    const patient = await getPatientById(Number(patientId))
-    if (!patient) {
-      return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
-    }
+    // TODO: Reconnect patient verification to new pharmacy partner
+    const patient = { id: patientId, firstName: '', lastName: '' }
 
     // ────────────────────────────────────────────────────────────────────────
     // BRANCH 1: TEMPLATE BASED

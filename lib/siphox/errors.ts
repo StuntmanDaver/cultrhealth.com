@@ -1,5 +1,5 @@
 // SiPhox Health API Error Class
-// Follows AsherMedApiError pattern from lib/asher-med-api.ts
+// Standard API error class for external service calls
 
 export class SiphoxApiError extends Error {
   constructor(
