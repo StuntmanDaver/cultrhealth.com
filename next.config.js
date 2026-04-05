@@ -65,7 +65,7 @@ const nextConfig = {
       },
       // Marketing pages: 5min edge cache, 1min stale window
       {
-        source: '/(pricing|how-it-works|faq|community|science|legal/:path*|creators|quiz|therapies|tools)',
+        source: '/(pricing|how-it-works|faq|community|legal/:path*|creators|quiz|therapies|tools)',
         headers: [
           {
             key: 'Cache-Control',
@@ -170,6 +170,23 @@ const nextConfig = {
       {
         source: '/library/:path*',
         destination: '/members/:path*',
+        permanent: true,
+      },
+      // /join bare → /pricing (join.cultrhealth.com is separate via middleware)
+      {
+        source: '/join',
+        destination: '/pricing',
+        permanent: true,
+      },
+      // Blog/science removed for LegitScript compliance
+      {
+        source: '/science',
+        destination: '/',
+        permanent: true,
+      },
+      {
+        source: '/science/:slug',
+        destination: '/',
         permanent: true,
       },
     ];
