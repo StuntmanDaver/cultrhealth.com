@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyHealthieWebhook, parseWebhookBody } from '@/lib/healthie/webhooks'
+import { getClient, getAppointment, getFormAnswerGroup, getDocument } from '@/lib/healthie'
+import { sql } from '@vercel/postgres'
 
 /**
  * Healthie Webhook Handler
@@ -25,12 +27,6 @@ export async function POST(request: NextRequest) {
 
     const event = await parseWebhookBody(request)
 
-    console.log('Healthie webhook received:', {
-      event_type: event.event_type,
-      resource_id: event.resource_id,
-      timestamp: new Date().toISOString(),
-    })
-
     switch (event.event_type) {
       case 'FormAnswerGroupCompleted':
         await handleFormCompleted(event.resource_id)
@@ -46,7 +42,7 @@ export async function POST(request: NextRequest) {
         break
 
       default:
-        console.log(`Unhandled Healthie event type: ${event.event_type}`)
+        console.warn(`Unhandled Healthie event type: ${event.event_type}`)
     }
 
     return NextResponse.json({ received: true })
@@ -59,14 +55,108 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleFormCompleted(_resourceId: string) {
-  // TODO: Update onboarding step when intake form completed
+/**
+ * Handle completed intake form.
+ * Updates member_onboarding: intake_completed = true, advances step.
+ */
+async function handleFormCompleted(resourceId: string) {
+  const formGroup = await getFormAnswerGroup(resourceId)
+
+  if (!formGroup.finished) {
+    return
+  }
+
+  const healthieUserId = formGroup.user?.id
+  if (!healthieUserId) {
+    console.error('FormAnswerGroupCompleted missing user ID:', resourceId)
+    return
+  }
+
+  const user = await getClient(healthieUserId)
+  const addr = user.email?.toLowerCase()
+  if (!addr) {
+    console.error('Healthie form completion: user record has no contact address')
+    return
+  }
+
+  await sql`
+    UPDATE member_onboarding
+    SET intake_completed = TRUE,
+        healthie_patient_id = ${healthieUserId},
+        step = CASE
+          WHEN step IN ('intake', 'welcome', 'blood-test') THEN 'schedule'
+          ELSE step
+        END,
+        updated_at = NOW()
+    WHERE LOWER(email) = ${addr}
+  `
 }
 
-async function handleAppointmentEvent(_eventType: string, _resourceId: string) {
-  // TODO: Track appointment status changes
+/**
+ * Handle appointment created/updated events.
+ * Created: marks onboarding appointment_scheduled, advances to complete.
+ * Updated with Cancelled/No-Show: reverts onboarding step.
+ */
+async function handleAppointmentEvent(eventType: string, resourceId: string) {
+  const appointment = await getAppointment(resourceId)
+
+  const healthieUserId = appointment.user?.id
+  if (!healthieUserId) {
+    console.error('Appointment webhook missing user ID:', resourceId)
+    return
+  }
+
+  const user = await getClient(healthieUserId)
+  const addr = user.email?.toLowerCase()
+  if (!addr) {
+    console.error('Healthie appointment: user record has no contact address')
+    return
+  }
+
+  if (eventType === 'AppointmentCreated') {
+    await sql`
+      UPDATE member_onboarding
+      SET appointment_scheduled = TRUE,
+          healthie_patient_id = ${healthieUserId},
+          step = CASE
+            WHEN step IN ('schedule', 'intake', 'welcome', 'blood-test') THEN 'complete'
+            ELSE step
+          END,
+          completed_at = CASE
+            WHEN step IN ('schedule', 'intake', 'welcome', 'blood-test') THEN NOW()
+            ELSE completed_at
+          END,
+          updated_at = NOW()
+      WHERE LOWER(email) = ${addr}
+    `
+  }
+
+  if (eventType === 'AppointmentUpdated') {
+    const status = appointment.status
+    if (status === 'Cancelled' || status === 'No-Show') {
+      await sql`
+        UPDATE member_onboarding
+        SET appointment_scheduled = FALSE,
+            step = 'schedule',
+            completed_at = NULL,
+            updated_at = NOW()
+        WHERE LOWER(email) = ${addr}
+          AND step = 'complete'
+      `
+    }
+  }
 }
 
-async function handleDocumentCreated(_resourceId: string) {
-  // TODO: Handle new documents (e.g., lab results pushed from SiPhox)
+/**
+ * Handle new document creation.
+ * SiPhox cron handles lab result processing separately.
+ */
+async function handleDocumentCreated(resourceId: string) {
+  const doc = await getDocument(resourceId)
+
+  if (!doc.rel_user_id) {
+    return
+  }
+
+  // No further action needed — SiPhox cron processes lab results independently
 }

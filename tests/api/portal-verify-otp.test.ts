@@ -143,7 +143,7 @@ const mockExistingSession = {
   id: 'uuid-123',
   phone: '5551234567',
   phone_e164: '+15551234567',
-  asher_patient_id: 42,
+  ehr_patient_id: '42',
   first_name: 'John',
   last_name: 'Doe',
   verified_at: new Date(),
@@ -194,7 +194,7 @@ describe('POST /api/portal/verify-otp', () => {
 
   // ---- Case B: Known phone, no patient ----
   it('returns hasPatient=false, knownPhone=true, redirect=/intake when phone is known but no patient', async () => {
-    const sessionWithoutPatient = { ...mockExistingSession, asher_patient_id: null }
+    const sessionWithoutPatient = { ...mockExistingSession, ehr_patient_id: null }
     mockGetPortalSessionByPhone.mockResolvedValue(sessionWithoutPatient)
     mockGetPatientByPhone.mockResolvedValue(null)
 
@@ -300,7 +300,7 @@ describe('POST /api/portal/verify-otp', () => {
   })
 
   it('calls setPortalCookies after successful verification (known phone, no patient)', async () => {
-    const sessionWithoutPatient = { ...mockExistingSession, asher_patient_id: null }
+    const sessionWithoutPatient = { ...mockExistingSession, ehr_patient_id: null }
     mockGetPortalSessionByPhone.mockResolvedValue(sessionWithoutPatient)
     mockGetPatientByPhone.mockResolvedValue(null)
 
@@ -340,10 +340,10 @@ describe('POST /api/portal/verify-otp', () => {
     )
   })
 
-  // ---- Cached patient ID fallback when Asher Med is down ----
-  it('uses cached patient ID when Asher Med lookup fails', async () => {
-    mockGetPortalSessionByPhone.mockResolvedValue(mockExistingSession) // has asher_patient_id: 42
-    mockGetPatientByPhone.mockRejectedValue(new Error('Asher Med down'))
+  // ---- Cached patient ID fallback when EHR is down ----
+  it('uses cached patient ID when EHR lookup fails', async () => {
+    mockGetPortalSessionByPhone.mockResolvedValue(mockExistingSession) // has ehr_patient_id: '42'
+    mockGetPatientByPhone.mockRejectedValue(new Error('EHR down'))
 
     const { POST } = await import('@/app/api/portal/verify-otp/route')
     const request = makeRequest({ phone: '5551234567', code: '789012' })

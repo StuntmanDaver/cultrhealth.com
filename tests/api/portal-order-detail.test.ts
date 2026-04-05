@@ -97,7 +97,7 @@ describe('GET /api/portal/orders/[id]', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: 42,
+      ehrPatientId: '42',
     })
     mockSql.mockResolvedValue({ rows: [mockDbRow] })
   })
@@ -106,7 +106,7 @@ describe('GET /api/portal/orders/[id]', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: false,
       phone: null,
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { GET } = await import('@/app/api/portal/orders/[id]/route')
@@ -120,11 +120,11 @@ describe('GET /api/portal/orders/[id]', () => {
     expect(data.error).toBeTruthy()
   })
 
-  it('returns 401 when no asherPatientId', async () => {
+  it('returns 401 when no ehrPatientId', async () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { GET } = await import('@/app/api/portal/orders/[id]/route')

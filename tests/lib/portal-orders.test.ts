@@ -138,6 +138,8 @@ describe('ACTIVE_STATUSES', () => {
       'RX Approved',
       'Shipped',
       'Payment Pending',
+      'Scheduled',
+      'Re-Scheduled',
     ])
   })
 })

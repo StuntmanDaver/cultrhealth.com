@@ -31,10 +31,10 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 3. Create new access token with same phone + patientId
+  // 3. Create new access token with same phone + ehrPatientId
   const newAccessToken = await createPortalAccessToken(
     session.phone,
-    session.asherPatientId
+    session.ehrPatientId
   )
 
   // 4. Set access token cookie on response

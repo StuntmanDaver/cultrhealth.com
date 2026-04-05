@@ -13,7 +13,7 @@ import type { PaymentProvider } from '@/lib/payments/payment-types';
 import { PaymentMethodSelector } from '@/components/payments/PaymentMethodSelector';
 import { COREPAY_ENABLED } from '@/lib/config/payments';
 import { CorePayForm } from '@/components/payments/CorePayForm';
-import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
+
 
 // Initialize Stripe for payment tokenization
 const stripePromise = loadStripe(
@@ -402,8 +402,7 @@ export default function JoinPage({ params }: { params: { tier: string } }) {
                     <div className="space-y-2 pl-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-cultr-text">
-                          At-home blood test kit{' '}
-                          <BiomarkerExplainerLink label="See what we test ›" />
+                          At-home blood test kit
                         </span>
                         <span className="text-sm font-medium text-cultr-forest">
                           {isConcierge ? 'included' : `$${BLOOD_TEST_ADDON.price}`}

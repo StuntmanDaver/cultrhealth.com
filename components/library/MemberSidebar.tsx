@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import type { PlanTier } from '@/lib/config/plans'
 import {
   LayoutDashboard,
-  TestTube2,
   Library,
   HelpCircle,
   Calculator,
@@ -23,12 +22,6 @@ const NAV_GROUPS = [
     label: null,
     items: [
       { label: 'Dashboard', href: '/members', icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: 'MY CARE',
-    items: [
-      { label: 'Labs & Results', href: '/members/labs', icon: TestTube2 },
     ],
   },
   {

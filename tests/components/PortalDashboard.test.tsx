@@ -107,7 +107,7 @@ describe('PortalDashboard', () => {
     await waitFor(() => {
       expect(screen.getByText('Welcome to CULTR Health!')).toBeInTheDocument()
     })
-    expect(screen.getByText(/Your orders will appear here/)).toBeInTheDocument()
+    expect(screen.getByText(/Your appointments and orders will appear here/)).toBeInTheDocument()
   })
 
   it('renders quick links in all states', async () => {

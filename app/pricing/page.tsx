@@ -21,7 +21,7 @@ import {
   Users,
   HelpCircle,
 } from 'lucide-react';
-import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
+
 import { brandify } from '@/lib/utils';
 
 export const metadata: Metadata = {
@@ -184,11 +184,6 @@ export default function PricingPage() {
                     <tr key={i} className="border-b border-cultr-sage/50">
                       <td className="py-4 px-4 text-cultr-text">
                         {row.feature}
-                        {row.hasBiomarkerLink && (
-                          <div className="mt-0.5">
-                            <BiomarkerExplainerLink label="See what we test ›" />
-                          </div>
-                        )}
                       </td>
                       {row.values.map((value, j) => (
                         <td key={j} className={`py-4 px-3 text-center ${j === 1 ? 'bg-cultr-mint/50' : ''}`}>
@@ -336,9 +331,6 @@ export default function PricingPage() {
                   <div>
                     <h4 className="font-display font-bold text-cultr-text mb-1">{item.title}</h4>
                     <p className="text-sm text-cultr-textMuted">{item.desc}</p>
-                    {'hasBiomarkerLink' in item && item.hasBiomarkerLink && (
-                      <BiomarkerExplainerLink label="See what we test ›" className="mt-1" />
-                    )}
                   </div>
                 </div>
               </ScrollReveal>

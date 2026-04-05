@@ -6,7 +6,7 @@ import { Check, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 
-import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
+
 import { CORE_THERAPIES } from '@/lib/config/plans';
 import { brandify } from '@/lib/utils';
 
@@ -76,7 +76,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
       <div className="flex-grow mb-6">
         <ul className="space-y-4">
           {plan.features.map((feature, i) => {
-            const isLabFeature = /lab test|blood test/i.test(feature);
+
             return (
               <li
                 key={i}
@@ -86,15 +86,6 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
                 <Check className={`w-5 h-5 shrink-0 transition-transform duration-300 group-hover:scale-110 ${plan.isFeatured ? 'text-cultr-sage' : 'text-cultr-forest'}`} />
                 <span>
                   {feature}
-                  {isLabFeature && (
-                    <>
-                      {' '}
-                      <BiomarkerExplainerLink
-                        label="See what we test ›"
-                        className={plan.isFeatured ? '!text-cultr-sage hover:!text-white !decoration-cultr-sage/50' : ''}
-                      />
-                    </>
-                  )}
                 </span>
               </li>
             );

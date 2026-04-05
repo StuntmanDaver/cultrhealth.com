@@ -1,7 +1,4 @@
 export const LINKS = {
-  // Partner Portal (Asher Med)
-  asherPartnerPortal: 'https://partners.joinasher.com',
-  
   // Billing Portal (Stripe)
   stripeCustomerPortal: 'https://billing.stripe.com/p/login/4gM00igPh021086fle6J200',
   

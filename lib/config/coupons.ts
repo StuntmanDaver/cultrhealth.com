@@ -31,6 +31,7 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'LOYALTY15':  { discount: 15, label: 'Returning Customer' },
   'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-04-11T23:59:59Z'), noBundleStack: true },
   'BUTCH10':    { discount: 10, label: 'Promo Code' },
+  'OWNERLR3':   { discount: 70, label: 'Owner Discount' },
 }
 
 export function validateCoupon(code: string): ClubCoupon | null {

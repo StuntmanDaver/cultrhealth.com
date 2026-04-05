@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 
   // No patient linked yet
-  if (!auth.asherPatientId) {
+  if (!auth.ehrPatientId) {
     return NextResponse.json({ success: true, profile: null })
   }
 
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const sessionResult = await sql`
       SELECT first_name, last_name, phone_e164
       FROM portal_sessions
-      WHERE asher_patient_id = ${auth.asherPatientId}
+      WHERE ehr_patient_id = ${auth.ehrPatientId}
       LIMIT 1
     `
 
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     const intakeResult = await sql`
       SELECT intake_data
       FROM pending_intakes
-      WHERE intake_data->>'asher_patient_id' = ${String(auth.asherPatientId)}
+      WHERE intake_data->>'asher_patient_id' = ${String(auth.ehrPatientId)}
         AND intake_status = 'completed'
       ORDER BY created_at DESC
       LIMIT 1
@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const auth = await verifyPortalAuth(request)
-  if (!auth.authenticated || !auth.asherPatientId) {
+  if (!auth.authenticated || !auth.ehrPatientId) {
     return NextResponse.json(
       { success: false, error: 'Not authenticated' },
       { status: 401 }
@@ -133,7 +133,7 @@ export async function PUT(request: NextRequest) {
         },
       })}::jsonb,
       updated_at = NOW()
-      WHERE intake_data->>'asher_patient_id' = ${String(auth.asherPatientId)}
+      WHERE intake_data->>'asher_patient_id' = ${String(auth.ehrPatientId)}
         AND intake_status = 'completed'
     `
 

@@ -8,8 +8,8 @@ export interface PortalSessionRow {
   id: string
   phone: string
   phone_e164: string
-  /** Patient ID from Asher Med — may be numeric or a UUID string */
-  asher_patient_id: number | string | null
+  /** EHR patient ID (Healthie or future vendor) */
+  ehr_patient_id: string | null
   first_name: string | null
   last_name: string | null
   verified_at: Date
@@ -36,22 +36,22 @@ export class PortalDatabaseError extends Error {
 /**
  * Insert or update a portal session record.
  * Uses INSERT ... ON CONFLICT(phone_e164) DO UPDATE to upsert.
- * Updates last_login_at, asher_patient_id (if provided), first_name, last_name, updated_at.
+ * Updates last_login_at, ehr_patient_id (if provided), first_name, last_name, updated_at.
  */
 export async function upsertPortalSession(
   phone: string,
   phoneE164: string,
-  asherPatientId: number | string | null,
+  ehrPatientId: string | null,
   firstName?: string,
   lastName?: string
 ): Promise<void> {
   try {
     await sql`
-      INSERT INTO portal_sessions (phone, phone_e164, asher_patient_id, first_name, last_name)
-      VALUES (${phone}, ${phoneE164}, ${asherPatientId}, ${firstName || null}, ${lastName || null})
+      INSERT INTO portal_sessions (phone, phone_e164, ehr_patient_id, first_name, last_name)
+      VALUES (${phone}, ${phoneE164}, ${ehrPatientId}, ${firstName || null}, ${lastName || null})
       ON CONFLICT (phone_e164) DO UPDATE SET
         phone = EXCLUDED.phone,
-        asher_patient_id = COALESCE(EXCLUDED.asher_patient_id, portal_sessions.asher_patient_id),
+        ehr_patient_id = COALESCE(EXCLUDED.ehr_patient_id, portal_sessions.ehr_patient_id),
         first_name = COALESCE(EXCLUDED.first_name, portal_sessions.first_name),
         last_name = COALESCE(EXCLUDED.last_name, portal_sessions.last_name),
         last_login_at = NOW(),
@@ -71,7 +71,7 @@ export async function getPortalSessionByPhone(
 ): Promise<PortalSessionRow | null> {
   try {
     const result = await sql`
-      SELECT id, phone, phone_e164, asher_patient_id, first_name, last_name,
+      SELECT id, phone, phone_e164, ehr_patient_id, first_name, last_name,
              verified_at, last_login_at, created_at, updated_at
       FROM portal_sessions
       WHERE phone_e164 = ${phoneE164}
@@ -84,17 +84,17 @@ export async function getPortalSessionByPhone(
 }
 
 /**
- * Update the Asher Med patient ID for an existing portal session.
- * Called when a patient is found/created in Asher Med after initial OTP verification.
+ * Update the EHR patient ID for an existing portal session.
+ * Called when a patient is found/created in Healthie after initial OTP verification.
  */
-export async function updatePortalPatientId(
+export async function updatePortalEhrPatientId(
   phoneE164: string,
-  asherPatientId: number | string
+  ehrPatientId: string
 ): Promise<void> {
   try {
     await sql`
       UPDATE portal_sessions
-      SET asher_patient_id = ${asherPatientId},
+      SET ehr_patient_id = ${ehrPatientId},
           updated_at = NOW()
       WHERE phone_e164 = ${phoneE164}
     `

@@ -25,7 +25,7 @@ vi.mock('@/lib/utils/phone', () => ({
 }))
 
 vi.mock('@/lib/portal-db', () => ({
-  updatePortalPatientId: vi.fn().mockResolvedValue(undefined),
+  updatePortalEhrPatientId: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('@/lib/intake-utils', () => ({

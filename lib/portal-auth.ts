@@ -38,10 +38,8 @@ const REFRESH_COOKIE_MAX_AGE = 604800 // 7 days in seconds
 
 export interface PortalSession {
   phone: string
-  /** Patient ID from Asher Med — may be numeric or a UUID string */
-  asherPatientId: number | string | null
-  /** Generic EHR patient ID (Healthie or future vendor) */
-  ehrPatientId?: string | null
+  /** EHR patient ID (Healthie or future vendor) */
+  ehrPatientId: string | null
 }
 
 // ===========================================
@@ -50,16 +48,14 @@ export interface PortalSession {
 
 /**
  * Create a short-lived access token for portal authentication.
- * Contains phone number and Asher Med patient ID.
+ * Contains phone number and EHR patient ID.
  */
 export async function createPortalAccessToken(
   phone: string,
-  patientId: number | string | null,
-  ehrPatientId?: string | null,
+  ehrPatientId: string | null,
 ): Promise<string> {
   return new SignJWT({
     phone,
-    asherPatientId: patientId,
     ehrPatientId: ehrPatientId || null,
     type: 'portal_access',
   })
@@ -71,16 +67,14 @@ export async function createPortalAccessToken(
 
 /**
  * Create a long-lived refresh token for portal session renewal.
- * Contains phone number and Asher Med patient ID.
+ * Contains phone number and EHR patient ID.
  */
 export async function createPortalRefreshToken(
   phone: string,
-  patientId: number | string | null,
-  ehrPatientId?: string | null,
+  ehrPatientId: string | null,
 ): Promise<string> {
   return new SignJWT({
     phone,
-    asherPatientId: patientId,
     ehrPatientId: ehrPatientId || null,
     type: 'portal_refresh',
   })
@@ -108,12 +102,12 @@ export async function verifyPortalAccessToken(
     }
     return {
       phone: payload.phone,
-      asherPatientId:
-        typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
-          ? payload.asherPatientId
-          : null,
+      // Backward compat: old JWTs have asherPatientId, new ones have ehrPatientId
       ehrPatientId:
-        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId : null,
+        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId
+        : typeof payload.asherPatientId === 'string' ? payload.asherPatientId
+        : typeof payload.asherPatientId === 'number' ? String(payload.asherPatientId)
+        : null,
     }
   } catch {
     return null
@@ -137,12 +131,12 @@ export async function verifyPortalRefreshToken(
     }
     return {
       phone: payload.phone,
-      asherPatientId:
-        typeof payload.asherPatientId === 'number' || typeof payload.asherPatientId === 'string'
-          ? payload.asherPatientId
-          : null,
+      // Backward compat: old JWTs have asherPatientId, new ones have ehrPatientId
       ehrPatientId:
-        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId : null,
+        typeof payload.ehrPatientId === 'string' ? payload.ehrPatientId
+        : typeof payload.asherPatientId === 'string' ? payload.asherPatientId
+        : typeof payload.asherPatientId === 'number' ? String(payload.asherPatientId)
+        : null,
     }
   } catch {
     return null
@@ -220,21 +214,21 @@ export async function verifyPortalAuth(
 ): Promise<{
   authenticated: boolean
   phone: string | null
-  asherPatientId: number | string | null
+  ehrPatientId: string | null
 }> {
   const token = request.cookies.get(PORTAL_ACCESS_COOKIE)?.value
   if (!token) {
-    return { authenticated: false, phone: null, asherPatientId: null }
+    return { authenticated: false, phone: null, ehrPatientId: null }
   }
 
   const session = await verifyPortalAccessToken(token)
   if (!session) {
-    return { authenticated: false, phone: null, asherPatientId: null }
+    return { authenticated: false, phone: null, ehrPatientId: null }
   }
 
   return {
     authenticated: true,
     phone: session.phone,
-    asherPatientId: session.asherPatientId,
+    ehrPatientId: session.ehrPatientId,
   }
 }

@@ -16,11 +16,6 @@ import {
   Check,
   Clock,
   RefreshCw,
-  TestTube2,
-  ChevronRight,
-  CheckCircle,
-  AlertTriangle,
-  Download,
   Layers,
 } from 'lucide-react'
 
@@ -33,15 +28,6 @@ export default function DashboardClient() {
   const [selectedOrderId, setSelectedOrderId] = useState<PortalOrder['id'] | null>(null)
   const [detailOrder, setDetailOrder] = useState<PortalOrder | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
-
-  // Kit status state
-  const [kitStatusMessage, setKitStatusMessage] = useState<string | null>(null)
-  const [kitStatusLoading, setKitStatusLoading] = useState(true)
-  const [resultsSummary, setResultsSummary] = useState<{
-    totalBiomarkers: number
-    optimalCount: number
-    needsAttentionCount: number
-  } | null>(null)
 
   const [patientFirstName, setPatientFirstName] = useState<string | null>(null)
 
@@ -97,65 +83,6 @@ export default function DashboardClient() {
     return () => {}
   }, [])
 
-  // Kit status fetch
-  useEffect(() => {
-    let cancelled = false
-    const KIT_STATUS_MESSAGES: Record<string, string> = {
-      no_kit: 'Get started with biomarker testing',
-      ordered: 'Kit ordered -- preparing to ship',
-      shipped: 'Kit shipped -- register when it arrives',
-      registered: 'Kit registered -- collect your sample',
-      sample_mailed: 'Sample in transit to lab',
-      processing: 'Lab processing your sample',
-      results_ready: 'Results ready -- view your biomarkers',
-    }
-    fetch('/api/portal/labs')
-      .then(async (res) => {
-        if (cancelled || !res.ok) return
-        const data = await res.json()
-        if (cancelled) return
-
-        // DSH-07: Club tier override message
-        if (data.tier === 'club') {
-          setKitStatusMessage('Upgrade your plan to unlock blood testing')
-          return
-        }
-
-        if (data.kitOrders && data.kitOrders.length > 0) {
-          const state = data.kitOrders[0].lifecycleState || 'no_kit'
-          setKitStatusMessage(KIT_STATUS_MESSAGES[state] || KIT_STATUS_MESSAGES.no_kit)
-
-          // DSH-01/DSH-06: Fetch results summary when results are ready
-          if (state === 'results_ready') {
-            fetch('/api/portal/results')
-              .then(async (rRes) => {
-                if (cancelled || !rRes.ok) return
-                const rData = await rRes.json()
-                if (cancelled) return
-                if (rData.report?.summary) {
-                  setResultsSummary({
-                    totalBiomarkers: rData.report.summary.totalBiomarkers,
-                    optimalCount: rData.report.summary.optimalCount,
-                    needsAttentionCount: rData.report.summary.needsAttentionCount,
-                  })
-                }
-              })
-              .catch(() => {
-                // Non-fatal — summary is a nice-to-have enhancement
-              })
-          }
-        } else {
-          setKitStatusMessage(KIT_STATUS_MESSAGES.no_kit)
-        }
-      })
-      .catch(() => {
-        // Fail silently -- kit card is non-blocking
-      })
-      .finally(() => {
-        if (!cancelled) setKitStatusLoading(false)
-      })
-    return () => { cancelled = true }
-  }, [])
 
   // Slide-over: fetch detail when selectedOrderId changes
   useEffect(() => {
@@ -245,100 +172,21 @@ export default function DashboardClient() {
         </Button>
       </div>
 
-      {/* Kit Status Summary Card */}
-      {kitStatusLoading && (
-        <div className="rounded-2xl border border-brand-primary/10 bg-white p-5 mb-6 animate-pulse">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-brand-primary/10" />
-            <div className="flex-1">
-              <div className="h-4 bg-brand-primary/10 rounded w-1/3 mb-2" />
-              <div className="h-3 bg-brand-primary/10 rounded w-1/2" />
-            </div>
-          </div>
-        </div>
-      )}
-      {!kitStatusLoading && kitStatusMessage && (
-        <Link
-          href="/portal/labs"
-          className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-sage/30 flex items-center justify-center">
-                <TestTube2 className="w-5 h-5 text-brand-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-brand-primary">Blood Test Kit</p>
-                <p className="text-xs text-brand-primary/60">{kitStatusMessage}</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-brand-primary/40" />
-          </div>
-          {resultsSummary && (
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-primary/5">
-              <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/5 px-2.5 py-1 text-xs font-medium text-brand-primary">
-                {resultsSummary.totalBiomarkers} Tested
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-                <CheckCircle className="w-3 h-3" />
-                {resultsSummary.optimalCount} Optimal
-              </span>
-              {resultsSummary.needsAttentionCount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                  <AlertTriangle className="w-3 h-3" />
-                  {resultsSummary.needsAttentionCount} Attention
-                </span>
-              )}
-            </div>
-          )}
-        </Link>
-      )}
-
-      {/* Blood Test Guides */}
-      {!kitStatusLoading && kitStatusMessage && kitStatusMessage !== 'Upgrade your plan to unlock blood testing' && (
-        <div className="rounded-2xl border border-brand-primary/10 bg-white p-5 mb-6">
-          <h3 className="text-sm font-semibold text-brand-primary mb-3">Blood Test Guides</h3>
-          <div className="space-y-2">
-            {[
-              { label: 'Collection Guide', href: '/docs/blood-test/collection-guide.pdf' },
-              { label: 'Instructions', href: '/docs/blood-test/instructions.pdf' },
-              { label: 'Ice Pack Preparation', href: '/docs/blood-test/ice-pack-frozen.pdf' },
-            ].map((doc) => (
-              <a
-                key={doc.href}
-                href={doc.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl p-3 hover:bg-brand-primary/[0.03] transition-colors"
-              >
-                <Download className="w-4 h-4 text-brand-primary/40 flex-shrink-0" />
-                <span className="text-sm font-medium text-brand-primary">{doc.label}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Stacking Guides Card */}
-      {!kitStatusLoading && (
-        <Link
-          href="/portal/stacking"
-          className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-sage/30 flex items-center justify-center">
-                <Layers className="w-5 h-5 text-brand-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-brand-primary">Peptide Stacking Protocols</p>
-                <p className="text-xs text-brand-primary/60">Goal-based guides for your regimen</p>
-              </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-brand-primary/40" />
+      <Link
+        href="/portal/stacking"
+        className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-sage/30 flex items-center justify-center">
+            <Layers className="w-5 h-5 text-brand-primary" />
           </div>
-        </Link>
-      )}
+          <div>
+            <p className="text-sm font-semibold text-brand-primary">Peptide Stacking Protocols</p>
+            <p className="text-xs text-brand-primary/60">Goal-based guides for your regimen</p>
+          </div>
+        </div>
+      </Link>
 
       {/* Loading State */}
       {isLoading && (
@@ -381,7 +229,7 @@ export default function DashboardClient() {
             Welcome to CULTR Health!
           </h2>
           <p className="text-brand-primary/60">
-            Your orders will appear here once placed.
+            Your appointments and orders will appear here.
           </p>
         </div>
       )}
@@ -396,7 +244,7 @@ export default function DashboardClient() {
           onKeyDown={(e) => e.key === 'Enter' && setSelectedOrderId(heroOrder.id)}
         >
           <h2 className="text-xl font-display font-semibold text-brand-primary mb-2">
-            {heroOrder.medicationName}
+            {heroOrder.displayName || heroOrder.medicationName}
           </h2>
           {(() => {
             const display = getStatusDisplay(heroOrder.status)
@@ -414,11 +262,22 @@ export default function DashboardClient() {
             )
           })()}
           <div className="flex flex-col gap-1 mt-3 text-sm text-brand-primary/50">
-            <span>Ordered {formatDate(heroOrder.createdAt)}</span>
-            <span>Updated {formatDate(heroOrder.updatedAt)}</span>
+            {heroOrder.appointmentDate ? (
+              <span>Appointment {formatDate(heroOrder.appointmentDate)}</span>
+            ) : (
+              <span>Ordered {formatDate(heroOrder.createdAt)}</span>
+            )}
+            {heroOrder.contactType && (
+              <span className="capitalize">{heroOrder.contactType}</span>
+            )}
           </div>
           <div className="flex items-center gap-1.5 mt-3 text-sm">
-            {heroOrder.doctorId ? (
+            {heroOrder.providerName ? (
+              <>
+                <Check className="w-4 h-4 text-green-600" />
+                <span className="text-green-700">{heroOrder.providerName}</span>
+              </>
+            ) : heroOrder.doctorId ? (
               <>
                 <Check className="w-4 h-4 text-green-600" />
                 <span className="text-green-700">Provider assigned</span>
@@ -549,10 +408,10 @@ export default function DashboardClient() {
                   <div className="space-y-5">
                     <div>
                       <h4 className="text-xl font-display font-semibold text-brand-primary">
-                        {detailOrder.medicationName}
+                        {detailOrder.displayName || detailOrder.medicationName}
                       </h4>
                       <span className="text-xs text-brand-primary/40">
-                        Order #{detailOrder.id}
+                        {detailOrder.sourceType === 'appointment' ? 'Appointment' : 'Order'} #{detailOrder.id}
                       </span>
                     </div>
                     <div>
@@ -566,20 +425,39 @@ export default function DashboardClient() {
                       </p>
                     </div>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-brand-primary/50">Ordered</span>
-                        <span className="text-brand-primary">
-                          {formatDate(detailOrder.createdAt)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-brand-primary/50">
-                          Last Updated
-                        </span>
-                        <span className="text-brand-primary">
-                          {formatDate(detailOrder.updatedAt)}
-                        </span>
-                      </div>
+                      {detailOrder.appointmentDate ? (
+                        <div className="flex justify-between">
+                          <span className="text-brand-primary/50">Appointment</span>
+                          <span className="text-brand-primary">
+                            {formatDate(detailOrder.appointmentDate)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between">
+                          <span className="text-brand-primary/50">Ordered</span>
+                          <span className="text-brand-primary">
+                            {formatDate(detailOrder.createdAt)}
+                          </span>
+                        </div>
+                      )}
+                      {detailOrder.contactType && (
+                        <div className="flex justify-between">
+                          <span className="text-brand-primary/50">Type</span>
+                          <span className="text-brand-primary capitalize">
+                            {detailOrder.contactType}
+                          </span>
+                        </div>
+                      )}
+                      {!detailOrder.appointmentDate && (
+                        <div className="flex justify-between">
+                          <span className="text-brand-primary/50">
+                            Last Updated
+                          </span>
+                          <span className="text-brand-primary">
+                            {formatDate(detailOrder.updatedAt)}
+                          </span>
+                        </div>
+                      )}
                       {detailOrder.orderType && (
                         <div className="flex justify-between">
                           <span className="text-brand-primary/50">
@@ -593,7 +471,11 @@ export default function DashboardClient() {
                       <div className="flex justify-between">
                         <span className="text-brand-primary/50">Provider</span>
                         <span className="text-brand-primary">
-                          {detailOrder.doctorId ? (
+                          {detailOrder.providerName ? (
+                            <span className="flex items-center gap-1 text-green-700">
+                              <Check className="w-3.5 h-3.5" /> {detailOrder.providerName}
+                            </span>
+                          ) : detailOrder.doctorId ? (
                             <span className="flex items-center gap-1 text-green-700">
                               <Check className="w-3.5 h-3.5" /> Assigned
                             </span>

@@ -15,7 +15,6 @@ import {
   X,
   Megaphone,
   LogOut,
-  TestTube2,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -44,12 +43,6 @@ const NAV_GROUPS = [
     items: [
       { label: 'My Network', href: '/creators/portal/network', icon: Users },
       { label: 'Resources', href: '/creators/portal/resources', icon: BookOpen },
-    ],
-  },
-  {
-    label: 'HEALTH',
-    items: [
-      { label: 'Labs', href: '/creators/portal/labs', icon: TestTube2 },
     ],
   },
   {

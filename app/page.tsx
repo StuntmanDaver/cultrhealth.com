@@ -9,7 +9,7 @@ import { PROVIDERS } from '@/lib/config/social-proof';
 import { TrustStrip } from '@/components/site/TrustStrip';
 import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import { brandify } from '@/lib/utils';
-import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
+
 import {
   ArrowRight,
   FlaskConical,
@@ -331,11 +331,6 @@ export default function HomePage() {
                 <div key={i} className="grid grid-cols-3 border-t border-cultr-sage">
                   <div className="p-4 text-cultr-text text-sm">
                     {feature}
-                    {row.hasBiomarkerLink && (
-                      <div className="mt-0.5">
-                        <BiomarkerExplainerLink label="See what we test ›" />
-                      </div>
-                    )}
                   </div>
                   <div className="p-4 text-center text-cultr-textMuted text-sm">{standard}</div>
                   <div className="p-4 text-center text-cultr-forest font-medium text-sm bg-cultr-mint/50">{cultr}</div>

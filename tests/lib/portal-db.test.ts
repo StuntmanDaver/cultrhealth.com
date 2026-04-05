@@ -9,7 +9,7 @@ vi.mock('@vercel/postgres', () => ({
 import {
   upsertPortalSession,
   getPortalSessionByPhone,
-  updatePortalPatientId,
+  updatePortalEhrPatientId,
   type PortalSessionRow,
 } from '@/lib/portal-db'
 
@@ -25,7 +25,7 @@ describe('Portal DB', () => {
       await upsertPortalSession(
         '(555) 123-4567',
         '+15551234567',
-        42,
+        '42',
         'John',
         'Doe'
       )
@@ -56,7 +56,7 @@ describe('Portal DB', () => {
         id: 'test-uuid',
         phone: '(555) 123-4567',
         phone_e164: '+15551234567',
-        asher_patient_id: 42,
+        ehr_patient_id: '42',
         first_name: 'John',
         last_name: 'Doe',
         verified_at: new Date(),
@@ -86,11 +86,11 @@ describe('Portal DB', () => {
     })
   })
 
-  describe('updatePortalPatientId', () => {
+  describe('updatePortalEhrPatientId', () => {
     it('calls sql with UPDATE for the given phone', async () => {
       vi.mocked(sql).mockResolvedValue({ rows: [], rowCount: 1 } as any)
 
-      await updatePortalPatientId('+15551234567', 99)
+      await updatePortalEhrPatientId('+15551234567', '99')
 
       expect(sql).toHaveBeenCalledTimes(1)
       const call = vi.mocked(sql).mock.calls[0]

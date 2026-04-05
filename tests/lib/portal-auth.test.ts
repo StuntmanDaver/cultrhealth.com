@@ -35,7 +35,7 @@ import {
 
 describe('Portal Auth', () => {
   const testPhone = '+15551234567'
-  const testPatientId = 42
+  const testPatientId = '42'
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -59,7 +59,7 @@ describe('Portal Auth', () => {
       const session = await verifyPortalAccessToken(token)
       expect(session).not.toBeNull()
       expect(session!.phone).toBe(testPhone)
-      expect(session!.asherPatientId).toBe(testPatientId)
+      expect(session!.ehrPatientId).toBe(testPatientId)
     })
 
     it('round-trips with null patientId', async () => {
@@ -67,7 +67,7 @@ describe('Portal Auth', () => {
       const session = await verifyPortalAccessToken(token)
       expect(session).not.toBeNull()
       expect(session!.phone).toBe(testPhone)
-      expect(session!.asherPatientId).toBeNull()
+      expect(session!.ehrPatientId).toBeNull()
     })
 
     it('returns null for an invalid token', async () => {
@@ -84,14 +84,14 @@ describe('Portal Auth', () => {
       const session = await verifyPortalRefreshToken(token)
       expect(session).not.toBeNull()
       expect(session!.phone).toBe(testPhone)
-      expect(session!.asherPatientId).toBe(testPatientId)
+      expect(session!.ehrPatientId).toBe(testPatientId)
     })
 
     it('round-trips with null patientId', async () => {
       const token = await createPortalRefreshToken(testPhone, null)
       const session = await verifyPortalRefreshToken(token)
       expect(session).not.toBeNull()
-      expect(session!.asherPatientId).toBeNull()
+      expect(session!.ehrPatientId).toBeNull()
     })
 
     it('returns null for an invalid token', async () => {
@@ -120,7 +120,7 @@ describe('Portal Auth', () => {
       const secret = new TextEncoder().encode(process.env.SESSION_SECRET || 'test-session-secret')
       const token = await new SignJWT({
         phone: testPhone,
-        asherPatientId: testPatientId,
+        ehrPatientId: testPatientId,
         type: 'portal_access',
       })
         .setProtectedHeader({ alg: 'HS256' })
@@ -220,7 +220,7 @@ describe('Portal Auth', () => {
       const session = await getPortalSession()
       expect(session).not.toBeNull()
       expect(session!.phone).toBe(testPhone)
-      expect(session!.asherPatientId).toBe(testPatientId)
+      expect(session!.ehrPatientId).toBe(testPatientId)
     })
 
     it('returns null when access cookie has an invalid token', async () => {
@@ -258,7 +258,7 @@ describe('Portal Auth', () => {
       const result = await verifyPortalAuth(mockRequest)
       expect(result.authenticated).toBe(true)
       expect(result.phone).toBe(testPhone)
-      expect(result.asherPatientId).toBe(testPatientId)
+      expect(result.ehrPatientId).toBe(testPatientId)
     })
 
     it('returns authenticated=false when portal access cookie is missing', async () => {
@@ -271,14 +271,14 @@ describe('Portal Auth', () => {
       const result = await verifyPortalAuth(mockRequest)
       expect(result.authenticated).toBe(false)
       expect(result.phone).toBeNull()
-      expect(result.asherPatientId).toBeNull()
+      expect(result.ehrPatientId).toBeNull()
     })
 
     it('returns authenticated=false when portal access cookie has expired token', async () => {
       const secret = new TextEncoder().encode(process.env.SESSION_SECRET || 'test-session-secret')
       const expiredToken = await new SignJWT({
         phone: testPhone,
-        asherPatientId: testPatientId,
+        ehrPatientId: testPatientId,
         type: 'portal_access',
       })
         .setProtectedHeader({ alg: 'HS256' })
@@ -300,7 +300,7 @@ describe('Portal Auth', () => {
       const result = await verifyPortalAuth(mockRequest)
       expect(result.authenticated).toBe(false)
       expect(result.phone).toBeNull()
-      expect(result.asherPatientId).toBeNull()
+      expect(result.ehrPatientId).toBeNull()
     })
 
     it('returns authenticated=false when token is a refresh token (wrong type)', async () => {
@@ -320,7 +320,7 @@ describe('Portal Auth', () => {
       const result = await verifyPortalAuth(mockRequest)
       expect(result.authenticated).toBe(false)
       expect(result.phone).toBeNull()
-      expect(result.asherPatientId).toBeNull()
+      expect(result.ehrPatientId).toBeNull()
     })
   })
 })

@@ -85,7 +85,7 @@ describe('GET /api/portal/profile', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: 42,
+      ehrPatientId: '42',
     })
     // Default: portal_sessions returns session, pending_intakes returns intake data
     let callCount = 0
@@ -127,7 +127,7 @@ describe('GET /api/portal/profile', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: false,
       phone: null,
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { GET } = await import('@/app/api/portal/profile/route')
@@ -138,11 +138,11 @@ describe('GET /api/portal/profile', () => {
     expect(data.error).toBeTruthy()
   })
 
-  it('returns profile: null when asherPatientId is null (Case C user)', async () => {
+  it('returns profile: null when ehrPatientId is null (Case C user)', async () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { GET } = await import('@/app/api/portal/profile/route')
@@ -188,7 +188,7 @@ describe('PUT /api/portal/profile', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: 42,
+      ehrPatientId: '42',
     })
     mockSql.mockResolvedValue({ rows: [], rowCount: 1 })
   })
@@ -197,7 +197,7 @@ describe('PUT /api/portal/profile', () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: false,
       phone: null,
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { PUT } = await import('@/app/api/portal/profile/route')
@@ -212,11 +212,11 @@ describe('PUT /api/portal/profile', () => {
     expect(data.error).toBeTruthy()
   })
 
-  it('returns 401 when asherPatientId is null', async () => {
+  it('returns 401 when ehrPatientId is null', async () => {
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
-      asherPatientId: null,
+      ehrPatientId: null,
     })
 
     const { PUT } = await import('@/app/api/portal/profile/route')

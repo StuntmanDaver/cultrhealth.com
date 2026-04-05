@@ -15,7 +15,6 @@ export interface OrderStatusDisplay {
 
 /**
  * Shape returned by the portal orders API routes.
- * Combines live Asher Med order data with local DB medication info.
  */
 export interface PortalOrder {
   id: number | string
@@ -26,6 +25,15 @@ export interface PortalOrder {
   createdAt: string
   updatedAt: string
   medicationName: string
+  /** Source of this record: Healthie appointment, form completion, or legacy DB order */
+  sourceType?: 'appointment' | 'form_completion' | 'legacy_order'
+  /** Human-readable name (appointment type, medication, or form name) */
+  displayName?: string
+  /** Appointment-specific fields */
+  appointmentDate?: string | null
+  appointmentTime?: string | null
+  contactType?: string | null
+  providerName?: string | null
 }
 
 // ===========================================
@@ -131,10 +139,46 @@ const STATUS_MAP: Partial<Record<string, OrderStatusDisplay>> = {
     bgClass: 'bg-gray-100',
     textClass: 'text-gray-600',
   },
+  // Healthie appointment statuses
+  Scheduled: {
+    label: 'Scheduled',
+    explanation: 'Your appointment is confirmed.',
+    color: 'blue',
+    bgClass: 'bg-blue-100',
+    textClass: 'text-blue-800',
+  },
+  Occurred: {
+    label: 'Completed',
+    explanation: 'Your appointment has been completed.',
+    color: 'green',
+    bgClass: 'bg-green-100',
+    textClass: 'text-green-800',
+  },
+  Cancelled: {
+    label: 'Cancelled',
+    explanation: 'This appointment was cancelled.',
+    color: 'gray',
+    bgClass: 'bg-gray-100',
+    textClass: 'text-gray-600',
+  },
+  'No-Show': {
+    label: 'Missed',
+    explanation: 'This appointment was missed.',
+    color: 'red',
+    bgClass: 'bg-red-100',
+    textClass: 'text-red-800',
+  },
+  'Re-Scheduled': {
+    label: 'Rescheduled',
+    explanation: 'This appointment has been rescheduled.',
+    color: 'amber',
+    bgClass: 'bg-amber-100',
+    textClass: 'text-amber-800',
+  },
 }
 
 /**
- * Get the display properties for a given Asher Med order status.
+ * Get the display properties for a given order status.
  * Returns label, explanation, color, and Tailwind CSS classes.
  * Falls back to PENDING display for unknown statuses.
  */
@@ -161,6 +205,8 @@ export const ACTIVE_STATUSES: OrderStatus[] = [
   'RX Approved',
   'Shipped',
   'Payment Pending',
+  'Scheduled',
+  'Re-Scheduled',
 ]
 
 /**

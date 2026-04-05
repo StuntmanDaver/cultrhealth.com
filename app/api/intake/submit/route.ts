@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { calculateBMI } from '@/lib/utils/health';
 import { formatPhoneNumber } from '@/lib/utils/phone';
-import { updatePortalPatientId } from '@/lib/portal-db';
+import { updatePortalEhrPatientId } from '@/lib/portal-db';
 import { formatMedicationsList, buildPartnerNote } from '@/lib/intake-utils';
 import { addTagsToContact } from '@/lib/mailchimp';
 
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
     if (body.phone) {
       try {
         const phoneE164 = formatPhoneNumber(body.phone);
-        await updatePortalPatientId(phoneE164, localPatientId);
+        await updatePortalEhrPatientId(phoneE164, String(localPatientId));
       } catch {
         // Non-fatal: portal session link failed, user can still re-login to get linked
       }

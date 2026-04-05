@@ -89,7 +89,7 @@ describe('POST /api/portal/refresh', () => {
     vi.clearAllMocks()
     mockVerifyPortalRefreshToken.mockResolvedValue({
       phone: '+15551234567',
-      asherPatientId: 42,
+      ehrPatientId: '42',
     })
     mockCreatePortalAccessToken.mockResolvedValue('new-access-token-789')
   })
@@ -134,13 +134,13 @@ describe('POST /api/portal/refresh', () => {
   it('creates new access token with same phone and patientId from refresh token', async () => {
     mockVerifyPortalRefreshToken.mockResolvedValue({
       phone: '+15559876543',
-      asherPatientId: 99,
+      ehrPatientId: '99',
     })
 
     const { POST } = await import('@/app/api/portal/refresh/route')
     const request = makeRefreshRequest({ cultr_portal_refresh: 'valid-refresh-token' })
     await POST(request as any)
 
-    expect(mockCreatePortalAccessToken).toHaveBeenCalledWith('+15559876543', 99)
+    expect(mockCreatePortalAccessToken).toHaveBeenCalledWith('+15559876543', '99')
   })
 })

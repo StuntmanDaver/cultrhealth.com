@@ -4,19 +4,18 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
 import { sql } from '@vercel/postgres'
+import { getAppointment, mapAppointmentToPortalOrder, isHealthieConfigured } from '@/lib/healthie'
 import type { PortalOrder } from '@/lib/portal-orders'
 
 /**
  * GET /api/portal/orders/[id]
  *
- * Returns full order detail for a single order with ownership verification.
- * The authenticated member can only view their own orders.
+ * Returns full order detail for a single order/appointment with ownership verification.
  */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  // 1. Verify portal authentication
   const auth = await verifyPortalAuth(request)
   if (!auth.authenticated) {
     return NextResponse.json(
@@ -25,8 +24,7 @@ export async function GET(
     )
   }
 
-  // 2. No patient ID — cannot look up orders
-  if (!auth.asherPatientId) {
+  if (!auth.ehrPatientId) {
     return NextResponse.json(
       { error: 'Not authenticated' },
       { status: 401 }
@@ -34,7 +32,6 @@ export async function GET(
   }
 
   try {
-    // 3. Extract order ID from params (may be numeric or UUID string)
     const { id } = await params
     if (!id) {
       return NextResponse.json(
@@ -43,7 +40,21 @@ export async function GET(
       )
     }
 
-    // 4. Fetch order detail from local DB with ownership check
+    // Try Healthie first for appointment detail
+    if (isHealthieConfigured()) {
+      try {
+        const appt = await getAppointment(id)
+        // Ownership check: appointment's user ID should match ehrPatientId
+        if (appt.user?.id === auth.ehrPatientId) {
+          const order = mapAppointmentToPortalOrder(appt)
+          return NextResponse.json({ success: true, order })
+        }
+      } catch {
+        // Not found in Healthie or API error — fall through to legacy DB
+      }
+    }
+
+    // Fallback: legacy asher_orders query
     const result = await sql`
       SELECT
         id,
@@ -69,15 +80,14 @@ export async function GET(
 
     const row = result.rows[0]
 
-    // 5. Ownership check — verify order belongs to authenticated patient
-    if (String(row.asher_patient_id) !== String(auth.asherPatientId)) {
+    // Ownership check
+    if (String(row.asher_patient_id) !== String(auth.ehrPatientId)) {
       return NextResponse.json(
         { error: 'Not authorized' },
         { status: 403 }
       )
     }
 
-    // 6. Extract medication name from packages
     let medicationName = row.order_type || 'Medication'
     try {
       const packages = typeof row.medication_packages === 'string'
@@ -90,10 +100,10 @@ export async function GET(
       // Skip malformed medication_packages
     }
 
-    // 7. Return full order detail as PortalOrder shape
     const portalOrder: PortalOrder = {
       id: row.asher_order_id || row.id,
       status: row.order_status || 'pending',
+      sourceType: 'legacy_order',
       orderType: row.order_type || null,
       doctorId: null,
       partnerNote: row.partner_note || null,
@@ -104,7 +114,6 @@ export async function GET(
 
     return NextResponse.json({ success: true, order: portalOrder })
   } catch {
-    // 8. DB error — return graceful 502
     return NextResponse.json(
       { success: false, error: 'Unable to load order details' },
       { status: 502 }

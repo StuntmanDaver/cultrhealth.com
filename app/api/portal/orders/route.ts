@@ -4,12 +4,14 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
 import { sql } from '@vercel/postgres'
+import { getAppointments, mapAppointmentToPortalOrder, isHealthieConfigured } from '@/lib/healthie'
 import type { PortalOrder } from '@/lib/portal-orders'
 
 /**
  * GET /api/portal/orders
  *
- * Returns the authenticated member's orders from the local asher_orders table.
+ * Returns the authenticated member's appointments from Healthie,
+ * with fallback to legacy asher_orders table.
  */
 export async function GET(request: NextRequest) {
   // 1. Verify portal authentication
@@ -21,13 +23,24 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // 2. No patient ID means never-seen phone (Case C) — valid empty state
-  if (!auth.asherPatientId) {
+  // 2. No patient ID means never-seen phone — valid empty state
+  if (!auth.ehrPatientId) {
     return NextResponse.json({ success: true, orders: [] })
   }
 
+  // 3. Try Healthie API first
+  if (isHealthieConfigured()) {
+    try {
+      const appointments = await getAppointments(auth.ehrPatientId)
+      const orders: PortalOrder[] = appointments.map(mapAppointmentToPortalOrder)
+      return NextResponse.json({ success: true, orders })
+    } catch (error) {
+      console.error('Healthie API error, falling back to local DB:', error)
+    }
+  }
+
+  // 4. Fallback: legacy asher_orders query
   try {
-    // 3. Fetch orders from local DB
     const result = await sql`
       SELECT
         id,
@@ -39,11 +52,10 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       FROM asher_orders
-      WHERE asher_patient_id = ${auth.asherPatientId}
+      WHERE asher_patient_id::text = ${auth.ehrPatientId}
       ORDER BY created_at DESC
     `
 
-    // 4. Map to PortalOrder shape
     const orders: PortalOrder[] = result.rows.map((row) => {
       let medicationName = row.order_type || 'Medication'
       try {
@@ -60,6 +72,7 @@ export async function GET(request: NextRequest) {
       return {
         id: row.asher_order_id || row.id,
         status: row.order_status || 'pending',
+        sourceType: 'legacy_order' as const,
         orderType: row.order_type || null,
         doctorId: null,
         partnerNote: row.partner_note || null,
@@ -71,7 +84,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, orders })
   } catch {
-    // 5. Unexpected error — return graceful empty state
     return NextResponse.json({ success: true, orders: [] })
   }
 }

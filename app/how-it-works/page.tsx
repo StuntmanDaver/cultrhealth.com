@@ -24,7 +24,7 @@ import {
   Sparkles,
   MapPin,
 } from 'lucide-react';
-import BiomarkerExplainerLink from '@/components/site/BiomarkerExplainer';
+
 import { brandify } from '@/lib/utils';
 import { TRUST_METRICS } from '@/lib/config/social-proof';
 
@@ -206,9 +206,6 @@ export default function HowItWorksPage() {
                   </div>
                   <h3 className="text-lg font-display font-bold text-cultr-text mb-2">{feature.title}</h3>
                   <p className="text-cultr-textMuted text-sm">{feature.desc}</p>
-                  {'hasBiomarkerLink' in feature && feature.hasBiomarkerLink && (
-                    <BiomarkerExplainerLink label="See what we test ›" className="mt-2" />
-                  )}
                 </div>
               </ScrollReveal>
             ))}

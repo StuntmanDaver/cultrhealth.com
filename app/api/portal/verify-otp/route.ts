@@ -114,11 +114,13 @@ export async function POST(request: Request) {
     const knownPhone = existingSession !== null
 
     // b. Determine patient ID from local DB cache
-    const patientId = existingSession?.asher_patient_id ?? null
+    const ehrPatientId = existingSession?.ehr_patient_id
+      ? String(existingSession.ehr_patient_id)
+      : null
 
     // 8. Create session tokens (always -- phone is verified regardless of patient status)
-    const accessToken = await createPortalAccessToken(phoneE164, patientId)
-    const refreshToken = await createPortalRefreshToken(phoneE164, patientId)
+    const accessToken = await createPortalAccessToken(phoneE164, ehrPatientId)
+    const refreshToken = await createPortalRefreshToken(phoneE164, ehrPatientId)
 
     // 9. Set cookies
     await setPortalCookies(accessToken, refreshToken)
@@ -127,13 +129,13 @@ export async function POST(request: Request) {
     await upsertPortalSession(
       phone,
       phoneE164,
-      patientId,
+      ehrPatientId,
       existingSession?.first_name,
       existingSession?.last_name
     )
 
     // 11. Return response based on three cases
-    const hasPatient = patientId !== null
+    const hasPatient = ehrPatientId !== null
 
     if (hasPatient) {
       // Case A: Patient found (cached from previous intake)

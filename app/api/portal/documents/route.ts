@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  if (!auth.asherPatientId) {
+  if (!auth.ehrPatientId) {
     return NextResponse.json({ error: 'No patient record found' }, { status: 401 })
   }
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     const result = await sql`
       SELECT id, s3_key, content_type, file_purpose, uploaded_at
       FROM asher_uploaded_files
-      WHERE asher_patient_id = ${auth.asherPatientId}
+      WHERE asher_patient_id = ${auth.ehrPatientId}
       ORDER BY uploaded_at DESC
     `
 
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  if (!auth.asherPatientId) {
+  if (!auth.ehrPatientId) {
     return NextResponse.json({ error: 'No patient record found' }, { status: 401 })
   }
 
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       // Record in DB even for mock uploads
       await sql`
         INSERT INTO asher_uploaded_files (s3_key, content_type, file_purpose, asher_patient_id, uploaded_at)
-        VALUES (${mockKey}, ${contentType}, ${purpose}, ${auth.asherPatientId}, NOW())
+        VALUES (${mockKey}, ${contentType}, ${purpose}, ${auth.ehrPatientId}, NOW())
       `
 
       return NextResponse.json({
@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     await sql`
       INSERT INTO asher_uploaded_files (s3_key, content_type, file_purpose, asher_patient_id, uploaded_at)
-      VALUES (${mockKey}, ${contentType}, ${purpose}, ${auth.asherPatientId}, NOW())
+      VALUES (${mockKey}, ${contentType}, ${purpose}, ${auth.ehrPatientId}, NOW())
     `
 
     return NextResponse.json({
