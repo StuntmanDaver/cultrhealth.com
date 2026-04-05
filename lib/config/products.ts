@@ -17,22 +17,6 @@ export interface Product {
 
 export const PRODUCTS: Product[] = [
   {
-    slug: 'retatrutide',
-    name: 'Compounded Retatrutide (RTA)',
-    description: 'Investigational triple-agonist targeting GLP-1, GIP, and glucagon receptors. Not FDA-approved. Available when clinically appropriate.',
-    priceTeaser: 'As low as $149/mo*',
-    features: [
-      'Triple GLP-1/GIP/Glucagon receptor targeting',
-      'Up to 24.2% weight reduction observed in Phase 2 trial',
-      'Compounded by licensed 503A pharmacy',
-      'Provider-supervised protocol required',
-    ],
-    isBestseller: true,
-    href: '/pricing',
-    icon: 'syringe',
-    gradient: 'from-cultr-copper/30 via-cultr-copper/10 to-transparent',
-  },
-  {
     slug: 'tirzepatide',
     name: 'Compounded Tirzepatide',
     description: 'Dual GIP/GLP-1 receptor agonist for metabolic support. Compounded formulation — not FDA-approved.',

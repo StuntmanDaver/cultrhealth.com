@@ -41,11 +41,6 @@ export const FDA_STATUSES: Record<string, FDAStatusInfo> = {
     label: 'FDA-Approved Active Ingredient',
     disclaimer: 'Tirzepatide is the active ingredient in FDA-approved Mounjaro and Zepbound. CULTR Health offers compounded tirzepatide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
   },
-  r3ta: {
-    status: 'investigational',
-    label: 'Investigational',
-    disclaimer: 'Retatrutide (R3TA) is an investigational compound currently in clinical trials. It is not FDA-approved. Availability is subject to regulatory status and provider determination of clinical appropriateness.',
-  },
   'ghk-cu': {
     status: 'not-fda-approved',
     label: 'Not FDA-Approved',
@@ -80,11 +75,6 @@ export const FDA_STATUSES: Record<string, FDAStatusInfo> = {
     status: 'not-fda-approved',
     label: 'Not FDA-Approved',
     disclaimer: 'BPC-157/TB-500 is a compounded research peptide combination not approved by the FDA for any indication.',
-  },
-  'melanotan-2': {
-    status: 'not-fda-approved',
-    label: 'Not FDA-Approved — FDA Warning Issued',
-    disclaimer: 'Melanotan 2 is not FDA-approved. The FDA has issued consumer warnings about melanotan products. Available only when determined clinically appropriate by a licensed provider.',
   },
 } as const;
 
@@ -175,16 +165,16 @@ export const CONSENT_DOCUMENT = {
 /** All therapy IDs from FDA_STATUSES, grouped by tier availability */
 export const TIER_THERAPY_IDS: Record<string, string[]> = {
   club: [], // Education only — no therapies
-  core: ['semaglutide', 'tirzepatide', 'r3ta'], // Foundation therapies
+  core: ['semaglutide', 'tirzepatide'], // Foundation therapies
   catalyst: [
-    'semaglutide', 'tirzepatide', 'r3ta',
+    'semaglutide', 'tirzepatide',
     'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
-    'nad-plus', 'semax-selank', 'bpc157-tb500', 'melanotan-2',
+    'nad-plus', 'semax-selank', 'bpc157-tb500',
   ],
   concierge: [
-    'semaglutide', 'tirzepatide', 'r3ta',
+    'semaglutide', 'tirzepatide',
     'ghk-cu', 'glutathione', 'tesa-ipa', 'cjc1295-ipa',
-    'nad-plus', 'semax-selank', 'bpc157-tb500', 'melanotan-2',
+    'nad-plus', 'semax-selank', 'bpc157-tb500',
   ],
 };
 
@@ -193,7 +183,6 @@ export const TIER_THERAPY_IDS: Record<string, string[]> = {
 export const CLINICAL_CITATIONS: Record<string, string> = {
   'semaglutide-weight-loss': 'Wilding JPH, et al. Once-Weekly Semaglutide in Adults with Overweight or Obesity. N Engl J Med. 2021;384(11):989-1002. (STEP 1 trial)',
   'tirzepatide-weight-loss': 'Jastreboff AM, et al. Tirzepatide Once Weekly for the Treatment of Obesity. N Engl J Med. 2022;387(3):205-216. (SURMOUNT-1 trial)',
-  'retatrutide-weight-loss': 'Jastreboff AM, et al. Triple-Hormone-Receptor Agonist Retatrutide for Obesity — A Phase 2 Trial. N Engl J Med. 2023;389(6):514-526.',
   'nad-decline': 'Massudi H, et al. Age-Associated Changes In Oxidative Stress and NAD+ Metabolism In Human Tissue. PLoS One. 2012;7(7):e42357.',
   'ghk-cu-genes': 'Pickart L, et al. GHK Peptide as a Natural Modulator of Multiple Cellular Pathways in Skin Regeneration. Biomed Res Int. 2015;2015:648108.',
 } as const;

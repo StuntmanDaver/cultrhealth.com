@@ -81,16 +81,6 @@ export const CORE_THERAPIES: CoreTherapy[] = [
     benefits: ['Dual-action GLP-1 + GIP targeting', 'Enhanced appetite suppression', 'Improved insulin sensitivity', 'Once-weekly injection'],
     disclaimer: 'Prescription required. Individual results may vary. Common side effects include nausea and GI discomfort during dose titration.',
   },
-  {
-    slug: 'retatrutide',
-    name: 'Retatrutide',
-    price: 239,
-    image: '/images/therapies/retatrutide.png',
-    productImage: '/images/products/r3ta-glp1-gip-gcg.png',
-    description: 'Triple-agonist GLP-1/GIP/glucagon receptor peptide for advanced metabolic support and significant weight management.',
-    benefits: ['Triple-action metabolic targeting', 'Most aggressive weight management option', 'Advanced metabolic optimization', 'Once-weekly injection'],
-    disclaimer: 'Prescription required. Individual results may vary. This is a newer therapy — your provider will determine clinical appropriateness.',
-  },
 ];
 
 /**

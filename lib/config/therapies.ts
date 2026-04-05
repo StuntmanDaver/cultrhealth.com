@@ -41,19 +41,6 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     citationKey: 'tirzepatide-weight-loss',
   },
   {
-    id: 'r3ta',
-    name: 'R3TA',
-    spec: '20 MG | 3 ML',
-    tag: 'GLP-1/GIP/GCG',
-    image: '/images/products/r3ta-glp1-gip-gcg.png',
-    shortDescription:
-      'Investigational triple-agonist GIP/GLP-1/glucagon receptor peptide. Not FDA-approved. Available when determined clinically appropriate.',
-    longDescription:
-      'R3TA (retatrutide) is an investigational triple-agonist that targets GLP-1, GIP, and glucagon receptors. In a Phase 2 clinical trial, participants experienced up to 24.2% body weight reduction at the highest dose over 48 weeks. This compound is not FDA-approved and is currently in clinical trials. Individual results vary significantly.',
-    fdaStatusId: 'r3ta',
-    citationKey: 'retatrutide-weight-loss',
-  },
-  {
     id: 'ghk-cu',
     name: 'GHK-CU',
     spec: '100 MG | 3 ML',
@@ -140,17 +127,5 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     longDescription:
       'BPC-157 (Body Protection Compound) and TB-500 (Thymosin Beta-4 fragment) are research peptides studied for their potential roles in tissue repair and recovery. This compounded combination is not FDA-approved for any indication. Individual responses vary. Prescribed when clinically appropriate.',
     fdaStatusId: 'bpc157-tb500',
-  },
-  {
-    id: 'melanotan-2',
-    name: 'Melanotan 2 (MT2)',
-    spec: '10 MG | 3 ML',
-    tag: 'Melanocortin',
-    image: '/images/products/melanotan2-mt2.png',
-    shortDescription:
-      'Melanocortin receptor agonist. Not FDA-approved. FDA has issued consumer warnings about melanotan products.',
-    longDescription:
-      'Melanotan 2 is a synthetic analog of alpha-melanocyte-stimulating hormone. It is not FDA-approved, and the FDA has issued consumer warnings about melanotan products. Available only when determined clinically appropriate by a licensed provider. Individual responses and risks vary.',
-    fdaStatusId: 'melanotan-2',
   },
 ];

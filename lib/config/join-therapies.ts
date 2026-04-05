@@ -49,18 +49,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       'Physician-supervised weight management protocols using the latest incretin-based therapies for sustainable fat loss.',
     therapies: [
       {
-        id: 'retatrutide',
-        name: 'R3TA — GLP1/GIP/GCG',
-        badge: '',
-        note: '20 MG | 3 ML · 2-3 month supply',
-        description:
-          'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
-        price: 340,
-        category: 'glp1',
-        featured: true,
-        image: '/images/products/r3ta-glp1-gip-gcg.png',
-      },
-      {
         id: 'semaglutide',
         name: 'Semaglutide — GLP1',
         badge: '',
@@ -172,17 +160,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 150,
         category: 'peptide',
         image: '/images/products/bpc157-tb500.png',
-      },
-      {
-        id: 'melanotan-2',
-        name: 'Melanotan 2 (MT2)',
-        badge: '',
-        note: '10 MG | 3 ML',
-        description:
-          'Melanocortin peptide for enhanced tanning response, skin pigmentation support, and photoprotection.',
-        price: 110,
-        category: 'peptide',
-        image: '/images/products/melanotan2-mt2.png',
       },
       {
         id: 'igf1-lr3',

@@ -85,7 +85,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     options: [
       { id: 'never-glp1', label: "No, I'm brand new", scores: { semaglutide: 5 } },
       { id: 'tried-sema', label: "Yes, I've tried one before", scores: { tirzepatide: 5 } },
-      { id: 'tried-multiple', label: "Yes, I've tried multiple", scores: { retatrutide: 5 } },
+      { id: 'tried-multiple', label: "Yes, I've tried multiple", scores: { tirzepatide: 5 } },
       { id: 'not-sure', label: 'Not sure', scores: { semaglutide: 3 } },
     ],
   },
@@ -117,7 +117,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     type: 'single',
     options: [
       { id: 'affordability', label: 'Keeping costs low', scores: { core: 3, club: 2, semaglutide: 2 } },
-      { id: 'results', label: 'Getting the best results', scores: { catalyst: 3, retatrutide: 2 } },
+      { id: 'results', label: 'Getting the best results', scores: { catalyst: 3, tirzepatide: 2 } },
       { id: 'convenience', label: 'Having everything handled for me', scores: { concierge: 4 } },
       { id: 'education', label: 'Understanding what I\'m putting in my body', scores: { club: 3 } },
     ],
@@ -127,7 +127,6 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
 // Medication category → specific medication recommendations
 const MEDICATION_MAP: Record<string, { id: string; name: string; description: string }[]> = {
   metabolic: [
-    { id: 'retatrutide', name: 'Retatrutide (RTA)', description: 'Triple GLP-1/GIP/Glucagon agonist for maximum metabolic optimization' },
     { id: 'tirzepatide', name: 'Tirzepatide', description: 'Dual GIP/GLP-1 for significant weight loss' },
     { id: 'semaglutide', name: 'Semaglutide', description: 'GLP-1 receptor agonist for weight management' },
   ],
@@ -160,7 +159,7 @@ const TIER_INFO: Record<string, { name: string; price: number }> = {
 const TIER_PRIORITY: string[] = ['club', 'core', 'catalyst', 'concierge'];
 
 // GLP-1 therapy score keys
-const GLP1_KEYS = ['semaglutide', 'tirzepatide', 'retatrutide'];
+const GLP1_KEYS = ['semaglutide', 'tirzepatide'];
 
 /**
  * Returns the list of questions that should be shown based on current answers.
@@ -178,7 +177,7 @@ export function getActiveQuestions(answers: Record<string, string | string[]>): 
 export function calculateRecommendation(answers: Record<string, string | string[]>): QuizResult {
   const tierScores: Record<string, number> = { club: 0, core: 0, catalyst: 0, concierge: 0 };
   const medScores: Record<string, number> = {};
-  const glp1Scores: Record<string, number> = { semaglutide: 0, tirzepatide: 0, retatrutide: 0 };
+  const glp1Scores: Record<string, number> = { semaglutide: 0, tirzepatide: 0 };
 
   for (const [questionId, answer] of Object.entries(answers)) {
     const question = QUIZ_QUESTIONS.find(q => q.id === questionId);
