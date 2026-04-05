@@ -220,7 +220,7 @@ export function ShopClient({ email, tier }: { email: string; tier: PlanTier | nu
           
           <div className="mt-6">
             <h1 className="text-3xl font-display font-bold">Product Shop</h1>
-            <p className="text-white/70 mt-2">Browse our complete catalog of peptides and compounds</p>
+            <p className="text-white/70 mt-2">Browse our therapy products</p>
           </div>
         </div>
       </header>
