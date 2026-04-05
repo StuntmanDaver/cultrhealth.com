@@ -1,3 +1,39 @@
+## [2026-04-04] - Server-Side Returning Member Recognition (join.cultrhealth.com)
+
+### Problem
+Returning members on join.cultrhealth.com were shown the signup modal every visit. Recognition was entirely client-side (localStorage + cookie) — clearing browser data, new device, or expired cookie meant the system had no fallback to check the database.
+
+### New: 3-Layer Member Recognition
+- **SSR (page.tsx):** Reads `cultr_club_visitor` cookie at render time, verifies member exists in `club_members` DB, passes verified data as `serverMember` prop — zero modal flash for returning members
+- **Client cascade (JoinLandingClient.tsx):** 6-priority recognition: serverMember > localhost bypass > localStorage > client cookie > has-ordered flag > API fallback check
+- **Email onBlur (SignupModal):** When a user types their email and tabs out, checks DB for existing member. Shows "Welcome Back!" banner with first name if found
+
+### New Endpoint: `GET /api/club/check-member`
+- **Cookie mode** (no params): reads cookie, returns full member data (trusted session)
+- **Email mode** (`?email=...`): returns only `{ firstName, exists: true }` — no PII exposed
+- Always returns HTTP 200 for email lookups (anti-enumeration)
+
+### Security Hardening (from deep audit)
+- Email-based lookups never return phone, address, age, gender, or social handle
+- Anti-enumeration: email lookups always return 200 (both found and not-found)
+- Client-side cookie now includes `Secure` flag on HTTPS
+- Login API uses explicit `SELECT` columns instead of `SELECT *`
+- Signup API cookie now includes `signupType`, `age`, `gender` for consistent schema
+- `ClubMember` age/gender made optional to prevent fabricated defaults for legacy members
+
+### Loading State
+- Pulsing CULTR logo shown during Priority 6 async server check (prevents bare-page flash)
+
+### Files Changed
+- `app/join/page.tsx` — server component with `getServerMember()` DB lookup
+- `app/join/JoinLandingClient.tsx` — 6-priority cascade, email onBlur, loading screen
+- `app/api/club/check-member/route.ts` — new endpoint
+- `app/api/club/login/route.ts` — explicit SELECT, age/gender in response, 90-day cookie
+- `app/api/club/signup/route.ts` — cookie schema updated
+- 28/28 test files passing, 380/380 tests, 0 TypeScript errors
+
+---
+
 ## [2026-04-04] - LegitScript Compliance Foundation + Asher Med Removal
 
 ### Asher Med Integration Removed
