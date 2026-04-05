@@ -172,8 +172,8 @@ export default function DashboardClient() {
         </Button>
       </div>
 
-      {/* Stacking Guides Card */}
-      <Link
+      {/* DEACTIVATED — Stacking Guides Card hidden for now; re-enable later */}
+      {/* <Link
         href="/portal/stacking"
         className="block rounded-2xl border border-brand-primary/10 bg-white p-5 hover:border-brand-primary/20 transition-colors mb-6"
       >
@@ -186,7 +186,7 @@ export default function DashboardClient() {
             <p className="text-xs text-brand-primary/60">Goal-based guides for your regimen</p>
           </div>
         </div>
-      </Link>
+      </Link> */}
 
       {/* Loading State */}
       {isLoading && (

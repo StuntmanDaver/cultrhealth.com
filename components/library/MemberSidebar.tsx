@@ -24,13 +24,14 @@ const NAV_GROUPS = [
       { label: 'Dashboard', href: '/members', icon: LayoutDashboard },
     ],
   },
-  {
-    label: 'LEARN',
-    items: [
-      { label: 'Peptide Library', href: '/members/index', icon: Library },
-      { label: 'Peptide FAQ', href: '/members/peptide-faq', icon: HelpCircle },
-    ],
-  },
+  // DEACTIVATED — peptide library & FAQ hidden for now; re-enable later
+  // {
+  //   label: 'LEARN',
+  //   items: [
+  //     { label: 'Peptide Library', href: '/members/index', icon: Library },
+  //     { label: 'Peptide FAQ', href: '/members/peptide-faq', icon: HelpCircle },
+  //   ],
+  // },
   {
     label: 'TOOLS',
     items: [

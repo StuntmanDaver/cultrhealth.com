@@ -13,7 +13,6 @@ import {
   FlaskConical,
   Dna,
   Sparkles,
-  BookOpen,
   Shield,
 } from 'lucide-react';
 
@@ -120,70 +119,10 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Peptide Library Feature */}
-      <section className="py-24 px-6 grad-dark text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <ScrollReveal direction="none">
-              <div>
-                <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6">
-                  <BookOpen className="w-4 h-4 text-cultr-sage" />
-                  <span className="text-sm">Coming Soon</span>
-                </div>
-                <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-                  The <span className="">CULTR</span> <span className="italic">Peptide Library</span>
-                </h2>
-                <p className="text-white/80 mb-8 leading-relaxed">
-                  Access our comprehensive library of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, and real-world outcomes data.
-                </p>
-                <ul className="space-y-4 mb-8">
-                  {[
-                    '60+ peptide protocols documented',
-                    'Evidence-based dosing guidelines',
-                    'Stacking and cycling recommendations',
-                    'Provider-reviewed safety data',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-center gap-3">
-                      <Check className="w-5 h-5 text-cultr-sage" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/pricing">
-                  <Button size="lg">Join for Access</Button>
-                </Link>
-              </div>
-            </ScrollReveal>
-            <ScrollReveal delay={200} direction="up">
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-                <div className="space-y-4">
-                  {[
-                    { name: 'BPC-157', category: 'Recovery', status: 'Popular' },
-                    { name: 'Semaglutide', category: 'Metabolic', status: 'Bestseller' },
-                    { name: 'Tirzepatide', category: 'Metabolic', status: 'Bestseller' },
-                    { name: 'PT-141', category: 'Performance', status: 'Available' },
-                    { name: 'Thymosin Alpha-1', category: 'Immune', status: 'Available' },
-                  ].map((peptide, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-white/10 rounded-xl">
-                      <div>
-                        <div className="font-medium text-white">{peptide.name}</div>
-                        <div className="text-sm text-white/60">{peptide.category}</div>
-                      </div>
-                      <span className={`text-xs px-3 py-1 rounded-full ${
-                        peptide.status === 'Bestseller' ? 'bg-cultr-sage text-cultr-forest' :
-                        peptide.status === 'Popular' ? 'bg-white/20 text-white' :
-                        'bg-white/10 text-white/80'
-                      }`}>
-                        {peptide.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
+      {/* DEACTIVATED — Peptide Library feature section hidden for now; re-enable later */}
+      {/* <section className="py-24 px-6 grad-dark text-white">
+        ...Peptide Library Feature...
+      </section> */}
 
       {/* Protocol Engine Feature */}
       <section className="py-24 px-6 grad-white">

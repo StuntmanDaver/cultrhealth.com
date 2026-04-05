@@ -5,8 +5,8 @@ import { getSession, isProviderEmail, getMembershipTier } from '@/lib/auth'
 import type { PlanTier } from '@/lib/config/plans'
 
 export const metadata: Metadata = {
-  title: 'Peptide Library | CULTR Health',
-  description: 'Access your member-only peptide reference library with detailed protocols, mechanisms, and safety information.',
+  title: 'Members Area | CULTR Health',
+  description: 'Access your member-only dashboard, tools, and resources.',
 }
 
 export default async function LibraryLayout({

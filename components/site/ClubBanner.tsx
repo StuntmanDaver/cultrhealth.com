@@ -61,7 +61,7 @@ export function ClubBanner() {
             </h3>
           </Link>
           <p className="text-cultr-textMuted text-sm md:text-base max-w-lg">
-            Get access to our protocol library, peptide calculators, cycle guides, and education content. No credit card required.
+            Get access to our health tools, protocol guides, and education content. No credit card required.
             {' '}<Link href="/therapies" className="text-cultr-forest font-medium hover:underline">See therapies &rarr;</Link>
           </p>
         </div>

@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
-  { label: 'Stacking Guides', href: '/portal/stacking', icon: Layers },
+  // DEACTIVATED — stacking guides hidden for now; re-enable later
+  // { label: 'Stacking Guides', href: '/portal/stacking', icon: Layers },
 ]
 
 // ============================================================

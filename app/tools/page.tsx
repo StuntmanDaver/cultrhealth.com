@@ -7,7 +7,7 @@ import { CTASection } from '@/components/site/CTASection';
 export const metadata = {
   title: 'Protocol Tools — CULTR Health',
   description:
-    'Free peptide dosing calculator, calorie & macro calculator, peptide FAQ, and stacking guides — no account required.',
+    'Free peptide dosing calculator and calorie & macro calculator — no account required.',
 };
 
 const TrustMarquee = dynamic(
@@ -30,20 +30,21 @@ const tools = [
     description:
       'Advanced TDEE calculator with multiple BMR formulas, activity levels, and goal-based macro splits.',
   },
-  {
-    href: '/tools/peptide-faq',
-    icon: HelpCircle,
-    title: 'Peptide FAQ',
-    description:
-      'Comprehensive answers to 100+ questions about peptide therapy, sourced from community and clinical research.',
-  },
-  {
-    href: '/tools/stacking-guides',
-    icon: Layers,
-    title: 'Stacking Guides',
-    description:
-      'Goal-based peptide stacking protocols for fat loss, recovery, growth, and longevity optimization.',
-  },
+  // DEACTIVATED — peptide FAQ & stacking guides hidden for now; re-enable later
+  // {
+  //   href: '/tools/peptide-faq',
+  //   icon: HelpCircle,
+  //   title: 'Peptide FAQ',
+  //   description:
+  //     'Comprehensive answers to 100+ questions about peptide therapy, sourced from community and clinical research.',
+  // },
+  // {
+  //   href: '/tools/stacking-guides',
+  //   icon: Layers,
+  //   title: 'Stacking Guides',
+  //   description:
+  //     'Goal-based peptide stacking protocols for fat loss, recovery, growth, and longevity optimization.',
+  // },
 ];
 
 export default function ToolsPage() {
@@ -63,7 +64,7 @@ export default function ToolsPage() {
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-lg text-white/80 max-w-2xl mx-auto">
-              Free tools to help you calculate, plan, and optimize your peptide
+              Free tools to help you calculate and plan your health
               protocols — no account required.
             </p>
           </ScrollReveal>

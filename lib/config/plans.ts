@@ -145,9 +145,9 @@ export const PLANS: Plan[] = [
     bestFor: 'Education & discovery',
     features: [
       'Education & discovery',
-      'Full protocol & peptide library',
-      'Peptide calculator access',
-      'Cycle guides & safety info',
+      'Health tools & calculators',
+      'Educational content',
+      'Protocol guides & safety info',
       'Instruction video library',
       'Protocol Builder',
     ],

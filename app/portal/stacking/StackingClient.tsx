@@ -51,7 +51,8 @@ export default function StackingClient() {
           </div>
           <ChevronRight className="w-4 h-4 text-brand-primary/20" />
         </Link>
-        <Link
+        {/* DEACTIVATED — peptide FAQ link hidden for now; re-enable later */}
+        {/* <Link
           href="/tools/peptide-faq"
           className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
         >
@@ -61,7 +62,7 @@ export default function StackingClient() {
             <span className="text-xs text-brand-primary/40">Common questions answered</span>
           </div>
           <ChevronRight className="w-4 h-4 text-brand-primary/20" />
-        </Link>
+        </Link> */}
       </div>
 
       {/* Stacking Content */}

@@ -30,7 +30,7 @@ import { TRUST_METRICS } from '@/lib/config/social-proof';
 
 export const metadata: Metadata = {
   title: 'How It Works — CULTR Health',
-  description: 'Learn how CULTR Health works: from signup to personalized protocols. Get comprehensive labs, provider consults, and access to our peptide library.',
+  description: 'Learn how CULTR Health works: from signup to personalized protocols. Get comprehensive labs, provider consults, and access to personalized protocols.',
 };
 
 export default function HowItWorksPage() {
@@ -175,8 +175,8 @@ export default function HowItWorksPage() {
               },
               {
                 icon: Dna,
-                title: 'Peptide Library Access',
-                desc: 'Browse our curated library of research-backed peptide protocols for various health goals.',
+                title: 'Personalized Protocols',
+                desc: 'Your provider recommends research-backed protocols tailored to your labs, goals, and health history.',
               },
               {
                 icon: Sparkles,
@@ -238,7 +238,7 @@ export default function HowItWorksPage() {
                 <FAQAccordion items={[
                   {
                     question: 'What is included in my membership?',
-                    answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like the Peptide Library and Protocol Engine.',
+                    answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like personalized protocols and the Protocol Engine.',
                   },
                   {
                     question: 'Can I cancel my membership?',
@@ -291,8 +291,8 @@ export default function HowItWorksPage() {
                 </h3>
                 <FAQAccordion items={[
                   {
-                    question: 'What is the Peptide Library?',
-                    answer: 'The Peptide Library is our comprehensive database of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, potential side effects, and real-world outcomes data. It\'s designed to help you understand your options and have informed conversations with your provider.',
+                    question: 'How are protocols personalized?',
+                    answer: 'Your provider reviews your lab results, health history, and goals to recommend research-backed protocols tailored to you. Each recommendation includes dosing guidelines, cycling recommendations, and safety considerations. Your provider adjusts protocols over time based on your progress and follow-up labs.',
                   },
                   {
                     question: 'How does the Protocol Engine work?',

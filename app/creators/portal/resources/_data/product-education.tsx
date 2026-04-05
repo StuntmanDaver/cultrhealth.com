@@ -141,7 +141,7 @@ export const productEducation: Record<string, ResourceEntry> = {
         <SectionHeading>CULTR Club (Free)</SectionHeading>
         <BulletList items={[
           'Price: Free \u2014 no credit card required',
-          'Access to protocol library and peptide calculators',
+          'Access to health tools and educational content',
           'Cycle guides and educational content',
           'Community access',
           'Best for: People exploring health optimization who want to learn before committing',
@@ -153,7 +153,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           'Comprehensive lab panel (29 biomarkers, upgradeable up to 60+)',
           'Basic messaging access with care team',
           'Standard protocol reviews',
-          'Peptide Library access',
+          'Protocol guidance from your provider',
           'Best for: People starting their optimization journey who want professional guidance',
         ]} />
 
@@ -163,7 +163,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           'Comprehensive lab panel (29 biomarkers, upgradeable up to 60+)',
           'Priority messaging with 24-hour response time',
           'Custom protocol reviews',
-          'Full Peptide Library + Protocol Engine access',
+          'Full Protocol Engine access',
           'Best for: Active optimizers who want more frequent touchpoints and customization',
         ]} />
 
@@ -174,7 +174,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           'Priority messaging with 24-hour response time',
           'Advanced protocol reviews',
           'Priority scheduling',
-          'Full Peptide Library + Protocol Engine access',
+          'Full Protocol Engine access',
           'Best for: Serious optimizers managing multiple protocols or complex health goals',
         ]} />
 
@@ -184,7 +184,7 @@ export const productEducation: Record<string, ResourceEntry> = {
           '24/7 messaging access with same-day response',
           'Comprehensive protocol management',
           'Priority scheduling and curated support',
-          'Full Peptide Library + Protocol Engine access',
+          'Full Protocol Engine access',
           'Best for: High-performers who want maximum access and support',
         ]} />
 

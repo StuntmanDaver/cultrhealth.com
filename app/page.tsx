@@ -485,7 +485,7 @@ export default function HomePage() {
 
           <FAQAccordion items={[
             { question: 'What is included in the membership?', answer: 'All memberships include telehealth consultations with licensed providers, access to our platform, messaging support, and our core lab panel review. Higher tiers include more frequent consults, peptide protocol access, and priority support.' },
-            { question: 'How do the peptide protocols work?', answer: 'Our peptide library contains research-backed protocols for various health goals. After your consultation, your provider can recommend specific peptides based on your labs and objectives. All peptides are compounded at licensed pharmacies.' },
+            { question: 'How do the peptide protocols work?', answer: 'After your consultation, your provider recommends specific peptides based on your labs, goals, and health history. All peptides are compounded at licensed US pharmacies and shipped directly to you with dosing instructions.' },
             { question: 'Is CULTR available in my state?', answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.') },
           ]} />
 
