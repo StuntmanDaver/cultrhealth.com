@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       const response = NextResponse.json(memberData, { status: 200 })
 
       // Set visitor cookie (90 days)
-      const cookieData = encodeURIComponent(JSON.stringify(memberData))
+      const cookieData = JSON.stringify(memberData)
       const domain = getCookieDomain()
       response.cookies.set('cultr_club_visitor', cookieData, {
         httpOnly: false,

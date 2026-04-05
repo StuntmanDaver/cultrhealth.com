@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import { parseCookieJson } from '@/lib/utils'
 
 type StockData = Record<string, { status: string; quantity: number | null }>
 import { Carousel, Card, type CarouselCard } from '@/components/ui/apple-cards-carousel'
@@ -86,7 +87,21 @@ function getVisitorContext(): VisitorContext {
   try {
     const ctxCookie = document.cookie.split('; ').find((c) => c.startsWith('cultr_visitor_ctx='))
     if (ctxCookie) {
-      const data = JSON.parse(decodeURIComponent(ctxCookie.substring('cultr_visitor_ctx='.length)))
+      const data = parseCookieJson<{
+        s?: string
+        m?: string
+        c?: string
+        t?: string
+        n?: string
+        r?: string
+        l?: string
+        ts?: number
+      }>(ctxCookie.substring('cultr_visitor_ctx='.length))
+
+      if (!data) {
+        throw new Error('Invalid visitor context cookie')
+      }
+
       utmSource = data.s || ''
       utmMedium = data.m || ''
       utmCampaign = data.c || ''
@@ -299,7 +314,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
       // --- Priority 4: Client-side cookie ---
       const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
       if (stored) {
-        const data = JSON.parse(decodeURIComponent(stored.substring('cultr_club_visitor='.length)))
+        const data = parseCookieJson<ClubMember>(stored.substring('cultr_club_visitor='.length))
         if (data?.firstName && data?.lastName && data?.email && data?.phone) {
           setMember({ ...data, signupType: data.signupType || 'products' })
           setShowSignup(false)

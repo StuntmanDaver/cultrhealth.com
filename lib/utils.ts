@@ -6,6 +6,32 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function parseCookieJson<T>(value: string | null | undefined): T | null {
+  if (!value) return null
+
+  const candidates = [value]
+
+  for (let i = 0; i < 2; i++) {
+    const previous = candidates[candidates.length - 1]
+    try {
+      const decoded = decodeURIComponent(previous)
+      if (decoded !== previous) candidates.push(decoded)
+    } catch {
+      break
+    }
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate) as T
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 /**
  * Returns the cookie domain for cross-subdomain sharing.
  * On cultrhealth.com (staging/production/join), returns '.cultrhealth.com'

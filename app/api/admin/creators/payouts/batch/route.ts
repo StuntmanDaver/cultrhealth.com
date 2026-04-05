@@ -4,7 +4,8 @@ import {
   getAllActiveCreators,
   getApprovedCommissionsForPayout,
   createPayout,
-  updateCommissionStatus,
+  updatePayoutStatus,
+  markCommissionsPaidForPayout,
   createAdminAction,
 } from '@/lib/creators/db'
 import { COMMISSION_CONFIG } from '@/lib/config/affiliate'
@@ -31,7 +32,10 @@ export async function POST(request: NextRequest) {
     const skipped: Array<{ creatorId: string; name: string; amount: number; reason: string }> = []
 
     for (const creator of creators) {
-      const commissions = await getApprovedCommissionsForPayout(creator.id)
+      const commissions = await getApprovedCommissionsForPayout(creator.id, {
+        periodStart: start,
+        periodEnd: end,
+      })
 
       if (commissions.length === 0) continue
 
@@ -70,10 +74,12 @@ export async function POST(request: NextRequest) {
         commission_count: commissions.length,
       })
 
-      // Mark commissions as paid
-      for (const commission of commissions) {
-        await updateCommissionStatus(commission.id, 'paid', payout.id)
-      }
+      await updatePayoutStatus(payout.id, 'processing')
+      await markCommissionsPaidForPayout(
+        commissions.map((commission) => commission.id),
+        payout.id
+      )
+      await updatePayoutStatus(payout.id, 'completed')
 
       payoutResults.push({
         creatorId: creator.id,

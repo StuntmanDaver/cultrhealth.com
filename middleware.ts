@@ -10,17 +10,26 @@ export function middleware(request: NextRequest) {
     hostname === 'join.staging.cultrhealth.com'
   ) {
     const url = request.nextUrl.clone()
+    const shouldTrackJoinLanding =
+      request.method === 'GET' &&
+      !url.pathname.startsWith('/api') &&
+      !url.pathname.startsWith('/_next') &&
+      !url.pathname.startsWith('/images') &&
+      !url.pathname.startsWith('/favicon') &&
+      !url.pathname.startsWith('/cultr-') &&
+      url.pathname !== '/robots.txt' &&
+      url.pathname !== '/sitemap.xml'
 
-    if (url.pathname !== '/') {
-      return NextResponse.next()
-    }
-
-    url.pathname = '/join'
-    const response = NextResponse.rewrite(url)
+    const response = url.pathname === '/'
+      ? (() => {
+          url.pathname = '/join'
+          return NextResponse.rewrite(url)
+        })()
+      : NextResponse.next()
 
     // Capture visitor context on first visit (UTM params + referrer)
     // Only set once — don't overwrite if already exists (preserves first-touch attribution)
-    if (!request.cookies.get('cultr_visitor_ctx')) {
+    if (shouldTrackJoinLanding && !request.cookies.get('cultr_visitor_ctx')) {
       const utmSource = (request.nextUrl.searchParams.get('utm_source') || '').slice(0, 255)
       const utmMedium = (request.nextUrl.searchParams.get('utm_medium') || '').slice(0, 255)
       const utmCampaign = (request.nextUrl.searchParams.get('utm_campaign') || '').slice(0, 255)
@@ -40,7 +49,7 @@ export function middleware(request: NextRequest) {
       })
 
       const domain = hostname.includes('cultrhealth.com') ? '.cultrhealth.com' : undefined
-      response.cookies.set('cultr_visitor_ctx', encodeURIComponent(visitorCtx), {
+      response.cookies.set('cultr_visitor_ctx', visitorCtx, {
         httpOnly: false, // Client-side readable so JS can send with signup
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

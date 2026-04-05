@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { cookies } from 'next/headers'
+import { parseCookieJson } from '@/lib/utils'
 
 /**
  * GET /api/club/check-member
@@ -31,12 +32,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ member: null }, { status: 404 })
       }
 
-      try {
-        const cookieData = JSON.parse(decodeURIComponent(visitorCookie.value))
-        lookupEmail = cookieData.email?.trim().toLowerCase() || null
-      } catch {
+      const cookieData = parseCookieJson<{ email?: string }>(visitorCookie.value)
+      if (!cookieData) {
         return NextResponse.json({ member: null }, { status: 404 })
       }
+
+      lookupEmail = cookieData.email?.trim().toLowerCase() || null
     }
 
     if (!lookupEmail) {

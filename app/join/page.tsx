@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers'
 import { sql } from '@vercel/postgres'
+import { parseCookieJson } from '@/lib/utils'
 import { JoinLandingClient } from './JoinLandingClient'
 
 export const dynamic = 'force-dynamic'
@@ -31,10 +32,17 @@ async function getServerMember(): Promise<{
 
     if (!visitorCookie?.value) return null
 
-    let cookieData: { email?: string; firstName?: string; lastName?: string; phone?: string; socialHandle?: string; signupType?: string; address?: { street: string; city: string; state: string; zip: string } }
-    try {
-      cookieData = JSON.parse(decodeURIComponent(visitorCookie.value))
-    } catch {
+    const cookieData = parseCookieJson<{
+      email?: string
+      firstName?: string
+      lastName?: string
+      phone?: string
+      socialHandle?: string
+      signupType?: string
+      address?: { street: string; city: string; state: string; zip: string }
+    }>(visitorCookie.value)
+
+    if (!cookieData) {
       return null
     }
 

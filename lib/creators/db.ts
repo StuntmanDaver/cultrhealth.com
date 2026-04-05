@@ -939,16 +939,51 @@ export async function reverseCommissionsForAttribution(attributionId: string): P
 }
 
 export async function getApprovedCommissionsForPayout(
-  creatorId: string
+  creatorId: string,
+  filters?: {
+    periodStart?: string
+    periodEnd?: string
+  }
 ): Promise<CommissionLedgerEntry[]> {
   try {
-    const result = await sql`
-      SELECT * FROM commission_ledger
-      WHERE beneficiary_creator_id = ${creatorId}
-        AND status = 'approved'
-        AND payout_id IS NULL
-      ORDER BY created_at ASC
-    `
+    const periodStart = filters?.periodStart
+    const periodEnd = filters?.periodEnd
+
+    const result = periodStart && periodEnd
+      ? await sql`
+          SELECT * FROM commission_ledger
+          WHERE beneficiary_creator_id = ${creatorId}
+            AND status = 'approved'
+            AND payout_id IS NULL
+            AND created_at >= ${periodStart}::date
+            AND created_at < (${periodEnd}::date + INTERVAL '1 day')
+          ORDER BY created_at ASC
+        `
+      : periodStart
+        ? await sql`
+            SELECT * FROM commission_ledger
+            WHERE beneficiary_creator_id = ${creatorId}
+              AND status = 'approved'
+              AND payout_id IS NULL
+              AND created_at >= ${periodStart}::date
+            ORDER BY created_at ASC
+          `
+        : periodEnd
+          ? await sql`
+              SELECT * FROM commission_ledger
+              WHERE beneficiary_creator_id = ${creatorId}
+                AND status = 'approved'
+                AND payout_id IS NULL
+                AND created_at < (${periodEnd}::date + INTERVAL '1 day')
+              ORDER BY created_at ASC
+            `
+          : await sql`
+              SELECT * FROM commission_ledger
+              WHERE beneficiary_creator_id = ${creatorId}
+                AND status = 'approved'
+                AND payout_id IS NULL
+              ORDER BY created_at ASC
+            `
     return result.rows as CommissionLedgerEntry[]
   } catch (error) {
     console.error('Database error fetching approved commissions:', error)

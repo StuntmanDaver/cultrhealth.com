@@ -387,7 +387,7 @@ export default function CouponsClient() {
           <span className="px-3 py-1 bg-brand-primary/5 rounded-full text-sm text-brand-primary">Total: {data.allCouponCodes.length}</span>
           <span className="px-3 py-1 bg-green-50 rounded-full text-sm text-green-700">Active: {data.allCouponCodes.filter(c => c.active).length}</span>
           <span className="px-3 py-1 bg-purple-50 rounded-full text-sm text-purple-700">Creator: {data.allCouponCodes.filter(c => c.program_type === 'creator').length}</span>
-          <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">Club: {data.allCouponCodes.filter(c => c.code_type === 'club' || c.program_type === 'club').length}</span>
+          <span className="px-3 py-1 bg-yellow-50 rounded-full text-sm text-yellow-700">Club: {data.allCouponCodes.filter(c => !c.creator_id && c.program_type !== 'prelaunch').length}</span>
           <span className="px-3 py-1 bg-blue-50 rounded-full text-sm text-blue-700">Prelaunch: {data.allCouponCodes.filter(c => c.program_type === 'prelaunch').length}</span>
         </div>
         {data.allCouponCodes.length > 0 ? (

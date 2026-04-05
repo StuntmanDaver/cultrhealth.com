@@ -37,6 +37,18 @@ describe('Join domain routing', () => {
     expect(response.headers.get('x-middleware-rewrite')).toBeNull()
   })
 
+  it('captures attribution context for non-root join-host landings', () => {
+    const response = middleware(
+      makeRequest(
+        'https://join.cultrhealth.com/pricing?utm_source=instagram&utm_campaign=spring',
+        'join.cultrhealth.com'
+      )
+    )
+
+    expect(response.headers.get('x-middleware-rewrite')).toBeNull()
+    expect(response.headers.get('set-cookie')).toContain('cultr_visitor_ctx=')
+  })
+
   it('blocks /join on non-join hostnames', () => {
     const response = middleware(
       makeRequest('https://staging.cultrhealth.com/join', 'staging.cultrhealth.com')

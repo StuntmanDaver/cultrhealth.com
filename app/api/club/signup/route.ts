@@ -148,7 +148,7 @@ export async function POST(request: Request) {
     })
 
     const domain = getCookieDomain()
-    response.cookies.set('cultr_club_visitor', encodeURIComponent(cookieData), {
+    response.cookies.set('cultr_club_visitor', cookieData, {
       httpOnly: false, // Client-side readable for personalization
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
