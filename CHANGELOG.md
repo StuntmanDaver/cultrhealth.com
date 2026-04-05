@@ -1,3 +1,18 @@
+## [2026-04-04] - Trust Strip on join.cultrhealth.com
+
+### Pharmaceutical credentialing strip added to join page hero zone
+- Added a responsive trust strip between the slogan banner and the "Browse & Build" section on `join.cultrhealth.com`.
+- Three trust signals: **Pharmaceutical-Grade APIs**, **Green-listed · Third-party tested**, **Made in the USA**.
+- Mobile: explicit `flex-col` centered vertical stack — no wrapping surprises, each badge on its own line.
+- Desktop (`sm+`): horizontal row with `|` pipe dividers, `select-none` so dividers aren't copyable.
+- Uses `bg-brand-primary` (same as slogan section above) with a `border-white/[0.07]` hairline separator — maintains the unified dark hero zone.
+- `Check` icon (sage) already imported from lucide-react — no new dependencies.
+
+### Files Changed
+- `app/join/JoinLandingClient.tsx` — trust strip section inserted between slogan banner and browse section
+
+---
+
 ## [2026-04-04] - Bac Water Shipping Upsell (Stock-Aware)
 
 ### Shipping Warning Banner on join.cultrhealth.com

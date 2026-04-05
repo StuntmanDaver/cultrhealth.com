@@ -367,6 +367,47 @@ function JoinLandingInner() {
         </p>
       </section>
 
+      {/* Trust Strip */}
+      <section className="bg-brand-primary border-t border-white/[0.07] px-4 py-2.5 sm:py-3">
+        <div className="max-w-4xl mx-auto">
+
+          {/* Mobile: clean vertical stack */}
+          <div className="flex flex-col items-center gap-1.5 sm:hidden">
+            <div className="flex items-center gap-2">
+              <Check className="w-3 h-3 text-sage shrink-0" />
+              <span className="text-[10.5px] text-white/70 font-medium tracking-wide leading-none">Pharmaceutical-Grade APIs</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-3 h-3 text-sage shrink-0" />
+              <span className="text-[10.5px] text-white/70 font-medium tracking-wide leading-none">Green-listed · Third-party tested</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-3 h-3 text-sage shrink-0" />
+              <span className="text-[10.5px] text-white/70 font-medium tracking-wide leading-none">Made in the USA</span>
+            </div>
+          </div>
+
+          {/* Desktop: horizontal row with dividers */}
+          <div className="hidden sm:flex items-center justify-center gap-5">
+            <div className="flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-sage shrink-0" />
+              <span className="text-xs text-white/75 font-medium tracking-wide">Pharmaceutical-Grade APIs</span>
+            </div>
+            <span className="text-white/20 select-none">|</span>
+            <div className="flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-sage shrink-0" />
+              <span className="text-xs text-white/75 font-medium tracking-wide">Green-listed sourcing · Third-party tested</span>
+            </div>
+            <span className="text-white/20 select-none">|</span>
+            <div className="flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-sage shrink-0" />
+              <span className="text-xs text-white/75 font-medium tracking-wide">Made in the USA</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* Welcome + Browse */}
       <section className="px-6 py-5 md:px-8 md:py-8 bg-brand-cream border-b border-brand-secondary/8">
         <div className="max-w-7xl mx-auto">
