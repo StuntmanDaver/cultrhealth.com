@@ -41,12 +41,6 @@ describe('Critical Page Smoke Tests', () => {
     expect(typeof mod.default).toBe('function')
   })
 
-  it('science page exports a valid page component', async () => {
-    const mod = await import('@/app/science/page')
-    expect(mod.default).toBeDefined()
-    expect(typeof mod.default).toBe('function')
-  })
-
   it('login page exports a valid page component', async () => {
     const mod = await import('@/app/login/page')
     expect(mod.default).toBeDefined()

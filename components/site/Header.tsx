@@ -9,7 +9,6 @@ const navLinks = [
   { href: '/pricing', label: 'Pricing', hasDropdown: false },
   { href: '/therapies', label: 'Core Therapies' },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/science', label: 'Latest Research' },
   { href: '/tools', label: 'Tools' },
 ];
 

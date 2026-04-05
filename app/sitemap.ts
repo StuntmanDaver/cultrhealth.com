@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next'
-import { getAllBlogSlugs } from '@/lib/blog-content'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
 
@@ -23,12 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/science`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
     },
     {
       url: `${BASE_URL}/faq`,
@@ -62,19 +55,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Dynamic blog posts
-  let blogPages: MetadataRoute.Sitemap = []
-  try {
-    const slugs = await getAllBlogSlugs()
-    blogPages = slugs.map((slug) => ({
-      url: `${BASE_URL}/science/${slug}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }))
-  } catch {
-    // Blog directory may not exist yet
-  }
-
-  return [...staticPages, ...blogPages]
+  return staticPages
 }

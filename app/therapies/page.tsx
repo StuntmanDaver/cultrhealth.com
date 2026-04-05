@@ -136,9 +136,9 @@ export default function TherapiesPage() {
                   View Membership Plans <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
-              <Link href="/science">
+              <Link href="/how-it-works">
                 <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                  Learn the Science <ArrowRight className="w-4 h-4 ml-2" />
+                  How It Works <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
             </div>

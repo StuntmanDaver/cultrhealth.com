@@ -33,10 +33,10 @@ export default function NotFound() {
                         Return Home
                     </Link>
                     <Link
-                        href="/science"
+                        href="/how-it-works"
                         className="w-full sm:w-auto px-8 py-3.5 border border-brand-primary/20 text-brand-primary font-medium rounded-full hover:bg-brand-primary/5 transition-all flex items-center justify-center gap-2 group"
                     >
-                        Read Science
+                        How It Works
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
