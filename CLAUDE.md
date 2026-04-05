@@ -89,6 +89,15 @@ This file provides guidance to Claude Code when working with the CULTR Health We
 - **Body text:** `font-body` / `font-sans` (Inter)
 - Font CSS variables set on `<html>`: `--font-fraunces`, `--font-display`, `--font-body`
 
+### Compliance Components (`components/compliance/`)
+| Component | Description |
+|---|---|
+| `ConsentModal.tsx` | Informed consent modal for checkout — scroll-gated checkbox + IntersectionObserver, FDA badges per tier, body scroll lock. Props: isOpen, onClose, onConsent, tierSlug |
+| `PrescriptionDisclaimer.tsx` | Reusable Rx disclaimer with Shield icon. Used on therapies + pricing pages |
+| `FDAStatusBadge.tsx` | FDA status badge per therapy (color-coded by status). Props: therapyId, showDisclaimer |
+| `TestimonialDisclaimer.tsx` | Testimonial results disclaimer. Used in testimonial sections |
+| `DispensingPharmacyInfo.tsx` | St. Luke Compounding Pharmacy info block. Used in footer |
+
 ### UI Components (`components/ui/`)
 | Component | Description |
 |---|---|
@@ -122,17 +131,15 @@ app/                              # Next.js 14 App Router
 ├── how-it-works/page.tsx         # How It Works page
 ├── faq/page.tsx                  # FAQ page
 ├── community/page.tsx            # Community social feed (Curator.io integration)
-├── science/                      # Science library / blog
-│   ├── page.tsx
-│   └── [slug]/page.tsx
+├── (science/ removed Apr 2026 — LegitScript compliance, redirects to /)
 ├── products/page.tsx             # Redirects to /pricing (301 via next.config.js)
 ├── success/page.tsx              # Post-checkout success
 ├── login/page.tsx                # Member login (magic link)
 ├── dashboard/page.tsx            # Member dashboard
 │
-├── join/                         # Checkout flow
+├── join/                         # Checkout flow (bare /join redirects to /pricing)
 │   ├── layout.tsx
-│   └── [tier]/page.tsx           # Tier-specific checkout (core, catalyst, concierge, club)
+│   └── [tier]/page.tsx           # Tier-specific checkout (core, catalyst, concierge, club) — includes ConsentModal
 │
 ├── intake/                       # Medical intake forms
 │   ├── page.tsx
@@ -432,7 +439,7 @@ lib/
 ├── analytics.ts                  # Analytics event tracking
 ├── asher-med-api.ts              # Asher Med API client (orders, patients, uploads)
 ├── auth.ts                       # JWT auth utilities (sign, verify, middleware)
-├── blog-content.ts               # Blog/science content loading (gray-matter + marked)
+├── (blog-content.ts removed Apr 2026 — blog deleted for LegitScript compliance)
 ├── calorie-calculator.ts         # Calorie calculation algorithms
 ├── cart-context.tsx              # Shopping cart React context
 ├── data-normalization.ts         # Data normalization utilities
@@ -465,19 +472,7 @@ migrations/                       # SQL database migrations (11 files)
 └── 011_quickbooks_tokens.sql     # quickbooks_tokens OAuth storage
 
 content/                          # Markdown content (gray-matter frontmatter)
-├── blog/                         # Science/blog articles (12 posts)
-│   ├── biomarker-basics.md
-│   ├── fasting-metabolic-health.md
-│   ├── glp1-beyond-weight-loss.md
-│   ├── inflammation-markers.md
-│   ├── mitochondrial-health.md
-│   ├── nad-and-longevity.md
-│   ├── peptide-stacking.md
-│   ├── sleep-and-recovery.md
-│   ├── tb500-tissue-repair.md
-│   ├── testosterone-optimization.md
-│   ├── thyroid-deep-dive.md
-│   └── understanding-bpc-157.md
+├── (blog/ removed Apr 2026 — LegitScript compliance)
 └── library/                      # Peptide library content (6 files)
     ├── index.md
     ├── bioregulators.md
@@ -556,8 +551,10 @@ The homepage is a single server component that builds all sections inline (does 
 ## Key Features by Domain
 
 ### 1. Public Marketing Site
-- **Pages:** Homepage, Pricing, How It Works, FAQ, Science Library, Community, Quiz
+- **Pages:** Homepage, Pricing, How It Works, FAQ, Community, Quiz, Therapies, Tools
+- **Science/Blog:** Removed Apr 2026 for LegitScript compliance (redirects to `/`)
 - **Community (`app/community/page.tsx`):** Curator.io-powered social feed with tabbed layout (Instagram, TikTok, YouTube). Shows "Coming Soon" when feed IDs not configured in env vars.
+- **LegitScript Compliance:** ConsentModal on checkout, FDA badges on therapy cards, ROSCA disclosure on pricing, state availability (48 states) on medical disclaimer, PrescriptionDisclaimer on therapies + pricing, LegitScript seal placeholder in footer (env: `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID`)
 
 ### 2. Membership Plans (defined in `lib/config/plans.ts`)
 | Tier | Slug | Price | Best For | BNPL | Featured |
@@ -720,6 +717,7 @@ On `staging.cultrhealth.com`, the magic link flow is bypassed for ease of testin
 | `QUICKBOOKS_REDIRECT_URI` | QuickBooks OAuth2 callback URL |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 measurement ID |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Google Search Console verification |
+| `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID` | LegitScript verification seal (post-certification) |
 | `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM` | Curator.io Instagram feed ID |
 | `NEXT_PUBLIC_CURATOR_FEED_TIKTOK` | Curator.io TikTok feed ID |
 | `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE` | Curator.io YouTube feed ID |
@@ -795,7 +793,7 @@ npm run setup:stripe
 - Caching headers:
   - HTML pages: `public, max-age=0, s-maxage=60, stale-while-revalidate=0` (always fresh)
   - Images/fonts: `public, max-age=31536000, immutable` (1 year cache)
-- Redirects: `/products` → `/pricing` (301 permanent), `/products/*` → `/pricing` (301)
+- Redirects: `/products` → `/pricing`, `/products/*` → `/pricing`, `/join` → `/pricing`, `/science` → `/`, `/science/*` → `/` (all 301 permanent)
 
 ---
 
@@ -806,7 +804,7 @@ Floating pill navbar that morphs on scroll via `requestAnimationFrame`:
 - **Trigger:** `window.scrollY > 50`
 - **Unscrolled:** Full-width bar, `bg-brand-cream/[0.97]`, `h-[68px]`, `rounded-none`, `backdrop-blur-sm`
 - **Scrolled:** Floating pill, `max-w-[1080px]`, `bg-brand-cream/[0.88]`, `h-[54px]`, `rounded-[60px]`, `backdrop-blur-[20px]`, shadow
-- **Left nav links:** Take the Quiz (`/quiz`), Pricing (`/pricing`), Therapies (`/therapies`), How It Works (`/how-it-works`), Science (`/science`)
+- **Left nav links:** Take the Quiz (`/quiz`), Pricing (`/pricing`), Therapies (`/therapies`), How It Works (`/how-it-works`), Tools (`/tools`)
 - **Right nav links:** Members (`/library`, has ChevronDown dropdown indicator), Creators (`/creators`), Community (`/community`)
 - **Active state:** Current route highlighted with `bg-brand-primary/[0.08]` rounded bg on matching nav link
 - **CTA:** "Get Started" button (links to `/quiz`, `bg-brand-primary`, `rounded-full`, `text-white`)
@@ -1044,7 +1042,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Button variants:** `primary` (forest bg, cream text), `secondary` (transparent, forest border), `ghost` (transparent, forest text). All use `rounded-full`. Has `isLoading` prop with built-in spinner. Managed via manual variant objects + `cn()` utility, NOT CVA.
 - **Context providers:** State shared via React Context (`CreatorContext`, `IntakeFormContext`, `CartContext`)
 - **API route pattern:** All API routes in `app/api/` follow Next.js App Router convention (`route.ts` with named exports `GET`, `POST`, etc.)
-- **Markdown content:** Blog and library content stored as `.md` files in `content/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify
+- **Markdown content:** Library content stored as `.md` files in `content/library/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify. Blog content removed Apr 2026.
 - **Social proof data:** Testimonials, providers, trust metrics, trust badges centralized in `lib/config/social-proof.ts`
 
 ### HIPAA Compliance
@@ -1107,7 +1105,7 @@ An exhaustive `.cursorrules` file exists at the project root with 23 sections of
 | React components | 61 files |
 | Library/utility files | 49 files |
 | Database migrations | 8 SQL files |
-| Content (blog + library) | 18 markdown files |
+| Content (library only, blog removed) | 6 markdown files |
 | Tests | 8 test files |
 | Public assets | 22 files |
 | Config files (root) | ~29 files |
