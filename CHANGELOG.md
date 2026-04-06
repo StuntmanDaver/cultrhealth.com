@@ -1,3 +1,14 @@
+## [2026-04-05] - Join catalog: IGF-1 LR3 price ($160)
+
+### Changed
+- **IGF-1 LR3** on join.cultrhealth.com: price updated from **$150** to **$160** in `lib/config/join-therapies.ts` (source of truth for join product cards).
+- `Peptides-Growth-Factors.md` and `Verification-Checklist.md` reference tables updated to **$160** for consistency.
+
+### Memory
+- Join peptide retail prices are edited in **`lib/config/join-therapies.ts`**; update internal docs that list dollar amounts when the join catalog price changes.
+
+---
+
 ## [2026-04-05] - Inventory Alerts on Admin Dashboard
 
 ### Added

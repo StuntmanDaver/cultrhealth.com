@@ -13,7 +13,7 @@ Anabolic and growth-promoting peptides that stimulate muscle protein synthesis, 
 
 | Product | Price | Size | Evidence | Risk | Best For | Regulatory |
 |---------|-------|------|----------|------|----------|-------------|
-| IGF-1 LR3 | $150 | 1mg | B–C | Moderate–Higher | Muscle gain, strength | Research-only |
+| IGF-1 LR3 | $160 | 1mg | B–C | Moderate–Higher | Muscle gain, strength | Research-only |
 | ACE-031 | $160 | 1mg | B–C | Moderate | Muscle preservation, fat loss | Investigational |
 | Follistatin 344 | $160 | 1mg | B–C | Moderate–Higher | Muscle growth, myostatin inhibition | Research-only |
 | Sermorelin | $50 | 5mg | B–C | Moderate | GH axis stimulation, recovery | Off-label Rx |

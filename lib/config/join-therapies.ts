@@ -206,7 +206,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         note: '1 MG | 3 ML',
         description:
           'Long-acting insulin-like growth factor for enhanced muscle protein synthesis, recovery acceleration, and anabolic support.',
-        price: 150,
+        price: 160,
         category: 'peptide',
         image: '/images/products/igf1-lr3.png',
       },
