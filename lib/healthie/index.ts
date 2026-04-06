@@ -7,7 +7,7 @@ export { isHealthieConfigured, HealthieApiError } from './client'
 export { createClient, createAppointment, createFormAnswerGroup, createDocument } from './mutations'
 export { getClient, getClientByEmail, getAppointment, getAppointments, getFormAnswerGroup, getDocument, getDocuments } from './queries'
 export { mapAppointmentToPortalOrder } from './portal-mapper'
-export { verifyHealthieWebhook, parseWebhookBody } from './webhooks'
+export { readWebhookBody, verifyHealthieWebhook, parseWebhookBody } from './webhooks'
 export type {
   HealthieUser,
   HealthieAppointment,

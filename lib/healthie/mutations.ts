@@ -1,6 +1,7 @@
 // Healthie GraphQL Mutations
 // HIPAA: Never log patient data in mutation inputs or responses
 
+import { z } from 'zod'
 import { healthieRequest } from './client'
 import {
   HealthieUserSchema,
@@ -20,6 +21,28 @@ import type {
 } from './types'
 
 // ============================================================
+// MUTATION RESPONSE WRAPPER SCHEMAS
+// Healthie mutations return { mutationName: { entity: {...} } }
+// These wrappers match that nesting so Zod validation succeeds.
+// ============================================================
+
+const CreateClientPayload = z.object({
+  user: HealthieUserSchema,
+}).passthrough()
+
+const CreateAppointmentPayload = z.object({
+  appointment: HealthieAppointmentSchema,
+}).passthrough()
+
+const CreateFormAnswerGroupPayload = z.object({
+  form_answer_group: HealthieFormAnswerGroupSchema,
+}).passthrough()
+
+const CreateDocumentPayload = z.object({
+  document: HealthieDocumentSchema,
+}).passthrough()
+
+// ============================================================
 // CLIENT / PATIENT
 // ============================================================
 
@@ -29,20 +52,18 @@ const CREATE_CLIENT = `
     $last_name: String
     $email: String
     $phone_number: String
-    $dob: String
-    $legal_name: String
     $dietitian_id: String
     $skipped_email: Boolean
+    $dont_send_welcome: Boolean
   ) {
     createClient(input: {
       first_name: $first_name
       last_name: $last_name
       email: $email
       phone_number: $phone_number
-      dob: $dob
-      legal_name: $legal_name
       dietitian_id: $dietitian_id
       skipped_email: $skipped_email
+      dont_send_welcome: $dont_send_welcome
     }) {
       user {
         id
@@ -62,15 +83,10 @@ export async function createClient(input: CreateClientInput): Promise<HealthieUs
   const result = await healthieRequest(
     CREATE_CLIENT,
     input as unknown as Record<string, unknown>,
-    HealthieUserSchema,
+    CreateClientPayload,
     'createClient',
   )
-  // createClient returns { user: {...} } — extract the nested user
-  const data = result as unknown as Record<string, unknown>
-  if (data.user) {
-    return HealthieUserSchema.parse(data.user)
-  }
-  return result
+  return result.user
 }
 
 // ============================================================
@@ -101,15 +117,20 @@ const CREATE_APPOINTMENT = `
       appointment {
         id
         date
-        start_time
-        end_time
+        length
         appointment_type {
           id
           name
+          length
         }
         contact_type
-        status
+        pm_status
         user {
+          id
+          first_name
+          last_name
+        }
+        provider {
           id
           first_name
           last_name
@@ -123,14 +144,10 @@ export async function createAppointment(input: CreateAppointmentInput): Promise<
   const result = await healthieRequest(
     CREATE_APPOINTMENT,
     input as unknown as Record<string, unknown>,
-    HealthieAppointmentSchema,
+    CreateAppointmentPayload,
     'createAppointment',
   )
-  const data = result as unknown as Record<string, unknown>
-  if (data.appointment) {
-    return HealthieAppointmentSchema.parse(data.appointment)
-  }
-  return result
+  return result.appointment
 }
 
 // ============================================================
@@ -167,14 +184,10 @@ export async function createFormAnswerGroup(input: CreateFormAnswerGroupInput): 
   const result = await healthieRequest(
     CREATE_FORM_ANSWER_GROUP,
     input as unknown as Record<string, unknown>,
-    HealthieFormAnswerGroupSchema,
+    CreateFormAnswerGroupPayload,
     'createFormAnswerGroup',
   )
-  const data = result as unknown as Record<string, unknown>
-  if (data.form_answer_group) {
-    return HealthieFormAnswerGroupSchema.parse(data.form_answer_group)
-  }
-  return result
+  return result.form_answer_group
 }
 
 // ============================================================
@@ -211,12 +224,8 @@ export async function createDocument(input: CreateDocumentInput): Promise<Health
   const result = await healthieRequest(
     CREATE_DOCUMENT,
     input as unknown as Record<string, unknown>,
-    HealthieDocumentSchema,
+    CreateDocumentPayload,
     'createDocument',
   )
-  const data = result as unknown as Record<string, unknown>
-  if (data.document) {
-    return HealthieDocumentSchema.parse(data.document)
-  }
-  return result
+  return result.document
 }

@@ -29,10 +29,9 @@ export interface CreateClientInput {
   last_name: string
   email: string
   phone_number?: string
-  dob?: string
-  legal_name?: string
   dietitian_id?: string
   skipped_email?: boolean
+  dont_send_welcome?: boolean
 }
 
 export interface CreateAppointmentInput {

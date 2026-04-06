@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyHealthieWebhook, parseWebhookBody } from '@/lib/healthie/webhooks'
+import { USE_HEALTHIE } from '@/lib/config/feature-flags'
+import { readWebhookBody, verifyHealthieWebhook, parseWebhookBody } from '@/lib/healthie/webhooks'
 import { getClient, getAppointment, getFormAnswerGroup, getDocument } from '@/lib/healthie'
 import { sql } from '@vercel/postgres'
 
@@ -9,15 +10,19 @@ import { sql } from '@vercel/postgres'
  * Receives real-time events from Healthie EMR.
  * HIPAA: Never log webhook body contents (may contain PHI).
  *
- * Common event types:
- * - FormAnswerGroupCompleted: Intake form completed
- * - AppointmentCreated: New appointment booked
- * - AppointmentUpdated: Appointment status changed
- * - DocumentCreated: New document uploaded
+ * Healthie event types use dot-notation (e.g. appointment.created).
+ * See: https://docs.gethealthie.com/guides/webhooks/event-reference/
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!verifyHealthieWebhook(request)) {
+    if (!USE_HEALTHIE) {
+      return NextResponse.json({ received: true, ignored: true })
+    }
+
+    // Read body once — shared between verification and parsing
+    const rawBody = await readWebhookBody(request)
+
+    if (!verifyHealthieWebhook(request, rawBody)) {
       console.error('Healthie webhook verification failed')
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -25,33 +30,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const event = await parseWebhookBody(request)
+    const event = parseWebhookBody(rawBody)
 
     switch (event.event_type) {
-      case 'FormAnswerGroupCompleted':
-        await handleFormCompleted(event.resource_id)
+      case 'form_answer_group.created':
+      case 'form_answer_group.locked':
+        await safeHandler('form', () => handleFormCompleted(event.resource_id))
         break
 
-      case 'AppointmentCreated':
-      case 'AppointmentUpdated':
-        await handleAppointmentEvent(event.event_type, event.resource_id)
+      case 'appointment.created':
+      case 'appointment.updated':
+        await safeHandler('appointment', () => handleAppointmentEvent(event.event_type, event.resource_id))
         break
 
-      case 'DocumentCreated':
-        await handleDocumentCreated(event.resource_id)
+      case 'document.created':
+        await safeHandler('document', () => handleDocumentCreated(event.resource_id))
         break
 
       default:
-        console.warn(`Unhandled Healthie event type: ${event.event_type}`)
+        // Healthie sends many event types — only warn in dev
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`Unhandled Healthie event type: ${event.event_type}`)
+        }
     }
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error('Healthie webhook handler error:', error)
+    console.error('Healthie webhook handler error:', error instanceof Error ? error.message : 'unknown')
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 },
     )
+  }
+}
+
+/**
+ * Wrap individual handlers so one failure doesn't crash the entire webhook.
+ */
+async function safeHandler(label: string, fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn()
+  } catch (err) {
+    console.error(`Healthie webhook ${label} handler error:`, err instanceof Error ? err.message : 'unknown')
   }
 }
 
@@ -68,7 +88,7 @@ async function handleFormCompleted(resourceId: string) {
 
   const healthieUserId = formGroup.user?.id
   if (!healthieUserId) {
-    console.error('FormAnswerGroupCompleted missing user ID:', resourceId)
+    console.error('Healthie form completion: missing user ID for resource', resourceId)
     return
   }
 
@@ -102,7 +122,7 @@ async function handleAppointmentEvent(eventType: string, resourceId: string) {
 
   const healthieUserId = appointment.user?.id
   if (!healthieUserId) {
-    console.error('Appointment webhook missing user ID:', resourceId)
+    console.error('Healthie appointment: missing user ID for resource', resourceId)
     return
   }
 
@@ -113,7 +133,7 @@ async function handleAppointmentEvent(eventType: string, resourceId: string) {
     return
   }
 
-  if (eventType === 'AppointmentCreated') {
+  if (eventType === 'appointment.created') {
     await sql`
       UPDATE member_onboarding
       SET appointment_scheduled = TRUE,
@@ -131,8 +151,8 @@ async function handleAppointmentEvent(eventType: string, resourceId: string) {
     `
   }
 
-  if (eventType === 'AppointmentUpdated') {
-    const status = appointment.status
+  if (eventType === 'appointment.updated') {
+    const status = appointment.pm_status
     if (status === 'Cancelled' || status === 'No-Show') {
       await sql`
         UPDATE member_onboarding

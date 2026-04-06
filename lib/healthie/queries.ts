@@ -44,8 +44,8 @@ export async function getClient(id: string): Promise<HealthieUser> {
 }
 
 const GET_CLIENT_BY_EMAIL = `
-  query GetUsers($email: String) {
-    users(email: $email) {
+  query GetUsers($keywords: String) {
+    users(keywords: $keywords) {
       id
       first_name
       last_name
@@ -61,11 +61,15 @@ const GET_CLIENT_BY_EMAIL = `
 export async function getClientByEmail(email: string): Promise<HealthieUser | null> {
   const result = await healthieRequest(
     GET_CLIENT_BY_EMAIL,
-    { email },
+    { keywords: email },
     z.array(HealthieUserSchema),
     'users',
   )
-  return result.length > 0 ? result[0] : null
+  // keywords is a fuzzy search — filter to exact email match
+  const match = result.find(
+    u => u.email?.toLowerCase() === email.toLowerCase()
+  )
+  return match || null
 }
 
 // ============================================================
@@ -77,15 +81,20 @@ const GET_APPOINTMENT = `
     appointment(id: $id) {
       id
       date
-      start_time
-      end_time
+      length
       appointment_type {
         id
         name
+        length
       }
       contact_type
-      status
+      pm_status
       user {
+        id
+        first_name
+        last_name
+      }
+      provider {
         id
         first_name
         last_name
@@ -104,19 +113,24 @@ export async function getAppointment(id: string): Promise<HealthieAppointment> {
 }
 
 const GET_APPOINTMENTS = `
-  query GetAppointments($user_id: String, $filter: String) {
+  query GetAppointments($user_id: ID, $filter: String) {
     appointments(user_id: $user_id, filter: $filter) {
       id
       date
-      start_time
-      end_time
+      length
       appointment_type {
         id
         name
+        length
       }
       contact_type
-      status
+      pm_status
       user {
+        id
+        first_name
+        last_name
+      }
+      provider {
         id
         first_name
         last_name

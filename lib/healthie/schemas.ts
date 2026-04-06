@@ -27,15 +27,20 @@ export const HealthieUserSchema = z.object({
 export const HealthieAppointmentSchema = z.object({
   id: z.string(),
   date: z.string().nullable().optional(),
-  start_time: z.string().nullable().optional(),
-  end_time: z.string().nullable().optional(),
+  length: z.number().nullable().optional(),
   appointment_type: z.object({
     id: z.string(),
     name: z.string().nullable().optional(),
+    length: z.number().nullable().optional(),
   }).passthrough().nullable().optional(),
   contact_type: z.string().nullable().optional(),
-  status: z.string().nullable().optional(),
+  pm_status: z.string().nullable().optional(),
   user: z.object({
+    id: z.string(),
+    first_name: z.string().nullable().optional(),
+    last_name: z.string().nullable().optional(),
+  }).passthrough().nullable().optional(),
+  provider: z.object({
     id: z.string(),
     first_name: z.string().nullable().optional(),
     last_name: z.string().nullable().optional(),

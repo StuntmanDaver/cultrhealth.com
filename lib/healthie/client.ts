@@ -55,54 +55,67 @@ export async function healthieRequest<T>(
 
   const url = getHealthieApiUrl()
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${apiKey}`,
-      'AuthorizationSource': 'API',
-    },
-    body: JSON.stringify({ query, variables }),
-  })
+  // 30-second timeout to prevent hanging requests
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
 
-  if (!response.ok) {
-    throw new HealthieApiError(
-      `Healthie API HTTP error: ${response.status}`,
-      response.status,
-    )
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${apiKey}`,
+        'AuthorizationSource': 'API',
+      },
+      body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      throw new HealthieApiError(
+        `Healthie API HTTP error: ${response.status}`,
+        response.status,
+      )
+    }
+
+    const json: GraphQLResponse<Record<string, unknown>> = await response.json()
+
+    if (json.errors && json.errors.length > 0) {
+      // HIPAA: Only log error messages, not variable data
+      console.error('Healthie GraphQL errors:', json.errors.map(e => e.message))
+      throw new HealthieApiError(
+        `Healthie GraphQL error: ${json.errors.map(e => e.message).join(', ')}`,
+        undefined,
+        json.errors,
+      )
+    }
+
+    if (!json.data) {
+      throw new HealthieApiError('Healthie API returned no data')
+    }
+
+    const result = json.data[resultKey]
+    if (result === undefined || result === null) {
+      throw new HealthieApiError(`Healthie API: missing result key "${resultKey}"`)
+    }
+
+    // Zod validation gate — HIPAA: only log paths, not received values
+    const parsed = schema.safeParse(result)
+    if (!parsed.success) {
+      console.error('Healthie response validation failed:', parsed.error.issues.map(i => ({
+        path: i.path,
+        code: i.code,
+        message: i.message,
+      })))
+      throw new HealthieApiError(
+        `Response validation failed: ${parsed.error.issues.map(i => i.message).join(', ')}`,
+      )
+    }
+
+    return parsed.data
+  } finally {
+    clearTimeout(timeout)
   }
-
-  const json: GraphQLResponse<Record<string, unknown>> = await response.json()
-
-  if (json.errors && json.errors.length > 0) {
-    // HIPAA: Only log error messages, not variable data
-    console.error('Healthie GraphQL errors:', json.errors.map(e => e.message))
-    throw new HealthieApiError(
-      `Healthie GraphQL error: ${json.errors.map(e => e.message).join(', ')}`,
-      undefined,
-      json.errors,
-    )
-  }
-
-  if (!json.data) {
-    throw new HealthieApiError('Healthie API returned no data')
-  }
-
-  const result = json.data[resultKey]
-  if (result === undefined || result === null) {
-    throw new HealthieApiError(`Healthie API: missing result key "${resultKey}"`)
-  }
-
-  // Zod validation gate
-  const parsed = schema.safeParse(result)
-  if (!parsed.success) {
-    console.error('Healthie response validation failed:', parsed.error.issues)
-    throw new HealthieApiError(
-      `Response validation failed: ${parsed.error.issues.map(i => i.message).join(', ')}`,
-    )
-  }
-
-  return parsed.data
 }
 
 /**
@@ -121,33 +134,45 @@ export async function healthieRawRequest<T = unknown>(
 
   const url = getHealthieApiUrl()
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${apiKey}`,
-      'AuthorizationSource': 'API',
-    },
-    body: JSON.stringify({ query, variables }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
 
-  if (!response.ok) {
-    throw new HealthieApiError(
-      `Healthie API HTTP error: ${response.status}`,
-      response.status,
-    )
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${apiKey}`,
+        'AuthorizationSource': 'API',
+      },
+      body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
+    })
+
+    if (!response.ok) {
+      throw new HealthieApiError(
+        `Healthie API HTTP error: ${response.status}`,
+        response.status,
+      )
+    }
+
+    const json: GraphQLResponse<T> = await response.json()
+
+    if (json.errors && json.errors.length > 0) {
+      console.error('Healthie GraphQL errors:', json.errors.map(e => e.message))
+      throw new HealthieApiError(
+        `Healthie GraphQL error: ${json.errors.map(e => e.message).join(', ')}`,
+        undefined,
+        json.errors,
+      )
+    }
+
+    if (!json.data) {
+      throw new HealthieApiError('Healthie API returned no data')
+    }
+
+    return json.data
+  } finally {
+    clearTimeout(timeout)
   }
-
-  const json: GraphQLResponse<T> = await response.json()
-
-  if (json.errors && json.errors.length > 0) {
-    console.error('Healthie GraphQL errors:', json.errors.map(e => e.message))
-    throw new HealthieApiError(
-      `Healthie GraphQL error: ${json.errors.map(e => e.message).join(', ')}`,
-      undefined,
-      json.errors,
-    )
-  }
-
-  return json.data as T
 }
