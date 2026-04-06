@@ -1007,6 +1007,8 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Markdown content:** Blog and library content stored as `.md` files in `content/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify
 - **Social proof data:** Testimonials, providers, trust metrics, trust badges centralized in `lib/config/social-proof.ts`
 - **Join catalog source:** `join.cultrhealth.com` product cards are driven by `lib/config/join-therapies.ts`; restoring `/join` page components alone does not restore the legacy join catalog.
+- **Join catalog pricing:** Change retail amounts in `lib/config/join-therapies.ts` only; update any internal markdown that duplicates those dollar figures (e.g. `Peptides-Growth-Factors.md`, `Verification-Checklist.md`) and record the change in `CHANGELOG.md`.
+- **Club visitor session:** `cultr_club_visitor` is a signed minimal session token used only to recover the join member record server-side. Never store full club profile data (phone, address, age, gender) in client-readable cookies or localStorage, and never trust raw browser JSON for member hydration.
 
 ### HIPAA Compliance
 - Never log PHI (Protected Health Information)
