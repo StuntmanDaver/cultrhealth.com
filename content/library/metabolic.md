@@ -9,8 +9,8 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 | Product | Size | Risk | Best For |
 |---------|------|------|----------|
 | RTA | 5mg | Moderate | Triple GLP-1/GIP/Glucagon metabolic optimization |
-| Semaglutide | 5mg | Moderate | GLP-1 receptor agonist; fat loss + glucose control |
-| Tirzepatide | 5mg | Moderate | Dual GLP-1/GIP incretin signaling |
+| SEMA/B6 | 5mg | Moderate | GLP-1 receptor agonist; fat loss + glucose control |
+| TIRZ/B3 | 5mg | Moderate | Dual GLP-1/GIP incretin signaling |
 | Mazdutide | 5mg | Moderate | Dual GLP-1/Glucagon agonist |
 | Cagrilintide | 5mg | Moderate | Amylin receptor agonist; appetite suppression |
 | Sema + Cagri Blend | 5mg + 5mg | Moderate | Combined metabolic support |
@@ -31,7 +31,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 - **Duration**: Ongoing (titrate based on tolerance and goals)
 - **Notes**: Most potent metabolic compound available; up to 24% body weight reduction in clinical trials. CULTR's primary GLP recommendation.
 
-### Semaglutide
+### SEMA/B6
 - **Primary Target**: GLP-1 receptor (GLP1R; Gs-coupled GPCR)
 - **Pathways**:
   - ↑ cAMP → PKA activation
@@ -44,7 +44,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 - **Route**: Subcutaneous
 - **Duration**: Ongoing
 
-### Tirzepatide
+### TIRZ/B3
 - **Primary Targets**: GLP1R + GIP receptor (GIPR)
 - **Pathways**:
   - Dual incretin signaling
@@ -78,13 +78,13 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 - **Duration**: Ongoing (titrate based on tolerance)
 - **Notes**: Emerging compound with strong appetite suppression
 
-### Semaglutide + Cagrilintide Stack
+### SEMA/B6 + Cagrilintide Stack
 - **Combined Mechanism**: GLP-1 agonist + Amylin agonist for enhanced metabolic effect
 - **Pathways**:
   - Dual receptor activation (GLP1R + Amylin)
   - ↑ Insulin secretion + ↑ Satiety
   - ↓ Glucagon + Delayed gastric emptying
-- **Typical Use**: Semaglutide 0.25–2.4mg weekly + Cagrilintide 0.25–2.4mg weekly (titrate slowly)
+- **Typical Use**: SEMA/B6 0.25–2.4mg weekly + Cagrilintide 0.25–2.4mg weekly (titrate slowly)
 - **Route**: Subcutaneous
 - **Duration**: Ongoing
 - **Best For**: Significant weight loss goals
@@ -118,15 +118,15 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 | Product | Optimal Timing | Notes |
 |---------|---------------|-------|
 | RTA | Morning or consistent daytime | Metabolic consistency |
-| Semaglutide | Same day each week | Weekly injection; consistency critical |
-| Tirzepatide | Same day each week | Weekly injection; consistent timing |
+| SEMA/B6 | Same day each week | Weekly injection; consistency critical |
+| TIRZ/B3 | Same day each week | Weekly injection; consistent timing |
 | Mazdutide | Same day each week | Weekly injection; consistent timing |
 | Cagrilintide | Same day each week | Weekly injection; pick consistent day/time |
 | AOD-9604 | Morning (fasted) or pre-cardio | Empty stomach 2–3 hours before/after |
 | 5-Amino-1MQ | Morning | Metabolic activation; fasted preferred |
 
 **Key Rules**:
-- **GLP-1 weekly injections (RTA, Semaglutide, Tirzepatide, Mazdutide)**: Same day and time every week; set a recurring reminder
+- **GLP-1 weekly injections (RTA, SEMA/B6, TIRZ/B3, Mazdutide)**: Same day and time every week; set a recurring reminder
 - **Fat-loss peptides (AOD-9604, 5-Amino-1MQ)**: Fasted morning or 2–3 hours after last meal
 - **Hydration**: GI side effects from GLP-1 agonists require adequate hydration throughout day
 

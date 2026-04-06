@@ -156,7 +156,7 @@ const COMMON_SUPPLEMENTS = [
 ]
 
 const COMMON_PEPTIDES = [
-  'Tirzepatide/Niacinamide', 'Semaglutide/Pyridoxine', 'Sermorelin', 'NAD+',
+  'TIRZ/B3', 'SEMA/B6', 'Sermorelin', 'NAD+',
   'PT-141', 'Oxytocin', 'Glutathione', 'L-Carnitine'
 ]
 

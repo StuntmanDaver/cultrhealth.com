@@ -27,7 +27,7 @@ const CATEGORIES = [
     description: 'Fat loss, appetite control, GLP-1 agonists, metabolic health',
     icon: Zap,
     color: 'amber',
-    tags: ['Tirzepatide', 'Semaglutide', 'Lipo-C']
+    tags: ['TIRZ/B3', 'SEMA/B6', 'Lipo-C']
   },
   {
     id: 'bioregulators',

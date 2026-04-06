@@ -4,8 +4,8 @@
 
 ### Fat Loss & Metabolism
 - **RTA** — Triple GLP-1/GIP/Glucagon agonist; most potent metabolic compound
-- **Semaglutide** — GLP-1 receptor agonist (GLP1R; Gs-coupled GPCR); satiety + glucose control
-- **Tirzepatide** — Dual GLP1R + GIPR agonist; enhanced metabolic flexibility
+- **SEMA/B6** — GLP-1 receptor agonist (GLP1R; Gs-coupled GPCR); satiety + glucose control
+- **TIRZ/B3** — Dual GLP1R + GIPR agonist; enhanced metabolic flexibility
 - **Mazdutide** — Dual GLP1R + Glucagon receptor agonist; energy expenditure
 - **Cagrilintide** — Amylin receptor agonist; appetite suppression
 - **AOD-9604** — GH fragment (176–191); lipolysis via HSL activation
@@ -115,7 +115,7 @@
 | Elamipretide (SS-31) | Morning (fasted) | Mitochondrial energy |
 | NAD+ | Morning | Cellular energy metabolism |
 | MOTS-c | Morning or pre-workout | Metabolic/exercise support |
-| RTA / Semaglutide / Tirzepatide / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
+| RTA / SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 *Best for growth hormone, repair, immune modulation, CNS calming*

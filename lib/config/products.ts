@@ -18,7 +18,7 @@ export interface Product {
 export const PRODUCTS: Product[] = [
   {
     slug: 'tirzepatide',
-    name: 'Compounded Tirzepatide',
+    name: 'Compounded TIRZ/B3',
     description: 'Dual GIP/GLP-1 receptor agonist for metabolic support. Compounded formulation — not FDA-approved.',
     priceTeaser: 'As low as $149/mo*',
     features: [
@@ -34,7 +34,7 @@ export const PRODUCTS: Product[] = [
   },
   {
     slug: 'semaglutide',
-    name: 'Compounded Semaglutide',
+    name: 'Compounded SEMA/B6',
     description: 'GLP-1 receptor agonist for weight management support. Compounded formulation — not FDA-approved.',
     priceTeaser: 'As low as $149/mo*',
     features: [

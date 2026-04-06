@@ -20,8 +20,8 @@ export const productEducation: Record<string, ResourceEntry> = {
 
         <SubHeading>Common GLP-1 Medications</SubHeading>
         <BulletList items={[
-          'Semaglutide \u2014 the active ingredient in Ozempic and Wegovy',
-          'Tirzepatide \u2014 the active ingredient in Mounjaro and Zepbound (dual GIP/GLP-1)',
+          'SEMA/B6 \u2014 the active ingredient in Ozempic and Wegovy',
+          'TIRZ/B3 \u2014 the active ingredient in Mounjaro and Zepbound (dual GIP/GLP-1)',
           'CULTR prescribes compounded versions through licensed 503A/503B pharmacies',
         ]} />
 
@@ -238,8 +238,8 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
 
         <SectionHeading>Treatment Questions</SectionHeading>
 
-        <SubHeading>&quot;Do you prescribe Ozempic/semaglutide?&quot;</SubHeading>
-        <CopyBlock>{`CULTR providers can prescribe compounded semaglutide and tirzepatide when clinically appropriate. These are the same active ingredients as Ozempic/Wegovy and Mounjaro/Zepbound, compounded at licensed US pharmacies. Eligibility is determined by your provider based on your labs and health evaluation.`}</CopyBlock>
+        <SubHeading>&quot;Do you prescribe Ozempic/SEMA/B6?&quot;</SubHeading>
+        <CopyBlock>{`CULTR providers can prescribe compounded SEMA/B6 and TIRZ/B3 when clinically appropriate. These are the same active ingredients as Ozempic/Wegovy and Mounjaro/Zepbound, compounded at licensed US pharmacies. Eligibility is determined by your provider based on your labs and health evaluation.`}</CopyBlock>
 
         <SubHeading>&quot;Are peptides safe?&quot;</SubHeading>
         <CopyBlock>{`Peptides prescribed through CULTR are provider-supervised and sourced from licensed pharmacies. Your provider evaluates your labs and health history before prescribing any protocol. Like any medication, there can be side effects \u2014 which is why provider oversight is important.`}</CopyBlock>

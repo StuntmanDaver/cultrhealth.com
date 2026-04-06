@@ -697,7 +697,7 @@ ACE-031 is a decoy receptor that binds to myostatin and activin (proteins that l
 #### Tier 2 — Goal-specific add-ons (highly recommended)
 
 **Fat loss / body recomposition**
-- **GLP-1 analog** (Cagrilintide, Semaglutide): Appetite suppression, fat loss acceleration; synergistic with ACE-031 for lean preservation
+- **GLP-1 analog** (Cagrilintide, SEMA/B6): Appetite suppression, fat loss acceleration; synergistic with ACE-031 for lean preservation
 - **Caffeine** (200–400mg daily): Energy during deficit, thermogenic support, training performance
 - **L-Carnitine** (1–2g daily): Mitochondrial function, fat oxidation
 

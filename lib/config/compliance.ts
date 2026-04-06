@@ -34,12 +34,12 @@ export const FDA_STATUSES: Record<string, FDAStatusInfo> = {
   semaglutide: {
     status: 'fda-approved-compounded',
     label: 'FDA-Approved Active Ingredient',
-    disclaimer: 'Semaglutide is the active ingredient in FDA-approved Wegovy and Ozempic. CULTR Health offers compounded semaglutide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
+    disclaimer: 'SEMA/B6 contains the active ingredient in FDA-approved Wegovy and Ozempic. CULTR Health offers compounded SEMA/B6 prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
   },
   tirzepatide: {
     status: 'fda-approved-compounded',
     label: 'FDA-Approved Active Ingredient',
-    disclaimer: 'Tirzepatide is the active ingredient in FDA-approved Mounjaro and Zepbound. CULTR Health offers compounded tirzepatide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
+    disclaimer: 'TIRZ/B3 contains the active ingredient in FDA-approved Mounjaro and Zepbound. CULTR Health offers compounded TIRZ/B3 prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
   },
   glutathione: {
     status: 'not-fda-approved',

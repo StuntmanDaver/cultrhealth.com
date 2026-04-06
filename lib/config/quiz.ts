@@ -127,8 +127,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
 // Medication category → specific medication recommendations
 const MEDICATION_MAP: Record<string, { id: string; name: string; description: string }[]> = {
   metabolic: [
-    { id: 'tirzepatide', name: 'Tirzepatide/Niacinamide', description: 'Dual GIP/GLP-1 for significant weight loss' },
-    { id: 'semaglutide', name: 'Semaglutide/Pyridoxine', description: 'GLP-1 receptor agonist for weight management' },
+    { id: 'tirzepatide', name: 'TIRZ/B3', description: 'Dual GIP/GLP-1 for significant weight loss' },
+    { id: 'semaglutide', name: 'SEMA/B6', description: 'GLP-1 receptor agonist for weight management' },
     { id: 'lipo-c', name: 'Lipo-C', description: 'Lipotropic injection for fat metabolism and energy' },
     { id: 'l-carnitine', name: 'L-Carnitine', description: 'Amino acid for fat metabolism and exercise performance' },
   ],

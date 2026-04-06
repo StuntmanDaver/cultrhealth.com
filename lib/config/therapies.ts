@@ -16,33 +16,33 @@ export interface TherapyProduct {
 export const THERAPY_PRODUCTS: TherapyProduct[] = [
   {
     id: 'semaglutide-pyridoxine',
-    name: 'Semaglutide/B6',
+    name: 'SEMA/B6 (reconstituted)',
     spec: '2.5–5 mg/mL | 1–5 mL',
     tag: 'GLP-1',
     image: '/images/products/semaglutide-glp1.png',
     shortDescription:
       'GLP-1 receptor agonist with pyridoxine (B6) prescribed for appetite regulation, blood sugar support, and weight management when clinically appropriate.',
     longDescription:
-      'Semaglutide mimics the GLP-1 hormone to slow gastric emptying, reduce hunger signals, and support insulin sensitivity. Combined with pyridoxine (vitamin B6) for enhanced tolerability. In the STEP 1 clinical trial, participants experienced an average of 14.9% body weight reduction over 68 weeks compared to placebo. Individual results vary. Compounded semaglutide is not FDA-approved.',
+      'SEMA/B6 mimics the GLP-1 hormone to slow gastric emptying, reduce hunger signals, and support insulin sensitivity. Combined with pyridoxine (vitamin B6) for enhanced tolerability. In the STEP 1 clinical trial, participants experienced an average of 14.9% body weight reduction over 68 weeks compared to placebo. Individual results vary. Compounded SEMA/B6 is not FDA-approved.',
     fdaStatusId: 'semaglutide',
     citationKey: 'semaglutide-weight-loss',
   },
   {
     id: 'tirzepatide-niacinamide',
-    name: 'Tirzepatide/B3',
+    name: 'TIRZ/B3 (reconstituted)',
     spec: '10–20 mg/mL | 1–3 mL',
     tag: 'GLP-1',
     image: '/images/products/tirzepatide-glp1-gip.png',
     shortDescription:
       'Dual GIP/GLP-1 receptor agonist with niacinamide prescribed for appetite regulation and metabolic support when clinically appropriate.',
     longDescription:
-      'Tirzepatide activates both GIP and GLP-1 receptors for enhanced metabolic support. Combined with niacinamide for improved stability and tolerability. In the SURMOUNT-1 trial, participants receiving the highest dose experienced up to 22.5% body weight reduction over 72 weeks compared to placebo. Individual results vary. Compounded tirzepatide is not FDA-approved.',
+      'TIRZ/B3 activates both GIP and GLP-1 receptors for enhanced metabolic support. Combined with niacinamide for improved stability and tolerability. In the SURMOUNT-1 trial, participants receiving the highest dose experienced up to 22.5% body weight reduction over 72 weeks compared to placebo. Individual results vary. Compounded TIRZ/B3 is not FDA-approved.',
     fdaStatusId: 'tirzepatide',
     citationKey: 'tirzepatide-weight-loss',
   },
   {
     id: 'nad-plus',
-    name: 'NAD+',
+    name: 'NAD+ (reconstituted)',
     spec: '200 mg/mL | 5 mL',
     tag: 'Longevity',
     image: '/images/products/nad-plus.png',
@@ -55,7 +55,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   },
   {
     id: 'sermorelin',
-    name: 'Sermorelin',
+    name: 'Sermorelin (reconstituted)',
     spec: '3MG 5ML',
     tag: 'Growth Hormone',
     image: '/images/products/sermorelin.png',
@@ -67,7 +67,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   },
   {
     id: 'glutathione',
-    name: 'Glutathione',
+    name: 'Glutathione (reconstituted)',
     spec: '200 mg/mL | 10–30 mL',
     tag: 'Antioxidant',
     image: '/images/products/glutathione.png',
@@ -91,7 +91,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   },
   {
     id: 'oxytocin',
-    name: 'Oxytocin',
+    name: 'Oxytocin (reconstituted)',
     spec: '2mg 3ML',
     tag: 'Sexual Wellness',
     image: '/images/products/oxytocin.png',

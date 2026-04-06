@@ -120,7 +120,7 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 ### Add-ons
 
 - **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
-- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (RTA, semaglutide)
+- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (RTA, SEMA/B6)
 - **AOD-9604** (300mcg AM fasted) -- targeted fat mobilization
 - **MOTS-C** (5-10mg 3-5x weekly) -- metabolic activation and exercise capacity
 
@@ -376,7 +376,7 @@ PT-141 acts centrally in the brain (melanocortin pathway), making it unique amon
 
 **Core Peptides**
 
-- **Incretin / GLP-1 Family** -- Semaglutide, Tirzepatide (GIP/GLP-1), Retatrutide (GIP/GLP-1/GCGR triple agonist), Cagrilintide (amylin analog)
+- **Incretin / GLP-1 Family** -- SEMA/B6, TIRZ/B3 (GIP/GLP-1), Retatrutide (GIP/GLP-1/GCGR triple agonist), Cagrilintide (amylin analog)
 - **GH-Mediated Metabolic Agents** -- AOD-9604 (GH fragment 176-191), Tesamorelin (GHRH for visceral fat), CJC-1295 / Ipamorelin (indirect metabolic via GH)
 - **Mitochondrial Metabolic Peptides** -- MOTS-c (exercise mimetic, AMPK activation), 5-Amino-1MQ (NNMT inhibitor, NAD+ salvage)
 
@@ -390,7 +390,7 @@ The incretin family works top-down via appetite/satiety signaling in the gut-bra
 
 **Risk / Caution Notes**
 
-- Never stack multiple GLP-1 agonists (e.g., semaglutide + tirzepatide) -- overlapping mechanisms increase GI side effects and hypoglycemia risk
+- Never stack multiple GLP-1 agonists (e.g., SEMA/B6 + TIRZ/B3) -- overlapping mechanisms increase GI side effects and hypoglycemia risk
 - Cagrilintide is designed to pair with GLP-1s but requires independent slow titration of each -- do not start both simultaneously
 - AOD-9604 must be dosed fasted (AM, 30+ minutes before eating) -- insulin presence abolishes its lipolytic effect
 - GLP-1 agonists cause muscle loss alongside fat loss -- protein intake (≥0.8g/lb target body weight) and resistance training are non-negotiable

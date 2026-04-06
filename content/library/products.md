@@ -35,7 +35,7 @@ Complete reference guide for all compounds in the CULTR library, organized by th
 
 ## GLP-1 / Incretin Family
 
-### Semaglutide
+### SEMA/B6
 - **Primary Target**: GLP-1 receptor (GLP1R; Gs-coupled GPCR)
 - **Pathways**:
   - ↑ cAMP → PKA activation
@@ -50,7 +50,7 @@ Complete reference guide for all compounds in the CULTR library, organized by th
 - **Best For**: Metabolic optimization, fat loss
 - **Cycle**: Ongoing
 
-### Tirzepatide
+### TIRZ/B3
 - **Primary Targets**: GLP1R + GIP receptor (GIPR)
 - **Pathways**:
   - Dual incretin signaling
@@ -500,7 +500,7 @@ Complete reference guide for all compounds in the CULTR library, organized by th
 | Elamipretide (SS-31) | Morning (fasted) | Mitochondrial energy |
 | MOTS-c | Morning | Metabolic regulation |
 | NAD+ | Morning | Cellular energy support |
-| RTA / Semaglutide / Tirzepatide / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
+| RTA / SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 

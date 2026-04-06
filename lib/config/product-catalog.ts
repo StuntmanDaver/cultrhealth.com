@@ -72,13 +72,13 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   // ---------------------------------------------------
   {
     sku: 'TRZ-NIA-10MG-1ML',
-    name: 'Tirzepatide/Niacinamide (reconstituted)',
+    name: 'TIRZ/B3 (reconstituted)',
     peptideId: 'glp1-tirzepatide',
     doseMg: 10,
     volumeMl: 1,
     category: 'metabolic',
     isBlend: false,
-    description: 'Tirzepatide dual GIP/GLP-1 receptor agonist with niacinamide for appetite suppression, blood sugar regulation, and metabolic support.',
+    description: 'TIRZ/B3 dual GIP/GLP-1 receptor agonist with niacinamide for appetite suppression, blood sugar regulation, and metabolic support.',
     priceUsd: 130.00,
     stockStatus: 'in_stock',
     variants: [
@@ -93,13 +93,13 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   },
   {
     sku: 'SMA-PYR-2.5MG-1ML',
-    name: 'Semaglutide/Pyridoxine (reconstituted)',
+    name: 'SEMA/B6 (reconstituted)',
     peptideId: 'glp1-semaglutide',
     doseMg: 2.5,
     volumeMl: 1,
     category: 'metabolic',
     isBlend: false,
-    description: 'Semaglutide GLP-1 receptor agonist with pyridoxine (B6) for appetite suppression, blood sugar regulation, and sustainable weight loss.',
+    description: 'SEMA/B6 GLP-1 receptor agonist with pyridoxine (B6) for appetite suppression, blood sugar regulation, and sustainable weight loss.',
     priceUsd: 104.00,
     stockStatus: 'in_stock',
     variants: [
@@ -150,7 +150,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   // ---------------------------------------------------
   {
     sku: 'LIPOC-10ML',
-    name: 'Lipo-C',
+    name: 'Lipo-C (reconstituted)',
     peptideId: null,
     doseMg: 200,
     volumeMl: 10,
@@ -169,7 +169,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   },
   {
     sku: 'METHYLENE-BLUE-25MG',
-    name: 'Methylene Blue',
+    name: 'Methylene Blue (reconstituted)',
     peptideId: null,
     doseMg: 25,
     volumeMl: 0,
@@ -183,7 +183,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   },
   {
     sku: 'GLUTATHIONE-200MG-10ML',
-    name: 'Glutathione',
+    name: 'Glutathione (reconstituted)',
     peptideId: 'glutathione',
     doseMg: 200,
     volumeMl: 10,
@@ -202,7 +202,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   },
   {
     sku: 'LCARNITINE-500MG-10ML',
-    name: 'L-Carnitine',
+    name: 'L-Carnitine (reconstituted)',
     peptideId: null,
     doseMg: 500,
     volumeMl: 10,
@@ -224,7 +224,7 @@ export const PRODUCT_CATALOG: ShopProduct[] = [
   // ---------------------------------------------------
   {
     sku: 'OXYTOCIN-TROCHE',
-    name: 'Oxytocin',
+    name: 'Oxytocin (reconstituted)',
     peptideId: 'oxytocin',
     doseMg: 0,
     volumeMl: 0,

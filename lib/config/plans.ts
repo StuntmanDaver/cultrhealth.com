@@ -63,7 +63,7 @@ export type CoreTherapy = {
 export const CORE_THERAPIES: CoreTherapy[] = [
   {
     slug: 'semaglutide',
-    name: 'Semaglutide',
+    name: 'SEMA/B6',
     price: 149,
     image: '/images/therapies/semaglutide.png',
     productImage: '/images/products/semaglutide-glp1.png',
@@ -73,7 +73,7 @@ export const CORE_THERAPIES: CoreTherapy[] = [
   },
   {
     slug: 'tirzepatide',
-    name: 'Tirzepatide',
+    name: 'TIRZ/B3',
     price: 199,
     image: '/images/therapies/tirzepatide.png',
     productImage: '/images/products/tirzepatide-glp1-gip.png',

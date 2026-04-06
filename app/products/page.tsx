@@ -142,7 +142,7 @@ export default function ProductsPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white rounded-xl border border-cultr-sage">
                       <div className="text-sm text-cultr-textMuted mb-1">Primary</div>
-                      <div className="font-medium text-cultr-text">Tirzepatide</div>
+                      <div className="font-medium text-cultr-text">TIRZ/B3</div>
                     </div>
                     <div className="p-4 bg-white rounded-xl border border-cultr-sage">
                       <div className="text-sm text-cultr-textMuted mb-1">Support</div>
