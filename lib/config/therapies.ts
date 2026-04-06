@@ -82,7 +82,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     name: 'PT-141 (Bremelanotide)',
     spec: 'Multiple formats',
     tag: 'Sexual Wellness',
-    image: '/images/products/semaglutide-glp1.png',
+    image: '/images/products/pt-141.png',
     shortDescription:
       'Melanocortin receptor agonist for sexual arousal and desire. Available as nasal spray, capsule, and troche.',
     longDescription:
