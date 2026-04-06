@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { ChevronDown, ArrowRight, Tag } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
-import { FDAStatusBadge } from '@/components/compliance/FDAStatusBadge';
 import { CLINICAL_CITATIONS } from '@/lib/config/compliance';
 import type { TherapyProduct } from '@/lib/config/therapies';
 import { BUNDLE_DISCOUNT_RATE } from '@/lib/config/join-therapies';
@@ -47,9 +46,9 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
               </div>
 
               {/* Content */}
-              <div className="p-5">
+              <div className="p-6">
                 {/* Name + Tag */}
-                <div className="flex items-start justify-between gap-2 mb-1">
+                <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-base font-display font-bold text-cultr-forest">
                     {product.name}
                   </h3>
@@ -71,7 +70,7 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                 )}
 
                 {/* Spec + Rx badge */}
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-3">
                   <p className="text-xs text-cultr-forest/60 font-medium">
                     {product.spec}
                   </p>
@@ -81,9 +80,6 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                   <span className="text-[10px] font-semibold text-cultr-forest/70 bg-mint/40 rounded-full px-2 py-0.5">
                     Compounded in the USA
                   </span>
-                  {product.fdaStatusId && (
-                    <FDAStatusBadge therapyId={product.fdaStatusId} className="mt-1" />
-                  )}
                 </div>
 
                 {/* Short description */}
@@ -99,7 +95,7 @@ export default function TherapiesGrid({ products }: TherapiesGridProps) {
                 )}
 
                 {/* Expand indicator */}
-                <div className="flex items-center justify-center mt-3 pt-3 border-t border-cultr-sage/20">
+                <div className="flex items-center justify-center mt-4 pt-3 border-t border-cultr-sage/20">
                   <ChevronDown
                     className={`w-4 h-4 text-cultr-forest/40 transition-transform duration-300 ${
                       isExpanded ? 'rotate-180' : ''

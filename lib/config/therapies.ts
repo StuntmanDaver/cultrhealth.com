@@ -16,7 +16,7 @@ export interface TherapyProduct {
 export const THERAPY_PRODUCTS: TherapyProduct[] = [
   {
     id: 'semaglutide-pyridoxine',
-    name: 'Semaglutide/Pyridoxine',
+    name: 'Semaglutide/B6',
     spec: '2.5–5 mg/mL | 1–5 mL',
     tag: 'GLP-1',
     image: '/images/products/semaglutide-glp1.png',
@@ -29,7 +29,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   },
   {
     id: 'tirzepatide-niacinamide',
-    name: 'Tirzepatide/Niacinamide',
+    name: 'Tirzepatide/B3',
     spec: '10–20 mg/mL | 1–3 mL',
     tag: 'GLP-1',
     image: '/images/products/tirzepatide-glp1-gip.png',
@@ -56,9 +56,9 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   {
     id: 'sermorelin',
     name: 'Sermorelin',
-    spec: '3 mg/mL | 5 mL',
+    spec: '3MG 5ML',
     tag: 'Growth Hormone',
-    image: '/images/products/semaglutide-glp1.png',
+    image: '/images/products/sermorelin.png',
     shortDescription:
       'Growth hormone-releasing hormone analog that stimulates natural GH production. Compounded preparation.',
     longDescription:
@@ -92,9 +92,9 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
   {
     id: 'oxytocin',
     name: 'Oxytocin',
-    spec: '50–125 IU troche/RDT',
+    spec: '2mg 3ML',
     tag: 'Sexual Wellness',
-    image: '/images/products/semaglutide-glp1.png',
+    image: '/images/products/oxytocin.png',
     shortDescription:
       'Neuropeptide supporting emotional bonding, stress reduction, and sexual well-being. Available as troche and RDT.',
     longDescription:
