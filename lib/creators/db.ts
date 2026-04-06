@@ -582,10 +582,26 @@ export async function createTrackingLink(
 export async function getTrackingLinksByCreator(creatorId: string): Promise<TrackingLink[]> {
   try {
     const result = await sql`
-      SELECT * FROM tracking_links WHERE creator_id = ${creatorId}
+      SELECT
+        tl.*,
+        COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
+      FROM tracking_links tl
+      LEFT JOIN (
+        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        FROM click_events
+        WHERE link_id IS NOT NULL AND creator_id = ${creatorId}
+        GROUP BY link_id
+      ) ce_stats ON ce_stats.link_id = tl.id
+      WHERE tl.creator_id = ${creatorId}
       ORDER BY is_default DESC, created_at ASC
     `
-    return result.rows as TrackingLink[]
+    return result.rows.map(r => ({
+      ...r,
+      conversion_count: Math.max(
+        Number(r.conversion_count) || 0,
+        Number(r.real_conversion_count) || 0
+      ),
+    })) as TrackingLink[]
   } catch (error) {
     console.error('Database error fetching tracking links:', error)
     throw new DatabaseError('Failed to fetch tracking links', error)
@@ -817,7 +833,9 @@ export async function getCreatorOrderStats(
             COALESCE(SUM(net_revenue), 0) as total_revenue,
             COALESCE(SUM(direct_commission_amount), 0) as total_commission
           FROM order_attributions
-          WHERE creator_id = ${creatorId} AND created_at >= ${since.toISOString()}
+          WHERE creator_id = ${creatorId}
+            AND status != 'refunded'
+            AND created_at >= ${since.toISOString()}
         `
       : await sql`
           SELECT
@@ -826,6 +844,7 @@ export async function getCreatorOrderStats(
             COALESCE(SUM(direct_commission_amount), 0) as total_commission
           FROM order_attributions
           WHERE creator_id = ${creatorId}
+            AND status != 'refunded'
         `
     const row = result.rows[0]
     return {

@@ -1063,7 +1063,9 @@ export async function getCreatorROI() {
           )
           FROM order_attributions oa
           LEFT JOIN affiliate_codes ac2 ON ac2.id = oa.code_id
-          WHERE oa.creator_id = c.id AND oa.net_revenue > 0
+          WHERE oa.creator_id = c.id
+            AND oa.net_revenue > 0
+            AND oa.status != 'refunded'
         ), 0) AS total_discount_given,
         COALESCE((
           SELECT SUM(cl.commission_amount)
@@ -1120,7 +1122,12 @@ export async function getAllCreatorsForAdmin() {
       SELECT
         c.*,
         (SELECT COUNT(*)::int FROM affiliate_codes ac WHERE ac.creator_id = c.id AND ac.active = TRUE) as code_count,
-        (SELECT COALESCE(SUM(ac.total_revenue), 0) FROM affiliate_codes ac WHERE ac.creator_id = c.id) as total_code_revenue
+        (
+          SELECT COALESCE(SUM(oa.net_revenue), 0)::float8
+          FROM order_attributions oa
+          WHERE oa.creator_id = c.id
+            AND oa.status != 'refunded'
+        ) as total_code_revenue
       FROM creators c
       ORDER BY c.created_at DESC
     `
@@ -1225,8 +1232,8 @@ export async function getAllCustomersForAdmin() {
           member_id,
           COUNT(*)::int as order_count,
           COALESCE(SUM(subtotal_usd), 0)::float8 as total_spent,
-          COUNT(*) FILTER (WHERE status NOT IN ('cancelled', 'rejected'))::int as valid_order_count,
-          COALESCE(SUM(subtotal_usd) FILTER (WHERE status NOT IN ('cancelled', 'rejected')), 0)::float8 as valid_spent
+          COUNT(*) FILTER (WHERE status NOT IN ('cancelled', 'rejected', 'dismissed'))::int as valid_order_count,
+          COALESCE(SUM(subtotal_usd) FILTER (WHERE status NOT IN ('cancelled', 'rejected', 'dismissed')), 0)::float8 as valid_spent
         FROM club_orders
         GROUP BY member_id
       ) os ON os.member_id = cm.id
