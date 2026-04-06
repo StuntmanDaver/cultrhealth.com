@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { getSession, isProviderEmail } from '@/lib/auth'
+import {
+  getOrderAttributionByOrderId,
+  reverseCommissionsForAttribution,
+  restoreCommissionsForAttribution,
+  updateOrderAttributionStatus,
+} from '@/lib/creators/db'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 
 // Pipeline order — index determines which forward skips are allowed
@@ -235,6 +241,16 @@ export async function POST(
         return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&error=concurrent`)
       }
       return NextResponse.json({ error: 'Order status changed concurrently, please refresh' }, { status: 409 })
+    }
+
+    // Keep creator attribution and admin order state aligned when orders are voided or reopened.
+    const linkedAttribution = await getOrderAttributionByOrderId(order.id)
+    if (newStatus === 'cancelled' && linkedAttribution) {
+      await reverseCommissionsForAttribution(linkedAttribution.id)
+      await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
+    } else if (currentStatus === 'cancelled' && newStatus !== 'cancelled' && linkedAttribution?.status === 'refunded') {
+      await restoreCommissionsForAttribution(linkedAttribution.id)
+      await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
     }
 
     // Log to admin_actions audit trail (non-fatal)

@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
+import {
+  getOrderAttributionByOrderId,
+  reverseCommissionsForAttribution,
+  updateOrderAttributionStatus,
+} from '@/lib/creators/db'
 
 export async function POST(
   request: Request,
@@ -31,6 +36,12 @@ export async function POST(
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Order not found or already processed' }, { status: 404 })
+    }
+
+    const attribution = await getOrderAttributionByOrderId(orderId)
+    if (attribution) {
+      await reverseCommissionsForAttribution(attribution.id)
+      await updateOrderAttributionStatus(attribution.id, 'refunded')
     }
 
     return NextResponse.json({ success: true, order: result.rows[0] })

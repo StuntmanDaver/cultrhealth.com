@@ -975,12 +975,31 @@ export async function reverseCommissionsForAttribution(attributionId: string): P
   try {
     const result = await sql`
       UPDATE commission_ledger SET status = 'reversed', updated_at = NOW()
-      WHERE order_attribution_id = ${attributionId} AND status IN ('pending', 'approved')
+      WHERE order_attribution_id = ${attributionId} AND status IN ('pending', 'approved', 'paid')
     `
     return result.rowCount ?? 0
   } catch (error) {
     console.error('Database error reversing commissions:', error)
     throw new DatabaseError('Failed to reverse commissions', error)
+  }
+}
+
+export async function restoreCommissionsForAttribution(attributionId: string): Promise<number> {
+  try {
+    const result = await sql`
+      UPDATE commission_ledger
+      SET
+        status = CASE
+          WHEN payout_id IS NOT NULL THEN 'paid'
+          ELSE 'pending'
+        END,
+        updated_at = NOW()
+      WHERE order_attribution_id = ${attributionId} AND status = 'reversed'
+    `
+    return result.rowCount ?? 0
+  } catch (error) {
+    console.error('Database error restoring commissions:', error)
+    throw new DatabaseError('Failed to restore commissions', error)
   }
 }
 
