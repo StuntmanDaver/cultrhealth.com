@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   getLibraryAccess,
   hasFeatureAccess,
+  isAdminEmail,
   isProviderEmail,
 } from '@/lib/auth'
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
@@ -125,15 +126,36 @@ describe('Library Access', () => {
 })
 
 describe('Provider Email Access', () => {
+  const ownerEmails = [
+    'erik@cultrhealth.com',
+    'alex@cultrhealth.com',
+    'stewart@cultrhealth.com',
+    'david@cultrhealth.com',
+    'tony@cultrhealth.com',
+  ]
+
   describe('isProviderEmail', () => {
     it('returns true for allowed emails', () => {
       expect(isProviderEmail('provider@cultrhealth.com')).toBe(true)
       expect(isProviderEmail('admin@cultrhealth.com')).toBe(true)
     })
 
+    it('returns true for owner emails', () => {
+      ownerEmails.forEach((email) => {
+        expect(isProviderEmail(email)).toBe(true)
+      })
+    })
+
     it('is case insensitive', () => {
       expect(isProviderEmail('PROVIDER@CULTRHEALTH.COM')).toBe(true)
       expect(isProviderEmail('Provider@CultrHealth.com')).toBe(true)
+      expect(isProviderEmail('Stewart@cultrhealth.com')).toBe(true)
+      expect(isProviderEmail('David@cultrhealth.com')).toBe(true)
+    })
+
+    it('trims whitespace before checking owner access', () => {
+      expect(isProviderEmail(' stewart@cultrhealth.com ')).toBe(true)
+      expect(isProviderEmail('\tdavid@cultrhealth.com\n')).toBe(true)
     })
 
     it('returns false for non-allowed emails', () => {
@@ -143,6 +165,19 @@ describe('Provider Email Access', () => {
 
     it('returns false for empty string', () => {
       expect(isProviderEmail('')).toBe(false)
+    })
+  })
+
+  describe('isAdminEmail', () => {
+    it('returns true for owner emails used for admin dashboard access', () => {
+      ownerEmails.forEach((email) => {
+        expect(isAdminEmail(email)).toBe(true)
+      })
+    })
+
+    it('normalizes owner email case and whitespace', () => {
+      expect(isAdminEmail(' Stewart@cultrhealth.com ')).toBe(true)
+      expect(isAdminEmail('\tDavid@cultrhealth.com\n')).toBe(true)
     })
   })
 })

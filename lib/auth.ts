@@ -129,8 +129,12 @@ export async function clearSession(): Promise<void> {
 const magicLinkRequests = new Map<string, number>()
 const RATE_LIMIT_WINDOW = 60 * 1000 // 60 seconds
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
 export function checkRateLimit(email: string): boolean {
-  const normalizedEmail = email.toLowerCase()
+  const normalizedEmail = normalizeEmail(email)
   const lastRequest = magicLinkRequests.get(normalizedEmail)
   const now = Date.now()
   
@@ -153,12 +157,16 @@ export function checkRateLimit(email: string): boolean {
   return true
 }
 
-const TEAM_EMAILS = [
-  'alex@cultrhealth.com',
-  'tony@cultrhealth.com',
-  'stewart@cultrhealth.com',
+const OWNER_EMAILS = [
   'erik@cultrhealth.com',
+  'alex@cultrhealth.com',
+  'stewart@cultrhealth.com',
   'david@cultrhealth.com',
+  'tony@cultrhealth.com',
+] as const
+
+const TEAM_EMAILS = [
+  ...OWNER_EMAILS,
   'legitscript@cultrhealth.com',
 ]
 
@@ -171,7 +179,7 @@ function parseEmailAllowlist(raw: string | undefined): string[] {
   if (!raw) return []
   return raw
     .split(',')
-    .map((value) => value.trim().toLowerCase())
+    .map((value) => normalizeEmail(value))
     .filter(Boolean)
 }
 
@@ -202,13 +210,11 @@ export async function getMembershipTier(customerId: string, email?: string): Pro
 
   // Team emails and staging always get full access
   if (email) {
-    const lower = email.toLowerCase()
+    const lower = normalizeEmail(email)
     if (TEAM_EMAILS.includes(lower)) return 'concierge'
     if (isStaging()) return 'concierge'
-    if (process.env.STAGING_ACCESS_EMAILS) {
-      const stagingEmails = process.env.STAGING_ACCESS_EMAILS.split(',').map(e => e.trim().toLowerCase())
-      if (stagingEmails.includes(lower)) return 'concierge'
-    }
+    const stagingEmails = parseEmailAllowlist(process.env.STAGING_ACCESS_EMAILS)
+    if (stagingEmails.includes(lower)) return 'concierge'
   }
 
   if (process.env.POSTGRES_URL) {
@@ -283,7 +289,7 @@ export function hasFeatureAccess(tier: PlanTier | null | undefined, feature: key
 }
 
 export function isProviderEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeEmail(email)
   if (TEAM_EMAILS.includes(lower)) return true
   const normalized = parseEmailAllowlist(process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS)
   if (normalized.includes(lower)) return true
@@ -293,7 +299,7 @@ export function isProviderEmail(email: string): boolean {
 }
 
 export function isAdminEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeEmail(email)
   if (isProviderEmail(lower)) return true
 
   const adminAllowlist = parseEmailAllowlist(process.env.ADMIN_ALLOWED_EMAILS)
@@ -397,15 +403,15 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
   // Team emails always get creator access (staging_creator is a placeholder —
   // dashboard queries will fail since it's not a valid UUID. The login route
   // should have created a real creator record; this fallback means DB was down.)
-  if (TEAM_EMAILS.includes(auth.email.toLowerCase())) {
+  if (TEAM_EMAILS.includes(normalizeEmail(auth.email))) {
     console.warn('[auth] staging_creator fallback used -- dashboard will show no real data')
     return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
   }
 
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (stagingEmails) {
-    const allowedEmails = stagingEmails.split(',').map(e => e.trim().toLowerCase())
-    if (allowedEmails.includes(auth.email.toLowerCase())) {
+    const allowedEmails = parseEmailAllowlist(stagingEmails)
+    if (allowedEmails.includes(normalizeEmail(auth.email))) {
       return { authenticated: true, email: auth.email, creatorId: 'staging_creator' }
     }
   }
