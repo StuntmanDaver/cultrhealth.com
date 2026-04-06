@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans';
 import { TierGate } from '@/components/library/TierGate';
+import { PRODUCT_CATALOG } from '@/lib/config/product-catalog';
 import { brandify } from '@/lib/utils';
 
 interface MemberDashboardProps {
@@ -76,6 +77,7 @@ export function MemberDashboard({
   const [lmnRecords, setLmnRecords] = useState<LmnRecord[]>([]);
   const [lmnLoading, setLmnLoading] = useState(true);
   const [showLmnModal, setShowLmnModal] = useState(false);
+  const shopProductCount = PRODUCT_CATALOG.length;
 
   // Fetch orders from Asher Med API
   useEffect(() => {
@@ -247,7 +249,7 @@ export function MemberDashboard({
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-medium">Product Shop</p>
-                  <p className="text-white/70 text-sm">Browse 130+ peptides and request quotes</p>
+                  <p className="text-white/70 text-sm">Browse {shopProductCount} products and request quotes</p>
                 </div>
                 <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
               </Link>
