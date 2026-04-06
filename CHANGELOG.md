@@ -1,3 +1,20 @@
+## [2026-04-05] - Safe Admin Coupon Removal + Join Flow Hardening
+
+### Changed
+- Admin coupon management now rejects collisions with built-in join coupon codes, and the admin dashboard exposes a remove action that permanently deletes only unused codes while deactivating historically used codes to preserve attribution and ROI reporting.
+- `cultr_club_visitor` handling was hardened across the join flow: `GET /api/club/check-member` now verifies the signed session token and rate-limits lookups, while login, signup, order submission, and `JoinLandingClient` continue using minimal server-rehydrated member state instead of trusting raw browser profile data.
+- Centralized join, intake, and consultation URLs in `lib/config/links.ts`, updated quiz/onboarding/consultations/success navigation to use those URLs, and gated portal Healthie order lookups behind `USE_HEALTHIE`.
+- Promoted the production Content Security Policy from report-only to enforced mode with the required Stripe allowances, refreshed `public/llms.txt`, and added `docs/PRODUCTION-COMPLIANCE-LAUNCH-PACK.md`.
+
+### Added
+- Regression coverage for safe coupon removal, join-compatible company coupon validation, portal order fallbacks, onboarding state, club session cookies, and creator attribution/admin sync paths.
+
+### Memory
+- Built-in `CLUB_COUPONS` values shadow DB coupon rows on `join.cultrhealth.com`; admin-created codes must not reuse those normalized values.
+- Admin coupon removal is hybrid-safe: hard delete only unused and unreferenced codes; otherwise deactivate them to preserve `order_attributions.code_id`, historical reporting, and creator ROI queries.
+
+---
+
 ## [2026-04-05] - Join catalog: IGF-1 LR3 price ($160)
 
 ### Changed

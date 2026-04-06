@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
+import { formLimiter, rateLimitResponse } from '@/lib/rate-limit'
+import { createClubVisitorToken } from '@/lib/auth'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { getCookieDomain } from '@/lib/utils'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
@@ -17,8 +19,18 @@ function getClientIp(request: Request): string {
   )
 }
 
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : 'unknown'
+}
+
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request)
+    const rateLimitResult = await formLimiter.check(`club-signup:${clientIp}`)
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
+    }
+
     const body = await request.json()
     const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender, visitorContext } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
@@ -113,7 +125,7 @@ export async function POST(request: Request) {
       }
     } catch (dbError) {
       // DB write is non-blocking — continue without it
-      console.error('[club/signup] DB error (non-fatal):', dbError)
+      console.error('[club/signup] DB error (non-fatal):', describeError(dbError))
     }
 
     // Sync to Mailchimp (non-blocking)
@@ -125,22 +137,10 @@ export async function POST(request: Request) {
       socialHandle: socialHandle?.trim() || undefined,
       tags: ['cultr-club-signup', 'club-member'],
     }).catch((err) =>
-      console.error('[club/signup] Mailchimp sync error (non-fatal):', err)
+      console.error('[club/signup] Mailchimp sync error (non-fatal):', describeError(err))
     )
 
-    // Set visitor cookie (90 days)
-    const validSignupTypeForCookie = ['creator', 'membership', 'products'].includes(signupType) ? signupType : 'products'
-    const cookieData = JSON.stringify({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: normalizedEmail,
-      phone: phone.trim(),
-      socialHandle: socialHandle?.trim() || '',
-      signupType: validSignupTypeForCookie,
-      age: age && Number(age) >= 18 && Number(age) <= 120 ? Number(age) : undefined,
-      gender: gender === 'male' || gender === 'female' ? gender : undefined,
-      address: address?.street ? { street: address.street.trim(), city: address.city?.trim() || '', state: address.state?.trim() || '', zip: address.zip?.trim() || '' } : undefined,
-    })
+    const clubVisitorToken = await createClubVisitorToken(normalizedEmail)
 
     const response = NextResponse.json({
       success: true,
@@ -148,8 +148,8 @@ export async function POST(request: Request) {
     })
 
     const domain = getCookieDomain()
-    response.cookies.set('cultr_club_visitor', cookieData, {
-      httpOnly: false, // Client-side readable for personalization
+    response.cookies.set('cultr_club_visitor', clubVisitorToken, {
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 90, // 90 days
@@ -159,12 +159,12 @@ export async function POST(request: Request) {
 
     // Send welcome email (fire-and-forget)
     sendClubWelcomeEmail(firstName.trim(), normalizedEmail).catch((err) =>
-      console.error('[club/signup] welcome send failed:', err instanceof Error ? err.message : 'unknown')
+      console.error('[club/signup] welcome send failed:', describeError(err))
     )
 
     return response
   } catch (error) {
-    console.error('[club/signup] Error:', error instanceof Error ? error.message : 'unknown')
+    console.error('[club/signup] Error:', describeError(error))
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }

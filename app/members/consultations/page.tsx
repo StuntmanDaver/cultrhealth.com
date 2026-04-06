@@ -1,18 +1,14 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
+import { LINKS, getConsultationBookingUrl } from '@/lib/config/links'
 
 export const metadata = { title: 'Schedule a Consultation — CULTR Health' }
 
-/**
- * Consultations Page — Calendly Embedded Scheduling
- *
- * TODO: Embed Calendly inline widget with tier-based gating once
- * CALENDLY_SCHEDULING_URL is configured. Tier limits are defined in
- * lib/config/plans.ts (consultationsPerMonth): Club=0, Core=1, Catalyst=2, Concierge=Infinity.
- */
 export default async function ConsultationsPage() {
   const session = await getSession()
   if (!session) redirect('/login')
+
+  const bookingUrl = getConsultationBookingUrl()
 
   return (
     <div className="min-h-screen bg-brand-cream">
@@ -26,13 +22,38 @@ export default async function ConsultationsPage() {
           </p>
 
           <div className="bg-white rounded-2xl border border-cultr-sage p-8">
-            <p className="text-cultr-textMuted">
-              Scheduling is being set up. Please check back shortly or contact{' '}
-              <a href="mailto:support@cultrhealth.com" className="text-brand-primary underline">
-                support@cultrhealth.com
-              </a>{' '}
-              to book your appointment.
-            </p>
+            {bookingUrl ? (
+              <div className="space-y-5">
+                <p className="text-cultr-textMuted">
+                  Scheduling happens in Healthie EHR so your appointment details stay in one system of record.
+                </p>
+                <a
+                  href={bookingUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-full bg-brand-primary px-6 py-3 text-sm font-medium text-brand-cream transition-all duration-200 hover:scale-[1.03] hover:bg-brand-primaryHover active:scale-[0.97]"
+                >
+                  Open Healthie Scheduling
+                </a>
+                <p className="text-xs text-cultr-textMuted/70">
+                  This opens Healthie scheduling in a new tab.
+                </p>
+                <a
+                  href={LINKS.dashboard}
+                  className="inline-flex items-center justify-center rounded-full border border-brand-primary/30 px-6 py-3 text-sm font-medium text-brand-primary transition-colors hover:bg-brand-primary/5 hover:border-brand-primary/50"
+                >
+                  Back to Dashboard
+                </a>
+              </div>
+            ) : (
+              <p className="text-cultr-textMuted">
+                The Healthie scheduling link is being finalized. Please contact{' '}
+                <a href={`mailto:${LINKS.supportEmail}`} className="text-brand-primary underline">
+                  {LINKS.supportEmail}
+                </a>{' '}
+                to book your appointment.
+              </p>
+            )}
           </div>
         </div>
       </section>

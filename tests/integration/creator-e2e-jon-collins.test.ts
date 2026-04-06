@@ -68,7 +68,11 @@ vi.mock('resend', () => ({
 // ============================================================
 
 import { validateCouponUnified } from '@/lib/config/coupons'
-import { handleClickTracking } from '@/lib/creators/attribution'
+import {
+  handleClickTracking,
+  resolveAttribution,
+  serializeAttributionCookie,
+} from '@/lib/creators/attribution'
 import { processOrderAttribution } from '@/lib/creators/commission'
 import * as creatorDb from '@/lib/creators/db'
 import { verifyCreatorAuth } from '@/lib/auth'
@@ -311,6 +315,47 @@ describe('Jon Collins Creator E2E Integration', () => {
       })
 
       expect(result.success).toBe(false)
+    })
+  })
+
+  // ----------------------------------------------------------
+  // 3b. Coupon + Link Convergence
+  // ----------------------------------------------------------
+  describe('3b. Coupon + Link Convergence (resolveAttribution)', () => {
+    beforeEach(() => {
+      setupCodeMock()
+      setupCreatorMock()
+      vi.mocked(creatorDb.getClickEventByToken).mockResolvedValue({
+        id: 'click-event-001',
+        creator_id: JON_CREATOR_ID,
+        link_id: JON_LINK_ID,
+      } as never)
+    })
+
+    it('preserves click metadata when JON21 is used after a joncollins441 link click', async () => {
+      const attributionCookie = serializeAttributionCookie({
+        token: 'click-token-001',
+        creatorId: JON_CREATOR_ID,
+        linkId: JON_LINK_ID,
+        expiresAt: Date.now() + 60_000,
+      })
+
+      const result = await resolveAttribution({
+        customerEmail: 'buyer@example.com',
+        couponCode: 'JON21',
+        attributionCookie,
+      })
+
+      expect(creatorDb.getClickEventByToken).toHaveBeenCalledWith('click-token-001')
+      expect(result).toEqual({
+        creatorId: JON_CREATOR_ID,
+        method: 'coupon_code',
+        codeId: JON_CODE_ID,
+        codeType: 'membership',
+        clickEventId: 'click-event-001',
+        linkId: JON_LINK_ID,
+        isSelfReferral: false,
+      })
     })
   })
 

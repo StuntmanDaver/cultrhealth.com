@@ -89,7 +89,7 @@ export default function MedicalDisclaimerPage() {
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Educational Content</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              Information provided on this website, including blog articles, dosing calculators, and educational content, is for educational purposes only and should not be considered medical advice. Always consult with your healthcare provider before making decisions about your health or starting any treatment.
+              Information provided on this website, including educational articles, calculators, membership descriptions, and library content, is for educational purposes only and should not be considered medical advice. Always consult with your healthcare provider before making decisions about your health or starting any treatment.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Reporting Side Effects</h2>
@@ -130,7 +130,7 @@ export default function MedicalDisclaimerPage() {
             </p>
 
             <p className="text-sm text-cultr-textMuted/50 border-t border-brand-primary/10 pt-6 mt-10">
-              Last updated: April 2026
+              Last updated: April 5, 2026
             </p>
           </div>
         </div>

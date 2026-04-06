@@ -242,5 +242,15 @@ describe('JoinLandingClient', () => {
       signupType: 'products',
     })
     expect(signupPayload.eventData).not.toHaveProperty('email')
+
+    const storedSession = JSON.parse(localStorage.getItem('cultr_club_member') || '{}') as Record<string, unknown>
+    expect(storedSession).toEqual({
+      email: 'taylor@example.com',
+      firstName: 'Taylor',
+      lastName: 'Member',
+      signupType: 'products',
+    })
+    expect(storedSession).not.toHaveProperty('phone')
+    expect(storedSession).not.toHaveProperty('address')
   })
 })

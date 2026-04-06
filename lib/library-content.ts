@@ -1,7 +1,12 @@
 import { promises as fs } from 'fs'
 import path from 'path'
+import createDOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 import { marked } from 'marked'
 import type { LibraryAccess } from '@/lib/config/plans'
+
+const sanitizationWindow = new JSDOM('').window as unknown as Parameters<typeof createDOMPurify>[0]
+const DOMPurify = createDOMPurify(sanitizationWindow)
 
 // Category metadata mapping
 export const CATEGORY_META: Record<string, { name: string; description: string; file: string }> = {
@@ -72,14 +77,21 @@ export async function getLibraryContent(
     if (!filteredMarkdown) {
       return null
     }
-    let html = await marked(filteredMarkdown)
-    // Brand-style CULTR in rendered HTML (skip if already inside a tag attribute)
-    html = html.replace(/(?<![<\w"])CULTR(?!["\w>])/g, '<span class="font-display font-bold">CULTR</span>')
-    return html
+    return renderLibraryMarkdown(filteredMarkdown)
   } catch (error) {
     console.error(`Failed to read library content for ${category}:`, error)
     return null
   }
+}
+
+export async function renderLibraryMarkdown(markdown: string): Promise<string> {
+  let html = await marked(markdown)
+  // Brand-style CULTR in rendered HTML (skip if already inside a tag attribute)
+  html = html.replace(/(?<![<\w"])CULTR(?!["\w>])/g, '<span class="font-display font-bold">CULTR</span>')
+
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+  })
 }
 
 function applyLibraryAccess(

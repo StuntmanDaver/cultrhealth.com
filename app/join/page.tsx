@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { sql } from '@vercel/postgres'
-import { parseCookieJson } from '@/lib/utils'
+import { verifyClubVisitorToken } from '@/lib/auth'
 import { JoinLandingClient } from './JoinLandingClient'
 
 export const dynamic = 'force-dynamic'
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 /**
  * Server-side member recognition.
  *
- * Reads the cultr_club_visitor cookie, extracts the email, and verifies
+ * Reads the signed cultr_club_visitor cookie, extracts the email, and verifies
  * the member exists in the club_members DB table. Passes verified member
  * data as a prop so the client never shows the signup modal for known members.
  *
@@ -32,34 +32,14 @@ async function getServerMember(): Promise<{
 
     if (!visitorCookie?.value) return null
 
-    const cookieData = parseCookieJson<{
-      email?: string
-      firstName?: string
-      lastName?: string
-      phone?: string
-      socialHandle?: string
-      signupType?: string
-      address?: { street: string; city: string; state: string; zip: string }
-    }>(visitorCookie.value)
+    const cookieData = await verifyClubVisitorToken(visitorCookie.value)
 
     if (!cookieData) {
       return null
     }
 
-    if (!cookieData.email) return null
-
-    // If no DB configured, trust the cookie data if it has required fields
+    // If no DB is configured, do not trust browser-provided session state.
     if (!process.env.POSTGRES_URL) {
-      if (cookieData.firstName && cookieData.lastName && cookieData.email && cookieData.phone) {
-        return {
-          firstName: cookieData.firstName,
-          lastName: cookieData.lastName,
-          email: cookieData.email,
-          phone: cookieData.phone,
-          socialHandle: cookieData.socialHandle || '',
-          signupType: cookieData.signupType || 'products',
-        }
-      }
       return null
     }
 
@@ -68,7 +48,7 @@ async function getServerMember(): Promise<{
       SELECT name, email, phone, social_handle, signup_type, age, gender,
              address_street, address_city, address_state, address_zip
       FROM club_members
-      WHERE LOWER(email) = LOWER(${cookieData.email.trim()})
+      WHERE LOWER(email) = LOWER(${cookieData.email})
       LIMIT 1
     `
 

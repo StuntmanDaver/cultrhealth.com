@@ -52,6 +52,24 @@ vi.mock('@vercel/postgres', () => ({
   }),
 }))
 
+// Mock feature flags
+const mockFeatureFlags = {
+  USE_HEALTHIE: false,
+}
+
+vi.mock('@/lib/config/feature-flags', () => mockFeatureFlags)
+
+// Mock Healthie
+const mockGetAppointment = vi.fn()
+const mockMapAppointmentToPortalOrder = vi.fn((appointment) => appointment)
+const mockIsHealthieConfigured = vi.fn(() => false)
+
+vi.mock('@/lib/healthie', () => ({
+  getAppointment: mockGetAppointment,
+  mapAppointmentToPortalOrder: mockMapAppointmentToPortalOrder,
+  isHealthieConfigured: mockIsHealthieConfigured,
+}))
+
 // --------------------------------------------------
 // HELPERS
 // --------------------------------------------------
@@ -94,6 +112,8 @@ const mockDbRow = {
 describe('GET /api/portal/orders/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFeatureFlags.USE_HEALTHIE = false
+    mockIsHealthieConfigured.mockReturnValue(false)
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
@@ -200,5 +220,21 @@ describe('GET /api/portal/orders/[id]', () => {
     expect(response.status).toBe(502)
     expect(data.success).toBe(false)
     expect(data.error).toBe('Unable to load order details')
+  })
+
+  it('skips Healthie detail lookups when the external clinical path is active', async () => {
+    mockFeatureFlags.USE_HEALTHIE = false
+    mockIsHealthieConfigured.mockReturnValue(true)
+
+    const { GET } = await import('@/app/api/portal/orders/[id]/route')
+    const response = await GET(
+      makeRequest() as any,
+      { params: Promise.resolve({ id: '101' }) }
+    )
+    const data = await response.json()
+
+    expect(mockGetAppointment).not.toHaveBeenCalled()
+    expect(response.status).toBe(200)
+    expect(data.order.id).toBe(101)
   })
 })

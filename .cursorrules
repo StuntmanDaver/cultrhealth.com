@@ -472,6 +472,8 @@ any file containing API keys, secrets, or tokens
 - Reference components/sections/* (dead code)
 - Use raw fetch to Stripe/Asher Med/SiPhox (use lib/ wrappers)
 - Trust raw `cultr_club_visitor` browser JSON for club member hydration or persist full club profiles in client-readable cookies/localStorage
+- Hard-delete affiliate/company coupon codes that already have historical usage or `order_attributions` references
+- Reuse built-in `CLUB_COUPONS` values for admin-created affiliate/company codes on `join.cultrhealth.com`
 
 ## DO:
 - Read files before modifying them
@@ -485,6 +487,8 @@ any file containing API keys, secrets, or tokens
 - Use existing shared components (MarketingHero, TrustStrip, SocialProofBadge, etc.)
 - Check CLAUDE.md and CHANGELOG.md for recent changes before making assumptions
 - Keep `cultr_club_visitor` as a signed minimal session token and rehydrate full club member data from the server only after token verification
+- Hard-delete coupon codes only when they are unused and unreferenced; otherwise deactivate them to preserve creator ROI and attribution history
+- Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
 
 # ============================================================================
 # 19. JOIN PAGE SPECIFIC

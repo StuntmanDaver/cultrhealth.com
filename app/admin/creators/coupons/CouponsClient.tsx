@@ -24,6 +24,7 @@ export default function CouponsClient() {
   const [couponForm, setCouponForm] = useState({ code: '', discount_value: '10', code_type: 'membership' })
   const [creatingCoupon, setCreatingCoupon] = useState(false)
   const [couponError, setCouponError] = useState<string | null>(null)
+  const [removingCouponId, setRemovingCouponId] = useState<string | null>(null)
 
   // Sync date range when periodDays changes
   useEffect(() => {
@@ -103,6 +104,35 @@ export default function CouponsClient() {
       fetchAnalytics()
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to toggle coupon')
+    }
+  }
+
+  async function handleRemoveCoupon(codeId: string, code: string) {
+    const confirmed = window.confirm(
+      `Remove ${code}? Unused codes will be permanently deleted. Codes with historical usage will be deactivated to preserve reporting and attribution history.`
+    )
+
+    if (!confirmed) return
+
+    setRemovingCouponId(codeId)
+    try {
+      const res = await fetch(`/api/admin/creators/codes?code_id=${encodeURIComponent(codeId)}`, {
+        method: 'DELETE',
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        throw new Error(result.error || 'Remove failed')
+      }
+
+      fetchAnalytics()
+
+      if (result.removal === 'deactivated') {
+        alert(`${code} has historical usage, so it was deactivated instead of permanently deleted.`)
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to remove coupon')
+    } finally {
+      setRemovingCouponId(null)
     }
   }
 
@@ -403,6 +433,7 @@ export default function CouponsClient() {
                   <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Revenue</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Stripe</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Active</th>
+                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Actions</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Expires</th>
                 </tr>
               </thead>
@@ -430,6 +461,17 @@ export default function CouponsClient() {
                           className={`px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 ${c.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
                         >
                           {c.active ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          type="button"
+                          aria-label={`Remove ${c.code}`}
+                          onClick={() => handleRemoveCoupon(c.id, c.code)}
+                          disabled={removingCouponId === c.id}
+                          className="px-2.5 py-0.5 rounded-full text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                        >
+                          {removingCouponId === c.id ? 'Removing...' : 'Remove'}
                         </button>
                       </td>
                       <td className="py-3 px-4 text-sm text-brand-primary/60">{c.expires_at ? formatDate(c.expires_at) : '\u2014'}</td>

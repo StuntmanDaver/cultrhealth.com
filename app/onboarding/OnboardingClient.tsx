@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Check, Circle, Loader2, ArrowRight, TestTube2, ClipboardList, Calendar, PartyPopper } from 'lucide-react'
+import { Check, Loader2, ArrowRight, TestTube2, ClipboardList, Calendar, PartyPopper } from 'lucide-react'
+import { LINKS } from '@/lib/config/links'
 
 interface OnboardingStep {
   id: string
@@ -50,9 +51,13 @@ export default function OnboardingClient({ email }: { email: string }) {
     intake_completed: boolean
     appointment_scheduled: boolean
   }) {
-    const currentStep = data.step
-    const stepOrder = ['welcome', 'blood-test', 'intake', 'schedule', 'complete']
-    const currentIndex = stepOrder.indexOf(currentStep)
+    const activeStepId = data.appointment_scheduled
+      ? 'complete'
+      : !data.blood_test_ordered
+        ? 'blood-test'
+        : !data.intake_completed
+          ? 'intake'
+          : 'schedule'
 
     setSteps([
       {
@@ -61,7 +66,7 @@ export default function OnboardingClient({ email }: { email: string }) {
         description: 'Your membership is active.',
         icon: <Check className="w-5 h-5" />,
         complete: true,
-        active: currentStep === 'welcome',
+        active: false,
       },
       {
         id: 'blood-test',
@@ -71,8 +76,8 @@ export default function OnboardingClient({ email }: { email: string }) {
           : 'Order your at-home blood test kit to establish your baseline.',
         icon: <TestTube2 className="w-5 h-5" />,
         complete: data.blood_test_ordered,
-        active: currentStep === 'blood-test',
-        href: '/members',
+        active: activeStepId === 'blood-test',
+        href: LINKS.members,
       },
       {
         id: 'intake',
@@ -82,8 +87,8 @@ export default function OnboardingClient({ email }: { email: string }) {
           : 'Complete your health questionnaire so your provider can review your history.',
         icon: <ClipboardList className="w-5 h-5" />,
         complete: data.intake_completed,
-        active: currentStep === 'intake',
-        href: '/intake',
+        active: activeStepId === 'intake',
+        href: LINKS.intake,
       },
       {
         id: 'schedule',
@@ -93,17 +98,17 @@ export default function OnboardingClient({ email }: { email: string }) {
           : 'Book your first telehealth consultation with a CULTR Health provider.',
         icon: <Calendar className="w-5 h-5" />,
         complete: data.appointment_scheduled,
-        active: currentStep === 'schedule',
-        href: '/members/consultations',
+        active: activeStepId === 'schedule',
+        href: LINKS.memberConsultations,
       },
       {
         id: 'complete',
         label: "You're All Set",
         description: "Your onboarding is complete. Welcome to CULTR Health.",
         icon: <PartyPopper className="w-5 h-5" />,
-        complete: currentIndex >= 4,
-        active: currentStep === 'complete',
-        href: '/members',
+        complete: data.appointment_scheduled,
+        active: activeStepId === 'complete',
+        href: LINKS.members,
       },
     ])
   }
@@ -115,9 +120,6 @@ export default function OnboardingClient({ email }: { email: string }) {
       </div>
     )
   }
-
-  const activeStep = steps.find(s => s.active) || steps.find(s => !s.complete)
-
   return (
     <div className="min-h-screen bg-brand-cream">
       <section className="py-16 md:py-24 px-6">

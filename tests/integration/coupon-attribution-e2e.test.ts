@@ -12,7 +12,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { sql } from '@vercel/postgres'
 
 // Source modules under test (no mocks)
-import { resolveAttribution } from '@/lib/creators/attribution'
+import { resolveAttribution, serializeAttributionCookie } from '@/lib/creators/attribution'
 import { processOrderAttribution } from '@/lib/creators/commission'
 import { validateCouponUnified } from '@/lib/config/coupons'
 import {
@@ -57,6 +57,11 @@ let codeMemId: string
 let codePrdId: string
 let codeRecId: string
 let codePauId: string
+let trackedLinkId: string
+let trackedClickEventId: string
+
+const CLICK_TOKEN = `${TEST_PREFIX}-CLICK`
+const CLICK_SESSION_ID = `${TEST_PREFIX}-SESSION`
 
 // Track initial code stats for delta assertions
 let initialCodeMemUseCount: number
@@ -139,6 +144,44 @@ beforeAll(async () => {
     RETURNING id
   `
   codePauId = codePauResult.rows[0].id
+
+  const trackedLinkResult = await sql`
+    INSERT INTO tracking_links (
+      creator_id, slug, destination_path, utm_source, utm_medium, active, is_default, click_count, conversion_count, created_at, updated_at
+    )
+    VALUES (
+      ${creatorId},
+      ${`${TEST_PREFIX.toLowerCase()}-link`},
+      '/',
+      'creator',
+      'referral',
+      TRUE,
+      FALSE,
+      0,
+      0,
+      NOW(),
+      NOW()
+    )
+    RETURNING id
+  `
+  trackedLinkId = trackedLinkResult.rows[0].id
+
+  const trackedClickEventResult = await sql`
+    INSERT INTO click_events (
+      creator_id, link_id, session_id, attribution_token, clicked_at, expires_at, converted
+    )
+    VALUES (
+      ${creatorId},
+      ${trackedLinkId},
+      ${CLICK_SESSION_ID},
+      ${CLICK_TOKEN},
+      NOW(),
+      NOW() + INTERVAL '30 days',
+      FALSE
+    )
+    RETURNING id
+  `
+  trackedClickEventId = trackedClickEventResult.rows[0].id
 
   // Record initial code stats
   initialCodeMemUseCount = 0
@@ -251,6 +294,28 @@ describe('attribution resolution — real DB', () => {
     })
 
     expect(result).toBeNull()
+  })
+
+  it('B4: coupon attribution preserves tracked click metadata when a code and click cookie are both present', async () => {
+    const attributionCookie = serializeAttributionCookie({
+      token: CLICK_TOKEN,
+      creatorId,
+      linkId: trackedLinkId,
+      expiresAt: Date.now() + 60_000,
+    })
+
+    const result = await resolveAttribution({
+      customerEmail: CUSTOMER_EMAIL,
+      couponCode: CODE_MEMBERSHIP,
+      attributionCookie,
+    })
+
+    expect(result).not.toBeNull()
+    expect(result!.creatorId).toBe(creatorId)
+    expect(result!.method).toBe('coupon_code')
+    expect(result!.codeId).toBe(codeMemId)
+    expect(result!.linkId).toBe(trackedLinkId)
+    expect(result!.clickEventId).toBe(trackedClickEventId)
   })
 })
 

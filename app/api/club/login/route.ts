@@ -1,9 +1,29 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
+import { strictLimiter, rateLimitResponse } from '@/lib/rate-limit'
+import { createClubVisitorToken } from '@/lib/auth'
 import { getCookieDomain } from '@/lib/utils'
+
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : 'unknown'
+}
 
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request)
+    const rateLimitResult = await strictLimiter.check(`club-login:${clientIp}`)
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
+    }
+
     const body = await request.json()
     const { email, phone } = body
 
@@ -76,11 +96,11 @@ export async function POST(request: Request) {
       }
 
       const response = NextResponse.json(memberData, { status: 200 })
+      const clubVisitorToken = await createClubVisitorToken(member.email)
 
       // Set visitor cookie (90 days)
-      const cookieData = JSON.stringify(memberData)
       const domain = getCookieDomain()
-      response.cookies.set('cultr_club_visitor', cookieData, {
+      response.cookies.set('cultr_club_visitor', clubVisitorToken, {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -91,14 +111,14 @@ export async function POST(request: Request) {
 
       return response
     } catch (dbError) {
-      console.error('[club/login] DB error:', dbError)
+      console.error('[club/login] DB error:', describeError(dbError))
       return NextResponse.json(
         { error: 'Database error. Please try again.' },
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('[club/login] Error:', error)
+    console.error('[club/login] Error:', describeError(error))
     return NextResponse.json(
       { error: 'Internal server error.' },
       { status: 500 }

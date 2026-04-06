@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { LINKS } from '@/lib/config/links';
-import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock, Download } from 'lucide-react';
+import { CheckCircle, Calendar, FileText, ArrowRight, Check, Clock } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Welcome to CULTR — CULTR Health',
@@ -25,7 +25,6 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const sessionId = params.session_id;
   const provider = params.provider || 'stripe';
   const orderId = params.order_id;
-  const checkoutToken = params.checkout_token;
   let isPending = params.pending === 'true';
   const isProductPurchase = params.type === 'product';
 
@@ -166,7 +165,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
           <p className="text-xl text-white/80 max-w-xl mx-auto">
             {isProductPurchase
               ? 'Your product order has been placed. We will process and ship your items shortly.'
-              : <>{`Welcome to `}<span className="font-display font-bold">CULTR</span>{planName ? ` ${planName}` : ''}. {isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Complete these two steps to start your journey.'}</>
+              : <>{`Welcome to `}<span className="font-display font-bold">CULTR</span>{planName ? ` ${planName}` : ''}. {isPending ? 'Your membership will be activated once payment is confirmed.' : 'Your membership is active. Start onboarding to complete your next clinical steps in one place.'}</>
 
             }
           </p>
@@ -190,26 +189,26 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         <section className="py-16 px-6 grad-white">
           <div className="max-w-2xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6 mb-12">
-              <Link href="/intake" className="block group">
+              <Link href={LINKS.onboarding} className="block group">
                 <div className="h-full p-8 rounded-2xl grad-light border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl grad-dark flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileText className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 1</span>
-                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Complete Intake</h3>
-                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">Fill out your health information and complete your intake forms.</p>
-                  <Button className="w-full">Start Intake <ArrowRight className="w-4 h-4 ml-2" /></Button>
+                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Start Onboarding</h3>
+                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">Open your guided checklist for blood work, intake, and consultation scheduling.</p>
+                  <Button className="w-full">Open Onboarding <ArrowRight className="w-4 h-4 ml-2" /></Button>
                 </div>
               </Link>
 
-              <Link href="/dashboard" className="block group">
+              <Link href={LINKS.dashboard} className="block group">
                 <div className="h-full p-8 rounded-2xl grad-light border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl grad-dark flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <Calendar className="w-7 h-7 text-white" />
                   </div>
                   <span className="text-xs font-bold text-cultr-forest tracking-widest mb-2">STEP 2</span>
-                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Track Your Order</h3>
-                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">View your order status and track your protocol in your dashboard.</p>
+                  <h3 className="text-lg font-display font-bold text-cultr-text mb-2">Open Dashboard</h3>
+                  <p className="text-sm text-cultr-textMuted mb-6 flex-1">View your order status, membership details, and ongoing next steps from your dashboard.</p>
                   <Button variant="secondary" className="w-full">Go to Dashboard <ArrowRight className="w-4 h-4 ml-2" /></Button>
                 </div>
               </Link>
@@ -221,23 +220,23 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
               <div className="space-y-6">
                 {[
                   {
-                    title: 'Complete Your Intake',
-                    desc: 'Fill out your health history forms in the portal.',
+                    title: 'Open Onboarding',
+                    desc: 'Start with the guided checklist for blood work, intake, and scheduling.',
                     active: true,
                   },
                   {
-                    title: 'Meet Your Provider',
-                    desc: 'Discuss your goals and review your health history.',
+                    title: 'Complete Your Intake',
+                    desc: 'Share your health history so your provider can review your goals safely.',
                     active: false,
                   },
                   {
-                    title: 'Get Your Protocol',
-                    desc: 'Receive your personalized treatment plan.',
+                    title: 'Book Your Consultation',
+                    desc: 'Choose a time to meet with your licensed provider.',
                     active: false,
                   },
                   {
-                    title: 'Start Optimizing',
-                    desc: 'Begin your optimized health protocol.',
+                    title: 'Receive Your Protocol',
+                    desc: 'Your provider finalizes your treatment plan after review.',
                     active: false,
                   },
                 ].map((step, i) => (

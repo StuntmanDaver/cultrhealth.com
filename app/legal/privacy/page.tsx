@@ -24,7 +24,7 @@ export default function PrivacyPage() {
       {/* Content */}
       <section className="py-16 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
-          <p className="text-sm text-cultr-textMuted mb-8">Last updated: April 2026</p>
+          <p className="text-sm text-cultr-textMuted mb-8">Last updated: April 5, 2026</p>
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">
@@ -67,9 +67,9 @@ export default function PrivacyPage() {
               <li>Improve website functionality through aggregated, de-identified analytics</li>
             </ul>
 
-            <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">4. Data Processors &amp; Business Associates</h2>
+            <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">4. Service Providers &amp; Clinical Partners</h2>
             <p className="text-cultr-textMuted leading-relaxed mb-4">
-              We share information with the following categories of service providers, all bound by contractual obligations to protect your data:
+              We work with carefully selected service providers to operate the platform, process payments, fulfill prescriptions, and support secure clinical workflows. We only enable a vendor to handle PHI when the required contractual and security controls are in place for that use case.
             </p>
             <div className="overflow-x-auto not-prose mb-6">
               <table className="min-w-full text-sm border border-brand-primary/10 rounded-lg">
@@ -81,13 +81,13 @@ export default function PrivacyPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-brand-primary/5 text-brand-primary/70">
-                  <tr><td className="py-3 px-4">St. Luke Compounding Pharmacy</td><td className="py-3 px-4">Medication compounding and dispensing</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">Healthie</td><td className="py-3 px-4">Electronic health records, patient management</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">Stripe</td><td className="py-3 px-4">Payment processing</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">Vercel / Neon</td><td className="py-3 px-4">Application hosting, database</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">Resend</td><td className="py-3 px-4">Transactional email delivery</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">SiPhox Health</td><td className="py-3 px-4">At-home lab testing</td><td className="py-3 px-4">BAA in place</td></tr>
-                  <tr><td className="py-3 px-4">Cloudflare</td><td className="py-3 px-4">CDN, security, bot protection</td><td className="py-3 px-4">BAA in place</td></tr>
+                  <tr><td className="py-3 px-4">St. Luke Compounding Pharmacy</td><td className="py-3 px-4">Medication compounding and dispensing</td><td className="py-3 px-4">Operational care partner</td></tr>
+                  <tr><td className="py-3 px-4">Healthie EHR</td><td className="py-3 px-4">Clinical intake, appointment scheduling, and patient workflow</td><td className="py-3 px-4">BAA required before PHI activation</td></tr>
+                  <tr><td className="py-3 px-4">Stripe</td><td className="py-3 px-4">Payment processing</td><td className="py-3 px-4">Payment data only — PHI not intentionally sent</td></tr>
+                  <tr><td className="py-3 px-4">Vercel / Neon</td><td className="py-3 px-4">Application hosting and database infrastructure</td><td className="py-3 px-4">Security and contractual controls required for authorized data</td></tr>
+                  <tr><td className="py-3 px-4">Resend</td><td className="py-3 px-4">Transactional email delivery</td><td className="py-3 px-4">Routine PHI excluded from email content</td></tr>
+                  <tr><td className="py-3 px-4">SiPhox Health</td><td className="py-3 px-4">At-home lab testing</td><td className="py-3 px-4">Clinical partner handling lab workflows</td></tr>
+                  <tr><td className="py-3 px-4">Cloudflare</td><td className="py-3 px-4">CDN, security, bot protection</td><td className="py-3 px-4">Security traffic data only</td></tr>
                   <tr><td className="py-3 px-4">Google Analytics</td><td className="py-3 px-4">Aggregated website analytics (no PHI pages)</td><td className="py-3 px-4">N/A — no PHI access</td></tr>
                 </tbody>
               </table>
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
               <li>Automatic session timeout after 30 minutes of inactivity</li>
               <li>Secure, HttpOnly cookies with SameSite protections</li>
               <li>Regular security audits through our infrastructure providers</li>
-              <li>SOC 2 compliance maintained by our hosting and database providers</li>
+              <li>Infrastructure providers maintain enterprise security controls and independent audit programs where applicable</li>
             </ul>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">6. Data Retention</h2>

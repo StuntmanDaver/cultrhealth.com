@@ -8,6 +8,8 @@ const mockCookies = vi.fn()
 const mockValidateCouponUnified = vi.fn()
 const mockResolveAttribution = vi.fn()
 const mockSyncContactToMailchimp = vi.fn()
+const mockFormLimiterCheck = vi.fn()
+const mockRateLimitResponse = vi.fn()
 
 vi.mock('@vercel/postgres', () => ({
   sql: mockSql,
@@ -32,6 +34,13 @@ vi.mock('@/lib/mailchimp', () => ({
   syncContactToMailchimp: mockSyncContactToMailchimp,
 }))
 
+vi.mock('@/lib/rate-limit', () => ({
+  formLimiter: {
+    check: mockFormLimiterCheck,
+  },
+  rateLimitResponse: mockRateLimitResponse,
+}))
+
 describe('club orders catalog sync', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -46,6 +55,39 @@ describe('club orders catalog sync', () => {
     mockValidateCouponUnified.mockResolvedValue(null)
     mockResolveAttribution.mockResolvedValue(null)
     mockSyncContactToMailchimp.mockResolvedValue(undefined)
+    mockFormLimiterCheck.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 })
+    mockRateLimitResponse.mockReturnValue(
+      new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 })
+    )
+  })
+
+  it('rate limits club order submissions before touching inventory or the database', async () => {
+    mockFormLimiterCheck.mockResolvedValueOnce({ success: false, limit: 5, remaining: 0, reset: 0 })
+
+    const { POST } = await import('@/app/api/club/orders/route')
+
+    const request = new Request('http://localhost:3000/api/club/orders', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      body: JSON.stringify({
+        email: 'member@example.com',
+        name: 'Member Example',
+        items: [
+          {
+            therapyId: 'semaglutide',
+            name: 'Semaglutide',
+            price: 299,
+            quantity: 1,
+          },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(429)
+    expect(mockConnect).not.toHaveBeenCalled()
+    expect(mockSql).not.toHaveBeenCalled()
   })
 
   it('rejects therapies that are no longer in the current join catalog', async () => {

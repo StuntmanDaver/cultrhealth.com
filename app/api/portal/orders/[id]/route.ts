@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
+import { USE_HEALTHIE } from '@/lib/config/feature-flags'
 import { sql } from '@vercel/postgres'
 import { getAppointment, mapAppointmentToPortalOrder, isHealthieConfigured } from '@/lib/healthie'
 import type { PortalOrder } from '@/lib/portal-orders'
@@ -41,7 +42,7 @@ export async function GET(
     }
 
     // Try Healthie first for appointment detail
-    if (isHealthieConfigured()) {
+    if (USE_HEALTHIE && isHealthieConfigured()) {
       try {
         const appt = await getAppointment(id)
         // Ownership check: appointment's user ID should match ehrPatientId

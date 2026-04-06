@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import { USE_HEALTHIE } from '@/lib/config/feature-flags'
 
 /**
  * Calendly Webhook Handler
@@ -10,6 +11,10 @@ import crypto from 'crypto'
  */
 export async function POST(request: NextRequest) {
   try {
+    if (!USE_HEALTHIE) {
+      return NextResponse.json({ received: true, ignored: true })
+    }
+
     const webhookSecret = process.env.CALENDLY_WEBHOOK_SECRET
     if (!webhookSecret) {
       console.error('CALENDLY_WEBHOOK_SECRET not configured')
@@ -69,22 +74,19 @@ export async function POST(request: NextRequest) {
         const eventStartTime = body.payload?.scheduled_event?.start_time
 
         if (inviteeEmail && eventStartTime) {
-          const { USE_HEALTHIE } = await import('@/lib/config/feature-flags')
-          if (USE_HEALTHIE) {
-            try {
-              const { getClientByEmail, createAppointment } = await import('@/lib/healthie')
-              const healthieUser = await getClientByEmail(inviteeEmail)
-              if (healthieUser) {
-                await createAppointment({
-                  user_id: healthieUser.id,
-                  datetime: eventStartTime,
-                  contact_type: 'Telehealth',
-                  notes: 'Booked via Calendly',
-                })
-              }
-            } catch (healthieError) {
-              console.error('Healthie appointment creation failed (non-fatal)')
+          try {
+            const { getClientByEmail, createAppointment } = await import('@/lib/healthie')
+            const healthieUser = await getClientByEmail(inviteeEmail)
+            if (healthieUser) {
+              await createAppointment({
+                user_id: healthieUser.id,
+                datetime: eventStartTime,
+                contact_type: 'Telehealth',
+                notes: 'Booked via Calendly',
+              })
             }
+          } catch (healthieError) {
+            console.error('Healthie appointment creation failed (non-fatal)')
           }
         }
         break

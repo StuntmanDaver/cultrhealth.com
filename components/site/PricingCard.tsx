@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 
 
 import { CORE_THERAPIES } from '@/lib/config/plans';
+import { getJoinCheckoutUrl } from '@/lib/config/links';
 import { brandify } from '@/lib/utils';
 
 interface PlanProps {
@@ -113,7 +114,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
               {CORE_THERAPIES.map((therapy) => (
                 <Link
                   key={therapy.slug}
-                  href={`/join/core?therapy=${therapy.slug}`}
+                  href={getJoinCheckoutUrl('core', { therapySlug: therapy.slug })}
                   className="flex items-center gap-4 p-3 rounded-xl border border-cultr-sage/50 hover:border-cultr-forest hover:bg-cultr-mint/30 transition-all duration-200 group/therapy"
                 >
                   <div className="w-12 h-12 md:w-16 md:h-16 relative shrink-0 rounded-lg overflow-hidden bg-cultr-offwhite">
@@ -149,7 +150,7 @@ export function PricingCard({ plan }: { plan: PlanProps }) {
 
       {/* Non-Core: Direct checkout link */}
       {!isCore && (
-        <Link href={`/join/${plan.slug}`} className="w-full">
+        <Link href={getJoinCheckoutUrl(plan.slug)} className="w-full">
           <Button
             variant={plan.isFeatured ? 'secondary' : 'primary'}
             className={`w-full ${plan.isFeatured ? 'text-white border-white/50 hover:bg-white/10 hover:border-white/70' : ''}`}

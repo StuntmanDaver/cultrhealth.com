@@ -11,6 +11,7 @@ const AUTO_APPROVE_EMAILS = [
   'stewart@cultrhealth.com',
   'erik@cultrhealth.com',
   'david@cultrhealth.com',
+  'legitscript@cultrhealth.com',
 ]
 
 function getBaseUrl() {

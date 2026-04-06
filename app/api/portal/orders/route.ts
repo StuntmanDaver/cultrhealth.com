@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyPortalAuth } from '@/lib/portal-auth'
+import { USE_HEALTHIE } from '@/lib/config/feature-flags'
 import { sql } from '@vercel/postgres'
 import { getAppointments, mapAppointmentToPortalOrder, isHealthieConfigured } from '@/lib/healthie'
 import type { PortalOrder } from '@/lib/portal-orders'
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 3. Try Healthie API first
-  if (isHealthieConfigured()) {
+  if (USE_HEALTHIE && isHealthieConfigured()) {
     try {
       const appointments = await getAppointments(auth.ehrPatientId)
       const orders: PortalOrder[] = appointments.map(mapAppointmentToPortalOrder)

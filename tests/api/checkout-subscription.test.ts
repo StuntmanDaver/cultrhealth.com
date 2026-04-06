@@ -26,12 +26,18 @@ const mockStripeConstructor = vi.fn().mockImplementation(() => ({
   },
 }))
 
+const mockGetProductBySku = vi.fn()
+
 vi.mock('stripe', () => ({
   default: class MockStripe {
     constructor(...args: unknown[]) {
       return mockStripeConstructor(...args)
     }
   },
+}))
+
+vi.mock('@/lib/config/product-catalog', () => ({
+  getProductBySku: mockGetProductBySku,
 }))
 
 // ============================================================
@@ -71,6 +77,22 @@ function createCheckoutRequest(body: Record<string, unknown>, cookies?: Record<s
   return req
 }
 
+function createProductRequest(body: Record<string, unknown>, cookies?: Record<string, string>): NextRequest {
+  const req = new NextRequest('http://localhost:3000/api/checkout/product', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+
+  if (cookies) {
+    for (const [name, value] of Object.entries(cookies)) {
+      req.cookies.set(name, value)
+    }
+  }
+
+  return req
+}
+
 // ============================================================
 // TESTS: POST /api/checkout/subscription
 // ============================================================
@@ -83,6 +105,18 @@ describe('POST /api/checkout/subscription', () => {
     process.env.STRIPE_SECRET_KEY = 'sk_test_abc123'
     process.env.NEXT_PUBLIC_SITE_URL = 'https://staging.cultrhealth.com'
     process.env.BLOOD_TEST_STRIPE_PRICE_ID = 'price_bloodtest_123'
+    mockGetProductBySku.mockImplementation((sku: string) => {
+      if (sku === 'TESTSKU') {
+        return {
+          sku: 'TESTSKU',
+          name: 'Test Product',
+          category: 'metabolic',
+          priceUsd: 49,
+        }
+      }
+
+      return null
+    })
 
     // Default mock: successful session creation
     mockCheckoutSessionsCreate.mockResolvedValue({
@@ -330,5 +364,65 @@ describe('POST /api/checkout (non-regression)', () => {
     expect(body.success).toBe(true)
     // All paid tiers now use Stripe Checkout Sessions (with one-time add-ons)
     expect(body.redirectUrl).toContain('checkout.stripe.com')
+  })
+
+  it('should forward attribution cookie for paid tier checkout sessions', async () => {
+    const { POST } = await import('@/app/api/checkout/route')
+
+    const request = createCheckoutRequest(
+      { planSlug: 'catalyst', email: 'user@example.com' },
+      { cultr_attribution: 'creator_abc123' }
+    )
+    await POST(request)
+
+    const createArgs = mockCheckoutSessionsCreate.mock.calls[0][0]
+    expect(createArgs.client_reference_id).toBe('attr_creator_abc123')
+    expect(createArgs.allow_promotion_codes).toBe(true)
+  })
+})
+
+describe('POST /api/checkout/product', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    process.env.STRIPE_SECRET_KEY = 'sk_test_abc123'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://staging.cultrhealth.com'
+    mockGetProductBySku.mockImplementation((sku: string) => {
+      if (sku === 'TESTSKU') {
+        return {
+          sku: 'TESTSKU',
+          name: 'Test Product',
+          category: 'metabolic',
+          priceUsd: 49,
+        }
+      }
+
+      return null
+    })
+    mockCheckoutSessionsCreate.mockResolvedValue({
+      id: 'cs_test_product_123',
+      url: 'https://checkout.stripe.com/cs_test_product_123',
+    })
+  })
+
+  it('forwards attribution cookie and enables promotion codes for product checkout', async () => {
+    const { POST } = await import('@/app/api/checkout/product/route')
+
+    const request = createProductRequest(
+      {
+        email: 'user@example.com',
+        firstName: 'Test',
+        lastName: 'Buyer',
+        items: [{ sku: 'TESTSKU', quantity: 1 }],
+      },
+      { cultr_attribution: 'product_attr_123' }
+    )
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    const createArgs = mockCheckoutSessionsCreate.mock.calls[0][0]
+    expect(createArgs.client_reference_id).toBe('attr_product_attr_123')
+    expect(createArgs.allow_promotion_codes).toBe(true)
   })
 })

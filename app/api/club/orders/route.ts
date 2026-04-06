@@ -8,6 +8,7 @@ import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, nor
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
 import { syncContactToMailchimp } from '@/lib/mailchimp'
+import { formLimiter, rateLimitResponse } from '@/lib/rate-limit'
 
 interface OrderItem {
   therapyId: string
@@ -18,8 +19,26 @@ interface OrderItem {
   quantity: number
 }
 
+function getClientIp(request: Request): string {
+  return (
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  )
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : 'unknown'
+}
+
 export async function POST(request: Request) {
   try {
+    const clientIp = getClientIp(request)
+    const rateLimitResult = await formLimiter.check(`club-order:${clientIp}`)
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
+    }
+
     const body = await request.json()
     const { email, name, phone, items, notes, couponCode, address } = body as {
       email: string
@@ -232,7 +251,7 @@ export async function POST(request: Request) {
         client.release()
       }
     } catch (dbError) {
-      console.error('[club/orders] DB error (fatal):', dbError)
+      console.error('[club/orders] DB error (fatal):', describeError(dbError))
       return NextResponse.json({ error: 'We could not save your order. Please retry in a moment.' }, { status: 500 })
     }
 
@@ -270,9 +289,8 @@ export async function POST(request: Request) {
         } catch (attrError) {
           console.error('[club/orders] Attribution processing failed (non-fatal):', {
             orderId,
-            creatorId: attributedCreatorId,
             method: attributionMethod,
-            error: attrError instanceof Error ? attrError.message : attrError,
+            error: describeError(attrError),
           })
         }
       } else {
@@ -289,9 +307,8 @@ export async function POST(request: Request) {
         } catch (attrError) {
           console.error('[club/orders] Zero-revenue attribution failed (non-fatal):', {
             orderId,
-            creatorId: attributedCreatorId,
             method: attributionMethod,
-            error: attrError instanceof Error ? attrError.message : attrError,
+            error: describeError(attrError),
           })
         }
       }
@@ -304,7 +321,7 @@ export async function POST(request: Request) {
         const { incrementCodeUsage } = await import('@/lib/creators/db')
         await incrementCodeUsage(couponResult.codeId, subtotal > 0 ? subtotal : 0)
       } catch (err) {
-        console.error('[club/orders] Code usage increment failed (non-fatal):', err)
+        console.error('[club/orders] Code usage increment failed (non-fatal):', describeError(err))
       }
     }
 
@@ -316,7 +333,6 @@ export async function POST(request: Request) {
     } else {
       siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
     }
-    console.log('[club/orders] Using siteUrl:', siteUrl, 'from host:', requestHost)
 
     // Send emails independently (not with Promise.all, so one failure doesn't block the other)
     let customerEmailSent = false
@@ -339,7 +355,7 @@ export async function POST(request: Request) {
       })
       customerEmailSent = true
     } catch (err) {
-      console.error('[club/orders] Customer confirmation email failed:', err)
+      console.error('[club/orders] Customer confirmation email failed:', describeError(err))
     }
 
     try {
@@ -367,7 +383,7 @@ export async function POST(request: Request) {
       })
       adminEmailSent = true
     } catch (err) {
-      console.error('[club/orders] Admin approval request email failed:', err)
+      console.error('[club/orders] Admin approval request email failed:', describeError(err))
     }
 
     if (customerEmailSent && adminEmailSent) {
@@ -396,7 +412,7 @@ export async function POST(request: Request) {
         ORDER_DATE: new Date().toISOString().split('T')[0],
       },
     }).catch((err) =>
-      console.error('[club/orders] Mailchimp sync error (non-fatal):', err)
+      console.error('[club/orders] Mailchimp sync error (non-fatal):', describeError(err))
     )
 
     return NextResponse.json({
@@ -407,7 +423,7 @@ export async function POST(request: Request) {
       adminEmailSent,
     })
   } catch (error) {
-    console.error('[club/orders] Error:', error)
+    console.error('[club/orders] Error:', describeError(error))
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 })
   }
 }

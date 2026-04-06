@@ -22,6 +22,7 @@ vi.mock('@/lib/db', () => ({
 import {
   getApprovedCommissionsForPayout,
   reverseCommissionsForAttribution,
+  restoreCommissionsForAttribution,
 } from '@/lib/creators/db'
 
 describe('creator payout lifecycle queries', () => {
@@ -58,5 +59,16 @@ describe('creator payout lifecycle queries', () => {
     expect(query).toContain("'pending'")
     expect(query).toContain("'approved'")
     expect(query).toContain("'paid'")
+  })
+
+  it('restores reversed commissions to paid or pending based on payout linkage', async () => {
+    await restoreCommissionsForAttribution('attr_123')
+
+    const [queryParts] = mockSql.mock.calls[0]
+    const query = queryParts.join(' ')
+
+    expect(query).toContain("status = 'reversed'")
+    expect(query).toContain("WHEN payout_id IS NOT NULL THEN 'paid'")
+    expect(query).toContain("ELSE 'pending'")
   })
 })

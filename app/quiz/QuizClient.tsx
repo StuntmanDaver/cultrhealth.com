@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { getActiveQuestions, calculateRecommendation, type QuizResult } from '@/lib/config/quiz';
+import { getJoinCheckoutUrl } from '@/lib/config/links';
 import { PLANS } from '@/lib/config/plans';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 
@@ -114,6 +115,12 @@ export function QuizClient() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: sessionId.current }),
     }).catch(() => { /* fire-and-forget */ });
+
+    if (href.startsWith('http')) {
+      window.location.assign(href);
+      return;
+    }
+
     router.push(href);
   };
 
@@ -130,8 +137,8 @@ export function QuizClient() {
     // Core tier always needs a therapy param — join page redirects to /pricing without one
     // Default to semaglutide (cheapest at $149) when no specific therapy was recommended
     const joinHref = result.recommendedTier === 'core'
-      ? `/join/core?therapy=${result.coreTherapy?.slug ?? 'semaglutide'}`
-      : `/join/${result.recommendedTier}`;
+      ? getJoinCheckoutUrl('core', { therapySlug: result.coreTherapy?.slug ?? 'semaglutide' })
+      : getJoinCheckoutUrl(result.recommendedTier);
 
     return (
       <div className="min-h-screen grad-light">

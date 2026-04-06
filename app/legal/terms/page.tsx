@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: 'CULTR Health terms of service. Please read these terms carefully before using our services.',
 };
 
+const LAST_UPDATED = 'April 5, 2026'
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen grad-white">
@@ -24,7 +26,7 @@ export default function TermsPage() {
       {/* Content */}
       <section className="py-16 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
-          <p className="text-sm text-cultr-textMuted mb-8">Last updated: {new Date().toLocaleDateString()}</p>
+          <p className="text-sm text-cultr-textMuted mb-8">Last updated: {LAST_UPDATED}</p>
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">

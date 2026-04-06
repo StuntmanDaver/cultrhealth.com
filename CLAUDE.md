@@ -1047,6 +1047,8 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Join catalog source:** `join.cultrhealth.com` product cards are driven by `lib/config/join-therapies.ts`; restoring `/join` page components alone does not restore the legacy join catalog.
 - **Join catalog pricing:** Change retail amounts in `lib/config/join-therapies.ts` only; update any internal markdown that duplicates those dollar figures (e.g. `Peptides-Growth-Factors.md`, `Verification-Checklist.md`) and record the change in `CHANGELOG.md`.
 - **Club visitor session:** `cultr_club_visitor` is a signed minimal session token used only to recover the join member record server-side. Never store full club profile data (phone, address, age, gender) in client-readable cookies or localStorage, and never trust raw browser JSON for member hydration.
+- **Join coupon precedence:** Built-in `CLUB_COUPONS` values shadow DB coupon rows on `join.cultrhealth.com`; admin-created affiliate/company codes must not reuse those normalized values.
+- **Admin coupon removal:** Permanently delete coupon codes only when they have no historical usage and no `order_attributions` references. Otherwise deactivate them so creator ROI and attribution history remain intact.
 
 ### HIPAA Compliance
 - Never log PHI (Protected Health Information)

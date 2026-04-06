@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminAuth } from '@/lib/auth'
+import { CLUB_COUPONS } from '@/lib/config/coupons'
 import {
   createAffiliateCode,
   deactivateAffiliateCode,
@@ -54,6 +55,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'code is required' }, { status: 400 })
     }
 
+    const normalizedCode = code.trim().toUpperCase()
+
+    if (Object.prototype.hasOwnProperty.call(CLUB_COUPONS, normalizedCode)) {
+      return NextResponse.json(
+        { error: 'Code is reserved for built-in coupon handling and cannot be created in admin.' },
+        { status: 409 }
+      )
+    }
+
     // Validate discount value range
     if (discount_value !== undefined && (discount_value < 1 || discount_value > 100)) {
       return NextResponse.json({ error: 'Discount value must be between 1 and 100' }, { status: 400 })
@@ -68,7 +78,6 @@ export async function POST(request: NextRequest) {
     // For company-owned codes without a creator_id, create directly in DB
     if (!creator_id) {
       const { sql } = await import('@vercel/postgres')
-      const normalizedCode = code.trim().toUpperCase()
       const effectiveType = discount_type || 'percentage'
       const effectiveValue = discount_value || 10
       const effectiveCodeType = code_type || 'membership'
@@ -98,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     const newCode = await createAffiliateCode(
       creator_id,
-      code,
+      normalizedCode,
       is_primary || false,
       discount_type || 'percentage',
       discount_value || 10.00,
@@ -115,8 +124,8 @@ export async function POST(request: NextRequest) {
 
         const couponParams: Record<string, unknown> = {
           duration: 'once',
-          name: code.toUpperCase(),
-          metadata: { source: 'cultr_affiliate_manual', code: code.toUpperCase() },
+          name: normalizedCode,
+          metadata: { source: 'cultr_affiliate_manual', code: normalizedCode },
         }
         if (effectiveType === 'percentage') {
           couponParams.percent_off = effectiveValue
@@ -128,7 +137,7 @@ export async function POST(request: NextRequest) {
         const coupon = await stripe.coupons.create(couponParams)
         const promo = await stripe.promotionCodes.create({
           promotion: { type: 'coupon', coupon: coupon.id },
-          code: code.toUpperCase(),
+          code: normalizedCode,
           metadata: { source: 'cultr_affiliate_manual' },
         })
         await updateAffiliateCodeStripeIds(newCode.id, coupon.id, promo.id)
@@ -142,7 +151,7 @@ export async function POST(request: NextRequest) {
       action_type: 'create_affiliate_code',
       entity_type: 'affiliate_code',
       entity_id: newCode.id,
-      metadata: { creator_id, code },
+      metadata: { creator_id, code: normalizedCode },
     })
 
     return NextResponse.json({ code: newCode }, { status: 201 })
@@ -209,18 +218,64 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'code_id is required' }, { status: 400 })
     }
 
-    await deactivateAffiliateCode(codeId)
+    const { sql } = await import('@vercel/postgres')
+    const existingCode = await sql`
+      SELECT code, use_count, stripe_promotion_code_id
+      FROM affiliate_codes
+      WHERE id = ${codeId}
+      LIMIT 1
+    `
+
+    if (existingCode.rows.length === 0) {
+      return NextResponse.json({ error: 'Code not found' }, { status: 404 })
+    }
+
+    const codeRow = existingCode.rows[0]
+    const usageResult = await sql`
+      SELECT
+        EXISTS(SELECT 1 FROM order_attributions WHERE code_id = ${codeId}) AS has_attributions,
+        EXISTS(SELECT 1 FROM club_orders WHERE UPPER(coupon_code) = UPPER(${codeRow.code})) AS has_orders
+    `
+
+    const hasHistoricalUsage =
+      Number(codeRow.use_count || 0) > 0 ||
+      Boolean(usageResult.rows[0]?.has_attributions) ||
+      Boolean(usageResult.rows[0]?.has_orders)
+
+    let removal: 'deleted' | 'deactivated'
+
+    if (hasHistoricalUsage) {
+      const deactivated = await deactivateAffiliateCode(codeId)
+      if (!deactivated) {
+        return NextResponse.json({ error: 'Code not found' }, { status: 404 })
+      }
+      removal = 'deactivated'
+    } else {
+      const stripePromoId = codeRow.stripe_promotion_code_id
+      if (stripePromoId && process.env.STRIPE_SECRET_KEY) {
+        try {
+          const Stripe = (await import('stripe')).default
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+          await stripe.promotionCodes.update(stripePromoId, { active: false })
+        } catch (stripeErr) {
+          console.error(`Failed to deactivate Stripe promotion code ${stripePromoId} before delete (non-fatal):`, stripeErr)
+        }
+      }
+
+      await sql`DELETE FROM affiliate_codes WHERE id = ${codeId}`
+      removal = 'deleted'
+    }
 
     await createAdminAction({
       admin_email: auth.email,
-      action_type: 'deactivate_affiliate_code',
+      action_type: removal === 'deleted' ? 'delete_affiliate_code' : 'deactivate_affiliate_code',
       entity_type: 'affiliate_code',
       entity_id: codeId,
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, removal })
   } catch (error) {
-    console.error('Admin code deactivation error:', error)
-    return NextResponse.json({ error: 'Failed to deactivate code' }, { status: 500 })
+    console.error('Admin code removal error:', error)
+    return NextResponse.json({ error: 'Failed to remove code' }, { status: 500 })
   }
 }

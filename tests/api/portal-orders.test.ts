@@ -52,6 +52,24 @@ vi.mock('@vercel/postgres', () => ({
   }),
 }))
 
+// Mock feature flags
+const mockFeatureFlags = {
+  USE_HEALTHIE: false,
+}
+
+vi.mock('@/lib/config/feature-flags', () => mockFeatureFlags)
+
+// Mock Healthie
+const mockGetAppointments = vi.fn()
+const mockMapAppointmentToPortalOrder = vi.fn((appointment) => appointment)
+const mockIsHealthieConfigured = vi.fn(() => false)
+
+vi.mock('@/lib/healthie', () => ({
+  getAppointments: mockGetAppointments,
+  mapAppointmentToPortalOrder: mockMapAppointmentToPortalOrder,
+  isHealthieConfigured: mockIsHealthieConfigured,
+}))
+
 // --------------------------------------------------
 // HELPERS
 // --------------------------------------------------
@@ -82,6 +100,8 @@ function makeUnauthenticatedRequest(): { cookies: { get: () => undefined } } {
 describe('GET /api/portal/orders', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFeatureFlags.USE_HEALTHIE = false
+    mockIsHealthieConfigured.mockReturnValue(false)
     mockVerifyPortalAuth.mockResolvedValue({
       authenticated: true,
       phone: '+15551234567',
@@ -175,5 +195,33 @@ describe('GET /api/portal/orders', () => {
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
     expect(data.orders).toEqual([])
+  })
+
+  it('skips Healthie lookups when the external clinical path is active', async () => {
+    mockFeatureFlags.USE_HEALTHIE = false
+    mockIsHealthieConfigured.mockReturnValue(true)
+    mockSql.mockResolvedValue({
+      rows: [
+        {
+          id: 1,
+          asher_order_id: 101,
+          order_type: 'GLP1',
+          order_status: 'APPROVED',
+          partner_note: 'Standard dosing',
+          medication_packages: JSON.stringify([{ name: 'Tirzepatide' }]),
+          created_at: '2026-03-01T10:00:00Z',
+          updated_at: '2026-03-05T14:00:00Z',
+        },
+      ],
+    })
+
+    const { GET } = await import('@/app/api/portal/orders/route')
+    const response = await GET(makeRequest() as any)
+    const data = await response.json()
+
+    expect(mockGetAppointments).not.toHaveBeenCalled()
+    expect(response.status).toBe(200)
+    expect(data.orders).toHaveLength(1)
+    expect(data.orders[0].id).toBe(101)
   })
 })

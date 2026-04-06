@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
 import { DispensingPharmacyInfo } from '@/components/compliance/DispensingPharmacyInfo';
+import { DISCLAIMERS, SERVED_STATE_COUNT } from '@/lib/config/compliance';
 
 const productLinks = [
   { href: '/pricing', label: 'Pricing' },
@@ -22,10 +23,10 @@ const contactLinks = [
 ];
 
 const trustBadges = [
-  { icon: Shield, label: 'HIPAA Compliant' },
-  { icon: Lock, label: '256-bit Encryption' },
+  { icon: Shield, label: 'HIPAA Safeguards' },
+  { icon: Lock, label: 'Encrypted Sessions' },
   { icon: Stethoscope, label: 'Licensed Providers' },
-  { icon: FlaskConical, label: 'Licensed Pharmacy' },
+  { icon: FlaskConical, label: '503A Pharmacy Partner' },
 ];
 
 export function Footer() {
@@ -195,13 +196,13 @@ export function Footer() {
           {/* Bottom Section */}
           <div className="pt-4 border-t border-white/10">
             <p className="text-xs text-white/40 mb-3">
-              CULTR Health telehealth services are available in 48 states.{' '}
+              CULTR Health telehealth services are available in {SERVED_STATE_COUNT} states.{' '}
               <Link href="/legal/medical-disclaimer#availability" className="underline hover:text-cultr-sage transition-colors">
                 Restrictions apply
               </Link>.
             </p>
             <p className="text-xs text-white/40 mb-4">
-              <strong className="text-white/60">Important Information:</strong> The <span className="font-display font-bold">CULTR</span> website, products, and services are intended to support a healthy lifestyle and are not for diagnosing, curing, managing, preventing, or treating any disease or condition. Always consult a licensed physician for medical advice. Compounded medications are not FDA-approved but are prepared by licensed pharmacies in compliance with applicable regulations.
+              <strong className="text-white/60">Important Information:</strong> <span className="font-display font-bold">CULTR</span> Health operates a telehealth platform that connects members with independent licensed providers. {DISCLAIMERS.prescriptionRequired} {DISCLAIMERS.compoundedMedication}
             </p>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <p className="text-xs text-white/40">

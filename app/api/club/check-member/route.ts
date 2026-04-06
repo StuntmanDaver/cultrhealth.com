@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { cookies } from 'next/headers'
-import { parseCookieJson } from '@/lib/utils'
+import { strictLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
+import { verifyClubVisitorToken } from '@/lib/auth'
 
 /**
  * GET /api/club/check-member
  *
  * Server-side member recognition. Two modes:
- * 1. No query params — reads cultr_club_visitor cookie and verifies via DB
- *    Returns full member data (trusted: cookie proves prior session).
+ * 1. No query params — reads the signed cultr_club_visitor cookie and verifies via DB.
+ *    Returns full member data only when the session token is valid.
  * 2. ?email=... — looks up member by email (for signup form auto-fill)
  *    Returns MINIMAL data only (firstName + exists flag). No PII.
  *    This mode is unauthenticated — never return phone, address, or sensitive data.
@@ -24,6 +25,14 @@ export async function GET(request: Request) {
     const isEmailLookup = !!emailParam
     let lookupEmail: string | null = emailParam || null
 
+    if (isEmailLookup) {
+      const clientIp = await getClientIp()
+      const rateLimitResult = await strictLimiter.check(`club-check-member:${clientIp}`)
+      if (!rateLimitResult.success) {
+        return rateLimitResponse(rateLimitResult)
+      }
+    }
+
     if (!lookupEmail) {
       const cookieStore = cookies()
       const visitorCookie = cookieStore.get('cultr_club_visitor')
@@ -32,12 +41,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ member: null }, { status: 404 })
       }
 
-      const cookieData = parseCookieJson<{ email?: string }>(visitorCookie.value)
+      const cookieData = await verifyClubVisitorToken(visitorCookie.value)
       if (!cookieData) {
         return NextResponse.json({ member: null }, { status: 404 })
       }
 
-      lookupEmail = cookieData.email?.trim().toLowerCase() || null
+      lookupEmail = cookieData.email
     }
 
     if (!lookupEmail) {
@@ -84,7 +93,7 @@ export async function GET(request: Request) {
       })
     }
 
-    // Cookie-based lookups return full data (cookie proves prior authenticated session)
+    // Signed cookie lookups return full data after the token is verified.
     return NextResponse.json({
       member: {
         firstName,

@@ -15,7 +15,7 @@ export const DISPENSING_PHARMACY = {
   licenseNumber: 'PH 32747',
   controlNumber: '114077',
   licenseExpires: '2027-02-28',
-  npi: '', // TBD
+  npi: '',
 } as const;
 
 export type FDAStatus =
@@ -79,7 +79,7 @@ export const DISCLAIMERS = {
 
 // --- Geographic scope ---
 
-export const EXCLUDED_STATES = ['NY', 'LA'] as const; // PLACEHOLDER — confirm with legal
+export const EXCLUDED_STATES = ['NY', 'LA'] as const;
 
 export const SERVED_STATES = [
   'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -89,14 +89,16 @@ export const SERVED_STATES = [
   'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
 ] as const;
 
+export const SERVED_STATE_COUNT = SERVED_STATES.length;
+
 // --- Provider credentials ---
 
 export const PROVIDER_CREDENTIALS = {
   medical_director: {
     name: 'Dr. Ali Saberi, MD',
-    npi: '', // PLACEHOLDER — user to provide
+    npi: '1649495276',
     specialty: 'Internal Medicine',
-    states_licensed: [] as string[], // PLACEHOLDER — user to provide
+    states_licensed: ['FL'] as string[],
   },
 } as const;
 

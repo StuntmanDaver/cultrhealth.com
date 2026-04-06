@@ -206,6 +206,53 @@ interface ClubMember {
   }
 }
 
+interface ClubMemberSession {
+  email: string
+  firstName?: string
+  lastName?: string
+  signupType?: ClubMember['signupType']
+}
+
+const CLUB_MEMBER_STORAGE_KEY = 'cultr_club_member'
+
+function toClubMemberSession(member: Pick<ClubMember, 'email' | 'firstName' | 'lastName' | 'signupType'>): ClubMemberSession {
+  return {
+    email: member.email.trim().toLowerCase(),
+    firstName: member.firstName,
+    lastName: member.lastName,
+    signupType: member.signupType,
+  }
+}
+
+function readStoredClubMemberSession(): ClubMemberSession | null {
+  const raw = localStorage.getItem(CLUB_MEMBER_STORAGE_KEY)
+  if (!raw) return null
+
+  try {
+    const data = JSON.parse(raw) as Partial<ClubMemberSession>
+    if (!data?.email || typeof data.email !== 'string') {
+      localStorage.removeItem(CLUB_MEMBER_STORAGE_KEY)
+      return null
+    }
+
+    return {
+      email: data.email.trim().toLowerCase(),
+      firstName: typeof data.firstName === 'string' ? data.firstName : undefined,
+      lastName: typeof data.lastName === 'string' ? data.lastName : undefined,
+      signupType: data.signupType === 'creator' || data.signupType === 'membership' || data.signupType === 'products'
+        ? data.signupType
+        : undefined,
+    }
+  } catch {
+    localStorage.removeItem(CLUB_MEMBER_STORAGE_KEY)
+    return null
+  }
+}
+
+function writeStoredClubMemberSession(member: Pick<ClubMember, 'email' | 'firstName' | 'lastName' | 'signupType'>) {
+  localStorage.setItem(CLUB_MEMBER_STORAGE_KEY, JSON.stringify(toClubMemberSession(member)))
+}
+
 const SECTION_ICONS = [Flame, Zap] as const
 
 function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null }) {
@@ -285,8 +332,8 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
       setMember(memberData)
       setShowSignup(false)
       setMemberCheckDone(true)
-      // Re-hydrate localStorage so future client-side checks work
-      try { localStorage.setItem('cultr_club_member', JSON.stringify(memberData)) } catch { /* ignore */ }
+      // Persist only minimal client-side session data; full profile re-hydrates from the server.
+      try { writeStoredClubMemberSession(memberData) } catch { /* ignore */ }
       return
     }
 
@@ -299,42 +346,20 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
         return
       }
 
-      // --- Priority 3: Client-side localStorage ---
-      const lsData = localStorage.getItem('cultr_club_member')
-      if (lsData) {
-        const data = JSON.parse(lsData)
-        if (data?.firstName && data?.lastName && data?.email && data?.phone) {
-          setMember({ ...data, signupType: data.signupType || 'products' })
-          setShowSignup(false)
-          setMemberCheckDone(true)
-          return
-        }
-        localStorage.removeItem('cultr_club_member')
+      // --- Priority 3: Minimal client-side session hint ---
+      const storedSession = readStoredClubMemberSession()
+      if (storedSession?.email) {
+        setLoginEmail(storedSession.email)
       }
 
-      // --- Priority 4: Client-side cookie ---
-      const stored = document.cookie.split('; ').find((c) => c.startsWith('cultr_club_visitor='))
-      if (stored) {
-        const data = parseCookieJson<ClubMember>(stored.substring('cultr_club_visitor='.length))
-        if (data?.firstName && data?.lastName && data?.email && data?.phone) {
-          setMember({ ...data, signupType: data.signupType || 'products' })
-          setShowSignup(false)
-          setMemberCheckDone(true)
-          localStorage.setItem('cultr_club_member', JSON.stringify(data))
-          return
-        }
-        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
-        document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
-      }
-
-      // --- Priority 5: Previous order flag ---
+      // --- Priority 4: Previous order flag ---
       // Preserve this signal, but only use it if the server cannot recover
       // the member from the existing cookie/session.
       const hasOrdered = !!localStorage.getItem('cultr_club_has_ordered')
 
-      // --- Priority 6: Server-side fallback API check ---
-      // Cookie may exist (httpOnly=false, sent automatically) but localStorage
-      // was cleared. Ask the server to verify via DB lookup.
+      // --- Priority 5: Server-side fallback API check ---
+      // The signed cookie is sent automatically; ask the server to verify it
+      // and hydrate the full member profile from the database.
       fetch('/api/club/check-member', { credentials: 'include' })
         .then((res) => res.ok ? res.json() : null)
         .then((data) => {
@@ -354,10 +379,11 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
             setShowSignup(false)
             setShowLogin(false)
             setLoginEmail('')
-            try { localStorage.setItem('cultr_club_member', JSON.stringify(m)) } catch { /* ignore */ }
+            try { writeStoredClubMemberSession(m) } catch { /* ignore */ }
           } else {
-            if (hasOrdered) {
+            if (hasOrdered || storedSession?.email) {
               setShowSignup(false)
+              setLoginEmail(storedSession?.email || '')
               setShowLogin(true)
             } else {
               // Truly a new visitor — no record anywhere
@@ -367,8 +393,9 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
           }
         })
         .catch(() => {
-          if (hasOrdered) {
+          if (hasOrdered || storedSession?.email) {
             setShowSignup(false)
+            setLoginEmail(storedSession?.email || '')
             setShowLogin(true)
           } else {
             // Network error on fallback — show signup
@@ -387,11 +414,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   }, [serverMember])
 
   const handleSignupComplete = useCallback((data: ClubMember) => {
-    localStorage.setItem('cultr_club_member', JSON.stringify(data))
-    const cookieData = encodeURIComponent(JSON.stringify(data))
-    const domainPart = window.location.hostname.includes('cultrhealth.com') ? '; domain=.cultrhealth.com' : ''
-    const securePart = window.location.protocol === 'https:' ? '; Secure' : ''
-    document.cookie = `cultr_club_visitor=${cookieData}; path=/; max-age=${60 * 60 * 24 * 90}${domainPart}; SameSite=Lax${securePart}`
+    writeStoredClubMemberSession(data)
     setMember(data)
     setShowSignup(false)
     setShowLogin(false)
@@ -420,11 +443,12 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   }, [])
 
   const handleLogout = useCallback(() => {
-    localStorage.removeItem('cultr_club_member')
+    localStorage.removeItem(CLUB_MEMBER_STORAGE_KEY)
     // Clear cookie with and without domain to cover both production and local
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
     setMember(null)
+    setLoginEmail('')
     setShowSignup(true)
     setOrderSubmitted(false)
     cart.clearCart()

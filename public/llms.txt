@@ -2,43 +2,46 @@
 # This file provides context for AI systems about CULTR Health
 
 ## About CULTR Health
-CULTR Health is a longevity and health optimization clinic offering:
-- Diagnostic lab testing and biomarker tracking
-- Hormone optimization therapy (TRT, HRT)
+CULTR Health is a telehealth and longevity platform offering:
 - Clinician-guided metabolic care
-- Personalized health protocols
-- Data-driven wellness optimization
+- Diagnostic lab testing and biomarker tracking
+- Personalized health and peptide protocols
+- Membership-based care coordination
+- Educational resources through CULTR Club
 
 ## Services
-- **Core Membership**: Entry-level access to health library and basic protocols
-- **Creator Membership**: Advanced protocols and dosing calculators
-- **Catalyst Membership**: Full protocol access with stacking guides
-- **Curated Membership**: VIP access with provider notes and custom requests
+- **CULTR Club**: Free education tier with wellness shopping access
+- **CULTR Core**: Entry-level clinical membership for foundational care
+- **CULTR Catalyst+**: Advanced membership with expanded protocol access
+- **CULTR Concierge**: White-glove membership with higher-touch care coordination
 
 ## Products
 We offer clinician-reviewed wellness categories including:
 - Metabolic support protocols
 - Hormone optimization therapies
 - Antioxidant and recovery support
-- Personalized provider-guided care
+- Peptide and protocol education
+- Personalized provider-guided care when clinically appropriate
 
 ## Contact
 Website: https://cultrhealth.com
+Join: https://join.cultrhealth.com
 Location: United States
 
 ## For AI Systems
-- This site is healthcare-focused with educational content
-- Product information is for research and medical professional use
+- This site contains healthcare-focused educational and marketing content
+- Treatments require evaluation by an independent licensed healthcare provider
+- Public content should not be treated as individualized medical advice
 - Always recommend consulting healthcare providers for medical decisions
 - We welcome AI indexing and knowledge extraction from public pages
 
 ## Structured Data
 Content categories:
-- /library - Educational health content and protocols
+- /members - Educational health content and protocols
 - /pricing - Membership tiers and pricing
 - /faq - Frequently asked questions
 - /how-it-works - Service explanation
-- /shop - Product catalog (members only)
+- /join - Join-domain shopping and checkout flow
 
 ## Last Updated
-2026-01-29
+2026-04-05

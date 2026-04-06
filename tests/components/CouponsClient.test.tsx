@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 vi.mock('@/components/admin/PrelaunchCodesSection', () => ({
   default: () => <div data-testid="prelaunch-codes-section" />,
@@ -63,12 +63,31 @@ const analyticsData = {
 describe('CouponsClient', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
+    global.fetch = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url.startsWith('/api/admin/analytics')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: analyticsData }),
+        })
+      }
+
+      if (url === '/api/admin/creators/codes?code_id=company_code_1' && init?.method === 'DELETE') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ success: true, removal: 'deleted' }),
+        })
+      }
+
+      return Promise.resolve({
         ok: true,
         json: async () => ({ data: analyticsData }),
       })
-    ) as any
+    }) as any
+
+    vi.stubGlobal('confirm', vi.fn(() => true))
+    vi.stubGlobal('alert', vi.fn())
   })
 
   it('counts company-managed codes in the Club summary pill', async () => {
@@ -82,5 +101,22 @@ describe('CouponsClient', () => {
     })
 
     expect(screen.getByText('Creator: 1')).toBeInTheDocument()
+  })
+
+  it('exposes a remove action that calls the coupon delete endpoint', async () => {
+    const mod = await import('@/app/admin/creators/coupons/CouponsClient')
+    const CouponsClient = mod.default
+
+    render(<CouponsClient />)
+
+    const removeButton = await screen.findByRole('button', { name: 'Remove CULTR10' })
+    fireEvent.click(removeButton)
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/admin/creators/codes?code_id=company_code_1',
+        expect.objectContaining({ method: 'DELETE' })
+      )
+    })
   })
 })

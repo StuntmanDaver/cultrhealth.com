@@ -22,6 +22,10 @@ const SESSION_SECRET = new TextEncoder().encode(
   sessionSecret || 'cultr-session-secret-dev-only'
 )
 
+const CLUB_VISITOR_SECRET = new TextEncoder().encode(
+  sessionSecret || jwtSecret || 'cultr-club-visitor-secret-dev-only'
+)
+
 // Magic link token (short-lived, 15 minutes)
 export async function createMagicLinkToken(email: string): Promise<string> {
   return new SignJWT({ email, type: 'magic_link' })
@@ -85,6 +89,36 @@ export async function verifySessionToken(token: string): Promise<SessionPayload 
       customerId: payload.customerId,
       creatorId: typeof payload.creatorId === 'string' ? payload.creatorId : undefined,
       role: (payload.role as SessionPayload['role']) || 'member',
+    }
+  } catch {
+    return null
+  }
+}
+
+export interface ClubVisitorPayload {
+  email: string
+}
+
+export async function createClubVisitorToken(email: string): Promise<string> {
+  return new SignJWT({
+    email: email.trim().toLowerCase(),
+    type: 'club_visitor',
+  })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('90d')
+    .sign(CLUB_VISITOR_SECRET)
+}
+
+export async function verifyClubVisitorToken(token: string): Promise<ClubVisitorPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, CLUB_VISITOR_SECRET)
+    if (payload.type !== 'club_visitor' || typeof payload.email !== 'string') {
+      return null
+    }
+
+    return {
+      email: payload.email.trim().toLowerCase(),
     }
   } catch {
     return null
