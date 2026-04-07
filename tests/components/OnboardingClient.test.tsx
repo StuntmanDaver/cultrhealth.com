@@ -39,7 +39,7 @@ describe('OnboardingClient', () => {
     expect(continueLink).toHaveAttribute('href', '/members')
   })
 
-  it('continues to intake after blood work is already ordered', async () => {
+  it('continues to intake with the preserved checkout session id', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -53,11 +53,11 @@ describe('OnboardingClient', () => {
       }),
     })
 
-    render(<OnboardingClient email="member@example.com" />)
+    render(<OnboardingClient email="member@example.com" intakeSessionId="cs_test_123" />)
 
     const continueLink = await screen.findByRole('link', { name: /continue/i })
 
     expect(screen.getByText('Medical Intake')).toBeInTheDocument()
-    expect(continueLink).toHaveAttribute('href', '/intake')
+    expect(continueLink).toHaveAttribute('href', '/intake?session_id=cs_test_123')
   })
 })

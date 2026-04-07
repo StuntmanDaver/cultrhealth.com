@@ -27,6 +27,9 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
   const orderId = params.order_id;
   let isPending = params.pending === 'true';
   const isProductPurchase = params.type === 'product';
+  const onboardingHref = sessionId
+    ? `${LINKS.onboarding}?session_id=${encodeURIComponent(sessionId)}`
+    : LINKS.onboarding;
 
   // Retrieve session details from Stripe if session_id is provided
   let customerEmail: string | null = null;
@@ -189,7 +192,7 @@ export default async function SuccessPage({ searchParams }: SuccessPageProps) {
         <section className="py-16 px-6 grad-white">
           <div className="max-w-2xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6 mb-12">
-              <Link href={LINKS.onboarding} className="block group">
+              <Link href={onboardingHref} className="block group">
                 <div className="h-full p-8 rounded-2xl grad-light border border-cultr-sage hover:border-cultr-forest/50 transition-all flex flex-col items-center text-center">
                   <div className="w-14 h-14 rounded-xl grad-dark flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <FileText className="w-7 h-7 text-white" />

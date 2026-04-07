@@ -5,13 +5,16 @@ import { NextRequest } from 'next/server'
 // MOCKS
 // ============================================================
 
-const { mockSql } = vi.hoisted(() => ({ mockSql: vi.fn() }))
+const { mockSql, mockVerifyAuth } = vi.hoisted(() => ({
+  mockSql: vi.fn(),
+  mockVerifyAuth: vi.fn(),
+}))
 vi.mock('@vercel/postgres', () => ({
   sql: mockSql,
 }))
 
 vi.mock('@/lib/auth', () => ({
-  verifyAuth: vi.fn().mockResolvedValue({ authenticated: true, email: 'test@example.com', customerId: 'cus_test', role: 'member' }),
+  verifyAuth: mockVerifyAuth,
   getSession: vi.fn().mockResolvedValue(null),
 }))
 
@@ -50,7 +53,7 @@ import { POST } from '@/app/api/intake/submit/route'
 const VALID_INTAKE = {
   firstName: 'Jane',
   lastName: 'TestPatient',
-  email: 'jane.testpatient@example.com',
+  email: 'test@example.com',
   phone: '(352) 555-0199',
   dateOfBirth: '1988-06-15',
   gender: 'female',
@@ -99,9 +102,9 @@ const VALID_INTAKE = {
     customSolution: false,
     additionalNotes: 'Sensitive to injections, prefer smallest gauge needle',
   },
-  idDocumentKey: 'uploads/2026-03-24/id_jane_test.jpg',
-  telehealthSignatureKey: 'uploads/2026-03-24/sig_jane_test.png',
-  compoundedConsentKey: 'uploads/2026-03-24/consent_jane_test.png',
+  emailConsent: true,
+  marketingConsent: true,
+  telehealthConsent: true,
   stripeSessionId: 'cs_test_jane_intake_001',
   planTier: 'catalyst',
 }
@@ -122,10 +125,36 @@ describe('Intake Submission E2E', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.POSTGRES_URL = 'postgres://test'
+    mockVerifyAuth.mockResolvedValue({
+      authenticated: true,
+      email: 'test@example.com',
+      customerId: 'cus_test',
+      role: 'member',
+    })
 
     // Default: SQL operations succeed
     mockSql.mockResolvedValue({ rows: [], rowCount: 1 })
   })
+
+  function getQueryText(queryParts: unknown): string {
+    return Array.isArray(queryParts) ? queryParts.join(' ') : String(queryParts)
+  }
+
+  function getJsonPayloadFromUpdateCall(): Record<string, unknown> {
+    const updateCall = mockSql.mock.calls.find(([queryParts]) =>
+      getQueryText(queryParts).includes('UPDATE pending_intakes')
+    )
+
+    expect(updateCall).toBeDefined()
+
+    const jsonArg = updateCall?.find((arg) =>
+      typeof arg === 'string' && arg.trim().startsWith('{')
+    )
+
+    expect(jsonArg).toBeDefined()
+
+    return JSON.parse(jsonArg as string) as Record<string, unknown>
+  }
 
   // ----------------------------------------------------------
   // VALIDATION
@@ -161,6 +190,22 @@ describe('Intake Submission E2E', () => {
       expect(res.status).toBe(200)
       expect(json.success).toBe(true)
     })
+
+    it('rejects submission when payload email does not match authenticated session', async () => {
+      mockVerifyAuth.mockResolvedValue({
+        authenticated: true,
+        email: 'member@example.com',
+        customerId: 'cus_test',
+        role: 'member',
+      })
+
+      const res = await POST(makeRequest({ ...VALID_INTAKE, email: 'other@example.com' }))
+      const json = await res.json()
+
+      expect(res.status).toBe(403)
+      expect(json.success).toBe(false)
+      expect(json.error).toContain('authenticated')
+    })
   })
 
   // ----------------------------------------------------------
@@ -176,7 +221,7 @@ describe('Intake Submission E2E', () => {
       expect(json.success).toBe(true)
       expect(json.patientId).toBeDefined()
       expect(typeof json.patientId).toBe('number')
-      // SQL should have been called for UPDATE pending_intakes and INSERT asher_orders
+      // SQL should have been called for UPDATE pending_intakes, INSERT asher_orders, and onboarding sync
       expect(mockSql).toHaveBeenCalled()
     })
 
@@ -198,6 +243,82 @@ describe('Intake Submission E2E', () => {
       expect(json.patientId).toBeDefined()
       expect(json.message).toBe('Intake form submitted successfully')
     })
+
+    it('stores compatibility fields consumed by downstream member and portal APIs', async () => {
+      const res = await POST(makeRequest(VALID_INTAKE))
+      const json = await res.json()
+
+      expect(res.status).toBe(200)
+      expect(json.success).toBe(true)
+
+      const persistedPayload = getJsonPayloadFromUpdateCall()
+
+      expect(persistedPayload.email).toBe(VALID_INTAKE.email)
+      expect(persistedPayload.dateOfBirth).toBe(VALID_INTAKE.dateOfBirth)
+      expect(persistedPayload.gender).toBe(VALID_INTAKE.gender)
+      expect(persistedPayload.shippingAddress).toEqual(VALID_INTAKE.shippingAddress)
+      expect(persistedPayload.personalInformation).toMatchObject({
+        firstName: VALID_INTAKE.firstName,
+        lastName: VALID_INTAKE.lastName,
+        email: VALID_INTAKE.email,
+        phone: VALID_INTAKE.phone,
+        dateOfBirth: VALID_INTAKE.dateOfBirth,
+        gender: VALID_INTAKE.gender,
+      })
+      expect(persistedPayload.medicationPackages).toEqual([
+        {
+          productId: 'tirzepatide',
+          name: 'tirzepatide',
+          duration: 30,
+          medicationType: 'Injection',
+        },
+        {
+          productId: 'sermorelin',
+          name: 'sermorelin',
+          duration: 30,
+          medicationType: 'Injection',
+        },
+      ])
+    })
+
+    it('updates onboarding progress when intake submission succeeds', async () => {
+      const res = await POST(makeRequest(VALID_INTAKE))
+      const json = await res.json()
+
+      expect(res.status).toBe(200)
+      expect(json.success).toBe(true)
+
+      const onboardingCall = mockSql.mock.calls.find(([queryParts]) =>
+        getQueryText(queryParts).includes('member_onboarding')
+      )
+
+      expect(onboardingCall).toBeDefined()
+    })
+
+    it('updates the latest pending intake for the authenticated member even when session id is missing', async () => {
+      mockSql.mockImplementation((queryParts: unknown) => {
+        if (getQueryText(queryParts).includes('SELECT id, stripe_payment_intent_id')) {
+          return Promise.resolve({
+            rows: [{ id: 77, stripe_payment_intent_id: 'cs_fallback_pending', session_id: 'cs_fallback_pending' }],
+            rowCount: 1,
+          })
+        }
+
+        return Promise.resolve({ rows: [], rowCount: 1 })
+      })
+
+      const res = await POST(makeRequest({ ...VALID_INTAKE, stripeSessionId: '' }))
+      const json = await res.json()
+
+      expect(res.status).toBe(200)
+      expect(json.success).toBe(true)
+
+      const pendingUpdateCall = mockSql.mock.calls.find(([queryParts]) =>
+        getQueryText(queryParts).includes('UPDATE pending_intakes')
+      )
+
+      expect(pendingUpdateCall).toBeDefined()
+    })
   })
 
   // ----------------------------------------------------------
@@ -211,7 +332,7 @@ describe('Intake Submission E2E', () => {
       await POST(makeRequest(VALID_INTAKE))
 
       expect(addTagsToContact).toHaveBeenCalledWith(
-        'jane.testpatient@example.com',
+        'test@example.com',
         ['intake-complete']
       )
     })

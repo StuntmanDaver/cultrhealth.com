@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { TypeformStep, TypeformRadio, TypeformInput, TypeformTextarea } from './TypeformStep';
-import { LINKS } from '@/lib/config/links';
+import { TypeformStep, TypeformRadio, TypeformInput } from './TypeformStep';
 import { AnimatePresence } from 'framer-motion';
 import { trackIntakeStart, trackIntakeStep, trackIntakeComplete } from '@/lib/analytics';
 
 // Types
+type ShippingAddress = {
+  address1: string;
+  address2: string;
+  city: string;
+  state: string;
+  zipCode: string;
+};
+
 type IntakeState = {
   firstName: string;
   lastName: string;
@@ -15,7 +22,7 @@ type IntakeState = {
   phone: string;
   dateOfBirth: string;
   gender: string;
-  shippingAddress: string;
+  shippingAddress: ShippingAddress;
   heightFeet: string;
   heightInches: string;
   weightLbs: string;
@@ -39,7 +46,13 @@ const initialState: IntakeState = {
   phone: '',
   dateOfBirth: '',
   gender: '',
-  shippingAddress: '',
+  shippingAddress: {
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zipCode: '',
+  },
   heightFeet: '',
   heightInches: '',
   weightLbs: '',
@@ -75,6 +88,13 @@ export function IntakeFormClient() {
     setData((prev) => ({
       ...prev,
       goalsMotivation: { ...prev.goalsMotivation, ...updates },
+    }));
+  };
+
+  const updateShippingAddress = (updates: Partial<ShippingAddress>) => {
+    setData((prev) => ({
+      ...prev,
+      shippingAddress: { ...prev.shippingAddress, ...updates },
     }));
   };
 
@@ -235,14 +255,51 @@ export function IntakeFormClient() {
             title="Where should we ship your protocol?"
             description="Must be a valid residential address (No PO Boxes for prescriptions)."
             onNext={nextStep}
-            canAdvance={data.shippingAddress.length > 10}
+            canAdvance={
+              data.shippingAddress.address1.trim().length > 0 &&
+              data.shippingAddress.city.trim().length > 0 &&
+              data.shippingAddress.state.trim().length === 2 &&
+              data.shippingAddress.zipCode.trim().length === 5
+            }
           >
-            <TypeformTextarea
-              placeholder="123 Main St&#10;Apt 4B&#10;City, State 12345"
-              value={data.shippingAddress}
-              onChange={(e) => updateData({ shippingAddress: e.target.value })}
+            <TypeformInput
+              label="Street Address"
+              placeholder="456 Oak Ave"
+              value={data.shippingAddress.address1}
+              onChange={(e) => updateShippingAddress({ address1: e.target.value })}
               autoFocus
             />
+            <TypeformInput
+              label="Apartment / Suite"
+              placeholder="Suite 200"
+              value={data.shippingAddress.address2}
+              onChange={(e) => updateShippingAddress({ address2: e.target.value })}
+            />
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr),88px,120px]">
+              <TypeformInput
+                label="City"
+                placeholder="Gainesville"
+                value={data.shippingAddress.city}
+                onChange={(e) => updateShippingAddress({ city: e.target.value })}
+              />
+              <TypeformInput
+                label="State"
+                placeholder="FL"
+                maxLength={2}
+                value={data.shippingAddress.state}
+                onChange={(e) => updateShippingAddress({ state: e.target.value.toUpperCase() })}
+              />
+              <TypeformInput
+                label="ZIP Code"
+                inputMode="numeric"
+                maxLength={5}
+                placeholder="32601"
+                value={data.shippingAddress.zipCode}
+                onChange={(e) =>
+                  updateShippingAddress({ zipCode: e.target.value.replace(/\D/g, '').slice(0, 5) })
+                }
+              />
+            </div>
           </TypeformStep>
         );
 

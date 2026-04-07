@@ -7,9 +7,20 @@ export const metadata = {
   description: 'Complete your onboarding to begin your personalized health protocol.',
 }
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>
+}) {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  return <OnboardingClient email={session.email} />
+  const params = await searchParams
+
+  return (
+    <OnboardingClient
+      email={session.email}
+      intakeSessionId={params.session_id || null}
+    />
+  )
 }

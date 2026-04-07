@@ -9,11 +9,20 @@ export const metadata: Metadata = {
   description: 'Complete your health questionnaire to get started with your personalized treatment plan.',
 };
 
-export default async function IntakePage() {
+export default async function IntakePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>
+}) {
   const session = await getSession();
+  const params = await searchParams;
+  const sessionId = params.session_id?.trim();
   
   if (!session) {
-    redirect('/login?redirect=/intake');
+    const intakeRedirectPath = sessionId
+      ? `/intake?session_id=${encodeURIComponent(sessionId)}`
+      : '/intake';
+    redirect(`/login?redirect=${encodeURIComponent(intakeRedirectPath)}`);
   }
 
   return (

@@ -15,9 +15,18 @@ interface OnboardingStep {
   href?: string
 }
 
-export default function OnboardingClient({ email }: { email: string }) {
+export default function OnboardingClient({
+  email,
+  intakeSessionId,
+}: {
+  email: string
+  intakeSessionId?: string | null
+}) {
   const [loading, setLoading] = useState(true)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
+  const intakeHref = intakeSessionId
+    ? `${LINKS.intake}?session_id=${encodeURIComponent(intakeSessionId)}`
+    : LINKS.intake
 
   useEffect(() => {
     async function fetchStatus() {
@@ -43,7 +52,7 @@ export default function OnboardingClient({ email }: { email: string }) {
       setLoading(false)
     }
     fetchStatus()
-  }, [])
+  }, [intakeHref])
 
   function buildSteps(data: {
     step: string
@@ -88,7 +97,7 @@ export default function OnboardingClient({ email }: { email: string }) {
         icon: <ClipboardList className="w-5 h-5" />,
         complete: data.intake_completed,
         active: activeStepId === 'intake',
-        href: LINKS.intake,
+        href: intakeHref,
       },
       {
         id: 'schedule',

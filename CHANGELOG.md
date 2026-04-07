@@ -1,5 +1,13 @@
 ## [2026-04-06] - Custom Typeform-Style Intake Flow
 
+### Fixed
+- **Unauthenticated Intake Access Leak:** Added server-side authentication protection (`getSession()`) to `app/intake/page.tsx` to redirect unauthenticated users to `/login` *before* they can access the form, preventing 401 errors on submission.
+- **Intake Form Submit UX Bug:** Refactored `submitForm` in `IntakeFormClient.tsx` to explicitly transition to step 10 to show a loading spinner, and gracefully handle errors with a "Go Back" button without automatically kicking users to previous completed steps.
+- **Checkout Session Propagation Gap:** Preserved `session_id` across `/success`, `/onboarding`, `/intake`, and `/login` redirects so custom intake submissions stay linked to the originating pending checkout.
+- **Pending Intake Persistence Drift:** `app/api/intake/submit` now stores `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages`, and falls back to the latest pending intake by authenticated email when `session_id` is absent.
+- **Onboarding Sync Gap:** Successful in-app intake submissions now mark `member_onboarding.intake_completed = true` so onboarding reflects the completed intake immediately.
+- **Email / Session Integrity Risk:** Intake submissions now reject payloads whose email does not match the authenticated session.
+
 ### Added
 - **Native Typeform-Style Intake Flow:** Replaced the external Healthie redirect with a custom, one-question-per-screen intake experience using framer-motion animations.
 - **`TypeformStep` Component:** Reusable UI for medical questionnaire with prominent yellow "OK" buttons and keyboard (`Enter`) advancement.
@@ -7,9 +15,11 @@
 
 ### Changed
 - **`/api/intake/submit`:** Updated to process boolean consent flags (`emailConsent`, `marketingConsent`, `telehealthConsent`) instead of requiring S3 signature keys.
+- **Focused Intake Regression Coverage:** Added tests for checkout session propagation, compatibility field persistence, onboarding sync, fallback pending-intake resolution, and authenticated email enforcement.
 
 ### Memory
 - Native intake UI replaces external Healthie form for improved funnel conversions. Consents are stored as booleans in `intake_data` JSONB payload.
+- Custom intake depends on preserving checkout `session_id` across `/success` -> `/onboarding` -> `/intake` -> `/login`, and downstream member/portal readers expect `shippingAddress`, `personalInformation`, and `medicationPackages` in `pending_intakes.intake_data`.
 
 ---
 
