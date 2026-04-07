@@ -65,17 +65,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check rate limit
-    if (!checkRateLimit(normalizedEmail)) {
+    const isStagingAccess = isStagingBypassEmail(normalizedEmail)
+    
+    // Check rate limit (skip for staging bypass to allow concurrent E2E tests)
+    if (!isStagingAccess && !checkRateLimit(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Please wait before requesting another link' },
         { status: 429 }
       )
     }
 
-    // Staging bypass: skip Stripe check for allowed emails
-    const isStagingAccess = isStagingBypassEmail(normalizedEmail)
-    
     if (!isStagingAccess) {
       // Find customer in Stripe by email
       const stripe = getStripe()

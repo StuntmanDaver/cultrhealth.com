@@ -1,3 +1,24 @@
+## [2026-04-07] - Cross-Browser Join and Admin Audit
+
+### Fixed
+- **Browser-Hostile Join Behavior:** Removed restrictive `viewport` meta tags, aggressive zoom-prevention event listeners, and `touchAction: 'manipulation'` from the join page, making it fully accessible and compliant with browser standards on iOS Safari and Android Chrome.
+- **Admin Layout Accessibility & Responsiveness:** Added missing `aria-label` and `aria-expanded` attributes to mobile menu buttons. Implemented scroll locking on `<body>` when the mobile sidebar is open to prevent confusing dual-scroll experiences.
+- **Middleware & Host Routing Inconsistencies:** Updated `LayoutShellClient.tsx` to properly handle `join.staging.cultrhealth.com` and `join.localhost` to align with `middleware.ts` routing logic.
+- **Legacy Tailwind Colors:** Replaced legacy color aliases (`stone-100`, `stone-200`) with brand-compliant opacity variants (`brand-primary/5`, `brand-primary/10`) in the Admin Sidebar.
+
+### Added
+- **Playwright E2E Test Suite:** Expanded the browser test matrix to include Desktop Chrome, Desktop Safari (WebKit), Mobile Chrome (Pixel 5), and Mobile Safari (iPhone 14).
+- **Admin E2E Coverage:** Created robust `auth.ts` fixture using the staging magic-link bypass for automated login. Added comprehensive tests for admin dashboard rendering, mobile drawer interaction, and navigation without horizontal overflow across all major routes.
+- **Join E2E Coverage:** Added tests for the join landing page, including navigation to all tier checkout pages and verification of proper scroll locking behavior when modals are open.
+- **Visual & Responsive Layout Checks:** Added automated JavaScript evaluation tests to ensure `document.documentElement.scrollWidth` never exceeds `clientWidth`, guaranteeing no horizontal overflow on both mobile and desktop viewports. Hooked into `page.on('pageerror')` to detect and fail on any unhandled React runtime exceptions.
+
+### Memory
+- Ensure `viewport` meta tags and JavaScript do not prevent standard browser zoom behavior.
+- Ensure all interactive elements have proper `aria-label` attributes and that modals/drawers appropriately lock body scrolling.
+- Avoid using horizontal overflow testing manually; use automated E2E evaluations for `scrollWidth > clientWidth`.
+
+---
+
 ## [2026-04-06] - Custom Typeform-Style Intake Flow
 
 ### Fixed

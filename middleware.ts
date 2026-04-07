@@ -7,7 +7,9 @@ export function middleware(request: NextRequest) {
   // Serve the restored join landing page from /join only at the root hostname path.
   if (
     hostname === 'join.cultrhealth.com' ||
-    hostname === 'join.staging.cultrhealth.com'
+    hostname === 'join.staging.cultrhealth.com' ||
+    hostname.startsWith('join.localhost:') ||
+    hostname === 'join.localhost'
   ) {
     const url = request.nextUrl.clone()
     const shouldTrackJoinLanding =
@@ -63,7 +65,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Block /join on non-join hostnames (only accessible via join.cultrhealth.com)
-  if (request.nextUrl.pathname.startsWith('/join')) {
+  if (request.nextUrl.pathname.startsWith('/join') && process.env.NODE_ENV === 'production') {
     return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 

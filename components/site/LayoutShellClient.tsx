@@ -5,7 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 
 const HIDE_CHROME_PREFIXES = ['/creators/portal', '/admin', '/portal', '/members']
 const HIDE_CHROME_EXACT = ['/join']
-const HIDE_CHROME_HOSTNAMES = ['join.cultrhealth.com']
+const HIDE_CHROME_HOSTNAMES = ['join.cultrhealth.com', 'join.staging.cultrhealth.com', 'join.localhost']
 
 export function LayoutShellClient({
   header,

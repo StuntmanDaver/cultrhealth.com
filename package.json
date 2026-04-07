@@ -11,7 +11,13 @@
     "setup:stripe": "ts-node scripts/setup-stripe.ts",
     "check:health": "node scripts/site-health-check.mjs",
     "check:health:staging": "node scripts/site-health-check.mjs https://staging.cultrhealth.com",
-    "test:smoke": "vitest run tests/smoke/"
+    "test:smoke": "vitest run tests/smoke/",
+    "test:e2e": "playwright test",
+    "test:e2e:join": "playwright test e2e/join/",
+    "test:e2e:admin": "playwright test e2e/admin/",
+    "test:e2e:visual": "playwright test e2e/visual/",
+    "test:e2e:mobile": "playwright test --project='Mobile Chrome' --project='Mobile Safari'",
+    "test:e2e:webkit": "playwright test --project='Desktop Safari' --project='Mobile Safari'"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.21",

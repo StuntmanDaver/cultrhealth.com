@@ -294,26 +294,6 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
       .catch(() => {})
   }, [])
 
-  // Prevent ALL zoom: trackpad pinch (Safari gesturestart), Ctrl+scroll, double-tap
-  useEffect(() => {
-    // Safari trackpad pinch zoom
-    const onGestureStart = (e: Event) => e.preventDefault()
-    const onGestureChange = (e: Event) => e.preventDefault()
-    // Ctrl+scroll zoom (Chrome/Firefox/Edge)
-    const onWheel = (e: WheelEvent) => {
-      if (e.ctrlKey) e.preventDefault()
-    }
-
-    document.addEventListener('gesturestart', onGestureStart, { passive: false })
-    document.addEventListener('gesturechange', onGestureChange, { passive: false })
-    document.addEventListener('wheel', onWheel, { passive: false })
-
-    return () => {
-      document.removeEventListener('gesturestart', onGestureStart)
-      document.removeEventListener('gesturechange', onGestureChange)
-      document.removeEventListener('wheel', onWheel)
-    }
-  }, [])
 
   useEffect(() => {
     // --- Priority 1: Server-side DB-verified member (cookie was present + DB confirmed) ---
@@ -468,7 +448,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-cream overflow-x-hidden" style={{ touchAction: 'manipulation' }}>
+    <div className="flex flex-col min-h-screen bg-brand-cream overflow-x-hidden">
       {/* Login Modal for Returning Members */}
       {showLogin && !member && (
         <LoginModal

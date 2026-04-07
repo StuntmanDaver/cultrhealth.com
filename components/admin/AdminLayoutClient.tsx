@@ -22,10 +22,12 @@ export function AdminLayoutClient({
 
       <div className="md:pl-60 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 md:px-8 py-3 bg-white border-b border-stone-200">
+        <div className="flex items-center justify-between px-4 md:px-8 py-3 bg-white border-b border-brand-primary/10">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-1.5 text-cultr-textMuted hover:text-cultr-forest rounded-lg hover:bg-stone-100 transition-colors"
+            className="md:hidden p-1.5 text-brand-primary/60 hover:text-brand-primary rounded-lg hover:bg-brand-primary/5 transition-colors"
+            aria-label="Open navigation menu"
+            aria-expanded={sidebarOpen}
           >
             <Menu className="w-5 h-5" />
           </button>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -68,6 +68,17 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   const router = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
 
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [mobileOpen])
+
   const handleLogout = async () => {
     setLoggingOut(true)
     try {
@@ -89,7 +100,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
           CULTR <span className="text-sm font-body font-normal text-cultr-textMuted">Admin</span>
         </Link>
         {onClose && (
-          <button onClick={onClose} className="md:hidden p-1 text-cultr-textMuted hover:text-cultr-forest">
+          <button onClick={onClose} aria-label="Close navigation menu" className="md:hidden p-1 text-brand-primary/60 hover:text-brand-primary">
             <X className="w-5 h-5" />
           </button>
         )}
@@ -99,7 +110,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
         {NAV_GROUPS.map((group, gi) => (
           <div key={gi}>
             {group.label && (
-              <p className="px-3 mb-1 text-[10px] font-semibold tracking-widest text-stone-400 uppercase">
+              <p className="px-3 mb-1 text-[10px] font-semibold tracking-widest text-brand-primary/40 uppercase">
                 {group.label}
               </p>
             )}
@@ -127,17 +138,17 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-stone-200 space-y-3">
+      <div className="p-4 border-t border-brand-primary/10 space-y-3">
         <Link
           href="/"
-          className="block text-xs text-cultr-textMuted hover:text-cultr-forest transition-colors"
+          className="block text-xs text-brand-primary/60 hover:text-brand-primary transition-colors"
         >
           Back to <span className="font-display font-bold">CULTR</span> Health
         </Link>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-2 text-xs text-cultr-textMuted hover:text-red-600 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 text-xs text-brand-primary/60 hover:text-red-600 transition-colors disabled:opacity-50"
         >
           <LogOut className="w-3.5 h-3.5" />
           {loggingOut ? 'Logging out...' : 'Log Out'}
@@ -149,7 +160,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:flex-col md:w-60 md:fixed md:inset-y-0 bg-white border-r border-stone-200 z-30">
+      <aside className="hidden md:flex md:flex-col md:w-60 md:fixed md:inset-y-0 bg-white border-r border-brand-primary/10 z-30">
         {sidebarContent}
       </aside>
 
