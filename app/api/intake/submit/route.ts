@@ -21,8 +21,7 @@ import { addTagsToContact } from '@/lib/mailchimp';
  * - GLP-1 history (if applicable)
  * - Current medications (if applicable)
  * - Treatment preferences
- * - ID document upload (S3 key)
- * - Consent signatures (telehealth + compounded medication)
+ * - Consent signatures (boolean flags from Typeform UI)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -46,12 +45,13 @@ export async function POST(request: NextRequest) {
       'heightInches',
       'weightLbs',
       'wellnessQuestionnaire',
-      'idDocumentKey',
-      'telehealthSignatureKey',
-      'compoundedConsentKey',
     ];
 
     const missingFields = requiredFields.filter(field => !body[field]);
+    if (body.emailConsent === undefined || body.emailConsent === null) missingFields.push('emailConsent');
+    if (body.marketingConsent === undefined || body.marketingConsent === null) missingFields.push('marketingConsent');
+    if (body.telehealthConsent === undefined || body.telehealthConsent === null) missingFields.push('telehealthConsent');
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
@@ -135,6 +135,11 @@ export async function POST(request: NextRequest) {
                 weight: weightLbs,
                 bmi,
               },
+              consents: {
+                emailConsent: body.emailConsent,
+                marketingConsent: body.marketingConsent,
+                telehealthConsent: body.telehealthConsent,
+              },
               firstName: body.firstName,
               lastName: body.lastName,
               phone: body.phone,
@@ -189,6 +194,9 @@ export async function POST(request: NextRequest) {
     console.log('Intake form submitted:', {
       timestamp: new Date().toISOString(),
       medicationCount: selectedMedications.length,
+      hasEmailConsent: body.emailConsent,
+      hasMarketingConsent: body.marketingConsent,
+      hasTelehealthConsent: body.telehealthConsent,
     });
 
     // Tag Mailchimp contact as intake complete (non-blocking)
@@ -248,4 +256,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

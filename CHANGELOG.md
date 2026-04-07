@@ -1,3 +1,18 @@
+## [2026-04-06] - Custom Typeform-Style Intake Flow
+
+### Added
+- **Native Typeform-Style Intake Flow:** Replaced the external Healthie redirect with a custom, one-question-per-screen intake experience using framer-motion animations.
+- **`TypeformStep` Component:** Reusable UI for medical questionnaire with prominent yellow "OK" buttons and keyboard (`Enter`) advancement.
+- **Data Layer Funnel Tracking:** Implemented granular GA4 event tracking (`begin_checkout`, `checkout_progress`, `generate_lead`) to track step-by-step funnel drop-off directly to `window.dataLayer`.
+
+### Changed
+- **`/api/intake/submit`:** Updated to process boolean consent flags (`emailConsent`, `marketingConsent`, `telehealthConsent`) instead of requiring S3 signature keys.
+
+### Memory
+- Native intake UI replaces external Healthie form for improved funnel conversions. Consents are stored as booleans in `intake_data` JSONB payload.
+
+---
+
 ## [2026-04-05] - Safe Admin Coupon Removal + Join Flow Hardening
 
 ### Changed

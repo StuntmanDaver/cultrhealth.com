@@ -237,3 +237,36 @@ export function trackQuoteRequest(products: { sku: string; name: string }[]): vo
     })),
   })
 }
+
+// Track medical intake start
+export function trackIntakeStart(): void {
+  if (!isGtagAvailable()) return
+  
+  window.gtag('event', 'begin_checkout', {
+    event_category: 'medical_intake',
+    event_label: 'start_intake'
+  })
+}
+
+// Track medical intake step completion
+export function trackIntakeStep(stepName: string, stepNumber: number): void {
+  if (!isGtagAvailable()) return
+  
+  window.gtag('event', 'checkout_progress', {
+    checkout_step: stepNumber,
+    checkout_option: stepName,
+    event_category: 'medical_intake',
+    event_label: stepName
+  })
+}
+
+// Track medical intake completion
+export function trackIntakeComplete(): void {
+  if (!isGtagAvailable()) return
+  
+  window.gtag('event', 'generate_lead', {
+    event_category: 'medical_intake',
+    event_label: 'complete_intake',
+    value: 0
+  })
+}
