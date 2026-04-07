@@ -109,8 +109,8 @@ export async function POST(request: NextRequest) {
       };
     })();
 
-    // Generate a local patient ID
-    const localPatientId = Date.now();
+    // Generate a local patient ID (use seconds to avoid 32-bit integer overflow in DB)
+    const localPatientId = Math.floor(Date.now() / 1000);
 
     // Save intake to local database
     if (process.env.POSTGRES_URL && body.stripeSessionId) {
