@@ -1,13 +1,21 @@
 import { Metadata } from 'next';
 import { IntakeFormClient } from '@/components/intake/IntakeFormClient';
 import { Suspense } from 'react';
+import { getSession } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: 'Complete Your Intake Form | CULTR Health',
   description: 'Complete your health questionnaire to get started with your personalized treatment plan.',
 };
 
-export default function IntakePage() {
+export default async function IntakePage() {
+  const session = await getSession();
+  
+  if (!session) {
+    redirect('/login?redirect=/intake');
+  }
+
   return (
     <div className="min-h-[calc(100vh-80px)] grad-light flex flex-col pt-12 md:pt-20">
       <div className="flex-1 w-full flex items-center justify-center">

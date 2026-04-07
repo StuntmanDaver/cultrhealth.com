@@ -102,6 +102,7 @@ export function IntakeFormClient() {
   const submitForm = async () => {
     setIsSubmitting(true);
     setError(null);
+    setStep(10); // Show loading screen
 
     try {
       const response = await fetch('/api/intake/submit', {
@@ -110,9 +111,7 @@ export function IntakeFormClient() {
         body: JSON.stringify({
           ...data,
           stripeSessionId: sessionId,
-          // Map boolean consents to string flags if needed, or keep as boolean
-          // API validation will be updated to accept these booleans
-          wellnessQuestionnaire: data.goalsMotivation, // pass through for existing logic
+          wellnessQuestionnaire: data.goalsMotivation, 
         }),
       });
 
@@ -123,11 +122,9 @@ export function IntakeFormClient() {
         router.push('/intake/success');
       } else {
         setError(result.error || 'Failed to submit form');
-        setStep(step - 1); // Go back to show error
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
-      setStep(step - 1);
     } finally {
       setIsSubmitting(false);
     }
@@ -420,17 +417,19 @@ export function IntakeFormClient() {
       case 10:
         return (
           <TypeformStep
-            title={isSubmitting ? "Submitting your intake..." : "Almost done..."}
+            title={isSubmitting ? "Submitting your intake..." : "Submission Failed"}
             canAdvance={false}
           >
-            <div className="flex justify-center my-12">
-              <div className="w-12 h-12 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
-            </div>
-            {error && (
+            {isSubmitting && (
+              <div className="flex justify-center my-12">
+                <div className="w-12 h-12 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
+              </div>
+            )}
+            {error && !isSubmitting && (
               <div className="text-red-500 text-center mt-4">
-                {error}
-                <button onClick={() => setStep(9)} className="block mx-auto mt-4 underline text-brand-primary">
-                  Go Back
+                <p className="text-lg font-medium">{error}</p>
+                <button onClick={() => { setStep(9); setError(null); }} className="block mx-auto mt-6 px-6 py-2 bg-brand-primary text-white rounded-full hover:bg-forest-light transition-colors">
+                  Go Back & Try Again
                 </button>
               </div>
             )}
