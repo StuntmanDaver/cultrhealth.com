@@ -4,6 +4,7 @@
 archive
 *.pdf
 !/public/docs/**/*.pdf
+!/public/pdfs/**/*.pdf
 "*Screenshot*"
 "*AGENT*"
 "*ARCHITECTURE*"

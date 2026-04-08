@@ -557,29 +557,45 @@ export const Card = ({
 
 
         {/* Top: Category + Title */}
-        <div className={cn("relative z-10 pb-0", compact ? "p-3.5" : "p-5")}>
-          <motion.span
-            layoutId={layout ? `category-${card.category}-${index}` : undefined}
-            className={cn("uppercase tracking-[0.18em] text-white/40 font-semibold", compact ? "text-[9px]" : "text-[10px]")}
-          >
-            {card.category}
-          </motion.span>
-          <motion.h3
-            layoutId={layout ? `title-${card.title}` : undefined}
-            className={cn("font-display font-bold text-white mt-1 leading-tight", compact ? "text-[14px] md:text-base" : "text-[17px] md:text-lg")}
-          >
-            {card.title}
-          </motion.h3>
-          {card.note && (
-            <span className={cn("text-white/30 mt-0.5 block font-medium", compact ? "text-[9px]" : "text-[10px]")}>
-              {card.note}
+        <div className={cn("relative z-10 pb-0 flex justify-between items-start gap-2", compact ? "p-3.5" : "p-5")}>
+          <div>
+            <motion.span
+              layoutId={layout ? `category-${card.category}-${index}` : undefined}
+              className={cn("uppercase tracking-[0.18em] text-white/40 font-semibold", compact ? "text-[9px]" : "text-[10px]")}
+            >
+              {card.category}
+            </motion.span>
+            <motion.h3
+              layoutId={layout ? `title-${card.title}` : undefined}
+              className={cn("font-display font-bold text-white mt-1 leading-tight", compact ? "text-[14px] md:text-base" : "text-[17px] md:text-lg")}
+            >
+              {card.title}
+            </motion.h3>
+            {card.note && (
+              <span className={cn("text-white/30 mt-0.5 block font-medium", compact ? "text-[9px]" : "text-[10px]")}>
+                {card.note}
+              </span>
+            )}
+            <span className={cn("inline-block text-white/50 font-semibold mt-1", compact ? "text-[8px]" : "text-[9px]")}>
+              Compounded in the USA
             </span>
-          )}
-          <span className={cn("inline-block text-white/50 font-semibold mt-1", compact ? "text-[8px]" : "text-[9px]")}>
-            Compounded in the USA
-          </span>
-          {card.badge && (
-            <div className="mt-1.5">{card.badge}</div>
+            {card.badge && (
+              <div className="mt-1.5">{card.badge}</div>
+            )}
+          </div>
+          {card.secondarySrc && (
+            <a
+              href={card.secondarySrc.replace('/images/products/', '/pdfs/products/').replace('.png', '.pdf')}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className={cn(
+                "shrink-0 rounded-full border border-white/20 bg-white/10 text-white font-medium backdrop-blur-md transition-colors hover:bg-white/20 hover:border-white/30",
+                compact ? "px-2 py-1 text-[9px]" : "px-3 py-1.5 text-[10px]"
+              )}
+            >
+              View COA
+            </a>
           )}
         </div>
 
