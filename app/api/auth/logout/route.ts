@@ -1,16 +1,31 @@
 import { NextResponse } from 'next/server'
-import { clearSession } from '@/lib/auth'
+import { getCookieDomain } from '@/lib/utils'
+
+/** Clear both session and idle-timeout cookies on a response */
+function clearAuthCookies(response: NextResponse) {
+  const domain = getCookieDomain()
+  const opts = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    maxAge: 0,
+    path: '/',
+    ...(domain ? { domain } : {}),
+  }
+  response.cookies.set('cultr_session', '', opts)
+  response.cookies.set('cultr_last_activity', '', opts)
+}
 
 export async function POST() {
   try {
-    await clearSession()
-    
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
-    
-    return NextResponse.json({ success: true, redirect: `${baseUrl}/library` })
+
+    const response = NextResponse.json({ success: true, redirect: `${baseUrl}/members` })
+    clearAuthCookies(response)
+    return response
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json({ error: 'Logout failed' }, { status: 500 })
@@ -19,22 +34,24 @@ export async function POST() {
 
 export async function GET() {
   try {
-    await clearSession()
-    
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
-    
-    return NextResponse.redirect(`${baseUrl}/library`)
+
+    const response = NextResponse.redirect(`${baseUrl}/members`)
+    clearAuthCookies(response)
+    return response
   } catch (error) {
     console.error('Logout error:', error)
-    
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
-    
-    return NextResponse.redirect(`${baseUrl}/library`)
+
+    const response = NextResponse.redirect(`${baseUrl}/members`)
+    clearAuthCookies(response)
+    return response
   }
 }

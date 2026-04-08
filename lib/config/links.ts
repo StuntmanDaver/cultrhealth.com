@@ -1,19 +1,79 @@
 export const LINKS = {
-  // Clinical Portal (Healthie)
-  healthiePortal: 'https://secure.gethealthie.com/portal/cultr', // Placeholder - update with actual URL
-  
   // Billing Portal (Stripe)
   stripeCustomerPortal: 'https://billing.stripe.com/p/login/4gM00igPh021086fle6J200',
-  
+
   // Support
   supportEmail: 'support@cultrhealth.com',
-  
+
   // Social Media
   instagram: 'https://instagram.com/cultrhealth',
   twitter: 'https://twitter.com/cultrhealth',
-  
+  tiktok: 'https://tiktok.com/@cultrhealth',
+  youtube: 'https://youtube.com/@cultrhealth',
+
   // Internal Routes
   login: '/login',
+  onboarding: '/onboarding',
   pricing: '/pricing',
   success: '/success',
-};
+  dashboard: '/dashboard',
+  intake: '/intake',
+  memberConsultations: '/members/consultations',
+  members: '/members',
+
+  // Portal Routes
+  portalLogin: '/portal/login',
+  portalDashboard: '/portal/dashboard',
+}
+
+const DEFAULT_JOIN_SITE_URL = 'https://join.cultrhealth.com'
+const DEFAULT_STAGING_JOIN_SITE_URL = 'https://join.staging.cultrhealth.com'
+
+function trimTrailingSlash(url: string): string {
+  return url.endsWith('/') ? url.slice(0, -1) : url
+}
+
+export function getJoinSiteUrl(siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''): string {
+  const normalizedSiteUrl = trimTrailingSlash(siteUrl)
+
+  if (!normalizedSiteUrl || normalizedSiteUrl.includes('localhost')) {
+    return DEFAULT_JOIN_SITE_URL
+  }
+
+  if (normalizedSiteUrl.includes('join.staging.cultrhealth.com')) {
+    return DEFAULT_STAGING_JOIN_SITE_URL
+  }
+
+  if (normalizedSiteUrl.includes('join.cultrhealth.com')) {
+    return DEFAULT_JOIN_SITE_URL
+  }
+
+  if (normalizedSiteUrl.includes('staging.cultrhealth.com')) {
+    return DEFAULT_JOIN_SITE_URL
+  }
+
+  return DEFAULT_JOIN_SITE_URL
+}
+
+export function getJoinCheckoutUrl(
+  tierSlug: string,
+  options?: { therapySlug?: string | null }
+): string {
+  const checkoutUrl = new URL(`/join/${tierSlug}`, getJoinSiteUrl())
+
+  if (options?.therapySlug) {
+    checkoutUrl.searchParams.set('therapy', options.therapySlug)
+  }
+
+  return checkoutUrl.toString()
+}
+
+export function getClinicalIntakeUrl(): string | null {
+  const intakeUrl = process.env.NEXT_PUBLIC_INTAKE_FORM_URL?.trim()
+  return intakeUrl ? trimTrailingSlash(intakeUrl) : null
+}
+
+export function getConsultationBookingUrl(): string | null {
+  const bookingUrl = process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL?.trim()
+  return bookingUrl ? trimTrailingSlash(bookingUrl) : null
+}

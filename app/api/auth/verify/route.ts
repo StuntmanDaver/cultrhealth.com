@@ -1,10 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { verifyMagicLinkToken, createSessionToken, setSessionCookie } from '@/lib/auth'
+import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { getCookieDomain } from '@/lib/utils'
+
+export const dynamic = 'force-dynamic'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2026-01-28.clover',
+    apiVersion: '2026-02-25.clover',
+  })
+}
+
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+  'legitscript@cultrhealth.com',
+]
+
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
+  if (isStaging()) return true
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
+}
+
+function setSessionOnResponse(response: NextResponse, token: string) {
+  const domain = getCookieDomain()
+  response.cookies.set('cultr_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24, // 24 hours (HIPAA)
+    path: '/',
+    ...(domain ? { domain } : {}),
+  })
+  // Reset idle-timeout cookie so middleware doesn't immediately expire fresh sessions
+  response.cookies.set('cultr_last_activity', Date.now().toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+    ...(domain ? { domain } : {}),
   })
 }
 
@@ -12,79 +60,96 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
+    const redirectParam = searchParams.get('redirect')
 
     // Build base URL for redirects
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
 
+    // Validate redirect is a safe relative path (prevent open redirect)
+    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
+
     if (!token) {
-      return NextResponse.redirect(`${baseUrl}/library?error=invalid_link`)
+      return NextResponse.redirect(`${baseUrl}/members?error=invalid_link`)
     }
 
     // Verify the magic link token
     const verified = await verifyMagicLinkToken(token)
-    
+
     if (!verified) {
-      return NextResponse.redirect(`${baseUrl}/library?error=expired_link`)
+      return NextResponse.redirect(`${baseUrl}/members?error=expired_link`)
     }
 
     const { email } = verified
 
-    // Double-check customer still has active subscription
-    const stripe = getStripe()
-    const customers = await stripe.customers.list({
-      email: email,
-      limit: 1,
-    })
+    // Check for staging bypass
+    const isStagingAccess = isStagingBypassEmail(email)
+    let customerId: string
 
-    if (customers.data.length === 0) {
-      return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
+    if (isStagingAccess) {
+      // Use staging IDs with full admin access for bypass emails
+      customerId = 'staging_customer'
+      const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
+      const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
+      setSessionOnResponse(response, sessionToken)
+      console.log('Staging admin access granted:', { timestamp: new Date().toISOString() })
+      return response
+    } else {
+      // Double-check customer still has active subscription
+      const stripe = getStripe()
+      const customers = await stripe.customers.list({
+        email: email,
+        limit: 1,
+      })
+
+      if (customers.data.length === 0) {
+        return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
+      }
+
+      const customer = customers.data[0]
+
+      // Check for active or trialing subscription
+      const activeSubscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'active',
+        limit: 1,
+      })
+
+      const trialingSubscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'trialing',
+        limit: 1,
+      })
+
+      if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
+        return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
+      }
+
+      customerId = customer.id
     }
 
-    const customer = customers.data[0]
-
-    // Check for active or trialing subscription
-    const activeSubscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'active',
-      limit: 1,
-    })
-
-    const trialingSubscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'trialing',
-      limit: 1,
-    })
-
-    if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
-      return NextResponse.redirect(`${baseUrl}/library?error=no_subscription`)
-    }
-
-    // Create session token
-    const sessionToken = await createSessionToken(email, customer.id)
-    
-    // Set session cookie
-    await setSessionCookie(sessionToken)
+    // Create session token and set cookie directly on the redirect response
+    const sessionToken = await createSessionToken(email, customerId)
+    const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
+    setSessionOnResponse(response, sessionToken)
 
     console.log('Session created:', {
-      email,
-      customerId: customer.id,
+      customerId,
       timestamp: new Date().toISOString(),
     })
 
-    // Redirect to library
-    return NextResponse.redirect(`${baseUrl}/library`)
+    return response
 
   } catch (error) {
     console.error('Verify error:', error)
-    
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
       'http://localhost:3000')
-    
-    return NextResponse.redirect(`${baseUrl}/library?error=verification_failed`)
+
+    return NextResponse.redirect(`${baseUrl}/members?error=verification_failed`)
   }
 }

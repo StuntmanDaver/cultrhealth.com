@@ -72,7 +72,7 @@ export function ComparisonTable() {
         <tbody>
           {FEATURES.map((feature) => (
             <tr key={feature.key} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-              <td className="p-4 text-gray-300 font-medium">{feature.label}</td>
+              <td className="p-4 text-gray-300 font-display font-medium">{feature.label}</td>
               {PLANS.map((plan) => {
                 const value = COMPARISON_DATA[plan.slug][feature.key];
                 return (

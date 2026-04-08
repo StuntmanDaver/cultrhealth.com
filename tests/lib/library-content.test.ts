@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CATEGORY_META, getCategories } from '@/lib/library-content'
+import { CATEGORY_META, getCategories, renderLibraryMarkdown } from '@/lib/library-content'
 import type { LibraryAccess } from '@/lib/config/plans'
 
 describe('Library Content', () => {
@@ -59,6 +59,17 @@ describe('Library Content', () => {
       }
     })
   })
+
+  describe('renderLibraryMarkdown', () => {
+    it('sanitizes unsafe html while preserving safe content', async () => {
+      const html = await renderLibraryMarkdown('## CULTR\n\n<script>alert("xss")</script>\n\nSafe paragraph.')
+
+      expect(html).toContain('Safe paragraph.')
+      expect(html).toContain('<span class="font-display font-bold">CULTR</span>')
+      expect(html).not.toContain('<script>')
+      expect(html).not.toContain('alert("xss")')
+    })
+  })
 })
 
 describe('Library Access Filtering', () => {
@@ -74,8 +85,9 @@ describe('Library Access Filtering', () => {
         stackingGuides: false,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: false,
       }
-      
+
       expect(coreAccess.advancedProtocols).toBe(false)
     })
 
@@ -87,8 +99,9 @@ describe('Library Access Filtering', () => {
         stackingGuides: false,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: 'browse',
       }
-      
+
       expect(creatorAccess.advancedProtocols).toBe(true)
     })
 
@@ -100,6 +113,7 @@ describe('Library Access Filtering', () => {
         stackingGuides: true,
         providerNotes: false,
         customRequests: false,
+        protocolBuilder: 'full',
       }
       
       expect(catalystAccess.stackingGuides).toBe(true)

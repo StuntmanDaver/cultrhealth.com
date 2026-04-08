@@ -7,17 +7,16 @@ export async function POST(request: NextRequest) {
     // 0. Rate limiting check
     const clientIp = await getClientIp()
     const rateLimitResult = await formLimiter.check(clientIp)
-    
+
     if (!rateLimitResult.success) {
       console.log('Rate limit exceeded:', { ip: clientIp, reset: rateLimitResult.reset })
       return rateLimitResponse(rateLimitResult)
     }
 
     const body = await request.json()
-    
-    // Extract turnstile token and source
-    const { turnstileToken, source, ...formData } = body
-    const isNewsletter = source === 'newsletter'
+
+    // Extract turnstile token
+    const { turnstileToken, ...formData } = body
 
     // 1. Verify Turnstile token (if configured)
     if (process.env.TURNSTILE_SECRET_KEY) {
@@ -37,38 +36,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. Validate input (use relaxed schema for newsletter signups)
-    let name: string
-    let email: string
-    let phone: string
-    let social_handle: string | undefined
-    let treatment_reason: string | undefined
+    // 2. Validate input
+    // If source is newsletter, we only require email
+    const isNewsletter = body.source === 'newsletter' || (!body.name && !body.phone)
+    const { waitlistSchema, newsletterSchema } = await import('@/lib/validation')
 
-    if (isNewsletter) {
-      const result = newsletterSchema.safeParse(formData)
-      if (!result.success) {
-        return NextResponse.json(
-          { error: 'Validation failed', details: result.error.errors },
-          { status: 400 }
-        )
-      }
-      name = 'Newsletter Subscriber'
-      email = result.data.email
-      phone = ''
-    } else {
-      const result = waitlistSchema.safeParse(formData)
-      if (!result.success) {
-        return NextResponse.json(
-          { error: 'Validation failed', details: result.error.errors },
-          { status: 400 }
-        )
-      }
-      name = result.data.name
-      email = result.data.email
-      phone = result.data.phone
-      social_handle = result.data.social_handle || undefined
-      treatment_reason = result.data.treatment_reason || undefined
+    const result = isNewsletter
+      ? newsletterSchema.safeParse(formData)
+      : waitlistSchema.safeParse(formData)
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: result.error.errors },
+        { status: 400 }
+      )
     }
+
+    const {
+      name = 'Newsletter Subscriber',
+      email,
+      phone = 'Not Provided',
+      social_handle = '',
+      treatment_reason = ''
+    } = result.data as any
 
     // 3. Try to save to database (if configured)
     let waitlistId = crypto.randomUUID()
@@ -86,18 +76,18 @@ export async function POST(request: NextRequest) {
         })
         waitlistId = dbResult.id
       } catch (dbError) {
-        console.error('Database error (continuing without DB):', dbError)
+        console.error('Database error saving waitlist entry:', dbError)
+        throw dbError // Fail explicitly so we don't lose the signup
       }
     }
 
     // Log the submission
-    console.log('Waitlist signup:', { 
+    console.log('Waitlist signup:', {
       waitlist_id: waitlistId,
-      source: isNewsletter ? 'newsletter' : 'waitlist',
-      name, 
-      email, 
-      phone: phone || undefined, 
-      social_handle, 
+      name,
+      email,
+      phone,
+      social_handle,
       treatment_reason,
       timestamp: new Date().toISOString()
     })

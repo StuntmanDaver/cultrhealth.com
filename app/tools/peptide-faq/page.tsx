@@ -1,0 +1,10 @@
+import { redirect } from 'next/navigation'
+
+export const metadata = {
+  title: 'Peptide FAQ | CULTR Health',
+  description: 'Comprehensive answers to the most common questions about peptide therapy, dosing, and protocols.',
+}
+
+export default function PublicPeptideFAQPage() {
+  redirect('/tools')
+}

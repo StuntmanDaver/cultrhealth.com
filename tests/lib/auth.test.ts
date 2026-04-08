@@ -2,28 +2,29 @@ import { describe, it, expect } from 'vitest'
 import {
   getLibraryAccess,
   hasFeatureAccess,
+  isAdminEmail,
   isProviderEmail,
 } from '@/lib/auth'
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans'
 
 describe('Library Access', () => {
   describe('getLibraryAccess', () => {
-    it('returns titles-only master index for Core tier', () => {
-      const access = getLibraryAccess('core')
-      expect(access.masterIndex).toBe('titles_only')
+    it('returns restricted access for Club tier (free)', () => {
+      const access = getLibraryAccess('club')
+      expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(false)
-      expect(access.dosingCalculators).toBe(false)
-      expect(access.stackingGuides).toBe(false)
+      expect(access.dosingCalculators).toBe(true)
+      expect(access.stackingGuides).toBe(true)
       expect(access.providerNotes).toBe(false)
       expect(access.customRequests).toBe(false)
     })
 
-    it('returns full access for Creator tier', () => {
-      const access = getLibraryAccess('creator')
+    it('returns full library and shop access for Core tier', () => {
+      const access = getLibraryAccess('core')
       expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(true)
-      expect(access.dosingCalculators).toBe(false)
-      expect(access.stackingGuides).toBe(false)
+      expect(access.dosingCalculators).toBe(true)
+      expect(access.stackingGuides).toBe(true)
       expect(access.providerNotes).toBe(false)
       expect(access.customRequests).toBe(false)
     })
@@ -48,32 +49,25 @@ describe('Library Access', () => {
       expect(access.customRequests).toBe(false)
     })
 
-    it('returns full access including custom requests for Club tier', () => {
-      const access = getLibraryAccess('club')
-      expect(access.masterIndex).toBe('full')
-      expect(access.advancedProtocols).toBe(true)
-      expect(access.dosingCalculators).toBe(true)
-      expect(access.stackingGuides).toBe(true)
-      expect(access.providerNotes).toBe(true)
-      expect(access.customRequests).toBe(true)
-    })
-
-    it('defaults to Core access for null tier', () => {
+    it('defaults to Club access for null tier', () => {
       const access = getLibraryAccess(null)
-      expect(access.masterIndex).toBe('titles_only')
+      expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(false)
+      expect(access.dosingCalculators).toBe(true)
     })
 
-    it('defaults to Core access for undefined tier', () => {
+    it('defaults to Club access for undefined tier', () => {
       const access = getLibraryAccess(undefined)
-      expect(access.masterIndex).toBe('titles_only')
+      expect(access.masterIndex).toBe('full')
       expect(access.advancedProtocols).toBe(false)
+      expect(access.dosingCalculators).toBe(true)
     })
 
     // Test legacy tier name aliases
     it('normalizes legacy "starter" to "core"', () => {
       const access = getLibraryAccess('starter' as PlanTier)
-      expect(access.masterIndex).toBe('titles_only')
+      expect(access.masterIndex).toBe('full')
+      expect(access.advancedProtocols).toBe(true)
     })
 
     it('normalizes legacy "cognition" to "catalyst"', () => {
@@ -89,24 +83,24 @@ describe('Library Access', () => {
   })
 
   describe('hasFeatureAccess', () => {
-    it('returns false for masterIndex on Core (titles_only)', () => {
-      expect(hasFeatureAccess('core', 'masterIndex')).toBe(false)
+    it('returns true for masterIndex on Club (full)', () => {
+      expect(hasFeatureAccess('club', 'masterIndex')).toBe(true)
     })
 
-    it('returns true for masterIndex on Creator (full)', () => {
-      expect(hasFeatureAccess('creator', 'masterIndex')).toBe(true)
+    it('returns true for masterIndex on Core (full)', () => {
+      expect(hasFeatureAccess('core', 'masterIndex')).toBe(true)
     })
 
-    it('returns false for advancedProtocols on Core', () => {
-      expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(false)
+    it('returns false for advancedProtocols on Club', () => {
+      expect(hasFeatureAccess('club', 'advancedProtocols')).toBe(false)
     })
 
-    it('returns true for advancedProtocols on Creator', () => {
-      expect(hasFeatureAccess('creator', 'advancedProtocols')).toBe(true)
+    it('returns true for advancedProtocols on Core', () => {
+      expect(hasFeatureAccess('core', 'advancedProtocols')).toBe(true)
     })
 
-    it('returns false for dosingCalculators on Creator', () => {
-      expect(hasFeatureAccess('creator', 'dosingCalculators')).toBe(false)
+    it('returns true for dosingCalculators on Club', () => {
+      expect(hasFeatureAccess('club', 'dosingCalculators')).toBe(true)
     })
 
     it('returns true for dosingCalculators on Catalyst+', () => {
@@ -125,22 +119,43 @@ describe('Library Access', () => {
       expect(hasFeatureAccess('concierge', 'customRequests')).toBe(false)
     })
 
-    it('returns true for customRequests on Club', () => {
-      expect(hasFeatureAccess('club', 'customRequests')).toBe(true)
+    it('returns false for customRequests on Club', () => {
+      expect(hasFeatureAccess('club', 'customRequests')).toBe(false)
     })
   })
 })
 
 describe('Provider Email Access', () => {
+  const ownerEmails = [
+    'erik@cultrhealth.com',
+    'alex@cultrhealth.com',
+    'stewart@cultrhealth.com',
+    'david@cultrhealth.com',
+    'tony@cultrhealth.com',
+  ]
+
   describe('isProviderEmail', () => {
     it('returns true for allowed emails', () => {
       expect(isProviderEmail('provider@cultrhealth.com')).toBe(true)
       expect(isProviderEmail('admin@cultrhealth.com')).toBe(true)
     })
 
+    it('returns true for owner emails', () => {
+      ownerEmails.forEach((email) => {
+        expect(isProviderEmail(email)).toBe(true)
+      })
+    })
+
     it('is case insensitive', () => {
       expect(isProviderEmail('PROVIDER@CULTRHEALTH.COM')).toBe(true)
       expect(isProviderEmail('Provider@CultrHealth.com')).toBe(true)
+      expect(isProviderEmail('Stewart@cultrhealth.com')).toBe(true)
+      expect(isProviderEmail('David@cultrhealth.com')).toBe(true)
+    })
+
+    it('trims whitespace before checking owner access', () => {
+      expect(isProviderEmail(' stewart@cultrhealth.com ')).toBe(true)
+      expect(isProviderEmail('\tdavid@cultrhealth.com\n')).toBe(true)
     })
 
     it('returns false for non-allowed emails', () => {
@@ -150,6 +165,19 @@ describe('Provider Email Access', () => {
 
     it('returns false for empty string', () => {
       expect(isProviderEmail('')).toBe(false)
+    })
+  })
+
+  describe('isAdminEmail', () => {
+    it('returns true for owner emails used for admin dashboard access', () => {
+      ownerEmails.forEach((email) => {
+        expect(isAdminEmail(email)).toBe(true)
+      })
+    })
+
+    it('normalizes owner email case and whitespace', () => {
+      expect(isAdminEmail(' Stewart@cultrhealth.com ')).toBe(true)
+      expect(isAdminEmail('\tDavid@cultrhealth.com\n')).toBe(true)
     })
   })
 })

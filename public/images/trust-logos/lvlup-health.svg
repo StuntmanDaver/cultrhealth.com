@@ -1,0 +1,8 @@
+<svg viewBox="0 0 200 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- LVLUP text -->
+  <text x="4" y="30" font-family="'Arial', 'Helvetica Neue', sans-serif" font-weight="700" font-size="28" fill="#FDFBF7" letter-spacing="2">LVLUP</text>
+  <!-- The "A" accent in light blue -->
+  <path d="M122 30 L128 12 L134 30" stroke="#5BA8E8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- "Health" subtitle -->
+  <text x="142" y="30" font-family="'Arial', 'Helvetica Neue', sans-serif" font-weight="300" font-size="14" fill="#FDFBF7" letter-spacing="0.5">Health</text>
+</svg>

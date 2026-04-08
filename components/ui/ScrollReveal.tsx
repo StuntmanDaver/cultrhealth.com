@@ -1,6 +1,45 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
+
+// Shared IntersectionObserver for all ScrollReveal components
+// This dramatically reduces memory usage and improves performance
+type ObserverCallback = (isIntersecting: boolean) => void;
+const observerCallbacks = new Map<Element, ObserverCallback>();
+
+let sharedObserver: IntersectionObserver | null = null;
+
+function getSharedObserver(): IntersectionObserver {
+  if (sharedObserver) return sharedObserver;
+  
+  sharedObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const callback = observerCallbacks.get(entry.target);
+        if (callback) {
+          callback(entry.isIntersecting);
+        }
+      });
+    },
+    {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px',
+    }
+  );
+  
+  return sharedObserver;
+}
+
+function observe(element: Element, callback: ObserverCallback): () => void {
+  const observer = getSharedObserver();
+  observerCallbacks.set(element, callback);
+  observer.observe(element);
+  
+  return () => {
+    observer.unobserve(element);
+    observerCallbacks.delete(element);
+  };
+}
 
 interface ScrollRevealProps {
   children: React.ReactNode;
@@ -21,54 +60,55 @@ export function ScrollReveal({
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const hasAnimated = useRef(false);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          if (once && ref.current) {
-            observer.unobserve(ref.current);
-          }
-        } else if (!once) {
-          setIsVisible(false);
-        }
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px',
-      }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
+  const handleIntersection = useCallback((isIntersecting: boolean) => {
+    if (isIntersecting) {
+      setIsVisible(true);
+      hasAnimated.current = true;
+    } else if (!once && !hasAnimated.current) {
+      setIsVisible(false);
     }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
   }, [once]);
 
-  const getTransform = () => {
-    if (isVisible) return 'translate3d(0, 0, 0)';
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
 
-    switch (direction) {
-      case 'up':
-        return 'translate3d(0, 30px, 0)';
-      case 'down':
-        return 'translate3d(0, -30px, 0)';
-      case 'left':
-        return 'translate3d(30px, 0, 0)';
-      case 'right':
-        return 'translate3d(-30px, 0, 0)';
-      case 'none':
-        return 'translate3d(0, 0, 0)';
-      default:
-        return 'translate3d(0, 30px, 0)';
+    // Check if already visible on mount (above the fold)
+    const rect = el.getBoundingClientRect();
+    if (
+      rect.top < window.innerHeight &&
+      rect.bottom > 0 &&
+      rect.left < window.innerWidth &&
+      rect.right > 0
+    ) {
+      setIsVisible(true);
+      hasAnimated.current = true;
+      if (once) return;
     }
-  };
+
+    const unobserve = observe(el, (isIntersecting) => {
+      handleIntersection(isIntersecting);
+      if (isIntersecting && once) {
+        unobserve();
+      }
+    });
+
+    return unobserve;
+  }, [once, handleIntersection]);
+
+  const transform = isVisible
+    ? 'translate3d(0, 0, 0)'
+    : direction === 'up'
+      ? 'translate3d(0, 30px, 0)'
+      : direction === 'down'
+        ? 'translate3d(0, -30px, 0)'
+        : direction === 'left'
+          ? 'translate3d(30px, 0, 0)'
+          : direction === 'right'
+            ? 'translate3d(-30px, 0, 0)'
+            : 'translate3d(0, 0, 0)';
 
   return (
     <div
@@ -76,9 +116,9 @@ export function ScrollReveal({
       className={className}
       style={{
         opacity: isVisible ? 1 : 0,
-        transform: getTransform(),
+        transform,
         transition: `opacity ${duration}ms ease-out ${delay}ms, transform ${duration}ms ease-out ${delay}ms`,
-        willChange: 'opacity, transform',
+        willChange: isVisible ? 'auto' : 'opacity, transform',
       }}
     >
       {children}

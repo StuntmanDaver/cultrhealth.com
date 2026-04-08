@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CULTR Health — Navbar</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Fraunces:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #2B4542;
+    --primary-light: #3a5b57;
+    --bg: #FCF8F7;
+    --white: #FFFFFF;
+    --accent-text: #5a7a6e;
+    --transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    min-height: 300vh;
+    color: var(--primary);
+  }
+
+  /* ─── Navbar Wrapper ─── */
+  .navbar-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    pointer-events: none;
+    transition: padding var(--transition);
+  }
+
+  /* When scrolled → add padding to float the pill */
+  .navbar-wrapper.scrolled {
+    padding: 14px 24px;
+  }
+
+  /* ─── Navbar ─── */
+  .navbar {
+    pointer-events: auto;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.97);
+    border-bottom: 1px solid rgba(43, 69, 66, 0.07);
+    border-radius: 0;
+    box-shadow: 0 1px 8px rgba(43, 69, 66, 0.04);
+    transition:
+      width var(--transition),
+      max-width var(--transition),
+      border-radius var(--transition),
+      background var(--transition),
+      box-shadow var(--transition),
+      border var(--transition);
+  }
+
+  /* When scrolled → become a floating pill */
+  .navbar-wrapper.scrolled .navbar {
+    width: 880px;
+    max-width: calc(100% - 48px);
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(43, 69, 66, 0.1);
+    border-radius: 60px;
+    box-shadow:
+      0 8px 32px rgba(43, 69, 66, 0.09),
+      0 2px 6px rgba(43, 69, 66, 0.04);
+  }
+
+  .navbar__inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 68px;
+    transition: height var(--transition), padding var(--transition);
+  }
+
+  .navbar-wrapper.scrolled .navbar__inner {
+    height: 54px;
+    padding: 0 28px;
+  }
+
+  /* ─── Logo ─── */
+  .logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .logo__text {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: var(--primary);
+    text-transform: uppercase;
+    transition: font-size var(--transition);
+  }
+
+  .navbar-wrapper.scrolled .logo__text {
+    font-size: 18px;
+  }
+
+  .logo__text span {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 20px;
+    margin-left: 6px;
+    color: var(--accent-text);
+    transition: font-size var(--transition);
+  }
+
+  .navbar-wrapper.scrolled .logo__text span {
+    font-size: 16px;
+  }
+
+  /* ─── Nav Links ─── */
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    list-style: none;
+  }
+
+  .nav__link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s ease, color 0.2s ease, font-size var(--transition), padding var(--transition);
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  .navbar-wrapper.scrolled .nav__link {
+    font-size: 13px;
+    padding: 6px 13px;
+  }
+
+  .nav__link:hover {
+    background: rgba(43, 69, 66, 0.07);
+  }
+
+  .nav__link svg {
+    width: 13px;
+    height: 13px;
+    transition: transform 0.25s ease;
+    opacity: 0.45;
+  }
+
+  .dropdown:hover .nav__link svg {
+    transform: rotate(180deg);
+    opacity: 0.8;
+  }
+
+  /* ─── Dropdowns ─── */
+  .dropdown__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+    min-width: 280px;
+    background: var(--white);
+    border: 1px solid rgba(43, 69, 66, 0.07);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow:
+      0 16px 48px rgba(43, 69, 66, 0.12),
+      0 2px 8px rgba(43, 69, 66, 0.04);
+  }
+
+  .dropdown:hover .dropdown__panel {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .dropdown__panel a {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.18s ease;
+  }
+
+  .dropdown__panel a:hover {
+    background: rgba(43, 69, 66, 0.04);
+  }
+
+  .dropdown__icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--primary);
+  }
+
+  .dropdown__icon svg { width: 17px; height: 17px; }
+
+  .dropdown__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--primary);
+    line-height: 1.2;
+  }
+
+  .dropdown__desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--accent-text);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .dropdown__section-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    padding: 10px 14px 5px;
+    opacity: 0.65;
+  }
+
+  .dropdown__divider {
+    height: 1px;
+    background: rgba(43, 69, 66, 0.06);
+    margin: 4px 10px;
+  }
+
+  /* ─── CTA Buttons ─── */
+  .nav__actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 9px 20px;
+    transition: all 0.25s ease, font-size var(--transition), padding var(--transition);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .navbar-wrapper.scrolled .btn {
+    font-size: 12.5px;
+    padding: 7px 16px;
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--primary);
+  }
+
+  .btn--ghost:hover {
+    background: rgba(43, 69, 66, 0.07);
+  }
+
+  .btn--primary {
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 40px;
+    padding: 9px 24px;
+    box-shadow: 0 2px 8px rgba(43, 69, 66, 0.18);
+  }
+
+  .navbar-wrapper.scrolled .btn--primary {
+    padding: 7px 20px;
+  }
+
+  .btn--primary:hover {
+    background: var(--primary-light);
+    box-shadow: 0 4px 20px rgba(43, 69, 66, 0.22);
+    transform: translateY(-1px);
+  }
+
+  /* ─── Mobile Toggle ─── */
+  .mobile-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 38px;
+    height: 38px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+    gap: 5px;
+  }
+
+  .mobile-toggle:hover { background: rgba(43, 69, 66, 0.06); }
+
+  .mobile-toggle span {
+    display: block;
+    width: 18px;
+    height: 1.8px;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .mobile-toggle.active span:nth-child(1) { transform: translateY(6.8px) rotate(45deg); }
+  .mobile-toggle.active span:nth-child(2) { opacity: 0; }
+  .mobile-toggle.active span:nth-child(3) { transform: translateY(-6.8px) rotate(-45deg); }
+
+  /* ─── Mobile Drawer ─── */
+  .mobile-drawer {
+    display: none;
+    position: fixed;
+    top: 72px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--white);
+    padding: 28px;
+    overflow-y: auto;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 999;
+  }
+
+  .mobile-drawer.open {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .mobile-drawer .mobile-nav-group { margin-bottom: 28px; }
+
+  .mobile-drawer .mobile-nav-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    padding-bottom: 8px;
+    opacity: 0.6;
+  }
+
+  .mobile-drawer a {
+    display: block;
+    padding: 13px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--primary);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(43, 69, 66, 0.06);
+  }
+
+  .mobile-drawer .mobile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 36px;
+  }
+
+  .mobile-drawer .mobile-actions .btn {
+    text-align: center;
+    width: 100%;
+    padding: 15px;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 960px) {
+    .nav__links, .nav__actions { display: none; }
+    .mobile-toggle { display: flex; }
+    .mobile-drawer { display: block; }
+    .navbar-wrapper.scrolled .navbar {
+      width: calc(100% - 16px);
+      max-width: calc(100% - 16px);
+    }
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    max-width: 800px;
+    margin: 140px auto 0;
+    padding: 80px 32px;
+    text-align: center;
+  }
+
+  .hero__tag {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: 20px;
+    opacity: 0.7;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 54px;
+    font-weight: 600;
+    color: var(--primary);
+    line-height: 1.12;
+    margin-bottom: 24px;
+  }
+
+  .hero p {
+    font-family: 'Inter', sans-serif;
+    font-size: 17px;
+    color: var(--accent-text);
+    max-width: 480px;
+    margin: 0 auto 40px;
+    line-height: 1.7;
+  }
+
+  .hero__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 14px 32px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(43, 69, 66, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .hero__cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(43, 69, 66, 0.25);
+    background: var(--primary-light);
+  }
+
+  .hero__cta svg {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+  }
+
+  .hero__cta:hover svg {
+    transform: translateX(3px);
+  }
+
+  .scroll-hint {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--accent-text);
+    opacity: 0.5;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: bounce 2s infinite;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+
+  .scroll-hint.hidden { opacity: 0; }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(5px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="navbar-wrapper" id="navbarWrapper">
+  <nav class="navbar">
+    <div class="navbar__inner">
+
+      <a href="#" class="logo">
+        <div class="logo__text">CULTR <span>Health</span></div>
+      </a>
+
+      <ul class="nav__links">
+        <li class="dropdown">
+          <div class="nav__link">Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg></div>
+          <div class="dropdown__panel" style="min-width: 300px;">
+            <div class="dropdown__section-label">Scheduling</div>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div><div class="dropdown__label">Inbound</div><div class="dropdown__desc">Route, qualify & schedule buyers</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg></div><div><div class="dropdown__label">Email Campaigns</div><div class="dropdown__desc">One-click prospect connections</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><div><div class="dropdown__label">Relays</div><div class="dropdown__desc">Handoff prospects in 2 clicks</div></div></a>
+            <div class="dropdown__divider"></div>
+            <div class="dropdown__section-label">Routing</div>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div><div class="dropdown__label">Balanced Round Robin</div><div class="dropdown__desc">Fair meeting distribution</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div><div class="dropdown__label">Smart Distribution</div><div class="dropdown__desc">Optimize routing & matching</div></div></a>
+          </div>
+        </li>
+
+        <li class="dropdown">
+          <div class="nav__link">Solutions <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg></div>
+          <div class="dropdown__panel">
+            <div class="dropdown__section-label">By Role</div>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg></div><div><div class="dropdown__label">Demand Gen Leaders</div><div class="dropdown__desc">More pipeline, same traffic</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div><div><div class="dropdown__label">RevOps Leaders</div><div class="dropdown__desc">Centralize your stack</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div><div><div class="dropdown__label">Sales Leaders</div><div class="dropdown__desc">Skip lifecycle stages</div></div></a>
+            <div class="dropdown__divider"></div>
+            <div class="dropdown__section-label">By Industry</div>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><div><div class="dropdown__label">Healthcare</div><div class="dropdown__desc">Health-tech sales & scheduling</div></div></a>
+          </div>
+        </li>
+
+        <li><a href="#" class="nav__link">Customers</a></li>
+
+        <li class="dropdown">
+          <div class="nav__link">Resources <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6l4 4 4-4"/></svg></div>
+          <div class="dropdown__panel">
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="dropdown__label">Help Center</div><div class="dropdown__desc">Guides & documentation</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div><div><div class="dropdown__label">Blog</div><div class="dropdown__desc">Marketing, sales & growth</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="dropdown__label">Events & Webinars</div><div class="dropdown__desc">Upcoming sessions</div></div></a>
+            <a href="#"><div class="dropdown__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div><div class="dropdown__label">Integrations</div><div class="dropdown__desc">Connect your tools</div></div></a>
+          </div>
+        </li>
+
+        <li><a href="#" class="nav__link">Pricing</a></li>
+      </ul>
+
+      <div class="nav__actions">
+        <a href="#" class="btn btn--ghost">Sign In</a>
+        <a href="#" class="btn btn--primary">Book a Demo</a>
+      </div>
+
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- Mobile Drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="mobile-nav-group">
+    <div class="mobile-nav-title">Features</div>
+    <a href="#">Inbound</a><a href="#">Email Campaigns</a><a href="#">Relays</a><a href="#">Balanced Round Robin</a><a href="#">Smart Distribution</a>
+  </div>
+  <div class="mobile-nav-group">
+    <div class="mobile-nav-title">Solutions</div>
+    <a href="#">Demand Gen Leaders</a><a href="#">RevOps Leaders</a><a href="#">Sales Leaders</a><a href="#">Healthcare</a>
+  </div>
+  <div class="mobile-nav-group">
+    <div class="mobile-nav-title">Company</div>
+    <a href="#">Customers</a><a href="#">Blog</a><a href="#">Help Center</a><a href="#">Pricing</a>
+  </div>
+  <div class="mobile-actions">
+    <a href="#" class="btn btn--ghost" style="border: 1px solid rgba(43,69,66,0.12);">Sign In</a>
+    <a href="#" class="btn btn--primary">Book a Demo</a>
+  </div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero__tag">Longevity Science · Personalized Protocols</div>
+  <h1>Redefining Biological Age.</h1>
+  <p>Our longevity protocols utilize advanced diagnostics to create personalized health roadmaps. Focus on healthspan.</p>
+  <a href="#" class="hero__cta">
+    Book Consultation
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  </a>
+</div>
+
+<div class="scroll-hint" id="scrollHint">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+  Scroll to see the floating effect
+</div>
+
+<script>
+  const wrapper = document.getElementById('navbarWrapper');
+  const hint = document.getElementById('scrollHint');
+  let ticking = false;
+
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrolled = window.scrollY > 50;
+        wrapper.classList.toggle('scrolled', scrolled);
+        hint.classList.toggle('hidden', scrolled);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  const toggle = document.getElementById('mobileToggle');
+  const drawer = document.getElementById('mobileDrawer');
+  toggle.addEventListener('click', () => {
+    toggle.classList.toggle('active');
+    drawer.classList.toggle('open');
+    document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
+  });
+</script>
+</body>
+</html>

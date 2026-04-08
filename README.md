@@ -357,18 +357,6 @@ DEBUG=cultr:*
 
 ---
 
-## Migration from Healthie
-
-This project was previously integrated with Healthie and has been migrated to Asher Med Partner Portal. Legacy Healthie code remains in the codebase for reference:
-
-- `lib/healthie-api.ts` - Old Healthie API client (deprecated)
-- Tests referencing Healthie
-- Some database fields may still reference Healthie IDs
-
-**Important:** New development should use the Asher Med integration exclusively. The Healthie integration is no longer maintained.
-
----
-
 ## Contributing
 
 ### Development Workflow
@@ -403,6 +391,18 @@ For technical issues or questions:
 - **Email:** dev@cultrhealth.com
 - **Asher Med Support:** support@ashermed.com
 - **Emergency:** Contact team leads directly
+
+---
+
+## AI Tooling
+
+This project includes configuration for multiple AI coding assistants:
+
+- **[CLAUDE.md](./CLAUDE.md)** — Claude Code instructions (canonical project rules)
+- **[AGENTS.md](./AGENTS.md)** — OpenAI Codex instructions
+- **[.cursorrules](./.cursorrules)** — Cursor IDE AI guardrails (23 sections: HIPAA, brand, DB, deploy, security, patterns)
+
+When updating conventions, keep all three files in sync.
 
 ---
 

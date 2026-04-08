@@ -1,107 +1,209 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
-import { Menu, X } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { NavDock } from '@/components/ui/NavDock';
 
 const navLinks = [
-  { href: '/products', label: 'Products' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/pricing', label: 'Pricing', hasDropdown: false },
+  { href: '/therapies', label: 'Core Therapies' },
   { href: '/how-it-works', label: 'How It Works' },
-  { href: '/faq', label: 'FAQ' },
-  { href: '/login', label: 'Login' },
+  { href: '/tools', label: 'Tools' },
+];
+
+const rightNavLinks = [
+  { href: '/portal/login', label: 'Members', hasDropdown: true },
+  { href: '/creators', label: 'Creators' },
+  { href: '/community', label: 'Community' },
 ];
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) => href === '/' ? pathname === '/' : pathname.startsWith(href);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 50);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen]);
 
   return (
     <>
-      <header className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-cultr-sage">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center shrink-0">
-            <img
-              src="/cultr-health-logo.png"
-              alt="CULTR Health"
-              className="w-auto h-[60px]"
-            />
-          </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-cultr-text hover:text-cultr-forest transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link href="/pricing">
-              <Button size="sm">Join CULTR</Button>
-            </Link>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-cultr-text hover:text-cultr-forest transition-colors"
-            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Menu Overlay */}
+      {/* Navbar Wrapper — centers and adds padding when scrolled */}
       <div
         className={`
-          fixed inset-0 z-40 bg-cultr-forest/40 backdrop-blur-sm md:hidden
-          transition-opacity duration-300
-          ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-        `}
-        onClick={() => setMobileMenuOpen(false)}
-      />
-
-      {/* Mobile Menu Panel */}
-      <div
-        className={`
-          fixed top-0 right-0 z-50 h-full w-72 bg-white border-l border-cultr-sage md:hidden
-          transform transition-transform duration-300 ease-out
-          ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}
+          fixed top-0 left-0 right-0 z-50 flex justify-center pointer-events-none
+          transition-[padding] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+          ${scrolled ? 'py-3.5 px-6' : 'p-0'}
         `}
       >
-        {/* Close Button */}
-        <div className="flex justify-end p-6">
-          <button
-            onClick={() => setMobileMenuOpen(false)}
-            className="p-2 text-cultr-textMuted hover:text-cultr-forest transition-colors"
-            aria-label="Close menu"
+        {/* Navbar — morphs from full-width bar to floating pill */}
+        <nav
+          className={`
+            pointer-events-auto w-full
+            transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+            ${scrolled
+              ? 'max-w-[1080px] rounded-[60px] shadow-lux-lg'
+              : 'max-w-full rounded-none shadow-[0_1px_8px_rgba(42,69,66,0.04)]'
+            }
+          `}
+          style={scrolled ? {
+            background: 'rgba(252, 251, 247, 0.72)',
+            backdropFilter: 'blur(24px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
+            border: '1px solid rgba(43, 69, 66, 0.08)',
+          } : {
+            background: 'rgba(252, 251, 247, 0.95)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            borderBottom: '1px solid rgba(43, 69, 66, 0.06)',
+          }}
+        >
+          <div
+            className={`
+              max-w-[1240px] mx-auto flex items-center justify-between
+              transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+              ${scrolled ? 'h-[54px] px-7' : 'h-[68px] px-10'}
+            `}
           >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
+            {/* Logo + Left Nav */}
+            <div className="flex items-center gap-5">
+              <Link href="/" className="flex items-center shrink-0">
+                <img
+                  src="/cultr-health-logo.png"
+                  alt="CULTR Health"
+                  className={`
+                    w-auto transition-[height] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
+                    ${scrolled ? 'h-[60px]' : 'h-[85px]'}
+                  `}
+                />
+              </Link>
 
-        {/* Mobile Nav Links */}
-        <nav className="flex flex-col px-6">
+              <div className="hidden lg:flex items-center gap-0.5 ml-4">
+                <Link
+                  href="/quiz"
+                  className={`
+                    inline-flex items-center justify-center font-body font-medium text-white
+                    bg-brand-primary rounded-full whitespace-nowrap mr-2
+                    shadow-[0_2px_8px_rgba(43,69,66,0.18)]
+                    transition-all duration-250 ease-out
+                    hover:bg-brand-primaryLight hover:shadow-[0_4px_20px_rgba(43,69,66,0.22)] hover:-translate-y-px
+                    ${scrolled ? 'text-[12.5px] py-[7px] px-5' : 'text-[13.5px] py-[9px] px-6'}
+                  `}
+                >
+                  Get Started
+                </Link>
+                <NavDock links={navLinks} isActive={isActive} scrolled={scrolled} />
+              </div>
+            </div>
+
+            {/* Right Nav + CTA */}
+            <NavDock links={rightNavLinks} isActive={isActive} scrolled={scrolled} className="hidden lg:flex" />
+
+            {/* Mobile Toggle — animated 3-bar hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex flex-col justify-center items-center w-[38px] h-[38px] rounded-lg gap-[5px] bg-transparent hover:bg-brand-primary/[0.06] transition-colors duration-200"
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              <span
+                className={`block w-[18px] h-[1.8px] bg-brand-primary rounded-sm transition-transform duration-300 ease-out ${
+                  mobileMenuOpen ? 'translate-y-[6.8px] rotate-45' : ''
+                }`}
+              />
+              <span
+                className={`block w-[18px] h-[1.8px] bg-brand-primary rounded-sm transition-opacity duration-300 ease-out ${
+                  mobileMenuOpen ? 'opacity-0' : ''
+                }`}
+              />
+              <span
+                className={`block w-[18px] h-[1.8px] bg-brand-primary rounded-sm transition-transform duration-300 ease-out ${
+                  mobileMenuOpen ? '-translate-y-[6.8px] -rotate-45' : ''
+                }`}
+              />
+            </button>
+          </div>
+        </nav>
+      </div>
+
+      {/* Mobile Drawer */}
+      <div
+        className={`
+          fixed top-[72px] left-0 right-0 bottom-0 z-40 bg-brand-cream overflow-y-auto
+          lg:hidden transition-all duration-300 ease-out px-7 py-7
+          ${mobileMenuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2.5 pointer-events-none'}
+        `}
+      >
+        {/* Main Nav Group */}
+        <div className="mb-7">
+          <div className="text-[11px] font-display font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
+            Navigate
+          </div>
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="py-4 text-lg font-medium text-cultr-text hover:text-cultr-forest border-b border-cultr-sage transition-colors"
+              className={`block py-3.5 text-base font-body font-medium border-b border-brand-primary/[0.06] ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.06] pl-3 rounded-lg' : 'text-brand-primary'}`}
             >
               {link.label}
             </Link>
           ))}
-          <div className="mt-8">
-            <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full">Join CULTR</Button>
-            </Link>
+        </div>
+
+        {/* Right Nav Group */}
+        <div className="mb-7">
+          <div className="text-[11px] font-display font-semibold tracking-[0.08em] uppercase text-brand-primary/50 pb-2">
+            More
           </div>
-        </nav>
+          {rightNavLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block py-3.5 text-base font-body font-medium border-b border-brand-primary/[0.06] ${isActive(link.href) ? 'text-brand-primary bg-brand-primary/[0.06] pl-3 rounded-lg' : 'text-brand-primary'}`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* Mobile CTAs */}
+        <div className="flex flex-col gap-2.5 mt-9">
+          <Link
+            href="/portal/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center w-full py-4 text-[15px] font-body font-medium text-brand-primary bg-transparent border border-brand-primary/[0.12] rounded-[14px] transition-colors duration-200 hover:bg-brand-primary/[0.07]"
+          >
+            Sign In
+          </Link>
+          <Link
+            href="/quiz"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-center w-full py-4 text-[15px] font-body font-medium text-white bg-brand-primary rounded-[14px] shadow-[0_2px_8px_rgba(43,69,66,0.18)] transition-all duration-250 hover:bg-brand-primaryLight hover:shadow-[0_4px_20px_rgba(43,69,66,0.22)]"
+          >
+            Get Started
+          </Link>
+        </div>
       </div>
     </>
   );

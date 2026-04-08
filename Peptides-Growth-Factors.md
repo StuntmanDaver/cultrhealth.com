@@ -13,7 +13,7 @@ Anabolic and growth-promoting peptides that stimulate muscle protein synthesis, 
 
 | Product | Price | Size | Evidence | Risk | Best For | Regulatory |
 |---------|-------|------|----------|------|----------|-------------|
-| IGF-1 LR3 | $150 | 1mg | B–C | Moderate–Higher | Muscle gain, strength | Research-only |
+| IGF-1 LR3 | $160 | 1mg | B–C | Moderate–Higher | Muscle gain, strength | Research-only |
 | ACE-031 | $160 | 1mg | B–C | Moderate | Muscle preservation, fat loss | Investigational |
 | Follistatin 344 | $160 | 1mg | B–C | Moderate–Higher | Muscle growth, myostatin inhibition | Research-only |
 | Sermorelin | $50 | 5mg | B–C | Moderate | GH axis stimulation, recovery | Off-label Rx |
@@ -697,7 +697,7 @@ ACE-031 is a decoy receptor that binds to myostatin and activin (proteins that l
 #### Tier 2 — Goal-specific add-ons (highly recommended)
 
 **Fat loss / body recomposition**
-- **GLP-1 analog** (Cagrilintide, Semaglutide): Appetite suppression, fat loss acceleration; synergistic with ACE-031 for lean preservation
+- **GLP-1 analog** (Cagrilintide, SEMA/B6): Appetite suppression, fat loss acceleration; synergistic with ACE-031 for lean preservation
 - **Caffeine** (200–400mg daily): Energy during deficit, thermogenic support, training performance
 - **L-Carnitine** (1–2g daily): Mitochondrial function, fat oxidation
 

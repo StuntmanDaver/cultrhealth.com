@@ -421,7 +421,7 @@ describe('Symptom Protocols', () => {
       { id: 'pms', supplements: ['Vitamin B6', 'Magnesium', 'Calcium'], peptide: 'Oxytocin' },
       { id: 'constipation', supplements: ['Magnesium citrate', 'Vitamin C', 'PHGG fiber'], peptide: 'BPC-157' },
       { id: 'hair-thinning', supplements: ['Iron', 'Zinc', 'Biotin'], peptide: 'GHK-Cu' },
-      { id: 'insulin-resistance', supplements: ['Chromium', 'Magnesium', 'Alpha lipoic acid'], peptide: 'Retatrutide' },
+      { id: 'insulin-resistance', supplements: ['Chromium', 'Magnesium', 'Alpha lipoic acid'], peptide: 'RTA' },
       { id: 'frequent-colds', supplements: ['Vitamin D', 'Zinc', 'Vitamin C'], peptide: 'Thymosin Alpha-1' },
       { id: 'muscle-cramps', supplements: ['Magnesium', 'Potassium', 'Sodium'], peptide: 'TB-500' },
     ]

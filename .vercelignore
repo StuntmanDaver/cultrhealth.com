@@ -1,0 +1,21 @@
+.ralph
+.agents
+.cursor
+archive
+*.pdf
+!/public/docs/**/*.pdf
+!/public/pdfs/**/*.pdf
+"*Screenshot*"
+"*AGENT*"
+"*ARCHITECTURE*"
+"*fix_plan*"
+"*PROMPT*"
+*.output
+# Exclude root images but keep public/images for product bottles and hero images
+/public/*.png
+/public/*.jpg
+/public/*.jpeg
+!/public/images
+# Official logo and OG image must be deployed
+!/public/cultr-health-logo.png
+!/public/og-image.png

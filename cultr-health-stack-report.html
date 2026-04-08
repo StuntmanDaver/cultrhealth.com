@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CULTR Health — Technology Stack Decision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --forest:       #2A4542;
+            --forest-dark:  #1A2E2C;
+            --forest-light: #3A5956;
+            --cream:        #FDFBF7;
+            --cream-dark:   #F5F0E8;
+            --sage:         #B7E4C7;
+            --mint:         #D8F3DC;
+            --muted:        rgba(253,251,247,0.55);
+            --card:         rgba(58,89,86,0.35);
+            --card-border:  rgba(183,228,199,0.2);
+            --green:        #4ade80;
+            --yellow:       #fbbf24;
+            --red:          #f87171;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--forest-dark);
+            color: var(--cream);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .slide-deck {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        @media (min-width: 769px) {
+            .slide-deck {
+                max-width: calc(100vh * 16 / 9);
+                max-height: calc(100vw * 9 / 16);
+                margin: auto;
+                position: absolute;
+                inset: 0;
+            }
+        }
+
+        .slide {
+            position: absolute;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 52px 64px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s ease;
+            background: var(--forest-dark);
+            overflow: hidden;
+        }
+
+        .slide.active { opacity: 1; visibility: visible; }
+
+        .slide-content {
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* ── Typography ── */
+        .display {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 5.5vw, 72px);
+            line-height: 1.1;
+            color: var(--cream);
+        }
+        .display .accent { color: var(--sage); }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(22px, 3.2vw, 42px);
+            color: var(--cream);
+            line-height: 1.2;
+        }
+        h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(13px, 1.6vw, 20px);
+            font-weight: 600;
+            color: var(--sage);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+        p { font-size: clamp(13px, 1.4vw, 18px); color: var(--muted); line-height: 1.6; }
+        .label {
+            font-size: clamp(10px, 1vw, 13px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+
+        /* ── Slide number tag ── */
+        .slide-tag {
+            position: absolute;
+            top: 28px; right: 36px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        /* ── Accent bar ── */
+        .accent-bar {
+            display: inline-block;
+            width: 48px; height: 3px;
+            background: var(--sage);
+            border-radius: 2px;
+            margin-bottom: 4px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 20px 22px;
+            backdrop-filter: blur(8px);
+        }
+
+        /* ── Grid layouts ── */
+        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+
+        /* ── Tags / pills ── */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: clamp(10px, 0.95vw, 13px);
+            font-weight: 600;
+        }
+        .pill-green  { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+        .pill-yellow { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+        .pill-red    { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+        .pill-sage   { background: rgba(183,228,199,0.15); color: var(--sage); border: 1px solid var(--card-border); }
+
+        /* ── Check / X rows ── */
+        .check-list { display: flex; flex-direction: column; gap: 8px; }
+        .check-row  { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(12px,1.2vw,16px); color: var(--cream); }
+        .check-row .ico { flex-shrink: 0; margin-top: 2px; }
+
+        /* ── Comparison table ── */
+        .cmp-table { width: 100%; border-collapse: collapse; font-size: clamp(11px,1.1vw,15px); }
+        .cmp-table th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: clamp(10px,0.95vw,13px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            border-bottom: 1px solid var(--card-border);
+        }
+        .cmp-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(183,228,199,0.08);
+            color: var(--cream);
+            line-height: 1.45;
+        }
+        .cmp-table tr:last-child td { border-bottom: none; }
+        .cmp-table .col-feature { color: var(--muted); font-size: clamp(10px,0.95vw,13px); }
+        .cmp-table .highlight { background: rgba(183,228,199,0.07); }
+
+        /* ── Flow arrows ── */
+        .flow {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            width: 100%;
+        }
+        .flow-step {
+            flex: 1;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 18px 16px;
+            text-align: center;
+            position: relative;
+        }
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            flex-shrink: 0;
+            color: var(--sage);
+            font-size: 18px;
+            opacity: 0.7;
+        }
+
+        /* ── Stack blocks ── */
+        .stack-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            background: var(--card);
+            border: 1px solid var(--card-border);
+        }
+        .stack-num {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(183,228,199,0.15);
+            border: 1px solid var(--card-border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+            color: var(--sage);
+            flex-shrink: 0;
+        }
+
+        /* ── CRM answer banner ── */
+        .answer-banner {
+            border-radius: 12px;
+            padding: 16px 22px;
+            font-size: clamp(13px,1.3vw,17px);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        .answer-yes { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: #4ade80; }
+        .answer-partial { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
+        .answer-no { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+
+        /* ── Animations ── */
+        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        .slide.active .slide-content > * { animation: fadeUp 0.5s ease-out both; }
+        .slide.active .slide-content > *:nth-child(1) { animation-delay: 0.05s; }
+        .slide.active .slide-content > *:nth-child(2) { animation-delay: 0.15s; }
+        .slide.active .slide-content > *:nth-child(3) { animation-delay: 0.25s; }
+        .slide.active .slide-content > *:nth-child(4) { animation-delay: 0.35s; }
+        .slide.active .slide-content > *:nth-child(5) { animation-delay: 0.4s; }
+
+        /* ── Progress + Nav ── */
+        .progress-bar {
+            position: fixed; top:0; left:0; height:3px;
+            background: var(--sage);
+            transition: width 0.35s ease;
+            z-index: 1000;
+        }
+        .nav-controls {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%);
+            display: flex; align-items: center; gap: 18px;
+            z-index: 1000;
+        }
+        .nav-btn {
+            background: rgba(183,228,199,0.1);
+            border: 1px solid var(--card-border);
+            color: var(--cream); width: 38px; height: 38px;
+            border-radius: 50%; cursor: pointer; font-size: 16px;
+            transition: background 0.2s;
+        }
+        .nav-btn:hover { background: rgba(183,228,199,0.2); }
+        .slide-counter { color: var(--muted); font-size: 13px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .slide { padding: 32px 24px; }
+            .grid-3 { grid-template-columns: 1fr; gap: 12px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 16px; }
+            .flow { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); height: 24px; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<div class="slide-deck">
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════════════ -->
+<div class="slide active">
+    <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 80% 50%, rgba(183,228,199,0.07), transparent);pointer-events:none;"></div>
+    <div class="slide-content" style="align-items:flex-start;max-width:860px;">
+        <span class="label">CULTR Health · Confidential</span>
+        <div class="accent-bar"></div>
+        <h1 class="display">Technology Stack<br><span class="accent">Decision Report</span></h1>
+        <p style="max-width:520px;font-size:clamp(14px,1.5vw,19px);">Evaluating CRM, clinical EMR, and e-prescribing infrastructure for a telehealth longevity startup — and answering whether this stack solves our patient acquisition problem.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+            <span class="pill pill-sage">20–50 patients/mo</span>
+            <span class="pill pill-sage">Cash-pay telehealth</span>
+            <span class="pill pill-sage">GLP-1 · Peptides · TRT</span>
+            <span class="pill pill-sage">March 2026</span>
+        </div>
+    </div>
+    <div style="position:absolute;bottom:52px;right:64px;text-align:right;">
+        <p style="font-size:12px;color:var(--muted);">Tools Evaluated</p>
+        <p style="font-size:13px;font-weight:600;color:var(--cream);margin-top:4px;">HubSpot · Charm Health · Akute Health · DoseSpot</p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">01 / Context</span>
+    <div class="slide-content">
+        <h3>Where We Are Now</h3>
+        <h2>Asher Med handles one thing.<br>We need three.</h2>
+        <div class="grid-3" style="margin-top:4px;">
+            <div class="card">
+                <div style="font-size:28px;margin-bottom:10px;">📦</div>
+                <p style="color:var(--sage);font-weight:600;font-size:14px;margin-bottom:6px;">Asher Med Today</p>
+                <p style="font-size:13px;">Product ordering flow only. No charting, no Rx, no patient communication, no clinical workflow.</p>
+                <div style="margin-top:12px;"><span class="pill pill-red">Replacing</span></div>
+            </div>
+            <div class="card" style="border-color:rgba(183,228,199,0.4);">
+                <div style="font-size:28px;margin-bottom:10px;">🧩</div>
+                <p style="color:var(--sage);font-weight:600;font-size:14px;margin-bottom:6px;">What We Actually Need</p>
+                <div class="check-list" style="margin-top:4px;">
+                    <div class="check-row"><span class="ico">→</span> Patient acquisition + CRM</div>
+                    <div class="check-row"><span class="ico">→</span> Clinical operations + Rx</div>
+                    <div class="check-row"><span class="ico">→</span> Unified patient portal</div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="font-size:28px;margin-bottom:10px;">🏗️</div>
+                <p style="color:var(--sage);font-weight:600;font-size:14px;margin-bottom:6px;">Our Approach</p>
+                <p style="font-size:13px;">Three separate tools, each purpose-built. Provider uses EMR natively. Patients see custom Next.js portal.</p>
+                <div style="margin-top:12px;"><span class="pill pill-green">Recommended</span></div>
+            </div>
+        </div>
+        <div class="answer-banner answer-partial" style="margin-top:4px;">
+            ⚠️ No single tool solves all three layers — and that's fine. The right stack uses best-in-class tools per layer, integrated through our existing codebase.
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 3 — THREE-LAYER ARCHITECTURE
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">02 / Architecture</span>
+    <div class="slide-content">
+        <h3>The Three-Layer Model</h3>
+        <h2>Each layer has a distinct job.</h2>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-top:4px;">
+            <div class="stack-row">
+                <div class="stack-num">1</div>
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <p style="font-weight:600;font-size:clamp(13px,1.3vw,17px);color:var(--cream);">Patient Acquisition &amp; CRM</p>
+                            <p style="font-size:clamp(11px,1.1vw,14px);margin-top:2px;">Leads → qualified prospects → paying members → retention &amp; re-engagement</p>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-shrink:0;">
+                            <span class="pill pill-sage">HubSpot</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="stack-row">
+                <div class="stack-num">2</div>
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <p style="font-weight:600;font-size:clamp(13px,1.3vw,17px);color:var(--cream);">Clinical Operations (Headless EMR)</p>
+                            <p style="font-size:clamp(11px,1.1vw,14px);margin-top:2px;">Provider charting, e-prescribing, telehealth visits, HIPAA-compliant patient messaging</p>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-shrink:0;">
+                            <span class="pill pill-sage">Akute Health</span>
+                            <span class="pill pill-yellow">+ DoseSpot</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="stack-row" style="border-color:rgba(183,228,199,0.4);">
+                <div class="stack-num" style="background:rgba(183,228,199,0.25);">3</div>
+                <div style="flex:1;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                        <div>
+                            <p style="font-weight:600;font-size:clamp(13px,1.3vw,17px);color:var(--cream);">Patient Dashboard <span style="color:var(--sage);font-size:12px;font-weight:500;">(already building)</span></p>
+                            <p style="font-size:clamp(11px,1.1vw,14px);margin-top:2px;">Unified portal — SiPhox labs, order history, bills, appointments. Fully custom, CULTR-branded.</p>
+                        </div>
+                        <div style="display:flex;gap:8px;flex-shrink:0;">
+                            <span class="pill pill-green">Next.js (Vercel)</span>
+                            <span class="pill pill-sage">SiPhox API</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p style="font-size:clamp(11px,1.05vw,14px);text-align:center;margin-top:4px;">Providers use the EMR natively. Patients never see the EMR — they see your custom portal.</p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 4 — HUBSPOT
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">03 / CRM Layer</span>
+    <div class="slide-content">
+        <h3>Layer 1 — Patient Acquisition</h3>
+        <h2>HubSpot <span style="color:var(--sage);font-size:0.65em;font-family:'Inter',sans-serif;font-weight:400;">— what it does &amp; doesn't do</span></h2>
+        <div class="grid-2" style="margin-top:4px;">
+            <div>
+                <p style="color:var(--sage);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">✅ What HubSpot handles</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Lead capture from quiz, waitlist, landing pages</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Automated email sequences (nurture → convert)</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Sales pipeline: lead → consultation → member</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Creator/affiliate contact tracking</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Churn prevention &amp; re-engagement campaigns</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Signs BAA on paid plans (HIPAA-safe for contact data)</div>
+                </div>
+            </div>
+            <div>
+                <p style="color:#f87171;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">🚫 What HubSpot does NOT do</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> Clinical charting or provider notes</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> E-prescribing or Rx management</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> Lab result storage (don't put PHI here)</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> Replace your EMR in any way</div>
+                </div>
+                <div class="answer-banner answer-partial" style="margin-top:16px;font-size:13px;">
+                    ⚠️ <strong>Key rule:</strong> Keep clinical data out of HubSpot. Contact info (name, email, source) only. PHI lives in the EMR.
+                </div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <span class="pill pill-green">Free tier available</span>
+            <span class="pill pill-sage">Starter ~$20/mo</span>
+            <span class="pill pill-yellow">BAA required on paid plan</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 5 — CHARM vs AKUTE COMPARISON
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">04 / EMR Comparison</span>
+    <div class="slide-content">
+        <h3>Layer 2 — Clinical EMR Options</h3>
+        <h2>Charm Health vs. Akute Health</h2>
+        <div class="card" style="padding:0;overflow:hidden;margin-top:4px;">
+            <table class="cmp-table">
+                <thead>
+                    <tr>
+                        <th style="width:28%;">Feature</th>
+                        <th style="width:36%;">Charm Health</th>
+                        <th style="width:36%;" class="highlight">Akute Health</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="col-feature">Designed for</td>
+                        <td>Traditional practices, any specialty</td>
+                        <td class="highlight">DPC · Digital Health · Wellness/Integrative</td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">Pricing (20–50 pts)</td>
+                        <td>Free tier + unclear paid tiers</td>
+                        <td class="highlight"><strong>$0.50/active pt/mo · min $50</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">E-prescribing</td>
+                        <td><span class="pill pill-green">Yes (Surescripts)</span></td>
+                        <td class="highlight"><span class="pill pill-green">Yes — included all tiers</span></td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">Telehealth video</td>
+                        <td><span class="pill pill-green">Yes</span></td>
+                        <td class="highlight"><span class="pill pill-green">Yes — built in</span></td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">Patient portal</td>
+                        <td><span class="pill pill-green">Yes</span></td>
+                        <td class="highlight"><span class="pill pill-green">Yes (web + iOS + Android)</span></td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">API access</td>
+                        <td><span class="pill pill-yellow">"Connect" platform (limited)</span></td>
+                        <td class="highlight"><span class="pill pill-yellow">Enterprise tier only</span></td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">Maturity</td>
+                        <td>More established</td>
+                        <td class="highlight">Modern · startup-focused</td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">1099 NP setup</td>
+                        <td>Supported</td>
+                        <td class="highlight">Supported (per-provider fee)</td>
+                    </tr>
+                    <tr>
+                        <td class="col-feature">Verdict</td>
+                        <td><span class="pill pill-yellow">Adequate</span></td>
+                        <td class="highlight"><span class="pill pill-green">✓ Recommended</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p style="font-size:12px;text-align:center;">At 20–50 patients/month, Akute costs ~$10–25/mo on Startup plan. Growth plan minimum is $200/mo.</p>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 6 — DOSESPOT & E-PRESCRIBING
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">05 / E-Prescribing</span>
+    <div class="slide-content">
+        <h3>E-Prescribing Infrastructure</h3>
+        <h2>DoseSpot — and when you need it</h2>
+        <div class="grid-2" style="margin-top:4px;">
+            <div class="card">
+                <p style="color:var(--sage);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">What is E-Prescribing?</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:var(--sage);">→</span> Sends prescriptions electronically to pharmacies</div>
+                    <div class="check-row"><span class="ico" style="color:var(--sage);">→</span> Routes through <strong>Surescripts</strong> — the national Rx network</div>
+                    <div class="check-row"><span class="ico" style="color:var(--sage);">→</span> Required for all controlled substances (EPCS)</div>
+                    <div class="check-row"><span class="ico" style="color:var(--sage);">→</span> NPs must be credentialed in each state they prescribe</div>
+                </div>
+            </div>
+            <div class="card">
+                <p style="color:var(--sage);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;">DoseSpot Specifically</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Surescripts-certified, API-first</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Embeds into custom apps via iframe/API</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Most used by telehealth startups</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> EPCS support (controlled substances)</div>
+                </div>
+            </div>
+        </div>
+        <div class="answer-banner answer-yes" style="margin-top:4px;">
+            ✓ <strong>Decision:</strong> Akute Health includes e-prescribing on all plans. Add DoseSpot only if Akute's EPCS coverage is insufficient for the controlled substance compounds your NPs prescribe. Confirm EPCS on your Akute sales call.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <span class="pill pill-yellow">⚠️ Verify: Schedule III–V coverage in FL</span>
+            <span class="pill pill-sage">DoseSpot ~$100–200/mo if needed</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 7 — DOES THIS SOLVE CRM?
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">06 / CRM Answer</span>
+    <div class="slide-content">
+        <h3>The Direct Answer</h3>
+        <h2>Does this stack solve our CRM problem?</h2>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+            <div class="answer-banner answer-yes">
+                ✅ <strong>Yes — top of funnel is fully covered.</strong> HubSpot handles lead capture, email nurture, quiz follow-ups, waitlist, creator contacts, and re-engagement. This is what most people mean by "CRM."
+            </div>
+            <div class="answer-banner answer-partial">
+                ⚠️ <strong>Partially — the lead-to-patient handoff is a gap.</strong> When a prospect becomes a paying member, you manually add them to Akute. There's no auto-sync between HubSpot and your EMR — and that's intentional (PHI must not flow into HubSpot).
+            </div>
+            <div class="answer-banner answer-no" style="color:var(--cream);background:rgba(42,69,66,0.5);border-color:var(--card-border);">
+                📋 <strong>Missing piece:</strong> Post-sale retention lives in two places — HubSpot (email/marketing) and Akute (clinical). You need a clear internal process for which tool owns which touchpoint.
+            </div>
+        </div>
+        <div class="card" style="margin-top:4px;">
+            <p style="font-size:13px;font-weight:600;color:var(--sage);margin-bottom:8px;">Ownership map — who touches the patient at each stage</p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;">
+                <span class="pill pill-sage">Quiz/Lead → HubSpot</span>
+                <span style="color:var(--muted);">→</span>
+                <span class="pill pill-sage">Checkout → Your Next.js app</span>
+                <span style="color:var(--muted);">→</span>
+                <span class="pill pill-sage">Intake → Akute EMR</span>
+                <span style="color:var(--muted);">→</span>
+                <span class="pill pill-sage">Labs → SiPhox portal</span>
+                <span style="color:var(--muted);">→</span>
+                <span class="pill pill-sage">Retention → HubSpot</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 8 — SIPHOX INTEGRATION
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">07 / SiPhox</span>
+    <div class="slide-content">
+        <h3>Lab Data Strategy</h3>
+        <h2>SiPhox Health — portal vs. dashboard</h2>
+        <div class="grid-2" style="margin-top:4px;">
+            <div class="card">
+                <p style="color:#fbbf24;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Option A — SiPhox Native Portal</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Zero dev effort</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Always up to date</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> Patients leave CULTR experience</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> No unified view with orders/billing</div>
+                    <div class="check-row"><span class="ico" style="color:#f87171;">✗</span> Admin can't see order status in-app</div>
+                </div>
+            </div>
+            <div class="card" style="border-color:rgba(183,228,199,0.4);">
+                <p style="color:var(--sage);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Option B — Pull via API (Recommended)</p>
+                <div class="check-list">
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Labs inside CULTR dashboard (branded)</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Admin sees order status + results</div>
+                    <div class="check-row"><span class="ico" style="color:#4ade80;">✓</span> Unified with bills, Rx history</div>
+                    <div class="check-row"><span class="ico" style="color:#fbbf24;">⚠</span> Requires patient OAuth link to SiPhox</div>
+                    <div class="check-row"><span class="ico" style="color:#fbbf24;">⚠</span> Confirm SiPhox Connect API supports token delegation</div>
+                </div>
+            </div>
+        </div>
+        <div class="answer-banner answer-yes" style="margin-top:4px;">
+            ✓ <strong>Recommended:</strong> Use Option B. Patient self-directs the SiPhox kit. On first login to CULTR portal, patient links their SiPhox account (OAuth). Your Next.js app pulls results via <code style="font-size:12px;background:rgba(183,228,199,0.1);padding:2px 6px;border-radius:4px;">connect.siphoxhealth.com/api</code> and displays them alongside orders and billing.
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <span class="pill pill-yellow">⚠️ Confirm: SiPhox Connect API supports read access for partners</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SLIDE 9 — RECOMMENDED STACK + NEXT STEPS
+═══════════════════════════════════════════════ -->
+<div class="slide">
+    <span class="slide-tag">08 / Decision</span>
+    <div class="slide-content">
+        <h3>Recommended Stack &amp; Next Steps</h3>
+        <h2>The Final Answer</h2>
+        <div class="grid-3" style="margin-top:4px;">
+            <div class="card" style="border-color:rgba(183,228,199,0.35);">
+                <p style="color:var(--sage);font-weight:700;font-size:15px;margin-bottom:4px;">HubSpot</p>
+                <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">CRM · Marketing · Retention</p>
+                <div class="check-list">
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Starter plan (~$20/mo)</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Sign BAA before storing contacts</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> No PHI — contact data only</div>
+                </div>
+            </div>
+            <div class="card" style="border-color:rgba(183,228,199,0.5);background:rgba(58,89,86,0.5);">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                    <p style="color:var(--sage);font-weight:700;font-size:15px;">Akute Health</p>
+                    <span class="pill pill-green" style="font-size:10px;">Pick this</span>
+                </div>
+                <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Clinical EMR · E-Rx · Telehealth</p>
+                <div class="check-list">
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Growth plan ($200/mo)</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> E-Rx included — confirm EPCS</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Add providers as 1099s</div>
+                </div>
+            </div>
+            <div class="card" style="border-color:rgba(183,228,199,0.35);">
+                <p style="color:var(--sage);font-weight:700;font-size:15px;margin-bottom:4px;">Custom Dashboard</p>
+                <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Next.js · Vercel · SiPhox API</p>
+                <div class="check-list">
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Already building</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Add SiPhox OAuth link step</div>
+                    <div class="check-row" style="font-size:12px;"><span class="ico" style="color:#4ade80;">✓</span> Admin order visibility built in</div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-top:4px;">
+            <p style="font-size:13px;font-weight:600;color:var(--sage);margin-bottom:10px;">Action Items — in order</p>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+                <div class="check-row" style="font-size:12px;"><span style="background:rgba(183,228,199,0.15);color:var(--sage);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">1</span> Book Akute Health demo — confirm EPCS + 1099 NP pricing</div>
+                <div class="check-row" style="font-size:12px;"><span style="background:rgba(183,228,199,0.15);color:var(--sage);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">2</span> Sign up for HubSpot Starter + request BAA</div>
+                <div class="check-row" style="font-size:12px;"><span style="background:rgba(183,228,199,0.15);color:var(--sage);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">3</span> Contact SiPhox Connect — confirm partner API token delegation</div>
+                <div class="check-row" style="font-size:12px;"><span style="background:rgba(183,228,199,0.15);color:var(--sage);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">4</span> Define lead→patient handoff process (HubSpot → Akute)</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+            <span class="pill pill-sage">Est. monthly tooling cost: ~$250–$400/mo</span>
+            <span class="pill pill-green">Replaces Asher Med entirely</span>
+        </div>
+    </div>
+</div>
+
+</div><!-- /.slide-deck -->
+
+<div class="nav-controls">
+    <button class="nav-btn" onclick="prevSlide()">←</button>
+    <span class="slide-counter"><span id="current">1</span> / <span id="total">9</span></span>
+    <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<script>
+    let current = 1;
+    const slides = document.querySelectorAll('.slide');
+    const total = slides.length;
+    document.getElementById('total').textContent = total;
+
+    function showSlide(n) {
+        if (n < 1) n = 1;
+        if (n > total) n = total;
+        slides.forEach((s, i) => s.classList.toggle('active', i === n - 1));
+        current = n;
+        document.getElementById('current').textContent = n;
+        document.getElementById('progressBar').style.width = (n / total * 100) + '%';
+    }
+
+    function nextSlide() { showSlide(current + 1); }
+    function prevSlide() { showSlide(current - 1); }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+    });
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.nav-controls')) nextSlide();
+    });
+
+    showSlide(1);
+</script>
+</body>
+</html>

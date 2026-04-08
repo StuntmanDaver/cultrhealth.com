@@ -37,6 +37,8 @@ vi.mock('next/navigation', () => ({
 process.env.JWT_SECRET = 'test-jwt-secret'
 process.env.SESSION_SECRET = 'test-session-secret'
 process.env.STRIPE_SECRET_KEY = 'sk_test_mock'
-process.env.HEALTHIE_API_KEY = 'test-healthie-key'
-process.env.HEALTHIE_API_URL = 'https://staging-api.gethealthie.com/graphql'
+// Asher Med env vars removed — external API no longer used
 process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS = 'provider@cultrhealth.com,admin@cultrhealth.com'
+process.env.MAILCHIMP_API_KEY = 'test-mailchimp-key-us1'
+process.env.MAILCHIMP_AUDIENCE_ID = 'test-audience-123'
+process.env.MAILCHIMP_SERVER_PREFIX = 'us1'

@@ -2,9 +2,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { CTASection } from '@/components/site/CTASection';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
+import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import { ArrowRight, MessageCircle } from 'lucide-react';
+import { brandify } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions',
@@ -58,16 +60,16 @@ export default function FAQPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
+      <section className="py-24 md:py-32 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal direction="none" duration={800}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Frequently asked <span className="italic">questions</span>
+              Frequently asked questions
             </h1>
           </ScrollReveal>
           <ScrollReveal delay={200} direction="none" duration={800}>
             <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Everything you need to know about CULTR Health, our memberships, and how we can help you optimize your health.
+              Everything you need to know about <span className="font-display font-bold">CULTR</span> Health, our memberships, and how we can help you optimize your health.
             </p>
           </ScrollReveal>
           <ScrollReveal delay={400} direction="up" duration={600}>
@@ -86,8 +88,8 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Sections */}
-      <section className="py-24 px-6 bg-white">
-        <div className="max-w-3xl mx-auto space-y-16">
+      <section className="py-24 px-6 section-veil">
+        <div className="max-w-3xl mx-auto space-y-16 w-full">
 
           {/* Membership */}
           <ScrollReveal>
@@ -98,19 +100,15 @@ export default function FAQPage() {
               <FAQAccordion items={[
                 {
                   question: 'What is included in my membership?',
-                  answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like the Peptide Library and Protocol Engine.',
+                  answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like personalized protocols and the Protocol Engine.',
                 },
                 {
                   question: 'Can I cancel my membership?',
-                  answer: 'Yes, memberships are month-to-month with no long-term contracts. You can cancel at any time before your next renewal date through your member portal. There are no cancellation fees, and your access continues until the end of your current billing period.',
+                  answer: 'Yes, memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date. You can cancel through your member portal with no cancellation fees, and your access continues until the end of your current billing period.',
                 },
                 {
                   question: 'Can I switch plans?',
                   answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
-                },
-                {
-                  question: 'Do you accept HSA/FSA?',
-                  answer: 'Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.',
                 },
               ]} />
             </div>
@@ -125,7 +123,7 @@ export default function FAQPage() {
               <FAQAccordion items={[
                 {
                   question: 'Who is CULTR Health for?',
-                  answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.',
+                  answer: brandify('CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.'),
                 },
                 {
                   question: 'What if I am not eligible for treatment?',
@@ -133,15 +131,15 @@ export default function FAQPage() {
                 },
                 {
                   question: 'Do you prescribe medications?',
-                  answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 agonists (semaglutide, tirzepatide), hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
+                  answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 receptor agonists, hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
                 },
                 {
                   question: 'How do telehealth visits work?',
-                  answer: 'Visits are conducted via secure, HIPAA-compliant video calls within our Healthie portal. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
+                  answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
                 },
                 {
                   question: 'What states do you operate in?',
-                  answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.',
+                  answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.'),
                 },
               ]} />
             </div>
@@ -155,8 +153,8 @@ export default function FAQPage() {
               </h2>
               <FAQAccordion items={[
                 {
-                  question: 'What is the Peptide Library?',
-                  answer: 'The Peptide Library is our comprehensive database of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, potential side effects, and real-world outcomes data. It\'s designed to help you understand your options and have informed conversations with your provider.',
+                  question: 'How are protocols personalized?',
+                  answer: 'Your provider reviews your lab results, health history, and goals to recommend research-backed protocols tailored to you. Each recommendation includes dosing guidelines, cycling recommendations, and safety considerations. Your provider adjusts protocols over time based on your progress and follow-up labs.',
                 },
                 {
                   question: 'How does the Protocol Engine work?',
@@ -164,7 +162,7 @@ export default function FAQPage() {
                 },
                 {
                   question: 'What labs are included?',
-                  answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles (testosterone, thyroid, cortisol), inflammation markers (hs-CRP), vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships; lab draw fees are billed separately through our partner labs.',
+                  answer: 'We test 29 critical biomarkers (upgradeable up to 60+) through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
                 },
                 {
                   question: 'Where do medications come from?',
@@ -183,7 +181,7 @@ export default function FAQPage() {
               <FAQAccordion items={[
                 {
                   question: 'How fast do you respond to messages?',
-                  answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge and Club members have 24/7 messaging access with expedited responses.',
+                  answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge members have 24/7 messaging access with expedited responses.',
                 },
                 {
                   question: 'What if I have side effects?',
@@ -203,11 +201,14 @@ export default function FAQPage() {
         </div>
       </section>
 
+      {/* Trust Logo Marquee */}
+      <TrustMarquee />
+
       {/* Still Have Questions */}
-      <section className="py-16 px-6 bg-cultr-offwhite border-y border-cultr-sage">
+      <section className="py-16 px-6 grad-light border-y border-cultr-sage">
         <div className="max-w-2xl mx-auto text-center">
           <ScrollReveal>
-            <div className="w-16 h-16 rounded-full bg-cultr-mint flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-full grad-mint flex items-center justify-center mx-auto mb-6">
               <MessageCircle className="w-8 h-8 text-cultr-forest" />
             </div>
             <h3 className="text-2xl font-display font-bold text-cultr-forest mb-4">
@@ -228,7 +229,7 @@ export default function FAQPage() {
       {/* CTA */}
       <CTASection
         title="Ready to optimize your health?"
-        subtitle="Join thousands taking control of their biology with CULTR."
+        subtitle="Join thousands taking control of their biology."
         ctaText="Get Started"
       />
     </main>

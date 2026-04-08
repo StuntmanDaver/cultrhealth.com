@@ -1,0 +1,175 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { getCookieDomain } from '@/lib/utils'
+
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+  'legitscript@cultrhealth.com',
+]
+
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
+function isStagingEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
+}
+
+function setCookieOnResponse(response: NextResponse, token: string) {
+  const domain = getCookieDomain()
+  response.cookies.set('cultr_session', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24, // 24 hours (HIPAA)
+    path: '/',
+    ...(domain ? { domain } : {}),
+  })
+  // Reset idle-timeout cookie so middleware doesn't immediately expire fresh sessions
+  response.cookies.set('cultr_last_activity', Date.now().toString(), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24,
+    path: '/',
+    ...(domain ? { domain } : {}),
+  })
+}
+
+export async function GET(request: NextRequest) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000')
+
+  try {
+    const { searchParams } = new URL(request.url)
+    const token = searchParams.get('token')
+
+    if (!token) {
+      return NextResponse.redirect(`${baseUrl}/creators/login?error=invalid_link`)
+    }
+
+    const verified = await verifyMagicLinkToken(token)
+    if (!verified) {
+      return NextResponse.redirect(`${baseUrl}/creators/login?error=expired_link`)
+    }
+
+    const { email } = verified
+
+    // Look up creator in DB
+    let creatorId: string | undefined
+    let creatorStatus: string | undefined
+    try {
+      const { getCreatorByEmail } = await import('@/lib/creators/db')
+      const creator = await getCreatorByEmail(email)
+      if (creator) {
+        creatorId = creator.id
+        creatorStatus = creator.status
+      }
+    } catch {
+      // DB lookup failed
+    }
+
+    // No DB record — auto-create for staging bypass emails
+    if (!creatorId && (isStaging() || isStagingEmail(email))) {
+      try {
+        const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } = await import('@/lib/creators/db')
+        const { generateCreatorCodes } = await import('@/lib/config/affiliate')
+
+        // Derive a name from the email (e.g. "erik" from "erik@threepointshospitality.com")
+        const namePart = email.split('@')[0]
+        const fullName = namePart.charAt(0).toUpperCase() + namePart.slice(1)
+
+        const creator = await createCreator({
+          email,
+          full_name: fullName,
+        })
+
+        await updateCreatorStatus(creator.id, 'active', 'staging-auto-create')
+
+        const slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 1000)
+        await createTrackingLink(creator.id, slug, '/', true)
+
+        // Generate dual coupon codes (matching approval flow)
+        let { membershipCode, productCode } = generateCreatorCodes(fullName)
+        const baseName = membershipCode
+        let suffix = 1
+        while (
+          await checkAffiliateCodeExists(membershipCode) ||
+          await checkAffiliateCodeExists(productCode)
+        ) {
+          membershipCode = `${baseName}${suffix}`
+          productCode = `${baseName}${suffix}10`
+          suffix++
+        }
+        await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
+        await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
+
+        creatorId = creator.id
+        creatorStatus = 'active'
+
+        console.log('Auto-created staging creator:', { creatorId, membershipCode, productCode })
+      } catch (err) {
+        console.error('Failed to auto-create staging creator:', err)
+        // Auto-create failed — retry lookup in case the record exists from a prior session
+        try {
+          const { getCreatorByEmail: retryLookup } = await import('@/lib/creators/db')
+          const existing = await retryLookup(email)
+          if (existing) {
+            creatorId = existing.id
+            creatorStatus = existing.status
+          }
+        } catch {
+          // DB truly unavailable
+        }
+        if (!creatorId) {
+          // Last resort: staging placeholder (profile route handles this via email fallback)
+          creatorId = 'staging_creator'
+          creatorStatus = 'active'
+        }
+      }
+    }
+
+    if (!creatorId) {
+      return NextResponse.redirect(`${baseUrl}/creators/login?error=no_account`)
+    }
+
+    // Pending creators go to pending page
+    if (creatorStatus === 'pending') {
+      const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
+      const response = NextResponse.redirect(`${baseUrl}/creators/pending`)
+      setCookieOnResponse(response, sessionToken)
+      return response
+    }
+
+    if (creatorStatus !== 'active') {
+      return NextResponse.redirect(`${baseUrl}/creators/login?error=inactive_account`)
+    }
+
+    // Create session with creator role
+    const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
+    const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
+    setCookieOnResponse(response, sessionToken)
+
+    console.log('Creator session created:', {
+      creatorId,
+      timestamp: new Date().toISOString(),
+    })
+
+    return response
+  } catch (error) {
+    console.error('Creator verify error:', error)
+    return NextResponse.redirect(`${baseUrl}/creators/login?error=verification_failed`)
+  }
+}

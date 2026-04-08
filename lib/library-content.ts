@@ -1,7 +1,12 @@
 import { promises as fs } from 'fs'
 import path from 'path'
+import createDOMPurify from 'dompurify'
+import { JSDOM } from 'jsdom'
 import { marked } from 'marked'
 import type { LibraryAccess } from '@/lib/config/plans'
+
+const sanitizationWindow = new JSDOM('').window as unknown as Parameters<typeof createDOMPurify>[0]
+const DOMPurify = createDOMPurify(sanitizationWindow)
 
 // Category metadata mapping
 export const CATEGORY_META: Record<string, { name: string; description: string; file: string }> = {
@@ -35,6 +40,11 @@ export const CATEGORY_META: Record<string, { name: string; description: string; 
     description: 'Comprehensive peptide library with detailed protocol cards and deep-dive information',
     file: 'products.md',
   },
+  'stack-guides': {
+    name: 'Stack Guides',
+    description: 'Goal-based protocol stacks by persona — athlete, weight loss, focus, skin, biohacker & more',
+    file: 'stack-guides.md',
+  },
 }
 
 // Configure marked for better rendering
@@ -67,12 +77,21 @@ export async function getLibraryContent(
     if (!filteredMarkdown) {
       return null
     }
-    const html = await marked(filteredMarkdown)
-    return html
+    return renderLibraryMarkdown(filteredMarkdown)
   } catch (error) {
     console.error(`Failed to read library content for ${category}:`, error)
     return null
   }
+}
+
+export async function renderLibraryMarkdown(markdown: string): Promise<string> {
+  let html = await marked(markdown)
+  // Brand-style CULTR in rendered HTML (skip if already inside a tag attribute)
+  html = html.replace(/(?<![<\w"])CULTR(?!["\w>])/g, '<span class="font-display font-bold">CULTR</span>')
+
+  return DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+  })
 }
 
 function applyLibraryAccess(
@@ -83,6 +102,10 @@ function applyLibraryAccess(
   if (!access) return markdown
 
   if (category === 'products' && !access.advancedProtocols) {
+    return null
+  }
+
+  if (category === 'stack-guides' && !access.stackingGuides) {
     return null
   }
 
@@ -110,7 +133,7 @@ function removeSection(markdown: string, heading: string): string {
 
 // Get all available categories (excludes special pages like index and products)
 export function getCategories(): Array<{ slug: string; name: string; description: string }> {
-  const specialPages = ['index', 'products']
+  const specialPages = ['index', 'products', 'stack-guides']
   return Object.entries(CATEGORY_META)
     .filter(([slug]) => !specialPages.includes(slug))
     .map(([slug, meta]) => ({

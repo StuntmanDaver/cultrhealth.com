@@ -5,5 +5,31 @@
       "main": false,
       "master": false
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/siphox-fulfillment",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/siphox-results",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/siphox-status-sync",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/approve-commissions",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/update-tiers",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/stale-orders",
+      "schedule": "0 12 * * *"
+    }
+  ]
 }

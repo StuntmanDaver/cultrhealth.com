@@ -5,10 +5,10 @@ import Button from '@/components/ui/Button'
 import type { PlanTier } from '@/lib/config/plans'
 import type { ReactNode } from 'react'
 
-const TIER_ORDER: PlanTier[] = ['core', 'creator', 'catalyst', 'concierge', 'club']
+const TIER_ORDER: PlanTier[] = ['club', 'core', 'catalyst', 'concierge']
 
 function getTierRank(tier: PlanTier | null | undefined): number {
-  const normalized = tier ?? 'core'
+  const normalized = tier ?? 'club'
   const rank = TIER_ORDER.indexOf(normalized)
   return rank === -1 ? 0 : rank
 }
@@ -16,7 +16,7 @@ function getTierRank(tier: PlanTier | null | undefined): number {
 interface TierGateProps {
   requiredTier: PlanTier
   currentTier: PlanTier | null | undefined
-  upgradeMessage: string
+  upgradeMessage: string | ReactNode
   children: ReactNode
 }
 

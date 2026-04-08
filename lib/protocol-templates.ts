@@ -24,6 +24,24 @@ export type Intervention = {
   notes?: string
 }
 
+// Expected outcome for N-of-1 trial tracking (Altos Labs alignment)
+export type ExpectedOutcome = {
+  biomarkerId: string // Links to BIOMARKER_DEFINITIONS in lib/resilience.ts
+  metric: string // Human-readable metric name
+  direction: 'increase' | 'decrease' | 'maintain'
+  targetChange?: number // Expected % change
+  timeframeWeeks: number // Weeks to see effect
+  measurementMethod: string // How to measure (e.g., "blood test", "daily log", "wearable")
+}
+
+// Subjective outcome tracking
+export type SubjectiveOutcome = {
+  metric: string // e.g., "Energy level", "Sleep quality"
+  scale: '1-10' | 'binary' | 'categorical'
+  direction: 'increase' | 'decrease'
+  checkInFrequency: 'daily' | 'weekly' | 'biweekly'
+}
+
 export type SymptomProtocol = {
   id: string
   symptom: string
@@ -34,6 +52,11 @@ export type SymptomProtocol = {
   monitoring: string[]
   contraindications?: string[]
   synergies?: string[] // IDs of symptoms that often co-occur
+  // N-of-1 Trial Tracking (Altos Labs alignment)
+  expectedOutcomes?: ExpectedOutcome[] // Biomarker-based outcomes
+  subjectiveOutcomes?: SubjectiveOutcome[] // Self-reported outcomes
+  typicalDurationWeeks?: number // Standard protocol length
+  checkInSchedule?: number[] // Days to prompt check-ins (e.g., [7, 14, 28])
 }
 
 // Complete symptom-to-intervention mapping
@@ -55,6 +78,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Anxiety levels (1-10 scale)', 'Sleep quality', 'Heart rate variability'],
     synergies: ['panic-attacks', 'social-anxiety', 'overthinking'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (inflammation)', direction: 'decrease', targetChange: 20, timeframeWeeks: 8, measurementMethod: 'blood test' },
+      { biomarkerId: 'homocysteine', metric: 'Homocysteine', direction: 'decrease', targetChange: 15, timeframeWeeks: 8, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Anxiety level', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Sleep quality', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'HRV', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+    ],
+    typicalDurationWeeks: 8,
+    checkInSchedule: [7, 14, 28, 56],
   },
   {
     id: 'insomnia',
@@ -70,6 +105,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Sleep onset latency', 'Sleep duration', 'Wake episodes', 'Morning energy'],
     synergies: ['restless-legs', 'stress-sensitivity'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (inflammation)', direction: 'decrease', targetChange: 15, timeframeWeeks: 4, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Sleep quality', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Sleep onset latency (minutes)', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Night wakings', scale: '1-10', direction: 'decrease', checkInFrequency: 'daily' },
+      { metric: 'Morning energy', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+    ],
+    typicalDurationWeeks: 4,
+    checkInSchedule: [3, 7, 14, 28],
   },
   {
     id: 'brain-fog',
@@ -85,6 +132,18 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     ],
     monitoring: ['Mental clarity (1-10)', 'Task completion', 'Word recall'],
     synergies: ['poor-focus', 'mental-fatigue'],
+    // N-of-1 Trial Tracking
+    expectedOutcomes: [
+      { biomarkerId: 'homocysteine', metric: 'Homocysteine', direction: 'decrease', targetChange: 20, timeframeWeeks: 8, measurementMethod: 'blood test' },
+      { biomarkerId: 'hs-crp', metric: 'hs-CRP (neuroinflammation proxy)', direction: 'decrease', targetChange: 15, timeframeWeeks: 8, measurementMethod: 'blood test' },
+    ],
+    subjectiveOutcomes: [
+      { metric: 'Mental clarity', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Focus duration', scale: '1-10', direction: 'increase', checkInFrequency: 'daily' },
+      { metric: 'Word recall ability', scale: '1-10', direction: 'increase', checkInFrequency: 'weekly' },
+    ],
+    typicalDurationWeeks: 8,
+    checkInSchedule: [7, 14, 28, 56],
   },
   {
     id: 'depression',
@@ -1083,12 +1142,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'High appetite',
     category: 'metabolic',
     supplements: ['Protein', 'Chromium', 'Inositol'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Protein', type: 'supplement', dosageRange: '30-40g per meal', timing: 'Each meal', notes: 'Satiety' },
       { name: 'Chromium', type: 'supplement', dosageRange: '200-400mcg', timing: 'With meals' },
       { name: 'Inositol', type: 'supplement', dosageRange: '2-4g', timing: 'Before meals' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Triple agonist appetite control' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Triple agonist appetite control' },
     ],
     monitoring: ['Appetite rating', 'Caloric intake', 'Satiety duration'],
     synergies: ['sugar-cravings', 'binge-eating'],
@@ -1098,12 +1157,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Binge eating',
     category: 'metabolic',
     supplements: ['Magnesium', 'Chromium', 'Omega-3'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Magnesium', type: 'supplement', dosageRange: '400mg', timing: 'Evening' },
       { name: 'Chromium', type: 'supplement', dosageRange: '400mcg', timing: 'With meals' },
       { name: 'Omega-3', type: 'supplement', dosageRange: '2-3g', timing: 'With meals' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Appetite normalization' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Appetite normalization' },
     ],
     monitoring: ['Binge frequency', 'Trigger identification', 'Emotional state'],
     contraindications: ['Active eating disorder without treatment team'],
@@ -1114,12 +1173,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Sugar cravings',
     category: 'metabolic',
     supplements: ['Chromium', 'Inositol', 'Magnesium'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Chromium', type: 'supplement', dosageRange: '200-400mcg', timing: 'With meals' },
       { name: 'Inositol', type: 'supplement', dosageRange: '2-4g', timing: 'Before meals' },
       { name: 'Magnesium', type: 'supplement', dosageRange: '300-400mg', timing: 'Evening' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Craving reduction' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Craving reduction' },
     ],
     monitoring: ['Craving intensity', 'Sugar intake', 'Blood glucose patterns'],
     synergies: ['insulin-resistance', 'high-appetite'],
@@ -1129,12 +1188,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Night cravings',
     category: 'metabolic',
     supplements: ['Magnesium', 'Glycine', 'Chromium'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Magnesium', type: 'supplement', dosageRange: '400mg', timing: 'After dinner' },
       { name: 'Glycine', type: 'supplement', dosageRange: '3g', timing: 'Evening' },
       { name: 'Chromium', type: 'supplement', dosageRange: '200mcg', timing: 'With dinner' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Evening appetite control' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Evening appetite control' },
     ],
     monitoring: ['Evening hunger', 'Night eating frequency', 'Sleep quality'],
     synergies: ['sugar-cravings', 'insomnia'],
@@ -1144,12 +1203,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Weight gain',
     category: 'metabolic',
     supplements: ['Vitamin D', 'Magnesium', 'Chromium'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Vitamin D', type: 'supplement', dosageRange: '5000 IU', timing: 'Morning' },
       { name: 'Magnesium', type: 'supplement', dosageRange: '400mg', timing: 'Evening' },
       { name: 'Chromium', type: 'supplement', dosageRange: '400mcg', timing: 'With meals' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Multi-receptor weight loss' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Multi-receptor weight loss' },
     ],
     monitoring: ['Weight', 'Body composition', 'Metabolic markers'],
     synergies: ['insulin-resistance', 'slow-metabolism'],
@@ -1159,12 +1218,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Weight loss resistance',
     category: 'metabolic',
     supplements: ['Zinc', 'Selenium', 'Iodine'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Zinc', type: 'supplement', dosageRange: '30mg', timing: 'Evening' },
       { name: 'Selenium', type: 'supplement', dosageRange: '200mcg', timing: 'With meals', notes: 'Thyroid support' },
       { name: 'Iodine', type: 'supplement', dosageRange: '150-300mcg', timing: 'Morning', notes: 'If deficient' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Metabolic breakthrough' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Metabolic breakthrough' },
     ],
     monitoring: ['Weight', 'Thyroid panel', 'Metabolic rate', 'Body composition'],
     synergies: ['slow-metabolism', 'insulin-resistance'],
@@ -1219,12 +1278,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'Insulin resistance',
     category: 'metabolic',
     supplements: ['Chromium', 'Magnesium', 'Alpha lipoic acid'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Chromium', type: 'supplement', dosageRange: '400-1000mcg', timing: 'With meals' },
       { name: 'Magnesium', type: 'supplement', dosageRange: '400-600mg', timing: 'Divided doses' },
       { name: 'Alpha lipoic acid', type: 'supplement', dosageRange: '600mg', timing: 'Before meals' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'GLP-1/GIP/glucagon' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'GLP-1/GIP/glucagon' },
     ],
     monitoring: ['Fasting glucose', 'HbA1c', 'Fasting insulin', 'HOMA-IR'],
     synergies: ['weight-gain', 'belly-fat', 'sugar-cravings'],
@@ -1234,12 +1293,12 @@ export const SYMPTOM_PROTOCOLS: SymptomProtocol[] = [
     symptom: 'High triglycerides',
     category: 'metabolic',
     supplements: ['Omega-3', 'Niacin B3', 'Magnesium'],
-    peptide: 'Retatrutide',
+    peptide: 'RTA',
     interventions: [
       { name: 'Omega-3', type: 'supplement', dosageRange: '3-4g EPA/DHA', timing: 'With meals' },
       { name: 'Niacin B3', type: 'supplement', dosageRange: '500-1500mg', timing: 'With meals', notes: 'Flush-free or extended release' },
       { name: 'Magnesium', type: 'supplement', dosageRange: '400mg', timing: 'Evening' },
-      { name: 'Retatrutide', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Metabolic optimization' },
+      { name: 'RTA', type: 'peptide', dosageRange: 'Per protocol', timing: 'Weekly', notes: 'Metabolic optimization' },
     ],
     monitoring: ['Lipid panel', 'Triglyceride levels', 'Liver enzymes'],
     synergies: ['insulin-resistance', 'belly-fat'],
@@ -1849,25 +1908,6 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     notes: 'Potent anabolic; requires careful glucose monitoring',
   },
   {
-    id: 'ace-031',
-    name: 'ACE-031',
-    category: 'growth_factor',
-    price: 160,
-    size: '1mg',
-    evidenceGrade: 'B-C',
-    riskTier: 'moderate',
-    mechanism: 'Myostatin inhibitor (ActRIIB-Fc fusion protein) promoting muscle growth',
-    dosageRange: '1-5mg',
-    timing: 'Weekly',
-    route: 'SubQ',
-    duration: '8-12 weeks',
-    goals: ['muscle_strength', 'fat_loss'],
-    bestFor: ['Muscle sparing during deficit', 'Lean mass gains', 'Body recomposition'],
-    contraindications: ['Cardiac conditions', 'Pregnancy'],
-    synergyWith: ['Follistatin 344', 'Cagrilintide', 'Sermorelin'],
-    notes: 'Early clinical trials show promise; muscle-sparing during weight loss',
-  },
-  {
     id: 'follistatin-344',
     name: 'Follistatin 344',
     category: 'growth_factor',
@@ -1883,7 +1923,7 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     goals: ['muscle_strength', 'fat_loss'],
     bestFor: ['Muscle growth', 'Fat reduction', 'Athletic performance'],
     contraindications: ['Cancer history', 'Pregnancy'],
-    synergyWith: ['ACE-031', 'IGF-1 LR3'],
+    synergyWith: ['IGF-1 LR3', 'CJC-1295'],
     notes: 'Limited human data; potent in animal models',
   },
   {
@@ -1980,25 +2020,6 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     contraindications: ['Active cancer', 'Pregnancy', 'Pituitary disorders'],
     synergyWith: ['Cagrilintide', 'MOTS-c', 'AOD-9604'],
     notes: 'FDA-approved for HIV lipodystrophy; effective for visceral fat',
-  },
-  {
-    id: 'testagen',
-    name: 'Testagen',
-    category: 'bioregulator',
-    price: 50,
-    size: '20mg',
-    evidenceGrade: 'D',
-    riskTier: 'low',
-    mechanism: 'Russian bioregulator targeting testicular function and testosterone support',
-    dosageRange: '10-20mg',
-    timing: 'Daily for 10-20 days',
-    route: 'SubQ or oral',
-    duration: '10-20 day cycles',
-    goals: ['hormonal', 'muscle_strength', 'sexual_function'],
-    bestFor: ['Male hormonal support', 'Testosterone optimization', 'Reproductive health'],
-    contraindications: ['Prostate cancer', 'Pregnancy'],
-    synergyWith: ['Kisspeptin-10', 'Zinc', 'Vitamin D'],
-    notes: 'Russian bioregulator; limited English-language data',
   },
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -2137,44 +2158,6 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     synergyWith: ['NAD+', 'CoQ10', 'MOTS-c'],
     notes: 'In clinical trials for heart failure and mitochondrial diseases',
   },
-  {
-    id: 'tp508',
-    name: 'TP508 (Chrysalin)',
-    category: 'repair',
-    price: 80,
-    size: '5mg',
-    evidenceGrade: 'C-D',
-    riskTier: 'low-moderate',
-    mechanism: 'Thrombin-derived peptide promoting wound healing and endothelial repair',
-    dosageRange: '100-500mcg',
-    timing: 'Daily or every other day',
-    route: 'SubQ or local',
-    duration: '4-8 weeks',
-    goals: ['tissue_repair', 'skin_hair'],
-    bestFor: ['Wound healing', 'Fracture repair', 'Diabetic ulcers'],
-    contraindications: ['Active bleeding disorders', 'Pregnancy'],
-    synergyWith: ['BPC-157', 'GHK-Cu'],
-    notes: 'Specialized wound healing peptide',
-  },
-  {
-    id: 'fgl',
-    name: 'FGL (Fibroblast Growth Factor-Like)',
-    category: 'repair',
-    price: 110,
-    size: '10mg',
-    evidenceGrade: 'D',
-    riskTier: 'low-moderate',
-    mechanism: 'FGF receptor modulator promoting cognitive and neural repair',
-    dosageRange: '1-5mg',
-    timing: '2-3x weekly',
-    route: 'SubQ',
-    duration: '4-8 weeks',
-    goals: ['cognitive', 'tissue_repair'],
-    bestFor: ['Neural repair', 'Cognitive enhancement', 'Memory'],
-    contraindications: ['Cancer history', 'Pregnancy'],
-    synergyWith: ['Semax', 'Selank', 'BPC-157'],
-    notes: 'Emerging neuroprotective peptide',
-  },
 
   // ─────────────────────────────────────────────────────────────────────────
   // METABOLIC & WEIGHT LOSS
@@ -2195,8 +2178,8 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     goals: ['fat_loss', 'metabolic_health'],
     bestFor: ['Weight loss', 'Appetite control', 'Metabolic syndrome'],
     contraindications: ['Pancreatitis history', 'MTC/MEN2 history', 'Pregnancy', 'Gastroparesis'],
-    synergyWith: ['Semaglutide', 'AOD-9604', 'Protein (1.4g/lb)'],
-    notes: 'Similar to GLP-1s; requires slow titration for GI tolerance',
+    synergyWith: ['RTA', 'SEMA/B6', 'AOD-9604', 'Protein (1.4g/lb)'],
+    notes: 'Can be combined with GLP-1 agonists (RTA, SEMA/B6); requires slow titration for GI tolerance',
   },
   {
     id: 'cagrilintide-10mg',
@@ -2214,8 +2197,8 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     goals: ['fat_loss', 'metabolic_health'],
     bestFor: ['Weight loss', 'Appetite control', 'Longer treatment duration'],
     contraindications: ['Pancreatitis history', 'MTC/MEN2 history', 'Pregnancy', 'Gastroparesis'],
-    synergyWith: ['Semaglutide', 'AOD-9604', 'Protein (1.4g/lb)'],
-    notes: 'Larger vial for extended treatment',
+    synergyWith: ['RTA', 'SEMA/B6', 'AOD-9604', 'Protein (1.4g/lb)'],
+    notes: 'Can be combined with GLP-1 agonists (RTA, SEMA/B6); larger vial for extended treatment',
   },
   {
     id: 'sema-cagri-blend',
@@ -2238,7 +2221,7 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
   },
   {
     id: 'aod-9604',
-    name: 'FRAG 176-191 + AOD 9604 Blend',
+    name: 'AOD-9604',
     category: 'metabolic',
     price: 95,
     size: '5mg each',
@@ -2334,44 +2317,6 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     contraindications: ['Narcolepsy', 'Untreated sleep apnea'],
     synergyWith: ['Sermorelin', 'Magnesium', 'Glycine'],
     notes: 'Very safe; promotes restorative sleep without sedation',
-  },
-  {
-    id: 'humanin',
-    name: 'Humanin (HNG)',
-    category: 'neuropeptide',
-    price: 60,
-    size: '5mg',
-    evidenceGrade: 'D',
-    riskTier: 'low',
-    mechanism: 'Mitochondrial-derived peptide with neuroprotective and cardioprotective effects',
-    dosageRange: '0.5-5mg',
-    timing: 'Daily or 3x weekly',
-    route: 'SubQ',
-    duration: '4-12 weeks',
-    goals: ['cognitive', 'anti_aging', 'cardiovascular'],
-    bestFor: ['Neuroprotection', 'Mitochondrial health', 'Alzheimer\'s prevention'],
-    contraindications: ['Pregnancy'],
-    synergyWith: ['NAD+', 'Semax', 'Elamipretide'],
-    notes: 'Emerging longevity peptide; excellent safety profile',
-  },
-  {
-    id: 'dihexa',
-    name: 'Dihexa',
-    category: 'neuropeptide',
-    price: 100,
-    size: '10mg',
-    evidenceGrade: 'D',
-    riskTier: 'low-moderate',
-    mechanism: 'HGF/c-Met system modulator promoting synaptic plasticity and memory',
-    dosageRange: '10-20mg',
-    timing: 'Morning',
-    route: 'Oral or SubQ',
-    duration: '4-8 weeks',
-    goals: ['cognitive'],
-    bestFor: ['Memory enhancement', 'Synaptic plasticity', 'Cognitive decline'],
-    contraindications: ['Cancer history', 'Pregnancy'],
-    synergyWith: ['Semax', 'NAD+'],
-    notes: 'Potent nootropic; 10 million times more potent than BDNF in some models',
   },
   {
     id: 'pinealon',
@@ -3359,12 +3304,12 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     goals: ['fat_loss', 'metabolic_health'],
     bestFor: ['Weight loss', 'Appetite control', 'Metabolic optimization'],
     contraindications: ['MTC/MEN2', 'Pancreatitis history', 'Pregnancy'],
-    synergyWith: ['Semaglutide', 'Tirzepatide', 'Exercise'],
-    notes: 'Often combined with semaglutide (CagriSema) for enhanced weight loss',
+    synergyWith: ['RTA', 'SEMA/B6', 'TIRZ/B3', 'Exercise'],
+    notes: 'Can be combined with GLP-1 agonists (RTA, SEMA/B6) for enhanced weight loss',
   },
   {
     id: 'glp1-semaglutide',
-    name: 'GLP-1 (Semaglutide)',
+    name: 'GLP-1 (SEMA/B6)',
     category: 'metabolic',
     price: 95,
     size: '5mg',
@@ -3383,7 +3328,7 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
   },
   {
     id: 'glp1-tirzepatide',
-    name: 'GLP-1 (Tirzepatide)',
+    name: 'GLP-1 (TIRZ/B3)',
     category: 'metabolic',
     price: 120,
     size: '5mg',
@@ -3395,14 +3340,14 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     route: 'SubQ',
     duration: 'Ongoing',
     goals: ['fat_loss', 'metabolic_health', 'cardiovascular'],
-    bestFor: ['Maximum weight loss', 'Type 2 diabetes', 'Metabolic syndrome'],
+    bestFor: ['Significant weight loss', 'Type 2 diabetes', 'Metabolic syndrome'],
     contraindications: ['MTC/MEN2', 'Pancreatitis', 'Pregnancy'],
     synergyWith: ['Exercise', 'Metformin', 'Lifestyle modification'],
-    notes: 'Most effective weight loss agent; titrate slowly; GI side effects common initially',
+    notes: 'FDA-approved dual agonist; titrate slowly; GI side effects common initially',
   },
   {
     id: 'glp1-retatrutide',
-    name: 'GLP-1 (Retatrutide)',
+    name: 'RTA',
     category: 'metabolic',
     price: 130,
     size: '5mg',
@@ -3414,10 +3359,10 @@ export const PEPTIDE_CATALOG: CatalogPeptide[] = [
     route: 'SubQ',
     duration: 'Ongoing',
     goals: ['fat_loss', 'metabolic_health'],
-    bestFor: ['Severe obesity', 'Maximum metabolic enhancement', 'Research'],
+    bestFor: ['Significant weight loss', 'Maximum metabolic optimization', 'Primary GLP recommendation'],
     contraindications: ['MTC/MEN2', 'Pancreatitis', 'Pregnancy', 'Cardiac conditions'],
-    synergyWith: ['Exercise', 'Caloric deficit'],
-    notes: 'Phase 3 trials; up to 24% weight loss in studies; not yet FDA-approved',
+    synergyWith: ['Cagrilintide', 'Exercise', 'Caloric deficit', 'BPC-157'],
+    notes: 'CULTR primary GLP recommendation; triple agonist with up to 24% weight loss in trials; titrate slowly',
   },
   {
     id: 'glp1-mz',
@@ -3530,6 +3475,8 @@ export function getPeptidesForGoals(goalIds: PeptideGoal[]): {
   recommendations: Array<CatalogPeptide & { matchedGoals: PeptideGoal[]; matchCount: number }>
 } {
   const goals = goalIds.map(id => PEPTIDE_GOALS.find(g => g.id === id)).filter((g): g is GoalDefinition => g !== null)
+  const evidenceOrder: Record<EvidenceGrade, number> = { 'A': 0, 'B': 1, 'B-C': 2, 'C': 3, 'C-D': 4, 'D': 5, 'D-E': 6 }
+  const riskOrder: Record<RiskTier, number> = { 'low': 0, 'low-moderate': 1, 'moderate': 2, 'moderate-high': 3, 'high': 4 }
   
   // Find all peptides that match any of the goals
   const peptideMatches = new Map<string, { peptide: CatalogPeptide; matchedGoals: PeptideGoal[] }>()
@@ -3541,21 +3488,36 @@ export function getPeptidesForGoals(goalIds: PeptideGoal[]): {
     }
   }
 
-  // Convert to array and sort by match count, then evidence
-  const recommendations = Array.from(peptideMatches.values())
+  // Convert to array and compute synergy within goal-matched set
+  const recommendationEntries = Array.from(peptideMatches.values())
     .map(({ peptide, matchedGoals }) => ({
       ...peptide,
       matchedGoals,
       matchCount: matchedGoals.length,
     }))
-    .sort((a, b) => {
-      // First by match count (more is better)
-      if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount
-      
-      // Then by evidence grade
-      const evidenceOrder: Record<EvidenceGrade, number> = { 'A': 0, 'B': 1, 'B-C': 2, 'C': 3, 'C-D': 4, 'D': 5, 'D-E': 6 }
-      return evidenceOrder[a.evidenceGrade] - evidenceOrder[b.evidenceGrade]
-    })
+  const recommendationIds = new Set(recommendationEntries.map((rec) => rec.id))
+  const synergyScores = new Map<string, number>()
+
+  for (const rec of recommendationEntries) {
+    const synergyCount = getSynergyPeptides(rec.id).filter((p) => recommendationIds.has(p.id)).length
+    synergyScores.set(rec.id, synergyCount)
+  }
+
+  // Sort by match count, synergy, then evidence/risk
+  const recommendations = recommendationEntries.sort((a, b) => {
+    if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount
+
+    const synergyDiff = (synergyScores.get(b.id) ?? 0) - (synergyScores.get(a.id) ?? 0)
+    if (synergyDiff !== 0) return synergyDiff
+
+    const evidenceDiff = evidenceOrder[a.evidenceGrade] - evidenceOrder[b.evidenceGrade]
+    if (evidenceDiff !== 0) return evidenceDiff
+
+    const riskDiff = riskOrder[a.riskTier] - riskOrder[b.riskTier]
+    if (riskDiff !== 0) return riskDiff
+
+    return a.name.localeCompare(b.name)
+  })
 
   return { goals, recommendations }
 }
@@ -3871,14 +3833,6 @@ export const PROTOCOL_TEMPLATES: ProtocolTemplate[] = [
         timing: 'Intranasal 1-2x daily',
         notes: 'Reduces anxiety without sedation, enhances learning',
         priority: 'primary',
-      },
-      {
-        name: 'Dihexa',
-        purpose: 'Memory & synaptic plasticity',
-        dosageRange: '10-20mg',
-        timing: 'Oral or SubQ morning',
-        notes: 'Potent nootropic, enhances HGF signaling',
-        priority: 'secondary',
       },
       {
         name: 'NAD+',

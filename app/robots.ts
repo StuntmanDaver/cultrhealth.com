@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next'
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -8,13 +10,15 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: [
           '/api/',
-          '/library/',
-          '/provider/',
-          '/success',
+          '/admin/',
+          '/members/',
+          '/dashboard/',
+          '/track/',
           '/join/',
+          '/success/',
         ],
       },
     ],
-    sitemap: 'https://www.cultrhealth.com/sitemap.xml',
+    sitemap: `${BASE_URL}/sitemap.xml`,
   }
 }

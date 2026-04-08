@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CULTR Trust Marquee Preview</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1F3533;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Context: simulated testimonials section above */
+    .context-above {
+      width: 100%;
+      background: #2A4542;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .context-above h2 {
+      color: #FDFBF7;
+      font-size: 28px;
+      font-weight: 600;
+      opacity: 0.3;
+    }
+    .context-above p {
+      color: #FDFBF7;
+      opacity: 0.2;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    /* ─── TRUST MARQUEE SECTION ─── */
+    .trust-marquee-section {
+      width: 100%;
+      background: #2A4542;
+      padding: 32px 0 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .trust-marquee-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+    .trust-marquee-section::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .trust-label {
+      text-align: center;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: rgba(253, 251, 247, 0.35);
+      margin-bottom: 24px;
+    }
+
+    .marquee-container {
+      width: 100%;
+      overflow: hidden;
+      mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    }
+
+    .marquee-track {
+      display: flex;
+      align-items: center;
+      animation: marquee-scroll 30s linear infinite;
+      width: max-content;
+    }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes marquee-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .logo-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 48px;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .logo-item:hover {
+      opacity: 1;
+    }
+
+    .logo-item svg {
+      height: 36px;
+      width: auto;
+    }
+
+    /* Context: simulated provider section below */
+    .context-below {
+      width: 100%;
+      background: #FDFBF7;
+      padding: 60px 20px;
+      text-align: center;
+    }
+    .context-below h2 {
+      color: #2A4542;
+      font-size: 28px;
+      font-weight: 600;
+      opacity: 0.3;
+    }
+    .context-below p {
+      color: #2A4542;
+      opacity: 0.2;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    /* Bridge transition */
+    .bridge {
+      width: 100%;
+      height: 80px;
+      background: linear-gradient(to bottom, #2A4542, #FDFBF7);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Simulated testimonials context -->
+  <div class="context-above">
+    <h2>What members say.</h2>
+    <p>⭐ 4.9 out of 5 from 847 reviews</p>
+    <p style="margin-top: 24px; opacity: 0.15;">[ Testimonial cards would be here ]</p>
+  </div>
+
+  <!-- ═══ THE TRUST MARQUEE ═══ -->
+  <section class="trust-marquee-section">
+    <p class="trust-label">Trusted by leading health platforms</p>
+
+    <div class="marquee-container">
+      <div class="marquee-track">
+        <!-- First set -->
+        <div class="logo-item">
+          <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="32" font-family="Arial Black, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="28" fill="#FDFBF7" letter-spacing="-0.5">CLIA</text>
+            <text x="0" y="47" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="14" fill="#FDFBF7" letter-spacing="1">Certified</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="18" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="18" cy="18" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="24" cy="18" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="30" cy="18" r="1.8" fill="#FDFBF7" opacity="0.7"/>
+            <circle cx="12" cy="24" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="18" cy="24" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="24" cy="24" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="30" cy="24" r="1.8" fill="#FDFBF7" opacity="0.8"/>
+            <circle cx="12" cy="30" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="18" cy="30" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="24" cy="30" r="1.8" fill="#FDFBF7" opacity="0.8"/><circle cx="30" cy="30" r="1.8" fill="#FDFBF7" opacity="0.9"/>
+            <circle cx="12" cy="36" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="18" cy="36" r="1.8" fill="#FDFBF7" opacity="0.8"/><circle cx="24" cy="36" r="1.8" fill="#FDFBF7" opacity="0.9"/><circle cx="30" cy="36" r="1.8" fill="#FDFBF7"/>
+            <text x="40" y="32" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="22" fill="#FDFBF7" letter-spacing="2">CAP</text>
+            <text x="40" y="46" font-family="Arial, Helvetica Neue, sans-serif" font-weight="500" font-size="10" fill="#FDFBF7" letter-spacing="1.5">ACCREDITED</text>
+            <path d="M120 35 L126 41 L136 28" stroke="#FDFBF7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30 5 L50 5 L60 27.5 L50 50 L30 50 L20 27.5 Z" fill="none" stroke="#FDFBF7" stroke-width="1.5"/>
+            <circle cx="35" cy="20" r="2" fill="#B7E4C7"/><circle cx="45" cy="20" r="2" fill="#B7E4C7"/><circle cx="40" cy="28" r="2" fill="#B7E4C7"/><circle cx="35" cy="36" r="2" fill="#B7E4C7"/><circle cx="45" cy="36" r="2" fill="#B7E4C7"/>
+            <line x1="35" y1="20" x2="45" y2="20" stroke="#B7E4C7" stroke-width="1"/><line x1="35" y1="20" x2="40" y2="28" stroke="#B7E4C7" stroke-width="1"/><line x1="45" y1="20" x2="40" y2="28" stroke="#B7E4C7" stroke-width="1"/><line x1="40" y1="28" x2="35" y2="36" stroke="#B7E4C7" stroke-width="1"/><line x1="40" y1="28" x2="45" y2="36" stroke="#B7E4C7" stroke-width="1"/>
+            <text x="68" y="24" font-family="Arial, Helvetica Neue, sans-serif" font-weight="300" font-size="16" fill="#FDFBF7">LegitScript</text>
+            <text x="68" y="42" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="13" fill="#FDFBF7">Certified</text>
+            <circle cx="148" cy="38" r="7" fill="#B7E4C7"/>
+            <path d="M144 38 L147 41 L153 35" stroke="#2A4542" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8 L21.5 18.5 L32.5 18.5 L23.5 25 L27 35.5 L18 29 L9 35.5 L12.5 25 L3.5 18.5 L14.5 18.5 Z" fill="#00B67A"/>
+            <text x="40" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="20" fill="#FDFBF7" letter-spacing="-0.3">Trustpilot</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="8" y="30" font-family="Helvetica Neue, Arial, sans-serif" font-weight="300" font-size="26" fill="#FDFBF7" letter-spacing="3">prenuvo</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 140 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 26 C12 18, 18 18, 22 26 C26 34, 32 34, 36 26" stroke="#FDFBF7" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <text x="46" y="32" font-family="Helvetica Neue, Arial, sans-serif" font-weight="500" font-size="26" fill="#FDFBF7" letter-spacing="1">path</text>
+            <text x="126" y="22" font-family="Helvetica Neue, Arial, sans-serif" font-weight="300" font-size="8" fill="#FDFBF7" opacity="0.7">®</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M117.419 26.5225C116.087 27.8541 113.928 27.8541 112.596 26.5225L93.3074 7.2334C91.9757 5.90177 91.9757 3.74277 93.3074 2.41114C94.639 1.0795 96.798 1.0795 98.1296 2.41114L117.419 21.7002C118.75 23.0318 118.75 25.1908 117.419 26.5225Z" fill="url(#p0)"/>
+            <path d="M93.2808 26.5889C91.9491 25.2572 91.9491 23.0982 93.2808 21.7666L112.57 2.47754C113.901 1.14591 116.06 1.14591 117.392 2.47754C118.724 3.80917 118.724 5.96817 117.392 7.2998L98.103 26.5889C96.7714 27.9205 94.6124 27.9205 93.2808 26.5889Z" fill="url(#p1)"/>
+            <path d="M86.3843 18.5911C86.3843 16.9464 85.8301 15.5699 84.7575 14.4258C83.667 13.2996 82.3799 12.7276 80.8962 12.7276C79.3946 12.7276 78.1074 13.2996 77.017 14.4258C75.9265 15.5699 75.3902 16.9464 75.3902 18.5911C75.3902 20.2357 75.9265 21.6122 77.017 22.7384C78.1074 23.8825 79.3946 24.4367 80.8962 24.4367C82.3799 24.4367 83.667 23.8825 84.7575 22.7384C85.8301 21.6122 86.3843 20.2357 86.3843 18.5911ZM71.7434 18.5911C71.7434 16.1241 72.6372 13.9789 74.4606 12.1555C76.284 10.3321 78.4292 9.42041 80.8962 9.42041C83.3631 9.42041 85.4904 10.3321 87.3138 12.1555C89.1373 13.9789 90.049 16.1241 90.049 18.5911C90.049 21.058 89.1373 23.1853 87.3138 25.0087C85.4904 26.8321 83.3631 27.7438 80.8962 27.7438C78.4292 27.7438 76.284 26.8321 74.4606 25.0087C72.6372 23.1853 71.7434 21.058 71.7434 18.5911Z" fill="#FDFBF7"/>
+            <path d="M56.5426 1.73364V11.6372C56.5783 11.5836 56.6677 11.5121 56.775 11.4048C56.8822 11.2976 57.1146 11.1188 57.4543 10.8685C57.7939 10.6183 58.1693 10.4038 58.5626 10.2071C58.9559 10.0105 59.4386 9.8317 60.0464 9.67081C60.6363 9.50992 61.2441 9.43842 61.8519 9.43842C63.9613 9.43842 65.6953 10.1356 67.0182 11.53C68.3411 12.9243 69.0025 14.7835 69.0025 17.1432V27.3864H65.3378V17.1432C65.3378 15.874 64.9266 14.8192 64.1222 13.9791C63.3178 13.1567 62.3167 12.7277 61.1189 12.7277C59.7246 12.7277 58.5984 13.1925 57.776 14.0863C56.9537 14.9801 56.5426 16.2494 56.5426 17.8583V27.3686H52.8958V1.73364H56.5426Z" fill="#FDFBF7"/>
+            <path d="M30.3835 1.73364L40.6268 1.75152C43.058 1.75152 45.1138 2.53809 46.7584 4.14697C48.4031 5.75586 49.2433 7.7044 49.2433 9.99259C49.2433 12.2808 48.4031 14.2293 46.7584 15.8203C45.1138 17.4292 43.058 18.2158 40.6268 18.2158H34.4058V27.3686H30.3835V1.73364ZM40.6268 5.4162L34.4058 5.39833V14.5511H40.6268C41.8781 14.5511 42.9686 14.1221 43.8624 13.2461C44.7563 12.3702 45.2032 11.2797 45.2032 9.99259C45.2032 8.70548 44.7563 7.61501 43.8624 6.73907C42.9686 5.84524 41.8781 5.4162 40.6268 5.4162Z" fill="#FDFBF7"/>
+            <path d="M25.0686 9.79598V27.3686H21.4039V9.79598H25.0686ZM25.444 4.30789C25.444 4.95144 25.2295 5.46986 24.8183 5.88102C24.3893 6.31006 23.8709 6.5067 23.2452 6.5067C22.6016 6.5067 22.0832 6.31006 21.6721 5.88102C21.243 5.46986 21.0464 4.95144 21.0464 4.30789C21.0464 3.68221 21.243 3.16379 21.6721 2.75263C22.0832 2.32359 22.6016 2.12695 23.2452 2.12695C23.8709 2.12695 24.3893 2.32359 24.8183 2.75263C25.2295 3.16379 25.444 3.68221 25.444 4.30789Z" fill="#FDFBF7"/>
+            <path d="M14.2833 20.0393C14.2833 19.2527 14.0331 18.6092 13.5325 18.0729C13.032 17.5366 12.3705 17.1254 11.584 16.8215C10.7974 16.5176 9.92146 16.2495 8.95613 15.9992C7.9908 15.7489 7.02547 15.445 6.06014 15.0875C5.09481 14.73 4.20098 14.3009 3.41441 13.8004C2.62785 13.2999 1.98429 12.6027 1.48375 11.6731C0.983208 10.7435 0.732937 9.63517 0.732937 8.33018C0.732937 6.36377 1.48375 4.70125 3.00325 3.37839C4.50488 2.05553 6.56068 1.37622 9.15277 1.37622C10.1002 1.37622 11.0119 1.50136 11.8879 1.73375C12.7638 1.96615 13.4968 2.23429 14.0688 2.55607C14.6409 2.87785 15.1593 3.18175 15.5883 3.50353C16.0174 3.8253 16.3391 4.09345 16.5536 4.30797L16.8397 4.6655L14.2833 7.23972C14.2297 7.20396 14.1582 7.11458 14.0688 7.00732C13.9794 6.90006 13.7828 6.7213 13.461 6.47103C13.1392 6.22075 12.7996 6.00624 12.4421 5.80959C12.0845 5.61295 11.6019 5.43419 11.0119 5.2733C10.422 5.13029 9.79633 5.04091 9.15277 5.04091C7.82991 5.04091 6.75732 5.38056 5.95288 6.02411C5.14843 6.68554 4.75515 7.45423 4.75515 8.33018C4.75515 9.11675 5.00542 9.77818 5.50596 10.3145C6.00651 10.8508 6.65006 11.2798 7.43663 11.5837C8.22319 11.8876 9.11702 12.1558 10.0824 12.406C11.0477 12.6563 12.013 12.9423 12.9783 13.2999C13.9437 13.6574 14.8196 14.0864 15.6062 14.587C16.3928 15.0875 17.0542 15.8026 17.5547 16.7321C18.0553 17.6617 18.3055 18.7701 18.3055 20.0572C18.3055 22.3096 17.4832 24.1688 15.8743 25.5989C14.2476 27.029 12.013 27.7441 9.15277 27.7441C7.97292 27.7441 6.86458 27.6011 5.80987 27.315C4.75515 27.029 3.89708 26.7072 3.21777 26.314C2.53846 25.9207 1.94854 25.5274 1.448 25.1341C0.947455 24.7408 0.572048 24.419 0.35753 24.1509L0 23.704L2.55634 21.1476C2.59209 21.2191 2.68148 21.3264 2.78874 21.4694C2.89599 21.6124 3.16414 21.8448 3.55743 22.1845C3.95071 22.5241 4.39762 22.828 4.86241 23.0783C5.3272 23.3286 5.935 23.561 6.70369 23.7755C7.47238 23.99 8.2947 24.0794 9.15277 24.0794C10.7259 24.0794 11.9773 23.704 12.9068 22.9174C13.8185 22.1487 14.2833 21.1834 14.2833 20.0393Z" fill="#FDFBF7"/>
+            <path d="M128.198 22.1357C128.198 21.9037 128.387 21.7156 128.619 21.7156H199.475C199.707 21.7156 199.895 21.9037 199.895 22.1357C199.895 22.3677 199.707 22.5558 199.475 22.5558H128.619C128.387 22.5558 128.198 22.3677 128.198 22.1357Z" fill="#B7E4C7"/>
+            <path d="M198.228 8.04028H199.437V19.4723H198.228V14.3442H191.777V19.4723H190.569V8.04028H191.777V13.2337H198.228V8.04028Z" fill="#FDFBF7"/>
+            <path d="M177.435 8.04028H185.813V9.15082H182.236V19.4723H181.028V9.15082H177.435V8.04028Z" fill="#FDFBF7"/>
+            <path d="M169.203 19.4723V8.04028H170.411V18.3617H175.915V19.4723H169.203Z" fill="#FDFBF7"/>
+            <path d="M160.141 7.89307L164.534 19.472H163.244L161.921 15.9281H156.973L155.666 19.472H154.392L158.802 7.89307H160.141ZM159.488 9.28124H159.422L157.381 14.8339H161.545L159.488 9.28124Z" fill="#FDFBF7"/>
+            <path d="M142.877 8.04028H150.242V9.15082H144.085V13.1194H148.756V14.2299H144.085V18.3617H150.242V19.4723H142.877V8.04028Z" fill="#FDFBF7"/>
+            <path d="M135.786 8.04028H136.995V19.4723H135.786V14.3442H129.335V19.4723H128.127V8.04028H129.335V13.2337H135.786V8.04028Z" fill="#FDFBF7"/>
+            <defs>
+              <linearGradient id="p0" x1="105.388" y1="23.6985" x2="105.388" y2="5.28529" gradientUnits="userSpaceOnUse"><stop stop-color="#F1D537"/><stop offset="1" stop-color="#F66B37"/></linearGradient>
+              <linearGradient id="p1" x1="96.4959" y1="18.5515" x2="108.26" y2="6.78746" gradientUnits="userSpaceOnUse"><stop offset="0.0885417" stop-color="#079E8E"/><stop offset="0.692708" stop-color="#4AC6C1"/></linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        <!-- VitaminLab -->
+        <div class="logo-item">
+          <svg viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="32" font-family="Arial, Helvetica Neue, sans-serif" font-weight="800" font-size="28" fill="#FDFBF7" letter-spacing="-0.3">VitaminLab</text>
+          </svg>
+        </div>
+
+        <!-- ProHealth Longevity -->
+        <div class="logo-item">
+          <svg viewBox="0 0 220 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="28" font-family="Arial, Helvetica Neue, sans-serif" font-weight="400" font-size="24" fill="#FDFBF7" letter-spacing="0.5">prohealth</text>
+            <line x1="4" y1="34" x2="168" y2="34" stroke="url(#phGrad)" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="4" y="46" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="11" fill="#FDFBF7" letter-spacing="4">LONGEVITY</text>
+            <defs><linearGradient id="phGrad" x1="4" y1="34" x2="168" y2="34" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4FC83D"/><stop offset="0.35" stop-color="#E8D44D"/><stop offset="0.65" stop-color="#3BB8C3"/><stop offset="1" stop-color="#3B7DD8"/></linearGradient></defs>
+          </svg>
+        </div>
+
+        <!-- LVLUP Health -->
+        <div class="logo-item">
+          <svg viewBox="0 0 200 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="28" fill="#FDFBF7" letter-spacing="2">LVLUP</text>
+            <path d="M122 30 L128 12 L134 30" stroke="#5BA8E8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <text x="142" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="300" font-size="14" fill="#FDFBF7" letter-spacing="0.5">Health</text>
+          </svg>
+        </div>
+
+        <!-- Duplicate set for seamless loop -->
+        <div class="logo-item">
+          <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="32" font-family="Arial Black, Helvetica Neue, Arial, sans-serif" font-weight="900" font-size="28" fill="#FDFBF7" letter-spacing="-0.5">CLIA</text>
+            <text x="0" y="47" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="14" fill="#FDFBF7" letter-spacing="1">Certified</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="18" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="18" cy="18" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="24" cy="18" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="30" cy="18" r="1.8" fill="#FDFBF7" opacity="0.7"/>
+            <circle cx="12" cy="24" r="1.8" fill="#FDFBF7" opacity="0.5"/><circle cx="18" cy="24" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="24" cy="24" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="30" cy="24" r="1.8" fill="#FDFBF7" opacity="0.8"/>
+            <circle cx="12" cy="30" r="1.8" fill="#FDFBF7" opacity="0.6"/><circle cx="18" cy="30" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="24" cy="30" r="1.8" fill="#FDFBF7" opacity="0.8"/><circle cx="30" cy="30" r="1.8" fill="#FDFBF7" opacity="0.9"/>
+            <circle cx="12" cy="36" r="1.8" fill="#FDFBF7" opacity="0.7"/><circle cx="18" cy="36" r="1.8" fill="#FDFBF7" opacity="0.8"/><circle cx="24" cy="36" r="1.8" fill="#FDFBF7" opacity="0.9"/><circle cx="30" cy="36" r="1.8" fill="#FDFBF7"/>
+            <text x="40" y="32" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="22" fill="#FDFBF7" letter-spacing="2">CAP</text>
+            <text x="40" y="46" font-family="Arial, Helvetica Neue, sans-serif" font-weight="500" font-size="10" fill="#FDFBF7" letter-spacing="1.5">ACCREDITED</text>
+            <path d="M120 35 L126 41 L136 28" stroke="#FDFBF7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 55" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30 5 L50 5 L60 27.5 L50 50 L30 50 L20 27.5 Z" fill="none" stroke="#FDFBF7" stroke-width="1.5"/>
+            <circle cx="35" cy="20" r="2" fill="#B7E4C7"/><circle cx="45" cy="20" r="2" fill="#B7E4C7"/><circle cx="40" cy="28" r="2" fill="#B7E4C7"/><circle cx="35" cy="36" r="2" fill="#B7E4C7"/><circle cx="45" cy="36" r="2" fill="#B7E4C7"/>
+            <line x1="35" y1="20" x2="45" y2="20" stroke="#B7E4C7" stroke-width="1"/><line x1="35" y1="20" x2="40" y2="28" stroke="#B7E4C7" stroke-width="1"/><line x1="45" y1="20" x2="40" y2="28" stroke="#B7E4C7" stroke-width="1"/><line x1="40" y1="28" x2="35" y2="36" stroke="#B7E4C7" stroke-width="1"/><line x1="40" y1="28" x2="45" y2="36" stroke="#B7E4C7" stroke-width="1"/>
+            <text x="68" y="24" font-family="Arial, Helvetica Neue, sans-serif" font-weight="300" font-size="16" fill="#FDFBF7">LegitScript</text>
+            <text x="68" y="42" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="13" fill="#FDFBF7">Certified</text>
+            <circle cx="148" cy="38" r="7" fill="#B7E4C7"/>
+            <path d="M144 38 L147 41 L153 35" stroke="#2A4542" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8 L21.5 18.5 L32.5 18.5 L23.5 25 L27 35.5 L18 29 L9 35.5 L12.5 25 L3.5 18.5 L14.5 18.5 Z" fill="#00B67A"/>
+            <text x="40" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="20" fill="#FDFBF7" letter-spacing="-0.3">Trustpilot</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="8" y="30" font-family="Helvetica Neue, Arial, sans-serif" font-weight="300" font-size="26" fill="#FDFBF7" letter-spacing="3">prenuvo</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 140 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 26 C12 18, 18 18, 22 26 C26 34, 32 34, 36 26" stroke="#FDFBF7" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <text x="46" y="32" font-family="Helvetica Neue, Arial, sans-serif" font-weight="500" font-size="26" fill="#FDFBF7" letter-spacing="1">path</text>
+            <text x="126" y="22" font-family="Helvetica Neue, Arial, sans-serif" font-weight="300" font-size="8" fill="#FDFBF7" opacity="0.7">®</text>
+          </svg>
+        </div>
+
+        <div class="logo-item">
+          <svg viewBox="0 0 200 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M117.419 26.5225C116.087 27.8541 113.928 27.8541 112.596 26.5225L93.3074 7.2334C91.9757 5.90177 91.9757 3.74277 93.3074 2.41114C94.639 1.0795 96.798 1.0795 98.1296 2.41114L117.419 21.7002C118.75 23.0318 118.75 25.1908 117.419 26.5225Z" fill="url(#p0b)"/>
+            <path d="M93.2808 26.5889C91.9491 25.2572 91.9491 23.0982 93.2808 21.7666L112.57 2.47754C113.901 1.14591 116.06 1.14591 117.392 2.47754C118.724 3.80917 118.724 5.96817 117.392 7.2998L98.103 26.5889C96.7714 27.9205 94.6124 27.9205 93.2808 26.5889Z" fill="url(#p1b)"/>
+            <path d="M86.3843 18.5911C86.3843 16.9464 85.8301 15.5699 84.7575 14.4258C83.667 13.2996 82.3799 12.7276 80.8962 12.7276C79.3946 12.7276 78.1074 13.2996 77.017 14.4258C75.9265 15.5699 75.3902 16.9464 75.3902 18.5911C75.3902 20.2357 75.9265 21.6122 77.017 22.7384C78.1074 23.8825 79.3946 24.4367 80.8962 24.4367C82.3799 24.4367 83.667 23.8825 84.7575 22.7384C85.8301 21.6122 86.3843 20.2357 86.3843 18.5911ZM71.7434 18.5911C71.7434 16.1241 72.6372 13.9789 74.4606 12.1555C76.284 10.3321 78.4292 9.42041 80.8962 9.42041C83.3631 9.42041 85.4904 10.3321 87.3138 12.1555C89.1373 13.9789 90.049 16.1241 90.049 18.5911C90.049 21.058 89.1373 23.1853 87.3138 25.0087C85.4904 26.8321 83.3631 27.7438 80.8962 27.7438C78.4292 27.7438 76.284 26.8321 74.4606 25.0087C72.6372 23.1853 71.7434 21.058 71.7434 18.5911Z" fill="#FDFBF7"/>
+            <path d="M56.5426 1.73364V11.6372C56.5783 11.5836 56.6677 11.5121 56.775 11.4048C56.8822 11.2976 57.1146 11.1188 57.4543 10.8685C57.7939 10.6183 58.1693 10.4038 58.5626 10.2071C58.9559 10.0105 59.4386 9.8317 60.0464 9.67081C60.6363 9.50992 61.2441 9.43842 61.8519 9.43842C63.9613 9.43842 65.6953 10.1356 67.0182 11.53C68.3411 12.9243 69.0025 14.7835 69.0025 17.1432V27.3864H65.3378V17.1432C65.3378 15.874 64.9266 14.8192 64.1222 13.9791C63.3178 13.1567 62.3167 12.7277 61.1189 12.7277C59.7246 12.7277 58.5984 13.1925 57.776 14.0863C56.9537 14.9801 56.5426 16.2494 56.5426 17.8583V27.3686H52.8958V1.73364H56.5426Z" fill="#FDFBF7"/>
+            <path d="M30.3835 1.73364L40.6268 1.75152C43.058 1.75152 45.1138 2.53809 46.7584 4.14697C48.4031 5.75586 49.2433 7.7044 49.2433 9.99259C49.2433 12.2808 48.4031 14.2293 46.7584 15.8203C45.1138 17.4292 43.058 18.2158 40.6268 18.2158H34.4058V27.3686H30.3835V1.73364ZM40.6268 5.4162L34.4058 5.39833V14.5511H40.6268C41.8781 14.5511 42.9686 14.1221 43.8624 13.2461C44.7563 12.3702 45.2032 11.2797 45.2032 9.99259C45.2032 8.70548 44.7563 7.61501 43.8624 6.73907C42.9686 5.84524 41.8781 5.4162 40.6268 5.4162Z" fill="#FDFBF7"/>
+            <path d="M25.0686 9.79598V27.3686H21.4039V9.79598H25.0686ZM25.444 4.30789C25.444 4.95144 25.2295 5.46986 24.8183 5.88102C24.3893 6.31006 23.8709 6.5067 23.2452 6.5067C22.6016 6.5067 22.0832 6.31006 21.6721 5.88102C21.243 5.46986 21.0464 4.95144 21.0464 4.30789C21.0464 3.68221 21.243 3.16379 21.6721 2.75263C22.0832 2.32359 22.6016 2.12695 23.2452 2.12695C23.8709 2.12695 24.3893 2.32359 24.8183 2.75263C25.2295 3.16379 25.444 3.68221 25.444 4.30789Z" fill="#FDFBF7"/>
+            <path d="M14.2833 20.0393C14.2833 19.2527 14.0331 18.6092 13.5325 18.0729C13.032 17.5366 12.3705 17.1254 11.584 16.8215C10.7974 16.5176 9.92146 16.2495 8.95613 15.9992C7.9908 15.7489 7.02547 15.445 6.06014 15.0875C5.09481 14.73 4.20098 14.3009 3.41441 13.8004C2.62785 13.2999 1.98429 12.6027 1.48375 11.6731C0.983208 10.7435 0.732937 9.63517 0.732937 8.33018C0.732937 6.36377 1.48375 4.70125 3.00325 3.37839C4.50488 2.05553 6.56068 1.37622 9.15277 1.37622C10.1002 1.37622 11.0119 1.50136 11.8879 1.73375C12.7638 1.96615 13.4968 2.23429 14.0688 2.55607C14.6409 2.87785 15.1593 3.18175 15.5883 3.50353C16.0174 3.8253 16.3391 4.09345 16.5536 4.30797L16.8397 4.6655L14.2833 7.23972C14.2297 7.20396 14.1582 7.11458 14.0688 7.00732C13.9794 6.90006 13.7828 6.7213 13.461 6.47103C13.1392 6.22075 12.7996 6.00624 12.4421 5.80959C12.0845 5.61295 11.6019 5.43419 11.0119 5.2733C10.422 5.13029 9.79633 5.04091 9.15277 5.04091C7.82991 5.04091 6.75732 5.38056 5.95288 6.02411C5.14843 6.68554 4.75515 7.45423 4.75515 8.33018C4.75515 9.11675 5.00542 9.77818 5.50596 10.3145C6.00651 10.8508 6.65006 11.2798 7.43663 11.5837C8.22319 11.8876 9.11702 12.1558 10.0824 12.406C11.0477 12.6563 12.013 12.9423 12.9783 13.2999C13.9437 13.6574 14.8196 14.0864 15.6062 14.587C16.3928 15.0875 17.0542 15.8026 17.5547 16.7321C18.0553 17.6617 18.3055 18.7701 18.3055 20.0572C18.3055 22.3096 17.4832 24.1688 15.8743 25.5989C14.2476 27.029 12.013 27.7441 9.15277 27.7441C7.97292 27.7441 6.86458 27.6011 5.80987 27.315C4.75515 27.029 3.89708 26.7072 3.21777 26.314C2.53846 25.9207 1.94854 25.5274 1.448 25.1341C0.947455 24.7408 0.572048 24.419 0.35753 24.1509L0 23.704L2.55634 21.1476C2.59209 21.2191 2.68148 21.3264 2.78874 21.4694C2.89599 21.6124 3.16414 21.8448 3.55743 22.1845C3.95071 22.5241 4.39762 22.828 4.86241 23.0783C5.3272 23.3286 5.935 23.561 6.70369 23.7755C7.47238 23.99 8.2947 24.0794 9.15277 24.0794C10.7259 24.0794 11.9773 23.704 12.9068 22.9174C13.8185 22.1487 14.2833 21.1834 14.2833 20.0393Z" fill="#FDFBF7"/>
+            <defs>
+              <linearGradient id="p0b" x1="105.388" y1="23.6985" x2="105.388" y2="5.28529" gradientUnits="userSpaceOnUse"><stop stop-color="#F1D537"/><stop offset="1" stop-color="#F66B37"/></linearGradient>
+              <linearGradient id="p1b" x1="96.4959" y1="18.5515" x2="108.26" y2="6.78746" gradientUnits="userSpaceOnUse"><stop offset="0.0885417" stop-color="#079E8E"/><stop offset="0.692708" stop-color="#4AC6C1"/></linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <!-- VitaminLab (dup) -->
+        <div class="logo-item">
+          <svg viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="32" font-family="Arial, Helvetica Neue, sans-serif" font-weight="800" font-size="28" fill="#FDFBF7" letter-spacing="-0.3">VitaminLab</text>
+          </svg>
+        </div>
+
+        <!-- ProHealth Longevity (dup) -->
+        <div class="logo-item">
+          <svg viewBox="0 0 220 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="28" font-family="Arial, Helvetica Neue, sans-serif" font-weight="400" font-size="24" fill="#FDFBF7" letter-spacing="0.5">prohealth</text>
+            <line x1="4" y1="34" x2="168" y2="34" stroke="url(#phGrad2)" stroke-width="2.5" stroke-linecap="round"/>
+            <text x="4" y="46" font-family="Arial, Helvetica Neue, sans-serif" font-weight="600" font-size="11" fill="#FDFBF7" letter-spacing="4">LONGEVITY</text>
+            <defs><linearGradient id="phGrad2" x1="4" y1="34" x2="168" y2="34" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4FC83D"/><stop offset="0.35" stop-color="#E8D44D"/><stop offset="0.65" stop-color="#3BB8C3"/><stop offset="1" stop-color="#3B7DD8"/></linearGradient></defs>
+          </svg>
+        </div>
+
+        <!-- LVLUP Health (dup) -->
+        <div class="logo-item">
+          <svg viewBox="0 0 200 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="4" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="700" font-size="28" fill="#FDFBF7" letter-spacing="2">LVLUP</text>
+            <path d="M122 30 L128 12 L134 30" stroke="#5BA8E8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <text x="142" y="30" font-family="Arial, Helvetica Neue, sans-serif" font-weight="300" font-size="14" fill="#FDFBF7" letter-spacing="0.5">Health</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bridge transition -->
+  <div class="bridge"></div>
+
+  <!-- Simulated provider section context -->
+  <div class="context-below">
+    <h2>Your care team.</h2>
+    <p>[ Provider cards would be here ]</p>
+  </div>
+
+</body>
+</html>

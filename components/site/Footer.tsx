@@ -1,40 +1,228 @@
 import Link from 'next/link';
-import { Shield, Lock, UserCheck, BadgeCheck } from 'lucide-react';
+import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
+import { DispensingPharmacyInfo } from '@/components/compliance/DispensingPharmacyInfo';
+import { DISCLAIMERS, SERVED_STATE_COUNT } from '@/lib/config/compliance';
+
+const productLinks = [
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/pricing#plans', label: 'Membership Plans' },
+  { href: '/pricing#faq', label: 'Pricing FAQ' },
+];
+
+const learnLinks = [
+  { href: '/how-it-works', label: 'How It Works' },
+  { href: '/members', label: 'Resources' },
+  { href: '/how-it-works#faq', label: 'FAQ' },
+];
+
+const contactLinks = [
+  { href: '/creators', label: 'Creators' },
+  { href: '/creators', label: 'Creator Program' },
+  { href: 'mailto:support@cultrhealth.com', label: 'Contact Us' },
+  { href: '/portal/login', label: 'Manage Account' },
+];
+
+const trustBadges = [
+  { icon: Shield, label: 'HIPAA Safeguards' },
+  { icon: Lock, label: 'Encrypted Sessions' },
+  { icon: Stethoscope, label: 'Licensed Providers' },
+  { icon: FlaskConical, label: '503A Pharmacy Partner' },
+];
 
 export function Footer() {
   return (
-    <footer className="bg-white border-t border-cultr-sage py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Trust Badges */}
-        <div className="flex flex-wrap justify-center gap-6 md:gap-10 mb-10 pb-10 border-b border-cultr-sage">
-          <div className="flex items-center gap-2 text-cultr-forest">
-            <Shield className="w-5 h-5" />
-            <span className="text-xs uppercase tracking-wide">HIPAA Compliant</span>
-          </div>
-          <div className="flex items-center gap-2 text-cultr-forest">
-            <Lock className="w-5 h-5" />
-            <span className="text-xs uppercase tracking-wide">Secure Payments</span>
-          </div>
-          <div className="flex items-center gap-2 text-cultr-forest">
-            <UserCheck className="w-5 h-5" />
-            <span className="text-xs uppercase tracking-wide">Licensed Providers</span>
-          </div>
-          <div className="flex items-center gap-2 text-cultr-forest">
-            <BadgeCheck className="w-5 h-5" />
-            <span className="text-xs uppercase tracking-wide">Verified Practice</span>
+    <footer>
+      {/* Trust Badges */}
+      <div className="grad-mint border-b border-cultr-sage py-6">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+            {trustBadges.map((badge) => (
+              <div key={badge.label} className="flex items-center gap-2 text-cultr-forest">
+                <badge.icon className="w-4 h-4" />
+                <span className="text-xs font-display font-medium tracking-wide">{badge.label}</span>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
 
-        {/* Footer Content */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="text-cultr-textMuted text-sm">
-            © {new Date().getFullYear()} CULTR Health. All rights reserved.
+      {/* Links Section */}
+      <div className="relative grad-dark-glow py-16 overflow-hidden">
+        {/* Radial glow — top center mint */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(60% 35% at 50% 0%, rgba(215,243,220,0.06) 0%, transparent 100%)' }} />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          {/* CULTR Wordmark */}
+          <div className="mb-12">
+            <Link href="/" className="inline-block">
+              <img
+                src="/cultr-health-logo.png"
+                alt="CULTR Health"
+                loading="lazy"
+                className="h-8 w-auto"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
+            </Link>
+            <p className="text-sm text-white/50 mt-2">Change the <span className="font-display font-bold">CULTR</span>, rebrand yourself.</p>
           </div>
-          <div className="flex gap-6 text-sm text-cultr-textMuted">
-            <Link href="/legal/terms" className="hover:text-cultr-forest transition-colors">Terms</Link>
-            <Link href="/legal/privacy" className="hover:text-cultr-forest transition-colors">Privacy</Link>
-            <Link href="/legal/medical-disclaimer" className="hover:text-cultr-forest transition-colors">Medical Disclaimer</Link>
-            <Link href="mailto:support@cultrhealth.com" className="hover:text-cultr-forest transition-colors">Contact</Link>
+
+          {/* Footer Links Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+            {/* Products */}
+            <div>
+              <h4 className="font-display text-sm font-semibold text-cultr-sage mb-4">Products</h4>
+              <ul className="space-y-3">
+                {productLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="group inline-flex items-center text-sm text-white/60 hover:text-cultr-sage transition-all duration-200"
+                    >
+                      <span className="relative">
+                        {link.label}
+                        <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-cultr-sage transition-all duration-300 ease-out group-hover:w-full" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Learn */}
+            <div>
+              <h4 className="font-display text-sm font-semibold text-cultr-sage mb-4">Learn</h4>
+              <ul className="space-y-3">
+                {learnLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="group inline-flex items-center text-sm text-white/60 hover:text-cultr-sage transition-all duration-200"
+                    >
+                      <span className="relative">
+                        {link.label}
+                        <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-cultr-sage transition-all duration-300 ease-out group-hover:w-full" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <h4 className="font-display text-sm font-semibold text-cultr-sage mb-4">Contact</h4>
+              <ul className="space-y-3">
+                {contactLinks.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="group inline-flex items-center text-sm text-white/60 hover:text-cultr-sage transition-all duration-200"
+                    >
+                      <span className="relative">
+                        {link.label}
+                        <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-cultr-sage transition-all duration-300 ease-out group-hover:w-full" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Social */}
+            <div className="flex gap-4 md:justify-end items-start">
+              <a
+                href="https://www.instagram.com/cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-white/50 hover:text-cultr-sage transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://www.facebook.com/cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-white/50 hover:text-cultr-sage transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="https://linkedin.com/company/cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-white/50 hover:text-cultr-sage transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a
+                href="https://tiktok.com/@cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-white/50 hover:text-cultr-sage transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="TikTok"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.75a8.18 8.18 0 0 0 4.78 1.54V6.84a4.84 4.84 0 0 1-1.02-.15Z" />
+                </svg>
+              </a>
+              <a
+                href="https://youtube.com/@cultrhealth"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-white/50 hover:text-cultr-sage transition-all duration-300 hover:scale-110 hover:-translate-y-0.5"
+                aria-label="YouTube"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.38.55A3.02 3.02 0 0 0 .5 6.19 31.67 31.67 0 0 0 0 12a31.67 31.67 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.88.55 9.38.55 9.38.55s7.5 0 9.38-.55a3.02 3.02 0 0 0 2.12-2.14A31.67 31.67 0 0 0 24 12a31.67 31.67 0 0 0-.5-5.81ZM9.75 15.02V8.98L15.5 12l-5.75 3.02Z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Dispensing Pharmacy — Required by LegitScript */}
+          <div className="pt-8 border-t border-white/10 mb-6">
+            <DispensingPharmacyInfo className="text-white/40" />
+          </div>
+
+          {/* LegitScript Seal */}
+          {process.env.NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID && (
+            <div className="pt-4 flex justify-center" id="legitscript-seal">
+              {/* LegitScript official verification seal renders here */}
+            </div>
+          )}
+
+          {/* Bottom Section */}
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-xs text-white/40 mb-3">
+              CULTR Health telehealth services are available in {SERVED_STATE_COUNT} states.{' '}
+              <Link href="/legal/medical-disclaimer#availability" className="underline hover:text-cultr-sage transition-colors">
+                Restrictions apply
+              </Link>.
+            </p>
+            <p className="text-xs text-white/40 mb-4">
+              <strong className="text-white/60">Important Information:</strong> <span className="font-display font-bold">CULTR</span> Health operates a telehealth platform that connects members with independent licensed providers. {DISCLAIMERS.prescriptionRequired} {DISCLAIMERS.compoundedMedication}
+            </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <p className="text-xs text-white/40">
+                © {new Date().getFullYear()} <span className="font-display font-bold">CULTR</span> Health
+              </p>
+              <div className="flex gap-4 text-xs text-white/40">
+                <Link href="/legal/privacy" className="hover:text-cultr-sage transition-all duration-200">
+                  Privacy
+                </Link>
+                <Link href="/legal/terms" className="hover:text-cultr-sage transition-all duration-200">
+                  Terms
+                </Link>
+                <Link href="/legal/medical-disclaimer" className="hover:text-cultr-sage transition-all duration-200">
+                  Medical Disclaimer
+                </Link>
+                <Link href="/legal/provider-credentials" className="hover:text-cultr-sage transition-all duration-200">
+                  Provider Credentials
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>

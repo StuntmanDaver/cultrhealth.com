@@ -1,0 +1,544 @@
+# CULTR Health — Cursor AI Rules
+# Last updated: 2026-03-30
+# Source of truth: CLAUDE.md, CHANGELOG.md, .planning/codebase/
+
+# ============================================================================
+# 1. PROJECT IDENTITY
+# ============================================================================
+
+You are working on **CULTR Health**, a HIPAA-compliant telehealth platform for
+GLP-1 weight loss medications, wellness peptides, and longevity optimization.
+
+- Production: https://cultrhealth.com (waitlist, `production` branch)
+- Staging: https://staging.cultrhealth.com (full app, `staging` branch)
+- Join: https://join.cultrhealth.com (CULTR Club landing, `staging` branch)
+- Brand tagline: "Change the CULTR, rebrand yourself."
+- Social: @cultrhealth (all platforms)
+
+# ============================================================================
+# 2. TECH STACK — DO NOT DEVIATE
+# ============================================================================
+
+Framework:       Next.js 14 App Router (NOT Pages Router)
+Language:        TypeScript (strict: false, allowJs: true)
+Styling:         Tailwind CSS 3.4 with @tailwindcss/typography
+Fonts:           Fraunces (display), Playfair Display (headings), Inter (body)
+Icons:           Lucide React (NO other icon libraries)
+State:           React Context API (CreatorContext, IntakeFormContext, CartContext)
+Forms:           Native React state + Zod validation (NO react-hook-form, NO formik)
+Class merge:     clsx + tailwind-merge via cn() from @/lib/utils (NO CVA)
+Database:        Neon PostgreSQL via @vercel/postgres SDK
+Auth:            JWT via jose library (HS256)
+Email:           Resend SDK
+Payments:        Stripe (primary), CorePay, NOWPayments, Affirm, Klarna
+Bot protection:  Cloudflare Turnstile
+AI:              AI SDK v6 (@ai-sdk/openai)
+Charts:          Recharts (ONLY in AnalyticsCharts.tsx and admin dashboard)
+PDF:             @react-pdf/renderer
+Tests:           Vitest + @testing-library/react + jsdom
+
+DO NOT introduce: styled-components, CSS modules, emotion, MUI, Chakra, Ant Design,
+Zustand, Redux, Jotai (except Daily.co dep), React Query, SWR, Prisma, Drizzle,
+NextAuth, Clerk, Auth0, Supabase client, Firebase, mongoose.
+
+# ============================================================================
+# 3. HIPAA COMPLIANCE — MANDATORY
+# ============================================================================
+
+## NEVER do these:
+- Log PHI (Protected Health Information) — no patient names, DOB, SSN, health
+  conditions, medications, diagnoses, or treatment data in console.log/error/warn
+- Log email addresses alongside health data in the same log line
+- Return PHI in error responses — use generic "An error occurred" messages
+- Store PHI in localStorage, sessionStorage, or cookies
+- Include PHI in URL query parameters or path segments
+- Send PHI to analytics (GA4, etc.) or third-party services
+- Disable HTTPS or weaken TLS settings
+- Remove Content-Security-Policy headers from middleware.ts
+
+## ALWAYS do these:
+- Use presigned URLs with expiration for file uploads (never direct S3)
+- Return sanitized error messages to clients (no stack traces, no DB errors)
+- Apply DOMPurify to all rendered markdown/HTML content
+- Set `private, no-cache, no-store` headers on authenticated routes
+- Use parameterized SQL queries (never string interpolation in SQL)
+- Verify webhook signatures before processing any payload
+- Check auth on every API route and server component that accesses patient data
+
+## Error logging pattern:
+```typescript
+// CORRECT — no PHI
+console.error('Order creation failed:', { orderId, errorMessage: error.message })
+
+// WRONG — leaks PHI
+console.error('Order failed for patient:', { email, medications, diagnosis })
+```
+
+# ============================================================================
+# 4. FILE & NAMING CONVENTIONS
+# ============================================================================
+
+## Files:
+- React components:         PascalCase.tsx      (Button.tsx, TierGate.tsx)
+- Client page components:   *Client.tsx          (QuizClient.tsx, ShopClient.tsx)
+- API routes:               route.ts             (Next.js App Router convention)
+- Utility/lib files:        camelCase.ts         (auth.ts, db.ts, utils.ts)
+- Config files:             kebab-case.ts        (product-catalog.ts, social-proof.ts)
+
+## Functions:
+- Exported async:           camelCase            (createMagicLinkToken, getMembershipTier)
+- React components:         PascalCase           (Button, TierGate)
+- Validators:               is*/has*/check*      (isProviderEmail, hasFeatureAccess)
+- Factory/getter:           get* prefix          (getStripe, getResend)
+
+## Variables:
+- Local:                    camelCase            (normalizedEmail, sessionCookie)
+- Constants:                SCREAMING_SNAKE_CASE (SESSION_COOKIE_NAME, TEAM_EMAILS)
+- Config objects:           SCREAMING_SNAKE_CASE (PLANS, STRIPE_CONFIG)
+
+## Types:
+- Interfaces:               PascalCase, no I prefix  (ButtonProps, SessionPayload)
+- Type aliases:             PascalCase               (PlanTier, LibraryAccess)
+- Input types:              *Input suffix            (CreateWaitlistInput)
+- Row/entry types:          *Entry or *Row suffix    (WaitlistEntry, SiphoxKitOrderRow)
+
+# ============================================================================
+# 5. CODE PATTERNS — FOLLOW EXACTLY
+# ============================================================================
+
+## Server/Client split:
+- Pages are Server Components by default
+- Interactive parts extracted to *Client.tsx files
+- 'use client' MUST be the first line (before any imports) in client components
+- Use next/dynamic for lazy-loading below-fold components with loading skeletons
+
+## Import order (always):
+1. React/Next.js framework   (react, next/link, next/image, next/dynamic)
+2. External libraries         (stripe, resend, jose, zod)
+3. Internal @/ imports        (@/lib/*, @/components/*)
+
+## Path alias:
+- Always use @/* (maps to project root)
+- NEVER use relative paths like ../../lib/utils
+- Defined in both tsconfig.json AND vitest.config.js
+
+## Button component:
+- ALWAYS use Button from @/components/ui/Button
+- Variants: 'primary' | 'secondary' | 'ghost'
+- Sizes: 'sm' | 'md' | 'lg'
+- All variants use rounded-full
+- Has isLoading prop with built-in spinner
+- Uses cn() utility, NOT class-variance-authority (CVA)
+
+## cn() utility:
+```typescript
+import { cn } from '@/lib/utils'
+className={cn('base-class', condition && 'conditional-class', className)}
+```
+NEVER use raw string concatenation for Tailwind classes.
+
+## API route pattern:
+```typescript
+export async function POST(request: NextRequest) {
+  try {
+    const auth = await verifyAuth(request)
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // ... validate input with Zod, call lib functions
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Descriptive prefix:', error instanceof Error ? error.message : 'Unknown error')
+    return NextResponse.json({ error: 'An error occurred.' }, { status: 500 })
+  }
+}
+```
+
+## Auth verification — use the right function:
+- Members/general:  verifyAuth(request)        from @/lib/auth
+- Creators:         verifyCreatorAuth(request)  from @/lib/auth
+- Admins:           verifyAdminAuth(request)    from @/lib/auth
+- Providers:        verifyAuth(request) + isProviderEmail() check
+
+## Context providers (existing — DO NOT create new state management):
+- CreatorContext    — creator portal state
+- IntakeFormContext — multi-step intake form state
+- CartContext       — shopping cart state
+- ProviderContext   — provider dashboard state
+
+## External API wrapper pattern:
+- Wrap third-party SDKs in lib/ modules
+- API routes NEVER call external SDKs directly
+- Lazy init pattern: `function getStripe() { return new Stripe(...) }`
+- Auth headers injected internally in the wrapper
+- Errors normalized to Error objects
+
+## Return values:
+- Functions return typed values or null (never undefined) for optional results
+- Async functions: Promise<T | null> for fallible lookups
+- JWT/Auth functions: return null on failure (never throw)
+- Always use async/await (no raw Promise chains)
+
+# ============================================================================
+# 6. DATABASE RULES — @vercel/postgres
+# ============================================================================
+
+## CRITICAL: NUMERIC type coercion
+@vercel/postgres returns NUMERIC columns as STRINGS. Always coerce:
+```typescript
+// CORRECT
+const rate = Number(row.commission_rate)
+const amount = parseFloat(row.tax_amount_usd)
+
+// WRONG — silent string arithmetic bugs
+const rate = row.commission_rate  // "10.00" not 10
+const total = row.subtotal_usd * 1.075  // "123.45" * 1.075 = NaN or wrong
+```
+
+## SQL patterns for @vercel/postgres:
+- Use make_interval(days => ${days}) for intervals (NOT CAST or INTERVAL * multiplication)
+- Use IS DISTINCT FROM instead of IS NULL OR != for nullable comparisons
+- Use COUNT(*)::integer to avoid NUMERIC string coercion on counts
+- Use ROUND(...)::float8 for computed decimals returned to JS
+- NEVER use UNION ALL with parameterized queries (duplicate param indices) — split into parallel queries and merge in JS
+- NEVER use date_trunc(${variable}, ...) — use literal SQL per bucket type
+- Always include GROUP BY columns in SELECT if accessed in application code
+
+## SQL safety:
+- Always use sql tagged template literals (parameterized queries)
+- NEVER concatenate user input into SQL strings
+- Use transactions for multi-table writes (commission + attribution)
+- Add .catch() fallbacks on parallel queries so one failure doesn't crash all
+
+## Migrations:
+- Location: migrations/ directory
+- Naming: NNN_description.sql (sequential numbering)
+- Run manually: node scripts/run-migration.mjs
+- Always add IF NOT EXISTS / IF EXISTS guards
+- Never drop columns with patient data (HIPAA retention)
+
+# ============================================================================
+# 7. TAILWIND & BRAND DESIGN SYSTEM
+# ============================================================================
+
+## Brand colors (use token names, NEVER raw hex):
+| Token              | Hex      | Usage                        |
+|--------------------|----------|------------------------------|
+| brand-primary      | #2A4542  | Primary text, buttons, bg    |
+| forest-light       | #3A5956  | Hover states                 |
+| forest-dark        | #1F3533  | Pressed states               |
+| brand-cream / cream| #FDFBF7  | Page backgrounds             |
+| cream-dark         | #F5F0E8  | Card backgrounds             |
+| sage               | #B7E4C7  | Accent, badges               |
+| mint               | #D8F3DC  | Highlights, trust badges bg  |
+
+## Typography:
+- "CULTR" / "CULTR HEALTH" text: ALWAYS font-display (Playfair Display)
+- Slogan "Change the CULTR, rebrand yourself": font-body (Inter), "rebrand" lowercase italic
+- Headings: font-fraunces or font-display
+- Body text: font-body or font-sans (Inter)
+
+## DO NOT use these undefined tokens (they render transparent):
+- cultr-copper (undefined — use sage or brand-primary instead)
+- cultr-charcoal (undefined — use brand-primary instead)
+- cultr-lightgray (undefined — use cream-dark instead)
+- cultr-black (undefined — use brand-primary instead)
+
+## Component patterns:
+- Cards: bg-cream-dark border-brand-primary/10 rounded-xl
+- Buttons: bg-brand-primary text-white rounded-full hover:bg-forest-light
+- Ghost buttons: transparent border border-brand-primary text-brand-primary rounded-full
+- Status badges: bg-sage text-brand-primary (positive), bg-mint (highlight)
+- Page backgrounds: bg-brand-cream
+- Text hierarchy: text-brand-primary (primary), text-brand-primary/60 (secondary), text-brand-primary/40 (muted)
+
+## NEVER use stone/gray/slate Tailwind colors for UI:
+Use brand tokens: brand-primary with opacity variants (/50, /40, /30, /20, /10, /5)
+
+# ============================================================================
+# 8. DEPLOYMENT & GIT SAFETY
+# ============================================================================
+
+## Branch strategy:
+| Branch     | Environment | URL                      |
+|------------|-------------|--------------------------|
+| production | Production  | cultrhealth.com          |
+| staging    | Staging     | staging.cultrhealth.com  |
+| main       | Base branch | No auto-deploy           |
+
+## CRITICAL DEPLOYMENT RULES:
+- NEVER run `vercel --prod` from any branch — it deploys local directory, NOT git branch
+- Production deploys: git push to `production` branch OR Vercel Dashboard promotion ONLY
+- Staging deploys: git push to `staging` branch
+- Incident precedent: staging was accidentally deployed to production on Mar 23, 2026
+
+## Git rules:
+- Commit messages: conventional commits (feat:, fix:, docs:, refactor:, test:, chore:)
+- Never force-push to staging or production branches
+- Never skip hooks (--no-verify)
+- Create new commits, don't amend existing ones (especially after hook failures)
+
+# ============================================================================
+# 9. MEMBERSHIP TIERS & PRICING
+# ============================================================================
+
+## Current pricing (as of Mar 29, 2026):
+| Tier             | Slug      | Price      | Notes                          |
+|------------------|-----------|------------|--------------------------------|
+| CULTR Club       | club      | $0/mo      | Education & discovery          |
+| CULTR Core       | core      | $149*/mo   | *Variable: Sema $149, Tirz $199, Reta $239 |
+| CULTR Catalyst+  | catalyst  | $499/mo    | Peptide stacking               |
+| CULTR Concierge  | concierge | $1,049/mo  | White-glove (was "Curated")    |
+
+## IMPORTANT naming:
+- It's "CULTR Concierge" NOT "CULTR Curated" (renamed Mar 29, 2026)
+- It's "clinical protocol" NOT "clinical cycle"
+- All paid plans: initial 2-month clinical protocol (minimum commitment)
+- Do NOT use "cancel anytime" or "no long-term contracts" language
+
+# ============================================================================
+# 10. CREATOR AFFILIATE SYSTEM
+# ============================================================================
+
+## Commission model:
+- Direct commission: 10% (default, per-creator override possible via DB)
+- Override commission: 5-20% tiered by recruits (Starter→Bronze→Silver→Gold→Platinum)
+- Total cap: 25% (first 6 months bonus window), then 10% flat
+- Payout: Net-30, $50 minimum, Stripe Connect / bank / PayPal
+
+## Creator tiers (from TIER_CONFIGS):
+| Tier     | Recruits | Override |
+|----------|----------|----------|
+| Starter  | 0        | 5%       |
+| Bronze   | 5        | 10%      |
+| Silver   | 10       | 15%      |
+| Gold     | 15       | 20%      |
+| Platinum | 20       | 20%      |
+
+## Active creator coupons:
+- JON21: 10% customer discount, 20% commission
+- STEWART1: 10% customer discount, 20% commission
+- Staff codes: OWNER, CULTRSTAFF, CULTRFAM, CULTR10, MARY20
+
+## Attribution:
+- Cookie: cultr_attribution (30-day window)
+- Redirect handler: /r/[slug] → sets cookie + logs click_events
+- Tracking links point to join.cultrhealth.com (NOT staging.cultrhealth.com)
+
+# ============================================================================
+# 11. KNOWN BUGS & TECH DEBT — DO NOT REINTRODUCE
+# ============================================================================
+
+## Bugs that were fixed (DO NOT reintroduce):
+1. NUMERIC→string coercion from @vercel/postgres causing silent arithmetic bugs
+2. Creator coupon codes silently failing (Migration 024 fixed missing columns)
+3. console.error stripped in production (now excluded from removeConsole)
+4. Hero text drift across viewports (fixed with object-position + responsive left)
+5. Email logos breaking on localhost (fixed with getEmailSiteUrl() helper)
+6. Hydration errors from <button> inside <button> (fixed with div + role="button")
+7. SQL CAST(${string} AS INTERVAL) failing with prepared statements
+8. UNION ALL with duplicate param indices in @vercel/postgres
+
+## Known tech debt (do not make worse):
+- components/sections/ — 9 UNUSED files (Hero, Services, About, etc.) — DO NOT import them
+- components/Footer.tsx, Navigation.tsx, WaitlistForm.tsx — LEGACY, use components/site/ instead
+- class-variance-authority in package.json — UNUSED, don't start using it
+- lib/stores/ — EMPTY directory, don't add state stores
+- lib/protocol-templates.ts — 4,074 lines, should be split (don't add more)
+- lib/resend.ts — 1,859 lines of inline HTML, should be extracted to templates
+
+## TEAM_EMAILS duplication:
+TEAM_EMAILS is defined in 5 separate files. If adding/removing team members,
+update ALL of: lib/auth.ts, app/api/auth/magic-link/route.ts,
+app/api/auth/verify/route.ts, app/api/creators/magic-link/route.ts,
+app/api/creators/verify-login/route.ts
+
+# ============================================================================
+# 12. TESTING RULES
+# ============================================================================
+
+## Framework: Vitest + React Testing Library
+- Test files: tests/**/*.test.{ts,tsx}
+- Run: npm test (or npx vitest run)
+- Coverage includes: lib/**/*.ts and app/**/*.{ts,tsx}
+- Environment: jsdom with @vitejs/plugin-react
+
+## Testing patterns:
+- Use @/ path alias in test imports (configured in vitest.config.js)
+- Mock external services, never real API calls in unit tests
+- Integration tests against staging DB use real @vercel/postgres connections
+- LibraryAccess mock objects MUST include protocolBuilder field
+- Test data should be isolated per run with unique prefixes, auto-cleaned in afterAll
+
+## What NOT to test:
+- Don't test internal implementation details
+- Don't add tests for code you didn't change (unless fixing a bug)
+- Don't create test files for unchanged code
+
+# ============================================================================
+# 13. EMAIL RULES
+# ============================================================================
+
+- Image URLs in emails MUST use getEmailSiteUrl() from lib/resend.ts
+  (never raw NEXT_PUBLIC_SITE_URL — localhost breaks email logos)
+- Always apply escapeHtml() to user-supplied values in email templates (XSS)
+- Email branding: Playfair Display headings, Inter body, forest/cream/sage/mint palette
+- Use brandedEmailHeader('dark') + brandedEmailFooter() for consistent styling
+- Official logo: public/cultr-health-logo.png (ALWAYS use this for all branding)
+
+# ============================================================================
+# 14. MIDDLEWARE & ROUTING
+# ============================================================================
+
+## middleware.ts handles:
+- Subdomain rewriting: join.* root path (`/`) → `/join` internally; non-root join paths pass through unchanged
+- HIPAA no-cache headers on authenticated routes
+- Content-Security-Policy headers
+- Camera/microphone permissions for consultation video routes
+- Pass-through for: /r/ tracking links, /api/ routes, static assets
+
+## LayoutShell hides Header/Footer on:
+- /creators/portal/*
+- /admin/*
+- /join-club/*
+
+## Route redirects (in next.config.js):
+- /products → /pricing (301)
+- /library → /members (301)
+- /library/* → /members/* (301)
+- /consultations/* → /members/consultations/* (301)
+
+# ============================================================================
+# 15. ENVIRONMENT VARIABLES
+# ============================================================================
+
+## Required (app won't function without):
+STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, POSTGRES_URL, JWT_SECRET,
+SESSION_SECRET, ASHER_MED_API_KEY, ASHER_MED_PARTNER_ID, ASHER_MED_API_URL,
+NEXT_PUBLIC_SITE_URL
+
+## Feature flags:
+NEXT_PUBLIC_ENABLE_KLARNA (default false)
+NEXT_PUBLIC_ENABLE_AFFIRM (default false)
+NEXT_PUBLIC_ENABLE_AUTHORIZE_NET (default false)
+NEXT_PUBLIC_PRIMARY_PAYMENT_PROVIDER (stripe | authorize_net)
+
+## Never commit to git:
+.env, .env.local, .env.production, .env.staging, credentials.json,
+any file containing API keys, secrets, or tokens
+
+# ============================================================================
+# 16. PERFORMANCE RULES
+# ============================================================================
+
+- Use next/dynamic for below-fold components with loading skeletons
+- Use Next.js Image component (NOT <img>) for all images
+- Optimize imports: lucide-react is in optimizePackageImports
+- Lazy-initialize external clients (Stripe, Resend) — never at module scope
+- DB queries: use parallel Promise.all() where queries are independent
+- Never import the entire lib/protocol-templates.ts — import specific functions
+- Cache membership tier in JWT payload where possible (avoid per-request Stripe calls)
+
+# ============================================================================
+# 17. SECURITY RULES
+# ============================================================================
+
+- Validate ALL user input with Zod schemas before any DB/service call
+- Sanitize rendered markdown with DOMPurify (lib/blog-content.ts, lib/library-content.ts)
+- Webhook signature verification: ALWAYS verify before processing (Stripe, Cal.com, Daily.co)
+- Rate limit sensitive endpoints (magic link, OTP, intake, club signup)
+- HMAC tokens for admin approval links (30-min expiry)
+- Presigned URLs for file uploads (never accept direct uploads)
+- CORS: rely on Next.js defaults (same-origin)
+- Never expose internal error details or stack traces to clients
+- Authorize.net webhook: MUST reject when signature key is not configured
+
+# ============================================================================
+# 18. COMMON MISTAKES — GUARDRAILS
+# ============================================================================
+
+## DO NOT:
+- Use 'use server' directive (this project uses API routes, not Server Actions)
+- Create new Context providers without strong justification
+- Add new npm dependencies without checking if existing tools cover the need
+- Use default exports for non-UI-component modules (use named exports)
+- Put business logic in components (extract to lib/)
+- Call database functions from client components (go through API routes)
+- Use inline styles (use Tailwind classes)
+- Create helpers/abstractions for one-time operations
+- Add features beyond what was asked
+- Add docstrings/comments to code you didn't change
+- Use stone/gray/slate colors (use brand tokens)
+- Reference components/sections/* (dead code)
+- Use raw fetch to Stripe/Asher Med/SiPhox (use lib/ wrappers)
+- Trust raw `cultr_club_visitor` browser JSON for club member hydration or persist full club profiles in client-readable cookies/localStorage
+- Hard-delete affiliate/company coupon codes that already have historical usage or `order_attributions` references
+- Reuse built-in `CLUB_COUPONS` values for admin-created affiliate/company codes on `join.cultrhealth.com`
+- Drop checkout `session_id` when linking through `/success`, `/onboarding`, `/intake`, or `/login` in the custom intake flow
+
+## DO:
+- Read files before modifying them
+- Follow existing patterns in the nearest similar file
+- Use the cn() utility for all conditional class merging
+- Coerce all NUMERIC DB columns with Number() or parseFloat()
+- Use make_interval() for all SQL interval calculations
+- Test changes with npx vitest run before committing
+- Run npx tsc --noEmit to verify type safety
+- Keep API routes thin — validate, call lib, respond
+- Use existing shared components (MarketingHero, TrustStrip, SocialProofBadge, etc.)
+- Check CLAUDE.md and CHANGELOG.md for recent changes before making assumptions
+- Keep `cultr_club_visitor` as a signed minimal session token and rehydrate full club member data from the server only after token verification
+- Hard-delete coupon codes only when they are unused and unreferenced; otherwise deactivate them to preserve creator ROI and attribution history
+- Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
+- Preserve checkout `session_id` across `/success` -> `/onboarding` -> `/intake` -> `/login`, persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` in `pending_intakes.intake_data`, and fall back to the latest pending intake by authenticated email if the session id is missing
+- After a successful custom intake submission, redirect to `/onboarding` with `next=schedule` while preserving `session_id` when present; `OnboardingClient` must keep the schedule CTA active even if `/api/onboarding/status` is stale or temporarily unavailable
+
+# ============================================================================
+# 19. JOIN PAGE SPECIFIC
+# ============================================================================
+
+- The join page root has overflow-x-hidden
+- Horizontal scrolling MUST use translateX-based Carousel, NOT CSS overflow
+- Card faces use motion.div with role="button" (NOT motion.button — causes hydration errors)
+- Products show "Compounded in the USA" badge across all product views
+- `join.cultrhealth.com` product cards are sourced from `lib/config/join-therapies.ts`; restoring `/join` UI files alone does NOT restore the legacy join catalog
+- Join retail prices: edit `lib/config/join-therapies.ts` only; align internal markdown that duplicates prices (e.g. `Peptides-Growth-Factors.md`, `Verification-Checklist.md`) and log in `CHANGELOG.md`
+
+# ============================================================================
+# 20. PROVIDER TOOLS
+# ============================================================================
+
+- Protocol Builder: available to ALL tiers (Club/Core browse mode, Catalyst+/Concierge full)
+- protocolBuilder field MUST be in all LibraryAccess objects ('browse' | 'full' | false)
+- Provider routes gated by verifyAuth() + isProviderEmail()
+- Provider sidebar: Dashboard, Consultations, Patients, Protocol Builder
+
+# ============================================================================
+# 21. CONSULTATION SYSTEM
+# ============================================================================
+
+- Cal.com for scheduling, Daily.co for video, AWS S3 for recordings
+- Recording requires explicit consent checkbox (disabled via API if declined)
+- Webhook HMAC verification with buffer length check (prevents timingSafeEqual crash)
+- Idempotency via consultation_webhook_events table
+- Meeting tokens generated for both 'scheduled' and 'in_progress' status (allows rejoin)
+- Camera/microphone permissions allowed on consultation routes via Permissions-Policy header
+
+# ============================================================================
+# 22. QUICKBOOKS INTEGRATION
+# ============================================================================
+
+- OAuth2 tokens rotate on every use — NEVER delete qb_tokens DB rows
+- Initial QUICKBOOKS_REFRESH_TOKEN env var goes stale after first use
+- Cold starts MUST read from qb_tokens table
+- QB company name shows "Sol Health" — known, change in QB Settings
+- Triggered by admin club order approval flow
+
+# ============================================================================
+# 23. SELF-CORRECTING RULE
+# ============================================================================
+
+Every time the AI gets something wrong about this project — a wrong file path,
+incorrect assumption, outdated pattern, misunderstood convention — the correction
+should be added to CLAUDE.md so it persists across future sessions. Do not just
+fix inline; codify the fix.

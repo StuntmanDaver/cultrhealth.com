@@ -1,0 +1,16 @@
+<svg viewBox="0 0 220 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- "prohealth" text -->
+  <text x="4" y="28" font-family="'Arial', 'Helvetica Neue', sans-serif" font-weight="400" font-size="24" fill="#FDFBF7" letter-spacing="0.5">prohealth</text>
+  <!-- Colorful underline gradient -->
+  <line x1="4" y1="34" x2="168" y2="34" stroke="url(#phGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- "LONGEVITY" subtitle -->
+  <text x="4" y="46" font-family="'Arial', 'Helvetica Neue', sans-serif" font-weight="600" font-size="11" fill="#FDFBF7" letter-spacing="4">LONGEVITY</text>
+  <defs>
+    <linearGradient id="phGrad" x1="4" y1="34" x2="168" y2="34" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4FC83D"/>
+      <stop offset="0.35" stop-color="#E8D44D"/>
+      <stop offset="0.65" stop-color="#3BB8C3"/>
+      <stop offset="1" stop-color="#3B7DD8"/>
+    </linearGradient>
+  </defs>
+</svg>

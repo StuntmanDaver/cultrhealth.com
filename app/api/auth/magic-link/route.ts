@@ -6,7 +6,7 @@ import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
 // Lazy initialization to avoid build-time errors
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-    apiVersion: '2026-01-28.clover',
+    apiVersion: '2026-02-25.clover',
   })
 }
 
@@ -18,9 +18,33 @@ function getResend() {
   return new Resend(apiKey)
 }
 
+const TEAM_EMAILS = [
+  'alex@cultrhealth.com',
+  'tony@cultrhealth.com',
+  'stewart@cultrhealth.com',
+  'erik@cultrhealth.com',
+  'david@cultrhealth.com',
+  'legitscript@cultrhealth.com',
+]
+
+function isStaging(): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+  return siteUrl.includes('staging')
+}
+
+// Check if email is allowed for staging bypass
+function isStagingBypassEmail(email: string): boolean {
+  const lower = email.toLowerCase()
+  if (TEAM_EMAILS.includes(lower)) return true
+  if (isStaging()) return true
+  const stagingEmails = process.env.STAGING_ACCESS_EMAILS
+  if (!stagingEmails) return false
+  return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, redirect: redirectPath } = await request.json()
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -41,56 +65,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check rate limit
-    if (!checkRateLimit(normalizedEmail)) {
+    const isStagingAccess = isStagingBypassEmail(normalizedEmail)
+    
+    // Check rate limit (skip for staging bypass to allow concurrent E2E tests)
+    if (!isStagingAccess && !checkRateLimit(normalizedEmail)) {
       return NextResponse.json(
         { error: 'Please wait before requesting another link' },
         { status: 429 }
       )
     }
 
-    // Find customer in Stripe by email
-    const stripe = getStripe()
-    const customers = await stripe.customers.list({
-      email: normalizedEmail,
-      limit: 1,
-    })
-
-    if (customers.data.length === 0) {
-      // Don't reveal if email exists - always show same message
-      return NextResponse.json({
-        success: true,
-        message: 'If you have an active membership, you will receive an email shortly.',
-      })
-    }
-
-    const customer = customers.data[0]
-
-    // Check for active subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customer.id,
-      status: 'active',
-      limit: 1,
-    })
-
-    if (subscriptions.data.length === 0) {
-      // Also check for trialing subscriptions
-      const trialingSubscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: 'trialing',
+    if (!isStagingAccess) {
+      // Find customer in Stripe by email
+      const stripe = getStripe()
+      const customers = await stripe.customers.list({
+        email: normalizedEmail,
         limit: 1,
       })
 
-      if (trialingSubscriptions.data.length === 0) {
-        // Don't reveal subscription status - always show same message
+      if (customers.data.length === 0) {
+        // Don't reveal if email exists - always show same message
         return NextResponse.json({
           success: true,
           message: 'If you have an active membership, you will receive an email shortly.',
         })
       }
+
+      const customer = customers.data[0]
+
+      // Check for active subscriptions
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'active',
+        limit: 1,
+      })
+
+      if (subscriptions.data.length === 0) {
+        // Also check for trialing subscriptions
+        const trialingSubscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'trialing',
+          limit: 1,
+        })
+
+        if (trialingSubscriptions.data.length === 0) {
+          // Don't reveal subscription status - always show same message
+          return NextResponse.json({
+            success: true,
+            message: 'If you have an active membership, you will receive an email shortly.',
+          })
+        }
+      }
     }
 
-    // Customer has active subscription - generate magic link
+    // Customer has active subscription (or staging bypass) - generate magic link
     const token = await createMagicLinkToken(normalizedEmail)
     
     // Build magic link URL
@@ -99,9 +127,26 @@ export async function POST(request: NextRequest) {
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
       'http://localhost:3000')
     
-    const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}`
+    // Validate redirect is a safe relative path (prevent open redirect)
+    const safeRedirect = typeof redirectPath === 'string' && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null
+    const redirectParam = safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''
+    const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}${redirectParam}`
 
-    // Send email via Resend
+    // For staging access emails, return the link directly (no email needed)
+    if (isStagingAccess) {
+      console.log('Staging access granted:', {
+        email: normalizedEmail,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.json({
+        success: true,
+        stagingAccess: true,
+        redirectUrl: magicLink,
+        message: 'Staging access granted. Redirecting...',
+      })
+    }
+
+    // Send email via Resend for regular users
     const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
     const resend = getResend()
 

@@ -54,7 +54,7 @@
 
 | Product | Price | Template Status |
 |---------|-------|-----------------|
-| ⭐ IGF-1 LR3 | $150 | 1mg | ✅ Full 13-section protocol template |
+| ⭐ IGF-1 LR3 | $160 | 1mg | ✅ Full 13-section protocol template |
 | ACE-031 | $160 | 1mg | ✅ Full 13-section protocol template |
 | Follistatin 344 | $160 | 1mg | ✅ Full 13-section protocol template |
 | Sermorelin | $50 | 5mg | ✅ Full 13-section protocol template |

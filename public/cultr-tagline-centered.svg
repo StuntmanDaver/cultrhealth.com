@@ -1,0 +1,43 @@
+<svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      .tagline-main {
+        font-family: 'Inter', sans-serif;
+        font-size: 72px;
+        font-weight: 600;
+        fill: #2A4542;
+      }
+      .tagline-italic {
+        font-family: 'Inter', sans-serif;
+        font-size: 72px;
+        font-weight: 600;
+        font-style: italic;
+        fill: #2A4542;
+      }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="#FDFBF7"/>
+
+  <!-- Decorative accent line (sage color) -->
+  <line x1="200" y1="150" x2="1000" y2="150" stroke="#B7E4C7" stroke-width="2"/>
+
+  <!-- Line 1: "Change the CULTR," -->
+  <text x="600" y="160" text-anchor="middle" class="tagline-main">
+    Change the CULTR,
+  </text>
+
+  <!-- Line 2: "rebrand yourself" with rebrand italicized -->
+  <text x="380" y="260" class="tagline-italic">
+    rebrand
+  </text>
+
+  <text x="735" y="260" class="tagline-main">
+    yourself
+  </text>
+
+  <!-- Bottom decorative accent line -->
+  <line x1="200" y1="300" x2="1000" y2="300" stroke="#B7E4C7" stroke-width="2"/>
+</svg>

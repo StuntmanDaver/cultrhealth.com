@@ -1,76 +1,64 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { PLANS } from '@/lib/config/plans';
+import { PLANS, MEMBERSHIP_DISCLAIMER } from '@/lib/config/plans';
 import { PricingCard } from '@/components/site/PricingCard';
+import { ClubBanner } from '@/components/site/ClubBanner';
 import { FAQAccordion } from '@/components/site/FAQAccordion';
 import { CTASection } from '@/components/site/CTASection';
+import { PrescriptionDisclaimer } from '@/components/compliance/PrescriptionDisclaimer';
+import { MarketingHero } from '@/components/site/MarketingHero';
+import { SocialProofBadge } from '@/components/site/SocialProofBadge';
+import TrustMarquee from '@/components/site/TrustMarquee';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import Button from '@/components/ui/Button';
 import {
   Check,
   X,
   ArrowRight,
-  Sparkles,
   Shield,
   MessageCircle,
   FlaskConical,
   Dna,
+  Users,
+  HelpCircle,
 } from 'lucide-react';
 
+import { brandify } from '@/lib/utils';
+
 export const metadata: Metadata = {
-  title: 'Membership Pricing & Plans',
-  description: 'CULTR Health membership plans from $99–$499/month. Includes telehealth consultations, 50+ biomarker lab panels, peptide protocols, and provider messaging. HSA/FSA eligible.',
-  alternates: {
-    canonical: '/pricing',
-  },
-  openGraph: {
-    title: 'Membership Pricing & Plans — CULTR Health',
-    description: 'Choose your CULTR Health membership. Plans from $99–$499/month with comprehensive labs, provider access, and peptide protocols.',
-    url: 'https://www.cultrhealth.com/pricing',
-  },
+  title: 'Pricing — CULTR Health',
+  description: 'Choose your CULTR Health membership. Plans from $149-$1,049/month with comprehensive labs, provider access, and peptide protocols.',
 };
 
 export default function PricingPage() {
+  const paidPlans = PLANS.filter((p) => p.slug !== 'club');
+
   return (
     <main className="flex flex-col">
       {/* Hero */}
-      <section className="py-24 md:py-32 px-6 bg-cultr-forest text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal direction="none" duration={800}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
-              <Sparkles className="w-4 h-4 text-cultr-sage" />
-              <span className="text-sm">HSA/FSA Eligible</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-              Invest in your <span className="italic">future self</span>
-            </h1>
-          </ScrollReveal>
-          <ScrollReveal delay={200} direction="none" duration={800}>
-            <p className="text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-              Membership-based longevity and optimization designed for sustainable results. No hidden fees, no surprises.
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={400} direction="up" duration={600}>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="#plans">
-                <Button size="lg">View Plans</Button>
-              </Link>
-              <Link href="/how-it-works">
-                <Button variant="ghost" size="lg" className="text-white hover:text-cultr-sage">
-                  How It Works <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      <MarketingHero
+        title={<>Choose the level of support<br className="hidden md:block" /> that fits your goals.</>}
+        subtitle="Clinician-guided programs for body composition, performance, recovery, confidence, and long-term optimization. Transparent membership pricing."
+        ctas={[
+          { label: 'View Plans', href: '#plans' },
+          { label: 'How It Works', href: '/how-it-works', variant: 'ghost' },
+        ]}
+        backgroundImage="/images/hero-wellness-walk.jpg"
+        align="left"
+      >
+        <ScrollReveal delay={500} direction="none" duration={800}>
+          <div className="mt-4">
+            <SocialProofBadge variant="pill" className="text-white/80" />
+          </div>
+        </ScrollReveal>
+      </MarketingHero>
 
       {/* Value Props */}
-      <section className="py-16 px-6 bg-cultr-mint border-b border-cultr-sage">
+      <section className="py-16 px-6 grad-mint border-b border-cultr-sage">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
-              { icon: FlaskConical, label: '50+ Biomarkers', sublabel: 'Comprehensive testing' },
+              { icon: FlaskConical, label: '29 Biomarkers', sublabel: 'Upgradeable up to 60+' },
               { icon: MessageCircle, label: 'Direct Access', sublabel: 'Provider messaging' },
               { icon: Dna, label: 'Peptide Protocols', sublabel: 'Personalized plans' },
               { icon: Shield, label: 'HIPAA Compliant', sublabel: 'Secure platform' },
@@ -90,33 +78,85 @@ export default function PricingPage() {
       </section>
 
       {/* Pricing Cards */}
-      <section id="plans" className="py-24 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="plans" className="py-16 md:py-20 px-6 grad-white">
+        <div className="max-w-5xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Choose your <span className="italic">membership</span>
+              Transparent pricing built around an initial 2-month clinical protocol.
             </h2>
-            <p className="text-cultr-textMuted max-w-2xl mx-auto">
-              All plans include access to our platform, provider consultations, and core features. Upgrade or downgrade anytime.
+            <p className="text-cultr-textMuted max-w-2xl mx-auto mb-4">
+              Choose the membership that matches your goals. All paid plans begin with a 2-month starting protocol so your provider has enough time to evaluate your labs, personalize your protocol, and adjust care when appropriate.
             </p>
+            <Link href="/quiz" className="text-sm text-cultr-forest font-medium hover:underline">
+              Not sure which plan? Take the quiz →
+            </Link>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-            {PLANS.map((plan, i) => (
+          {/* CULTR Club — Free Banner */}
+          <ScrollReveal className="mb-10">
+            <ClubBanner />
+          </ScrollReveal>
+
+          {/* Paid Plans — 3-column grid */}
+          <div className="grid md:grid-cols-3 gap-6">
+            {paidPlans.map((plan, i) => (
               <ScrollReveal key={plan.slug} delay={i * 100} direction="up">
                 <PricingCard plan={plan} />
               </ScrollReveal>
             ))}
           </div>
+
+          {/* Global Microcopy */}
+          <div className="mt-10 text-center space-y-2 max-w-2xl mx-auto">
+            <p className="text-xs text-cultr-textMuted leading-relaxed">
+              All paid memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date.
+            </p>
+            <p className="text-xs text-cultr-textMuted/70 leading-relaxed">
+              Medication, protocol eligibility, and refills are subject to clinical review and approval.
+            </p>
+          </div>
+
+          <div className="mt-6 text-center">
+            <PrescriptionDisclaimer />
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Logo Marquee */}
+      <TrustMarquee />
+
+      {/* CULTR Creator CTA */}
+      <section className="py-12 px-6 grad-dark">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal>
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <Users className="w-8 h-8 text-cultr-sage" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  <span className="">CULTR</span> Creator
+                </h3>
+                <p className="text-white/70 max-w-lg">
+                  Earn commissions sharing <span className="font-display font-bold">CULTR</span> with your audience. Get tracking links, coupon codes, and a dedicated creator dashboard.
+                </p>
+              </div>
+              <Link href="/creators" className="shrink-0">
+                <Button variant="secondary" size="lg">
+                  Learn More <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Comparison Table */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-16 md:py-20 px-6 section-veil">
+        <div className="max-w-4xl mx-auto w-full">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Compare <span className="italic">memberships</span>
+              Compare memberships
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               See what&apos;s included in each tier to find the right fit for your goals.
@@ -130,27 +170,26 @@ export default function PricingPage() {
                   <tr className="border-b border-cultr-sage">
                     <th className="text-left py-4 px-4 font-display font-bold text-cultr-text">Feature</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm bg-cultr-mint rounded-t-xl">Creator</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Catalyst+</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
                     <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
-                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Club</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {[
-                    { feature: 'Monthly Price', values: ['$99', '$149', '$199', '$299', '$499'] },
-                    { feature: 'Telehealth Consults', values: ['Monthly', 'Monthly', 'Bi-weekly', 'Weekly', 'Unlimited'] },
-                    { feature: 'Provider Messaging', values: ['Basic', 'Priority', 'Priority', '24/7', 'Direct'] },
-                    { feature: 'Lab Review', values: ['Core', 'Comprehensive', 'Advanced', 'Executive', 'Concierge'] },
-                    { feature: 'Peptide Library Access', values: [false, true, true, true, true] },
-                    { feature: 'Protocol Engine', values: [false, true, true, true, true] },
-                    { feature: 'Cognitive Protocols', values: [false, false, true, true, true] },
-                    { feature: 'Executive Health Review', values: [false, false, false, true, true] },
-                    { feature: 'Exclusive Events', values: [false, false, false, false, true] },
-                    { feature: 'Partner Perks', values: [false, false, false, false, true] },
+                    { feature: 'Monthly Price', values: ['$149*', '$499', '$1,049'] },
+                    { feature: 'At Home Lab Test', values: ['$135', '$135', 'Included'], hasBiomarkerLink: true },
+                    { feature: 'Physician Follow-up', values: ['Every 6 months', 'Every 4 months', 'Every 2 months'] },
+                    { feature: 'Foundation Therapies', values: ['1', '1', '2'] },
+                    { feature: 'Add-On Therapies', values: ['—', '2', 'Up to 4'] },
+                    { feature: 'Protocol Library', values: [true, true, true] },
+                    { feature: 'Protocol Builder', values: ['Browse', 'Full Builder', 'Full Builder'] },
+                    { feature: 'Peptide Calculator', values: [true, true, true] },
+                    { feature: 'Member Shop Access', values: [false, true, 'VIP'] },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-cultr-sage/50">
-                      <td className="py-4 px-4 text-cultr-text">{row.feature}</td>
+                      <td className="py-4 px-4 text-cultr-text">
+                        {row.feature}
+                      </td>
                       {row.values.map((value, j) => (
                         <td key={j} className={`py-4 px-3 text-center ${j === 1 ? 'bg-cultr-mint/50' : ''}`}>
                           {typeof value === 'boolean' ? (
@@ -173,12 +212,91 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Glossary — CORE vs Enhancement */}
+      <section className="py-12 px-6 grad-mint border-b border-cultr-sage">
+        <div className="max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-6">
+            <ScrollReveal direction="up">
+              <div className="flex items-start gap-3">
+                <HelpCircle className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-display font-bold text-cultr-forest text-sm mb-1">What&apos;s a CORE therapy?</h4>
+                  <p className="text-xs text-cultr-textMuted">Your primary protocol or anchor therapy — the main treatment your provider prescribes based on your goals and labs.</p>
+                </div>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={100} direction="up">
+              <div className="flex items-start gap-3">
+                <HelpCircle className="w-5 h-5 text-cultr-forest shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-display font-bold text-cultr-forest text-sm mb-1">What&apos;s an enhancement?</h4>
+                  <p className="text-xs text-cultr-textMuted">An add-on therapy or support protocol layered onto your core plan to address additional goals like recovery, cognition, or longevity.</p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Therapy Unlock Matrix */}
+      <section className="py-16 md:py-20 px-6 grad-white">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-3">
+              Therapy access by plan
+            </h2>
+            <p className="text-cultr-textMuted max-w-2xl mx-auto text-sm">
+              Higher tiers unlock more therapy categories. All therapies require medical eligibility.
+            </p>
+          </ScrollReveal>
+
+          <ScrollReveal>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-cultr-sage">
+                    <th className="text-left py-4 px-4 font-display font-bold text-cultr-text text-sm">Therapy Category</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Core</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-forest text-sm grad-mint rounded-t-xl">Catalyst+</th>
+                    <th className="text-center py-4 px-3 font-display font-bold text-cultr-text text-sm">Concierge</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {[
+                    { category: 'GLP-1 / Weight Management', values: [true, true, true] },
+                    { category: 'NAD+ / Longevity', values: [false, true, true] },
+                    { category: 'Sexual Wellness (PT-141, Oxytocin)', values: [false, true, true] },
+                    { category: 'Sermorelin / Growth Hormone', values: [false, true, true] },
+                    { category: 'Growth Hormone Support', values: [false, true, true] },
+                    { category: 'Multi-therapy stacking', values: [false, true, true] },
+                    { category: 'Concierge customization', values: [false, false, true] },
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-cultr-sage/50">
+                      <td className="py-3 px-4 text-cultr-text text-sm">{row.category}</td>
+                      {row.values.map((val, j) => (
+                        <td key={j} className={`py-3 px-3 text-center ${j === 1 ? 'bg-cultr-mint/50' : ''}`}>
+                          {val ? (
+                            <Check className="w-5 h-5 text-cultr-forest mx-auto" />
+                          ) : (
+                            <X className="w-5 h-5 text-cultr-textMuted/40 mx-auto" />
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* What's Included */}
-      <section className="py-24 px-6 bg-white">
+      <section className="py-16 md:py-20 px-6 grad-white">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Every membership <span className="italic">includes</span>
+              Every membership includes
             </h2>
           </ScrollReveal>
 
@@ -194,7 +312,8 @@ export default function PricingPage() {
               },
               {
                 title: 'Comprehensive Lab Panels',
-                desc: '50+ biomarkers analyzed with provider interpretation and recommendations.',
+                desc: '29 biomarkers per test (upgradeable up to 60+) via SiPhox EasyDraw Core — heart, metabolic, hormonal, nutritional, inflammation, and thyroid markers analyzed with provider interpretation and recommendations.',
+                hasBiomarkerLink: true,
               },
               {
                 title: 'Provider Messaging',
@@ -210,8 +329,8 @@ export default function PricingPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="flex items-start gap-4 p-6 rounded-xl bg-cultr-offwhite border border-cultr-sage">
-                  <div className="w-6 h-6 rounded-full bg-cultr-forest flex items-center justify-center shrink-0 mt-0.5">
+                <div className="flex items-start gap-4 p-6 rounded-xl grad-light border border-cultr-sage">
+                  <div className="w-6 h-6 rounded-full grad-dark flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-4 h-4 text-white" />
                   </div>
                   <div>
@@ -226,59 +345,76 @@ export default function PricingPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-24 px-6 bg-cultr-offwhite">
+      <section className="py-16 md:py-20 px-6 grad-light">
         <div className="max-w-3xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              Pricing <span className="italic">FAQ</span>
+              Pricing FAQ
             </h2>
           </ScrollReveal>
 
           <FAQAccordion items={[
             {
-              question: 'Can I upgrade or downgrade my plan?',
-              answer: 'Yes, you can change your plan at any time from your member portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
+              question: 'Why do memberships start with a 2-month clinical protocol?',
+              answer: 'Our memberships begin with a 2-month starting protocol so your provider has enough time to review your intake, assess labs when needed, personalize your protocol, and evaluate your response before ongoing month-to-month care.',
             },
             {
-              question: 'What payment methods do you accept?',
-              answer: 'We accept all major credit cards, debit cards, and HSA/FSA cards through our secure Stripe payment system. We also provide superbills for insurance reimbursement.',
+              question: 'Am I charged monthly or all at once?',
+              answer: 'We display pricing as a monthly rate for easy comparison. Your initial purchase covers your first 2-month clinical protocol. After that, your membership renews monthly at your plan rate unless canceled.',
             },
             {
-              question: 'Is there a commitment period?',
-              answer: 'No long-term contracts required. All memberships are month-to-month. We recommend a 3-month commitment to see meaningful physiological changes, but you can cancel anytime.',
+              question: 'Can I cancel?',
+              answer: 'You can cancel future renewals anytime before your next renewal date. Your initial 2-month clinical protocol is the minimum starting term for paid memberships.',
             },
             {
-              question: 'What if I need to cancel?',
-              answer: 'You can cancel your membership at any time from your member portal. Your access continues until the end of your current billing period. No cancellation fees.',
+              question: 'Why is there an asterisk next to Core pricing?',
+              answer: brandify('CULTR Core starts at $149 per month, and the exact price depends on the selected therapy option.'),
             },
             {
-              question: 'Are labs and medications included?',
-              answer: 'Lab interpretation is included in all memberships. Lab draw fees and medication costs are billed separately through our partner labs and pharmacies at discounted rates.',
-            },
-            {
-              question: 'Can I use HSA/FSA funds?',
-              answer: 'Yes! CULTR memberships are HSA/FSA eligible. We provide all necessary documentation for reimbursement from your health savings account.',
+              question: 'Are medications guaranteed?',
+              answer: 'No. Treatment recommendations, prescriptions, and refills are always subject to provider review, clinical appropriateness, and applicable pharmacy and state requirements.',
             },
           ]} />
 
           <ScrollReveal delay={300} className="text-center mt-10">
-            <Link href="/faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
+            <Link href="/how-it-works#faq" className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors">
               View all FAQs →
             </Link>
           </ScrollReveal>
         </div>
       </section>
 
-      {/* Medical Disclaimer */}
-      <section className="py-12 px-6 bg-white border-y border-cultr-sage">
-        <div className="max-w-4xl mx-auto">
+      {/* Membership & Medical Disclaimer */}
+      <section className="py-12 px-6 grad-white border-y border-cultr-sage">
+        <div className="max-w-4xl mx-auto space-y-6">
           <ScrollReveal>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <h4 className="font-display font-bold text-amber-800 text-sm mb-2">
+                Subscription & Renewal Terms
+              </h4>
+              <p className="text-sm text-amber-900 leading-relaxed">
+                All memberships include an initial 2-month clinical protocol. After your initial period, your membership renews monthly at the listed price until you cancel. You may cancel anytime after your initial protocol by contacting support@cultrhealth.com or through your Stripe billing portal.
+              </p>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal>
+            <div className="flex items-start gap-4">
+              <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-display font-bold text-cultr-text mb-2">Membership Pricing</h4>
+                <p className="text-sm text-cultr-textMuted leading-relaxed">
+                  {MEMBERSHIP_DISCLAIMER}
+                </p>
+              </div>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
             <div className="flex items-start gap-4">
               <Shield className="w-6 h-6 text-cultr-forest shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-display font-bold text-cultr-text mb-2">Medical Disclaimer</h4>
                 <p className="text-sm text-cultr-textMuted leading-relaxed">
-                  CULTR Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
+                  <span className="font-display font-bold">CULTR</span> Health does not guarantee specific results. Weight loss, longevity, and optimization outcomes vary by individual.
                   All services are provided via telehealth by licensed providers. Prescriptions are issued only when clinically appropriate.
                   If you have a medical emergency, please call 911 or proceed to your nearest emergency room.
                 </p>
@@ -290,9 +426,10 @@ export default function PricingPage() {
 
       {/* CTA */}
       <CTASection
-        title="Ready to invest in yourself?"
-        subtitle="Join thousands optimizing their health with CULTR."
-        ctaText="Choose Your Plan"
+        title="Stop guessing. Start optimizing."
+        subtitle="Take the 2-minute quiz to find your plan."
+        ctaText="Take the Quiz"
+        ctaLink="/quiz"
       />
     </main>
   );

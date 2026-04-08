@@ -1,61 +1,69 @@
 import type { Metadata } from 'next'
-import { Inter, Raleway, Playfair_Display } from 'next/font/google'
+import { Fraunces, Inter, Playfair_Display } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
-import { CultrBackground } from '@/components/CultrBackground'
+import { LayoutShell } from '@/components/site/LayoutShell'
+import { MeshBackgroundDynamic } from '@/components/ui/MeshBackgroundDynamic'
+
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+
+// Optimize font loading - only load needed weights/subsets
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+  preload: true,
+})
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+  preload: true,
+})
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap',
-  preload: false,
+  weight: ['400', '500', '600'],
+  preload: true,
 })
 
-const raleway = Raleway({
-  subsets: ['latin'],
-  variable: '--font-raleway',
-  display: 'swap',
-  preload: false,
-})
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
-  display: 'swap',
-  preload: false,
-})
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.cultrhealth.com'),
+  metadataBase: new URL(siteUrl),
   title: {
-    default: 'CULTR Health — Personalized Longevity & Peptide Therapy',
-    template: '%s | CULTR Health',
+    default: 'CULTR Health — Optimize Your Longevity',
+    template: '%s — CULTR Health',
   },
-  description: 'CULTR Health offers personalized longevity medicine, comprehensive lab testing, peptide protocols, and provider-supervised hormone optimization. HSA/FSA eligible.',
-  keywords: ['longevity medicine', 'peptide therapy', 'health optimization', 'hormone therapy', 'telehealth', 'semaglutide', 'tirzepatide', 'lab testing', 'CULTR Health'],
-  alternates: {
-    canonical: '/',
-  },
+  description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health. Data-driven health optimization for peak performance.',
+  keywords: ['longevity', 'health optimization', 'hormone therapy', 'diagnostic labs', 'TRT', 'wellness', 'CULTR'],
   openGraph: {
-    title: 'CULTR Health — Personalized Longevity & Peptide Therapy',
-    description: 'Personalized longevity medicine with comprehensive labs, peptide protocols, and provider-supervised care. Memberships from $99/mo.',
-    type: 'website',
+    title: 'Change the CULTR, rebrand yourself.',
+    description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
+    url: siteUrl,
     siteName: 'CULTR Health',
+    type: 'website',
     locale: 'en_US',
-    url: 'https://www.cultrhealth.com',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'CULTR Health — Personalized Longevity Medicine',
-      },
-    ],
+    images: [{ url: `${siteUrl}/images/hero-cultr-diverse-women.png`, width: 1536, height: 1024, alt: 'CULTR Health — Five diverse women in athletic wear' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'CULTR Health — Personalized Longevity & Peptide Therapy',
-    description: 'Personalized longevity medicine with comprehensive labs, peptide protocols, and provider-supervised care.',
-    images: ['/og-image.png'],
+    title: 'Change the CULTR, rebrand yourself.',
+    description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
+    images: [`${siteUrl}/images/hero-cultr-diverse-women.png`],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  // Google Search Console verification (set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in env)
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
   robots: {
     index: true,
@@ -105,22 +113,37 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${inter.variable} ${raleway.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${fraunces.variable} ${playfair.variable} ${inter.variable}`}>
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
+        {/* DNS prefetch for third-party services */}
+        <link rel="dns-prefetch" href="https://js.stripe.com" />
+        <link rel="dns-prefetch" href="https://cdn.curator.io" />
+        {/* Google Analytics */}
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GA_MEASUREMENT_ID}', {
+                  page_title: document.title,
+                  page_location: window.location.href,
+                });
+              `}
+            </Script>
+          </>
+        )}
       </head>
-      <body className="min-h-screen bg-[#2B4542] text-white antialiased">
-        <CultrBackground />
-        <div className="relative z-[1]">
+      <body className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
+        <MeshBackgroundDynamic />
+        <LayoutShell>
           {children}
-        </div>
+        </LayoutShell>
       </body>
     </html>
   )

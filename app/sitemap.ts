@@ -1,59 +1,54 @@
 import { MetadataRoute } from 'next'
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://www.cultrhealth.com'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
 
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Static public pages
   const staticPages: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: BASE_URL,
       lastModified: new Date(),
       changeFrequency: 'weekly',
-      priority: 1.0,
+      priority: 1,
     },
     {
-      url: `${baseUrl}/pricing`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/products`,
+      url: `${BASE_URL}/pricing`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/how-it-works`,
+      url: `${BASE_URL}/how-it-works`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/faq`,
+      url: `${BASE_URL}/faq`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
-      priority: 0.7,
+      priority: 0.5,
     },
     {
-      url: `${baseUrl}/login`,
+      url: `${BASE_URL}/login`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/legal/terms`,
+      url: `${BASE_URL}/legal/privacy`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.2,
     },
     {
-      url: `${baseUrl}/legal/privacy`,
+      url: `${BASE_URL}/legal/terms`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.2,
     },
     {
-      url: `${baseUrl}/legal/medical-disclaimer`,
+      url: `${BASE_URL}/legal/medical-disclaimer`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.2,
