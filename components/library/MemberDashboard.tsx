@@ -5,9 +5,6 @@ import Link from 'next/link';
 import {
   Package,
   RefreshCw,
-  DollarSign,
-  Download,
-  Receipt,
   Truck,
   Clock,
   CheckCircle,
@@ -17,15 +14,12 @@ import {
   FileText,
   Scale,
   Flame,
-  HelpCircle,
-  Dumbbell,
   Brain,
   ArrowRight,
 } from 'lucide-react';
 import type { PlanTier, LibraryAccess } from '@/lib/config/plans';
 import { TierGate } from '@/components/library/TierGate';
 import { PRODUCT_CATALOG } from '@/lib/config/product-catalog';
-import { brandify } from '@/lib/utils';
 
 interface MemberDashboardProps {
   tier: PlanTier | null;
@@ -42,15 +36,6 @@ interface Order {
   createdAt: string;
   updatedAt?: string;
   tracking?: string;
-}
-
-interface LmnRecord {
-  lmnNumber: string;
-  orderNumber: string;
-  issueDate: string;
-  eligibleTotal: number;
-  currency: string;
-  itemCount: number;
 }
 
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
@@ -74,9 +59,6 @@ export function MemberDashboard({
 }: MemberDashboardProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
-  const [lmnRecords, setLmnRecords] = useState<LmnRecord[]>([]);
-  const [lmnLoading, setLmnLoading] = useState(true);
-  const [showLmnModal, setShowLmnModal] = useState(false);
   const shopProductCount = PRODUCT_CATALOG.length;
 
   // Fetch orders from Asher Med API
@@ -95,24 +77,6 @@ export function MemberDashboard({
       }
     }
     fetchOrders();
-  }, []);
-
-  // Fetch LMN records for HSA/FSA documents
-  useEffect(() => {
-    async function fetchLmnRecords() {
-      try {
-        const response = await fetch('/api/lmn/list');
-        if (response.ok) {
-          const data = await response.json();
-          setLmnRecords(data.lmns || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch LMN records:', error);
-      } finally {
-        setLmnLoading(false);
-      }
-    }
-    fetchLmnRecords();
   }, []);
 
   const getStatusConfig = (status: string) => {
@@ -140,14 +104,32 @@ export function MemberDashboard({
         </div>
 
         {/* Quick Action Buttons */}
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Link
             href="/members/shop"
-            className="group flex flex-col items-center gap-2 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
+            className="group flex items-center justify-center gap-3 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
           >
-            <ShoppingCart className="w-6 h-6 text-white/80" />
-            <span className="text-xs font-medium text-center leading-tight">
+            <ShoppingCart className="w-5 h-5 text-white/80" />
+            <span className="text-sm font-medium leading-tight">
               Shop Products
+            </span>
+          </Link>
+          <Link
+            href="/members/dosing-calculator"
+            className="group flex items-center justify-center gap-3 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
+          >
+            <Scale className="w-5 h-5 text-white/80" />
+            <span className="text-sm font-medium leading-tight">
+              Dosing Calculator
+            </span>
+          </Link>
+          <Link
+            href="/members/calorie-calculator"
+            className="group flex items-center justify-center gap-3 p-4 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all"
+          >
+            <Flame className="w-5 h-5 text-white/80" />
+            <span className="text-sm font-medium leading-tight">
+              Calorie Calculator
             </span>
           </Link>
         </div>
