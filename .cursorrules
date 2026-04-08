@@ -497,6 +497,7 @@ any file containing API keys, secrets, or tokens
 - Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
 - Preserve checkout `session_id` across `/success` -> `/onboarding` -> `/intake` -> `/login`, persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` in `pending_intakes.intake_data`, and fall back to the latest pending intake by authenticated email if the session id is missing
 - After a successful custom intake submission, redirect to `/onboarding` with `next=schedule` while preserving `session_id` when present; `OnboardingClient` must keep the schedule CTA active even if `/api/onboarding/status` is stale or temporarily unavailable
+- Club orders must route to `api/admin/club-orders` APIs and use shared UI controls (`ClubOrderStageControls`, `ClubOrderBulkActions`) — NEVER pass a club order row into the product `orders/[id]/fulfill` workflow.
 - Default member magic-link redirects in `app/api/auth/verify/route.ts` to `/members`; only explicit safe redirect params should land on `/dashboard`
 - Skip creator magic-link rate limiting on staging hosts and for listed bypass emails in `app/api/creators/magic-link/route.ts` so Safari/WebKit retries and E2E logins do not fail spuriously
 

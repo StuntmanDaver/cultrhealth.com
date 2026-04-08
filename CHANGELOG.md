@@ -1,3 +1,20 @@
+## [2026-04-08] - Club Order Parity
+
+### Fixed
+- **All Orders Modal Cross-Wiring Risk:** `OrdersClient` no longer treats club orders as product orders. Club rows now safely route to the club-specific `api/admin/club-orders/[orderId]/status` endpoint instead of falling into the product fulfillment flow.
+- **Admin Dashboard Logic Duplication:** Removed embedded pipeline structures from `AdminDashboardClient` and `PendingApprovalTab`, standardizing on a single shared source of truth.
+
+### Added
+- **Shared Club-Order Pipeline Module:** Created `lib/admin-club-orders.ts` to govern stage order, labels, target move validation, and skip/rollback notes. Both UI and backend endpoints now import this exact metadata.
+- **Shared Stage Controls:** Built `ClubOrderStageControls` and `ClubOrderBulkActions` to enforce exact feature parity (approve, next-step, move-to anywhere, cancel, and inline shipping form) across all surfaces.
+- **Unified Bulk Actions:** The "All Orders" mixed table now provides checkboxes and a bulk-move toolbar exclusively for club orders, mirroring the behavior in the Overview and Pending Approval tabs.
+
+### Memory
+- Club orders and product orders are deeply distinguished in the admin UI. Never use the `orders` APIs for `club_orders`.
+- Always import `PIPELINE_ORDER` and `PIPELINE_STATUSES` from `lib/admin-club-orders.ts` rather than hardcoding stage logic in components.
+
+---
+
 ## [2026-04-07] - Intake Scheduling Handoff Hardening
 
 ### Fixed
