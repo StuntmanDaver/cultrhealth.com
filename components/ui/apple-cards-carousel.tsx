@@ -669,9 +669,6 @@ export const Card = ({
         <div className={cn("relative z-10 flex items-end justify-between", compact ? "px-3.5 pb-3.5" : "px-5 pb-5")}>
           {card.price ? (
             <div>
-              <span className={cn("block uppercase tracking-widest text-white/40 font-semibold", compact ? "text-[8px] mb-0.5" : "text-[9px] mb-0.5")}>
-                Starting at
-              </span>
               <span className={cn("font-display font-bold text-white", compact ? "text-lg" : "text-xl")}>{card.price}</span>
             </div>
           ) : (
