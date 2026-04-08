@@ -57,10 +57,6 @@ export const metadata: Metadata = {
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
     images: [`${siteUrl}/images/hero-cultr-diverse-women.png`],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
   // Google Search Console verification (set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in env)
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,

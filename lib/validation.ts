@@ -42,13 +42,6 @@ export const newsletterSchema = z.object({
 
 export type WaitlistFormData = z.infer<typeof waitlistSchema>
 
-export const newsletterSchema = z.object({
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email address'),
-})
-
 export type NewsletterFormData = z.infer<typeof newsletterSchema>
 
 export function formatPhoneE164(phone: string): string {
