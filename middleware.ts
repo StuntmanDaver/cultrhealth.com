@@ -3,6 +3,16 @@ import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
+  const isProductionDeployment = process.env.VERCEL_ENV === 'production'
+  const isVercelHost = hostname.endsWith('.vercel.app')
+
+  // Canonicalize production deployment hosts to the primary public domain.
+  if (isProductionDeployment && isVercelHost && (request.method === 'GET' || request.method === 'HEAD')) {
+    const canonicalUrl = request.nextUrl.clone()
+    canonicalUrl.protocol = 'https:'
+    canonicalUrl.host = 'cultrhealth.com'
+    return NextResponse.redirect(canonicalUrl, 308)
+  }
 
   // Serve the restored join landing page from /join only at the root hostname path.
   if (
