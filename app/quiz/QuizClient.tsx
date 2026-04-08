@@ -144,7 +144,8 @@ export function QuizClient() {
     });
     
     // Also push a specific datalayer event for ease of use
-    if (typeof window !== 'undefined' && window.dataLayer) {
+    if (typeof window !== 'undefined') {
+      window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({
         event: 'quiz_cta_clicked',
         quiz_recommended_tier: result?.recommendedTier,

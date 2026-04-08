@@ -273,10 +273,17 @@ export function trackIntakeComplete(): void {
 
 // Track quiz start
 export function trackQuizStart(): void {
-  if (!isGtagAvailable()) return
+  if (typeof window === 'undefined') return
   
-  window.gtag('event', 'tutorial_begin', {
-    event_category: 'quiz',
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'tutorial_begin', {
+      event_category: 'quiz',
+    })
+  }
+
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({
+    event: 'quiz_start'
   })
 }
 
@@ -286,26 +293,27 @@ export function trackQuizStep(
   questionId: string,
   answer: string | string[]
 ): void {
-  if (!isGtagAvailable()) return
+  if (typeof window === 'undefined') return
   
   const formattedAnswer = Array.isArray(answer) ? answer.join(',') : answer
 
-  window.gtag('event', 'tutorial_progress', {
-    event_category: 'quiz',
-    step_number: stepNumber,
-    question_id: questionId,
-    answer: formattedAnswer
-  })
-  
-  // Also push raw data to dataLayer for GTM flexibility
-  if (typeof window !== 'undefined' && window.dataLayer) {
-    window.dataLayer.push({
-      event: 'quiz_step_answered',
-      quiz_step: stepNumber,
-      quiz_question_id: questionId,
-      quiz_answer: formattedAnswer
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'tutorial_progress', {
+      event_category: 'quiz',
+      step_number: stepNumber,
+      question_id: questionId,
+      answer: formattedAnswer
     })
   }
+  
+  // Also push raw data to dataLayer for GTM flexibility
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({
+    event: 'quiz_step_answered',
+    quiz_step: stepNumber,
+    quiz_question_id: questionId,
+    quiz_answer: formattedAnswer
+  })
 }
 
 // Track quiz completion and capture all answers
@@ -313,7 +321,7 @@ export function trackQuizComplete(
   answers: Record<string, string | string[]>,
   result: { recommendedTier: string; coreTherapy?: { slug: string } }
 ): void {
-  if (!isGtagAvailable()) return
+  if (typeof window === 'undefined') return
   
   // Format answers for GA4 custom dimensions
   const formattedAnswers = Object.entries(answers).reduce((acc, [key, val]) => {
@@ -321,28 +329,29 @@ export function trackQuizComplete(
     return acc
   }, {} as Record<string, string>)
 
-  window.gtag('event', 'tutorial_complete', {
-    event_category: 'quiz',
-    recommended_tier: result.recommendedTier,
-    recommended_therapy: result.coreTherapy?.slug || 'none',
-    ...formattedAnswers
-  })
-
-  // Also track as a generic lead generation event
-  window.gtag('event', 'generate_lead', {
-    event_category: 'quiz',
-    event_label: 'complete_quiz',
-    value: 0,
-    recommended_tier: result.recommendedTier,
-  })
-
-  // Push full payload to dataLayer for GTM
-  if (typeof window !== 'undefined' && window.dataLayer) {
-    window.dataLayer.push({
-      event: 'quiz_completed',
-      quiz_answers: answers,
+  if (typeof window.gtag === 'function') {
+    window.gtag('event', 'tutorial_complete', {
+      event_category: 'quiz',
       recommended_tier: result.recommendedTier,
-      recommended_therapy: result.coreTherapy?.slug || null
+      recommended_therapy: result.coreTherapy?.slug || 'none',
+      ...formattedAnswers
+    })
+
+    // Also track as a generic lead generation event
+    window.gtag('event', 'generate_lead', {
+      event_category: 'quiz',
+      event_label: 'complete_quiz',
+      value: 0,
+      recommended_tier: result.recommendedTier,
     })
   }
+
+  // Push full payload to dataLayer for GTM
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({
+    event: 'quiz_completed',
+    quiz_answers: answers,
+    recommended_tier: result.recommendedTier,
+    recommended_therapy: result.coreTherapy?.slug || null
+  })
 }
