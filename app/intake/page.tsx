@@ -33,7 +33,7 @@ export default async function IntakePage({
             <div className="w-12 h-12 border-4 border-brand-primary/20 border-t-brand-primary rounded-full animate-spin"></div>
           </div>
         }>
-          <IntakeFormClient />
+          <IntakeFormClient authenticatedEmail={session.email} />
         </Suspense>
       </div>
     </div>

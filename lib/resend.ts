@@ -1986,3 +1986,65 @@ export async function sendRecordingReadyNotification(
     return { success: false, error: String(err) }
   }
 }
+
+interface LegacySiphoxKitFulfillmentEmailData {
+  name: string
+  email: string
+  address: unknown
+}
+
+interface LegacySiphoxFailureAlertData {
+  customerEmail: string
+  planTier: string
+  siphoxOrderId?: string | null
+  lastError: string
+  retryCount: number
+}
+
+interface LegacySiphoxRefundAlertData {
+  customerName?: string
+  customerEmail?: string
+  planTier: string
+  siphoxOrderId?: string | null
+  kitStatus: string
+  refundAmount: number
+  suggestedAction: string
+}
+
+/**
+ * Legacy compatibility shim for deprecated SiPhox workflows.
+ * Kept to prevent build/runtime failures while SiPhox code remains in tree.
+ */
+export async function sendKitFulfillmentEmail(
+  _data: LegacySiphoxKitFulfillmentEmailData
+): Promise<EmailResult> {
+  return { success: false, error: 'Deprecated SiPhox email workflow' }
+}
+
+/**
+ * Legacy compatibility shim for deprecated SiPhox workflows.
+ */
+export async function sendSiphoxFailureAlert(
+  _data: LegacySiphoxFailureAlertData
+): Promise<EmailResult> {
+  return { success: false, error: 'Deprecated SiPhox email workflow' }
+}
+
+/**
+ * Legacy compatibility shim for deprecated SiPhox workflows.
+ */
+export async function sendSiphoxRefundAlert(
+  _data: LegacySiphoxRefundAlertData
+): Promise<EmailResult> {
+  return { success: false, error: 'Deprecated SiPhox email workflow' }
+}
+
+/**
+ * Legacy compatibility shim for deprecated SiPhox workflows.
+ */
+export async function sendLowCreditAlert(
+  _balance: number,
+  _threshold: number
+): Promise<EmailResult> {
+  return { success: false, error: 'Deprecated SiPhox email workflow' }
+}

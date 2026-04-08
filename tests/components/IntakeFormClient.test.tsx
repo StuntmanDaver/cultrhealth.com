@@ -36,13 +36,13 @@ describe('IntakeFormClient', () => {
     vi.stubGlobal('fetch', mockFetch)
   })
 
-  it('routes successful submissions into onboarding with the preserved session id', async () => {
+  it('submits using the authenticated email and routes into onboarding with the preserved session id', async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
     })
 
-    render(<IntakeFormClient />)
+    render(<IntakeFormClient authenticatedEmail="member@example.com" />)
 
     fireEvent.click(screen.getByRole('button', { name: /let's go/i }))
 
@@ -52,7 +52,10 @@ describe('IntakeFormClient', () => {
     fireEvent.click(screen.getByRole('button', { name: /^ok/i }))
 
     await screen.findByText('What is your best contact info?')
-    fireEvent.change(screen.getByPlaceholderText('jane@example.com'), { target: { value: 'jane@example.com' } })
+    const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement
+    expect(emailInput.value).toBe('member@example.com')
+    fireEvent.change(emailInput, { target: { value: 'other@example.com' } })
+    expect(emailInput.value).toBe('member@example.com')
     fireEvent.change(screen.getByPlaceholderText('(555) 555-5555'), { target: { value: '(352) 555-0199' } })
     fireEvent.click(screen.getByRole('button', { name: /^ok/i }))
 
@@ -103,7 +106,7 @@ describe('IntakeFormClient', () => {
 
     expect(JSON.parse(mockFetch.mock.calls[0][1].body as string)).toMatchObject({
       stripeSessionId: 'cs_test_intake_123',
-      email: 'jane@example.com',
+      email: 'member@example.com',
       telehealthConsent: true,
     })
 

@@ -69,9 +69,10 @@ const initialState: IntakeState = {
   telehealthConsent: null,
 };
 
-export function IntakeFormClient() {
+export function IntakeFormClient({ authenticatedEmail }: { authenticatedEmail: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const normalizedAuthenticatedEmail = authenticatedEmail.trim().toLowerCase();
   const sessionId = searchParams?.get('session_id') || '';
   const onboardingParams = new URLSearchParams();
   if (sessionId) {
@@ -81,7 +82,10 @@ export function IntakeFormClient() {
   const onboardingHref = `${LINKS.onboarding}?${onboardingParams.toString()}`;
   
   const [step, setStep] = useState(0);
-  const [data, setData] = useState<IntakeState>(initialState);
+  const [data, setData] = useState<IntakeState>(() => ({
+    ...initialState,
+    email: normalizedAuthenticatedEmail,
+  }));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,11 +136,13 @@ export function IntakeFormClient() {
     setStep(10); // Show loading screen
 
     try {
+      const submissionEmail = normalizedAuthenticatedEmail || data.email.trim().toLowerCase();
       const response = await fetch('/api/intake/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
+          email: submissionEmail,
           stripeSessionId: sessionId,
           wellnessQuestionnaire: data.goalsMotivation, 
         }),
@@ -211,7 +217,8 @@ export function IntakeFormClient() {
               type="email"
               placeholder="jane@example.com"
               value={data.email}
-              onChange={(e) => updateData({ email: e.target.value })}
+              readOnly
+              className="cursor-not-allowed opacity-70"
               autoFocus
             />
             <TypeformInput
