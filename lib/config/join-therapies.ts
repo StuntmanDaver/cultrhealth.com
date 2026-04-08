@@ -226,7 +226,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         badge: '',
         note: '30 ML',
         description:
-          'Sterile water with 0.9% benzyl alcohol for safe reconstitution of lyophilized peptides. Essential supply for injectable therapies.',
+          'FDA approved Hospira brand 30ml bacteriostatic water for injection, USP, is a sterile, multiple-dose, non-pyrogenic water for injection. Contains 0.9% (9 mg/mL) benzyl alcohol added as a bacteriostatic preservative. Bacteriostatic water for injection, USP, is a sterile, multiple-dose, non-pyrogenic water for injection. Bacteriostatic Water for Injection is supplied in a multiple-dose 30 mL plastic vial with a flip-top lid and is not pressurized. Contains 0.9% (9 mg/mL) of benzyl alcohol added as a bacteriostatic preservative.',
         price: 29.99,
         category: 'peptide',
         catalogSku: 'BACWATER-30ML',
