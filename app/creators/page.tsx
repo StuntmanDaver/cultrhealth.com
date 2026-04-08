@@ -55,6 +55,7 @@ export default function CreatorsPage() {
           { label: 'Apply Now', href: '/creators/apply' },
           { label: 'Creator Login', href: '/creators/login', variant: 'ghost' },
         ]}
+        backgroundImage="/images/hero-cultr-office.png"
       >
         <ScrollReveal delay={500} direction="none" duration={800}>
           <div className="mt-6">

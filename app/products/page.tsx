@@ -17,8 +17,16 @@ import {
 } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Products — CULTR Health',
-  description: 'Explore CULTR Health products including compounded peptides, hormone optimization, and comprehensive diagnostic labs.',
+  title: 'Products — Peptides, Hormone Therapy & Labs',
+  description: 'Explore CULTR Health products: compounded tirzepatide, semaglutide, hormone optimization, and comprehensive diagnostic labs. All provider-supervised.',
+  alternates: {
+    canonical: '/products',
+  },
+  openGraph: {
+    title: 'Products — CULTR Health',
+    description: 'Science-backed peptide protocols, GLP-1 agonists, hormone optimization, and advanced lab testing through CULTR Health.',
+    url: 'https://www.cultrhealth.com/products',
+  },
 };
 
 const iconMap = {
@@ -29,8 +37,27 @@ const iconMap = {
 };
 
 export default function ProductsPage() {
+  const itemListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'CULTR Health Products',
+    description: 'Science-backed peptide protocols, GLP-1 agonists, hormone optimization, and diagnostic labs.',
+    numberOfItems: PRODUCTS.length,
+    itemListElement: PRODUCTS.map((product, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: product.name,
+      description: product.description,
+      url: `https://www.cultrhealth.com${product.href}`,
+    })),
+  }
+
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
       {/* Hero */}
       <section className="py-24 md:py-32 px-6 grad-dark-glow text-white">
         <div className="max-w-4xl mx-auto text-center">
@@ -272,6 +299,6 @@ export default function ProductsPage() {
         subtitle="Get access to our full product line through membership."
         ctaText="Choose Your Plan"
       />
-    </div>
+    </main>
   );
 }

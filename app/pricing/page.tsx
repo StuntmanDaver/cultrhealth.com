@@ -34,7 +34,7 @@ export default function PricingPage() {
   const paidPlans = PLANS.filter((p) => p.slug !== 'club');
 
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {/* Hero */}
       <MarketingHero
         title={<>Choose the level of support<br className="hidden md:block" /> that fits your goals.</>}
@@ -431,6 +431,6 @@ export default function PricingPage() {
         ctaText="Take the Quiz"
         ctaLink="/quiz"
       />
-    </div>
+    </main>
   );
 }

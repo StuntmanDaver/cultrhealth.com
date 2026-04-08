@@ -42,6 +42,8 @@ export const newsletterSchema = z.object({
 
 export type WaitlistFormData = z.infer<typeof waitlistSchema>
 
+export type NewsletterFormData = z.infer<typeof newsletterSchema>
+
 export function formatPhoneE164(phone: string): string {
   // Basic cleanup - remove spaces, dashes, parentheses
   const cleaned = phone.replace(/[\s\-\(\)\.]/g, '')

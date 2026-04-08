@@ -102,6 +102,12 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+          <div 
+            className="text-[#FDFBF7]/90 mt-4 text-xs md:text-sm tracking-widest font-light" 
+            style={{ fontFamily: 'var(--font-playfair)' }}
+          >
+            Change the CULTR, <span className="italic font-medium">rebrand</span> yourself.
+          </div>
         </div>
       </section>
 

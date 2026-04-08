@@ -182,6 +182,7 @@ export default async function SciencePage({
           { label: 'Take the Quiz', href: '/quiz' },
         ]}
         size="default"
+        backgroundImage="/images/hero-cultr-office.png"
       />
 
       {/* Social Proof */}

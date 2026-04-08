@@ -4,8 +4,11 @@ import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { DISPENSING_PHARMACY, DISCLAIMERS, SERVED_STATES, EXCLUDED_STATES } from '@/lib/config/compliance';
 
 export const metadata: Metadata = {
-  title: 'Medical Disclaimer — CULTR Health',
-  description: 'Important medical disclaimer and safety information for CULTR Health services.',
+  title: 'Medical Disclaimer',
+  description: 'Important medical disclaimer and safety information for CULTR Health telehealth and peptide therapy services.',
+  alternates: {
+    canonical: '/legal/medical-disclaimer',
+  },
 };
 
 export default function MedicalDisclaimerPage() {

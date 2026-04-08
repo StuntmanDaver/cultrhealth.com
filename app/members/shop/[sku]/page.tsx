@@ -19,9 +19,21 @@ export async function generateMetadata({ params }: { params: Promise<{ sku: stri
     return { title: 'Product Not Found | CULTR Health' }
   }
   
+  const title = `${product.name} — CULTR Health Shop`
+  const description = `${product.name} available through CULTR Health membership. Compounded peptide therapy with provider-supervised protocols.`
+
   return {
-    title: `${product.name} | CULTR Health Shop`,
-    description: `View details and add ${product.name} to your quote request.`,
+    title,
+    description,
+    alternates: {
+      canonical: `/library/shop/${encodeURIComponent(product.sku)}`,
+    },
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      siteName: 'CULTR Health',
+    },
   }
 }
 
@@ -50,11 +62,37 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   // Get peptide details from catalog if available
   const peptideDetails = product.peptideId ? getPeptideById(product.peptideId) : null
 
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || `${product.name} — compounded peptide available through CULTR Health membership.`,
+    sku: product.sku,
+    brand: {
+      '@type': 'Brand',
+      name: 'CULTR Health',
+    },
+    offers: {
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'CULTR Health',
+      },
+    },
+  }
+
   return (
-    <ProductDetailClient
-      product={product}
-      peptideDetails={peptideDetails}
-      email={session.email}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <ProductDetailClient
+        product={product}
+        peptideDetails={peptideDetails}
+        email={session.email}
+      />
+    </>
   )
 }

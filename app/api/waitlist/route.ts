@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { waitlistSchema } from '@/lib/validation'
+import { waitlistSchema, newsletterSchema } from '@/lib/validation'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
@@ -19,7 +19,13 @@ export async function POST(request: NextRequest) {
     const { turnstileToken, ...formData } = body
 
     // 1. Verify Turnstile token (if configured)
-    if (process.env.TURNSTILE_SECRET_KEY && turnstileToken !== 'pending-setup') {
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken || turnstileToken === 'pending-setup') {
+        return NextResponse.json(
+          { error: 'Verification required. Please complete the captcha.' },
+          { status: 400 }
+        )
+      }
       const { verifyTurnstileToken } = await import('@/lib/turnstile')
       const turnstileResult = await verifyTurnstileToken(turnstileToken)
       if (!turnstileResult.success) {
@@ -64,8 +70,9 @@ export async function POST(request: NextRequest) {
           name,
           email,
           phone,
-          social_handle: social_handle || undefined,
-          treatment_reason: treatment_reason || undefined,
+          social_handle,
+          treatment_reason,
+          source: isNewsletter ? 'newsletter' : undefined,
         })
         waitlistId = dbResult.id
       } catch (dbError) {
@@ -93,19 +100,23 @@ export async function POST(request: NextRequest) {
         name,
         email,
         phone,
-        social_handle: social_handle || undefined,
-        treatment_reason: treatment_reason || undefined,
+        social_handle,
+        treatment_reason,
         timestamp: new Date(),
       }).catch((emailError) => {
         console.error('Failed to send founder notification:', emailError)
       })
+    } else {
+      console.warn('Email notifications disabled: RESEND_API_KEY not configured')
     }
 
     // 5. Return success
     return NextResponse.json({
       success: true,
       waitlist_id: waitlistId,
-      message: 'Successfully joined the waitlist',
+      message: isNewsletter
+        ? 'Successfully subscribed to the newsletter'
+        : 'Successfully joined the waitlist',
     })
 
   } catch (error) {

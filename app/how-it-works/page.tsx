@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 
 export default function HowItWorksPage() {
   return (
-    <div className="flex flex-col">
+    <main className="flex flex-col">
       {/* Hero */}
       <MarketingHero
         title="From quiz to clinician-guided plan in a few simple steps."
@@ -45,6 +45,7 @@ export default function HowItWorksPage() {
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
         ]}
+        backgroundImage="/images/hero-cultr-office.png"
       >
         <ScrollReveal delay={500} direction="none" duration={800}>
           <div className="mt-4">
@@ -369,6 +370,6 @@ export default function HowItWorksPage() {
         ctaText="Take the Quiz"
         ctaLink="/quiz"
       />
-    </div>
+    </main>
   );
 }

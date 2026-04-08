@@ -57,13 +57,20 @@ export const metadata: Metadata = {
     description: 'Order labs, optimize hormones, and unlock your full potential with CULTR Health.',
     images: [`${siteUrl}/images/hero-cultr-diverse-women.png`],
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
   // Google Search Console verification (set NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION in env)
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 }
 
@@ -72,6 +79,35 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalOrganization',
+    name: 'CULTR Health',
+    url: 'https://www.cultrhealth.com',
+    logo: 'https://www.cultrhealth.com/cultr-health-logo.png',
+    description: 'Personalized longevity medicine with comprehensive lab testing, peptide protocols, and provider-supervised hormone optimization.',
+    medicalSpecialty: 'Preventive Medicine',
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'support@cultrhealth.com',
+      contactType: 'customer service',
+      availableLanguage: 'English',
+    },
+    sameAs: [],
+  }
+
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'CULTR Health',
+    url: 'https://www.cultrhealth.com',
+    description: 'Personalized longevity medicine, peptide therapy, and health optimization.',
+    publisher: {
+      '@type': 'Organization',
+      name: 'CULTR Health',
+    },
+  }
+
   return (
     <html lang="en" className={`${fraunces.variable} ${playfair.variable} ${inter.variable}`}>
       <head>
