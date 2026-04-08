@@ -13,9 +13,16 @@ export default async function OnboardingPage({
   searchParams: Promise<{ session_id?: string; next?: string }>
 }) {
   const session = await getSession()
-  if (!session) redirect('/login')
-
   const params = await searchParams
+
+  if (!session) {
+    let query = ''
+    if (params.session_id) query += `session_id=${encodeURIComponent(params.session_id)}`
+    if (params.next) query += `${query ? '&' : ''}next=${encodeURIComponent(params.next)}`
+    
+    const onboardingRedirectPath = query ? `/onboarding?${query}` : '/onboarding'
+    redirect(`/login?redirect=${encodeURIComponent(onboardingRedirectPath)}`)
+  }
 
   return (
     <OnboardingClient

@@ -729,33 +729,55 @@ export interface CouponStats {
 export async function getCouponStats(days = 30): Promise<CouponStats> {
   try {
     const result = await sql`
+      WITH all_usages AS (
+        SELECT
+          coupon_code,
+          discount_percent,
+          attributed_creator_id,
+          subtotal_usd as revenue,
+          created_at
+        FROM club_orders
+        WHERE coupon_code IS NOT NULL AND coupon_code != ''
+        
+        UNION ALL
+        
+        SELECT
+          ac.code as coupon_code,
+          ac.discount_value as discount_percent,
+          ac.creator_id as attributed_creator_id,
+          oa.net_revenue as revenue,
+          oa.created_at
+        FROM order_attributions oa
+        JOIN affiliate_codes ac ON oa.code_id = ac.id
+        WHERE oa.attribution_method = 'coupon_code'
+          AND oa.status != 'refunded'
+          AND (oa.order_id LIKE 'ORD-%' OR oa.order_id LIKE 'SUB-%' OR oa.order_id LIKE 'INV-%')
+      )
       SELECT
-        co.coupon_code,
-        co.discount_percent,
-        co.attributed_creator_id,
+        u.coupon_code,
+        u.discount_percent,
+        u.attributed_creator_id,
         COUNT(*)::int as usage_count,
-        COALESCE(SUM(co.subtotal_usd), 0) as total_revenue,
+        COALESCE(SUM(u.revenue), 0) as total_revenue,
         COALESCE(SUM(
-          CASE WHEN co.discount_percent > 0 AND co.discount_percent < 100
-          THEN co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent)
+          CASE WHEN u.discount_percent > 0 AND u.discount_percent < 100
+          THEN u.revenue * u.discount_percent / (100.0 - u.discount_percent)
           ELSE 0 END
         ), 0) as total_discount,
-        COALESCE(AVG(co.subtotal_usd), 0) as avg_order_value,
+        COALESCE(AVG(u.revenue), 0) as avg_order_value,
         c.full_name as creator_name,
         ac_match.program_type
-      FROM club_orders co
-      LEFT JOIN creators c ON co.attributed_creator_id = c.id
+      FROM all_usages u
+      LEFT JOIN creators c ON u.attributed_creator_id = c.id
       LEFT JOIN LATERAL (
         SELECT program_type FROM affiliate_codes
-        WHERE UPPER(code) = UPPER(co.coupon_code)
+        WHERE UPPER(code) = UPPER(u.coupon_code)
         ORDER BY active DESC, created_at DESC
         LIMIT 1
       ) ac_match ON TRUE
-      WHERE co.coupon_code IS NOT NULL
-        AND co.coupon_code != ''
-        AND co.created_at >= NOW() - make_interval(days => ${days})
+      WHERE u.created_at >= NOW() - make_interval(days => ${days})
         AND (ac_match.program_type IS NULL OR ac_match.program_type != 'prelaunch')
-      GROUP BY co.coupon_code, co.discount_percent, co.attributed_creator_id, c.full_name, ac_match.program_type
+      GROUP BY u.coupon_code, u.discount_percent, u.attributed_creator_id, c.full_name, ac_match.program_type
       ORDER BY usage_count DESC
     `
 
@@ -856,13 +878,12 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
     const [commissionResult, statusResult] = await Promise.all([
       sql`
         SELECT
-          COUNT(DISTINCT CASE WHEN cl.status != 'reversed' THEN cl.beneficiary_creator_id END)::int as active_creators,
-          COALESCE(SUM(CASE WHEN cl.status = 'pending' THEN cl.commission_amount ELSE 0 END), 0) as total_pending,
-          COALESCE(SUM(CASE WHEN cl.status = 'approved' THEN cl.commission_amount ELSE 0 END), 0) as total_approved,
-          COALESCE(SUM(CASE WHEN cl.status = 'paid' THEN cl.commission_amount ELSE 0 END), 0) as total_paid,
+          COUNT(DISTINCT CASE WHEN cl.status != 'reversed' AND cl.created_at >= NOW() - make_interval(days => ${days}) THEN cl.beneficiary_creator_id END)::int as active_creators,
+          COALESCE(SUM(CASE WHEN cl.status = 'pending' AND cl.created_at >= NOW() - make_interval(days => ${days}) THEN cl.commission_amount ELSE 0 END), 0) as total_pending,
+          COALESCE(SUM(CASE WHEN cl.status = 'approved' AND cl.created_at >= NOW() - make_interval(days => ${days}) THEN cl.commission_amount ELSE 0 END), 0) as total_approved,
+          COALESCE(SUM(CASE WHEN cl.status = 'paid' AND cl.created_at >= NOW() - make_interval(days => ${days}) THEN cl.commission_amount ELSE 0 END), 0) as total_paid,
           COALESCE(SUM(CASE WHEN cl.status != 'reversed' THEN cl.commission_amount ELSE 0 END), 0) as total_lifetime
         FROM commission_ledger cl
-        WHERE cl.created_at >= NOW() - make_interval(days => ${days})
       `,
       sql`
         SELECT status, COUNT(*)::int as count FROM creators GROUP BY status
