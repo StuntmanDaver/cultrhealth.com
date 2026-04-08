@@ -10,7 +10,7 @@ export const metadata = {
 export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>
+  searchParams: Promise<{ session_id?: string; next?: string }>
 }) {
   const session = await getSession()
   if (!session) redirect('/login')
@@ -21,6 +21,7 @@ export default async function OnboardingPage({
     <OnboardingClient
       email={session.email}
       intakeSessionId={params.session_id || null}
+      postIntakeStep={params.next || null}
     />
   )
 }

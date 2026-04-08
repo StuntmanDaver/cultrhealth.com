@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { TypeformStep, TypeformRadio, TypeformInput } from './TypeformStep';
 import { AnimatePresence } from 'framer-motion';
 import { trackIntakeStart, trackIntakeStep, trackIntakeComplete } from '@/lib/analytics';
+import { LINKS } from '@/lib/config/links';
 
 // Types
 type ShippingAddress = {
@@ -72,6 +73,12 @@ export function IntakeFormClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams?.get('session_id') || '';
+  const onboardingParams = new URLSearchParams();
+  if (sessionId) {
+    onboardingParams.set('session_id', sessionId);
+  }
+  onboardingParams.set('next', 'schedule');
+  const onboardingHref = `${LINKS.onboarding}?${onboardingParams.toString()}`;
   
   const [step, setStep] = useState(0);
   const [data, setData] = useState<IntakeState>(initialState);
@@ -139,7 +146,7 @@ export function IntakeFormClient() {
 
       if (response.ok && result.success) {
         trackIntakeComplete();
-        router.push('/intake/success');
+        router.push(onboardingHref);
       } else {
         setError(result.error || 'Failed to submit form');
       }

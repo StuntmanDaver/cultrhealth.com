@@ -18,15 +18,31 @@ interface OnboardingStep {
 export default function OnboardingClient({
   email,
   intakeSessionId,
+  postIntakeStep,
 }: {
   email: string
   intakeSessionId?: string | null
+  postIntakeStep?: string | null
 }) {
   const [loading, setLoading] = useState(true)
   const [steps, setSteps] = useState<OnboardingStep[]>([])
   const intakeHref = intakeSessionId
     ? `${LINKS.intake}?session_id=${encodeURIComponent(intakeSessionId)}`
     : LINKS.intake
+
+  const fallbackOnboarding = postIntakeStep === 'schedule'
+    ? {
+        step: 'schedule',
+        blood_test_ordered: false,
+        intake_completed: true,
+        appointment_scheduled: false,
+      }
+    : {
+        step: 'welcome',
+        blood_test_ordered: false,
+        intake_completed: false,
+        appointment_scheduled: false,
+      }
 
   useEffect(() => {
     async function fetchStatus() {
@@ -35,7 +51,15 @@ export default function OnboardingClient({
         if (res.ok) {
           const data = await res.json()
           if (data.success) {
-            buildSteps(data.onboarding)
+            buildSteps(
+              postIntakeStep === 'schedule' && !data.onboarding.appointment_scheduled
+                ? {
+                    ...data.onboarding,
+                    step: 'schedule',
+                    intake_completed: true,
+                  }
+                : data.onboarding
+            )
             setLoading(false)
             return
           }
@@ -43,16 +67,11 @@ export default function OnboardingClient({
       } catch { /* fallback to defaults */ }
 
       // Default steps if API not ready
-      buildSteps({
-        step: 'welcome',
-        blood_test_ordered: false,
-        intake_completed: false,
-        appointment_scheduled: false,
-      })
+      buildSteps(fallbackOnboarding)
       setLoading(false)
     }
     fetchStatus()
-  }, [intakeHref])
+  }, [intakeHref, postIntakeStep])
 
   function buildSteps(data: {
     step: string
@@ -62,6 +81,8 @@ export default function OnboardingClient({
   }) {
     const activeStepId = data.appointment_scheduled
       ? 'complete'
+      : data.step === 'schedule'
+        ? 'schedule'
       : !data.blood_test_ordered
         ? 'blood-test'
         : !data.intake_completed

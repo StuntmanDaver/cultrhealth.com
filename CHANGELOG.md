@@ -1,3 +1,18 @@
+## [2026-04-07] - Intake Scheduling Handoff Hardening
+
+### Fixed
+- **Post-Intake Scheduling Dead-End:** Successful custom intake submissions now route directly into onboarding with an explicit `next=schedule` handoff, instead of landing on a generic intake success page that did not advance members into provider scheduling.
+- **Stale Onboarding Status Regression:** `OnboardingClient` now keeps the schedule CTA active when onboarding status is briefly stale or temporarily unavailable immediately after a successful intake submission.
+
+### Added
+- **Focused Handoff Regression Coverage:** Added component tests for the intake redirect, persisted `schedule` precedence, stale onboarding state after intake, and the status-fetch fallback path.
+
+### Memory
+- Custom intake completion should hand members into `/onboarding` with `next=schedule` while preserving `session_id` when present.
+- Onboarding must honor the schedule handoff after intake even if `/api/onboarding/status` briefly returns stale data or fails.
+
+---
+
 ## [2026-04-07] - Cross-Browser Join and Admin Audit
 
 ### Fixed
