@@ -75,5 +75,26 @@ export function getClinicalIntakeUrl(): string | null {
 
 export function getConsultationBookingUrl(): string | null {
   const bookingUrl = process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL?.trim()
-  return bookingUrl ? trimTrailingSlash(bookingUrl) : null
+  if (!bookingUrl) {
+    return null
+  }
+
+  const normalizedBookingUrl = trimTrailingSlash(bookingUrl)
+
+  try {
+    const parsedUrl = new URL(normalizedBookingUrl)
+    const isHealthieBookingLink = parsedUrl.pathname.includes('/appointments/embed_appt')
+
+    if (
+      isHealthieBookingLink &&
+      parsedUrl.searchParams.has('provider_ids') &&
+      !parsedUrl.searchParams.has('org_level')
+    ) {
+      parsedUrl.searchParams.set('org_level', 'true')
+    }
+
+    return parsedUrl.toString()
+  } catch {
+    return normalizedBookingUrl
+  }
 }

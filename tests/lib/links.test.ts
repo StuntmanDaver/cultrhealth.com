@@ -59,4 +59,13 @@ describe('clinical workflow links', () => {
     expect(getClinicalIntakeUrl()).toBe('https://intake.example.com/form')
     expect(getConsultationBookingUrl()).toBe('https://schedule.example.com/book')
   })
+
+  it('adds org_level=true for Healthie booking links filtered by provider_ids', () => {
+    process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL =
+      'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493,510494%5D&primary_color=4A9625'
+
+    expect(getConsultationBookingUrl()).toBe(
+      'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493%2C510494%5D&primary_color=4A9625&org_level=true'
+    )
+  })
 })

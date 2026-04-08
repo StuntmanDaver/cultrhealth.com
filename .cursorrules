@@ -478,6 +478,8 @@ any file containing API keys, secrets, or tokens
 - Hard-delete affiliate/company coupon codes that already have historical usage or `order_attributions` references
 - Reuse built-in `CLUB_COUPONS` values for admin-created affiliate/company codes on `join.cultrhealth.com`
 - Drop checkout `session_id` when linking through `/success`, `/onboarding`, `/intake`, or `/login` in the custom intake flow
+- Diagnose a blank Healthie scheduler on plain `http://localhost` as a production booking failure; Healthie blocks non-HTTPS iframe ancestors in local dev
+- Ship or preserve a Healthie booking URL that includes `provider_ids` without also including `org_level=true`
 
 ## DO:
 - Read files before modifying them
@@ -497,6 +499,7 @@ any file containing API keys, secrets, or tokens
 - Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
 - Preserve checkout `session_id` across `/success` -> `/onboarding` -> `/intake` -> `/login`, persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` in `pending_intakes.intake_data`, and fall back to the latest pending intake by authenticated email if the session id is missing
 - After a successful custom intake submission, redirect to `/onboarding` with `next=schedule` while preserving `session_id` when present; `OnboardingClient` must keep the schedule CTA active even if `/api/onboarding/status` is stale or temporarily unavailable
+- For Healthie scheduling links, ensure `org_level=true` is present whenever `provider_ids` is used; verify the resolved booking URL directly in local dev instead of trusting a blank localhost iframe
 - Club orders must route to `api/admin/club-orders` APIs and use shared UI controls (`ClubOrderStageControls`, `ClubOrderBulkActions`) — NEVER pass a club order row into the product `orders/[id]/fulfill` workflow.
 - Default member magic-link redirects in `app/api/auth/verify/route.ts` to `/members`; only explicit safe redirect params should land on `/dashboard`
 - Skip creator magic-link rate limiting on staging hosts and for listed bypass emails in `app/api/creators/magic-link/route.ts` so Safari/WebKit retries and E2E logins do not fail spuriously
