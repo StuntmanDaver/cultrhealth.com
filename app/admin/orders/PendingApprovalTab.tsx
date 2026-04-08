@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Check, Loader2, RefreshCw, ChevronDown, ChevronUp, Package, Truck, CheckCircle2, Clock, FileText, DollarSign } from 'lucide-react'
+import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
+import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
+import { ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 
 interface OrderItem {
   therapyId: string
@@ -48,18 +51,6 @@ const PIPELINE_STAGES = [
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
 ] as const
 
-const STATUS_STYLES: Record<string, { label: string; bg: string; text: string }> = {
-  pending_approval: { label: 'Pending', bg: 'bg-yellow-100', text: 'text-yellow-800' },
-  approved: { label: 'Approved', bg: 'bg-blue-100', text: 'text-blue-800' },
-  invoice_sent: { label: 'Invoice Sent', bg: 'bg-indigo-100', text: 'text-indigo-800' },
-  paid: { label: 'Paid', bg: 'bg-green-100', text: 'text-green-800' },
-  shipped: { label: 'Waiting to Ship', bg: 'bg-blue-100', text: 'text-blue-800' },
-  fulfilled: { label: 'Fulfilled', bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  rejected: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-800' },
-  cancelled: { label: 'Cancelled', bg: 'bg-brand-primary/10', text: 'text-brand-primary/60' },
-  dismissed: { label: 'Dismissed', bg: 'bg-brand-primary/10', text: 'text-brand-primary/40' },
-}
-
 interface PendingApprovalTabProps {
   onPendingCountChange?: (count: number) => void
 }
@@ -72,6 +63,8 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
   const [approvingId, setApprovingId] = useState<string | null>(null)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
 
   // Shipping form state
   const [shippingForm, setShippingForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
@@ -132,6 +125,39 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
       alert(err instanceof Error ? err.message : 'Failed to update')
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  // ── Bulk Status update action ──
+  async function handleBulkStatusUpdate(newStatus: string) {
+    if (selectedOrders.size === 0) return
+    const ids = Array.from(selectedOrders)
+    setBulkUpdating(true)
+    let successCount = 0
+    let failCount = 0
+    for (const orderId of ids) {
+      try {
+        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        })
+        if (res.ok) {
+          successCount++
+        } else {
+          failCount++
+        }
+      } catch {
+        failCount++
+      }
+    }
+    setSelectedOrders(new Set())
+    setBulkUpdating(false)
+    if (failCount > 0) {
+      alert(`${successCount} updated, ${failCount} failed`)
+    }
+    if (successCount > 0) {
+      await fetchOrders()
     }
   }
 
@@ -244,23 +270,63 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
         </div>
       )}
 
+      {/* Bulk action bar */}
+      <ClubOrderBulkActions
+        selectedCount={selectedOrders.size}
+        isBulkUpdating={bulkUpdating}
+        onBulkMove={handleBulkStatusUpdate}
+        onClearSelection={() => setSelectedOrders(new Set())}
+      />
+
       {/* ═══ Orders List ═══ */}
       {filteredOrders.length > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 overflow-hidden">
+          {/* Select all header */}
+          <div className="flex items-center gap-3 px-4 py-2 bg-brand-primary/[0.03] border-b border-brand-primary/10">
+            <input
+              type="checkbox"
+              checked={filteredOrders.length > 0 && filteredOrders.every(inv => selectedOrders.has(inv.id))}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedOrders(new Set([...Array.from(selectedOrders), ...filteredOrders.map(inv => inv.id)]))
+                } else {
+                  const remaining = new Set(selectedOrders)
+                  filteredOrders.forEach(inv => remaining.delete(inv.id))
+                  setSelectedOrders(remaining)
+                }
+              }}
+              className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/20 cursor-pointer"
+            />
+            <span className="text-xs text-brand-primary/50 uppercase tracking-wide font-medium">Select all ({filteredOrders.length})</span>
+          </div>
+
           {filteredOrders.map((order) => {
-            const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.pending_approval
+            const statusStyle = ORDER_STATUS_STYLES[order.status] || { label: order.status, bg: 'bg-gray-100', text: 'text-gray-600' }
             const isExpanded = expandedId === order.id
             const isApproving = approvingId === order.id
             const isUpdating = updatingId === order.id
-            const isShippingThis = shippingOrderId === order.id
+            const isSelected = selectedOrders.has(order.id)
 
             return (
-              <div key={order.id} className="border-b border-brand-primary/10 last:border-b-0">
+              <div key={order.id} className={`border-b border-brand-primary/10 last:border-b-0 ${isSelected ? 'bg-amber-50/50' : ''}`}>
                 {/* Row */}
                 <div
                   className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-brand-cream/30 transition-colors"
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                 >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => {
+                      e.stopPropagation()
+                      const next = new Set(selectedOrders)
+                      if (e.target.checked) next.add(order.id)
+                      else next.delete(order.id)
+                      setSelectedOrders(next)
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary focus:ring-brand-primary/20 cursor-pointer shrink-0"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
                       <span className="font-mono text-sm text-brand-primary/50">{order.order_number}</span>
@@ -406,120 +472,16 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
                     </div>
 
                     {/* ═══ Context-Aware Actions ═══ */}
-                    <div className="flex flex-wrap gap-3 mt-4">
-                      {/* Pending → Approve */}
-                      {order.status === 'pending_approval' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleApprove(order.id) }}
-                          disabled={isApproving}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-60"
-                        >
-                          {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                          {isApproving ? 'Approving...' : 'Approve & Send Invoice'}
-                        </button>
-                      )}
-
-                      {/* Approved / Invoice Sent → Mark Paid */}
-                      {(order.status === 'approved' || order.status === 'invoice_sent') && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, 'paid') }}
-                          disabled={isUpdating}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-60"
-                        >
-                          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <DollarSign className="w-4 h-4" />}
-                          {isUpdating ? 'Updating...' : 'Mark Paid'}
-                        </button>
-                      )}
-
-                      {/* Paid → Mark Shipped (with tracking form) */}
-                      {order.status === 'paid' && !isShippingThis && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setShippingOrderId(order.id) }}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                        >
-                          <Truck className="w-4 h-4" />
-                          Mark Shipped
-                        </button>
-                      )}
-
-                      {/* Paid → Skip to Fulfilled (no shipping needed) */}
-                      {order.status === 'paid' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, 'fulfilled') }}
-                          disabled={isUpdating}
-                          className="flex items-center gap-2 px-4 py-2.5 border border-brand-primary/20 text-brand-primary rounded-lg font-medium hover:bg-brand-cream transition-colors disabled:opacity-60 text-sm"
-                        >
-                          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                          Mark Fulfilled (no shipping)
-                        </button>
-                      )}
-
-                      {/* Shipped → Mark Fulfilled */}
-                      {order.status === 'shipped' && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, 'fulfilled') }}
-                          disabled={isUpdating}
-                          className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors disabled:opacity-60"
-                        >
-                          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-                          {isUpdating ? 'Updating...' : 'Mark Fulfilled'}
-                        </button>
-                      )}
+                    <div className="mt-4 pt-4 border-t border-brand-primary/10">
+                      <ClubOrderStageControls
+                        orderId={order.id}
+                        currentStatus={order.status}
+                        isApproving={isApproving}
+                        isUpdating={isUpdating}
+                        onApprove={handleApprove}
+                        onStatusUpdate={handleStatusUpdate}
+                      />
                     </div>
-
-                    {/* Shipping form (inline) */}
-                    {isShippingThis && (
-                      <div className="mt-3 bg-blue-50 rounded-lg p-4 space-y-2">
-                        <h4 className="text-sm font-medium text-blue-900 mb-2">Shipping Details</h4>
-                        <input
-                          type="text"
-                          placeholder="Carrier (e.g., USPS, UPS, FedEx)"
-                          value={shippingForm.carrier}
-                          onChange={(e) => setShippingForm(f => ({ ...f, carrier: e.target.value }))}
-                          className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Tracking Number"
-                          value={shippingForm.trackingNumber}
-                          onChange={(e) => setShippingForm(f => ({ ...f, trackingNumber: e.target.value }))}
-                          className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Tracking URL (optional)"
-                          value={shippingForm.trackingUrl}
-                          onChange={(e) => setShippingForm(f => ({ ...f, trackingUrl: e.target.value }))}
-                          className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <div className="flex gap-2 pt-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleStatusUpdate(order.id, 'shipped', {
-                                carrier: shippingForm.carrier,
-                                trackingNumber: shippingForm.trackingNumber,
-                                trackingUrl: shippingForm.trackingUrl || undefined,
-                              })
-                            }}
-                            disabled={isUpdating || !shippingForm.carrier || !shippingForm.trackingNumber}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-                          >
-                            {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
-                            {isUpdating ? 'Shipping...' : 'Confirm Shipment'}
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setShippingOrderId(null); setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' }) }}
-                            className="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>

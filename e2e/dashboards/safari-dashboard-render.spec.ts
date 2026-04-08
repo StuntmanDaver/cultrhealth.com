@@ -15,9 +15,9 @@ function trackResponsiveContainerErrors(page: Page) {
   return errors
 }
 
-async function loginMember(page: Page, redirect: string) {
+async function loginMember(page: Page, redirect?: string) {
   const response = await page.request.post('/api/auth/magic-link', {
-    data: { email: TEAM_EMAIL, redirect },
+    data: redirect ? { email: TEAM_EMAIL, redirect } : { email: TEAM_EMAIL },
   })
 
   expect(response.ok()).toBeTruthy()
@@ -30,8 +30,12 @@ async function loginMember(page: Page, redirect: string) {
   const token = new URL(payload.redirectUrl).searchParams.get('token')
   expect(token).toBeTruthy()
 
-  await page.goto(`/api/auth/verify?token=${encodeURIComponent(token ?? '')}&redirect=${encodeURIComponent(redirect)}`)
-  await page.waitForURL((url) => new URL(url).pathname === redirect)
+  const verifyUrl = redirect
+    ? `/api/auth/verify?token=${encodeURIComponent(token ?? '')}&redirect=${encodeURIComponent(redirect)}`
+    : `/api/auth/verify?token=${encodeURIComponent(token ?? '')}`
+
+  await page.goto(verifyUrl)
+  await page.waitForURL((url) => new URL(url).pathname === (redirect ?? '/members'))
   await page.waitForLoadState('networkidle')
 }
 
@@ -82,5 +86,12 @@ test.describe('Safari dashboard rendering', () => {
 
     await expect(page.getByRole('heading', { name: 'Member Dashboard' })).toBeVisible()
     expect(responsiveContainerErrors).toEqual([])
+  })
+
+  test('member login without redirect lands on canonical members route', async ({ page }) => {
+    await loginMember(page)
+
+    await expect(page).toHaveURL(/\/members(?:\?|$)/)
+    await expect(page.getByRole('heading', { name: 'Member Dashboard' })).toBeVisible()
   })
 })

@@ -3,27 +3,17 @@ import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { getSession, isProviderEmail } from '@/lib/auth'
 import {
+  PIPELINE_ORDER,
+  ALLOWED_TRANSITIONS,
+  NEXT_ACTIONS
+} from '@/lib/admin-club-orders'
+import {
   getOrderAttributionByOrderId,
   reverseCommissionsForAttribution,
   restoreCommissionsForAttribution,
   updateOrderAttributionStatus,
 } from '@/lib/creators/db'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
-
-// Pipeline order — index determines which forward skips are allowed
-const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'] as const
-
-// Any pipeline status can move to any other pipeline status (forward skip or backward rollback).
-// cancelled can be reopened to any stage. Only fulfilled blocks cancel (must roll back first).
-const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
-const ALL_PIPELINE_AND_CANCEL = [...PIPELINE_STATUSES, 'cancelled']
-
-const ALLOWED_TRANSITIONS: Record<string, string[]> = Object.fromEntries(
-  ALL_PIPELINE_AND_CANCEL.map(status => [
-    status,
-    ALL_PIPELINE_AND_CANCEL.filter(s => s !== status), // can go to any other status
-  ])
-)
 
 // Timestamp columns for each pipeline stage (used when skipping stages)
 const STAGE_TIMESTAMPS: Record<string, string> = {
@@ -38,14 +28,6 @@ const STATUS_LABELS: Record<string, string> = {
   paid: 'Payment Confirmed',
   shipped: 'Order Shipped',
   fulfilled: 'Order Complete',
-}
-
-// Next action after each status for admin email buttons
-const NEXT_ACTIONS: Record<string, { status: string; label: string; color: string }> = {
-  approved: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  invoice_sent: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  paid: { status: 'shipped', label: 'Mark Shipped', color: '#2563eb' },
-  shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 }
 
 function generateStatusToken(orderId: string, newStatus: string): { token: string; expiresAt: number } {
