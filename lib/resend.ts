@@ -1987,13 +1987,18 @@ export async function sendRecordingReadyNotification(
   }
 }
 
-interface LegacySiphoxKitFulfillmentEmailData {
+interface SiphoxKitFulfillmentEmailData {
   name: string
   email: string
-  address: unknown
+  address: {
+    street1: string
+    city: string
+    state: string
+    zip: string
+  }
 }
 
-interface LegacySiphoxFailureAlertData {
+interface SiphoxFailureAlertData {
   customerEmail: string
   planTier: string
   siphoxOrderId?: string | null
@@ -2001,7 +2006,7 @@ interface LegacySiphoxFailureAlertData {
   retryCount: number
 }
 
-interface LegacySiphoxRefundAlertData {
+interface SiphoxRefundAlertData {
   customerName?: string
   customerEmail?: string
   planTier: string
@@ -2011,40 +2016,177 @@ interface LegacySiphoxRefundAlertData {
   suggestedAction: string
 }
 
-/**
- * Legacy compatibility shim for deprecated SiPhox workflows.
- * Kept to prevent build/runtime failures while SiPhox code remains in tree.
- */
 export async function sendKitFulfillmentEmail(
-  _data: LegacySiphoxKitFulfillmentEmailData
+  data: SiphoxKitFulfillmentEmailData
 ): Promise<EmailResult> {
-  return { success: false, error: 'Deprecated SiPhox email workflow' }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const safeName = escapeHtml(data.name)
+  const safeAddress = escapeHtml(
+    `${data.address.street1}, ${data.address.city}, ${data.address.state} ${data.address.zip}`
+  )
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Your blood test kit is on its way</h1>
+    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your SiPhox blood test kit has been ordered.</p>
+    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 14px; padding: 12px; background: #1a1a1a; border-radius: 8px;">${safeAddress}</p>
+    <p style="margin: 0;"><a href="${siteUrl}/dashboard" style="color: #B7E4C7; text-decoration: underline;">Open dashboard</a></p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: data.email,
+      subject: 'Your blood test kit is on its way',
+      html: baseEmailTemplate(content),
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
 }
 
-/**
- * Legacy compatibility shim for deprecated SiPhox workflows.
- */
+export async function sendResultsReadyEmail(data: {
+  name: string
+  email: string
+  summary: {
+    totalBiomarkers: number
+    optimalCount: number
+    needsAttentionCount: number
+  }
+}): Promise<EmailResult> {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+  const safeName = escapeHtml(data.name)
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Your blood test results are ready</h1>
+    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your latest biomarker report has been processed.</p>
+    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">
+      Total: <strong>${data.summary.totalBiomarkers}</strong> · Optimal: <strong>${data.summary.optimalCount}</strong> · Attention: <strong>${data.summary.needsAttentionCount}</strong>
+    </p>
+    <p style="margin: 0;"><a href="${siteUrl}/dashboard" style="color: #B7E4C7; text-decoration: underline;">View dashboard</a></p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: data.email,
+      subject: 'Your blood test results are ready',
+      html: baseEmailTemplate(content),
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
 export async function sendSiphoxFailureAlert(
-  _data: LegacySiphoxFailureAlertData
+  data: SiphoxFailureAlertData
 ): Promise<EmailResult> {
-  return { success: false, error: 'Deprecated SiPhox email workflow' }
+  const supportEmail = process.env.FROM_EMAIL || 'admin@cultrhealth.com'
+  const safeEmail = escapeHtml(data.customerEmail)
+  const safePlanTier = escapeHtml(data.planTier)
+  const safeOrderId = escapeHtml(data.siphoxOrderId || 'unknown')
+  const safeError = escapeHtml(data.lastError)
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">SiPhox kit order failed</h1>
+    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A SiPhox order failed after retries and needs manual review.</p>
+    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+      Customer: ${safeEmail}<br/>
+      Plan: ${safePlanTier}<br/>
+      Order: ${safeOrderId}<br/>
+      Retries: ${data.retryCount}<br/>
+      Error: ${safeError}
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: supportEmail,
+      subject: `[ACTION REQUIRED] SiPhox order failed - ${safeEmail}`,
+      html: baseEmailTemplate(content),
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
 }
 
-/**
- * Legacy compatibility shim for deprecated SiPhox workflows.
- */
 export async function sendSiphoxRefundAlert(
-  _data: LegacySiphoxRefundAlertData
+  data: SiphoxRefundAlertData
 ): Promise<EmailResult> {
-  return { success: false, error: 'Deprecated SiPhox email workflow' }
+  const supportEmail = process.env.FROM_EMAIL || 'admin@cultrhealth.com'
+  const safeCustomerName = escapeHtml(data.customerName || 'N/A')
+  const safeCustomerEmail = escapeHtml(data.customerEmail || 'N/A')
+  const safePlanTier = escapeHtml(data.planTier)
+  const safeOrderId = escapeHtml(data.siphoxOrderId || 'unknown')
+  const safeKitStatus = escapeHtml(data.kitStatus)
+  const safeAction = escapeHtml(data.suggestedAction)
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Refund with SiPhox order</h1>
+    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A refund was processed for a member with a SiPhox order.</p>
+    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+      Name: ${safeCustomerName}<br/>
+      Email: ${safeCustomerEmail}<br/>
+      Plan: ${safePlanTier}<br/>
+      SiPhox Order: ${safeOrderId}<br/>
+      Status: ${safeKitStatus}<br/>
+      Refund: $${data.refundAmount.toFixed(2)}<br/>
+      Suggested action: ${safeAction}
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: supportEmail,
+      subject: `[ACTION REQUIRED] SiPhox refund review - ${safeCustomerEmail}`,
+      html: baseEmailTemplate(content),
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
 }
 
-/**
- * Legacy compatibility shim for deprecated SiPhox workflows.
- */
 export async function sendLowCreditAlert(
-  _balance: number,
-  _threshold: number
+  balance: number,
+  threshold: number
 ): Promise<EmailResult> {
-  return { success: false, error: 'Deprecated SiPhox email workflow' }
+  const adminEmail = process.env.FOUNDER_EMAIL
+  if (!adminEmail) {
+    return { success: false, error: 'Admin email not configured' }
+  }
+
+  const content = `
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">SiPhox credits running low</h1>
+    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0;">
+      Current balance: <strong>${balance}</strong> credits<br/>
+      Alert threshold: <strong>${threshold}</strong> credits
+    </p>
+  `
+
+  try {
+    const client = getResendClient()
+    const { error } = await client.emails.send({
+      from: getFromEmail(),
+      to: adminEmail,
+      subject: `[ACTION REQUIRED] SiPhox credit balance low (${balance})`,
+      html: baseEmailTemplate(content),
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
 }
