@@ -35,6 +35,7 @@ export default function AdminDashboardClient() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [periodDays, setPeriodDays] = useState(30)
+  const [exportingVisitors, setExportingVisitors] = useState(false)
   // Club orders (invoice aging)
   const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
   const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null)
@@ -79,6 +80,35 @@ export default function AdminDashboardClient() {
       setCronLoading(false)
     }
   }, [])
+
+  const handleVisitorExport = useCallback(async () => {
+    setExportingVisitors(true)
+    try {
+      const response = await fetch(`/api/admin/qr-scans/export?days=${periodDays}`)
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}))
+        throw new Error(result.error || 'Failed to export visitor CSV')
+      }
+
+      const blob = await response.blob()
+      const disposition = response.headers.get('content-disposition')
+      const filenameMatch = disposition?.match(/filename="([^"]+)"/)
+      const filename = filenameMatch?.[1] || `cultr-visitor-events-${periodDays}d.csv`
+
+      const objectUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = objectUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(objectUrl)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to export visitor CSV')
+    } finally {
+      setExportingVisitors(false)
+    }
+  }, [periodDays])
 
   useEffect(() => {
     fetchAnalytics()
@@ -242,6 +272,13 @@ export default function AdminDashboardClient() {
             <option value={365}>Last year</option>
           </select>
           <button
+            onClick={handleVisitorExport}
+            disabled={exportingVisitors}
+            className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors disabled:opacity-50 text-sm"
+          >
+            {exportingVisitors ? 'Exporting...' : 'Export Visitor CSV'}
+          </button>
+          <button
             onClick={fetchAnalytics}
             disabled={loading}
             className="px-4 py-2 bg-brand-primary text-brand-cream rounded-lg hover:bg-brand-primary/90 transition-colors disabled:opacity-50 text-sm"
@@ -375,7 +412,7 @@ export default function AdminDashboardClient() {
                 </span>
               </div>
               <div style={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                   <ComposedChart data={data.revenueTimeSeries} margin={{ top: 8, right: 8, left: -10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">

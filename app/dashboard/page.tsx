@@ -9,7 +9,7 @@ import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 const DEFAULT_ACCESS: LibraryAccess = {
   masterIndex: 'titles_only',
   advancedProtocols: false,
-  dosingCalculators: false,
+  dosingCalculators: true,
   stackingGuides: false,
   providerNotes: false,
   customRequests: false,

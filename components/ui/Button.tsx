@@ -1,6 +1,7 @@
 'use client'
 
 import { ButtonHTMLAttributes, forwardRef } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -11,7 +12,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, disabled, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center font-body font-medium transition-all duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream'
+    const baseStyles = 'inline-flex items-center justify-center font-body font-medium transition-colors duration-200 ease-out disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-cream'
 
     const variants = {
       primary: 'bg-brand-primary text-brand-cream hover:bg-brand-primaryHover focus:ring-brand-primary rounded-full',
@@ -26,18 +27,18 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     }
 
     return (
-      <button
+      <motion.button
         ref={ref}
+        whileHover={!disabled && variant !== 'ghost' ? { scale: 1.02 } : {}}
+        whileTap={!disabled ? { scale: 0.98 } : {}}
         className={cn(
           baseStyles,
           variants[variant],
           sizes[size],
-          !disabled && variant !== 'ghost' && 'hover:scale-[1.03] active:scale-[0.97]',
-          variant === 'ghost' && !disabled && 'active:scale-[0.98]',
           className
         )}
         disabled={disabled || isLoading}
-        {...props}
+        {...(props as any)}
       >
         {isLoading ? (
           <span className="flex items-center gap-2">
@@ -62,7 +63,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           children
         )}
-      </button>
+      </motion.button>
     )
   }
 )

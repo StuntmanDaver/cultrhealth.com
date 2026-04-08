@@ -253,7 +253,7 @@ function PillButtonGroup({
   )
 }
 
-export function DosingCalculatorClient({ email, backHref = '/members' }: { email?: string; backHref?: string }) {
+export function CreatorDosingCalculatorClient({ email, backHref = '/creators/portal/dashboard' }: { email?: string; backHref?: string }) {
   // Input states
   const [vialSelection, setVialSelection] = useState<number | 'custom'>(5)
   const [customVial, setCustomVial] = useState('')
@@ -311,7 +311,7 @@ export function DosingCalculatorClient({ email, backHref = '/members' }: { email
       </section>
 
       {/* AI Recommended Dosing Engine */}
-      <AiDosingEnginePanel apiEndpoint="/api/member/dosing/recommendation" />
+      <AiDosingEnginePanel apiEndpoint="/api/creators/dosing/recommendation" />
 
       {/* Calculator Content */}
       <section className="py-10 px-6 section-veil">

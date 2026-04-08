@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       'http://localhost:3000')
 
     // Validate redirect is a safe relative path (prevent open redirect)
-    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
+    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/dashboard'
 
     if (!token) {
       return NextResponse.redirect(`${baseUrl}/members?error=invalid_link`)
