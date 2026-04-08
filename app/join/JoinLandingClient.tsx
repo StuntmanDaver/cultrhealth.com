@@ -694,6 +694,7 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
 
     const cardData: CarouselCard = {
       src: therapy.image || '',
+      secondarySrc: therapy.secondaryImage,
       title: therapy.name,
       category: therapy.category === 'glp1' ? 'GLP-1 Therapy' : 'Enhancement',
       price: therapy.price !== null ? `$${therapy.price % 1 === 0 ? therapy.price.toFixed(0) : therapy.price.toFixed(2)}` : therapy.pricingNote || 'TBD',

@@ -26,6 +26,8 @@ export interface JoinTherapy {
   catalogSku?: string
   /** Product image URL */
   image?: string
+  /** Optional COA image shown in the expanded product modal */
+  secondaryImage?: string
   /** ID of a product this bundles with for a discount */
   bundleWith?: string
   /** Stock status. Defaults to 'in_stock' when omitted. */
@@ -74,6 +76,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'glp1',
         featured: true,
         image: '/images/products/r3ta-glp1-gip-gcg.png',
+        secondaryImage: '/images/products/r3ta-glp1-gip-gcg-coa.png',
       },
       {
         id: 'semaglutide',
@@ -97,6 +100,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 290,
         category: 'glp1',
         image: '/images/products/tirzepatide-glp1-gip.png',
+        secondaryImage: '/images/products/tirzepatide-glp1-gip-coa.png',
       },
     ],
   },
@@ -117,6 +121,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'GHKCU-100MG-3ML',
         image: '/images/products/ghk-cu.png',
+        secondaryImage: '/images/products/ghk-cu-coa.png',
         bundleWith: 'glutathione',
       },
       {
@@ -152,6 +157,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 170,
         category: 'peptide',
         image: '/images/products/cjc1295-ipa.png',
+        secondaryImage: '/images/products/cjc1295-ipa-coa.png',
       },
       {
         id: 'nad-plus',
@@ -164,6 +170,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'NAD-1000MG-10ML',
         image: '/images/products/nad-plus.png',
+        secondaryImage: '/images/products/nad-plus-coa.png',
       },
       {
         id: 'semax-selank',
@@ -176,6 +183,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'peptide',
         catalogSku: 'SELANK-SEMAX-5MG-3ML',
         image: '/images/products/semax-selank.png',
+        secondaryImage: '/images/products/semax-selank-coa.png',
       },
       {
         id: 'bpc157-tb500',
@@ -198,6 +206,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 110,
         category: 'peptide',
         image: '/images/products/melanotan2-mt2.png',
+        secondaryImage: '/images/products/melanotan2-mt2-coa.png',
       },
       {
         id: 'igf1-lr3',

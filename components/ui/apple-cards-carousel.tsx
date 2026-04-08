@@ -19,6 +19,7 @@ import { useOutsideClick } from "@/hooks/use-outside-click"
 
 export type CarouselCard = {
   src: string
+  secondarySrc?: string
   title: string
   category: string
   content: React.ReactNode
@@ -414,16 +415,36 @@ export const Card = ({
                     initial={{ scale: 0.85, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
-                    className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6 flex items-center justify-center"
+                    className="w-full bg-gradient-to-br from-brand-cream via-cream-dark/80 to-brand-cream px-6 pt-10 pb-6"
                   >
-                    <div className="relative w-full h-[140px] md:h-[180px] drop-shadow-lg">
-                      <ProductImage
-                        src={card.src}
-                        alt={card.title}
-                        fill
-                        sizes="(max-width: 768px) 300px, 400px"
-                        className="object-contain"
-                      />
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-center">
+                        <div className="relative w-full h-[140px] md:h-[180px] drop-shadow-lg">
+                          <ProductImage
+                            src={card.src}
+                            alt={card.title}
+                            fill
+                            sizes="(max-width: 768px) 300px, 400px"
+                            className="object-contain"
+                          />
+                        </div>
+                      </div>
+                      {card.secondarySrc && (
+                        <div className="rounded-2xl border border-brand-primary/10 bg-white/70 p-3 md:p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary/50">
+                            COA Report
+                          </p>
+                          <div className="relative mt-3 h-[220px] w-full md:h-[260px]">
+                            <ProductImage
+                              src={card.secondarySrc}
+                              alt={`${card.title} COA`}
+                              fill
+                              sizes="(max-width: 768px) 300px, 400px"
+                              className="object-contain"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
