@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { getActiveQuestions, calculateRecommendation, type QuizResult } from '@/lib/config/quiz';
 import { getJoinCheckoutUrl } from '@/lib/config/links';
 import { PLANS } from '@/lib/config/plans';
+import { trackQuizStart, trackQuizStep, trackQuizComplete, trackEvent } from '@/lib/analytics';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 
 export function QuizClient() {
@@ -31,9 +32,25 @@ export function QuizClient() {
     }
   }, [currentIndex, safeIndex]);
 
+  // Track initial quiz start
+  const hasTrackedStart = useRef(false);
+  useEffect(() => {
+    if (!hasTrackedStart.current) {
+      trackQuizStart();
+      hasTrackedStart.current = true;
+    }
+  }, []);
+
   // Fire-and-forget save when results are computed
   useEffect(() => {
     if (!result) return;
+    
+    // Track quiz completion to GA4 and dataLayer
+    trackQuizComplete(answers, {
+      recommendedTier: result.recommendedTier,
+      coreTherapy: result.coreTherapy,
+    });
+
     fetch('/api/quiz/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -75,6 +92,9 @@ export function QuizClient() {
       const newAnswers = clearStaleAnswers({ ...answers, [question.id]: optionId });
       setAnswers(newAnswers);
 
+      // Track the answer directly when a single-select option is clicked
+      trackQuizStep(safeIndex + 1, question.id, optionId);
+
       // Recompute active questions with the cleaned answer set
       const nextActive = getActiveQuestions(newAnswers);
       const nextIsLast = safeIndex === nextActive.length - 1;
@@ -91,6 +111,12 @@ export function QuizClient() {
   const handleMultiContinue = () => {
     const cleaned = clearStaleAnswers(answers);
     if (cleaned !== answers) setAnswers(cleaned);
+
+    // Track the answer when a multi-select continue button is clicked
+    if (question && cleaned[question.id]) {
+      trackQuizStep(safeIndex + 1, question.id, cleaned[question.id]);
+    }
+
     const nextActive = getActiveQuestions(cleaned);
     const nextIsLast = safeIndex === nextActive.length - 1;
 
@@ -109,6 +135,23 @@ export function QuizClient() {
   };
 
   const handleJoinClick = (href: string) => {
+    // Track to GA4 / GTM DataLayer
+    trackEvent('quiz_join_click', {
+      event_category: 'quiz',
+      recommended_tier: result?.recommendedTier,
+      recommended_therapy: result?.coreTherapy?.slug || null,
+      destination_url: href
+    });
+    
+    // Also push a specific datalayer event for ease of use
+    if (typeof window !== 'undefined' && window.dataLayer) {
+      window.dataLayer.push({
+        event: 'quiz_cta_clicked',
+        quiz_recommended_tier: result?.recommendedTier,
+        quiz_destination_url: href
+      });
+    }
+
     // Track join click (fire-and-forget)
     fetch('/api/quiz/submit', {
       method: 'PATCH',
