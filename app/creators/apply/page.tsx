@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, CheckCircle, Megaphone } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 function ApplyForm() {
   const [fullName, setFullName] = useState('')
@@ -73,28 +74,54 @@ function ApplyForm() {
     return (
       <div className="min-h-[80vh] grad-light flex items-center justify-center px-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
             <CheckCircle className="w-8 h-8 text-emerald-600" />
-          </div>
-          <h1 className="text-2xl font-display font-bold text-cultr-forest mb-3">
+          </motion.div>
+          <motion.h1 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-2xl font-display font-bold text-cultr-forest mb-3"
+          >
             {autoApproved ? 'You\'re Approved!' : 'Application Submitted'}
-          </h1>
-          <p className="text-cultr-textMuted mb-2">
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-cultr-textMuted mb-2"
+          >
             {autoApproved
               ? 'Your creator account is active. Log in to access your dashboard, tracking links, and coupon codes.'
               : 'Check your email to verify your address. Once verified, our team will review your application within 48 hours.'}
-          </p>
+          </motion.p>
           {!autoApproved && (
-            <p className="text-sm text-cultr-textMuted mb-6">
+            <motion.p 
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-sm text-cultr-textMuted mb-6"
+            >
               You&apos;ll receive an email when your application is approved with your tracking link and coupon code.
-            </p>
+            </motion.p>
           )}
-          <Link
-            href={autoApproved ? '/creators/login' : '/creators'}
-            className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white rounded-full text-sm font-medium hover:opacity-90 transition-all"
+          <motion.div
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
           >
-            {autoApproved ? 'Log In to Dashboard' : 'Back to Creator Program'}
-          </Link>
+            <Link
+              href={autoApproved ? '/creators/login' : '/creators'}
+              className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white rounded-full text-sm font-medium hover:opacity-90 transition-all hover:scale-105 active:scale-95"
+            >
+              {autoApproved ? 'Log In to Dashboard' : 'Back to Creator Program'}
+            </Link>
+          </motion.div>
         </div>
       </div>
     )

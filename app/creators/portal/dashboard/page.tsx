@@ -13,12 +13,15 @@ import {
   Circle,
   Timer,
   UserPlus,
+  Calculator,
 } from 'lucide-react'
 import Link from 'next/link'
 import { getTierName, getNextTierRequirement, TIER_CONFIGS } from '@/lib/config/affiliate'
 import { MilestoneBadges } from '@/components/creators/Milestones'
 import { AnalyticsCharts } from '@/components/creators/AnalyticsCharts'
 import { TextShimmer } from '@/components/ui/TextShimmer'
+import { HoverCard } from '@/components/ui/HoverCard'
+import { motion } from 'framer-motion'
 
 function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: string }) {
   return (
@@ -41,7 +44,7 @@ function MetricCard({
   subtitle?: string
 }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-2xl p-5">
+    <HoverCard glow className="bg-white border border-stone-200 rounded-2xl p-5 h-full">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs uppercase tracking-wider text-cultr-textMuted font-medium">
@@ -56,7 +59,7 @@ function MetricCard({
           <Icon className="w-5 h-5 text-cultr-forest" />
         </div>
       </div>
-    </div>
+    </HoverCard>
   )
 }
 
@@ -351,9 +354,20 @@ export default function CreatorDashboardPage() {
                     <th className="text-right py-3 px-5 text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">Conv. Rate</th>
                   </tr>
                 </thead>
-                <tbody>
+                <motion.tbody
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    visible: { transition: { staggerChildren: 0.05 } }
+                  }}
+                >
                   {linkStats.map((link, i) => (
-                    <tr key={link.id} className={i % 2 === 0 ? 'bg-stone-50/50' : ''}>
+                    <motion.tr 
+                      variants={{
+                        hidden: { opacity: 0, y: 10 },
+                        visible: { opacity: 1, y: 0 }
+                      }}
+                      key={link.id} className={i % 2 === 0 ? 'bg-stone-50/50' : ''}>
                       <td className="py-3 px-5 text-sm font-mono text-cultr-forest">/r/{link.slug}</td>
                       <td className="py-3 px-5 text-sm text-cultr-textMuted">{link.destinationPath}</td>
                       <td className="py-3 px-5 text-sm text-right text-cultr-forest">{link.clickCount}</td>
@@ -363,9 +377,9 @@ export default function CreatorDashboardPage() {
                           {link.conversionRate}%
                         </span>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
-                </tbody>
+                </motion.tbody>
               </table>
             </div>
           </div>
@@ -414,50 +428,73 @@ export default function CreatorDashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-4 gap-4">
         <Link
           href="/creators/portal/share"
-          className="grad-dark text-white rounded-2xl p-5 hover:bg-cultr-forestDark transition-colors group"
+          className="group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-display font-bold">Share Your Codes</p>
-              <p className="text-sm text-white/70 mt-1">
-                Share your membership & product codes
-              </p>
+          <HoverCard glow className="grad-dark text-white rounded-2xl p-5 hover:bg-cultr-forestDark transition-colors h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold">Share Your Codes</p>
+                <p className="text-sm text-white/70 mt-1">
+                  Share your membership & product codes
+                </p>
+              </div>
+              <ArrowUpRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
             </div>
-            <ArrowUpRight className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
-          </div>
+          </HoverCard>
         </Link>
 
         <Link
           href="/creators/portal/network"
-          className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-cultr-forest transition-colors group"
+          className="group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-display font-bold text-cultr-forest">Recruit Creators</p>
-              <p className="text-sm text-cultr-textMuted mt-1">
-                Earn {metrics?.overrideRate ?? 5}% override on their sales
-              </p>
+          <HoverCard glow className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-cultr-forest transition-colors h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-cultr-forest">Recruit Creators</p>
+                <p className="text-sm text-cultr-textMuted mt-1">
+                  Earn {metrics?.overrideRate ?? 5}% override on their sales
+                </p>
+              </div>
+              <UserPlus className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
             </div>
-            <UserPlus className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
-          </div>
+          </HoverCard>
         </Link>
 
         <Link
           href="/creators/portal/earnings"
-          className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-cultr-forest transition-colors group"
+          className="group"
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-display font-bold text-cultr-forest">View Earnings</p>
-              <p className="text-sm text-cultr-textMuted mt-1">
-                Track all three commission streams
-              </p>
+          <HoverCard glow className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-cultr-forest transition-colors h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-cultr-forest">View Earnings</p>
+                <p className="text-sm text-cultr-textMuted mt-1">
+                  Track all three commission streams
+                </p>
+              </div>
+              <DollarSign className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
             </div>
-            <DollarSign className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
-          </div>
+          </HoverCard>
+        </Link>
+
+        <Link
+          href="/creators/portal/dosing-calculator"
+          className="group"
+        >
+          <HoverCard glow className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-cultr-forest transition-colors h-full">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-display font-bold text-cultr-forest">Dosing Calculator</p>
+                <p className="text-sm text-cultr-textMuted mt-1">
+                  Precision peptide reconstitution
+                </p>
+              </div>
+              <Calculator className="w-5 h-5 text-cultr-textMuted group-hover:text-cultr-forest transition-colors" />
+            </div>
+          </HoverCard>
         </Link>
       </div>
     </div>

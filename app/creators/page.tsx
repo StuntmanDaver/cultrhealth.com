@@ -6,6 +6,8 @@ import { CTASection } from '@/components/site/CTASection';
 import { MarketingHero } from '@/components/site/MarketingHero';
 import { SocialProofBadge } from '@/components/site/SocialProofBadge';
 import Button from '@/components/ui/Button';
+import { HoverCard } from '@/components/ui/HoverCard';
+import { ParallaxReveal } from '@/components/ui/ParallaxReveal';
 import {
   COMMISSION_CONFIG,
   TIER_CONFIGS,
@@ -107,14 +109,14 @@ export default function CreatorsPage() {
               },
             ].map((stream, i) => (
               <ScrollReveal key={i} delay={i * 120} direction="up">
-                <div className="relative p-6 rounded-2xl bg-white border border-cultr-sage/30 shadow-sm h-full text-center">
+                <HoverCard glow className="relative p-6 rounded-2xl bg-white border border-cultr-sage/30 shadow-sm h-full text-center">
                   <div className={`w-12 h-12 rounded-xl ${stream.color} flex items-center justify-center mx-auto mb-4`}>
                     <stream.icon className="w-6 h-6" />
                   </div>
                   <div className="text-3xl font-display font-bold text-cultr-forest mb-1">{stream.rate}</div>
                   <h3 className="text-base font-display font-bold text-cultr-text mb-2">{stream.title}</h3>
                   <p className="text-sm text-cultr-textMuted leading-relaxed">{stream.desc}</p>
-                </div>
+                </HoverCard>
               </ScrollReveal>
             ))}
           </div>
@@ -131,8 +133,10 @@ export default function CreatorsPage() {
       <section className="px-6 pb-16 section-veil">
         <div className="max-w-4xl mx-auto">
           <ScrollReveal>
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cultr-forest to-forest-dark p-8 md:p-10 text-white">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-cultr-sage/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <HoverCard glow className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cultr-forest to-forest-dark p-8 md:p-10 text-white">
+              <ParallaxReveal offset={30} className="absolute top-0 right-0 w-64 h-64 -translate-y-1/2 translate-x-1/2">
+                <div className="w-full h-full bg-cultr-sage/10 rounded-full" />
+              </ParallaxReveal>
               <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-3 py-1 mb-4">
                   <Zap className="w-3.5 h-3.5 text-yellow-300" />
@@ -159,7 +163,7 @@ export default function CreatorsPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </HoverCard>
           </ScrollReveal>
         </div>
       </section>
@@ -195,7 +199,7 @@ export default function CreatorsPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 150} direction="up">
-                <div className="relative p-8 rounded-2xl grad-mint border border-cultr-sage h-full">
+                <HoverCard glow className="relative p-8 rounded-2xl grad-mint border border-cultr-sage h-full">
                   <div className="flex items-center gap-3 mb-6">
                     <span className="text-xs font-display font-bold text-cultr-forest tracking-widest">STEP {item.step}</span>
                     <div className="flex-1 h-px bg-cultr-sage" />
@@ -205,7 +209,7 @@ export default function CreatorsPage() {
                   </div>
                   <h3 className="text-xl font-display font-bold text-cultr-text mb-3">{item.title}</h3>
                   <p className="text-cultr-textMuted text-sm leading-relaxed">{item.desc}</p>
-                </div>
+                </HoverCard>
               </ScrollReveal>
             ))}
           </div>
@@ -338,7 +342,7 @@ export default function CreatorsPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 80} direction="up">
-                <div className="flex items-start gap-4 p-5 rounded-xl bg-white border border-cultr-sage/30 shadow-sm">
+                <HoverCard glow className="flex items-start gap-4 p-5 rounded-xl bg-white border border-cultr-sage/30 shadow-sm h-full">
                   <div className="w-10 h-10 rounded-lg grad-mint flex items-center justify-center shrink-0">
                     <item.icon className="w-5 h-5 text-cultr-forest" />
                   </div>
@@ -346,7 +350,7 @@ export default function CreatorsPage() {
                     <h4 className="font-display font-bold text-cultr-text mb-1">{item.title}</h4>
                     <p className="text-sm text-cultr-textMuted leading-relaxed">{item.desc}</p>
                   </div>
-                </div>
+                </HoverCard>
               </ScrollReveal>
             ))}
           </div>
@@ -390,12 +394,12 @@ export default function CreatorsPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 100} direction="up">
-                <div className="text-center p-5 rounded-xl grad-mint border border-cultr-sage/30">
+                <HoverCard glow className="text-center p-5 rounded-xl grad-mint border border-cultr-sage/30 h-full">
                   <item.icon className="w-5 h-5 text-cultr-forest mx-auto mb-2" />
                   <div className="text-lg font-display font-bold text-cultr-forest">{item.value}</div>
                   <div className="text-sm font-medium text-cultr-text">{item.label}</div>
                   <div className="text-xs text-cultr-textMuted mt-1">{item.note}</div>
-                </div>
+                </HoverCard>
               </ScrollReveal>
             ))}
           </div>
@@ -433,14 +437,14 @@ export default function CreatorsPage() {
               },
             ].map((item, i) => (
               <ScrollReveal key={i} delay={i * 120} direction="up">
-                <div className="p-6 rounded-2xl bg-white border border-cultr-sage/30 shadow-sm h-full">
+                <HoverCard glow className="p-6 rounded-2xl bg-white border border-cultr-sage/30 shadow-sm h-full flex flex-col">
                   <div className="w-10 h-10 rounded-lg grad-mint flex items-center justify-center mb-4">
                     <item.icon className="w-5 h-5 text-cultr-forest" />
                   </div>
                   <h3 className="text-lg font-display font-bold text-cultr-text mb-2">{item.track}</h3>
-                  <p className="text-sm text-cultr-textMuted leading-relaxed mb-3">{item.desc}</p>
+                  <p className="text-sm text-cultr-textMuted leading-relaxed mb-3 flex-1">{item.desc}</p>
                   <p className="text-xs text-cultr-forest/70 italic">{item.examples}</p>
-                </div>
+                </HoverCard>
               </ScrollReveal>
             ))}
           </div>
@@ -462,13 +466,13 @@ export default function CreatorsPage() {
           <ScrollReveal delay={200}>
             <div className="space-y-3">
               {FTC_DISCLOSURES.map((disc) => (
-                <div key={disc.id} className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-cultr-sage/30">
+                <HoverCard key={disc.id} glow className="flex items-center justify-between gap-4 p-4 rounded-xl bg-white border border-cultr-sage/30">
                   <div>
                     <span className="text-xs font-display font-bold text-cultr-forest uppercase tracking-wider">{disc.label}</span>
                     <p className="text-sm text-cultr-textMuted mt-0.5">{disc.text}</p>
                   </div>
                   <span className="text-xs text-cultr-textMuted whitespace-nowrap">Copy in portal</span>
-                </div>
+                </HoverCard>
               ))}
             </div>
           </ScrollReveal>

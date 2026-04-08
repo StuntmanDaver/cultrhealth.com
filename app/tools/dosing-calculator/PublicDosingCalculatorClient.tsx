@@ -6,8 +6,6 @@ import Image from 'next/image'
 import { ArrowLeft, AlertTriangle, Syringe, Droplets, FlaskConical } from 'lucide-react'
 import { calcPeptide, formatNumber, type DoseUnit } from '@/lib/peptide-calculator'
 
-import { AiDosingEnginePanel } from '@/components/dosing-ai/AiDosingEnginePanel'
-
 const VIAL_OPTIONS = [5, 10, 15, 50, 100] as const
 const WATER_OPTIONS = [1, 2, 3, 5] as const
 const SYRINGE_OPTIONS = [0.3, 0.5, 1.0] as const
@@ -253,7 +251,7 @@ function PillButtonGroup({
   )
 }
 
-export function DosingCalculatorClient({ email, backHref = '/members' }: { email?: string; backHref?: string }) {
+export function PublicDosingCalculatorClient({ email, backHref = '/members' }: { email?: string; backHref?: string }) {
   // Input states
   const [vialSelection, setVialSelection] = useState<number | 'custom'>(5)
   const [customVial, setCustomVial] = useState('')
@@ -309,9 +307,6 @@ export function DosingCalculatorClient({ email, backHref = '/members' }: { email
           </div>
         </div>
       </section>
-
-      {/* AI Recommended Dosing Engine */}
-      <AiDosingEnginePanel apiEndpoint="/api/member/dosing/recommendation" />
 
       {/* Calculator Content */}
       <section className="py-10 px-6 section-veil">

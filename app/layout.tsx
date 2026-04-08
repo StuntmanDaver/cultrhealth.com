@@ -109,7 +109,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" className={`${fraunces.variable} ${playfair.variable} ${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${fraunces.variable} ${playfair.variable} ${inter.variable}`}>
       <head>
         {/* DNS prefetch for third-party services */}
         <link rel="dns-prefetch" href="https://js.stripe.com" />
@@ -135,7 +135,7 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
+      <body suppressHydrationWarning className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
         <MeshBackgroundDynamic />
         <LayoutShell>
           {children}

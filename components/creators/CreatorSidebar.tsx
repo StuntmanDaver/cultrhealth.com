@@ -15,6 +15,7 @@ import {
   X,
   Megaphone,
   LogOut,
+  Calculator,
 } from 'lucide-react'
 
 const NAV_GROUPS = [
@@ -43,6 +44,7 @@ const NAV_GROUPS = [
     items: [
       { label: 'My Network', href: '/creators/portal/network', icon: Users },
       { label: 'Resources', href: '/creators/portal/resources', icon: BookOpen },
+      { label: 'Dosing Calculator', href: '/creators/portal/dosing-calculator', icon: Calculator },
     ],
   },
   {

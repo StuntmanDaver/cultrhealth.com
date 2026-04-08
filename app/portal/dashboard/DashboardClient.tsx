@@ -17,6 +17,7 @@ import {
   Clock,
   RefreshCw,
   Layers,
+  Calculator,
 } from 'lucide-react'
 
 export default function DashboardClient() {
@@ -334,6 +335,20 @@ export default function DashboardClient() {
           Quick Links
         </h3>
         <div className="space-y-3">
+          <Link
+            href="/members/dosing-calculator"
+            className="flex items-center gap-3 rounded-xl bg-white p-4 border border-brand-primary/5 hover:bg-brand-primary/[0.02] transition-colors"
+          >
+            <Calculator className="w-5 h-5 text-brand-primary/40" />
+            <div>
+              <span className="font-medium text-brand-primary block">
+                Dosing Calculator
+              </span>
+              <span className="text-xs text-brand-primary/40">
+                Precision peptide reconstitution
+              </span>
+            </div>
+          </Link>
           <a
             href={LINKS.stripeCustomerPortal}
             target="_blank"

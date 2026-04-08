@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { ArrowRight, Mail, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_link: 'Invalid login link. Please request a new one.',
@@ -87,9 +88,19 @@ function CreatorLoginForm() {
           )}
 
           {status === 'success' ? (
-            <div className="space-y-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
               <div className="flex items-start gap-2.5 p-4 bg-cultr-mint/30 border border-cultr-sage rounded-xl">
-                <CheckCircle className="w-5 h-5 text-cultr-forest mt-0.5 flex-shrink-0" />
+                <motion.div
+                  initial={{ scale: 0.5 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                >
+                  <CheckCircle className="w-5 h-5 text-cultr-forest mt-0.5 flex-shrink-0" />
+                </motion.div>
                 <div>
                   <p className="text-sm text-cultr-forest font-medium">Check your email</p>
                   <p className="text-sm text-cultr-forest/80 mt-1">{message}</p>
@@ -116,9 +127,13 @@ function CreatorLoginForm() {
               >
                 Send another link
               </button>
-            </div>
+            </motion.div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <motion.form 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onSubmit={handleSubmit} className="space-y-4"
+            >
               <div>
                 <label className="flex items-center gap-1.5 text-sm font-medium text-cultr-forest/70 mb-1.5">
                   <Mail className="w-3.5 h-3.5" /> Email Address
@@ -129,18 +144,24 @@ function CreatorLoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="w-full bg-white border border-cultr-sage/40 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-stone-400 focus:outline-none focus:border-cultr-forest focus:ring-2 focus:ring-cultr-forest/10"
+                  className="w-full bg-white border border-cultr-sage/40 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-stone-400 focus:outline-none focus:border-cultr-forest focus:ring-2 focus:ring-cultr-forest/10 transition-shadow duration-200"
                 />
               </div>
 
               {status === 'error' && (
-                <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <motion.div 
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl"
+                >
                   <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                   <p className="text-sm text-red-700">{message}</p>
-                </div>
+                </motion.div>
               )}
 
-              <button
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={status === 'loading'}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 grad-dark text-white rounded-lg text-sm font-medium hover:bg-cultr-forestDark transition-colors disabled:opacity-50"
@@ -156,8 +177,8 @@ function CreatorLoginForm() {
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
-              </button>
-            </form>
+              </motion.button>
+            </motion.form>
           )}
 
           <div className="mt-6 pt-6 border-t border-stone-100 text-center space-y-3">

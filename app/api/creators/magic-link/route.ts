@@ -38,12 +38,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
     }
 
-    if (!checkRateLimit(normalizedEmail)) {
+    const isStagingAccess = isStaging() || isStagingEmail(normalizedEmail)
+
+    if (!isStagingAccess && !checkRateLimit(normalizedEmail)) {
       return NextResponse.json({ error: 'Please wait before requesting another link' }, { status: 429 })
     }
 
     // Check if creator exists in DB OR is a staging bypass email
-    let creatorExists = isStaging() || isStagingEmail(normalizedEmail)
+    let creatorExists = isStagingAccess
 
     if (!creatorExists) {
       try {
