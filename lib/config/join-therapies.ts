@@ -195,6 +195,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         price: 150,
         category: 'peptide',
         image: '/images/products/bpc157-tb500.png',
+        secondaryImage: '/images/products/bpc157-tb500-coa.png',
       },
       {
         id: 'melanotan-2',
