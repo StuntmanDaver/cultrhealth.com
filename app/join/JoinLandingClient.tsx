@@ -506,7 +506,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
       <section className="bg-brand-primary px-6 py-6 md:py-8 text-center">
         <h1 className="font-body text-xl md:text-4xl lg:text-5xl text-white font-bold tracking-tight leading-tight">
           Change the <span className="font-display">CULTR</span>.<br />
-          <span className="italic text-sage">rebrand</span> Yourself.
+          <span className="italic text-sage">rebrand</span> yourself.
         </h1>
         <p className="mt-2 text-[11px] md:text-sm text-white/50 max-w-2xl mx-auto">
           HIPAA-compliant telehealth for physician-supervised GLP-1 therapies, wellness peptides &amp; longevity optimization.
