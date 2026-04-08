@@ -56,6 +56,7 @@ export default function TherapiesPage() {
           { label: 'Compare Plans', href: '/pricing', variant: 'ghost' },
         ]}
         size="compact"
+        backgroundImage="/images/hero-cultr-diverse-women.png"
       />
 
       {/* Social Proof */}
