@@ -112,18 +112,29 @@ export function AiDosingQuestionFlow({
               </div>
             </div>
           </div>
-          <div className="flex justify-between pt-4">
+          <div className="flex justify-between pt-4 items-center">
             <Button variant="ghost" onClick={handleBack} className="gap-2 px-0 text-cultr-textMuted">
               <ArrowLeft className="w-4 h-4" /> Back
             </Button>
-            <Button
-              variant="primary"
-              onClick={handleNext}
-              disabled={!data.age || !data.weightLb || !data.heightInches}
-              className="gap-2"
-            >
-              Next <ArrowRight className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              {(!data.age || data.age < 18 || data.age > 120 || 
+                !data.weightLb || data.weightLb < 80 || data.weightLb > 600 || 
+                !data.heightInches || data.heightInches < 40 || data.heightInches > 96) && (
+                <span className="text-xs text-red-500 font-medium">Please enter valid values</span>
+              )}
+              <Button
+                variant="primary"
+                onClick={handleNext}
+                disabled={
+                  !data.age || data.age < 18 || data.age > 120 ||
+                  !data.weightLb || data.weightLb < 80 || data.weightLb > 600 ||
+                  !data.heightInches || data.heightInches < 40 || data.heightInches > 96
+                }
+                className="gap-2"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

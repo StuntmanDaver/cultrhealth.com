@@ -13,6 +13,9 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { MetricCard } from '@/components/admin/MetricCard'
+import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
+import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
+import { PIPELINE_LABELS } from '@/lib/admin-club-orders'
 import { parseOrderItems, ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
@@ -140,13 +143,13 @@ export default function AdminDashboardClient() {
     }
   }
 
-  async function handleStatusUpdate(orderId: string, newStatus: string) {
+  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }) {
     setUpdatingStatus(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, ...extra }),
       })
       if (res.ok && data) {
         const updatedInvoices = data.invoiceAging.map(inv =>
@@ -591,12 +594,12 @@ export default function AdminDashboardClient() {
           {/* Fulfillment Pipeline Summary */}
           {data.clubOrderFulfillment && Object.values(data.clubOrderFulfillment).some(c => c > 0) && (() => {
             const OVERVIEW_PIPELINE = [
-              { key: 'pending_approval', label: 'Pending', color: 'yellow' },
-              { key: 'approved', label: 'Approved', color: 'blue' },
-              { key: 'invoice_sent', label: 'Invoiced', color: 'indigo' },
-              { key: 'paid', label: 'Paid', color: 'green' },
-              { key: 'shipped', label: 'Waiting to Ship', color: 'blue' },
-              { key: 'fulfilled', label: 'Fulfilled', color: 'emerald' },
+              { key: 'pending_approval', label: PIPELINE_LABELS.pending_approval || 'Pending Approval', color: 'yellow' },
+              { key: 'approved', label: PIPELINE_LABELS.approved || 'Approved', color: 'blue' },
+              { key: 'invoice_sent', label: PIPELINE_LABELS.invoice_sent || 'Invoiced', color: 'indigo' },
+              { key: 'paid', label: PIPELINE_LABELS.paid || 'Paid', color: 'green' },
+              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Waiting to Ship', color: 'blue' },
+              { key: 'fulfilled', label: PIPELINE_LABELS.fulfilled || 'Fulfilled', color: 'emerald' },
             ]
             const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
               yellow:  { bg: 'bg-yellow-50',  text: 'text-yellow-700',  activeBg: 'bg-yellow-100' },
@@ -714,40 +717,12 @@ export default function AdminDashboardClient() {
                 </div>
 
                 {/* Bulk action bar */}
-                {selectedOrders.size > 0 && (
-                  <div className="flex items-center gap-3 mb-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <span className="text-sm font-medium text-amber-800">{selectedOrders.size} selected</span>
-                    <select
-                      disabled={bulkUpdating}
-                      value=""
-                      onChange={(e) => {
-                        const target = e.target.value
-                        if (!target) return
-                        const LABELS: Record<string, string> = { approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Waiting to Ship', fulfilled: 'Fulfilled', cancelled: 'Cancelled' }
-                        if (confirm(`Move ${selectedOrders.size} order(s) to "${LABELS[target] || target}"?\n\nAll intermediate timestamps will be set automatically.`)) {
-                          handleBulkStatusUpdate(target)
-                        }
-                        e.target.value = ''
-                      }}
-                      className="px-3 py-1.5 text-sm rounded-lg border border-amber-300 bg-white text-amber-900 cursor-pointer disabled:opacity-50"
-                    >
-                      <option value="">Move to…</option>
-                      <option value="approved">Approved</option>
-                      <option value="invoice_sent">Invoiced</option>
-                      <option value="paid">Paid</option>
-                      <option value="shipped">Waiting to Ship</option>
-                      <option value="fulfilled">Fulfilled</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                    <button
-                      onClick={() => setSelectedOrders(new Set())}
-                      className="text-sm text-amber-600 hover:text-amber-800 ml-auto"
-                    >
-                      Clear
-                    </button>
-                    {bulkUpdating && <span className="text-xs text-amber-600 animate-pulse">Updating...</span>}
-                  </div>
-                )}
+                <ClubOrderBulkActions
+                  selectedCount={selectedOrders.size}
+                  isBulkUpdating={bulkUpdating}
+                  onBulkMove={handleBulkStatusUpdate}
+                  onClearSelection={() => setSelectedOrders(new Set())}
+                />
 
                 {/* Orders list */}
                 <div className="border border-brand-primary/10 rounded-lg overflow-hidden">
@@ -885,88 +860,16 @@ export default function AdminDashboardClient() {
                             </div>
 
                             {/* Actions row */}
-                            {(() => {
-                              const PIPELINE = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled']
-                              const LABELS: Record<string, string> = {
-                                pending_approval: 'Pending', approved: 'Approved', invoice_sent: 'Invoiced', paid: 'Paid', shipped: 'Waiting to Ship', fulfilled: 'Fulfilled', cancelled: 'Cancelled',
-                              }
-                              const currentIdx = PIPELINE.indexOf(inv.status)
-                              const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE.length - 1 ? PIPELINE[currentIdx + 1] : null
-                              // All other pipeline stages (forward + backward) excluding current
-                              const moveTargets = currentIdx >= 0
-                                ? PIPELINE.filter((_, i) => i !== currentIdx)
-                                : inv.status === 'cancelled' ? PIPELINE : [] // cancelled can reopen to any stage
-                              const isTerminal = ['cancelled', 'fulfilled', 'rejected', 'dismissed'].includes(inv.status)
-
-                              return (
-                                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-brand-primary/10">
-                                  {/* Primary action: Approve for pending, next step for others */}
-                                  {inv.status === 'pending_approval' && (
-                                    <button
-                                      onClick={() => handleApproveOrder(inv.id)}
-                                      disabled={approvingOrder === inv.id}
-                                      className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
-                                    >
-                                      {approvingOrder === inv.id ? 'Approving...' : 'Approve & Send Invoice'}
-                                    </button>
-                                  )}
-                                  {nextStatus && inv.status !== 'pending_approval' && (
-                                    <button
-                                      onClick={() => handleStatusUpdate(inv.id, nextStatus)}
-                                      disabled={updatingStatus === inv.id}
-                                      className={`px-4 py-2 text-sm rounded-lg text-white disabled:opacity-50 transition-colors ${
-                                        nextStatus === 'paid' ? 'bg-green-600 hover:bg-green-700'
-                                        : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
-                                        : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
-                                        : 'bg-brand-primary hover:bg-brand-primaryHover'
-                                      }`}
-                                    >
-                                      {updatingStatus === inv.id ? '...' : `Mark ${LABELS[nextStatus] || nextStatus}`}
-                                    </button>
-                                  )}
-                                  {/* Move to — forward skip OR backward rollback */}
-                                  {moveTargets.length > 0 && (
-                                    <select
-                                      disabled={updatingStatus === inv.id || approvingOrder === inv.id}
-                                      value=""
-                                      onChange={(e) => {
-                                        const target = e.target.value
-                                        if (!target) return
-                                        const targetIdx = PIPELINE.indexOf(target)
-                                        const goingBack = currentIdx >= 0 && targetIdx >= 0 && targetIdx < currentIdx
-                                        const note = goingBack
-                                          ? `Rolling back to "${LABELS[target]}". Timestamps for later stages will be cleared.`
-                                          : inv.status === 'pending_approval'
-                                            ? `This will NOT create a QuickBooks invoice or send approval emails.\nUse this when the order was already handled manually.`
-                                            : `All skipped stage timestamps will be set automatically.`
-                                        if (confirm(`Move to "${LABELS[target]}"?\n\n${note}`)) {
-                                          handleStatusUpdate(inv.id, target)
-                                        }
-                                        e.target.value = ''
-                                      }}
-                                      className="px-3 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary cursor-pointer disabled:opacity-50 transition-colors hover:bg-brand-primary/10"
-                                    >
-                                      <option value="">Move to…</option>
-                                      {moveTargets.map(s => {
-                                        const targetIdx = PIPELINE.indexOf(s)
-                                        const isBack = currentIdx >= 0 && targetIdx >= 0 && targetIdx < currentIdx
-                                        return <option key={s} value={s}>{isBack ? '← ' : ''}{LABELS[s] || s}</option>
-                                      })}
-                                      {!isTerminal && <option value="cancelled">Cancel</option>}
-                                    </select>
-                                  )}
-                                  {!isTerminal && (
-                                    <button
-                                      onClick={() => { if (confirm('Cancel this order?')) handleStatusUpdate(inv.id, 'cancelled') }}
-                                      disabled={updatingStatus === inv.id}
-                                      className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors"
-                                    >
-                                      Cancel Order
-                                    </button>
-                                  )}
-                                </div>
-                              )
-                            })()}
+                            <div className="mt-3 pt-3 border-t border-brand-primary/10">
+                              <ClubOrderStageControls
+                                orderId={inv.id}
+                                currentStatus={inv.status}
+                                isApproving={approvingOrder === inv.id}
+                                isUpdating={updatingStatus === inv.id}
+                                onApprove={handleApproveOrder}
+                                onStatusUpdate={handleStatusUpdate}
+                              />
+                            </div>
                           </div>
                         )}
                       </div>

@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import type { AnalyticsData, OrderSearchData, SearchOrderRow, OrderRow } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor } from '@/lib/admin-utils'
 import PendingApprovalTab from './PendingApprovalTab'
+import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
+import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 
 export default function OrdersClient() {
   // --------------- Tab State ---------------
@@ -29,7 +31,11 @@ export default function OrdersClient() {
   const [orderLoading, setOrderLoading] = useState(false)
 
   // --------------- Order Detail Modal State ---------------
-  const [selectedOrder, setSelectedOrder] = useState<OrderRow | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<SearchOrderRow | null>(null)
+  const [selectedClubOrders, setSelectedClubOrders] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+  const [clubUpdatingId, setClubUpdatingId] = useState<string | null>(null)
+  const [clubApprovingId, setClubApprovingId] = useState<string | null>(null)
   const [fulfillAction, setFulfillAction] = useState<'ship' | 'fulfill' | null>(null)
   const [fulfillForm, setFulfillForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
   const [fulfilling, setFulfilling] = useState(false)
@@ -109,6 +115,76 @@ export default function OrdersClient() {
       )
     }
   }, [data, orderData])
+
+  // --------------- Club Order Fulfillment ---------------
+  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }) {
+    setClubUpdatingId(orderId)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus, ...extra }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to update status')
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus })
+      }
+      fetchOrders()
+      fetchAnalytics()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to update')
+    } finally {
+      setClubUpdatingId(null)
+    }
+  }
+
+  async function handleClubOrderApprove(orderId: string) {
+    if (!confirm('Approve this order? This will create a QuickBooks invoice and email the customer.')) return
+    setClubApprovingId(orderId)
+    try {
+      const res = await fetch(`/api/admin/club-orders/${orderId}/approve`, { method: 'POST' })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to approve order')
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: 'approved' })
+      }
+      fetchOrders()
+      fetchAnalytics()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : 'Failed to approve')
+    } finally {
+      setClubApprovingId(null)
+    }
+  }
+
+  async function handleBulkStatusUpdate(newStatus: string) {
+    if (selectedClubOrders.size === 0) return
+    const ids = Array.from(selectedClubOrders)
+    setBulkUpdating(true)
+    let successCount = 0
+    let failCount = 0
+    for (const orderId of ids) {
+      try {
+        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus }),
+        })
+        if (res.ok) successCount++
+        else failCount++
+      } catch {
+        failCount++
+      }
+    }
+    setSelectedClubOrders(new Set())
+    setBulkUpdating(false)
+    if (failCount > 0) alert(`${successCount} updated, ${failCount} failed`)
+    if (successCount > 0) {
+      fetchOrders()
+      fetchAnalytics()
+    }
+  }
 
   // --------------- Order Fulfillment ---------------
   async function handleFulfill() {
@@ -329,9 +405,36 @@ export default function OrdersClient() {
           <div className="py-12 text-center text-brand-primary/40">Loading orders...</div>
         ) : (
           <div className="overflow-x-auto">
+            {/* Bulk action bar */}
+            <ClubOrderBulkActions
+              selectedCount={selectedClubOrders.size}
+              isBulkUpdating={bulkUpdating}
+              onBulkMove={handleBulkStatusUpdate}
+              onClearSelection={() => setSelectedClubOrders(new Set())}
+            />
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
+                  <th className="w-10 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary cursor-pointer"
+                      checked={
+                        (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders').length > 0 &&
+                        (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders').every(o => selectedClubOrders.has(o.id))
+                      }
+                      onChange={(e) => {
+                        const clubOrders = (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders')
+                        if (e.target.checked) {
+                          setSelectedClubOrders(new Set([...Array.from(selectedClubOrders), ...clubOrders.map(o => o.id)]))
+                        } else {
+                          const next = new Set(selectedClubOrders)
+                          clubOrders.forEach(o => next.delete(o.id))
+                          setSelectedClubOrders(next)
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
@@ -342,12 +445,29 @@ export default function OrdersClient() {
                 </tr>
               </thead>
               <tbody>
-                {(orderData?.orders ?? data.sales.recentOrders).map((order, index) => (
+                {(orderData?.orders ?? data.sales.recentOrders).map((order, index) => {
+                  const isClub = 'source' in order ? order.source === 'club_orders' : false;
+                  return (
                   <tr
                     key={`${order.id}-${index}`}
-                    className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`}
-                    onClick={() => setSelectedOrder(order as OrderRow)}
+                    className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} ${isClub && selectedClubOrders.has(order.id) ? 'bg-amber-50/50' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`}
+                    onClick={() => setSelectedOrder(order as SearchOrderRow)}
                   >
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      {isClub && (
+                        <input
+                          type="checkbox"
+                          checked={selectedClubOrders.has(order.id)}
+                          onChange={(e) => {
+                            const next = new Set(selectedClubOrders)
+                            if (e.target.checked) next.add(order.id)
+                            else next.delete(order.id)
+                            setSelectedClubOrders(next)
+                          }}
+                          className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary cursor-pointer"
+                        />
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-brand-primary font-mono text-sm">{order.order_number}</td>
                     <td className="py-3 px-4 text-sm">
                       {'customer_name' in order && (order as SearchOrderRow).customer_name && (
@@ -372,9 +492,9 @@ export default function OrdersClient() {
                     </td>
                     <td className="py-3 px-4 text-brand-primary/60 text-sm">{formatDate(order.created_at)}</td>
                     <td className="py-3 px-4">
-                      {order.status === 'paid' && (
+                      {order.status === 'paid' && !isClub && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order as OrderRow); setFulfillAction('ship'); }}
+                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order as SearchOrderRow); setFulfillAction('ship'); }}
                           className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200"
                         >
                           Ship
@@ -382,7 +502,7 @@ export default function OrdersClient() {
                       )}
                     </td>
                   </tr>
-                ))}
+                )})}
                 {orderData?.orders.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-8 text-center text-brand-primary/40 text-sm">No orders found matching your filters</td>
@@ -468,7 +588,18 @@ export default function OrdersClient() {
             )}
 
             {/* Fulfillment Actions */}
-            {(selectedOrder.status === 'paid' || selectedOrder.status === 'shipped') && (
+            {selectedOrder.source === 'club_orders' ? (
+              <div className="border-t border-brand-primary/10 pt-4 mt-4">
+                <ClubOrderStageControls
+                  orderId={selectedOrder.id}
+                  currentStatus={selectedOrder.status}
+                  isApproving={clubApprovingId === selectedOrder.id}
+                  isUpdating={clubUpdatingId === selectedOrder.id}
+                  onApprove={handleClubOrderApprove}
+                  onStatusUpdate={handleClubOrderStatusUpdate}
+                />
+              </div>
+            ) : (selectedOrder.status === 'paid' || selectedOrder.status === 'shipped') && (
               <div className="border-t border-brand-primary/10 pt-4">
                 <div className="flex gap-2 mb-3">
                   {selectedOrder.status === 'paid' && (
