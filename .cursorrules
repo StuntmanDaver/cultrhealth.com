@@ -271,6 +271,7 @@ Use brand tokens: brand-primary with opacity variants (/50, /40, /30, /20, /10, 
 - Production deploys: git push to `production` branch OR Vercel Dashboard promotion ONLY
 - Staging deploys: git push to `staging` branch
 - Incident precedent: staging was accidentally deployed to production on Mar 23, 2026
+- CRITICAL: Always keep `staging` and `production` branches in sync. When hotfixing `production`, ALWAYS backport the merge to `staging` so that `join.cultrhealth.com` (which deploys from staging) does not drift from the main site.
 
 ## Git rules:
 - Commit messages: conventional commits (feat:, fix:, docs:, refactor:, test:, chore:)
@@ -471,6 +472,8 @@ any file containing API keys, secrets, or tokens
 - Use stone/gray/slate colors (use brand tokens)
 - Reference components/sections/* (dead code)
 - Use raw fetch to Stripe/Asher Med/SiPhox (use lib/ wrappers)
+- Apply global date constraints (e.g., `WHERE created_at >= ...`) to SQL queries that also calculate "Lifetime" metrics.
+- Query only `club_orders` when calculating total coupon usage or revenue; ALWAYS include `order_attributions`.
 - Trust raw `cultr_club_visitor` browser JSON for club member hydration or persist full club profiles in client-readable cookies/localStorage
 - Hard-delete affiliate/company coupon codes that already have historical usage or `order_attributions` references
 - Reuse built-in `CLUB_COUPONS` values for admin-created affiliate/company codes on `join.cultrhealth.com`
@@ -487,6 +490,8 @@ any file containing API keys, secrets, or tokens
 - Keep API routes thin — validate, call lib, respond
 - Use existing shared components (MarketingHero, TrustStrip, SocialProofBadge, etc.)
 - Check CLAUDE.md and CHANGELOG.md for recent changes before making assumptions
+- When querying admin analytics for coupon stats, ALWAYS use a `UNION ALL` to combine data from `club_orders` (club purchases) AND `order_attributions` (main site Stripe purchases) to ensure creators receive full credit.
+- When calculating "lifetime" metrics alongside period metrics, apply the date interval constraint conditionally per column (e.g., `SUM(CASE WHEN created_at >= ... THEN amount ELSE 0 END)`) rather than globally filtering the entire table.
 - Keep `cultr_club_visitor` as a signed minimal session token and rehydrate full club member data from the server only after token verification
 - Hard-delete coupon codes only when they are unused and unreferenced; otherwise deactivate them to preserve creator ROI and attribution history
 - Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
