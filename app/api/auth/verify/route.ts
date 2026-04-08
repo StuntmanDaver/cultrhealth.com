@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { verifyMagicLinkToken, createSessionToken, normalizeAuthEmailInput } from '@/lib/auth'
 import { getCookieDomain } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -27,12 +27,18 @@ function isStaging(): boolean {
 
 // Check if email is allowed for staging bypass
 function isStagingBypassEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeAuthEmailInput(email)
   if (TEAM_EMAILS.includes(lower)) return true
   if (isStaging()) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
   return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
+}
+
+function getStagingCustomerId(email: string): string {
+  const localPart = email.split('@')[0] || 'user'
+  const normalizedLocalPart = localPart.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 40)
+  return `staging_customer_${normalizedLocalPart || 'user'}`
 }
 
 function setSessionOnResponse(response: NextResponse, token: string) {
@@ -82,15 +88,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/members?error=expired_link`)
     }
 
-    const { email } = verified
+    const email = normalizeAuthEmailInput(verified.email)
 
     // Check for staging bypass
     const isStagingAccess = isStagingBypassEmail(email)
     let customerId: string
 
     if (isStagingAccess) {
-      // Use staging IDs with full admin access for bypass emails
-      customerId = 'staging_customer'
+      // Use per-email staging IDs so owner sessions remain isolated.
+      customerId = getStagingCustomerId(email)
       const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
       const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
       setSessionOnResponse(response, sessionToken)

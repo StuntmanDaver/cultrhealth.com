@@ -48,7 +48,12 @@ export async function GET(request: NextRequest) {
     }[] = [];
 
     // Fetch Stripe invoices if configured
-    if (process.env.STRIPE_SECRET_KEY && customerId && customerId !== 'dev_customer') {
+    if (
+      process.env.STRIPE_SECRET_KEY &&
+      customerId &&
+      customerId !== 'dev_customer' &&
+      !customerId.startsWith('staging_customer')
+    ) {
       try {
         const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {

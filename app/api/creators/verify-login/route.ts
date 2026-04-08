@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyMagicLinkToken, createSessionToken } from '@/lib/auth'
+import { verifyMagicLinkToken, createSessionToken, normalizeAuthEmailInput } from '@/lib/auth'
 import { getCookieDomain } from '@/lib/utils'
 
 const TEAM_EMAILS = [
@@ -17,7 +17,7 @@ function isStaging(): boolean {
 }
 
 function isStagingEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeAuthEmailInput(email)
   if (TEAM_EMAILS.includes(lower)) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=expired_link`)
     }
 
-    const { email } = verified
+    const email = normalizeAuthEmailInput(verified.email)
 
     // Look up creator in DB
     let creatorId: string | undefined

@@ -118,7 +118,11 @@ function LoginForm() {
                     <Mail className="w-3.5 h-3.5" /> Email Address
                   </label>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"

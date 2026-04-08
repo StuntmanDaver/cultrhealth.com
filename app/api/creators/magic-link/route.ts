@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
+import { createMagicLinkToken, checkRateLimit, normalizeAuthEmailInput } from '@/lib/auth'
 
 const TEAM_EMAILS = [
   'alex@cultrhealth.com',
@@ -16,7 +16,7 @@ function isStaging(): boolean {
 }
 
 function isStagingEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeAuthEmailInput(email)
   if (TEAM_EMAILS.includes(lower)) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
   if (!stagingEmails) return false
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedEmail = normalizeAuthEmailInput(email)
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(normalizedEmail)) {

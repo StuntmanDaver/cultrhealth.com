@@ -167,6 +167,19 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase()
 }
 
+export function normalizeAuthEmailInput(email: string): string {
+  const normalized = normalizeEmail(email)
+
+  if (!normalized.includes('@') && normalized.endsWith('.cultrhealth.com')) {
+    const canonicalEmail = normalized.replace(/\.cultrhealth\.com$/, '@cultrhealth.com')
+    if (TEAM_EMAILS.includes(canonicalEmail)) {
+      return canonicalEmail
+    }
+  }
+
+  return normalized
+}
+
 export function checkRateLimit(email: string): boolean {
   const normalizedEmail = normalizeEmail(email)
   const lastRequest = magicLinkRequests.get(normalizedEmail)
@@ -213,7 +226,7 @@ function parseEmailAllowlist(raw: string | undefined): string[] {
   if (!raw) return []
   return raw
     .split(',')
-    .map((value) => normalizeEmail(value))
+    .map((value) => normalizeAuthEmailInput(value))
     .filter(Boolean)
 }
 

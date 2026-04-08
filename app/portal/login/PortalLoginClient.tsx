@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Button from '@/components/ui/Button'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { ArrowRight, Shield, Mail, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
@@ -50,21 +51,20 @@ export default function PortalLoginClient() {
 
         <ScrollReveal direction="none" duration={800}>
           <div className="text-center mb-8">
-            <div className="mb-4">
-              <span
-                className="font-display font-bold uppercase text-white text-3xl tracking-wide"
-                style={{ fontFamily: "var(--font-display), 'Playfair Display', Georgia, serif" }}
-              >
-                CULTR
-              </span>
-              <span className="block font-display font-medium tracking-[0.12em] uppercase text-white/60 text-xs">
-                Health
-              </span>
-            </div>
+            <Image
+              src="/cultr-health-logo.png"
+              alt="CULTR Health"
+              width={240}
+              height={86}
+              priority
+              className="mx-auto mb-6 h-12 md:h-14 w-auto"
+            />
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-              Change the CULTR
+              Member Portal
             </h1>
-            <p className="text-white/70 text-lg">Access your portal</p>
+            <p className="text-white/70 text-base md:text-lg">
+              Use your email to receive a secure sign-in link.
+            </p>
           </div>
         </ScrollReveal>
 
@@ -96,7 +96,11 @@ export default function PortalLoginClient() {
                     <Mail className="w-3.5 h-3.5" /> Email Address
                   </label>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"

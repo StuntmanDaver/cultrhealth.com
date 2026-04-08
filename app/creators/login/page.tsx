@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { ArrowRight, Mail, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -74,10 +75,20 @@ function CreatorLoginForm() {
       <div className="w-full max-w-md">
 
         <div className="bg-white rounded-2xl p-8 shadow-xl">
-          <h1 className="text-2xl font-display font-bold text-cultr-forest mb-2">Creator Login</h1>
-          <p className="text-sm text-cultr-textMuted mb-6">
-            Enter your email to receive a login link for your creator portal.
-          </p>
+          <div className="mb-6 text-center">
+            <Image
+              src="/cultr-health-logo.png"
+              alt="CULTR Health"
+              width={220}
+              height={79}
+              priority
+              className="mx-auto mb-6 h-11 md:h-12 w-auto"
+            />
+            <h1 className="text-2xl font-display font-bold text-cultr-forest mb-2">Creator Portal</h1>
+            <p className="text-sm text-cultr-textMuted">
+              Use your email to receive a secure sign-in link.
+            </p>
+          </div>
 
           {/* Error from redirect */}
           {errorParam && ERROR_MESSAGES[errorParam] && status === 'idle' && (
@@ -139,7 +150,11 @@ function CreatorLoginForm() {
                   <Mail className="w-3.5 h-3.5" /> Email Address
                 </label>
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"

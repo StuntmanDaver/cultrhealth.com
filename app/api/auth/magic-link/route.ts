@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { Resend } from 'resend'
-import { createMagicLinkToken, checkRateLimit } from '@/lib/auth'
+import { createMagicLinkToken, checkRateLimit, normalizeAuthEmailInput } from '@/lib/auth'
 
 // Lazy initialization to avoid build-time errors
 function getStripe() {
@@ -34,7 +34,7 @@ function isStaging(): boolean {
 
 // Check if email is allowed for staging bypass
 function isStagingBypassEmail(email: string): boolean {
-  const lower = email.toLowerCase()
+  const lower = normalizeAuthEmailInput(email)
   if (TEAM_EMAILS.includes(lower)) return true
   if (isStaging()) return true
   const stagingEmails = process.env.STAGING_ACCESS_EMAILS
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
+    const normalizedEmail = normalizeAuthEmailInput(email)
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
