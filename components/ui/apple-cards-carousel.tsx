@@ -431,10 +431,25 @@ export const Card = ({
                       </div>
                       {card.secondarySrc && (
                         <div className="rounded-2xl border border-brand-primary/10 bg-white/70 p-3 md:p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary/50">
-                            COA Report
-                          </p>
-                          <div className="relative mt-3 h-[220px] w-full md:h-[260px]">
+                          <div className="flex items-center justify-between">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-secondary/50">
+                              COA Report
+                            </p>
+                            <a
+                              href={card.secondarySrc.replace('/images/products/', '/pdfs/products/').replace('.png', '.pdf')}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[11px] font-semibold text-brand-primary hover:underline flex items-center gap-1"
+                            >
+                              View Full PDF <ArrowRight className="w-3 h-3" />
+                            </a>
+                          </div>
+                          <a
+                            href={card.secondarySrc.replace('/images/products/', '/pdfs/products/').replace('.png', '.pdf')}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative mt-3 h-[220px] w-full md:h-[260px] hover:opacity-90 transition-opacity cursor-zoom-in group"
+                          >
                             <ProductImage
                               src={card.secondarySrc}
                               alt={`${card.title} COA`}
@@ -442,7 +457,7 @@ export const Card = ({
                               sizes="(max-width: 768px) 300px, 400px"
                               className="object-contain"
                             />
-                          </div>
+                          </a>
                         </div>
                       )}
                     </div>
@@ -528,7 +543,7 @@ export const Card = ({
         className={cn(
           "relative flex flex-col overflow-hidden rounded-3xl text-left",
           fluid
-            ? "h-[420px] w-full"
+            ? "h-[420px] md:h-[540px] w-full"
             : compact
               ? "h-[340px] w-[180px] md:h-[460px] md:w-[260px]"
               : "h-[420px] w-[260px] md:h-[540px] md:w-[320px]",
