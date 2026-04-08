@@ -76,9 +76,9 @@ export function TypeformStep({
             onClick={onNext}
             disabled={!canAdvance}
             className={cn(
-              "px-8 py-3 rounded-lg font-bold text-lg transition-all duration-200 shadow-sm flex items-center gap-2",
+              "px-8 py-3 rounded-full font-bold text-lg transition-all duration-200 shadow-sm flex items-center gap-2",
               canAdvance 
-                ? "bg-[#FAFF00] text-black hover:bg-[#E5EA00] hover:shadow-md cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0" 
+                ? "bg-brand-primary text-white hover:bg-forest-light hover:shadow-md cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0" 
                 : "bg-brand-primary/10 text-brand-primary/40 cursor-not-allowed"
             )}
           >
