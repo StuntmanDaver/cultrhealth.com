@@ -20,8 +20,10 @@ export default async function ConsultationsPage() {
 
           <div className="bg-white rounded-2xl border border-cultr-sage overflow-hidden shadow-sm">
             <iframe
+              title="Schedule Consultation"
               src="https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493,510494,510495%5D&primary_color=4A9625"
               style={{ width: '100%', height: '100%', minHeight: '600px', border: '0px' }}
+              allow="camera; microphone; geolocation"
             />
             <div className="p-3 bg-brand-cream/50 border-t border-cultr-sage/30 text-center">
               <p className="text-sm text-cultr-textMuted">
