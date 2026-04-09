@@ -45,12 +45,16 @@ function setCookieOnResponse(response: NextResponse, token: string) {
   })
 }
 
-export async function GET(request: NextRequest) {
-  const baseUrl =
+function getBaseUrl(request: NextRequest): string {
+  return (
+    request.nextUrl.origin ||
     process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000')
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  )
+}
+
+export async function GET(request: NextRequest) {
+  const baseUrl = getBaseUrl(request)
 
   try {
     const { searchParams } = new URL(request.url)

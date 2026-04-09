@@ -23,6 +23,14 @@ function isStagingEmail(email: string): boolean {
   return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
 }
 
+function getBaseUrl(request: NextRequest): string {
+  return (
+    request.nextUrl.origin ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  )
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json()
@@ -69,10 +77,7 @@ export async function POST(request: NextRequest) {
 
     // Generate magic link
     const token = await createMagicLinkToken(normalizedEmail)
-
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    const baseUrl = getBaseUrl(request)
 
     const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
@@ -92,7 +97,7 @@ export async function POST(request: NextRequest) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
 
-      await resend.emails.send({
+      const { error: emailError } = await resend.emails.send({
         from: fromEmail,
         to: normalizedEmail,
         subject: 'Access Your CULTR Creator Portal',
@@ -111,8 +116,14 @@ export async function POST(request: NextRequest) {
 </body>
 </html>`,
       })
+
+      if (emailError) {
+        console.error('Failed to send creator magic link email:', emailError)
+        return NextResponse.json({ error: 'Failed to send email. Please try again.' }, { status: 500 })
+      }
     } catch (emailError) {
       console.error('Failed to send creator magic link email:', emailError)
+      return NextResponse.json({ error: 'Failed to send email. Please try again.' }, { status: 500 })
     }
 
     return NextResponse.json({
