@@ -181,8 +181,8 @@
 **Branch → Environment mapping:**
 | Branch | Environment | URL |
 |---|---|---|
-| `staging` | Staging | staging.cultrhealth.com + join.cultrhealth.com |
-| `production` | Production | cultrhealth.com |
+| `staging` | Staging | staging.cultrhealth.com |
+| `production` | Production | cultrhealth.com + join.cultrhealth.com |
 | `main` | No deploy (disabled in `vercel.json`) | — |
 
 ## Webhooks & Callbacks

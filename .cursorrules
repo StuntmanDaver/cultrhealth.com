@@ -11,7 +11,7 @@ GLP-1 weight loss medications, wellness peptides, and longevity optimization.
 
 - Production: https://cultrhealth.com (waitlist, `production` branch)
 - Staging: https://staging.cultrhealth.com (full app, `staging` branch)
-- Join: https://join.cultrhealth.com (CULTR Club landing, `staging` branch)
+- Join: https://join.cultrhealth.com (CULTR Club landing, `production` branch)
 - Brand tagline: "Change the CULTR, rebrand yourself."
 - Social: @cultrhealth (all platforms)
 
@@ -271,7 +271,7 @@ Use brand tokens: brand-primary with opacity variants (/50, /40, /30, /20, /10, 
 - Production deploys: git push to `production` branch OR Vercel Dashboard promotion ONLY
 - Staging deploys: git push to `staging` branch
 - Incident precedent: staging was accidentally deployed to production on Mar 23, 2026
-- CRITICAL: Always keep `staging` and `production` branches in sync. When hotfixing `production`, ALWAYS backport the merge to `staging` so that `join.cultrhealth.com` (which deploys from staging) does not drift from the main site.
+- CRITICAL: Always keep `staging` and `production` branches in sync. When hotfixing `production`, ALWAYS backport the merge to `staging` so that both the main site and `join.cultrhealth.com` (which both deploy from `production`) do not drift from staging testing.
 
 ## Git rules:
 - Commit messages: conventional commits (feat:, fix:, docs:, refactor:, test:, chore:)

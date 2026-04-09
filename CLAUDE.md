@@ -10,7 +10,7 @@ This file provides guidance to Claude Code when working with the CULTR Health We
 
 - **Production URL:** https://cultrhealth.com (waitlist site, `production` branch)
 - **Staging URL:** https://staging.cultrhealth.com (full app, `staging` branch)
-- **Join Club URL:** https://join.cultrhealth.com (CULTR Club landing page, `staging` branch, subdomain alias via middleware)
+- **Join Club URL:** https://join.cultrhealth.com (CULTR Club landing page, `production` branch, subdomain alias via middleware)
 - **Hosting:** Vercel (automatic deployments per branch)
 - **Brand Tagline:** "Change the CULTR, rebrand yourself."
 - **Social Handle:** @cultrhealth (all platforms)
@@ -777,7 +777,7 @@ npm run setup:stripe
 | `staging` | Staging | staging.cultrhealth.com |
 | `main` | Base branch (for PRs) | — |
 
-**Note:** `join.cultrhealth.com` is a Vercel domain alias for the `staging` deployment. The `middleware.ts` rewrites the join host root path (`/`) to `/join` and lets non-root join paths pass through unchanged.
+**Note:** `join.cultrhealth.com` is a Vercel domain alias for the `production` deployment. The `middleware.ts` rewrites the join host root path (`/`) to `/join` and lets non-root join paths pass through unchanged.
 
 ### Deployment Flow
 1. Push to `staging` or `production` branch
