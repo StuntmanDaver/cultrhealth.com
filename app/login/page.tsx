@@ -77,7 +77,7 @@ function LoginForm() {
 
           <div className="text-center mb-8">
             <Image
-              src="/cultr-health-logo.png"
+              src="/images/email-logo-cream.png"
               alt="CULTR Health"
               width={240}
               height={86}
@@ -85,7 +85,7 @@ function LoginForm() {
               className="mx-auto mb-6 h-12 md:h-14 w-auto"
             />
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
-              Member Login
+              {redirectParam === '/admin' ? 'Admin Login' : 'Member Login'}
             </h1>
             <p className="text-white/70 text-base md:text-lg">
               Use your email to receive a secure sign-in link.

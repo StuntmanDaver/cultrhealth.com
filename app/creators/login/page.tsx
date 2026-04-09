@@ -77,21 +77,24 @@ function CreatorLoginForm() {
     <div className="min-h-[80vh] grad-dark flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
 
+        <div className="text-center mb-8">
+          <Image
+            src="/images/email-logo-cream.png"
+            alt="CULTR Health"
+            width={240}
+            height={86}
+            priority
+            className="mx-auto mb-6 h-12 md:h-14 w-auto"
+          />
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
+            Creator Portal
+          </h1>
+          <p className="text-white/70 text-base md:text-lg">
+            Use your email to receive a secure sign-in link.
+          </p>
+        </div>
+
         <div className="bg-white rounded-2xl p-8 shadow-xl">
-          <div className="mb-6 text-center">
-            <Image
-              src="/cultr-health-logo.png"
-              alt="CULTR Health"
-              width={220}
-              height={79}
-              priority
-              className="mx-auto mb-6 h-11 md:h-12 w-auto"
-            />
-            <h1 className="text-2xl font-display font-bold text-cultr-forest mb-2">Creator Portal</h1>
-            <p className="text-sm text-cultr-textMuted">
-              Use your email to receive a secure sign-in link.
-            </p>
-          </div>
 
           {/* Error from redirect */}
           {errorParam && ERROR_MESSAGES[errorParam] && status === 'idle' && (

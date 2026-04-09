@@ -52,7 +52,7 @@ export default function PortalLoginClient() {
         <ScrollReveal direction="none" duration={800}>
           <div className="text-center mb-8">
             <Image
-              src="/cultr-health-logo.png"
+              src="/images/email-logo-cream.png"
               alt="CULTR Health"
               width={240}
               height={86}
