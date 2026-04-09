@@ -5,6 +5,18 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   const isProductionDeployment = process.env.VERCEL_ENV === 'production'
   const isVercelHost = hostname.endsWith('.vercel.app')
+  const isJoinHost =
+    hostname === 'join.cultrhealth.com' ||
+    hostname === 'join.staging.cultrhealth.com' ||
+    hostname.startsWith('join.localhost:') ||
+    hostname === 'join.localhost'
+  const isLocalDevHost =
+    hostname === 'localhost' ||
+    hostname.startsWith('localhost:') ||
+    hostname === '127.0.0.1' ||
+    hostname.startsWith('127.0.0.1:') ||
+    hostname === '[::1]' ||
+    hostname.startsWith('[::1]:')
 
   // Canonicalize production deployment hosts to the primary public domain.
   if (isProductionDeployment && isVercelHost && (request.method === 'GET' || request.method === 'HEAD')) {
@@ -15,12 +27,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Serve the restored join landing page from /join only at the root hostname path.
-  if (
-    hostname === 'join.cultrhealth.com' ||
-    hostname === 'join.staging.cultrhealth.com' ||
-    hostname.startsWith('join.localhost:') ||
-    hostname === 'join.localhost'
-  ) {
+  if (isJoinHost) {
     const url = request.nextUrl.clone()
     const shouldTrackJoinLanding =
       request.method === 'GET' &&
@@ -74,8 +81,8 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  // Block /join on non-join hostnames (only accessible via join.cultrhealth.com)
-  if (request.nextUrl.pathname.startsWith('/join') && process.env.NODE_ENV === 'production') {
+  // Block /join on public non-join hosts, but keep localhost available for local development.
+  if (request.nextUrl.pathname.startsWith('/join') && !isJoinHost && !isLocalDevHost) {
     return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 

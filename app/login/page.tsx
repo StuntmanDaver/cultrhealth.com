@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import { LINKS } from '@/lib/config/links'
@@ -75,11 +76,19 @@ function LoginForm() {
         <div className="w-full max-w-md">
 
           <div className="text-center mb-8">
+            <Image
+              src="/cultr-health-logo.png"
+              alt="CULTR Health"
+              width={240}
+              height={86}
+              priority
+              className="mx-auto mb-6 h-12 md:h-14 w-auto"
+            />
             <h1 className="text-4xl md:text-5xl font-display font-bold text-white mb-3">
               Member Login
             </h1>
-            <p className="text-white/70">
-              Enter your email to access your member library and dashboard.
+            <p className="text-white/70 text-base md:text-lg">
+              Use your email to receive a secure sign-in link.
             </p>
           </div>
 

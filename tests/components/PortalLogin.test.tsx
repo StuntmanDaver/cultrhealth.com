@@ -70,8 +70,9 @@ describe('PortalLoginClient', () => {
       render(<PortalLoginClient />)
 
       await waitFor(() => {
-        expect(screen.getByText('Change the CULTR')).toBeInTheDocument()
-        expect(screen.getByText('Access your portal')).toBeInTheDocument()
+        expect(screen.getByAltText('CULTR Health')).toBeInTheDocument()
+        expect(screen.getByText('Member Portal')).toBeInTheDocument()
+        expect(screen.getByText('Use your email to receive a secure sign-in link.')).toBeInTheDocument()
         expect(screen.getByPlaceholderText('you@example.com')).toBeInTheDocument()
         expect(screen.getByText('Send Login Link')).toBeInTheDocument()
       })
