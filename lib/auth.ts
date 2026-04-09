@@ -206,10 +206,12 @@ export function checkRateLimit(email: string): boolean {
 
 const OWNER_EMAILS = [
   'erik@cultrhealth.com',
+  'erik@threepointshospitality.com',
   'alex@cultrhealth.com',
   'stewart@cultrhealth.com',
   'david@cultrhealth.com',
   'tony@cultrhealth.com',
+  'carlos@threepointshospitality.com',
 ] as const
 
 const TEAM_EMAILS = [

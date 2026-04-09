@@ -24,6 +24,8 @@ const TEAM_EMAILS = [
   'stewart@cultrhealth.com',
   'erik@cultrhealth.com',
   'david@cultrhealth.com',
+  'erik@threepointshospitality.com',
+  'carlos@threepointshospitality.com',
   'legitscript@cultrhealth.com',
 ]
 

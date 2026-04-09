@@ -102,7 +102,8 @@ export function middleware(request: NextRequest) {
       const elapsed = Date.now() - parseInt(lastActivity, 10)
       if (elapsed > IDLE_TIMEOUT_MS) {
         // Session idle too long -- clear and redirect to login
-        const loginUrl = new URL('/login', request.url)
+        const loginPath = request.nextUrl.pathname.startsWith('/creators/portal') ? '/creators/login' : '/login'
+        const loginUrl = new URL(loginPath, request.url)
         loginUrl.searchParams.set('error', 'session_timeout')
         loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
         const response = NextResponse.redirect(loginUrl)
