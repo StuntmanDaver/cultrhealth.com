@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyMagicLinkToken, createSessionToken, normalizeAuthEmailInput } from '@/lib/auth'
-import { getCookieDomain } from '@/lib/utils'
 
 const TEAM_EMAILS = [
   'alex@cultrhealth.com',
@@ -24,8 +23,21 @@ function isStagingEmail(email: string): boolean {
   return stagingEmails.split(',').map(e => e.trim().toLowerCase()).includes(lower)
 }
 
-function setCookieOnResponse(response: NextResponse, token: string) {
-  const domain = getCookieDomain()
+function getCookieDomainForHostname(hostname: string): string | undefined {
+  const normalizedHostname = hostname.trim().toLowerCase()
+  if (
+    normalizedHostname === 'cultrhealth.com' ||
+    normalizedHostname === 'www.cultrhealth.com' ||
+    normalizedHostname.endsWith('.cultrhealth.com')
+  ) {
+    return '.cultrhealth.com'
+  }
+
+  return undefined
+}
+
+function setCookieOnResponse(response: NextResponse, token: string, hostname: string) {
+  const domain = getCookieDomainForHostname(hostname)
   response.cookies.set('cultr_session', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -55,6 +67,7 @@ function getBaseUrl(request: NextRequest): string {
 
 export async function GET(request: NextRequest) {
   const baseUrl = getBaseUrl(request)
+  const cookieHostname = request.nextUrl.hostname
 
   try {
     const { searchParams } = new URL(request.url)
@@ -153,7 +166,7 @@ export async function GET(request: NextRequest) {
     if (creatorStatus === 'pending') {
       const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
       const response = NextResponse.redirect(`${baseUrl}/creators/pending`)
-      setCookieOnResponse(response, sessionToken)
+      setCookieOnResponse(response, sessionToken, cookieHostname)
       return response
     }
 
@@ -164,7 +177,7 @@ export async function GET(request: NextRequest) {
     // Create session with creator role
     const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
     const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
-    setCookieOnResponse(response, sessionToken)
+    setCookieOnResponse(response, sessionToken, cookieHostname)
 
     console.log('Creator session created:', {
       creatorId,
