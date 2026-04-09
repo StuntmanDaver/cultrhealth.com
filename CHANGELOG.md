@@ -1,3 +1,11 @@
+## [2026-04-09] - Admin Creator Impersonation
+
+### Added
+- **Creator Impersonation:** Added a new admin-only endpoint (`app/api/admin/creators/[id]/impersonate/route.ts`) and UI action in the Creator Network table (`app/admin/creators/CreatorsClient.tsx`) to allow admins to seamlessly log in as a creator using the existing magic-link flow.
+- **Impersonation Testing:** Added a dedicated test suite (`tests/api/admin-creator-impersonate-route.test.ts`) that verifies admin-only access, missing creator handling, and successful token generation and redirection.
+
+---
+
 ## [2026-04-09] - Admin Add Member Functionality
 
 ### Added
