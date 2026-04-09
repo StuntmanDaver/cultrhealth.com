@@ -91,8 +91,21 @@ export function getConsultationBookingUrl(): string | null {
       return normalizedKey === 'provider_ids' || normalizedKey.startsWith('provider_ids[')
     })
 
-    if (isHealthieBookingLink && hasProviderFilter) {
-      parsedUrl.searchParams.set('org_level', 'true')
+    if (isHealthieBookingLink) {
+      // Provider-filtered Healthie embeds need org-level scheduling to surface availability.
+      if (hasProviderFilter) {
+        parsedUrl.searchParams.set('org_level', 'true')
+      }
+
+      // Stale appointment type filters can hide newly configured schedulable types.
+      const apptTypeParamKeys = Array.from(parsedUrl.searchParams.keys()).filter((key) => {
+        const normalizedKey = key.toLowerCase()
+        return normalizedKey === 'appt_type_ids' || normalizedKey.startsWith('appt_type_ids[')
+      })
+
+      for (const key of apptTypeParamKeys) {
+        parsedUrl.searchParams.delete(key)
+      }
     }
 
     return parsedUrl.toString()

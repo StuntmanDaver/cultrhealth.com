@@ -1,3 +1,18 @@
+## [2026-04-08] - Healthie Scheduling Filter Unblock
+
+### Fixed
+- **Hidden Schedulable Appointment Types:** Healthie consultation URLs now strip `appt_type_ids` filters before rendering the member consultations iframe, preventing stale type IDs from hiding newly configured bookable appointment types.
+- **Provider-Filtered Embed Safety:** Healthie booking URLs continue to enforce `org_level=true` whenever `provider_ids` is present so provider-filtered calendars can resolve availability correctly.
+
+### Added
+- **Scheduling URL Regression Coverage:** Extended `tests/lib/links.test.ts` to verify `appt_type_ids` removal (including bracketed variants) and retained `org_level=true` behavior for provider-filtered links.
+
+### Memory
+- Do not hardcode or preserve `appt_type_ids` on Healthie embed links in `NEXT_PUBLIC_CONSULTATION_BOOKING_URL`; stale type filters can make available appointments appear unschedulable.
+- Keep `provider_ids` + `org_level=true` paired for Healthie booking links, and validate in deployed HTTPS environments instead of local iframe behavior.
+
+---
+
 ## [2026-04-08] - Club Order Parity
 
 ### Fixed
