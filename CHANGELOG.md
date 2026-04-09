@@ -1,3 +1,14 @@
+## [2026-04-09] - Added Mary Cooper as Creator
+
+### Added
+- **Production Creator Generation:** Executed a production script to create Mary Cooper (`marycooper2004@gmail.com`) as an active creator directly in the database.
+- **Creator Artifacts:** Generated tracking link (`marycooper521`) and 10% affiliate discount codes (`COOPER` for memberships, `COOPER10` for products).
+
+### Memory
+- Scripts executed against the production database using `vercel env pull .env.production` can quickly generate creator affiliate codes and tracking links for high-priority partners without requiring manual application submission and approval.
+
+---
+
 ## [2026-04-09] - Admin Login & Session Timeout Fix
 
 ### Fixed
