@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 40,
     borderBottomWidth: 2,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#2A4542',
     paddingBottom: 20,
   },
   logo: {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   invoiceTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#2A4542',
     textAlign: 'right',
   },
   invoiceNumber: {
@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#1a1a1a',
+    color: '#2A4542',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 10,
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   table: {
     marginTop: 10,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontWeight: 'bold',
     fontSize: 9,
-    color: '#1a1a1a',
+    color: '#2A4542',
     textTransform: 'uppercase',
   },
   tableRow: {
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   totalsValue: {
     fontSize: 10,
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   totalRow: {
     flexDirection: 'row',
@@ -143,18 +143,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: '#f9f9f9',
     borderTopWidth: 2,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: '#2A4542',
     marginTop: 5,
   },
   totalLabel: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   totalValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   paymentInfo: {
     marginTop: 30,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   paymentText: {
     fontSize: 10,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
     textAlign: 'center',
     fontSize: 12,
-    color: '#1a1a1a',
+    color: '#2A4542',
     fontWeight: 'bold',
   },
 })

@@ -305,7 +305,7 @@ function MealPlanModal({
             body {
               font-family: 'Georgia', 'Times New Roman', serif;
               line-height: 1.7;
-              color: #1a1a1a;
+              color: #2A4542;
               padding: 40px 60px;
               max-width: 800px;
               margin: 0 auto;
@@ -321,7 +321,7 @@ function MealPlanModal({
               margin-bottom: 8px;
             }
             .subtitle {
-              color: #666;
+              color: #5A6B68;
               font-size: 14px;
             }
             .date {
@@ -348,7 +348,7 @@ function MealPlanModal({
             }
             .macro-label {
               font-size: 11px;
-              color: #666;
+              color: #5A6B68;
               text-transform: uppercase;
               letter-spacing: 1px;
             }
@@ -368,7 +368,7 @@ function MealPlanModal({
             }
             p {
               margin-bottom: 12px;
-              color: #333;
+              color: #2A4542;
             }
             ul, ol {
               margin: 12px 0 12px 24px;

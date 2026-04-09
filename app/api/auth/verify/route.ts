@@ -107,21 +107,22 @@ export async function GET(request: NextRequest) {
 
     const cookieHostname = request.nextUrl.hostname
 
-    // Validate redirect is a safe relative path (prevent open redirect)
-    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
-
-    if (!token) {
-      return NextResponse.redirect(`${baseUrl}/members?error=invalid_link`)
-    }
-
-    // Verify the magic link token
-    const verified = await verifyMagicLinkToken(token)
-
-    if (!verified) {
-      return NextResponse.redirect(`${baseUrl}/members?error=expired_link`)
-    }
-
     const email = normalizeAuthEmailInput(verified.email)
+
+    const OWNERS = [
+      'alex@cultrhealth.com',
+      'erik@cultrhealth.com',
+      'david@cultrhealth.com',
+      'stewart@cultrhealth.com',
+    ]
+
+    // Validate redirect is a safe relative path (prevent open redirect)
+    let postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
+
+    // Push owners straight to admin on production (and staging) if no specific redirect was passed
+    if (OWNERS.includes(email) && (!redirectParam || redirectParam === '/members')) {
+      postLoginPath = '/admin'
+    }
 
     // Check for staging bypass
     const isStagingAccess = isStagingBypassEmail(email)

@@ -54,7 +54,7 @@ async function sendCreatorApprovalEmail(
       <p style="color: #FDFBF7; font-size: 14px; margin: 0;"><strong>Product code:</strong> ${assets.productCode}</p>
     </div>
     <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Open Creator Portal</a>
-    <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7;">cultrhealth.com/creators/login</a>.</p>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7;">cultrhealth.com/creators/login</a>.</p>
   `
 
   const result = await resend.emails.send({

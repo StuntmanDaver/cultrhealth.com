@@ -110,11 +110,11 @@ export async function POST(request: NextRequest) {
         to: normalizedEmail,
         subject: 'Access Your CULTR Creator Portal',
         html: baseEmailTemplate(`
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
       Creator Portal
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">
       Click the button below to access your Creator Portal. This link expires in 15 minutes.
     </p>
     
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       </a>
     </div>
     
-    <p style="color: #666; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
       If you didn't request this link, you can safely ignore this email.
     </p>
         `),

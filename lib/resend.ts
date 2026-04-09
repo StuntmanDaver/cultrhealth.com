@@ -129,9 +129,9 @@ export function baseEmailTemplate(content: string, footerText?: string): string 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   ${EMAIL_FONT_IMPORT}
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    ${brandedEmailHeader('dark')}
+    ${brandedEmailHeader('light')}
 
     <div style="padding: 24px;">
     ${content}
@@ -182,50 +182,50 @@ export async function sendFounderNotification(data: FounderNotificationData): Pr
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 24px; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 30px; color: #fff;">
+    <h1 style="font-size: 24px; font-weight: 300; letter-spacing: 0.1em; margin-bottom: 30px; color: #2A4542;">
       New Waitlist Signup
     </h1>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Name</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeName}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68; width: 140px;">Name</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${safeName}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Email</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222;">
-            <a href="mailto:${safeEmail}" style="color: #c9a962; text-decoration: none;">${safeEmail}</a>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Email</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7;">
+            <a href="mailto:${safeEmail}" style="color: #2A4542; text-decoration: none;">${safeEmail}</a>
           </td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Phone</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222;">
-            <a href="tel:${safePhone}" style="color: #c9a962; text-decoration: none;">${safePhone}</a>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Phone</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7;">
+            <a href="tel:${safePhone}" style="color: #2A4542; text-decoration: none;">${safePhone}</a>
           </td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Social Handle</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeSocial}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Social Handle</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${safeSocial}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; vertical-align: top;">Treatment Reason</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${safeReason}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68; vertical-align: top;">Treatment Reason</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${safeReason}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Timestamp</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${timestamp.toISOString()}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Timestamp</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${timestamp.toISOString()}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; color: #888;">Waitlist ID</td>
-          <td style="padding: 12px 0; color: #666; font-family: monospace; font-size: 12px;">${escapeHtml(waitlist_id)}</td>
+          <td style="padding: 12px 0; color: #5A6B68;">Waitlist ID</td>
+          <td style="padding: 12px 0; color: #5A6B68; font-family: monospace; font-size: 12px;">${escapeHtml(waitlist_id)}</td>
         </tr>
       </table>
     </div>
 
-    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+    <p style="color: #5A6B68; font-size: 12px; margin-top: 30px;">
       This notification was sent from the CULTR waitlist system.
     </p>
   </div>
@@ -271,52 +271,52 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailRes
   const firstName = name.split(' ')[0]
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Welcome to CULTR, ${firstName}.
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Your <strong style="color: #c9a962;">${planName}</strong> membership is now active. 
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Your <strong style="color: #2A4542;">${planName}</strong> membership is now active. 
       You're one step closer to optimized health and longevity.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-      <h2 style="font-size: 16px; font-weight: 600; color: #fff; margin: 0 0 16px 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <h2 style="font-size: 16px; font-weight: 600; color: #2A4542; margin: 0 0 16px 0;">
         Your Next Steps
       </h2>
       
       <div style="margin-bottom: 16px;">
-        <span style="display: inline-block; width: 24px; height: 24px; background: #c9a962; color: #000; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">1</span>
-        <span style="color: #fff;">Complete your intake forms (required before consultation)</span>
+        <span style="display: inline-block; width: 24px; height: 24px; background: #B7E4C7; color: #2A4542; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">1</span>
+        <span style="color: #2A4542;">Complete your intake forms (required before consultation)</span>
       </div>
       
       <div style="margin-bottom: 16px;">
-        <span style="display: inline-block; width: 24px; height: 24px; background: #c9a962; color: #000; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">2</span>
-        <span style="color: #fff;">Book your initial consultation with a provider</span>
+        <span style="display: inline-block; width: 24px; height: 24px; background: #B7E4C7; color: #2A4542; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">2</span>
+        <span style="color: #2A4542;">Book your initial consultation with a provider</span>
       </div>
       
       <div>
-        <span style="display: inline-block; width: 24px; height: 24px; background: #c9a962; color: #000; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">3</span>
-        <span style="color: #fff;">Upload any recent lab work (if available)</span>
+        <span style="display: inline-block; width: 24px; height: 24px; background: #B7E4C7; color: #2A4542; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold; margin-right: 12px;">3</span>
+        <span style="color: #2A4542;">Upload any recent lab work (if available)</span>
       </div>
     </div>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Go to Your Dashboard
       </a>
     </div>
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 14px; margin: 0;">
-        <strong style="color: #fff;">Need help?</strong> Our care team is here for you. 
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #5A6B68; font-size: 14px; margin: 0;">
+        <strong style="color: #2A4542;">Need help?</strong> Our care team is here for you. 
         Simply reply to this email or message us through the member dashboard.
       </p>
     </div>
     
     ${stripePortalUrl ? `
-    <p style="color: #666; font-size: 12px; margin-top: 24px; text-align: center;">
-      <a href="${stripePortalUrl}" style="color: #666; text-decoration: underline;">Manage billing &amp; subscription</a>
+    <p style="color: #5A6B68; font-size: 12px; margin-top: 24px; text-align: center;">
+      <a href="${stripePortalUrl}" style="color: #5A6B68; text-decoration: underline;">Manage billing &amp; subscription</a>
     </p>
     ` : ''}
   `
@@ -378,63 +378,63 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
   const formattedTime = appointmentDate.toLocaleTimeString('en-US', timeOptions)
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Appointment Confirmed
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Hi ${firstName}, your appointment has been scheduled.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 120px;">Type</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; font-weight: 500;">${appointmentType}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68; width: 120px;">Type</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; font-weight: 500;">${appointmentType}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Date</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${formattedDate}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Date</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${formattedDate}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Time</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; font-weight: 500;">${formattedTime}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Time</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; font-weight: 500;">${formattedTime}</td>
         </tr>
         ${providerName ? `
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Provider</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${providerName}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Provider</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${providerName}</td>
         </tr>
         ` : ''}
         <tr>
-          <td style="padding: 12px 0; color: #888;">Format</td>
-          <td style="padding: 12px 0; color: #fff;">${isVideo ? '📹 Video Visit' : '📍 In-Person'}</td>
+          <td style="padding: 12px 0; color: #5A6B68;">Format</td>
+          <td style="padding: 12px 0; color: #2A4542;">${isVideo ? '📹 Video Visit' : '📍 In-Person'}</td>
         </tr>
       </table>
     </div>
     
     ${isVideo && meetingLink ? `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${meetingLink}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${meetingLink}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Join Video Visit
       </a>
-      <p style="color: #666; font-size: 12px; margin-top: 12px;">
+      <p style="color: #5A6B68; font-size: 12px; margin-top: 12px;">
         Link will be active 10 minutes before your appointment
       </p>
     </div>
     ` : `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         View in Dashboard
       </a>
     </div>
     `}
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #2A4542; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
         Before Your Appointment
       </p>
-      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+      <ul style="color: #5A6B68; font-size: 14px; margin: 0; padding-left: 20px;">
         <li style="margin-bottom: 6px;">Complete all intake forms in the member dashboard</li>
         <li style="margin-bottom: 6px;">Have your ID ready for verification</li>
         <li style="margin-bottom: 6px;">Prepare a list of current medications</li>
@@ -442,8 +442,8 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       </ul>
     </div>
     
-    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
-      Need to reschedule? <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none;">Manage your appointment</a> in the member dashboard.
+    <p style="color: #5A6B68; font-size: 13px; margin-top: 24px; text-align: center;">
+      Need to reschedule? <a href="${dashboardUrl}" style="color: #2A4542; text-decoration: none;">Manage your appointment</a> in the member dashboard.
     </p>
   `
 
@@ -508,45 +508,45 @@ export async function sendAppointmentReminder(data: AppointmentReminderData): Pr
       : 'tomorrow'
 
   const content = `
-    <div style="background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
-      <p style="color: #000; font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">
+    <div style="background: #2A4542; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
+      <p style="color: #FDFBF7; font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">
         Appointment ${urgencyText}
       </p>
     </div>
     
-    <h1 style="font-size: 24px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center;">
+    <h1 style="font-size: 24px; font-weight: 300; color: #2A4542; margin-bottom: 24px; text-align: center;">
       Hi ${firstName}, just a reminder
     </h1>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; text-align: center;">
-      <p style="color: #c9a962; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px; text-align: center;">
+      <p style="color: #2A4542; font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px 0;">
         ${appointmentType}
       </p>
-      <p style="color: #fff; font-size: 32px; font-weight: 300; margin: 0 0 8px 0;">
+      <p style="color: #2A4542; font-size: 32px; font-weight: 300; margin: 0 0 8px 0;">
         ${formattedTime}
       </p>
-      <p style="color: #888; font-size: 14px; margin: 0;">
+      <p style="color: #5A6B68; font-size: 14px; margin: 0;">
         ${formattedDate}
       </p>
-      ${providerName ? `<p style="color: #666; font-size: 13px; margin: 12px 0 0 0;">with ${providerName}</p>` : ''}
+      ${providerName ? `<p style="color: #5A6B68; font-size: 13px; margin: 12px 0 0 0;">with ${providerName}</p>` : ''}
     </div>
     
     ${isVideo && meetingLink ? `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${meetingLink}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+      <a href="${meetingLink}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
         Join Video Visit
       </a>
     </div>
     ` : `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 16px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
         View Appointment
       </a>
     </div>
     `}
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 16px; border: 1px solid #222; text-align: center;">
-      <p style="color: #888; font-size: 13px; margin: 0;">
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 16px; border: 1px solid #B7E4C7; text-align: center;">
+      <p style="color: #5A6B68; font-size: 13px; margin: 0;">
         Can't make it? Please reschedule at least 24 hours in advance to avoid a cancellation fee.
       </p>
     </div>
@@ -626,22 +626,22 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
   }
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Thanks for your visit, ${firstName}.
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Here's a summary following your <strong style="color: #fff;">${appointmentType}</strong> on ${formattedDate}${providerName ? ` with ${providerName}` : ''}.
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Here's a summary following your <strong style="color: #2A4542;">${appointmentType}</strong> on ${formattedDate}${providerName ? ` with ${providerName}` : ''}.
     </p>
     
     ${nextSteps.length > 0 ? `
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-      <h2 style="font-size: 16px; font-weight: 600; color: #c9a962; margin: 0 0 16px 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <h2 style="font-size: 16px; font-weight: 600; color: #2A4542; margin: 0 0 16px 0;">
         Your Next Steps
       </h2>
       <ul style="margin: 0; padding-left: 20px;">
         ${nextSteps.map(step => `
-          <li style="color: #fff; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
+          <li style="color: #2A4542; font-size: 14px; line-height: 1.6; margin-bottom: 10px;">
             ${step}
           </li>
         `).join('')}
@@ -650,44 +650,44 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
     ` : ''}
     
     ${customNotes ? `
-    <div style="background-color: #0f1a0f; border-radius: 8px; padding: 20px; margin-bottom: 24px; border-left: 3px solid #c9a962;">
-      <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">
+    <div style="background-color: #FDFBF7; border: 1px solid #B7E4C7; border-radius: 8px; padding: 20px; margin-bottom: 24px; border-left: 3px solid #2A4542;">
+      <p style="color: #5A6B68; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">
         Provider Notes
       </p>
-      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+      <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0;">
         ${customNotes}
       </p>
     </div>
     ` : ''}
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${dashboardUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         View Visit Summary
       </a>
     </div>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 12px 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+      <p style="color: #2A4542; font-size: 14px; font-weight: 500; margin: 0 0 12px 0;">
         Quick Actions
       </p>
       <table style="width: 100%;">
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #2A4542; text-decoration: none; font-size: 14px;">
               → Message your care team
             </a>
           </td>
         </tr>
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #2A4542; text-decoration: none; font-size: 14px;">
               → Book follow-up appointment
             </a>
           </td>
         </tr>
         <tr>
           <td style="padding: 8px 0;">
-            <a href="${dashboardUrl}" style="color: #c9a962; text-decoration: none; font-size: 14px;">
+            <a href="${dashboardUrl}" style="color: #2A4542; text-decoration: none; font-size: 14px;">
               → View lab results
             </a>
           </td>
@@ -695,9 +695,9 @@ export async function sendPostVisitFollowUp(data: PostVisitFollowUpData): Promis
       </table>
     </div>
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 13px; margin: 0; line-height: 1.6;">
-        <strong style="color: #fff;">Questions?</strong> Message us anytime through the member dashboard. 
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #5A6B68; font-size: 13px; margin: 0; line-height: 1.6;">
+        <strong style="color: #2A4542;">Questions?</strong> Message us anytime through the member dashboard. 
         For urgent medical concerns, please call 911 or visit your nearest emergency room.
       </p>
     </div>
@@ -765,9 +765,9 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
   // Build items table rows
   const itemRows = items.map(item => `
     <tr>
-      <td style="padding: 10px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #222; color: #888;">${item.sku}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${item.name}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-align: center;">${item.quantity}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">${item.sku}</td>
     </tr>
   `).join('')
 
@@ -778,52 +778,52 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 700px; margin: 0 auto;">
-    <div style="background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-      <h1 style="font-size: 20px; font-weight: 600; margin: 0; color: #000;">
+    <div style="background: #2A4542; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+      <h1 style="font-size: 20px; font-weight: 600; margin: 0; color: #FDFBF7;">
         New Quote Request
       </h1>
     </div>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888; width: 140px;">Member Email</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222;">
-            <a href="mailto:${email}" style="color: #c9a962; text-decoration: none;">${email}</a>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68; width: 140px;">Member Email</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7;">
+            <a href="mailto:${email}" style="color: #2A4542; text-decoration: none;">${email}</a>
           </td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Membership Tier</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-transform: capitalize;">${tier || 'None'}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Membership Tier</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-transform: capitalize;">${tier || 'None'}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Total Items</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${totalItems} items (${uniqueProducts} unique)</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Total Items</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${totalItems} items (${uniqueProducts} unique)</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #888;">Timestamp</td>
-          <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${timestamp.toISOString()}</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #5A6B68;">Timestamp</td>
+          <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${timestamp.toISOString()}</td>
         </tr>
         <tr>
-          <td style="padding: 12px 0; color: #888;">Quote ID</td>
-          <td style="padding: 12px 0; color: #666; font-family: monospace; font-size: 12px;">${quoteId}</td>
+          <td style="padding: 12px 0; color: #5A6B68;">Quote ID</td>
+          <td style="padding: 12px 0; color: #5A6B68; font-family: monospace; font-size: 12px;">${quoteId}</td>
         </tr>
       </table>
     </div>
     
-    <h2 style="font-size: 18px; font-weight: 300; color: #fff; margin: 24px 0 16px 0;">
+    <h2 style="font-size: 18px; font-weight: 300; color: #2A4542; margin: 24px 0 16px 0;">
       Requested Products
     </h2>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 16px; margin-bottom: 20px; overflow-x: auto;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 16px; margin-bottom: 20px; overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; min-width: 400px;">
         <thead>
           <tr>
-            <th style="padding: 10px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
-            <th style="padding: 10px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
-            <th style="padding: 10px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">SKU</th>
+            <th style="padding: 10px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 10px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 10px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: left; font-weight: 500;">SKU</th>
           </tr>
         </thead>
         <tbody>
@@ -833,23 +833,23 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
     </div>
     
     ${notes ? `
-    <div style="background-color: #0f1a0f; border-radius: 8px; padding: 20px; margin-bottom: 24px; border-left: 3px solid #c9a962;">
-      <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">
+    <div style="background-color: #FDFBF7; border: 1px solid #B7E4C7; border-radius: 8px; padding: 20px; margin-bottom: 24px; border-left: 3px solid #2A4542;">
+      <p style="color: #5A6B68; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">
         Customer Notes
       </p>
-      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">
+      <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0; white-space: pre-wrap;">
         ${notes}
       </p>
     </div>
     ` : ''}
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 16px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 13px; margin: 0;">
-        <strong style="color: #c9a962;">Action Required:</strong> Review this quote request and send pricing to the member within 24-48 hours.
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 16px; border: 1px solid #B7E4C7;">
+      <p style="color: #5A6B68; font-size: 13px; margin: 0;">
+        <strong style="color: #2A4542;">Action Required:</strong> Review this quote request and send pricing to the member within 24-48 hours.
       </p>
     </div>
     
-    <p style="color: #666; font-size: 12px; margin-top: 30px; text-align: center;">
+    <p style="color: #5A6B68; font-size: 12px; margin-top: 30px; text-align: center;">
       This notification was sent from the CULTR Shop quote system.
     </p>
   </div>
@@ -925,33 +925,33 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
   // Build items rows
   const itemRows = items.map(item => `
     <tr>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; text-align: right;">${formatCurrency(item.price)}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${item.name}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-align: right;">${formatCurrency(item.price)}</td>
     </tr>
   `).join('')
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Order Confirmed
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Hi ${firstName}, thank you for your order. Your products are being prepared for shipment.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
-        <span style="color: #888;">Order Number</span>
-        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+        <span style="color: #5A6B68;">Order Number</span>
+        <span style="color: #2A4542; font-family: monospace;">${orderNumber}</span>
       </div>
       
       <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
         <thead>
           <tr>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: right; font-weight: 500;">Price</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: right; font-weight: 500;">Price</th>
           </tr>
         </thead>
         <tbody>
@@ -959,27 +959,27 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="padding: 16px 0 0 0; color: #fff; font-weight: 600; text-align: right;">Total:</td>
-            <td style="padding: 16px 0 0 0; color: #c9a962; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
+            <td colspan="2" style="padding: 16px 0 0 0; color: #2A4542; font-weight: 600; text-align: right;">Total:</td>
+            <td style="padding: 16px 0 0 0; color: #2A4542; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
           </tr>
         </tfoot>
       </table>
     </div>
     
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #2A4542; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
         What's Next?
       </p>
-      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+      <ul style="color: #5A6B68; font-size: 14px; margin: 0; padding-left: 20px;">
         <li style="margin-bottom: 6px;">You'll receive a shipping confirmation with tracking details</li>
         <li style="margin-bottom: 6px;">Products typically ship within 1-2 business days</li>
         <li>Your LMN is also available in your member portal</li>
       </ul>
     </div>
     
-    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
-      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    <p style="color: #5A6B68; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #2A4542; text-decoration: none;">Contact Support</a>
     </p>
   `
 
@@ -1051,37 +1051,37 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
   // Build items rows
   const itemRows = items.map(item => `
     <tr>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff;">${item.name}</td>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #fff; text-align: center;">${item.quantity}</td>
-      <td style="padding: 12px 0; border-bottom: 1px solid #222; color: #c9a962; text-align: right;">${formatCurrency(item.price)}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542;">${item.name}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-align: center;">${item.quantity}</td>
+      <td style="padding: 12px 0; border-bottom: 1px solid #B7E4C7; color: #2A4542; text-align: right;">${formatCurrency(item.price)}</td>
     </tr>
   `).join('')
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Order Confirmed
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Hi ${firstName}, thank you for your order. Your products are being prepared for shipment.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <div style="margin-bottom: 16px;">
-        <span style="color: #888; display: inline-block; width: 120px;">Order Number</span>
-        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 120px;">Order Number</span>
+        <span style="color: #2A4542; font-family: monospace;">${orderNumber}</span>
       </div>
       <div style="margin-bottom: 16px;">
-        <span style="color: #888; display: inline-block; width: 120px;">Payment</span>
-        <span style="color: #fff;">${paymentMethod}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 120px;">Payment</span>
+        <span style="color: #2A4542;">${paymentMethod}</span>
       </div>
       
       <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
         <thead>
           <tr>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: left; font-weight: 500;">Product</th>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: center; font-weight: 500;">Qty</th>
-            <th style="padding: 8px 0; border-bottom: 2px solid #333; color: #888; text-align: right; font-weight: 500;">Price</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: left; font-weight: 500;">Product</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: center; font-weight: 500;">Qty</th>
+            <th style="padding: 8px 0; border-bottom: 2px solid #B7E4C7; color: #5A6B68; text-align: right; font-weight: 500;">Price</th>
           </tr>
         </thead>
         <tbody>
@@ -1089,26 +1089,26 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="padding: 16px 0 0 0; color: #fff; font-weight: 600; text-align: right;">Total:</td>
-            <td style="padding: 16px 0 0 0; color: #c9a962; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
+            <td colspan="2" style="padding: 16px 0 0 0; color: #2A4542; font-weight: 600; text-align: right;">Total:</td>
+            <td style="padding: 16px 0 0 0; color: #2A4542; font-weight: 600; text-align: right; font-size: 18px;">${formatCurrency(totalAmount)}</td>
           </tr>
         </tfoot>
       </table>
     </div>
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #fff; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #2A4542; font-size: 14px; font-weight: 500; margin: 0 0 8px 0;">
         What's Next?
       </p>
-      <ul style="color: #888; font-size: 14px; margin: 0; padding-left: 20px;">
+      <ul style="color: #5A6B68; font-size: 14px; margin: 0; padding-left: 20px;">
         <li style="margin-bottom: 6px;">You'll receive a shipping confirmation with tracking details</li>
         <li style="margin-bottom: 6px;">Products typically ship within 1-2 business days</li>
         <li>Track your order status in your member portal</li>
       </ul>
     </div>
     
-    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
-      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    <p style="color: #5A6B68; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your order? <a href="mailto:support@cultrhealth.com" style="color: #2A4542; text-decoration: none;">Contact Support</a>
     </p>
   `
 
@@ -1195,59 +1195,59 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
   // Build items list if provided
   const itemsList = items && items.length > 0
     ? items.map(item => `
-        <li style="color: #fff; margin-bottom: 6px;">
+        <li style="color: #2A4542; margin-bottom: 6px;">
           ${item.name} ${item.quantity > 1 ? `(x${item.quantity})` : ''}
         </li>
       `).join('')
     : ''
 
   const content = `
-    <div style="background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
-      <p style="color: #000; font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">
+    <div style="background: #2A4542; border-radius: 8px; padding: 20px; margin-bottom: 24px; text-align: center;">
+      <p style="color: #FDFBF7; font-size: 14px; font-weight: 600; margin: 0; text-transform: uppercase; letter-spacing: 0.1em;">
         📦 Your Order Has Shipped
       </p>
     </div>
     
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       On its way, ${firstName}!
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Great news — your order has shipped and is headed your way.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
       <div style="margin-bottom: 16px;">
-        <span style="color: #888; display: inline-block; width: 140px;">Order Number</span>
-        <span style="color: #fff; font-family: monospace;">${orderNumber}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 140px;">Order Number</span>
+        <span style="color: #2A4542; font-family: monospace;">${orderNumber}</span>
       </div>
       <div style="margin-bottom: 16px;">
-        <span style="color: #888; display: inline-block; width: 140px;">Carrier</span>
-        <span style="color: #fff;">${carrier}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 140px;">Carrier</span>
+        <span style="color: #2A4542;">${carrier}</span>
       </div>
       <div style="margin-bottom: ${formattedDelivery ? '16px' : '0'};">
-        <span style="color: #888; display: inline-block; width: 140px;">Tracking Number</span>
-        <span style="color: #c9a962; font-family: monospace;">${trackingNumber}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 140px;">Tracking Number</span>
+        <span style="color: #2A4542; font-family: monospace;">${trackingNumber}</span>
       </div>
       ${formattedDelivery ? `
       <div>
-        <span style="color: #888; display: inline-block; width: 140px;">Est. Delivery</span>
-        <span style="color: #fff; font-weight: 500;">${formattedDelivery}</span>
+        <span style="color: #5A6B68; display: inline-block; width: 140px;">Est. Delivery</span>
+        <span style="color: #2A4542; font-weight: 500;">${formattedDelivery}</span>
       </div>
       ` : ''}
     </div>
     
     ${trackingUrl ? `
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${trackingUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${trackingUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Track Your Package
       </a>
     </div>
     ` : ''}
     
     ${itemsList ? `
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222; margin-bottom: 24px;">
-      <p style="color: #888; font-size: 12px; text-transform: uppercase; margin: 0 0 12px 0;">
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7; margin-bottom: 24px;">
+      <p style="color: #5A6B68; font-size: 12px; text-transform: uppercase; margin: 0 0 12px 0;">
         Items in this shipment
       </p>
       <ul style="margin: 0; padding-left: 20px;">
@@ -1256,15 +1256,15 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
     </div>
     ` : ''}
     
-    <div style="background-color: #0a0a0a; border-radius: 8px; padding: 20px; border: 1px solid #222;">
-      <p style="color: #888; font-size: 13px; margin: 0; line-height: 1.6;">
-        <strong style="color: #fff;">Delivery Tips:</strong> Ensure someone is available to receive temperature-sensitive products. 
+    <div style="background-color: #FDFBF7; border-radius: 8px; padding: 20px; border: 1px solid #B7E4C7;">
+      <p style="color: #5A6B68; font-size: 13px; margin: 0; line-height: 1.6;">
+        <strong style="color: #2A4542;">Delivery Tips:</strong> Ensure someone is available to receive temperature-sensitive products. 
         Contact us immediately if there are any issues with your delivery.
       </p>
     </div>
     
-    <p style="color: #666; font-size: 13px; margin-top: 24px; text-align: center;">
-      Questions about your shipment? <a href="mailto:support@cultrhealth.com" style="color: #c9a962; text-decoration: none;">Contact Support</a>
+    <p style="color: #5A6B68; font-size: 13px; margin-top: 24px; text-align: center;">
+      Questions about your shipment? <a href="mailto:support@cultrhealth.com" style="color: #2A4542; text-decoration: none;">Contact Support</a>
     </p>
   `
 
@@ -1311,28 +1311,28 @@ export async function sendCancellationEmail(data: CancellationEmailData): Promis
   })
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Subscription Cancelled
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Hi ${firstName}, your <strong style="color: #fff;">${planName}</strong> subscription has been cancelled and will end on ${formattedDate}.
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, your <strong style="color: #2A4542;">${planName}</strong> subscription has been cancelled and will end on ${formattedDate}.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
-      <p style="color: #888; font-size: 14px; line-height: 1.6; margin: 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+      <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0;">
         You will continue to have access to your member benefits until the end of your current billing period. 
         Your member dashboard will remain accessible for your medical records.
       </p>
     </div>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="/pricing" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="/pricing" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Reactivate Subscription
       </a>
     </div>
     
-    <p style="color: #666; font-size: 13px; text-align: center;">
+    <p style="color: #5A6B68; font-size: 13px; text-align: center;">
       We're sorry to see you go. If you have any feedback on how we can improve, please let us know.
     </p>
   `
@@ -1382,28 +1382,28 @@ export async function sendPaymentFailedEmail(data: PaymentFailedEmailData): Prom
   }
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Payment Failed
     </h1>
     
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Hi ${firstName}, we were unable to process your recent payment of <strong style="color: #fff;">${formatCurrency(amount)}</strong>.
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+      Hi ${firstName}, we were unable to process your recent payment of <strong style="color: #2A4542;">${formatCurrency(amount)}</strong>.
     </p>
     
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
-      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff4444;">
+      <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0;">
         To avoid any interruption to your membership and care, please update your payment method. 
         Stripe will automatically retry the payment in a few days.
       </p>
     </div>
     
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${billingPortalUrl}" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${billingPortalUrl}" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Update Payment Method
       </a>
     </div>
     
-    <p style="color: #666; font-size: 13px; text-align: center;">
+    <p style="color: #5A6B68; font-size: 13px; text-align: center;">
       If you've already updated your payment information, please ignore this email.
     </p>
   `
@@ -1449,35 +1449,35 @@ export async function sendFraudHeldAdminNotification(data: FraudHeldNotification
   const { transactionId, merchantRefId, provider } = data
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Payment Held for Fraud Review
     </h1>
 
-    <div style="background-color: #111; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff8800;">
-      <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">
+    <div style="background-color: #F5F0E8; border-radius: 8px; padding: 24px; margin-bottom: 24px; border-left: 3px solid #ff8800;">
+      <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;">
         A payment has been flagged and held for manual fraud review.
       </p>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="padding: 8px 0; color: #888; width: 140px;">Provider</td>
-          <td style="padding: 8px 0; color: #fff;">${provider}</td>
+          <td style="padding: 8px 0; color: #5A6B68; width: 140px;">Provider</td>
+          <td style="padding: 8px 0; color: #2A4542;">${provider}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #888;">Transaction ID</td>
-          <td style="padding: 8px 0; color: #fff; font-family: monospace; font-size: 13px;">${transactionId}</td>
+          <td style="padding: 8px 0; color: #5A6B68;">Transaction ID</td>
+          <td style="padding: 8px 0; color: #2A4542; font-family: monospace; font-size: 13px;">${transactionId}</td>
         </tr>
         ${merchantRefId ? `<tr>
-          <td style="padding: 8px 0; color: #888;">Order Reference</td>
-          <td style="padding: 8px 0; color: #fff; font-family: monospace; font-size: 13px;">${merchantRefId}</td>
+          <td style="padding: 8px 0; color: #5A6B68;">Order Reference</td>
+          <td style="padding: 8px 0; color: #2A4542; font-family: monospace; font-size: 13px;">${merchantRefId}</td>
         </tr>` : ''}
         <tr>
-          <td style="padding: 8px 0; color: #888;">Time</td>
-          <td style="padding: 8px 0; color: #fff;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</td>
+          <td style="padding: 8px 0; color: #5A6B68;">Time</td>
+          <td style="padding: 8px 0; color: #2A4542;">${new Date().toLocaleString('en-US', { timeZone: 'America/New_York' })} ET</td>
         </tr>
       </table>
     </div>
 
-    <p style="color: #888; font-size: 13px;">
+    <p style="color: #5A6B68; font-size: 13px;">
       Please review this transaction in the ${provider} dashboard and approve or decline it.
     </p>
   `
@@ -1518,21 +1518,21 @@ export async function sendSubscriptionExpiringEmail(data: SubscriptionExpiringEm
   const siteUrl = getEmailSiteUrl()
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px;">
       Your Subscription is Expiring Soon
     </h1>
 
-    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+    <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Hi ${firstName}, your CULTR Health subscription is expiring soon. To continue receiving your treatments without interruption, please renew your membership.
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${siteUrl}/renewal" style="display: inline-block; background: linear-gradient(135deg, #c9a962 0%, #a08030 100%); color: #000; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
+      <a href="${siteUrl}/renewal" style="display: inline-block; background: #2A4542; color: #FDFBF7; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
         Renew Subscription
       </a>
     </div>
 
-    <p style="color: #666; font-size: 13px; text-align: center;">
+    <p style="color: #5A6B68; font-size: 13px; text-align: center;">
       If you have any questions, contact us at support@cultrhealth.com.
     </p>
   `
@@ -2034,9 +2034,9 @@ export async function sendKitFulfillmentEmail(
   )
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Your blood test kit is on its way</h1>
-    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your SiPhox blood test kit has been ordered.</p>
-    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 14px; padding: 12px; background: #1a1a1a; border-radius: 8px;">${safeAddress}</p>
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 20px;">Your blood test kit is on its way</h1>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your SiPhox blood test kit has been ordered.</p>
+    <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0 0 14px; padding: 12px; background: #2A4542; border-radius: 8px;">${safeAddress}</p>
     <p style="margin: 0;"><a href="${siteUrl}/dashboard" style="color: #B7E4C7; text-decoration: underline;">Open dashboard</a></p>
   `
 
@@ -2068,9 +2068,9 @@ export async function sendResultsReadyEmail(data: {
   const safeName = escapeHtml(data.name)
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Your blood test results are ready</h1>
-    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your latest biomarker report has been processed.</p>
-    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 20px;">Your blood test results are ready</h1>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">Hi ${safeName}, your latest biomarker report has been processed.</p>
+    <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">
       Total: <strong>${data.summary.totalBiomarkers}</strong> · Optimal: <strong>${data.summary.optimalCount}</strong> · Attention: <strong>${data.summary.needsAttentionCount}</strong>
     </p>
     <p style="margin: 0;"><a href="${siteUrl}/dashboard" style="color: #B7E4C7; text-decoration: underline;">View dashboard</a></p>
@@ -2101,9 +2101,9 @@ export async function sendSiphoxFailureAlert(
   const safeError = escapeHtml(data.lastError)
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">SiPhox kit order failed</h1>
-    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A SiPhox order failed after retries and needs manual review.</p>
-    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 20px;">SiPhox kit order failed</h1>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A SiPhox order failed after retries and needs manual review.</p>
+    <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0;">
       Customer: ${safeEmail}<br/>
       Plan: ${safePlanTier}<br/>
       Order: ${safeOrderId}<br/>
@@ -2139,9 +2139,9 @@ export async function sendSiphoxRefundAlert(
   const safeAction = escapeHtml(data.suggestedAction)
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">Refund with SiPhox order</h1>
-    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A refund was processed for a member with a SiPhox order.</p>
-    <p style="color: #fff; font-size: 14px; line-height: 1.6; margin: 0;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 20px;">Refund with SiPhox order</h1>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0 0 14px;">A refund was processed for a member with a SiPhox order.</p>
+    <p style="color: #2A4542; font-size: 14px; line-height: 1.6; margin: 0;">
       Name: ${safeCustomerName}<br/>
       Email: ${safeCustomerEmail}<br/>
       Plan: ${safePlanTier}<br/>
@@ -2177,8 +2177,8 @@ export async function sendLowCreditAlert(
   }
 
   const content = `
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 20px;">SiPhox credits running low</h1>
-    <p style="color: #ddd; font-size: 14px; line-height: 1.6; margin: 0;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 20px;">SiPhox credits running low</h1>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin: 0;">
       Current balance: <strong>${balance}</strong> credits<br/>
       Alert threshold: <strong>${threshold}</strong> credits
     </p>

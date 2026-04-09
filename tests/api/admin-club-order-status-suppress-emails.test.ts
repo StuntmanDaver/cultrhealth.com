@@ -1,5 +1,6 @@
 // @vitest-environment node
 
+import crypto from 'crypto'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSql = vi.fn()
@@ -82,6 +83,13 @@ function createStatusRouteSqlMock(currentStatus: string, nextStatus: string) {
   })
 }
 
+function createStatusToken(orderId: string, status: string, expiresAt: number) {
+  return crypto
+    .createHmac('sha256', process.env.JWT_SECRET || '')
+    .update(`${orderId}:status:${status}:${expiresAt}`)
+    .digest('hex')
+}
+
 describe('admin club order status suppressEmails', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -134,5 +142,42 @@ describe('admin club order status suppressEmails', () => {
 
     expect(response.status).toBe(200)
     expect(mockResendSend).toHaveBeenCalled()
+  })
+
+  it('does not send status emails when skipping directly to fulfilled with suppressEmails enabled', async () => {
+    createStatusRouteSqlMock('approved', 'fulfilled')
+
+    const { POST } = await import('@/app/api/admin/club-orders/[orderId]/status/route')
+    const response = await POST(
+      new Request('http://localhost:3000/api/admin/club-orders/11111111-1111-1111-1111-111111111111/status', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'fulfilled', suppressEmails: true }),
+      }),
+      { params: Promise.resolve({ orderId: '11111111-1111-1111-1111-111111111111' }) }
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockResendSend).not.toHaveBeenCalled()
+  })
+
+  it('redirects email-link status actions back to the club-orders tab', async () => {
+    const orderId = '11111111-1111-1111-1111-111111111111'
+    const expiresAt = Date.now() + 60_000
+    const token = createStatusToken(orderId, 'paid', expiresAt)
+
+    createStatusRouteSqlMock('approved', 'paid')
+    mockGetSession.mockResolvedValue(null)
+
+    const { GET } = await import('@/app/api/admin/club-orders/[orderId]/status/route')
+    const response = await GET(
+      new Request(`http://localhost:3000/api/admin/club-orders/${orderId}/status?token=${token}&expires=${expiresAt}&status=paid`),
+      { params: Promise.resolve({ orderId }) }
+    )
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe(
+      'https://cultrhealth.com/admin/orders?tab=club-orders&updated=CLB-TEST-STATUS&status=paid'
+    )
   })
 })

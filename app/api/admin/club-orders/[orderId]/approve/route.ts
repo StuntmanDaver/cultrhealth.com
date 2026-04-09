@@ -383,7 +383,7 @@ async function sendApprovalConfirmationToAdmin(data: {
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
 
     <div style="background: #e8f5e9; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #2A4542;">
@@ -391,7 +391,7 @@ async function sendApprovalConfirmationToAdmin(data: {
     </div>
 
     <h2 style="font-size: 18px; margin-bottom: 4px;">Order #${escapeHtml(data.orderNumber)}</h2>
-    <p style="color: #666; font-size: 14px; margin-bottom: 24px;">
+    <p style="color: #3A5956; font-size: 14px; margin-bottom: 24px;">
       <strong>Customer:</strong> ${escapeHtml(data.name)} &lt;${escapeHtml(data.email)}&gt;
     </p>
 
@@ -409,12 +409,12 @@ async function sendApprovalConfirmationToAdmin(data: {
     ${data.subtotal > 0 ? `
     <div style="margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
       ${data.couponDiscountAmount > 0 ? `
-      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
+      <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.couponDiscountAmount.toFixed(2)}</p>
       ` : ''}
       ${data.taxAmount > 0 ? `
-      ${data.couponDiscountAmount === 0 ? `<p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>` : ''}
-      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
+      ${data.couponDiscountAmount === 0 ? `<p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>` : ''}
+      <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
       ` : ''}
       <p style="text-align: right; font-weight: 700; font-size: 15px; margin: 0;">
         Total: $${data.total.toFixed(2)}
@@ -422,7 +422,7 @@ async function sendApprovalConfirmationToAdmin(data: {
     </div>
     ` : ''}
 
-    <p style="color: #666; font-size: 14px; margin-top: 24px;">
+    <p style="color: #3A5956; font-size: 14px; margin-top: 24px;">
       The order is now marked as approved. Next steps: contact the customer to finalize payment and shipping details.
     </p>
 

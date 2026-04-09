@@ -597,10 +597,10 @@ async function sendOrderApprovalRequestToAdmin(data: {
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
     <h1 style="font-size: 20px; margin-bottom: 4px;">New Club Order</h1>
-    <p style="color: #666; font-size: 14px; margin-bottom: 24px;">Order #${escapeHtml(data.orderNumber)}</p>
+    <p style="color: #3A5956; font-size: 14px; margin-bottom: 24px;">Order #${escapeHtml(data.orderNumber)}</p>
 
     <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
       <p style="margin: 0 0 4px; font-weight: 600;">Customer Info</p>
@@ -625,7 +625,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
     ${data.subtotalBeforeDiscount > 0 ? `
     <div style="margin-bottom: 24px;">
       ${(data.bundleDiscountAmount > 0 || data.discountAmount > 0) ? `
-      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
+      <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
       ` : ''}
       ${data.bundleDiscountAmount > 0 ? `
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%): &minus;$${data.bundleDiscountAmount.toFixed(2)}</p>
@@ -633,7 +633,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
       ${data.discountAmount > 0 ? `
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.discountAmount.toFixed(2)}</p>
       ` : ''}
-      <p style="text-align: right; color: #666; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
+      <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
       <p style="text-align: right; font-weight: 700; font-size: 16px; margin: 0;">Total: $${data.total.toFixed(2)}</p>
     </div>
     ` : ''}
@@ -650,7 +650,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
       </a>
     </div>
 
-    <p style="color: #666; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
+    <p style="color: #3A5956; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
       If you prefer, you can also <a href="${data.siteUrl}/admin/orders?tab=club-orders" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
     </p>
   </div>

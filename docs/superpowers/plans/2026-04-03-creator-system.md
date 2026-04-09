@@ -832,16 +832,16 @@ export async function POST(request: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0; margin-bottom: 30px; color: #fff;">CULTR</h1>
+    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0; margin-bottom: 30px; color: #2A4542;">CULTR</h1>
     <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Click the button below to access your Creator Dashboard. This link will expire in 15 minutes.
     </p>
-    <a href="${magicLink}" style="display: inline-block; background-color: #1B4332; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: 500; font-size: 16px; margin-bottom: 24px;">
+    <a href="${magicLink}" style="display: inline-block; background-color: #2A4542; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: 500; font-size: 16px; margin-bottom: 24px;">
       Open Dashboard
     </a>
-    <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px;">
       If you didn't request this link, you can safely ignore this email.
     </p>
     <p style="color: #444; font-size: 12px; margin-top: 40px; border-top: 1px solid #222; padding-top: 20px;">
@@ -1103,16 +1103,16 @@ export async function POST(request: NextRequest) {
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #000; color: #fafafa; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 28px; font-weight: 300; margin-bottom: 30px; color: #fff;">CULTR Admin</h1>
+    <h1 style="font-size: 28px; font-weight: 300; margin-bottom: 30px; color: #2A4542;">CULTR Admin</h1>
     <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
       Click the button below to access the admin dashboard. This link will expire in 15 minutes.
     </p>
-    <a href="${magicLink}" style="display: inline-block; background-color: #1B4332; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: 500; font-size: 16px; margin-bottom: 24px;">
+    <a href="${magicLink}" style="display: inline-block; background-color: #2A4542; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: 500; font-size: 16px; margin-bottom: 24px;">
       Open Admin Dashboard
     </a>
-    <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px;">
       If you didn't request this link, you can safely ignore this email.
     </p>
     <p style="color: #444; font-size: 12px; margin-top: 40px; border-top: 1px solid #222; padding-top: 20px;">

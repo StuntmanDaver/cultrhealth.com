@@ -139,7 +139,7 @@ export async function POST(
       // If from email link, redirect with error
       if (authMethod === 'email_link') {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&error=already_${order.status}`)
+        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=club-orders&error=already_${order.status}`)
       }
       return NextResponse.json(
         { error: `Cannot transition from '${currentStatus}' to '${newStatus}'` },
@@ -222,7 +222,7 @@ export async function POST(
     if (result.rowCount === 0) {
       if (authMethod === 'email_link') {
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&error=concurrent`)
+        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=club-orders&error=concurrent`)
       }
       return NextResponse.json({ error: 'Order status changed concurrently, please refresh' }, { status: 409 })
     }
@@ -274,7 +274,7 @@ export async function POST(
     // If from email link, redirect to success
     if (authMethod === 'email_link') {
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-      return NextResponse.redirect(`${siteUrl}/admin/orders?tab=pending&updated=${order.order_number}&status=${newStatus}`)
+      return NextResponse.redirect(`${siteUrl}/admin/orders?tab=club-orders&updated=${order.order_number}&status=${newStatus}`)
     }
 
     return NextResponse.json({ success: true, status: newStatus })
@@ -338,22 +338,22 @@ async function sendAdminStatusEmail(
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
 
     <div style="background: ${statusColors[newStatus] || '#f5f5f5'}; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 14px; color: #2A4542;">
       <strong>${escapeHtml(statusLabel)}</strong> — Order <strong>#${escapeHtml(order.order_number)}</strong>
     </div>
 
-    <p style="font-size: 14px; color: #666; margin-bottom: 8px;">
+    <p style="font-size: 14px; color: #3A5956; margin-bottom: 8px;">
       <strong>Customer:</strong> ${escapeHtml(order.member_name)} &lt;${escapeHtml(order.member_email)}&gt;
     </p>
-    ${order.subtotal_usd ? `<p style="font-size: 14px; color: #666; margin-bottom: 24px;"><strong>Amount:</strong> $${Number(order.subtotal_usd).toFixed(2)}</p>` : ''}
+    ${order.subtotal_usd ? `<p style="font-size: 14px; color: #3A5956; margin-bottom: 24px;"><strong>Amount:</strong> $${Number(order.subtotal_usd).toFixed(2)}</p>` : ''}
 
     ${actionButtonHtml}
 
     <p style="color: #999; font-size: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; text-align: center;">
-      <a href="${siteUrl}/admin/orders?tab=pending" style="color: #2A4542; text-decoration: underline;">View all orders in dashboard</a>
+      <a href="${siteUrl}/admin/orders?tab=club-orders" style="color: #2A4542; text-decoration: underline;">View all orders in dashboard</a>
       ${nextAction ? ` · Action link expires in 48 hours` : ''}
     </p>
 

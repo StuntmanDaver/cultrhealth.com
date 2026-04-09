@@ -13,10 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { MetricCard } from '@/components/admin/MetricCard'
-import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
-import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 import { PIPELINE_LABELS } from '@/lib/admin-club-orders'
-import { parseOrderItems, ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
 interface CronStatus {
@@ -39,15 +36,6 @@ export default function AdminDashboardClient() {
   const [error, setError] = useState<string | null>(null)
   const [periodDays, setPeriodDays] = useState(30)
   const [exportingVisitors, setExportingVisitors] = useState(false)
-  // Club orders (invoice aging)
-  const [dismissingInvoice, setDismissingInvoice] = useState<string | null>(null)
-  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null)
-  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<string>('')
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
-  const [approvingOrder, setApprovingOrder] = useState<string | null>(null)
-  // Bulk selection
-  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
-  const [bulkUpdating, setBulkUpdating] = useState(false)
   // Cron status
   const [cronStatuses, setCronStatuses] = useState<CronStatus[]>([])
   const [cronLoading, setCronLoading] = useState(false)
@@ -117,113 +105,6 @@ export default function AdminDashboardClient() {
     fetchAnalytics()
     fetchCronStatuses()
   }, [fetchAnalytics, fetchCronStatuses])
-
-  async function handleDismissInvoice(orderId: string) {
-    if (!confirm('Dismiss this order? It will be hidden from the dashboard.')) return
-    setDismissingInvoice(orderId)
-    try {
-      const res = await fetch(`/api/admin/club-orders/${orderId}/dismiss`, { method: 'POST' })
-      if (res.ok && data) {
-        const updatedInvoices = data.invoiceAging.filter(inv => inv.id !== orderId)
-        setData({ ...data, invoiceAging: updatedInvoices })
-        if (expandedInvoiceId === orderId) setExpandedInvoiceId(null)
-        fetch(`/api/admin/analytics?days=${periodDays}`)
-          .then(r => r.json())
-          .then(result => {
-            if (result.data?.revenueTimeSeries) {
-              setData(prev => prev ? { ...prev, revenueTimeSeries: result.data.revenueTimeSeries } : prev)
-            }
-          })
-          .catch(() => {})
-      }
-    } catch {
-      // silent
-    } finally {
-      setDismissingInvoice(null)
-    }
-  }
-
-  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }) {
-    setUpdatingStatus(orderId)
-    try {
-      const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, ...extra }),
-      })
-      if (res.ok && data) {
-        const updatedInvoices = data.invoiceAging.map(inv =>
-          inv.id === orderId ? { ...inv, status: newStatus } : inv
-        )
-        setData({ ...data, invoiceAging: updatedInvoices })
-      } else {
-        const err = await res.json().catch(() => ({}))
-        alert(err.error || 'Failed to update status')
-      }
-    } catch {
-      alert('Failed to update status')
-    } finally {
-      setUpdatingStatus(null)
-    }
-  }
-
-  async function handleApproveOrder(orderId: string) {
-    if (!confirm('Approve this order? This will create a QuickBooks invoice and email the customer.')) return
-    setApprovingOrder(orderId)
-    try {
-      const res = await fetch(`/api/admin/club-orders/${orderId}/approve`, { method: 'POST' })
-      const json = await res.json()
-      if (res.ok && data) {
-        const newStatus = json.status || 'approved'
-        const updatedInvoices = data.invoiceAging.map(inv =>
-          inv.id === orderId ? { ...inv, status: newStatus } : inv
-        )
-        setData({ ...data, invoiceAging: updatedInvoices })
-      } else {
-        alert(json.error || 'Failed to approve order')
-      }
-    } catch {
-      alert('Failed to approve order')
-    } finally {
-      setApprovingOrder(null)
-    }
-  }
-
-  async function handleBulkStatusUpdate(newStatus: string) {
-    if (selectedOrders.size === 0) return
-    const ids = Array.from(selectedOrders)
-    setBulkUpdating(true)
-    let successCount = 0
-    let failCount = 0
-    for (const orderId of ids) {
-      try {
-        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
-        })
-        if (res.ok) {
-          successCount++
-        } else {
-          failCount++
-        }
-      } catch {
-        failCount++
-      }
-    }
-    // Refresh data to show updated statuses
-    if (successCount > 0 && data) {
-      const updatedInvoices = data.invoiceAging.map(inv =>
-        selectedOrders.has(inv.id) ? { ...inv, status: newStatus } : inv
-      )
-      setData({ ...data, invoiceAging: updatedInvoices })
-    }
-    setSelectedOrders(new Set())
-    setBulkUpdating(false)
-    if (failCount > 0) {
-      alert(`${successCount} updated, ${failCount} failed`)
-    }
-  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -598,7 +479,7 @@ export default function AdminDashboardClient() {
               { key: 'approved', label: PIPELINE_LABELS.approved || 'Approved', color: 'blue' },
               { key: 'invoice_sent', label: PIPELINE_LABELS.invoice_sent || 'Invoiced', color: 'indigo' },
               { key: 'paid', label: PIPELINE_LABELS.paid || 'Paid', color: 'green' },
-              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Waiting to Ship', color: 'blue' },
+              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Shipped', color: 'blue' },
               { key: 'fulfilled', label: PIPELINE_LABELS.fulfilled || 'Fulfilled', color: 'emerald' },
             ]
             const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {

@@ -34,12 +34,12 @@ export default function ClubOrderBulkActions({
         className="px-3 py-1.5 text-sm rounded-lg border border-amber-300 bg-white text-amber-900 cursor-pointer disabled:opacity-50"
       >
         <option value="">Move to…</option>
-        <option value="approved">Approved</option>
-        <option value="invoice_sent">Invoiced</option>
-        <option value="paid">Paid</option>
-        <option value="shipped">Waiting to Ship</option>
-        <option value="fulfilled">Fulfilled</option>
-        <option value="cancelled">Cancelled</option>
+        <option value="approved">{PIPELINE_LABELS.approved}</option>
+        <option value="invoice_sent">{PIPELINE_LABELS.invoice_sent}</option>
+        <option value="paid">{PIPELINE_LABELS.paid}</option>
+        <option value="shipped">{PIPELINE_LABELS.shipped}</option>
+        <option value="fulfilled">{PIPELINE_LABELS.fulfilled}</option>
+        <option value="cancelled">{PIPELINE_LABELS.cancelled}</option>
       </select>
       <button
         onClick={onClearSelection}

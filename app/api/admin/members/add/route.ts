@@ -123,11 +123,11 @@ export async function POST(request: NextRequest) {
         to: normalizedEmail,
         subject: subjectTitle,
         html: baseEmailTemplate(`
-      <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
+      <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
         Welcome, ${firstName.trim()}
       </h1>
       
-      <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">
+      <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">
         ${bodyText}
       </p>
       
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         </a>
       </div>
       
-      <p style="color: #666; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
+      <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
         If you didn't expect this, you can safely ignore this email.
       </p>
         `),

@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
-import type { AnalyticsData, OrderSearchData, SearchOrderRow, OrderRow } from '@/lib/admin-types'
-import { downloadCSV, formatDate, formatCurrency, getStatusColor } from '@/lib/admin-utils'
+import type { AnalyticsData, OrderSearchData, SearchOrderRow } from '@/lib/admin-types'
+import { downloadCSV, formatDate, formatCurrency, getStatusColor, ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 import ClubOrdersTab from './ClubOrdersTab'
 import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
 import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
+
+function getStatusLabel(status: string) {
+  return ORDER_STATUS_STYLES[status]?.label || status
+}
 
 export default function OrdersClient() {
   // --------------- Tab State ---------------
@@ -54,6 +58,19 @@ export default function OrdersClient() {
   useEffect(() => {
     fetchAnalytics()
   }, [fetchAnalytics])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const url = new URL(window.location.href)
+    if (activeTab === 'club-orders') {
+      url.searchParams.set('tab', 'club-orders')
+    } else {
+      url.searchParams.delete('tab')
+    }
+
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [activeTab])
 
   // --------------- Fetch Orders ---------------
   const fetchOrders = useCallback(async (searchQ?: string, statusF?: string, dateF?: string, dateT?: string, pg?: number) => {
@@ -254,7 +271,7 @@ export default function OrdersClient() {
                   : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
               }`}
             >
-              Pending Approval
+              Club Orders
               {pendingCount > 0 && (
                 <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
                   activeTab === 'club-orders'
@@ -282,7 +299,7 @@ export default function OrdersClient() {
         </div>
       </div>
 
-      {/* Pending Approval Tab */}
+      {/* Club Orders Tab */}
       {activeTab === 'club-orders' && (
         <ClubOrdersTab onPendingCountChange={setPendingCount} />
       )}
@@ -310,7 +327,7 @@ export default function OrdersClient() {
                 key={status}
                 className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(status)}`}
               >
-                {status}: {count}
+                {getStatusLabel(status)}: {count}
               </span>
             ))}
           </div>
@@ -370,9 +387,9 @@ export default function OrdersClient() {
             className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
           >
             <option value="">All Statuses</option>
-            <option value="club-orders">Pending</option>
+            <option value="pending">Pending</option>
             <option value="pending_approval">
-              Club Orders
+              {ORDER_STATUS_STYLES.pending_approval.label}
             </option>
             <option value="paid">Paid</option>
             <option value="shipped">Shipped</option>
@@ -479,7 +496,7 @@ export default function OrdersClient() {
                     </td>
                     <td className="py-3 px-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {order.status}
+                        {getStatusLabel(order.status)}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-brand-primary text-right font-medium text-sm">
@@ -564,7 +581,7 @@ export default function OrdersClient() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-primary/60">Status</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>{selectedOrder.status}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>{getStatusLabel(selectedOrder.status)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-primary/60">Amount</span>

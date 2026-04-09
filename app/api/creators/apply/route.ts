@@ -163,17 +163,17 @@ export async function POST(request: NextRequest) {
         email,
         'Welcome to CULTR Creator Program — You\'re Approved!',
         baseEmailTemplate(`
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
       CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span>
     </h1>
-          <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 16px; text-align: center;">Hi ${escapeHtml(full_name)},</p>
-          <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">Your creator account has been approved! Click below to access your Creator Portal where you can find your tracking link, coupon code, and start earning commissions.</p>
+          <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 16px; text-align: center;">Hi ${escapeHtml(full_name)},</p>
+          <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">Your creator account has been approved! Click below to access your Creator Portal where you can find your tracking link, coupon code, and start earning commissions.</p>
           <div style="text-align: center; margin-bottom: 32px;">
             <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-weight: 600; font-size: 16px;">
               Open Creator Portal
             </a>
           </div>
-          <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 0; text-align: center;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7; text-decoration: none;">cultrhealth.com/creators/login</a>.</p>
+          <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 0; text-align: center;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7; text-decoration: none;">cultrhealth.com/creators/login</a>.</p>
         `)
       )
 
@@ -197,18 +197,18 @@ export async function POST(request: NextRequest) {
       email,
       'Verify Your CULTR Creator Application',
       baseEmailTemplate(`
-    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
+    <h1 style="font-size: 28px; font-weight: 300; color: #2A4542; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
       CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span>
     </h1>
-        <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 16px; text-align: center;">Hi ${escapeHtml(full_name)},</p>
-        <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">Thanks for applying to the CULTR Creator Program! Please verify your email address by clicking the button below.</p>
+        <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 16px; text-align: center;">Hi ${escapeHtml(full_name)},</p>
+        <p style="color: #5A6B68; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">Thanks for applying to the CULTR Creator Program! Please verify your email address by clicking the button below.</p>
         <div style="text-align: center; margin-bottom: 32px;">
           <a href="${verifyLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-weight: 600; font-size: 16px;">
             Verify Email
           </a>
         </div>
-        <p style="color: #a0a0a0; font-size: 14px; line-height: 1.6; margin-top: 24px; text-align: center;">Once verified, our team will review your application within 48 hours. You'll receive an email when approved with your tracking link and coupon code.</p>
-        <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px; text-align: center; margin-bottom: 0;">If you didn't apply, you can safely ignore this email.</p>
+        <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 24px; text-align: center;">Once verified, our team will review your application within 48 hours. You'll receive an email when approved with your tracking link and coupon code.</p>
+        <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px; text-align: center; margin-bottom: 0;">If you didn't apply, you can safely ignore this email.</p>
       `)
     )
 

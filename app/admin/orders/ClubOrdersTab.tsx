@@ -47,7 +47,7 @@ const PIPELINE_STAGES = [
   { key: 'approved', label: 'Approved', icon: Check, color: 'blue' },
   { key: 'invoice_sent', label: 'Invoiced', icon: FileText, color: 'indigo' },
   { key: 'paid', label: 'Paid', icon: DollarSign, color: 'green' },
-  { key: 'shipped', label: 'Waiting to Ship', icon: Truck, color: 'blue' },
+  { key: 'shipped', label: 'Shipped', icon: Truck, color: 'blue' },
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
 ] as const
 

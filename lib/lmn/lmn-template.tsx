@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 30,
     borderBottomWidth: 2,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#2A4542',
     paddingBottom: 20,
   },
   logo: {
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 20,
-    color: '#1a1a1a',
+    color: '#2A4542',
     textTransform: 'uppercase',
     letterSpacing: 2,
   },
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#1a1a1a',
+    color: '#2A4542',
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   value: {
     flex: 1,
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   table: {
     marginTop: 10,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   tableHeaderText: {
     fontWeight: 'bold',
     fontSize: 9,
-    color: '#1a1a1a',
+    color: '#2A4542',
   },
   tableRow: {
     flexDirection: 'row',
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: '#f9f9f9',
     borderTopWidth: 2,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: '#2A4542',
     marginTop: 5,
   },
   totalLabel: {
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   signatureLine: {
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#2A4542',
     width: 250,
     marginBottom: 5,
   },

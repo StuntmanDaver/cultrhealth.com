@@ -104,9 +104,9 @@ export async function POST(request: NextRequest) {
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0fdf4; color: #1a3c34; padding: 40px 20px; margin: 0;">
   <div style="max-width: 600px; margin: 0 auto;">
     <div style="background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-      <h1 style="font-size: 20px; font-weight: 600; margin: 0; color: #fff;">New Supplement Order Request</h1>
+      <h1 style="font-size: 20px; font-weight: 600; margin: 0; color: #2A4542;">New Supplement Order Request</h1>
     </div>
-    <div style="background-color: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
+    <div style="background-color: #2A4542fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; width: 140px;">Order Reference</td>
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         </tr>
       </table>
     </div>
-    <div style="background-color: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
+    <div style="background-color: #2A4542fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
       <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 16px; text-transform: uppercase; letter-spacing: 0.05em; color: #059669;">Items Requested</h2>
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       </table>
     </div>
     ${notes ? `
-    <div style="background-color: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
+    <div style="background-color: #2A4542fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #d1fae5;">
       <h2 style="font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #059669;">Patient Notes</h2>
       <p style="margin: 0; color: #374151; white-space: pre-wrap;">${escapeHtml(notes)}</p>
     </div>

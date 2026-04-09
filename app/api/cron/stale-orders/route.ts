@@ -143,7 +143,7 @@ async function sendStaleOrderDigest(
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9f9f9; color: #333; padding: 40px 20px; margin: 0;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #FDFBF7; color: #2A4542; padding: 40px 20px; margin: 0;">
   <div style="max-width: 640px; margin: 0 auto; background: white; border-radius: 12px; padding: 32px; border: 1px solid #eee;">
 
     <div style="background: #fef3c7; border-radius: 8px; padding: 14px 16px; margin-bottom: 24px; font-size: 14px; color: #92400e;">
@@ -153,7 +153,7 @@ async function sendStaleOrderDigest(
     ${sections}
 
     <div style="text-align: center; margin-top: 28px;">
-      <a href="${siteUrl}/admin/orders?tab=pending" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">
+      <a href="${siteUrl}/admin/orders?tab=club-orders" style="display: inline-block; background: #2A4542; color: white; padding: 14px 40px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 15px;">
         View All Orders
       </a>
     </div>
