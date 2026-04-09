@@ -106,6 +106,22 @@ describe('creator magic-link auth routes', () => {
     expect(setCookie).toContain('Domain=.cultrhealth.com')
   })
 
+  it('clears stale host-only creator cookies before setting shared cultrhealth cookies', async () => {
+    mockVerifyMagicLinkToken.mockResolvedValue({ email: 'creator@example.com' })
+
+    const { GET } = await import('@/app/api/creators/verify-login/route')
+    const request = new NextRequest('https://www.cultrhealth.com/api/creators/verify-login?token=test-token')
+
+    const response = await GET(request)
+    const setCookie = response.headers.get('set-cookie') || ''
+
+    expect(response.status).toBe(307)
+    expect(setCookie).toContain('cultr_session=; Path=/;')
+    expect(setCookie).toContain('cultr_last_activity=; Path=/;')
+    expect(setCookie).toContain('cultr_session=session-token')
+    expect(setCookie).toContain('Domain=.cultrhealth.com')
+  })
+
   it('fails closed when resend reports an email delivery error', async () => {
     mockResendSend.mockResolvedValue({
       data: null,
