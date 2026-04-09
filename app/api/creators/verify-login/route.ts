@@ -149,14 +149,20 @@ export async function GET(request: NextRequest) {
             slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 10000)
           }
         }
+        
+        if (!slugCreated) {
+          throw new Error('Failed to generate tracking link slug')
+        }
 
         // Generate dual coupon codes (matching approval flow)
         let { membershipCode, productCode } = generateCreatorCodes(fullName)
         const baseName = membershipCode
         let suffix = 1
         while (
-          await checkAffiliateCodeExists(membershipCode) ||
-          await checkAffiliateCodeExists(productCode)
+          suffix <= 10 && (
+            await checkAffiliateCodeExists(membershipCode) ||
+            await checkAffiliateCodeExists(productCode)
+          )
         ) {
           membershipCode = `${baseName}${suffix}`
           productCode = `${baseName}${suffix}10`

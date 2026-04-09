@@ -143,18 +143,24 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      if (!slugCreated) {
+        throw new Error('Failed to generate tracking link slug')
+      }
+
       let { membershipCode, productCode } = generateCreatorCodes(full_name)
       const baseName = membershipCode
       let suffix = 1
       while (
-        await checkAffiliateCodeExists(membershipCode) ||
-        await checkAffiliateCodeExists(productCode)
+        suffix <= 10 && (
+          await checkAffiliateCodeExists(membershipCode) ||
+          await checkAffiliateCodeExists(productCode)
+        )
       ) {
         membershipCode = `${baseName}${suffix}`
         productCode = `${baseName}${suffix}10`
         suffix++
       }
-      
+
       await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
       await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
 

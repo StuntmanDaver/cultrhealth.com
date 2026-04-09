@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       : generated.productCode
 
     // Generate slug from name
-    const defaultSlug = full_name
+    let defaultSlug = full_name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '')
       .slice(0, 20) + Math.floor(Math.random() * 1000)

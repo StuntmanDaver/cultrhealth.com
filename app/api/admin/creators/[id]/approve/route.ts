@@ -68,7 +68,7 @@ export async function POST(
     const { reason } = body as { reason?: string }
 
     // Generate default slug from name
-    const defaultSlug = creator.full_name
+    let defaultSlug = creator.full_name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '')
       .slice(0, 20) + Math.floor(Math.random() * 1000)
