@@ -1,3 +1,14 @@
+## [2026-04-09] - Club Member Dashboard Access & Analytics Fix
+
+### Fixed
+- **Club Member Magic Link Access:** `app/api/auth/magic-link/route.ts` and `app/api/auth/verify/route.ts` now fall back to verifying emails against the `club_members` table if no active Stripe subscription is found. This correctly routes `$0` Club Members to their dashboard area instead of throwing a "No active subscription found" error.
+- **Club Member Profile Rendering:** `app/api/member/profile/route.ts` now correctly hydrates a `patient` object using `club_members` records when `pending_intakes` forms are unavailable. This prevents the member dashboard from crashing or stalling out for Club Members.
+- **Member Dashboard Orders Tab:** `app/api/member/orders/route.ts` now queries both `asher_orders` AND `club_orders` using a `UNION ALL`. Club Members will now correctly see their product orders on their dashboard along with properly mapped statuses (e.g., `invoice_sent` mapping to `approved`).
+- **Admin Dashboard Members Table:** `lib/db.ts` now aggregates `getMembershipStats()` and `getAllMembershipsForAdmin()` by merging Stripe `memberships` with Postgres `club_members`. This ensures Club Members appear accurately in the Admin breakdown with the `Club` tier and `Active` status.
+- **Admin Member Action Guardrails:** `app/admin/members/MembersClient.tsx` now explicitly hides Stripe mutation actions (Pause, Change Tier, Cancel) for users on the `club` tier, preventing fatal admin API crashes when attempting to mutate non-existent Stripe subscriptions.
+
+---
+
 ## [2026-04-09] - Admin Creator ROI Metrics Fix
 
 ### Fixed
