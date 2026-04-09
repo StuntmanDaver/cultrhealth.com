@@ -28,6 +28,17 @@ export default function MembersClient() {
   const [upgradeTarget, setUpgradeTarget] = useState<{ customerId: string; email: string; name: string; currentTier: string } | null>(null)
   const [upgradeTier, setUpgradeTier] = useState('')
 
+  // Add Member Modal
+  const [isAddingMember, setIsAddingMember] = useState(false)
+  const [addMemberForm, setAddMemberForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    tier: 'club'
+  })
+  const [isAddLoading, setIsAddLoading] = useState(false)
+
   const fetchAnalytics = useCallback(() => {
     setLoading(true)
     fetch(`/api/admin/analytics?days=${periodDays}`)
@@ -113,6 +124,29 @@ export default function MembersClient() {
       setMemberActionError(err instanceof Error ? err.message : 'Failed to upgrade subscription')
     } finally {
       setMemberActionLoading(null)
+    }
+  }
+
+  async function handleAddMember(e: React.FormEvent) {
+    e.preventDefault()
+    clearMemberActionMessages()
+    setIsAddLoading(true)
+    try {
+      const res = await fetch(`/api/admin/members/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addMemberForm),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to add member')
+      setMemberActionSuccess(`Member added successfully: ${addMemberForm.email}`)
+      setIsAddingMember(false)
+      setAddMemberForm({ firstName: '', lastName: '', email: '', phone: '', tier: 'club' })
+      fetchAnalytics()
+    } catch (err) {
+      setMemberActionError(err instanceof Error ? err.message : 'Failed to add member')
+    } finally {
+      setIsAddLoading(false)
     }
   }
 
@@ -216,7 +250,15 @@ export default function MembersClient() {
       {/* ========== Member Lifecycle Management ========== */}
       <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="font-display text-xl text-brand-primary">Member Management</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="font-display text-xl text-brand-primary">Member Management</h2>
+            <button
+              onClick={() => setIsAddingMember(true)}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-primary text-white hover:bg-forest-light transition-colors"
+            >
+              + Add Member
+            </button>
+          </div>
           <div className="flex flex-wrap items-center gap-3">
             <select
               value={memberStatusFilter}
@@ -432,6 +474,89 @@ export default function MembersClient() {
                 Go Back
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========== ADD MEMBER MODAL ========== */}
+      {isAddingMember && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setIsAddingMember(false)}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg text-brand-primary">Add New Member</h3>
+              <button onClick={() => setIsAddingMember(false)} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+            </div>
+            <p className="text-sm text-brand-primary/60 mb-4">
+              Manually add a user to the system. This will generate a login link and send them a welcome email.
+            </p>
+            <form onSubmit={handleAddMember} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">First Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={addMemberForm.firstName}
+                    onChange={(e) => setAddMemberForm({...addMemberForm, firstName: e.target.value})}
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-brand-primary/60 mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={addMemberForm.lastName}
+                    onChange={(e) => setAddMemberForm({...addMemberForm, lastName: e.target.value})}
+                    className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={addMemberForm.email}
+                  onChange={(e) => setAddMemberForm({...addMemberForm, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Phone (Optional)</label>
+                <input
+                  type="tel"
+                  value={addMemberForm.phone}
+                  onChange={(e) => setAddMemberForm({...addMemberForm, phone: e.target.value})}
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-brand-primary/60 mb-1">Plan Tier</label>
+                <select
+                  value={addMemberForm.tier}
+                  onChange={(e) => setAddMemberForm({...addMemberForm, tier: e.target.value})}
+                  className="w-full px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                >
+                  <option value="club">Club (Free Tier - No Stripe sync)</option>
+                  <option value="core">Core ($149/mo - Creates Stripe Customer)</option>
+                  <option value="catalyst">Catalyst+ ($499/mo - Creates Stripe Customer)</option>
+                  <option value="concierge">Concierge ($1,049/mo - Creates Stripe Customer)</option>
+                </select>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="submit"
+                  disabled={isAddLoading}
+                  className="flex-1 px-4 py-2.5 bg-brand-primary text-white rounded-lg text-sm font-medium hover:bg-forest-light transition-colors disabled:opacity-50"
+                >
+                  {isAddLoading ? 'Adding...' : 'Add Member'}
+                </button>
+                <button type="button" onClick={() => setIsAddingMember(false)} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

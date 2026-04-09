@@ -1,3 +1,13 @@
+## [2026-04-09] - Admin Add Member Functionality
+
+### Added
+- **Admin Add Member:** Added manual member creation via the admin dashboard (`app/admin/members/MembersClient.tsx` and `app/api/admin/members/add/route.ts`). Allows adding members to the free Club tier or paid tiers (Core, Catalyst+, Concierge).
+- **Stripe & Auth Integration:** For paid tiers, the backend automatically generates a Stripe Customer record and placeholder subscription, mapping it directly into the local `memberships` table.
+- **Branded Welcome Emails:** Triggers an immediate branded Welcome Email via Resend with a secure 15-minute magic login link to the member's dashboard upon creation.
+- **Testing:** Added a dedicated test suite (`tests/api/admin-member-add.test.ts`) that verifies Stripe syncing, Postgres operations, authentication guards, and Resend email payloads for the new endpoint.
+
+---
+
 ## [2026-04-09] - Admin Add Creator API Tests & Bugfix
 
 ### Added
