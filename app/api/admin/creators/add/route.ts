@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
            VALUES ($1, $2, TRUE, 'percentage', $3, 'membership') RETURNING id`,
           [creatorId, membershipCode, discountPct]
         )
-        membershipCodeId = memberResult.rows[0].id
+        membershipCodeId = memberResult.rows[0]?.id
 
         // Create product code
         const productResult = await client.query(
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
            VALUES ($1, $2, FALSE, 'percentage', $3, 'product') RETURNING id`,
           [creatorId, productCode, discountPct]
         )
-        productCodeId = productResult.rows[0].id
+        productCodeId = productResult.rows[0]?.id
 
         await client.query('COMMIT')
         break // Success
