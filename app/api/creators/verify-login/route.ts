@@ -93,8 +93,6 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token')
     const redirectParam = searchParams.get('redirect')
 
-    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/creators/portal/dashboard'
-
     if (!token) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=invalid_link`)
     }
@@ -105,6 +103,20 @@ export async function GET(request: NextRequest) {
     }
 
     const email = normalizeAuthEmailInput(verified.email)
+
+    const OWNERS = [
+      'alex@cultrhealth.com',
+      'erik@cultrhealth.com',
+      'david@cultrhealth.com',
+      'stewart@cultrhealth.com',
+    ]
+
+    let postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/creators/portal/dashboard'
+
+    // Push owners straight to admin on production (and staging) if no specific redirect was passed
+    if (OWNERS.includes(email) && (!redirectParam || redirectParam === '/creators/portal/dashboard')) {
+      postLoginPath = '/admin'
+    }
 
     // Look up creator in DB
     let creatorId: string | undefined

@@ -107,6 +107,17 @@ export async function GET(request: NextRequest) {
 
     const cookieHostname = request.nextUrl.hostname
 
+    if (!token) {
+      return NextResponse.redirect(`${baseUrl}/members?error=invalid_link`)
+    }
+
+    // Verify the magic link token
+    const verified = await verifyMagicLinkToken(token)
+
+    if (!verified) {
+      return NextResponse.redirect(`${baseUrl}/members?error=expired_link`)
+    }
+
     const email = normalizeAuthEmailInput(verified.email)
 
     const OWNERS = [
