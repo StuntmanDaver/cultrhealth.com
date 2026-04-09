@@ -114,8 +114,12 @@ export async function POST(
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
     }
 
-    // Tracking info is optional — admin can update it later via the full orders tab
-    // Previously this blocked the transition, but the overview page doesn't collect tracking fields
+    if (newStatus === 'shipped' && (!carrier || !trackingNumber)) {
+      return NextResponse.json(
+        { error: 'carrier and trackingNumber are required when marking an order as shipped' },
+        { status: 400 }
+      )
+    }
 
     // Fetch current order
     const current = await sql`

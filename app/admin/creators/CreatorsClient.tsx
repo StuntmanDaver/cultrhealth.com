@@ -317,12 +317,20 @@ export default function CreatorsClient() {
                     <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(Number(c.total_code_revenue))}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(c.created_at)}</td>
                     <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={() => { setEditingCreator(c); setCreatorEditForm({ commission_rate: String(Number(c.commission_rate)), override_rate: String(Number(c.override_rate)), status: c.status }); setCreatorEditError(null); setConfirmDelete(false) }}
-                        className="text-xs text-brand-primary underline hover:text-brand-primaryHover"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => { window.location.href = `/api/admin/creators/${c.id}/impersonate` }}
+                          className="text-xs text-brand-primary underline hover:text-brand-primaryHover"
+                        >
+                          Login As
+                        </button>
+                        <button
+                          onClick={() => { setEditingCreator(c); setCreatorEditForm({ commission_rate: String(Number(c.commission_rate)), override_rate: String(Number(c.override_rate)), status: c.status }); setCreatorEditError(null); setConfirmDelete(false) }}
+                          className="text-xs text-brand-primary underline hover:text-brand-primaryHover"
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

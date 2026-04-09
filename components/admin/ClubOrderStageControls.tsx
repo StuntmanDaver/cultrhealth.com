@@ -32,13 +32,23 @@ export default function ClubOrderStageControls({
   onApprove,
   onStatusUpdate,
 }: ClubOrderStageControlsProps) {
-  const [isShippingThis, setIsShippingThis] = useState(false)
+  const [shippingRequest, setShippingRequest] = useState<{ suppressEmails?: boolean } | null>(null)
   const [shippingForm, setShippingForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
 
   const currentIdx = PIPELINE_STATUSES.indexOf(currentStatus)
   const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE_STATUSES.length - 1 ? PIPELINE_STATUSES[currentIdx + 1] : null
   const moveTargets = getMoveTargets(currentStatus)
   const isTerminal = TERMINAL_STATUSES.includes(currentStatus)
+  const isShippingThis = shippingRequest !== null
+
+  function openShippingForm(options?: { suppressEmails?: boolean }) {
+    setShippingRequest(options ?? {})
+  }
+
+  function closeShippingForm() {
+    setShippingRequest(null)
+    setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -75,7 +85,7 @@ export default function ClubOrderStageControls({
             onClick={(e) => {
               e.stopPropagation()
               if (nextStatus === 'shipped') {
-                setIsShippingThis(true)
+                openShippingForm()
               } else {
                 onStatusUpdate(orderId, nextStatus)
               }
@@ -101,6 +111,10 @@ export default function ClubOrderStageControls({
             onClick={(e) => {
               e.stopPropagation()
               if (confirm(`Skip email trigger and move to "${PIPELINE_LABELS[nextStatus] || nextStatus}"?`)) {
+                if (nextStatus === 'shipped') {
+                  openShippingForm({ suppressEmails: true })
+                  return
+                }
                 onStatusUpdate(orderId, nextStatus, { suppressEmails: true })
               }
             }}
@@ -123,6 +137,11 @@ export default function ClubOrderStageControls({
               if (!target) return
               const note = getMoveNote(currentStatus, target)
               if (confirm(`Move to "${PIPELINE_LABELS[target] || target}"?\n\n${note}`)) {
+                if (target === 'shipped') {
+                  openShippingForm({ suppressEmails: true })
+                  e.target.value = ''
+                  return
+                }
                 onStatusUpdate(orderId, target, { suppressEmails: true })
               }
               e.target.value = ''
@@ -190,10 +209,9 @@ export default function ClubOrderStageControls({
                   carrier: shippingForm.carrier,
                   trackingNumber: shippingForm.trackingNumber,
                   trackingUrl: shippingForm.trackingUrl || undefined,
+                  suppressEmails: shippingRequest?.suppressEmails,
                 })
-                // Form stays open while updating, reset via props updating but can reset locally if needed
-                setIsShippingThis(false)
-                setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
+                closeShippingForm()
               }}
               disabled={isUpdating || !shippingForm.carrier || !shippingForm.trackingNumber}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
@@ -204,8 +222,7 @@ export default function ClubOrderStageControls({
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                setIsShippingThis(false)
-                setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
+                closeShippingForm()
               }}
               className="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors font-medium"
             >

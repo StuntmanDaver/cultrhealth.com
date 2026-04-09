@@ -142,6 +142,12 @@ describe('admin club order status suppressEmails', () => {
 
     expect(response.status).toBe(200)
     expect(mockResendSend).toHaveBeenCalled()
+
+    const adminEmail = mockResendSend.mock.calls
+      .map(call => call[0])
+      .find(payload => payload?.to === 'admin@cultrhealth.com')
+
+    expect(adminEmail?.html).not.toContain('Mark Shipped')
   })
 
   it('does not send status emails when skipping directly to fulfilled with suppressEmails enabled', async () => {
@@ -179,5 +185,25 @@ describe('admin club order status suppressEmails', () => {
     expect(response.headers.get('location')).toBe(
       'https://cultrhealth.com/admin/orders?tab=club-orders&updated=CLB-TEST-STATUS&status=paid'
     )
+  })
+
+  it('rejects shipped updates when tracking details are missing', async () => {
+    createStatusRouteSqlMock('paid', 'shipped')
+
+    const { POST } = await import('@/app/api/admin/club-orders/[orderId]/status/route')
+    const response = await POST(
+      new Request('http://localhost:3000/api/admin/club-orders/11111111-1111-1111-1111-111111111111/status', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'shipped', suppressEmails: true }),
+      }),
+      { params: Promise.resolve({ orderId: '11111111-1111-1111-1111-111111111111' }) }
+    )
+
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({
+      error: 'carrier and trackingNumber are required when marking an order as shipped',
+    })
+    expect(mockResendSend).not.toHaveBeenCalled()
   })
 })

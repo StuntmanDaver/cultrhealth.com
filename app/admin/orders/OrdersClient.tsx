@@ -60,6 +60,11 @@ export default function OrdersClient() {
   }, [fetchAnalytics])
 
   useEffect(() => {
+    const requestedTab = searchParams.get('tab') === 'club-orders' ? 'club-orders' : 'all'
+    setActiveTab((currentTab) => currentTab === requestedTab ? currentTab : requestedTab)
+  }, [searchParams])
+
+  useEffect(() => {
     if (typeof window === 'undefined') return
 
     const url = new URL(window.location.href)
@@ -177,6 +182,10 @@ export default function OrdersClient() {
 
   async function handleBulkStatusUpdate(newStatus: string) {
     if (selectedClubOrders.size === 0) return
+    if (newStatus === 'shipped') {
+      alert('Bulk shipping is not supported. Update each order individually so tracking can be recorded.')
+      return
+    }
     const ids = Array.from(selectedClubOrders)
     setBulkUpdating(true)
     let successCount = 0
@@ -186,7 +195,7 @@ export default function OrdersClient() {
         const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
+          body: JSON.stringify({ status: newStatus, suppressEmails: true }),
         })
         if (res.ok) successCount++
         else failCount++
@@ -524,7 +533,7 @@ export default function OrdersClient() {
                 )})}
                 {orderData?.orders.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-brand-primary/40 text-sm">No orders found matching your filters</td>
+                    <td colSpan={8} className="py-8 text-center text-brand-primary/40 text-sm">No orders found matching your filters</td>
                   </tr>
                 )}
               </tbody>

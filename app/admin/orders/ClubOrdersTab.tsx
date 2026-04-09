@@ -131,6 +131,10 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
   // ── Bulk Status update action ──
   async function handleBulkStatusUpdate(newStatus: string) {
     if (selectedOrders.size === 0) return
+    if (newStatus === 'shipped') {
+      alert('Bulk shipping is not supported. Update each order individually so tracking can be recorded.')
+      return
+    }
     const ids = Array.from(selectedOrders)
     setBulkUpdating(true)
     let successCount = 0
@@ -140,7 +144,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
         const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus }),
+          body: JSON.stringify({ status: newStatus, suppressEmails: true }),
         })
         if (res.ok) {
           successCount++

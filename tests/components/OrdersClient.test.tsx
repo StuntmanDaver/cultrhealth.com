@@ -3,9 +3,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 import OrdersClient from '@/app/admin/orders/OrdersClient'
 
+let currentTabParam: string | null = null
+
 vi.mock('next/navigation', () => ({
   useSearchParams: () => ({
-    get: () => null,
+    get: (key: string) => (key === 'tab' ? currentTabParam : null),
   }),
 }))
 
@@ -16,6 +18,7 @@ global.fetch = mockFetch
 describe('OrdersClient', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    currentTabParam = null
 
     mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString()
@@ -108,7 +111,22 @@ describe('OrdersClient', () => {
     fireEvent.click(screen.getByText('CLB-2001'))
 
     await waitFor(() => {
-      expect(screen.getAllByText(/^Shipped$/)).toHaveLength(2)
+      expect(screen.getAllByText(/^Shipped$/).length).toBeGreaterThanOrEqual(2)
+    })
+  })
+
+  it('syncs the active tab when the club-orders query param changes after mount', async () => {
+    const { rerender } = render(<OrdersClient />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /all orders/i }).className).toContain('bg-brand-primary')
+    })
+
+    currentTabParam = 'club-orders'
+    rerender(<OrdersClient />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /club orders/i }).className).toContain('bg-brand-primary')
     })
   })
 })

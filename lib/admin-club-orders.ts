@@ -23,7 +23,6 @@ export const PIPELINE_LABELS: Record<string, string> = {
 export const NEXT_ACTIONS: Record<string, { status: string; label: string; color: string }> = {
   approved: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
   invoice_sent: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  paid: { status: 'shipped', label: 'Mark Shipped', color: '#2563eb' },
   shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 };
 
