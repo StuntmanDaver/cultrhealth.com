@@ -1019,6 +1019,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Intake payload compatibility:** Custom intake submissions must persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` inside `pending_intakes.intake_data`; downstream member, portal, and medical-record readers rely on those keys.
 - **Club visitor session:** `cultr_club_visitor` is a signed minimal session token used only to recover the join member record server-side. Never store full club profile data (phone, address, age, gender) in client-readable cookies or localStorage, and never trust raw browser JSON for member hydration.
 - **Join coupon precedence:** Built-in `CLUB_COUPONS` values shadow DB coupon rows on `join.cultrhealth.com`; admin-created affiliate/company codes must not reuse those normalized values.
+- **Retroactive Attribution:** When an admin approves an order, the system automatically checks if an unattributed coupon code now belongs to an active creator and maps the commission retroactively. This prevents lost commissions when internal promo codes are transferred to active affiliates.
 - **Admin coupon removal:** Permanently delete coupon codes only when they have no historical usage and no `order_attributions` references. Otherwise deactivate them so creator ROI and attribution history remain intact.
 
 ### HIPAA Compliance

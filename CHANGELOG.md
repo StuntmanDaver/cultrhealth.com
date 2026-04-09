@@ -1,3 +1,10 @@
+## [2026-04-09] - Retroactive Affiliate Code Attribution
+
+### Fixed
+- **Retroactive Coupon Mapping:** `app/api/admin/club-orders/[orderId]/approve/route.ts` now catches cases where a coupon code was reassigned to a creator *after* an order was placed. If `attributed_creator_id` is null but the coupon matches an active affiliate code, the approval flow will retroactively map the order to the creator, generate the missing `order_attributions` row, update the creator's portfolio, and properly insert `commission_ledger` entries. This prevents lost commissions when internal promo codes (e.g. `MARY20`) are transferred to active creators.
+
+---
+
 ## [2026-04-09] - Reassigned MARY20 Promo Code to Mary Cooper
 
 ### Changed

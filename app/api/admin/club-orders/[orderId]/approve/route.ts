@@ -198,22 +198,63 @@ export async function POST(
       }, { status: 400 })
     }
 
+    // Retroactively map coupon to creator if the code was reassigned after the order was placed
+    // (e.g. an internal promo code was transferred to an active affiliate)
+    let finalAttributedCreatorId = order.attributed_creator_id
+    let finalAttributionMethod = order.attribution_method
+
+    if (!finalAttributedCreatorId && order.coupon_code) {
+      try {
+        const { validateCouponUnified } = await import('@/lib/config/coupons')
+        const couponResult = await validateCouponUnified(order.coupon_code)
+        
+        if (couponResult?.isCreatorCode && couponResult.creatorId) {
+          finalAttributedCreatorId = couponResult.creatorId
+          finalAttributionMethod = 'coupon_code'
+          
+          // Update the order row so the attribution is persisted
+          await sql`
+            UPDATE club_orders 
+            SET attributed_creator_id = ${finalAttributedCreatorId}, attribution_method = ${finalAttributionMethod} 
+            WHERE id = ${orderId}::uuid
+          `
+          
+          // Ensure an order_attributions row exists with zero-revenue placeholder so the subsequent block handles it properly
+          const { recordZeroRevenueAttribution } = await import('@/lib/creators/commission')
+          await recordZeroRevenueAttribution({
+            orderId: order.id,
+            customerEmail: order.member_email,
+            attribution: {
+              creatorId: finalAttributedCreatorId,
+              method: 'coupon_code',
+              codeId: couponResult.codeId,
+              codeType: couponResult.codeType,
+              isSelfReferral: false
+            }
+          })
+          console.log(`[club-orders/approve] Retroactively mapped coupon ${order.coupon_code} to creator ${finalAttributedCreatorId}`)
+        }
+      } catch (attrError) {
+        console.error('[club-orders/approve] Failed to retroactively map creator attribution (non-fatal):', attrError)
+      }
+    }
+
     // Record commission on approval for attributed orders where subtotal is known.
     // This updates the zero-revenue placeholder created at order time and inserts
     // commission_ledger entries (direct + override) with the actual invoiced amount.
-    if (order.attributed_creator_id && effectiveSubtotal > 0) {
+    if (finalAttributedCreatorId && effectiveSubtotal > 0) {
       try {
         const { getCreatorById } = await import('@/lib/creators/db')
         const { COMMISSION_CONFIG } = await import('@/lib/config/affiliate')
         const { calculateOverrideCommission, insertCommissionLedgerEntries } = await import('@/lib/creators/commission')
         const { db: pgDb } = await import('@vercel/postgres')
 
-        const creator = await getCreatorById(order.attributed_creator_id)
+        const creator = await getCreatorById(finalAttributedCreatorId)
         const directRate = creator?.commission_rate != null ? Number(creator.commission_rate) : COMMISSION_CONFIG.directRate
         const directAmount = Math.round((effectiveSubtotal * directRate) / 100 * 100) / 100
 
         // Calculate override commission for the recruiter (if any)
-        const override = await calculateOverrideCommission(order.attributed_creator_id, effectiveSubtotal, directAmount)
+        const override = await calculateOverrideCommission(finalAttributedCreatorId, effectiveSubtotal, directAmount)
 
         const pgClient = await pgDb.connect()
         try {
@@ -223,10 +264,10 @@ export async function POST(
           // Priced orders already have a full attribution + commission entry from order time.
           const attrUpdate = await pgClient.query(
             `UPDATE order_attributions
-             SET net_revenue = $1, direct_commission_rate = $2, direct_commission_amount = $3, updated_at = NOW()
-             WHERE order_id = $4 AND net_revenue = 0
+             SET net_revenue = $1, direct_commission_rate = $2, direct_commission_amount = $3, customer_email = $4, updated_at = NOW()
+             WHERE order_id = $5 AND net_revenue = 0
              RETURNING id`,
-            [effectiveSubtotal, directRate, directAmount, order.id]
+            [effectiveSubtotal, directRate, directAmount, order.member_email, order.id]
           )
 
           if (attrUpdate.rows[0]) {
@@ -234,18 +275,18 @@ export async function POST(
 
             // Insert direct + override commissions using shared helper
             const result = await insertCommissionLedgerEntries(
-              pgClient, attributionId, order.attributed_creator_id,
+              pgClient, attributionId, finalAttributedCreatorId,
               effectiveSubtotal, directRate, directAmount, override
             )
 
-            if (order.coupon_code && order.attribution_method === 'coupon_code') {
+            if (order.coupon_code && finalAttributionMethod === 'coupon_code') {
               await pgClient.query(
                 `UPDATE affiliate_codes SET total_revenue = total_revenue + $1, updated_at = NOW()
                  WHERE UPPER(code) = UPPER($2)`,
                 [effectiveSubtotal, order.coupon_code]
               )
             }
-            console.log(`[club-orders/approve] Commission recorded: creator=${order.attributed_creator_id} direct=$${result.directCommission} override=$${result.overrideCommission} for order ${order.order_number}`)
+            console.log(`[club-orders/approve] Commission recorded: creator=${finalAttributedCreatorId} direct=$${result.directCommission} override=$${result.overrideCommission} for order ${order.order_number}`)
           }
 
           await pgClient.query('COMMIT')

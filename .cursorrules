@@ -498,6 +498,7 @@ any file containing API keys, secrets, or tokens
 - Keep `cultr_club_visitor` as a signed minimal session token and rehydrate full club member data from the server only after token verification
 - Hard-delete coupon codes only when they are unused and unreferenced; otherwise deactivate them to preserve creator ROI and attribution history
 - Reject normalized collisions between admin-created coupon codes and built-in `CLUB_COUPONS` values
+- Retroactively map unassigned coupon codes to creators during order approval if an internal code was transferred to an affiliate
 - Preserve checkout `session_id` across `/success` -> `/onboarding` -> `/intake` -> `/login`, persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` in `pending_intakes.intake_data`, and fall back to the latest pending intake by authenticated email if the session id is missing
 - After a successful custom intake submission, redirect to `/onboarding` with `next=schedule` while preserving `session_id` when present; `OnboardingClient` must keep the schedule CTA active even if `/api/onboarding/status` is stale or temporarily unavailable
 - For Healthie scheduling links, ensure `org_level=true` is present whenever `provider_ids` is used, and strip hardcoded `appt_type_ids` filters unless they are intentionally maintained with the provider's active scheduling types; verify the resolved booking URL directly in local dev instead of trusting a blank localhost iframe
