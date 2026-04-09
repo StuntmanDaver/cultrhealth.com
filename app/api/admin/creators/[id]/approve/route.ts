@@ -102,11 +102,10 @@ export async function POST(
           [now, auth.email, id]
         )
 
-        // Create default tracking link (ON CONFLICT ignore if slug already exists)
+        // Create default tracking link
         await client.query(
           `INSERT INTO tracking_links (creator_id, slug, destination_path, is_default)
-           VALUES ($1, $2, '/', TRUE)
-           ON CONFLICT ((lower(slug))) DO NOTHING`,
+           VALUES ($1, $2, '/', TRUE)`,
           [id, defaultSlug.toLowerCase()]
         )
 
@@ -130,6 +129,17 @@ export async function POST(
         break // Success — exit retry loop
       } catch (error) {
         await client.query('ROLLBACK')
+
+        // Retry on slug collision
+        const isSlugCollision = error instanceof Error &&
+          error.message.includes('idx_tracking_links_slug')
+        if (isSlugCollision && attempt < maxRetries - 1) {
+          defaultSlug = creator.full_name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .slice(0, 20) + Math.floor(Math.random() * 10000)
+          continue
+        }
 
         // Check if this is a unique constraint violation on affiliate_codes
         const isCodeCollision = error instanceof Error &&

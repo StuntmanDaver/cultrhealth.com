@@ -92,7 +92,11 @@ export function middleware(request: NextRequest) {
     '/members', '/intake', '/dashboard', '/admin', '/provider', '/creators/portal',
     '/api/member', '/api/intake', '/api/admin', '/api/provider', '/api/creators'
   ]
-  const isAuthRoute = authenticatedPrefixes.some(p => request.nextUrl.pathname.startsWith(p))
+  const isAuthRoute = authenticatedPrefixes.some(p => request.nextUrl.pathname.startsWith(p)) &&
+    !request.nextUrl.pathname.startsWith('/api/creators/apply') &&
+    !request.nextUrl.pathname.startsWith('/api/creators/magic-link') &&
+    !request.nextUrl.pathname.startsWith('/api/creators/verify-login') &&
+    !request.nextUrl.pathname.startsWith('/api/creators/verify-email')
 
   if (isAuthRoute) {
     const sessionCookie = request.cookies.get('cultr_session')
