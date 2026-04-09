@@ -76,7 +76,6 @@ export const INTERNAL_COUPON_LABELS: Record<string, string> = {
   'CULTRFAM': 'Family',
   'CULTR10': 'Promo',
   'SUMMER20': 'Promo',
-  'MARY20': 'Promo',
   'LOYALTY15': 'Returning',
   'CULTR30': 'Owner Promo',
   'BUTCH10': 'Promo',

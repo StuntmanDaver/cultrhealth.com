@@ -27,7 +27,6 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTRFAM':   { discount: 20, label: 'Family Discount' },
   'CULTR10':    { discount: 10, label: 'Promo Code' },
   'SUMMER20':   { discount: 20, label: 'Summer Promo' },
-  'MARY20':     { discount: 20, label: "Mary's Discount" },
   'LOYALTY15':  { discount: 15, label: 'Returning Customer' },
   'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-04-11T23:59:59Z'), noBundleStack: true },
   'BUTCH10':    { discount: 10, label: 'Promo Code' },
