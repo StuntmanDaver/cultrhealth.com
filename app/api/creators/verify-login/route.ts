@@ -36,24 +36,44 @@ function getCookieDomainForHostname(hostname: string): string | undefined {
   return undefined
 }
 
+function appendCookieHeader(
+  response: NextResponse,
+  name: string,
+  value: string,
+  options: { maxAge: number; domain?: string }
+) {
+  const expires =
+    options.maxAge === 0 ? new Date(0).toUTCString() : new Date(Date.now() + options.maxAge * 1000).toUTCString()
+  const parts = [
+    `${name}=${value}`,
+    'Path=/',
+    `Expires=${expires}`,
+    `Max-Age=${options.maxAge}`,
+    process.env.NODE_ENV === 'production' ? 'Secure' : null,
+    'HttpOnly',
+    'SameSite=Lax',
+    options.domain ? `Domain=${options.domain}` : null,
+  ].filter(Boolean)
+
+  response.headers.append('Set-Cookie', parts.join('; '))
+}
+
+function clearHostOnlyCookiesOnResponse(response: NextResponse) {
+  appendCookieHeader(response, 'cultr_session', '', { maxAge: 0 })
+  appendCookieHeader(response, 'cultr_last_activity', '', { maxAge: 0 })
+}
+
 function setCookieOnResponse(response: NextResponse, token: string, hostname: string) {
   const domain = getCookieDomainForHostname(hostname)
-  response.cookies.set('cultr_session', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24, // 24 hours (HIPAA)
-    path: '/',
-    ...(domain ? { domain } : {}),
+  clearHostOnlyCookiesOnResponse(response)
+  appendCookieHeader(response, 'cultr_session', token, {
+    maxAge: 60 * 60 * 24,
+    domain,
   })
   // Reset idle-timeout cookie so middleware doesn't immediately expire fresh sessions
-  response.cookies.set('cultr_last_activity', Date.now().toString(), {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+  appendCookieHeader(response, 'cultr_last_activity', Date.now().toString(), {
     maxAge: 60 * 60 * 24,
-    path: '/',
-    ...(domain ? { domain } : {}),
+    domain,
   })
 }
 
