@@ -651,7 +651,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
     </div>
 
     <p style="color: #666; font-size: 14px; margin-top: 24px; padding-top: 24px; border-top: 1px solid #eee;">
-      If you prefer, you can also <a href="${data.siteUrl}/admin/orders?tab=pending" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
+      If you prefer, you can also <a href="${data.siteUrl}/admin/orders?tab=club-orders" style="color: #2A4542; text-decoration: underline;">view all orders in the admin panel</a> to process manually.
     </p>
   </div>
 </body>

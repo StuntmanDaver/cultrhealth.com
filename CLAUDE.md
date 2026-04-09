@@ -773,8 +773,8 @@ npm run setup:stripe
 ### Branch Strategy
 | Branch | Environment | URL |
 |---|---|---|
-| `production` | Production | cultrhealth.com |
-| `staging` | Staging | staging.cultrhealth.com + join.cultrhealth.com |
+| `production` | Production | cultrhealth.com + join.cultrhealth.com |
+| `staging` | Staging | staging.cultrhealth.com |
 | `main` | Base branch (for PRs) | — |
 
 **Note:** `join.cultrhealth.com` is a Vercel domain alias for the `staging` deployment. The `middleware.ts` rewrites the join host root path (`/`) to `/join` and lets non-root join paths pass through unchanged.
@@ -1087,7 +1087,7 @@ An exhaustive `.cursorrules` file exists at the project root with 23 sections of
 - **Brand design system** — color tokens, typography, undefined tokens to avoid (cultr-copper, cultr-charcoal)
 - **Deployment safety** — `vercel --prod` incident prevention, branch strategy
 - **Code patterns** — server/client split, imports, Button usage, cn() utility, API route template, auth functions
-- **Known bugs** — 8 previously fixed bugs with "DO NOT reintroduce" warnings
+- **Known bugs** — 9 previously fixed bugs with "DO NOT reintroduce" warnings
 - **Common mistakes** — explicit DO/DON'T guardrails checklist
 - **Domain-specific** — membership tiers/pricing, creator affiliate system, consultations, QuickBooks, email rules
 

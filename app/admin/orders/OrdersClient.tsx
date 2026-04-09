@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation'
 import type { AnalyticsData, OrderSearchData, SearchOrderRow, OrderRow } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor } from '@/lib/admin-utils'
-import PendingApprovalTab from './PendingApprovalTab'
+import ClubOrdersTab from './ClubOrdersTab'
 import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
 import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 
 export default function OrdersClient() {
   // --------------- Tab State ---------------
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<'all' | 'pending'>(
-    searchParams.get('tab') === 'pending' ? 'pending' : 'all'
+  const [activeTab, setActiveTab] = useState<'all' | 'club-orders'>(
+    searchParams.get('tab') === 'club-orders' ? 'club-orders' : 'all'
   )
   const [pendingCount, setPendingCount] = useState(0)
 
@@ -247,9 +247,9 @@ export default function OrdersClient() {
               All Orders
             </button>
             <button
-              onClick={() => setActiveTab('pending')}
+              onClick={() => setActiveTab('club-orders')}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                activeTab === 'pending'
+                activeTab === 'club-orders'
                   ? 'bg-brand-primary text-white shadow-sm'
                   : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
               }`}
@@ -257,7 +257,7 @@ export default function OrdersClient() {
               Pending Approval
               {pendingCount > 0 && (
                 <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
-                  activeTab === 'pending'
+                  activeTab === 'club-orders'
                     ? 'bg-white/20 text-white'
                     : 'bg-red-500 text-white'
                 }`}>
@@ -283,8 +283,8 @@ export default function OrdersClient() {
       </div>
 
       {/* Pending Approval Tab */}
-      {activeTab === 'pending' && (
-        <PendingApprovalTab onPendingCountChange={setPendingCount} />
+      {activeTab === 'club-orders' && (
+        <ClubOrdersTab onPendingCountChange={setPendingCount} />
       )}
 
       {/* All Orders Tab */}
@@ -370,8 +370,10 @@ export default function OrdersClient() {
             className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
           >
             <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="pending_approval">Pending Approval</option>
+            <option value="club-orders">Pending</option>
+            <option value="pending_approval">
+              Club Orders
+            </option>
             <option value="paid">Paid</option>
             <option value="shipped">Shipped</option>
             <option value="fulfilled">Fulfilled</option>

@@ -51,11 +51,11 @@ const PIPELINE_STAGES = [
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
 ] as const
 
-interface PendingApprovalTabProps {
+interface ClubOrdersTabProps {
   onPendingCountChange?: (count: number) => void
 }
 
-export default function PendingApprovalTab({ onPendingCountChange }: PendingApprovalTabProps) {
+export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabProps) {
   const [orders, setOrders] = useState<ClubOrder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

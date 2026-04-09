@@ -12,7 +12,7 @@ export const PIPELINE_LABELS: Record<string, string> = {
   approved: 'Approved',
   invoice_sent: 'Invoice Sent',
   paid: 'Paid',
-  shipped: 'Waiting to Ship',
+  shipped: 'Shipped',
   fulfilled: 'Fulfilled',
   cancelled: 'Cancelled',
   rejected: 'Rejected',

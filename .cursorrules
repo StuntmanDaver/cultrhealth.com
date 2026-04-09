@@ -339,6 +339,7 @@ Use brand tokens: brand-primary with opacity variants (/50, /40, /30, /20, /10, 
 6. Hydration errors from <button> inside <button> (fixed with div + role="button")
 7. SQL CAST(${string} AS INTERVAL) failing with prepared statements
 8. UNION ALL with duplicate param indices in @vercel/postgres
+9. `RETURNING id` crashing on unique constraint failure or manual retries. Always use optional chaining (`rows[0]?.id`) for `@vercel/postgres` transaction results to prevent `TypeError: Cannot read properties of undefined`.
 
 ## Known tech debt (do not make worse):
 - components/sections/ — 9 UNUSED files (Hero, Services, About, etc.) — DO NOT import them

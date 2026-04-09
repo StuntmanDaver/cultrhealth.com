@@ -1,3 +1,13 @@
+## [2026-04-09] - Admin Add Creator API Tests & Bugfix
+
+### Added
+- **Admin Creator Add Test Suite:** Added a dedicated test suite (`tests/api/admin-creator-add-route.test.ts`) to meticulously verify the atomic transaction, Stripe coupon syncing, duplicate email handling, tracking link generation, and audit logging of the `POST /api/admin/creators/add` endpoint.
+
+### Fixed
+- **Admin Creator Add Undefined Bug:** Fixed a potential undefined reference crash in `app/api/admin/creators/add/route.ts` where `productResult.rows[0].id` and `memberResult.rows[0].id` could crash the endpoint during a collision retry fallback. Safely chained `?.id` to prevent crashes when the retry flow handles duplicate codes.
+
+---
+
 ## [2026-04-09] - Club Member Dashboard Access & Analytics Fix
 
 ### Fixed
