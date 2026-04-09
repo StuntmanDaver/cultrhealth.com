@@ -504,6 +504,7 @@ any file containing API keys, secrets, or tokens
 - Club orders must route to `api/admin/club-orders` APIs and use shared UI controls (`ClubOrderStageControls`, `ClubOrderBulkActions`) — NEVER pass a club order row into the product `orders/[id]/fulfill` workflow.
 - Default member magic-link redirects in `app/api/auth/verify/route.ts` to `/members`; only explicit safe redirect params should land on `/dashboard`
 - Skip creator magic-link rate limiting on staging hosts and for listed bypass emails in `app/api/creators/magic-link/route.ts` so Safari/WebKit retries and E2E logins do not fail spuriously
+- Keep `app/api/creators/verify-email/route.ts` compatible with browser-clicked `GET` verification links as well as JSON `POST` verification; redirect pending creators to `/creators/pending`, active creators to `/creators/login`, and invalid links back to creator login with a safe error code
 
 # ============================================================================
 # 19. JOIN PAGE SPECIFIC

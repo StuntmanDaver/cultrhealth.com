@@ -12,6 +12,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   expired_link: 'Your login link has expired. Please request a new one.',
   no_account: 'No creator account found for this email. Apply to become a creator first.',
   inactive_account: 'Your creator account is not currently active. Contact creators@cultrhealth.com for help.',
+  invalid_verification_link: 'Your verification link is invalid or has expired. Please contact creators@cultrhealth.com for help.',
   verification_failed: 'Login verification failed. Please try again.',
 }
 

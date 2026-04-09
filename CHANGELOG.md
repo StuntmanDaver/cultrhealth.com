@@ -1,3 +1,19 @@
+## [2026-04-09] - Creator Verification Link Click Fix
+
+### Fixed
+- **Broken Verification Email CTA:** `GET /api/creators/verify-email` now accepts browser-clicked verification links instead of only JSON `POST`s, so creator signup emails no longer land on a broken endpoint.
+- **State-Aware Post-Verify Routing:** Pending creators now land on `/creators/pending`, while already-approved creators are routed to `/creators/login` after verification.
+- **Expired Link UX:** Invalid or expired verification links now redirect back to creator login with a clear safe error instead of failing ambiguously.
+
+### Added
+- **Verification Route Regression Coverage:** Added `tests/api/creator-verify-email-route.test.ts` to cover pending, active, invalid-link, and JSON `POST` compatibility flows.
+
+### Memory
+- Creator verification emails are browser-clicked `GET` links to `/api/creators/verify-email?token=...`; that route must keep a `GET` handler even if the JSON `POST` verification API remains.
+- After creator email verification, route pending creators to `/creators/pending` and active creators to `/creators/login`; invalid links should redirect to creator login with a safe error code.
+
+---
+
 ## [2026-04-08] - Healthie Scheduling Filter Unblock
 
 ### Fixed
