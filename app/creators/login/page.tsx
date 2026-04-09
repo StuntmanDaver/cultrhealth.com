@@ -13,6 +13,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   no_account: 'No creator account found for this email. Apply to become a creator first.',
   inactive_account: 'Your creator account is not currently active. Contact creators@cultrhealth.com for help.',
   invalid_verification_link: 'Your verification link is invalid or has expired. Please contact creators@cultrhealth.com for help.',
+  email_verification_failed: 'We could not complete your email verification. Please try the link again or contact creators@cultrhealth.com for help.',
   verification_failed: 'Login verification failed. Please try again.',
 }
 
@@ -31,6 +32,7 @@ export default function CreatorLoginPage() {
 function CreatorLoginForm() {
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
+  const redirectParam = searchParams.get('redirect')
 
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -48,7 +50,7 @@ function CreatorLoginForm() {
       const res = await fetch('/api/creators/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, redirect: redirectParam || undefined }),
       })
 
       const data = await res.json()

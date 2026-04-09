@@ -747,9 +747,9 @@ npm run lint
 npm run analyze     # ANALYZE=true next build
 
 # Run tests (Vitest)
-npm test
-npm test -- --watch
-npm test -- --coverage
+npx vitest run
+npx vitest --watch
+npx vitest run --coverage
 
 # Run database migration
 node scripts/run-migration.mjs
@@ -1054,7 +1054,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Healthie scheduling URLs:** When a Healthie booking link includes `provider_ids`, it must also include `org_level=true` or the calendar can show no availability. Do not hardcode/preserve `appt_type_ids` in the booking URL because stale type filters can hide newly schedulable appointment types. Healthie also refuses to render its scheduling embed inside plain `http://localhost` due to `frame-ancestors`, so local blank iframes are not reliable evidence of a production scheduling failure.
 - **Member magic-link fallback:** `app/api/auth/verify/route.ts` must default post-login redirects to `/members`. `/dashboard` is only for flows that pass an explicit safe redirect.
 - **Creator staging login rate limit:** `app/api/creators/magic-link/route.ts` skips magic-link rate limiting on staging hosts and for listed bypass emails so Safari/WebKit retries and E2E logins do not fail spuriously.
-- **Creator email verification links:** `app/api/creators/verify-email/route.ts` must support browser-clicked `GET` verification links as well as the JSON `POST` verification flow. After verification, pending creators should land on `/creators/pending`, active creators on `/creators/login`, and invalid links should return to creator login with a safe error code.
+- **Creator email verification links:** `app/api/creators/verify-email/route.ts` must support browser-clicked `GET` verification links as well as the JSON `POST` verification flow. After verification, pending creators should land on `/creators/pending`, active creators on `/creators/login`, and paused/rejected creators should route to creator login with `inactive_account`. Invalid links should return to creator login with `invalid_verification_link`, and unexpected verification failures should use a dedicated safe `email_verification_failed` error.
 - **Intake payload compatibility:** Custom intake submissions must persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` inside `pending_intakes.intake_data`; downstream member, portal, and medical-record readers rely on those keys.
 - **Club visitor session:** `cultr_club_visitor` is a signed minimal session token used only to recover the join member record server-side. Never store full club profile data (phone, address, age, gender) in client-readable cookies or localStorage, and never trust raw browser JSON for member hydration.
 - **Join coupon precedence:** Built-in `CLUB_COUPONS` values shadow DB coupon rows on `join.cultrhealth.com`; admin-created affiliate/company codes must not reuse those normalized values.
@@ -1071,7 +1071,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Framework:** Vitest ^4.0.18 with React Testing Library
 - **Coverage target:** Critical user paths (auth, checkout, intake forms)
 - **Test location:** `tests/` directory organized by type (`api/`, `components/`, `integration/`, `lib/`)
-- **Run:** `npm test`
+- **Run:** `npx vitest run`
 - **7 test files** covering: auth, plans, protocol templates, library content, TierGate component, protocol generation API, protocol engine integration
 
 ---

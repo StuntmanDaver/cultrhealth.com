@@ -61,14 +61,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=invalid_verification_link`)
     }
 
+    if (result.creatorStatus === 'pending') {
+      return NextResponse.redirect(`${baseUrl}/creators/pending`)
+    }
+
     if (result.creatorStatus === 'active') {
       return NextResponse.redirect(`${baseUrl}/creators/login`)
     }
 
-    return NextResponse.redirect(`${baseUrl}/creators/pending`)
+    return NextResponse.redirect(`${baseUrl}/creators/login?error=inactive_account`)
   } catch (error) {
     console.error('Email verification error:', error)
-    return NextResponse.redirect(`${baseUrl}/creators/login?error=verification_failed`)
+    return NextResponse.redirect(`${baseUrl}/creators/login?error=email_verification_failed`)
   }
 }
 

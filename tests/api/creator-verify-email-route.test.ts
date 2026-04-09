@@ -64,6 +64,29 @@ describe('creator verify-email route', () => {
     expect(mockUpdateCreatorEmailVerified).toHaveBeenCalledWith('creator_123')
   })
 
+  it.each(['paused', 'rejected'] as const)(
+    'redirects %s creators to creator login with inactive_account after clicking the email link',
+    async (status) => {
+      mockGetCreatorByEmail.mockResolvedValue({
+        id: 'creator_123',
+        email: 'creator@example.com',
+        status,
+        email_verified: false,
+      })
+
+      const { GET } = await import('@/app/api/creators/verify-email/route')
+      const request = new NextRequest('https://www.cultrhealth.com/api/creators/verify-email?token=test-token')
+
+      const response = await GET(request)
+
+      expect(response.status).toBe(307)
+      expect(response.headers.get('location')).toBe(
+        'https://www.cultrhealth.com/creators/login?error=inactive_account'
+      )
+      expect(mockUpdateCreatorEmailVerified).toHaveBeenCalledWith('creator_123')
+    }
+  )
+
   it('redirects invalid verification links to creator login with an error', async () => {
     mockVerifyMagicLinkToken.mockResolvedValue(null)
 
@@ -77,6 +100,20 @@ describe('creator verify-email route', () => {
       'https://www.cultrhealth.com/creators/login?error=invalid_verification_link'
     )
     expect(mockUpdateCreatorEmailVerified).not.toHaveBeenCalled()
+  })
+
+  it('redirects unexpected verification errors to creator login with an email verification error', async () => {
+    mockGetCreatorByEmail.mockRejectedValue(new Error('db unavailable'))
+
+    const { GET } = await import('@/app/api/creators/verify-email/route')
+    const request = new NextRequest('https://www.cultrhealth.com/api/creators/verify-email?token=test-token')
+
+    const response = await GET(request)
+
+    expect(response.status).toBe(307)
+    expect(response.headers.get('location')).toBe(
+      'https://www.cultrhealth.com/creators/login?error=email_verification_failed'
+    )
   })
 
   it('keeps the JSON POST verification API working', async () => {

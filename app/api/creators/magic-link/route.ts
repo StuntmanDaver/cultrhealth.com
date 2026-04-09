@@ -35,7 +35,7 @@ function getBaseUrl(request: NextRequest): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, redirect: redirectPath } = await request.json()
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
@@ -81,10 +81,15 @@ export async function POST(request: NextRequest) {
     const token = await createMagicLinkToken(normalizedEmail)
     const baseUrl = getBaseUrl(request)
 
-    const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
+    // Validate redirect is a safe relative path
+    const safeRedirect = typeof redirectPath === 'string' && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null
+    const redirectParam = safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''
+    const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}${redirectParam}`
 
-    // Staging bypass emails or dev mode: return magic link directly (no email needed)
-    if (process.env.NODE_ENV === 'development' || isStaging() || isStagingEmail(normalizedEmail)) {
+    const isTestEmail = normalizedEmail === 'david@cultrhealth.com'
+
+    // Staging bypass emails or dev mode: return magic link directly (no email needed), unless it's the test email
+    if ((process.env.NODE_ENV === 'development' || isStaging() || isStagingEmail(normalizedEmail)) && !isTestEmail) {
       console.log('Creator magic link (direct):', magicLink)
       return NextResponse.json({
         success: true,

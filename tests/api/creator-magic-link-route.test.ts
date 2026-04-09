@@ -65,13 +65,13 @@ describe('creator magic-link auth routes', () => {
   })
 
   it('uses the request origin for direct creator magic links when NEXT_PUBLIC_SITE_URL is unset', async () => {
-    mockVerifyMagicLinkToken.mockResolvedValue({ email: 'david@cultrhealth.com' })
+    mockVerifyMagicLinkToken.mockResolvedValue({ email: 'erik@cultrhealth.com' })
 
     const { POST } = await import('@/app/api/creators/magic-link/route')
     const request = new NextRequest('https://www.cultrhealth.com/api/creators/magic-link', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ email: 'david@cultrhealth.com' }),
+      body: JSON.stringify({ email: 'erik@cultrhealth.com' }),
     })
 
     const response = await POST(request)

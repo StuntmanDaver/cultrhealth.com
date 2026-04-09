@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { Resend } from 'resend'
-import { createMagicLinkToken, checkRateLimit, normalizeAuthEmailInput } from '@/lib/auth'
+import { createMagicLinkToken, checkRateLimit, normalizeAuthEmailInput, isAdminEmail } from '@/lib/auth'
 
 // Lazy initialization to avoid build-time errors
 function getStripe() {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!isStagingAccess) {
+    if (!isStagingAccess && !isAdminEmail(normalizedEmail)) {
       // Find customer in Stripe by email
       const stripe = getStripe()
       const customers = await stripe.customers.list({
@@ -134,8 +134,11 @@ export async function POST(request: NextRequest) {
     const redirectParam = safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''
     const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}${redirectParam}`
 
-    // For staging access emails, return the link directly (no email needed)
-    if (isStagingAccess) {
+    // Force send email if requested for testing, bypassing staging fast-path
+    const isTestEmail = normalizedEmail === 'david@cultrhealth.com'
+
+    // For staging access emails, return the link directly (no email needed), unless it's the test email
+    if (isStagingAccess && !isTestEmail) {
       console.log('Staging access granted:', {
         email: normalizedEmail,
         timestamp: new Date().toISOString(),
@@ -148,6 +151,14 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Determine email wording based on redirect path
+    const isOnboarding = safeRedirect && (safeRedirect.includes('/onboarding') || safeRedirect.includes('/intake'))
+    const subjectTitle = isOnboarding ? 'Continue Your CULTR Onboarding' : 'Access Your CULTR Library'
+    const buttonText = isOnboarding ? 'Continue Onboarding' : 'Access Library'
+    const bodyText = isOnboarding 
+      ? 'Click the button below to continue your CULTR onboarding and medical intake. This link will expire in 15 minutes.'
+      : 'Click the button below to access your CULTR Library. This link will expire in 15 minutes.'
+
     // Send email via Resend for regular users
     const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
     const resend = getResend()
@@ -155,7 +166,7 @@ export async function POST(request: NextRequest) {
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,
       to: normalizedEmail,
-      subject: 'Access Your CULTR Library',
+      subject: subjectTitle,
       html: `
 <!DOCTYPE html>
 <html>
@@ -170,11 +181,11 @@ export async function POST(request: NextRequest) {
     </h1>
     
     <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-      Click the button below to access your CULTR Library. This link will expire in 15 minutes.
+      ${bodyText}
     </p>
     
     <a href="${magicLink}" style="display: inline-block; background-color: #B87333; color: #fff; text-decoration: none; padding: 14px 32px; border-radius: 4px; font-weight: 500; font-size: 16px; margin-bottom: 24px;">
-      Access Library
+      ${buttonText}
     </a>
     
     <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">

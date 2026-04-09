@@ -1,16 +1,35 @@
+## [2026-04-09] - Admin Login & Session Timeout Fix
+
+### Fixed
+- **Stripe Subscription Block for Admins:** `GET /api/auth/verify` now skips the Stripe active subscription check for admin emails (`isAdminEmail`), allowing team members without patient subscriptions to log in successfully.
+- **Production Staging Bypass Bug:** `isStagingBypassEmail` in `app/api/auth/magic-link/route.ts` and `app/api/auth/verify/route.ts` now strictly enforces `if (!isStaging()) return false;` before checking `TEAM_EMAILS`, preventing staging bypass on production and resolving unpredictable login states.
+- **Ghost Session Cookie Loop:** `middleware.ts` and `app/api/auth/logout/route.ts` now explicitly clear both domain-scoped (`.cultrhealth.com`) and host-scoped (`cultrhealth.com`) cookies when a session times out or logs out. This resolves an infinite `session_timeout` redirect loop caused by stale host-only cookies surviving the deletion process.
+
+### Memory
+- Next.js `response.cookies.set()` doesn't inherently clear multiple cookies with the same name across different domains/hosts. To prevent ghost sessions during logout/timeout, use `response.headers.append('Set-Cookie', ...)` to explicitly delete both domain-wide and host-only cookies by setting `Max-Age=0` and matching `Secure`, `HttpOnly`, and `SameSite` attributes.
+- Admin authentication bypasses (`isAdminEmail`) should allow team members to skip patient-specific checks (like Stripe subscriptions) while still enforcing security (like magic links).
+- When implementing a staging bypass based on emails, ensure the logic first strictly verifies that the environment is actually staging (`isStaging()`) to avoid inadvertently granting bypasses in production.
+
+---
+
 ## [2026-04-09] - Creator Verification Link Click Fix
 
 ### Fixed
 - **Broken Verification Email CTA:** `GET /api/creators/verify-email` now accepts browser-clicked verification links instead of only JSON `POST`s, so creator signup emails no longer land on a broken endpoint.
 - **State-Aware Post-Verify Routing:** Pending creators now land on `/creators/pending`, while already-approved creators are routed to `/creators/login` after verification.
 - **Expired Link UX:** Invalid or expired verification links now redirect back to creator login with a clear safe error instead of failing ambiguously.
+- **Inactive Creator Redirect Safety:** Paused or rejected creators no longer fall through to the pending-review page after email verification; they now return to creator login with the existing inactive-account handling.
+- **Verification Failure Messaging:** Unexpected creator email verification failures now use a dedicated safe `email_verification_failed` redirect state instead of reusing the login verification error.
+- **Session Timeout Cookie Cleanup:** HIPAA idle-timeout logout now clears both shared-domain and host-only session cookies, preventing stale browser cookies from surviving timeout redirects on `cultrhealth.com` hosts.
 
 ### Added
-- **Verification Route Regression Coverage:** Added `tests/api/creator-verify-email-route.test.ts` to cover pending, active, invalid-link, and JSON `POST` compatibility flows.
+- **Verification Route Regression Coverage:** Added `tests/api/creator-verify-email-route.test.ts` to cover pending, active, paused, rejected, invalid-link, exception, and JSON `POST` compatibility flows.
+- **Middleware Timeout Regression Coverage:** Added `tests/smoke/middleware-session-timeout.test.ts` to verify timeout redirects clear both shared-domain and host-only auth cookies.
 
 ### Memory
 - Creator verification emails are browser-clicked `GET` links to `/api/creators/verify-email?token=...`; that route must keep a `GET` handler even if the JSON `POST` verification API remains.
-- After creator email verification, route pending creators to `/creators/pending` and active creators to `/creators/login`; invalid links should redirect to creator login with a safe error code.
+- After creator email verification, route pending creators to `/creators/pending`, active creators to `/creators/login`, paused/rejected creators to creator login with `inactive_account`, invalid links with `invalid_verification_link`, and unexpected failures with `email_verification_failed`.
+- When expiring a `cultrhealth.com` session in middleware, clear both domain-scoped and host-only `cultr_session` / `cultr_last_activity` cookies or stale auth state can persist.
 
 ---
 

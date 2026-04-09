@@ -122,10 +122,22 @@ export function middleware(request: NextRequest) {
           response = NextResponse.redirect(loginUrl)
         }
         
-        // Must specify domain to match how cookies were set, otherwise delete is a no-op
-        const cookieOpts = { path: '/', ...(domain ? { domain } : {}) }
-        response.cookies.set('cultr_session', '', { ...cookieOpts, maxAge: 0 })
-        response.cookies.set('cultr_last_activity', '', { ...cookieOpts, maxAge: 0 })
+        // Clear both domain and host-only cookies to prevent ghost sessions
+        const expires = new Date(0).toUTCString()
+        const isProd = process.env.NODE_ENV === 'production'
+        const clearCookie = (name: string, d?: string) => {
+          response.headers.append(
+            'Set-Cookie',
+            `${name}=; Path=/; Expires=${expires}; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}${d ? `; Domain=${d}` : ''}`
+          )
+        }
+        
+        clearCookie('cultr_session', domain)
+        clearCookie('cultr_last_activity', domain)
+        if (domain) {
+          clearCookie('cultr_session')
+          clearCookie('cultr_last_activity')
+        }
         return response
       }
     }

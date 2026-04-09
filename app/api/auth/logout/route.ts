@@ -4,16 +4,22 @@ import { getCookieDomain } from '@/lib/utils'
 /** Clear both session and idle-timeout cookies on a response */
 function clearAuthCookies(response: NextResponse) {
   const domain = getCookieDomain()
-  const opts = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax' as const,
-    maxAge: 0,
-    path: '/',
-    ...(domain ? { domain } : {}),
+  const expires = new Date(0).toUTCString()
+  const isProd = process.env.NODE_ENV === 'production'
+  
+  const clearCookie = (name: string, d?: string) => {
+    response.headers.append(
+      'Set-Cookie',
+      `${name}=; Path=/; Expires=${expires}; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}${d ? `; Domain=${d}` : ''}`
+    )
   }
-  response.cookies.set('cultr_session', '', opts)
-  response.cookies.set('cultr_last_activity', '', opts)
+  
+  clearCookie('cultr_session', domain)
+  clearCookie('cultr_last_activity', domain)
+  if (domain) {
+    clearCookie('cultr_session')
+    clearCookie('cultr_last_activity')
+  }
 }
 
 export async function POST() {

@@ -94,6 +94,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
+    const redirectParam = searchParams.get('redirect')
+
+    const postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/creators/portal/dashboard'
 
     if (!token) {
       return NextResponse.redirect(`${baseUrl}/creators/login?error=invalid_link`)
@@ -214,7 +217,7 @@ export async function GET(request: NextRequest) {
 
     // Create session with creator role
     const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
-    const response = NextResponse.redirect(`${baseUrl}/creators/portal/dashboard`)
+    const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
     setCookieOnResponse(response, sessionToken, cookieHostname)
 
     console.log('Creator session created:', {

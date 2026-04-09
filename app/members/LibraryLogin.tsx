@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import { Mail, AlertCircle, CheckCircle, Lock, Shield } from 'lucide-react'
@@ -15,6 +16,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 export function LibraryLogin({ error }: { error?: string }) {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -25,11 +28,14 @@ export function LibraryLogin({ error }: { error?: string }) {
     setFormError('')
     setIsLoading(true)
 
+    const queryString = searchParams.toString()
+    const currentPath = pathname + (queryString ? `?${queryString}` : '')
+
     try {
       const response = await fetch('/api/auth/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, redirect: currentPath }),
       })
 
       const data = await response.json()
