@@ -53,10 +53,26 @@ export async function GET(request: NextRequest) {
         order_status as status,
         medication_packages as "medicationPackages",
         created_at as "createdAt",
-        updated_at as "updatedAt"
+        updated_at as "updatedAt",
+        'asher' as "source"
       FROM asher_orders
       WHERE lower(customer_email) = ${email}
-      ORDER BY created_at DESC
+      
+      UNION ALL
+      
+      SELECT
+        id,
+        order_number as "orderNumber",
+        NULL as "patientId",
+        status as status,
+        items as "medicationPackages",
+        created_at as "createdAt",
+        updated_at as "updatedAt",
+        'club' as "source"
+      FROM club_orders
+      WHERE lower(member_email) = ${email}
+      
+      ORDER BY "createdAt" DESC
       LIMIT 50
     `;
 
@@ -65,19 +81,31 @@ export async function GET(request: NextRequest) {
 
     // Transform orders for frontend
     const orders = result.rows.map((row) => {
-      const packages = row.medicationPackages as Array<{ name: string; medicationName?: string }> | null;
+      const isClub = row.source === 'club';
+      let packages = row.medicationPackages;
+      
+      if (typeof packages === 'string') {
+        try {
+          packages = JSON.parse(packages);
+        } catch {
+          packages = null;
+        }
+      }
+
       const asherOrderId = row.orderNumber;
 
       // Use Asher Med status if available, otherwise use database status
-      const realTimeData = asherOrderId && asherOrders[asherOrderId];
+      const realTimeData = !isClub && asherOrderId && asherOrders[asherOrderId];
       const status = realTimeData?.status || row.status;
       const updatedAt = realTimeData?.updatedAt || row.updatedAt;
 
       return {
         id: row.id,
-        orderNumber: asherOrderId || `ORD-${row.id}`,
+        orderNumber: asherOrderId || (isClub ? `CLB-${row.id}` : `ORD-${row.id}`),
         status: mapOrderStatus(status),
-        medicationName: packages?.[0]?.name || packages?.[0]?.medicationName || 'Medication',
+        medicationName: Array.isArray(packages) && packages.length > 0 
+          ? (packages[0]?.name || packages[0]?.medicationName || 'Medication') 
+          : 'Medication',
         createdAt: row.createdAt,
         updatedAt,
       };
@@ -103,14 +131,20 @@ export async function GET(request: NextRequest) {
 function mapOrderStatus(dbStatus: string | null): string {
   const statusMap: Record<string, string> = {
     pending: 'pending',
+    pending_approval: 'pending',
     approved: 'approved',
     waiting_room: 'waitingRoom',
     waitingroom: 'waitingRoom',
     prescribed: 'prescribed',
+    invoice_sent: 'approved',
+    paid: 'processing',
     shipped: 'shipped',
+    fulfilled: 'completed',
     completed: 'completed',
     cancelled: 'cancelled',
     canceled: 'cancelled',
+    dismissed: 'cancelled',
+    rejected: 'denied',
   };
 
   return statusMap[dbStatus?.toLowerCase() || ''] || 'pending';

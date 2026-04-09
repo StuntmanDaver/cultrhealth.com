@@ -10,7 +10,7 @@ import React, {
 } from "react"
 import { createPortal } from "react-dom"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight, AlertTriangle } from "lucide-react"
+import { ArrowLeft, ArrowRight, X, Plus, Check, ChevronRight, ChevronDown, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion } from "framer-motion"
 import { useOutsideClick } from "@/hooks/use-outside-click"
@@ -316,17 +316,20 @@ export const Card = ({
   index,
   layout = false,
   onAdd,
+  onUpdateQuantity,
   inCart,
   cartQty,
   compact = false,
   fluid = false,
   stockLabel,
   disableAdd,
+  maxDropdownQty = 10,
 }: {
   card: CarouselCard
   index: number
   layout?: boolean
   onAdd?: () => void
+  onUpdateQuantity?: (qty: number) => void
   inCart?: boolean
   cartQty?: number
   compact?: boolean
@@ -336,6 +339,7 @@ export const Card = ({
   stockLabel?: string
   /** When true, add button is disabled (out of stock or at max qty) */
   disableAdd?: boolean
+  maxDropdownQty?: number
 }) => {
   const [open, setOpen] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
@@ -500,26 +504,41 @@ export const Card = ({
                       )}
                     </div>
                     {onAdd && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
-                        disabled={disableAdd}
-                        className={cn(
-                          "flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all",
-                          disableAdd
-                            ? "bg-brand-secondary/10 text-brand-secondary/40 cursor-not-allowed"
-                            : inCart
-                              ? "bg-sage/30 text-brand-primary"
+                      inCart ? (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all bg-sage/30 text-brand-primary"
+                        >
+                          <Check className="w-4 h-4" />
+                          <span>Qty:</span>
+                          <div className="relative flex items-center">
+                            <select
+                              value={cartQty || 1}
+                              onChange={(e) => onUpdateQuantity?.(Number(e.target.value))}
+                              className="appearance-none bg-transparent font-bold outline-none cursor-pointer pr-4 [&>option]:text-brand-primary"
+                            >
+                              {Array.from({ length: maxDropdownQty }, (_, i) => i + 1).map(num => (
+                                <option key={num} value={num}>{num}</option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-3 h-3 absolute right-0 pointer-events-none" />
+                          </div>
+                          {stockLabel && <span className="text-xs font-normal ml-1 border-l border-brand-primary/20 pl-2">{stockLabel}</span>}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
+                          disabled={disableAdd}
+                          className={cn(
+                            "flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-all",
+                            disableAdd
+                              ? "bg-brand-secondary/10 text-brand-secondary/40 cursor-not-allowed"
                               : "bg-brand-primary text-white hover:bg-brand-primaryHover active:scale-95"
-                        )}
-                      >
-                        {disableAdd && !inCart ? (
-                          <>Out of Stock</>
-                        ) : inCart ? (
-                          <><Check className="w-4 h-4" /> Added ({cartQty}){stockLabel ? ` · ${stockLabel}` : ''}</>
-                        ) : (
-                          <><Plus className="w-4 h-4" /> Add to Cart</>
-                        )}
-                      </button>
+                          )}
+                        >
+                          {disableAdd ? <>Out of Stock</> : <><Plus className="w-4 h-4" /> Add to Cart</>}
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -675,27 +694,39 @@ export const Card = ({
             <span className="text-xs text-white/40 font-medium">Consultation</span>
           )}
           {onAdd && (
-            <button
-              onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
-              disabled={disableAdd}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full text-xs font-bold transition-all duration-200",
-                disableAdd
-                  ? "bg-white/10 text-white/30 cursor-not-allowed"
-                  : inCart
-                    ? "bg-white/15 text-white backdrop-blur-sm px-3.5 py-2"
-                    : "bg-white text-brand-primary px-4 py-2 hover:scale-105 active:scale-95 shadow-sm",
-                !disableAdd && (inCart ? "px-3.5 py-2" : "px-4 py-2")
-              )}
-            >
-              {disableAdd && !inCart ? (
-                <>Sold Out</>
-              ) : inCart ? (
-                <><Check className="w-3 h-3" /> {cartQty}</>
-              ) : (
-                <><Plus className="w-3 h-3" /> Add</>
-              )}
-            </button>
+            inCart ? (
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 rounded-full text-xs font-bold transition-all duration-200 bg-white/15 text-white backdrop-blur-sm px-3 py-1.5 shadow-sm"
+              >
+                <Check className="w-3 h-3" />
+                <div className="relative flex items-center">
+                  <select
+                    value={cartQty || 1}
+                    onChange={(e) => onUpdateQuantity?.(Number(e.target.value))}
+                    className="appearance-none bg-transparent font-bold outline-none cursor-pointer pr-3.5 [&>option]:text-brand-primary"
+                  >
+                    {Array.from({ length: maxDropdownQty }, (_, i) => i + 1).map(num => (
+                      <option key={num} value={num}>{num}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 absolute right-0 pointer-events-none opacity-70" />
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={(e) => { e.stopPropagation(); if (!disableAdd) onAdd() }}
+                disabled={disableAdd}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full text-xs font-bold transition-all duration-200 px-4 py-2",
+                  disableAdd
+                    ? "bg-white/10 text-white/30 cursor-not-allowed"
+                    : "bg-white text-brand-primary hover:scale-105 active:scale-95 shadow-sm"
+                )}
+              >
+                {disableAdd ? <>Sold Out</> : <><Plus className="w-3 h-3" /> Add</>}
+              </button>
+            )
           )}
         </div>
       </motion.div>

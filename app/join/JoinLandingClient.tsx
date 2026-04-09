@@ -692,6 +692,10 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
       onAddToCart?.(therapy.id, therapy.name, therapy.price)
     }
 
+    const handleUpdateQuantity = (qty: number) => {
+      cart.updateQuantity(therapy.id, qty)
+    }
+
     const cardData: CarouselCard = {
       src: therapy.image || '',
       secondarySrc: therapy.secondaryImage,
@@ -732,12 +736,14 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
         card={cardData}
         index={index}
         onAdd={handleAdd}
+        onUpdateQuantity={handleUpdateQuantity}
         inCart={inCart}
         cartQty={cartItem?.quantity}
         compact={isCompact}
         fluid={isFluid}
         stockLabel={stockLabel}
         disableAdd={disableAdd}
+        maxDropdownQty={Math.max(cartItem?.quantity || 1, Math.min(10, maxQty))}
       />
     )
   }

@@ -288,7 +288,7 @@ export default function MembersClient() {
                       <td className="py-3 px-4 text-sm text-brand-primary/60">{formatDate(m.updated_at)}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {isActive && (
+                          {isActive && m.plan_tier !== 'club' && (
                             <>
                               <button
                                 onClick={() => {

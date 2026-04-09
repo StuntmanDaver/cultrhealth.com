@@ -943,33 +943,47 @@ export async function getWaitlistStats(): Promise<{ total: number; bySource: Rec
 
 export async function getMembershipStats(): Promise<{ total: number; byTier: Record<string, number>; byStatus: Record<string, number> }> {
   try {
-    const totalResult = await sql`SELECT COUNT(*) as count FROM memberships WHERE subscription_status = 'active'`
+    // Note: We avoid UNION ALL to prevent parameter indexing issues in vercel/postgres
+    // Instead we do two separate queries and combine them in JS
+    const membershipsTotalResult = await sql`SELECT COUNT(*)::int as count FROM memberships WHERE subscription_status = 'active'`
+    const clubTotalResult = await sql`SELECT COUNT(*)::int as count FROM club_members`
 
     const tierResult = await sql`
-      SELECT plan_tier, COUNT(*) as count
+      SELECT plan_tier, COUNT(*)::int as count
       FROM memberships
       WHERE subscription_status = 'active'
       GROUP BY plan_tier
     `
 
     const statusResult = await sql`
-      SELECT subscription_status, COUNT(*) as count
+      SELECT subscription_status, COUNT(*)::int as count
       FROM memberships
       GROUP BY subscription_status
     `
 
     const byTier: Record<string, number> = {}
     tierResult.rows.forEach(row => {
-      byTier[row.plan_tier] = parseInt(row.count, 10)
+      byTier[row.plan_tier] = parseInt(row.count || '0', 10)
     })
+    
+    // Add club tier
+    const clubTotal = parseInt(clubTotalResult.rows[0]?.count || '0', 10)
+    if (clubTotal > 0) {
+      byTier['club'] = (byTier['club'] || 0) + clubTotal
+    }
 
     const byStatus: Record<string, number> = {}
     statusResult.rows.forEach(row => {
-      byStatus[row.subscription_status] = parseInt(row.count, 10)
+      byStatus[row.subscription_status] = parseInt(row.count || '0', 10)
     })
+    
+    // Add club members as active
+    if (clubTotal > 0) {
+      byStatus['active'] = (byStatus['active'] || 0) + clubTotal
+    }
 
     return {
-      total: parseInt(totalResult.rows[0]?.count || '0', 10),
+      total: parseInt(membershipsTotalResult.rows[0]?.count || '0', 10) + clubTotal,
       byTier,
       byStatus,
     }
@@ -1073,20 +1087,27 @@ export async function getCreatorROI() {
       SELECT
         c.id, c.full_name, c.status,
         COALESCE((
-          SELECT SUM(
-            CASE
-              WHEN oa.attribution_method = 'coupon_code'
-                AND ac2.discount_value > 0
-                AND ac2.discount_value < 100
-              THEN oa.net_revenue * ac2.discount_value / (100.0 - ac2.discount_value)
-              ELSE 0
-            END
-          )
-          FROM order_attributions oa
-          LEFT JOIN affiliate_codes ac2 ON ac2.id = oa.code_id
-          WHERE oa.creator_id = c.id
-            AND oa.net_revenue > 0
-            AND oa.status != 'refunded'
+          SELECT SUM(discount_amount)
+          FROM (
+            SELECT
+              co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent) as discount_amount
+            FROM club_orders co
+            WHERE co.attributed_creator_id = c.id
+              AND co.discount_percent > 0 AND co.discount_percent < 100
+              AND co.subtotal_usd > 0
+              AND co.status NOT IN ('refunded', 'cancelled', 'dismissed', 'rejected')
+            UNION ALL
+            SELECT
+              oa.net_revenue * ac2.discount_value / (100.0 - ac2.discount_value) as discount_amount
+            FROM order_attributions oa
+            JOIN affiliate_codes ac2 ON ac2.id = oa.code_id
+            WHERE oa.creator_id = c.id
+              AND oa.attribution_method = 'coupon_code'
+              AND ac2.discount_value > 0 AND ac2.discount_value < 100
+              AND oa.net_revenue > 0
+              AND oa.status != 'refunded'
+              AND (oa.order_id LIKE 'ORD-%' OR oa.order_id LIKE 'SUB-%' OR oa.order_id LIKE 'INV-%')
+          ) all_discounts
         ), 0) AS total_discount_given,
         COALESCE((
           SELECT SUM(cl.commission_amount)
@@ -2513,22 +2534,43 @@ export interface MembershipAdminRow {
  */
 export async function getAllMembershipsForAdmin(): Promise<MembershipAdminRow[]> {
   try {
-    const result = await sql`
-      SELECT
-        id,
-        email,
-        stripe_customer_id,
-        stripe_subscription_id,
-        plan_tier,
-        subscription_status,
-        created_at,
-        updated_at,
-        cancelled_at,
-        cancellation_reason
-      FROM memberships
-      ORDER BY created_at DESC
-    `
-    return result.rows as MembershipAdminRow[]
+    const [membershipsResult, clubMembersResult] = await Promise.all([
+      sql`
+        SELECT
+          id,
+          email,
+          stripe_customer_id,
+          stripe_subscription_id,
+          plan_tier,
+          subscription_status,
+          created_at,
+          updated_at,
+          cancelled_at,
+          cancellation_reason
+        FROM memberships
+      `.catch(() => ({ rows: [] })),
+      sql`
+        SELECT
+          id,
+          email,
+          'club_' || id::text as stripe_customer_id,
+          NULL as stripe_subscription_id,
+          'club' as plan_tier,
+          'active' as subscription_status,
+          created_at,
+          updated_at,
+          NULL as cancelled_at,
+          NULL as cancellation_reason
+        FROM club_members
+      `.catch(() => ({ rows: [] }))
+    ])
+
+    const allRows = [
+      ...membershipsResult.rows,
+      ...clubMembersResult.rows
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    return allRows as MembershipAdminRow[]
   } catch (error) {
     console.error('Database error fetching all memberships:', error)
     throw new DatabaseError('Failed to fetch memberships for admin', error)

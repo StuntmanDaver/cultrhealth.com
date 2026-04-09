@@ -78,6 +78,14 @@ export async function GET(request: NextRequest) {
       LIMIT 1
     `;
 
+    // Get club member info as well
+    const clubResult = await sql`
+      SELECT id, name, email, phone, address_street, address_city, address_state, address_zip
+      FROM club_members
+      WHERE lower(email) = ${email}
+      LIMIT 1
+    `;
+
     let patient = null;
     let renewalEligible = false;
 
@@ -109,6 +117,25 @@ export async function GET(request: NextRequest) {
       };
 
       // TODO: Reconnect to new pharmacy partner for real-time patient data
+    } else if (clubResult.rows.length > 0) {
+      const clubMember = clubResult.rows[0];
+      const nameParts = (clubMember.name || '').split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      patient = {
+        id: clubMember.id,
+        firstName,
+        lastName,
+        email: clubMember.email,
+        phone: clubMember.phone || '',
+        shippingAddress: clubMember.address_street ? {
+          street: clubMember.address_street,
+          city: clubMember.address_city || '',
+          state: clubMember.address_state || '',
+          zip: clubMember.address_zip || '',
+        } : null,
+      };
     }
 
     return NextResponse.json({

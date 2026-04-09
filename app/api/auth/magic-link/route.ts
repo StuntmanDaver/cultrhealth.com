@@ -85,38 +85,52 @@ export async function POST(request: NextRequest) {
         limit: 1,
       })
 
-      if (customers.data.length === 0) {
+      let isAllowed = false;
+
+      if (customers.data.length > 0) {
+        const customer = customers.data[0]
+
+        // Check for active subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'active',
+          limit: 1,
+        })
+
+        if (subscriptions.data.length > 0) {
+          isAllowed = true;
+        } else {
+          // Also check for trialing subscriptions
+          const trialingSubscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'trialing',
+            limit: 1,
+          })
+
+          if (trialingSubscriptions.data.length > 0) {
+            isAllowed = true;
+          }
+        }
+      }
+
+      if (!isAllowed) {
+        // Check if they are a club member
+        if (process.env.POSTGRES_URL) {
+          const { sql } = await import('@vercel/postgres')
+          const clubMember = await sql`SELECT id FROM club_members WHERE LOWER(email) = LOWER(${normalizedEmail}) LIMIT 1`
+          
+          if (clubMember.rows.length > 0) {
+            isAllowed = true;
+          }
+        }
+      }
+
+      if (!isAllowed) {
         // Don't reveal if email exists - always show same message
         return NextResponse.json({
           success: true,
           message: 'If you have an active membership, you will receive an email shortly.',
         })
-      }
-
-      const customer = customers.data[0]
-
-      // Check for active subscriptions
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: 'active',
-        limit: 1,
-      })
-
-      if (subscriptions.data.length === 0) {
-        // Also check for trialing subscriptions
-        const trialingSubscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          status: 'trialing',
-          limit: 1,
-        })
-
-        if (trialingSubscriptions.data.length === 0) {
-          // Don't reveal subscription status - always show same message
-          return NextResponse.json({
-            success: true,
-            message: 'If you have an active membership, you will receive an email shortly.',
-          })
-        }
       }
     }
 

@@ -1,3 +1,10 @@
+## [2026-04-09] - Admin Creator ROI Metrics Fix
+
+### Fixed
+- **Admin Dashboard Creator ROI Sync:** Fixed `getCreatorROI()` in `lib/db.ts` to properly calculate total discount given by using a `UNION ALL` to aggregate discounts from both `club_orders` (for CULTR Club checkouts) and `order_attributions` (for main Stripe checkouts). Previously, it only included Stripe checkouts, causing the admin dashboard to under-report the actual discounts given by creators.
+
+---
+
 ## [2026-04-09] - Retroactive Affiliate Code Attribution
 
 ### Fixed

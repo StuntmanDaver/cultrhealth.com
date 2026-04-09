@@ -154,30 +154,51 @@ export async function GET(request: NextRequest) {
         limit: 1,
       })
 
-      if (customers.data.length === 0) {
+      let isAllowed = false;
+      let stripeCustomerId: string | null = null;
+
+      if (customers.data.length > 0) {
+        const customer = customers.data[0]
+
+        // Check for active or trialing subscription
+        const activeSubscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'active',
+          limit: 1,
+        })
+
+        const trialingSubscriptions = await stripe.subscriptions.list({
+          customer: customer.id,
+          status: 'trialing',
+          limit: 1,
+        })
+
+        if (activeSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0) {
+          isAllowed = true;
+          stripeCustomerId = customer.id;
+        }
+      }
+
+      if (!isAllowed) {
+        // Check if they are a club member
+        if (process.env.POSTGRES_URL) {
+          const { sql } = await import('@vercel/postgres')
+          const clubMember = await sql`SELECT id FROM club_members WHERE LOWER(email) = LOWER(${email}) LIMIT 1`
+          
+          if (clubMember.rows.length > 0) {
+            isAllowed = true;
+            customerId = `club_${clubMember.rows[0].id}`
+          }
+        }
+      }
+
+      if (!isAllowed) {
         return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
       }
 
-      const customer = customers.data[0]
-
-      // Check for active or trialing subscription
-      const activeSubscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: 'active',
-        limit: 1,
-      })
-
-      const trialingSubscriptions = await stripe.subscriptions.list({
-        customer: customer.id,
-        status: 'trialing',
-        limit: 1,
-      })
-
-      if (activeSubscriptions.data.length === 0 && trialingSubscriptions.data.length === 0) {
-        return NextResponse.redirect(`${baseUrl}/members?error=no_subscription`)
+      if (stripeCustomerId) {
+        customerId = stripeCustomerId;
       }
-
-      customerId = customer.id
     }
 
     // Create session token and set cookie directly on the redirect response
