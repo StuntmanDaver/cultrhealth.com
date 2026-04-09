@@ -160,9 +160,9 @@ export async function POST(request: NextRequest) {
       : 'Click the button below to access your CULTR Library. This link will expire in 15 minutes.'
 
     // Send email via Resend for regular users
-    const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
+    const { baseEmailTemplate, getFromEmail } = await import('@/lib/resend')
+    const fromEmail = getFromEmail()
     const resend = getResend()
-    const { baseEmailTemplate } = await import('@/lib/resend')
 
     const { error: emailError } = await resend.emails.send({
       from: fromEmail,

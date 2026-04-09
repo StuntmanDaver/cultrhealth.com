@@ -22,9 +22,9 @@ function getBaseUrl() {
 
 async function sendCreatorEmail(to: string, subject: string, html: string) {
   try {
+    const { getFromEmail } = await import('@/lib/resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
-    await resend.emails.send({ from: fromEmail, to, subject, html })
+    await resend.emails.send({ from: getFromEmail(), to, subject, html })
   } catch (err) {
     console.error('Failed to send creator email:', err)
   }

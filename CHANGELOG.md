@@ -1,3 +1,11 @@
+## [2026-04-09] - Reassigned MARY20 Promo Code to Mary Cooper
+
+### Changed
+- **Promo Code Migration:** Removed `MARY20` from hardcoded internal promo codes list (`CLUB_COUPONS`, `INTERNAL_COUPON_LABELS`, `RESERVED_CODES`) to allow it to be fully owned as an affiliate code by Mary Cooper.
+- **Creator Artifact Update:** Updated Mary Cooper's tracking link to `mary20`, and changed her discount codes from `COOPER` to `MARY` and `COOPER10` to `MARY20` (both at 20% discount).
+
+---
+
 ## [2026-04-09] - Added Mary Cooper as Creator
 
 ### Added

@@ -32,8 +32,10 @@ export function escapeHtml(text: string | null | undefined): string {
 }
 
 // Get configured from email
-function getFromEmail(): string {
-  return process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
+export function getFromEmail(): string {
+  const email = process.env.FROM_EMAIL || 'onboarding@resend.dev'
+  if (email.includes('<')) return email
+  return `CULTR <${email}>`
 }
 
 // Get public site URL for email assets — localhost is unreachable from email clients

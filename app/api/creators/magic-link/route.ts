@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
     try {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
-      const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
-      const { baseEmailTemplate } = await import('@/lib/resend')
+      const { baseEmailTemplate, getFromEmail } = await import('@/lib/resend')
+      const fromEmail = getFromEmail()
 
       const { error: emailError } = await resend.emails.send({
         from: fromEmail,
