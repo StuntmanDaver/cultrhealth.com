@@ -103,25 +103,31 @@ export async function POST(request: NextRequest) {
       const { Resend } = await import('resend')
       const resend = new Resend(process.env.RESEND_API_KEY)
       const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
+      const { baseEmailTemplate } = await import('@/lib/resend')
 
       const { error: emailError } = await resend.emails.send({
         from: fromEmail,
         to: normalizedEmail,
         subject: 'Access Your CULTR Creator Portal',
-        html: `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #2A4542; color: #fafafa; padding: 40px 20px; margin: 0;">
-  <div style="max-width: 600px; margin: 0 auto;">
-    <h1 style="font-size: 28px; font-weight: 300; letter-spacing: 0; margin-bottom: 30px; color: #fff;">CULTR <span style="font-size: 14px; opacity: 0.7;">Creator</span></h1>
-    <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Click the button below to access your Creator Portal. This link expires in 15 minutes.</p>
-    <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Open Creator Portal</a>
-    <p style="color: #666; font-size: 14px; line-height: 1.6; margin-top: 32px;">If you didn't request this link, you can safely ignore this email.</p>
-    <p style="color: #444; font-size: 12px; margin-top: 40px; border-top: 1px solid #3a5a57; padding-top: 20px;">CULTR Health Creator Program<br>This is an automated message.</p>
-  </div>
-</body>
-</html>`,
+        html: baseEmailTemplate(`
+    <h1 style="font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', Georgia, serif;">
+      Creator Portal
+    </h1>
+    
+    <p style="color: #a0a0a0; font-size: 16px; line-height: 1.6; margin-bottom: 32px; text-align: center;">
+      Click the button below to access your Creator Portal. This link expires in 15 minutes.
+    </p>
+    
+    <div style="text-align: center; margin-bottom: 32px;">
+      <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-weight: 600; font-size: 16px;">
+        Open Creator Portal
+      </a>
+    </div>
+    
+    <p style="color: #666; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
+      If you didn't request this link, you can safely ignore this email.
+    </p>
+        `),
       })
 
       if (emailError) {

@@ -428,15 +428,22 @@ export async function verifyCreatorAuth(request: NextRequest): Promise<{
     return { authenticated: false, email: null, creatorId: null }
   }
 
-  // If creatorId is in the token and not the staging placeholder, use it
-  if (auth.creatorId && auth.creatorId !== 'staging_creator') {
-    return { authenticated: true, email: auth.email, creatorId: auth.creatorId }
-  }
-
-  // Otherwise look up creator by email. This lets staging_creator placeholder
-  // sessions recover to a real creator record after staging auto-create succeeds.
   try {
-    const { getCreatorByEmail } = await import('@/lib/creators/db')
+    const { getCreatorByEmail, getCreatorById } = await import('@/lib/creators/db')
+
+    // Real creator sessions must still map to an active creator record.
+    if (auth.creatorId && auth.creatorId !== 'staging_creator') {
+      const creator = await getCreatorById(auth.creatorId)
+      if (creator?.status === 'active') {
+        return { authenticated: true, email: auth.email, creatorId: creator.id }
+      }
+      if (creator) {
+        return { authenticated: false, email: auth.email, creatorId: null }
+      }
+    }
+
+    // Otherwise look up creator by email. This lets staging_creator placeholder
+    // sessions recover to a real creator record after staging auto-create succeeds.
     const creator = await getCreatorByEmail(auth.email)
     if (creator && creator.status === 'active') {
       return { authenticated: true, email: auth.email, creatorId: creator.id }

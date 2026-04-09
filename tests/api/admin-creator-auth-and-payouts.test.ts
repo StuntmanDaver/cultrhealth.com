@@ -102,6 +102,31 @@ describe('creator/admin auth parity', () => {
       creatorId: 'creator_real_123',
     })
   })
+
+  it('rejects real creator sessions when the creator is not active', async () => {
+    mockGetCreatorById.mockResolvedValue({
+      id: 'creator_real_123',
+      email: 'ops@example.com',
+      status: 'pending',
+    })
+
+    const token = await createSessionToken(
+      'ops@example.com',
+      'creator_pending',
+      'creator_real_123',
+      'creator'
+    )
+    const request = createAuthenticatedRequest(token, '/api/creators/dashboard')
+
+    const result = await verifyCreatorAuth(request)
+
+    expect(mockGetCreatorById).toHaveBeenCalledWith('creator_real_123')
+    expect(result).toEqual({
+      authenticated: false,
+      email: 'ops@example.com',
+      creatorId: null,
+    })
+  })
 })
 
 describe('creator routes honor resolved staging creators', () => {

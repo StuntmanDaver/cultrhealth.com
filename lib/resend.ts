@@ -118,7 +118,7 @@ export function brandedEmailFooter(): string {
 // EMAIL BASE TEMPLATE
 // ===========================================
 
-function baseEmailTemplate(content: string, footerText?: string): string {
+export function baseEmailTemplate(content: string, footerText?: string): string {
   return `
 <!DOCTYPE html>
 <html>
