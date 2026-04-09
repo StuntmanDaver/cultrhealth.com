@@ -55,5 +55,5 @@ export function getMoveNote(currentStatus: string, targetStatus: string): string
   if (currentStatus === 'pending_approval') {
     return `This will NOT create a QuickBooks invoice or send approval emails.\nUse this when the order was already handled manually.`;
   }
-  return `All skipped stage timestamps will be set automatically.`;
+  return `All skipped stage timestamps will be set automatically. No status emails will be sent.`;
 }

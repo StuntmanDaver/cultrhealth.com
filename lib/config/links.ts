@@ -83,13 +83,15 @@ export function getConsultationBookingUrl(): string | null {
 
   try {
     const parsedUrl = new URL(normalizedBookingUrl)
-    const isHealthieBookingLink = parsedUrl.pathname.includes('/appointments/embed_appt')
+    const isHealthieBookingLink =
+      parsedUrl.hostname.endsWith('gethealthie.com') &&
+      parsedUrl.pathname.includes('/appointments/')
+    const hasProviderFilter = Array.from(parsedUrl.searchParams.keys()).some((key) => {
+      const normalizedKey = key.toLowerCase()
+      return normalizedKey === 'provider_ids' || normalizedKey.startsWith('provider_ids[')
+    })
 
-    if (
-      isHealthieBookingLink &&
-      parsedUrl.searchParams.has('provider_ids') &&
-      !parsedUrl.searchParams.has('org_level')
-    ) {
+    if (isHealthieBookingLink && hasProviderFilter) {
       parsedUrl.searchParams.set('org_level', 'true')
     }
 

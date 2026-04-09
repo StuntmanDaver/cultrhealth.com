@@ -68,4 +68,24 @@ describe('clinical workflow links', () => {
       'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493%2C510494%5D&primary_color=4A9625&org_level=true'
     )
   })
+
+  it('forces org_level=true when a Healthie link already includes org_level=false', () => {
+    process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL =
+      'https://secure.gethealthie.com/appointments/embed_appt?provider_ids=%5B13052862%5D&org_level=false'
+
+    const bookingUrl = getConsultationBookingUrl()
+
+    expect(bookingUrl).not.toBeNull()
+    expect(new URL(bookingUrl as string).searchParams.get('org_level')).toBe('true')
+  })
+
+  it('forces org_level=true for Healthie links using provider_ids[] keys', () => {
+    process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL =
+      'https://secure.gethealthie.com/appointments/embed_appt?provider_ids%5B%5D=13052862'
+
+    const bookingUrl = getConsultationBookingUrl()
+
+    expect(bookingUrl).not.toBeNull()
+    expect(new URL(bookingUrl as string).searchParams.get('org_level')).toBe('true')
+  })
 })

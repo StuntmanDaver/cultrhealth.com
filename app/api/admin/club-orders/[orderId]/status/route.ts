@@ -97,6 +97,7 @@ export async function POST(
     let carrier: string | undefined
     let trackingNumber: string | undefined
     let trackingUrl: string | undefined
+    let suppressEmails = false
 
     if (authMethod === 'email_link') {
       newStatus = statusFromUrl!
@@ -106,6 +107,7 @@ export async function POST(
       carrier = body.carrier
       trackingNumber = body.trackingNumber
       trackingUrl = body.trackingUrl
+      suppressEmails = body.suppressEmails === true
     }
 
     if (!newStatus) {
@@ -245,7 +247,7 @@ export async function POST(
           ${'club_order'},
           ${orderId},
           ${`${currentStatus} → ${newStatus}${isSkip ? ' (skip)' : ''}${isBackward ? ' (rollback)' : ''}`},
-          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, rollback: isBackward, carrier, trackingNumber })}
+          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, rollback: isBackward, suppressEmails, carrier, trackingNumber })}
         )
       `
     } catch {
@@ -253,18 +255,20 @@ export async function POST(
     }
 
     // Send emails (non-fatal — status already committed)
-    try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://staging.cultrhealth.com'
-      const emailResults = await Promise.allSettled([
-        sendAdminStatusEmail(order, newStatus, siteUrl, orderId),
-        sendCustomerStatusEmail(order, newStatus, carrier, trackingNumber, trackingUrl),
-      ])
-      const adminResult = emailResults[0]
-      const notifyResult = emailResults[1]
-      if (adminResult.status === 'rejected') console.warn('[club-orders/status] admin notification send failed')
-      if (notifyResult.status === 'rejected') console.warn('[club-orders/status] status notification send failed')
-    } catch {
-      // Email failures are non-fatal
+    if (!suppressEmails) {
+      try {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://staging.cultrhealth.com'
+        const emailResults = await Promise.allSettled([
+          sendAdminStatusEmail(order, newStatus, siteUrl, orderId),
+          sendCustomerStatusEmail(order, newStatus, carrier, trackingNumber, trackingUrl),
+        ])
+        const adminResult = emailResults[0]
+        const notifyResult = emailResults[1]
+        if (adminResult.status === 'rejected') console.warn('[club-orders/status] admin notification send failed')
+        if (notifyResult.status === 'rejected') console.warn('[club-orders/status] status notification send failed')
+      } catch {
+        // Email failures are non-fatal
+      }
     }
 
     // If from email link, redirect to success

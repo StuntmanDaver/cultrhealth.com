@@ -108,7 +108,7 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
   }
 
   // ── Status update action ──
-  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }) {
+  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }) {
     setUpdatingId(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {

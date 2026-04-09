@@ -20,7 +20,7 @@ interface ClubOrderStageControlsProps {
   onStatusUpdate: (
     orderId: string,
     newStatus: string,
-    extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }
+    extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }
   ) => void
 }
 
@@ -45,14 +45,28 @@ export default function ClubOrderStageControls({
       <div className="flex flex-wrap gap-2">
         {/* Primary action: Approve for pending, next step for others */}
         {currentStatus === 'pending_approval' && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onApprove(orderId) }}
-            disabled={isApproving || isUpdating}
-            className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
-          >
-            {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-            {isApproving ? 'Approving...' : 'Approve & Send Invoice'}
-          </button>
+          <>
+            <button
+              onClick={(e) => { e.stopPropagation(); onApprove(orderId) }}
+              disabled={isApproving || isUpdating}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {isApproving ? 'Approving...' : 'Approve & Send Invoice'}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                if (confirm('Skip invoice/email and move this order to "Approved"?')) {
+                  onStatusUpdate(orderId, 'approved', { suppressEmails: true })
+                }
+              }}
+              disabled={isApproving || isUpdating}
+              className="px-4 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50 transition-colors font-medium"
+            >
+              Skip to Approved (No Email)
+            </button>
+          </>
         )}
 
         {/* Dynamic Next Step Button */}
@@ -82,6 +96,20 @@ export default function ClubOrderStageControls({
             {isUpdating ? 'Updating...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
           </button>
         )}
+        {nextStatus && currentStatus !== 'pending_approval' && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (confirm(`Skip email trigger and move to "${PIPELINE_LABELS[nextStatus] || nextStatus}"?`)) {
+                onStatusUpdate(orderId, nextStatus, { suppressEmails: true })
+              }
+            }}
+            disabled={isUpdating || isApproving || isShippingThis}
+            className="px-4 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50 transition-colors font-medium"
+          >
+            {`Skip ${PIPELINE_LABELS[nextStatus] || nextStatus} (No Email)`}
+          </button>
+        )}
 
         {/* Move to — forward skip OR backward rollback */}
         {moveTargets.length > 0 && (
@@ -95,13 +123,13 @@ export default function ClubOrderStageControls({
               if (!target) return
               const note = getMoveNote(currentStatus, target)
               if (confirm(`Move to "${PIPELINE_LABELS[target] || target}"?\n\n${note}`)) {
-                onStatusUpdate(orderId, target)
+                onStatusUpdate(orderId, target, { suppressEmails: true })
               }
               e.target.value = ''
             }}
             className="px-3 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary cursor-pointer disabled:opacity-50 transition-colors hover:bg-brand-primary/10"
           >
-            <option value="">Move to…</option>
+            <option value="">Skip to… (No Email)</option>
             {moveTargets.map(s => {
               const targetIdx = PIPELINE_STATUSES.indexOf(s)
               const isBack = currentIdx >= 0 && targetIdx >= 0 && targetIdx < currentIdx

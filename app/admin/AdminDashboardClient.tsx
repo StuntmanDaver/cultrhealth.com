@@ -143,7 +143,7 @@ export default function AdminDashboardClient() {
     }
   }
 
-  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string }) {
+  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }) {
     setUpdatingStatus(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
