@@ -123,12 +123,11 @@ export function middleware(request: NextRequest) {
         }
         
         // Clear both domain and host-only cookies to prevent ghost sessions
-        const expires = new Date(0).toUTCString()
         const isProd = process.env.NODE_ENV === 'production'
         const clearCookie = (name: string, d?: string) => {
           response.headers.append(
             'Set-Cookie',
-            `${name}=; Path=/; Expires=${expires}; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}${d ? `; Domain=${d}` : ''}`
+            `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}${d ? `; Domain=${d}` : ''}`
           )
         }
         

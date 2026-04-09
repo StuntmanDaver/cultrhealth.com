@@ -44,12 +44,9 @@ function appendCookieHeader(
   value: string,
   options: { maxAge: number; domain?: string }
 ) {
-  const expires =
-    options.maxAge === 0 ? new Date(0).toUTCString() : new Date(Date.now() + options.maxAge * 1000).toUTCString()
   const parts = [
     `${name}=${value}`,
     'Path=/',
-    `Expires=${expires}`,
     `Max-Age=${options.maxAge}`,
     process.env.NODE_ENV === 'production' ? 'Secure' : null,
     'HttpOnly',
