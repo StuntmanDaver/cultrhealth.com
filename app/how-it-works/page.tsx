@@ -159,7 +159,7 @@ export default function HowItWorksPage() {
         <div className="max-w-7xl mx-auto">
           <ScrollReveal className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4">
-              What's included in your membership
+              What&apos;s included in your membership
             </h2>
             <p className="text-cultr-textMuted max-w-2xl mx-auto">
               Every plan includes access to our core platform and features. Higher tiers unlock more frequent consultations and advanced protocols.

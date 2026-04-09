@@ -20,8 +20,8 @@ export default function NotFound() {
                         Protocol Not Found
                     </h2>
                     <p className="text-brand-primary/60 max-w-md mx-auto">
-                        The optimization path you're looking for doesn't exist or has been relocated.
-                        Let's get you back on track.
+                        The optimization path you&apos;re looking for doesn&apos;t exist or has been relocated.
+                        Let&apos;s get you back on track.
                     </p>
                 </div>
 
