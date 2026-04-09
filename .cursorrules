@@ -482,6 +482,7 @@ any file containing API keys, secrets, or tokens
 - Diagnose a blank Healthie scheduler on plain `http://localhost` as a production booking failure; Healthie blocks non-HTTPS iframe ancestors in local dev
 - Ship or preserve a Healthie booking URL that includes `provider_ids` without also including `org_level=true`
 - Ship or preserve Healthie embed URLs with hardcoded `appt_type_ids` filters that can hide newly schedulable appointment types
+- Pass `Expires` strings into manual `Set-Cookie` headers or `response.headers.append('Set-Cookie', ...)` in Next.js `NextResponse`. `Expires` strings contain commas, which breaks Vercel Edge's cookie string merging and causes browser parsing failures (e.g. ghost session loops).
 
 ## DO:
 - Read files before modifying them
@@ -507,6 +508,7 @@ any file containing API keys, secrets, or tokens
 - Default member magic-link redirects in `app/api/auth/verify/route.ts` to `/members`; only explicit safe redirect params should land on `/dashboard`
 - Skip creator magic-link rate limiting on staging hosts and for listed bypass emails in `app/api/creators/magic-link/route.ts` so Safari/WebKit retries and E2E logins do not fail spuriously
 - Keep `app/api/creators/verify-email/route.ts` compatible with browser-clicked `GET` verification links as well as JSON `POST` verification; redirect pending creators to `/creators/pending`, active creators to `/creators/login`, paused/rejected creators to creator login with `inactive_account`, invalid links with `invalid_verification_link`, and unexpected verification failures with `email_verification_failed`
+- Use `Max-Age` EXCLUSIVELY (never `Expires`) when manually constructing `Set-Cookie` headers via `response.headers.append('Set-Cookie', ...)`. `Max-Age=0` safely clears cookies without introducing commas that corrupt Edge header merging.
 
 # ============================================================================
 # 19. JOIN PAGE SPECIFIC
