@@ -106,7 +106,7 @@ export async function POST(
         await client.query(
           `INSERT INTO tracking_links (creator_id, slug, destination_path, is_default)
            VALUES ($1, $2, '/', TRUE)
-           ON CONFLICT (slug) DO NOTHING`,
+           ON CONFLICT ((lower(slug))) DO NOTHING`,
           [id, defaultSlug.toLowerCase()]
         )
 

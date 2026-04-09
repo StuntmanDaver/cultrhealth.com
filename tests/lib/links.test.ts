@@ -60,12 +60,12 @@ describe('clinical workflow links', () => {
     expect(getConsultationBookingUrl()).toBe('https://schedule.example.com/book')
   })
 
-  it('adds org_level=true and strips appt_type_ids for Healthie booking links filtered by provider_ids', () => {
+  it('adds org_level=true but PRESERVES appt_type_ids for Healthie booking links filtered by provider_ids', () => {
     process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL =
       'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493,510494%5D&primary_color=4A9625'
 
     expect(getConsultationBookingUrl()).toBe(
-      'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&primary_color=4A9625&org_level=true'
+      'https://secure.gethealthie.com/appointments/embed_appt?dietitian_id=13052862&provider_ids=%5B13052862%5D&appt_type_ids=%5B510493%2C510494%5D&primary_color=4A9625&org_level=true'
     )
   })
 
@@ -89,7 +89,7 @@ describe('clinical workflow links', () => {
     expect(new URL(bookingUrl as string).searchParams.get('org_level')).toBe('true')
   })
 
-  it('strips bracketed appt_type_ids[] params from Healthie booking links', () => {
+  it('preserves bracketed appt_type_ids[] params in Healthie booking links', () => {
     process.env.NEXT_PUBLIC_CONSULTATION_BOOKING_URL =
       'https://secure.gethealthie.com/appointments/embed_appt?provider_ids=%5B13052862%5D&appt_type_ids%5B%5D=510493&appt_type_ids%5B%5D=510494'
 
@@ -100,6 +100,6 @@ describe('clinical workflow links', () => {
     const hasApptTypeIds = Array.from(parsed.searchParams.keys()).some((key) =>
       key.toLowerCase().startsWith('appt_type_ids')
     )
-    expect(hasApptTypeIds).toBe(false)
+    expect(hasApptTypeIds).toBe(true)
   })
 })

@@ -137,8 +137,18 @@ export async function GET(request: NextRequest) {
 
         await updateCreatorStatus(creator.id, 'active', 'staging-auto-create')
 
-        const slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 1000)
-        await createTrackingLink(creator.id, slug, '/', true)
+        let slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 1000)
+        let slugCreated = false
+        let slugAttempts = 0
+        while (!slugCreated && slugAttempts < 10) {
+          try {
+            await createTrackingLink(creator.id, slug, '/', true)
+            slugCreated = true
+          } catch (err) {
+            slugAttempts++
+            slug = namePart.replace(/[^a-z0-9]/g, '').slice(0, 20) + Math.floor(Math.random() * 10000)
+          }
+        }
 
         // Generate dual coupon codes (matching approval flow)
         let { membershipCode, productCode } = generateCreatorCodes(fullName)

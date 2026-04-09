@@ -88,7 +88,10 @@ export function middleware(request: NextRequest) {
 
   // Session idle timeout for HIPAA compliance (30 min inactivity)
   const IDLE_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
-  const authenticatedPrefixes = ['/members', '/intake', '/dashboard', '/admin', '/provider', '/creators/portal']
+  const authenticatedPrefixes = [
+    '/members', '/intake', '/dashboard', '/admin', '/provider', '/creators/portal',
+    '/api/member', '/api/intake', '/api/admin', '/api/provider', '/api/creators'
+  ]
   const isAuthRoute = authenticatedPrefixes.some(p => request.nextUrl.pathname.startsWith(p))
 
   if (isAuthRoute) {
@@ -102,11 +105,19 @@ export function middleware(request: NextRequest) {
       const elapsed = Date.now() - parseInt(lastActivity, 10)
       if (elapsed > IDLE_TIMEOUT_MS) {
         // Session idle too long -- clear and redirect to login
-        const loginPath = request.nextUrl.pathname.startsWith('/creators/portal') ? '/creators/login' : '/login'
-        const loginUrl = new URL(loginPath, request.url)
-        loginUrl.searchParams.set('error', 'session_timeout')
-        loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
-        const response = NextResponse.redirect(loginUrl)
+        const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
+        let response: NextResponse
+
+        if (isApiRoute) {
+          response = NextResponse.json({ error: 'Session timeout' }, { status: 401 })
+        } else {
+          const loginPath = request.nextUrl.pathname.startsWith('/creators/portal') ? '/creators/login' : '/login'
+          const loginUrl = new URL(loginPath, request.url)
+          loginUrl.searchParams.set('error', 'session_timeout')
+          loginUrl.searchParams.set('redirect', request.nextUrl.pathname)
+          response = NextResponse.redirect(loginUrl)
+        }
+        
         // Must specify domain to match how cookies were set, otherwise delete is a no-op
         const cookieOpts = { path: '/', ...(domain ? { domain } : {}) }
         response.cookies.set('cultr_session', '', { ...cookieOpts, maxAge: 0 })

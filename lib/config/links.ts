@@ -97,15 +97,13 @@ export function getConsultationBookingUrl(): string | null {
         parsedUrl.searchParams.set('org_level', 'true')
       }
 
-      // Stale appointment type filters can hide newly configured schedulable types.
-      const apptTypeParamKeys = Array.from(parsedUrl.searchParams.keys()).filter((key) => {
-        const normalizedKey = key.toLowerCase()
-        return normalizedKey === 'appt_type_ids' || normalizedKey.startsWith('appt_type_ids[')
-      })
-
-      for (const key of apptTypeParamKeys) {
-        parsedUrl.searchParams.delete(key)
-      }
+      // Note: We used to unconditionally strip appt_type_ids here because stale type 
+      // filters can hide newly configured schedulable types. However, if a URL
+      // intentionally maintains appt_type_ids to restrict the provider's availability,
+      // stripping them causes the widget to show org-level types with "(No availability)".
+      // Per .cursorrules, we should only avoid HARDCODING them in the app code itself,
+      // but if the user provides them via NEXT_PUBLIC_CONSULTATION_BOOKING_URL, we 
+      // must preserve them.
     }
 
     return parsedUrl.toString()

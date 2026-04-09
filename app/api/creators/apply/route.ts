@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode } from '@/lib/creators/db'
+import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } from '@/lib/creators/db'
+import { generateCreatorCodes } from '@/lib/config/affiliate'
 import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
 import { escapeHtml } from '@/lib/resend'
@@ -122,19 +123,40 @@ export async function POST(request: NextRequest) {
     if (AUTO_APPROVE_EMAILS.includes(email.toLowerCase())) {
       await updateCreatorStatus(creator.id, 'active', 'system-auto-approve')
 
-      const defaultSlug = full_name
+      let defaultSlug = full_name
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '')
         .slice(0, 20) + Math.floor(Math.random() * 1000)
 
-      await createTrackingLink(creator.id, defaultSlug, '/', true)
+      let slugCreated = false
+      let slugAttempts = 0
+      while (!slugCreated && slugAttempts < 10) {
+        try {
+          await createTrackingLink(creator.id, defaultSlug, '/', true)
+          slugCreated = true
+        } catch (err) {
+          slugAttempts++
+          defaultSlug = full_name
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '')
+            .slice(0, 20) + Math.floor(Math.random() * 10000)
+        }
+      }
 
-      const code = full_name
-        .toUpperCase()
-        .replace(/[^A-Z]/g, '')
-        .slice(0, 6) + '10'
-
-      await createAffiliateCode(creator.id, code, true)
+      let { membershipCode, productCode } = generateCreatorCodes(full_name)
+      const baseName = membershipCode
+      let suffix = 1
+      while (
+        await checkAffiliateCodeExists(membershipCode) ||
+        await checkAffiliateCodeExists(productCode)
+      ) {
+        membershipCode = `${baseName}${suffix}`
+        productCode = `${baseName}${suffix}10`
+        suffix++
+      }
+      
+      await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
+      await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
 
       // Send login magic link email
       const token = await createMagicLinkToken(email)
@@ -159,7 +181,7 @@ export async function POST(request: NextRequest) {
         message: 'You have been approved! Check your email to log in.',
         creatorId: creator.id,
         trackingSlug: defaultSlug,
-        couponCode: code,
+        couponCode: membershipCode,
       })
     }
 
