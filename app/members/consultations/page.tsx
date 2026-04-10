@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
-import { LINKS, getConsultationBookingUrl } from '@/lib/config/links'
+import { LINKS } from '@/lib/config/links'
 
 export const metadata = { title: 'Schedule a Consultation — CULTR Health' }
 
@@ -8,7 +8,10 @@ export default async function ConsultationsPage() {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const bookingUrl = getConsultationBookingUrl()
+  const rawUrl = process.env.NEXT_PUBLIC_CALENDLY_URL?.trim()
+  const calendlyUrl = rawUrl
+    ? `${rawUrl}?embed_type=inline&hide_gdpr_banner=1&primary_color=2A4542`
+    : null
 
   return (
     <div className="min-h-screen bg-brand-cream">
@@ -22,19 +25,18 @@ export default async function ConsultationsPage() {
           </p>
 
           <div className="bg-white rounded-2xl border border-cultr-sage overflow-hidden shadow-sm">
-            {bookingUrl ? (
+            {calendlyUrl ? (
               <>
                 <iframe
                   title="Schedule Consultation"
-                  src={bookingUrl}
-                  style={{ width: '100%', height: '100%', minHeight: '600px', border: '0px' }}
-                  allow="camera; microphone; geolocation"
+                  src={calendlyUrl}
+                  style={{ width: '100%', height: '100%', minHeight: '700px', border: '0px' }}
                 />
                 <div className="p-3 bg-brand-cream/50 border-t border-cultr-sage/30 text-center flex flex-col sm:flex-row items-center justify-between px-6">
                   <p className="text-sm text-cultr-textMuted">
-                    Booking Provided by{' '}
-                    <a href="https://gethealthie.com" target="_blank" rel="noreferrer" className="text-brand-primary hover:underline">
-                      Healthie
+                    Scheduling by{' '}
+                    <a href="https://calendly.com" target="_blank" rel="noreferrer" className="text-brand-primary hover:underline">
+                      Calendly
                     </a>
                   </p>
                   <a
@@ -48,7 +50,7 @@ export default async function ConsultationsPage() {
             ) : (
               <div className="p-8 text-center">
                 <p className="text-cultr-textMuted mb-4">
-                  The Healthie scheduling link is being finalized. Please contact{' '}
+                  Online scheduling is being configured. Please contact{' '}
                   <a href={`mailto:${LINKS.supportEmail}`} className="text-brand-primary underline">
                     {LINKS.supportEmail}
                   </a>{' '}
