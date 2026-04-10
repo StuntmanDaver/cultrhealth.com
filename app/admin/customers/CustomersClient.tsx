@@ -125,11 +125,15 @@ export default function CustomersClient() {
   }
 
   function getFilteredCustomers(customers: CustomerAdminRow[]): CustomerAdminRow[] {
-    const filtered = filterByDateRange(customers, startDate, endDate)
-      .filter(c =>
-        c.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-        c.email.toLowerCase().includes(customerSearch.toLowerCase())
-      )
+    const q = customerSearch.toLowerCase().trim()
+    // When searching by name/email, skip the date range filter so older customers are found
+    const pool = q ? customers : filterByDateRange(customers, startDate, endDate)
+    const filtered = q
+      ? pool.filter(c =>
+          c.name.toLowerCase().includes(q) ||
+          c.email.toLowerCase().includes(q)
+        )
+      : pool
     return sortCustomers(filtered, sortField, sortDir)
   }
 
@@ -422,16 +426,28 @@ export default function CustomersClient() {
                         <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Club Orders ({customerDetail.clubOrders.length})</h4>
                         <div className="space-y-2">
                           {customerDetail.clubOrders.map(o => (
-                            <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3 flex items-center justify-between">
-                              <div>
-                                <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
-                                <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
-                                {o.coupon_code && <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">{o.coupon_code}</span>}
+                            <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
+                                  <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
+                                  {o.coupon_code && <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-mono">{o.coupon_code}</span>}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-brand-primary">{o.subtotal_usd ? formatCurrency(o.subtotal_usd) : 'TBD'}</span>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-brand-primary">{o.subtotal_usd ? formatCurrency(o.subtotal_usd) : 'TBD'}</span>
-                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
-                              </div>
+                              {Array.isArray(o.items) && o.items.length > 0 && (
+                                <ul className="mt-2 space-y-1 border-t border-brand-primary/10 pt-2">
+                                  {o.items.map((item, idx) => (
+                                    <li key={idx} className="flex items-center justify-between text-xs text-brand-primary/70">
+                                      <span>· {item.name}{item.quantity > 1 ? ` × ${item.quantity}` : ''}{item.pricingNote ? <span className="ml-1 text-brand-primary/40">({item.pricingNote})</span> : null}</span>
+                                      <span className="ml-4 shrink-0">{item.price != null ? formatCurrency(item.price) : 'TBD'}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -443,16 +459,28 @@ export default function CustomersClient() {
                         <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Product Orders ({customerDetail.productOrders.length})</h4>
                         <div className="space-y-2">
                           {customerDetail.productOrders.map(o => (
-                            <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3 flex items-center justify-between">
-                              <div>
-                                <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
-                                <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
-                                {o.payment_provider && <span className="ml-2 text-xs text-brand-primary/40">via {o.payment_provider}</span>}
+                            <div key={o.id} className="bg-brand-cream/30 rounded-lg p-3">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="font-mono text-sm text-brand-primary">{o.order_number}</span>
+                                  <span className="ml-2 text-xs text-brand-primary/40">{formatDate(o.created_at)}</span>
+                                  {o.payment_provider && <span className="ml-2 text-xs text-brand-primary/40">via {o.payment_provider}</span>}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm font-medium text-brand-primary">{formatCurrency(o.total_amount)}</span>
+                                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-brand-primary">{formatCurrency(o.total_amount)}</span>
-                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(o.status)}`}>{o.status}</span>
-                              </div>
+                              {Array.isArray(o.items) && o.items.length > 0 && (
+                                <ul className="mt-2 space-y-1 border-t border-brand-primary/10 pt-2">
+                                  {o.items.map((item, idx) => (
+                                    <li key={idx} className="flex items-center justify-between text-xs text-brand-primary/70">
+                                      <span>· {item.name}{item.quantity > 1 ? ` × ${item.quantity}` : ''}</span>
+                                      <span className="ml-4 shrink-0">{item.unit_price != null ? formatCurrency(item.unit_price) : ''}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
                             </div>
                           ))}
                         </div>

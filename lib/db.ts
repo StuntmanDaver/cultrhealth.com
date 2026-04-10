@@ -576,7 +576,7 @@ export async function getOrdersByCustomerEmail(email: string, limit = 50): Promi
       items: typeof row.items === 'string' ? JSON.parse(row.items) : row.items,
     })) as OrderEntry[]
   } catch (error) {
-    console.error('Database error fetching orders by email:', error)
+    console.error('Database error fetching orders:', error instanceof Error ? error.message : 'unknown')
     throw new DatabaseError('Failed to fetch orders', error)
   }
 }
@@ -2277,6 +2277,7 @@ export interface SearchOrdersResult {
     created_at: string
     source: 'orders' | 'club_orders'
     items: OrderItem[]
+    coupon_code: string | null
   }[]
   total: number
   page: number
@@ -2300,7 +2301,8 @@ export async function searchOrders({
     const [shopResult, clubResult] = await Promise.all([
       sql`
         SELECT id::text as id, order_number, customer_email, NULL::text as customer_name, status,
-          COALESCE(total_amount, 0)::numeric as total_amount, created_at, items::text as items_raw
+          COALESCE(total_amount, 0)::numeric as total_amount, created_at, items::text as items_raw,
+          ''::text as coupon_code
         FROM orders
         WHERE (order_number ILIKE ${searchPattern} OR customer_email ILIKE ${searchPattern})
         AND COALESCE(status, '') ILIKE ${statusFilter}
@@ -2308,9 +2310,11 @@ export async function searchOrders({
       `.catch(() => ({ rows: [] })),
       sql`
         SELECT id::text as id, order_number, member_email as customer_email, member_name as customer_name, status,
-          COALESCE(subtotal_usd, 0)::numeric as total_amount, created_at, items::text as items_raw
+          COALESCE(subtotal_usd, 0)::numeric as total_amount, created_at, items::text as items_raw,
+          COALESCE(coupon_code, '') as coupon_code
         FROM club_orders
-        WHERE (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern})
+        WHERE (order_number ILIKE ${searchPattern} OR member_email ILIKE ${searchPattern}
+          OR member_name ILIKE ${searchPattern})
         AND COALESCE(status, '') ILIKE ${statusFilter}
         ORDER BY created_at DESC
       `.catch(() => ({ rows: [] })),
@@ -2346,6 +2350,7 @@ export async function searchOrders({
         created_at: String(row.created_at),
         source: row.source,
         items,
+        coupon_code: row.coupon_code || null,
       }
     })
 
@@ -2425,7 +2430,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
         ORDER BY created_at DESC
       `.catch(() => emptyResult),
       sql`
-        SELECT id, order_number, status, total_amount, items, created_at
+        SELECT id, order_number, status, total_amount, items, payment_provider, created_at
         FROM orders
         WHERE LOWER(customer_email) = ${normalizedEmail}
         ORDER BY created_at DESC
@@ -2477,6 +2482,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
       status: String(r.status),
       total_amount: parseFloat(r.total_amount) || 0,
       items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+      payment_provider: r.payment_provider ? String(r.payment_provider) : null,
       created_at: String(r.created_at),
     }))
 

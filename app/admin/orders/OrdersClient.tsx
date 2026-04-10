@@ -516,11 +516,18 @@ export default function OrdersClient() {
                       {formatCurrency(order.total_amount)}
                     </td>
                     <td className="py-3 px-4 text-sm">
-                      {'source' in order && (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${(order as SearchOrderRow).source === 'club_orders' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                          {(order as SearchOrderRow).source === 'club_orders' ? 'Club' : 'Product'}
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {'source' in order && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${(order as SearchOrderRow).source === 'club_orders' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
+                            {(order as SearchOrderRow).source === 'club_orders' ? 'Club' : 'Product'}
+                          </span>
+                        )}
+                        {'coupon_code' in order && (order as SearchOrderRow).coupon_code && (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-green-50 text-green-700 w-fit">
+                            {(order as SearchOrderRow).coupon_code}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="py-3 px-4 text-brand-primary/60 text-sm">{formatDate(order.created_at)}</td>
                     <td className="py-3 px-4">

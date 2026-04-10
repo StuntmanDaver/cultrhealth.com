@@ -251,6 +251,7 @@ export interface SearchOrderRow {
   created_at: string
   source: 'orders' | 'club_orders'
   items: { sku: string; name: string; quantity: number; unit_price: number }[]
+  coupon_code: string | null
 }
 
 export interface OrderSearchData {
@@ -279,7 +280,7 @@ export interface CustomerProfile {
     order_number: string
     status: string
     subtotal_usd: number | null
-    items: unknown
+    items: { therapyId?: string; name: string; price: number | null; quantity: number; pricingNote?: string }[] | null
     coupon_code: string | null
     created_at: string
   }[]
@@ -288,7 +289,7 @@ export interface CustomerProfile {
     order_number: string
     status: string
     total_amount: number
-    items: unknown
+    items: { sku?: string; name: string; quantity: number; unit_price?: number }[] | null
     payment_provider: string | null
     created_at: string
   }[]
