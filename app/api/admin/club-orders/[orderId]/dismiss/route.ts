@@ -30,7 +30,7 @@ export async function POST(
     const result = await sql`
       UPDATE club_orders
       SET status = 'dismissed'
-      WHERE id = ${orderId} AND status NOT IN ('dismissed', 'paid', 'needs_shipment', 'shipped_complete')
+      WHERE id = ${orderId}::uuid AND status NOT IN ('dismissed', 'paid', 'shipped', 'fulfilled')
       RETURNING id, order_number
     `
 
