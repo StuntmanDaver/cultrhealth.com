@@ -49,7 +49,10 @@ function verifyStatusToken(orderId: string, newStatus: string, token: string, ex
     .createHmac('sha256', secret)
     .update(`${orderId}:status:${newStatus}:${expiresAt}`)
     .digest('hex')
-  return crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
+  const tokenBuf = Buffer.from(token)
+  const expectedBuf = Buffer.from(expected)
+  if (tokenBuf.length !== expectedBuf.length) return false
+  return crypto.timingSafeEqual(tokenBuf, expectedBuf)
 }
 
 export async function POST(
@@ -98,6 +101,7 @@ export async function POST(
     let trackingNumber: string | undefined
     let trackingUrl: string | undefined
     let suppressEmails = false
+    let manualProcessed = false
 
     if (authMethod === 'email_link') {
       newStatus = statusFromUrl!
@@ -108,6 +112,7 @@ export async function POST(
       trackingNumber = body.trackingNumber
       trackingUrl = body.trackingUrl
       suppressEmails = body.suppressEmails === true
+      manualProcessed = body.manualProcessed === true
     }
 
     if (!newStatus) {
@@ -115,6 +120,10 @@ export async function POST(
     }
 
     if (newStatus === 'shipped' && (!carrier || !trackingNumber)) {
+      if (authMethod === 'email_link') {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=club-orders&openShipping=${orderId}`)
+      }
       return NextResponse.json(
         { error: 'carrier and trackingNumber are required when marking an order as shipped' },
         { status: 400 }
@@ -154,9 +163,9 @@ export async function POST(
     // Determine direction: forward (set timestamps) or backward (clear timestamps)
     const fromIdx = PIPELINE_ORDER.indexOf(currentStatus as typeof PIPELINE_ORDER[number])
     const toIdx = PIPELINE_ORDER.indexOf(newStatus as typeof PIPELINE_ORDER[number])
-    const isForward = fromIdx >= 0 && toIdx >= 0 && toIdx > fromIdx
+    const isForward = toIdx >= 0 && toIdx > fromIdx
     const isBackward = fromIdx >= 0 && toIdx >= 0 && toIdx < fromIdx
-    const isSkip = isForward && toIdx - fromIdx > 1
+    const isSkip = isForward && (fromIdx < 0 ? toIdx > 0 : toIdx - fromIdx > 1)
 
     const actorEmail = session?.email || 'email_link'
     const now = new Date().toISOString()
@@ -173,7 +182,7 @@ export async function POST(
 
     if (isForward) {
       // Set timestamps for skipped + target stages
-      for (let i = fromIdx + 1; i <= toIdx; i++) {
+      for (let i = Math.max(0, fromIdx + 1); i <= toIdx; i++) {
         const stage = PIPELINE_ORDER[i]
         if (stage === 'approved') { approvedAtVal = now; approvedByVal = actorEmail }
         if (stage === 'paid') paidAtVal = now
@@ -232,13 +241,17 @@ export async function POST(
     }
 
     // Keep creator attribution and admin order state aligned when orders are voided or reopened.
-    const linkedAttribution = await getOrderAttributionByOrderId(order.id)
-    if (newStatus === 'cancelled' && linkedAttribution) {
-      await reverseCommissionsForAttribution(linkedAttribution.id)
-      await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
-    } else if (currentStatus === 'cancelled' && newStatus !== 'cancelled' && linkedAttribution?.status === 'refunded') {
-      await restoreCommissionsForAttribution(linkedAttribution.id)
-      await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
+    try {
+      const linkedAttribution = await getOrderAttributionByOrderId(order.id)
+      if (newStatus === 'cancelled' && linkedAttribution) {
+        await reverseCommissionsForAttribution(linkedAttribution.id)
+        await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
+      } else if (currentStatus === 'cancelled' && newStatus !== 'cancelled' && linkedAttribution?.status === 'refunded') {
+        await restoreCommissionsForAttribution(linkedAttribution.id)
+        await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
+      }
+    } catch (err) {
+      console.warn(`[club-orders/status] Failed to update commissions for order ${order.id}:`, err)
     }
 
     // Log to admin_actions audit trail (non-fatal)
@@ -251,7 +264,7 @@ export async function POST(
           ${'club_order'},
           ${orderId},
           ${`${currentStatus} → ${newStatus}${isSkip ? ' (skip)' : ''}${isBackward ? ' (rollback)' : ''}`},
-          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, rollback: isBackward, suppressEmails, carrier, trackingNumber })}
+          ${JSON.stringify({ from: currentStatus, to: newStatus, method: authMethod, skip: isSkip, rollback: isBackward, suppressEmails, manualProcessed, carrier, trackingNumber })}
         )
       `
     } catch {

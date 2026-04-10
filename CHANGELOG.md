@@ -78,7 +78,7 @@
 - **Ghost Session Cookie Loop:** `middleware.ts` and `app/api/auth/logout/route.ts` now explicitly clear both domain-scoped (`.cultrhealth.com`) and host-scoped (`cultrhealth.com`) cookies when a session times out or logs out. This resolves an infinite `session_timeout` redirect loop caused by stale host-only cookies surviving the deletion process.
 
 ### Memory
-- Next.js `response.cookies.set()` doesn't inherently clear multiple cookies with the same name across different domains/hosts. To prevent ghost sessions during logout/timeout, use `response.headers.append('Set-Cookie', ...)` to explicitly delete both domain-wide and host-only cookies by setting `Max-Age=0` and matching `Secure`, `HttpOnly`, and `SameSite` attributes.
+- Next.js `response.cookies.set()` merged multiple headers with the same name into a single comma-separated string, breaking Safari parsing. We migrated to `cultr_session_v2` ensuring only a single cookie name and domain is used, allowing native Next.js cookie helpers.
 - Admin authentication bypasses (`isAdminEmail`) should allow team members to skip patient-specific checks (like Stripe subscriptions) while still enforcing security (like magic links).
 - When implementing a staging bypass based on emails, ensure the logic first strictly verifies that the environment is actually staging (`isStaging()`) to avoid inadvertently granting bypasses in production.
 

@@ -106,7 +106,7 @@ describe('creator magic-link auth routes', () => {
     expect(setCookie).toContain('Domain=.cultrhealth.com')
   })
 
-  it('clears stale host-only creator cookies before setting shared cultrhealth cookies', async () => {
+  it('sets shared cultrhealth cookies', async () => {
     mockVerifyMagicLinkToken.mockResolvedValue({ email: 'creator@example.com' })
 
     const { GET } = await import('@/app/api/creators/verify-login/route')
@@ -116,9 +116,7 @@ describe('creator magic-link auth routes', () => {
     const setCookie = response.headers.get('set-cookie') || ''
 
     expect(response.status).toBe(307)
-    expect(setCookie).toContain('cultr_session=; Path=/;')
-    expect(setCookie).toContain('cultr_last_activity=; Path=/;')
-    expect(setCookie).toContain('cultr_session=session-token')
+    expect(setCookie).toContain('cultr_session_v2=session-token')
     expect(setCookie).toContain('Domain=.cultrhealth.com')
   })
 

@@ -16,9 +16,14 @@ const mockFetch = vi.fn()
 global.fetch = mockFetch
 
 describe('OrdersClient', () => {
+  let pendingOrders = [{ id: 'pending-club-order', status: 'pending_approval' }]
+  let clubOrderStatus = 'shipped'
+
   beforeEach(() => {
     vi.clearAllMocks()
     currentTabParam = null
+    pendingOrders = [{ id: 'pending-club-order', status: 'pending_approval' }]
+    clubOrderStatus = 'shipped'
 
     mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString()
@@ -39,7 +44,7 @@ describe('OrdersClient', () => {
                     order_number: 'CLB-2001',
                     customer_email: 'member@example.com',
                     customer_name: 'Member Example',
-                    status: 'shipped',
+                    status: clubOrderStatus,
                     total_amount: 225,
                     source: 'club_orders',
                     created_at: '2026-04-01T00:00:00.000Z',
@@ -63,7 +68,7 @@ describe('OrdersClient', () => {
                   order_number: 'CLB-2001',
                   customer_email: 'member@example.com',
                   customer_name: 'Member Example',
-                  status: 'shipped',
+                  status: clubOrderStatus,
                   total_amount: 225,
                   source: 'club_orders',
                   created_at: '2026-04-01T00:00:00.000Z',
@@ -82,8 +87,17 @@ describe('OrdersClient', () => {
         return {
           ok: true,
           json: async () => ({
-            orders: [{ id: 'pending-club-order', status: 'pending_approval' }],
+            orders: pendingOrders,
           }),
+        }
+      }
+
+      if (url === '/api/admin/club-orders/club-order-1/status') {
+        clubOrderStatus = 'paid'
+        pendingOrders = []
+        return {
+          ok: true,
+          json: async () => ({ success: true, status: 'paid' }),
         }
       }
 
@@ -127,6 +141,30 @@ describe('OrdersClient', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /club orders/i }).className).toContain('bg-brand-primary')
+    })
+  })
+
+  it('refreshes the pending badge after manually clearing a pending club order from the all-orders modal', async () => {
+    clubOrderStatus = 'pending_approval'
+    render(<OrdersClient />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /club orders/i }).textContent).toContain('1')
+    })
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    fireEvent.click(screen.getByText('CLB-2001'))
+    fireEvent.change(screen.getByLabelText(/mark manually processed/i), { target: { value: 'paid' } })
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith('/api/admin/club-orders/club-order-1/status', expect.objectContaining({
+        method: 'POST',
+      }))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /^club orders$/i }).textContent).toBe('Club Orders')
     })
   })
 })

@@ -4,7 +4,7 @@ import { PLANS, type LibraryAccess, type PlanTier } from '@/lib/config/plans'
 import { getMembershipByCustomerId } from '@/lib/db'
 import { getCookieDomain } from '@/lib/utils'
 
-const SESSION_COOKIE_NAME = 'cultr_session'
+const SESSION_COOKIE_NAME = 'cultr_session_v2'
 
 const jwtSecret = process.env.JWT_SECRET
 if (!jwtSecret && process.env.NODE_ENV === 'production') {

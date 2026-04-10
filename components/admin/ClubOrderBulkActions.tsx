@@ -26,16 +26,15 @@ export default function ClubOrderBulkActions({
         onChange={(e) => {
           const target = e.target.value
           if (!target) return
-          if (confirm(`Move ${selectedCount} order(s) to "${PIPELINE_LABELS[target] || target}"?\n\nAll intermediate timestamps will be set automatically.`)) {
+          if (confirm(`Mark ${selectedCount} manually processed order(s) as "${PIPELINE_LABELS[target] || target}"?\n\nThis will not create QuickBooks invoices or send status emails.`)) {
             onBulkMove(target)
           }
           e.target.value = ''
         }}
         className="px-3 py-1.5 text-sm rounded-lg border border-amber-300 bg-white text-amber-900 cursor-pointer disabled:opacity-50"
       >
-        <option value="">Move to…</option>
+        <option value="">Mark manually processed as…</option>
         <option value="approved">{PIPELINE_LABELS.approved}</option>
-        <option value="invoice_sent">{PIPELINE_LABELS.invoice_sent}</option>
         <option value="paid">{PIPELINE_LABELS.paid}</option>
         <option value="fulfilled">{PIPELINE_LABELS.fulfilled}</option>
         <option value="cancelled">{PIPELINE_LABELS.cancelled}</option>

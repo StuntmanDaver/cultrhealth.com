@@ -10,7 +10,7 @@ import { verifySessionToken } from '@/lib/auth';
 export async function GET(request: NextRequest) {
   try {
     // Verify session from cookie (JWT verification, not raw JSON.parse)
-    const sessionCookie = request.cookies.get('cultr_session');
+    const sessionCookie = request.cookies.get('cultr_session_v2');
 
     if (!sessionCookie) {
       return NextResponse.json(
@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify session from cookie (JWT verification)
-    const sessionCookie = request.cookies.get('cultr_session');
+    const sessionCookie = request.cookies.get('cultr_session_v2');
 
     if (!sessionCookie) {
       return NextResponse.json(

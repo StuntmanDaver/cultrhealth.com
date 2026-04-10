@@ -45,6 +45,17 @@ export default function OrdersClient() {
   const [fulfilling, setFulfilling] = useState(false)
   const [fulfillError, setFulfillError] = useState<string | null>(null)
 
+  const refreshPendingCount = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/club-orders')
+      const result = await res.json()
+      const orders = result.orders || []
+      setPendingCount(orders.filter((o: { status: string }) => o.status === 'pending_approval').length)
+    } catch {
+      // non-critical
+    }
+  }, [])
+
   // --------------- Fetch Analytics ---------------
   const fetchAnalytics = useCallback(() => {
     setLoading(true)
@@ -139,7 +150,7 @@ export default function OrdersClient() {
   }, [data, orderData])
 
   // --------------- Club Order Fulfillment ---------------
-  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }) {
+  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }) {
     setClubUpdatingId(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
@@ -152,8 +163,8 @@ export default function OrdersClient() {
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus })
       }
-      fetchOrders()
       fetchAnalytics()
+      await Promise.all([fetchOrders(), refreshPendingCount()])
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to update')
     } finally {
@@ -171,8 +182,8 @@ export default function OrdersClient() {
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: 'approved' })
       }
-      fetchOrders()
       fetchAnalytics()
+      await Promise.all([fetchOrders(), refreshPendingCount()])
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to approve')
     } finally {
@@ -188,27 +199,26 @@ export default function OrdersClient() {
     }
     const ids = Array.from(selectedClubOrders)
     setBulkUpdating(true)
-    let successCount = 0
-    let failCount = 0
-    for (const orderId of ids) {
-      try {
-        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+    const results = await Promise.allSettled(
+      ids.map(orderId =>
+        fetch(`/api/admin/club-orders/${orderId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus, suppressEmails: true }),
+        }).then(res => {
+          if (!res.ok) throw new Error('failed')
+          return res
         })
-        if (res.ok) successCount++
-        else failCount++
-      } catch {
-        failCount++
-      }
-    }
+      )
+    )
+    const successCount = results.filter(r => r.status === 'fulfilled').length
+    const failCount = results.filter(r => r.status === 'rejected').length
     setSelectedClubOrders(new Set())
     setBulkUpdating(false)
     if (failCount > 0) alert(`${successCount} updated, ${failCount} failed`)
     if (successCount > 0) {
-      fetchOrders()
       fetchAnalytics()
+      await Promise.all([fetchOrders(), refreshPendingCount()])
     }
   }
 
@@ -245,14 +255,8 @@ export default function OrdersClient() {
 
   // --------------- Fetch Pending Count on Mount ---------------
   useEffect(() => {
-    fetch('/api/admin/club-orders')
-      .then(r => r.json())
-      .then(result => {
-        const orders = result.orders || []
-        setPendingCount(orders.filter((o: { status: string }) => o.status === 'pending_approval').length)
-      })
-      .catch(() => {})
-  }, [])
+    refreshPendingCount()
+  }, [refreshPendingCount])
 
   return (
     <div className="space-y-6">

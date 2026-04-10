@@ -206,4 +206,28 @@ describe('admin club order status suppressEmails', () => {
     })
     expect(mockResendSend).not.toHaveBeenCalled()
   })
+
+  it('records manual processed transitions in the admin audit metadata', async () => {
+    createStatusRouteSqlMock('pending_approval', 'paid')
+
+    const { POST } = await import('@/app/api/admin/club-orders/[orderId]/status/route')
+    const response = await POST(
+      new Request('http://localhost:3000/api/admin/club-orders/11111111-1111-1111-1111-111111111111/status', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ status: 'paid', suppressEmails: true, manualProcessed: true }),
+      }),
+      { params: Promise.resolve({ orderId: '11111111-1111-1111-1111-111111111111' }) }
+    )
+
+    expect(response.status).toBe(200)
+
+    const auditInsertCall = mockSql.mock.calls.find(([queryParts]) =>
+      queryParts.join(' ').includes('INSERT INTO admin_actions')
+    )
+    const metadata = JSON.parse(String(auditInsertCall?.[6] || '{}'))
+
+    expect(metadata.manualProcessed).toBe(true)
+    expect(metadata.suppressEmails).toBe(true)
+  })
 })

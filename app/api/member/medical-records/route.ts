@@ -10,7 +10,7 @@ import { verifySessionToken } from '@/lib/auth';
  */
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('cultr_session');
+    const sessionCookie = request.cookies.get('cultr_session_v2');
 
     if (!sessionCookie) {
       return NextResponse.json(

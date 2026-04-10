@@ -66,10 +66,6 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
   const [bulkUpdating, setBulkUpdating] = useState(false)
 
-  // Shipping form state
-  const [shippingForm, setShippingForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
-  const [shippingOrderId, setShippingOrderId] = useState<string | null>(null)
-
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -108,7 +104,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
   }
 
   // ── Status update action ──
-  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }) {
+  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }) {
     setUpdatingId(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
@@ -118,8 +114,6 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to update status')
-      setShippingOrderId(null)
-      setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
       await fetchOrders()
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Failed to update')
@@ -137,24 +131,20 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
     }
     const ids = Array.from(selectedOrders)
     setBulkUpdating(true)
-    let successCount = 0
-    let failCount = 0
-    for (const orderId of ids) {
-      try {
-        const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
+    const results = await Promise.allSettled(
+      ids.map(orderId =>
+        fetch(`/api/admin/club-orders/${orderId}/status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ status: newStatus, suppressEmails: true }),
+        }).then(res => {
+          if (!res.ok) throw new Error('failed')
+          return res
         })
-        if (res.ok) {
-          successCount++
-        } else {
-          failCount++
-        }
-      } catch {
-        failCount++
-      }
-    }
+      )
+    )
+    const successCount = results.filter(r => r.status === 'fulfilled').length
+    const failCount = results.filter(r => r.status === 'rejected').length
     setSelectedOrders(new Set())
     setBulkUpdating(false)
     if (failCount > 0) {

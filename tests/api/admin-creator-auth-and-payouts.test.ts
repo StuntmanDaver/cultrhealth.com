@@ -53,7 +53,7 @@ function createAuthenticatedRequest(
     body: init?.body,
     headers: init?.headers,
   })
-  request.cookies.set('cultr_session', token)
+  request.cookies.set('cultr_session_v2', token)
   return request
 }
 

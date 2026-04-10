@@ -99,8 +99,8 @@ export function middleware(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/api/creators/verify-email')
 
   if (isAuthRoute) {
-    const sessionCookie = request.cookies.get('cultr_session')
-    const lastActivity = request.cookies.get('cultr_last_activity')?.value
+    const sessionCookie = request.cookies.get('cultr_session_v2')
+    const lastActivity = request.cookies.get('cultr_last_activity_v2')?.value
     const domain = request.headers.get('host')?.includes('cultrhealth.com')
       ? '.cultrhealth.com'
       : undefined
@@ -122,21 +122,20 @@ export function middleware(request: NextRequest) {
           response = NextResponse.redirect(loginUrl)
         }
         
-        // Clear both domain and host-only cookies to prevent ghost sessions
-        const isProd = process.env.NODE_ENV === 'production'
+        // Clear domain cookies to prevent ghost sessions
         const clearCookie = (name: string, d?: string) => {
-          response.headers.append(
-            'Set-Cookie',
-            `${name}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax${isProd ? '; Secure' : ''}${d ? `; Domain=${d}` : ''}`
-          )
+          response.cookies.set(name, '', {
+            maxAge: 0,
+            path: '/',
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            ...(d ? { domain: d } : {})
+          })
         }
         
-        clearCookie('cultr_session', domain)
-        clearCookie('cultr_last_activity', domain)
-        if (domain) {
-          clearCookie('cultr_session')
-          clearCookie('cultr_last_activity')
-        }
+        clearCookie('cultr_session_v2', domain)
+        clearCookie('cultr_last_activity_v2', domain)
         return response
       }
     }
@@ -144,7 +143,7 @@ export function middleware(request: NextRequest) {
     // Update last activity timestamp
     if (sessionCookie) {
       const response = NextResponse.next()
-      response.cookies.set('cultr_last_activity', Date.now().toString(), {
+      response.cookies.set('cultr_last_activity_v2', Date.now().toString(), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

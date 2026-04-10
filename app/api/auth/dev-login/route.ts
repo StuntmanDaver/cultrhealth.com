@@ -14,14 +14,14 @@ export async function GET() {
   const token = await createSessionToken(email, 'dev_customer', undefined, 'admin')
 
   const response = NextResponse.redirect(new URL('/admin', 'http://localhost:3000'))
-  response.cookies.set('cultr_session', token, {
+  response.cookies.set('cultr_session_v2', token, {
     httpOnly: true,
     secure: false,
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
-  response.cookies.set('cultr_last_activity', Date.now().toString(), {
+  response.cookies.set('cultr_last_activity_v2', Date.now().toString(), {
     httpOnly: true,
     secure: false,
     sameSite: 'lax',

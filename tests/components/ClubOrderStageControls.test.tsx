@@ -35,6 +35,64 @@ describe('ClubOrderStageControls', () => {
     })
   })
 
+  it('offers a dedicated manual-processing action for pending orders and flags manual processed transitions', () => {
+    const onStatusUpdate = vi.fn()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(
+      <ClubOrderStageControls
+        orderId="club-order-pending-1"
+        currentStatus="pending_approval"
+        isApproving={false}
+        isUpdating={false}
+        onApprove={vi.fn()}
+        onStatusUpdate={onStatusUpdate}
+      />
+    )
+
+    expect(screen.queryByRole('button', { name: /skip to approved \(no email\)/i })).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/mark manually processed/i), { target: { value: 'paid' } })
+
+    expect(onStatusUpdate).toHaveBeenCalledWith('club-order-pending-1', 'paid', {
+      suppressEmails: true,
+      manualProcessed: true,
+    })
+  })
+
+  it('requires tracking when manually processing a pending order to shipped', () => {
+    const onStatusUpdate = vi.fn()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(
+      <ClubOrderStageControls
+        orderId="club-order-pending-2"
+        currentStatus="pending_approval"
+        isApproving={false}
+        isUpdating={false}
+        onApprove={vi.fn()}
+        onStatusUpdate={onStatusUpdate}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/mark manually processed/i), { target: { value: 'shipped' } })
+
+    expect(onStatusUpdate).not.toHaveBeenCalled()
+    expect(screen.getByPlaceholderText(/carrier/i)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText(/carrier/i), { target: { value: 'UPS' } })
+    fireEvent.change(screen.getByPlaceholderText(/tracking number/i), { target: { value: '1Z999AA10123456784' } })
+    fireEvent.click(screen.getByRole('button', { name: /confirm shipment/i }))
+
+    expect(onStatusUpdate).toHaveBeenCalledWith('club-order-pending-2', 'shipped', {
+      carrier: 'UPS',
+      trackingNumber: '1Z999AA10123456784',
+      trackingUrl: undefined,
+      suppressEmails: true,
+      manualProcessed: true,
+    })
+  })
+
   it('uses suppressEmails when skipping ahead from the move menu', () => {
     const onStatusUpdate = vi.fn()
     vi.spyOn(window, 'confirm').mockReturnValue(true)

@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react'
 import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 
 describe('ClubOrderBulkActions', () => {
-  it('does not allow bulk moves directly to shipped because tracking is required per order', () => {
+  it('frames bulk moves as manual processing and limits them to safe no-tracking statuses', () => {
     render(
       <ClubOrderBulkActions
         selectedCount={2}
@@ -14,7 +14,12 @@ describe('ClubOrderBulkActions', () => {
       />
     )
 
+    expect(screen.getByRole('option', { name: /mark manually processed as/i })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Invoice Sent' })).not.toBeInTheDocument()
     expect(screen.queryByRole('option', { name: 'Shipped' })).not.toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Approved' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Paid' })).toBeInTheDocument()
     expect(screen.getByRole('option', { name: 'Fulfilled' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Cancelled' })).toBeInTheDocument()
   })
 })

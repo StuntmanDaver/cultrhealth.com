@@ -1,9 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2, Check, DollarSign, Truck, CheckCircle2 } from 'lucide-react'
 import {
-  PIPELINE_ORDER,
   PIPELINE_STATUSES,
   PIPELINE_LABELS,
   TERMINAL_STATUSES,
@@ -20,7 +19,7 @@ interface ClubOrderStageControlsProps {
   onStatusUpdate: (
     orderId: string,
     newStatus: string,
-    extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean }
+    extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }
   ) => void
 }
 
@@ -32,7 +31,7 @@ export default function ClubOrderStageControls({
   onApprove,
   onStatusUpdate,
 }: ClubOrderStageControlsProps) {
-  const [shippingRequest, setShippingRequest] = useState<{ suppressEmails?: boolean } | null>(null)
+  const [shippingRequest, setShippingRequest] = useState<{ suppressEmails?: boolean; manualProcessed?: boolean } | null>(null)
   const [shippingForm, setShippingForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
 
   const currentIdx = PIPELINE_STATUSES.indexOf(currentStatus)
@@ -40,14 +39,43 @@ export default function ClubOrderStageControls({
   const moveTargets = getMoveTargets(currentStatus)
   const isTerminal = TERMINAL_STATUSES.includes(currentStatus)
   const isShippingThis = shippingRequest !== null
+  const manualProcessingOptions = [
+    { value: 'approved', label: 'Approved (No QB / No Email)' },
+    { value: 'paid', label: 'Paid (No Email)' },
+    { value: 'shipped', label: 'Shipped (Tracking Required / No Email)' },
+    { value: 'fulfilled', label: 'Fulfilled (No Email)' },
+    { value: 'cancelled', label: 'Cancelled' },
+  ] as const
 
-  function openShippingForm(options?: { suppressEmails?: boolean }) {
+  function openShippingForm(options?: { suppressEmails?: boolean; manualProcessed?: boolean }) {
     setShippingRequest(options ?? {})
   }
 
   function closeShippingForm() {
     setShippingRequest(null)
     setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
+  }
+
+  useEffect(() => {
+    closeShippingForm()
+  }, [currentStatus])
+
+  function handlePendingManualProcessed(target: string) {
+    const targetLabel = PIPELINE_LABELS[target] || target
+    const note = target === 'cancelled'
+      ? 'This will cancel the order without creating a QuickBooks invoice or sending status emails.'
+      : `This will mark the order as "${targetLabel}" without creating a QuickBooks invoice or sending status emails.`
+
+    if (!confirm(`Mark this order as manually processed and move it to "${targetLabel}"?\n\n${note}`)) {
+      return
+    }
+
+    if (target === 'shipped') {
+      openShippingForm({ suppressEmails: true, manualProcessed: true })
+      return
+    }
+
+    onStatusUpdate(orderId, target, { suppressEmails: true, manualProcessed: true })
   }
 
   return (
@@ -64,18 +92,25 @@ export default function ClubOrderStageControls({
               {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               {isApproving ? 'Approving...' : 'Approve & Send Invoice'}
             </button>
-            <button
-              onClick={(e) => {
+            <select
+              aria-label="Mark manually processed"
+              defaultValue=""
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => {
                 e.stopPropagation()
-                if (confirm('Skip invoice/email and move this order to "Approved"?')) {
-                  onStatusUpdate(orderId, 'approved', { suppressEmails: true })
-                }
+                const target = e.target.value
+                if (!target) return
+                handlePendingManualProcessed(target)
+                e.target.value = ''
               }}
               disabled={isApproving || isUpdating}
-              className="px-4 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50 transition-colors font-medium"
+              className="px-3 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary cursor-pointer disabled:opacity-50 transition-colors hover:bg-brand-primary/10 font-medium"
             >
-              Skip to Approved (No Email)
-            </button>
+              <option value="">Mark manually processed as…</option>
+              {manualProcessingOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
           </>
         )}
 
@@ -126,10 +161,10 @@ export default function ClubOrderStageControls({
         )}
 
         {/* Move to — forward skip OR backward rollback */}
-        {moveTargets.length > 0 && (
+        {currentStatus !== 'pending_approval' && moveTargets.length > 0 && (
           <select
-            disabled={isUpdating || isApproving}
-            value=""
+            disabled={isUpdating || isApproving || isShippingThis}
+            defaultValue=""
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
               e.stopPropagation()
@@ -159,13 +194,13 @@ export default function ClubOrderStageControls({
         )}
 
         {/* Cancel Action */}
-        {!isTerminal && (
+        {!isTerminal && currentStatus !== 'pending_approval' && (
           <button
             onClick={(e) => {
               e.stopPropagation()
               if (confirm('Cancel this order?')) onStatusUpdate(orderId, 'cancelled')
             }}
-            disabled={isUpdating || isApproving}
+            disabled={isUpdating || isApproving || isShippingThis}
             className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors font-medium"
           >
             Cancel Order
@@ -210,6 +245,7 @@ export default function ClubOrderStageControls({
                   trackingNumber: shippingForm.trackingNumber,
                   trackingUrl: shippingForm.trackingUrl || undefined,
                   suppressEmails: shippingRequest?.suppressEmails,
+                  manualProcessed: shippingRequest?.manualProcessed,
                 })
                 closeShippingForm()
               }}

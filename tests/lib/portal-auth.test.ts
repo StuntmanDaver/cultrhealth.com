@@ -46,8 +46,8 @@ describe('Portal Auth', () => {
       expect(PORTAL_ACCESS_COOKIE).toBe('cultr_portal_access')
       expect(PORTAL_REFRESH_COOKIE).toBe('cultr_portal_refresh')
       // Must NOT be 'cultr_session'
-      expect(PORTAL_ACCESS_COOKIE).not.toBe('cultr_session')
-      expect(PORTAL_REFRESH_COOKIE).not.toBe('cultr_session')
+      expect(PORTAL_ACCESS_COOKIE).not.toBe('cultr_session_v2')
+      expect(PORTAL_REFRESH_COOKIE).not.toBe('cultr_session_v2')
     })
   })
 
