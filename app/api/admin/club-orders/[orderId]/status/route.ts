@@ -241,17 +241,35 @@ export async function POST(
     }
 
     // Keep creator attribution and admin order state aligned when orders are voided or reopened.
+    // Each step is in its own non-fatal try/catch so a failure on the status update doesn't
+    // silently mask that the commission ledger was already modified.
     try {
       const linkedAttribution = await getOrderAttributionByOrderId(order.id)
       if (newStatus === 'cancelled' && linkedAttribution) {
-        await reverseCommissionsForAttribution(linkedAttribution.id)
-        await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
+        try {
+          await reverseCommissionsForAttribution(linkedAttribution.id)
+        } catch (err) {
+          console.warn(`[club-orders/status] Failed to reverse commissions for order ${order.id}:`, err)
+        }
+        try {
+          await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
+        } catch (err) {
+          console.warn(`[club-orders/status] Failed to update attribution status to refunded for order ${order.id}:`, err)
+        }
       } else if (currentStatus === 'cancelled' && newStatus !== 'cancelled' && linkedAttribution?.status === 'refunded') {
-        await restoreCommissionsForAttribution(linkedAttribution.id)
-        await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
+        try {
+          await restoreCommissionsForAttribution(linkedAttribution.id)
+        } catch (err) {
+          console.warn(`[club-orders/status] Failed to restore commissions for order ${order.id}:`, err)
+        }
+        try {
+          await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
+        } catch (err) {
+          console.warn(`[club-orders/status] Failed to update attribution status to pending for order ${order.id}:`, err)
+        }
       }
     } catch (err) {
-      console.warn(`[club-orders/status] Failed to update commissions for order ${order.id}:`, err)
+      console.warn(`[club-orders/status] Failed to fetch attribution for order ${order.id}:`, err)
     }
 
     // Log to admin_actions audit trail (non-fatal)

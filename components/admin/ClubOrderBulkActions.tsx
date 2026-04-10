@@ -22,7 +22,7 @@ export default function ClubOrderBulkActions({
       <span className="text-sm font-medium text-amber-800">{selectedCount} selected</span>
       <select
         disabled={isBulkUpdating}
-        value=""
+        defaultValue=""
         onChange={(e) => {
           const target = e.target.value
           if (!target) return

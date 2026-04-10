@@ -50,10 +50,12 @@ export async function POST(request: NextRequest) {
       .update(payload)
       .digest('hex')
 
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(receivedSignature),
-    )
+    const expectedBuf = Buffer.from(expectedSignature)
+    const receivedBuf = Buffer.from(receivedSignature)
+    if (expectedBuf.length !== receivedBuf.length) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+    }
+    const isValid = crypto.timingSafeEqual(expectedBuf, receivedBuf)
 
     if (!isValid) {
       console.error('Calendly webhook signature verification failed')

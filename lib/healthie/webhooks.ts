@@ -54,10 +54,10 @@ export function verifyHealthieWebhook(
   const provided = urlSecret || headerSecret
   if (provided) {
     try {
-      return timingSafeEqual(
-        Buffer.from(provided, 'utf8'),
-        Buffer.from(webhookSecret, 'utf8'),
-      )
+      const providedBuf = Buffer.from(provided, 'utf8')
+      const secretBuf = Buffer.from(webhookSecret, 'utf8')
+      if (providedBuf.length !== secretBuf.length) return false
+      return timingSafeEqual(providedBuf, secretBuf)
     } catch {
       return false
     }
@@ -133,10 +133,10 @@ function verifyHmacSignature(
 
     const actualSig = sigMatch[1]
 
-    return timingSafeEqual(
-      Buffer.from(computedSig, 'base64'),
-      Buffer.from(actualSig, 'base64'),
-    )
+    const computedBuf = Buffer.from(computedSig, 'base64')
+    const actualBuf = Buffer.from(actualSig, 'base64')
+    if (computedBuf.length !== actualBuf.length) return false
+    return timingSafeEqual(computedBuf, actualBuf)
   } catch (err) {
     console.error('Healthie webhook HMAC verification error:', err instanceof Error ? err.message : 'unknown')
     return false
