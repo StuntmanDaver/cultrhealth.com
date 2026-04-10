@@ -120,6 +120,15 @@ export async function POST(
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
     }
 
+    // Shipped transitions always require tracking info (inline form enforces this client-side;
+    // this guard protects the API from direct calls that skip the form)
+    if (newStatus === 'shipped' && authMethod !== 'email_link' && (!carrier || !trackingNumber)) {
+      return NextResponse.json(
+        { error: 'carrier and trackingNumber are required when marking an order as shipped' },
+        { status: 400 }
+      )
+    }
+
     // Fetch current order
     const current = await sql`
       SELECT id, order_number, member_name, member_email, status, items, subtotal_usd,
@@ -398,7 +407,7 @@ async function sendCustomerStatusEmail(
   trackingUrl?: string,
 ) {
   // Only send customer emails for these statuses
-  if (!['paid', 'shipped', 'fulfilled'].includes(newStatus)) return
+  if (!['paid', 'shipped', 'fulfilled', 'cancelled'].includes(newStatus)) return
   if (!process.env.RESEND_API_KEY) return
 
   const { Resend } = await import('resend')
@@ -433,6 +442,18 @@ async function sendCustomerStatusEmail(
       statusText: 'Your order has been delivered and fulfilled.',
       body: `<p style="margin: 0 0 16px; font-size: 14px; color: #546E6B; line-height: 1.6;">
         Your order has been completed! If you have any questions about your therapies, our team is always here to help.
+      </p>
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="mailto:support@cultrhealth.com" style="display: inline-block; background: #2A4542; color: white; padding: 12px 32px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 14px;">Contact Support</a>
+      </div>`,
+    },
+    cancelled: {
+      subject: `Order Cancelled — ${order.order_number}`,
+      heading: 'Order Cancelled',
+      statusBg: '#FCE4EC',
+      statusText: 'Your order has been cancelled.',
+      body: `<p style="margin: 0 0 16px; font-size: 14px; color: #546E6B; line-height: 1.6;">
+        Your order has been cancelled. If you believe this was a mistake or have questions, please reach out to our support team and we&rsquo;ll be happy to help.
       </p>
       <div style="text-align: center; margin: 20px 0;">
         <a href="mailto:support@cultrhealth.com" style="display: inline-block; background: #2A4542; color: white; padding: 12px 32px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 14px;">Contact Support</a>

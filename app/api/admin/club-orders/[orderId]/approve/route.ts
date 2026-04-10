@@ -179,6 +179,7 @@ export async function POST(
         status = ${finalStatus},
         approved_at = NOW(),
         approved_by = ${session?.email || 'email_link'},
+        invoice_sent_at = CASE WHEN ${finalStatus === 'invoice_sent'}::boolean THEN NOW() ELSE NULL END,
         qb_invoice_id = ${qbInvoiceId},
         qb_invoice_url = ${qbInvoiceUrl},
         subtotal_usd = COALESCE(subtotal_usd, ${subtotalUpdated ? effectiveSubtotal : null}),
@@ -310,8 +311,8 @@ export async function POST(
         sendApprovalConfirmationToAdmin(emailData),
       ])
       console.log('[club-orders/approve] Approval emails sent for', order.order_number)
-    } catch (err) {
-      console.error('[club-orders/approve] Email send failed (non-fatal, order already approved):', err)
+    } catch {
+      // non-fatal — approval already committed
     }
 
     // If called from email link, redirect

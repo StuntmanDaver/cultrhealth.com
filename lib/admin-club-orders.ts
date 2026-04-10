@@ -25,7 +25,8 @@ export const NEXT_ACTIONS: Record<string, { status: string; label: string; color
   approved: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
   invoice_sent: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
   needs_payment: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  paid: { status: 'shipped', label: 'Mark Shipped', color: '#2563eb' },
+  // NOTE: paid→shipped intentionally omitted — shipping requires the inline tracking form,
+  // not a one-click email link.
   shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 };
 

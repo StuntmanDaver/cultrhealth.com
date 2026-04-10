@@ -26,7 +26,7 @@ export async function GET() {
       SELECT
         co.id, co.order_number, co.member_name, co.member_email, co.member_phone,
         co.items, co.subtotal_usd, co.notes, co.status,
-        co.created_at, co.approved_at, co.paid_at, co.shipped_at, co.fulfilled_at,
+        co.created_at, co.approved_at, co.invoice_sent_at, co.paid_at, co.shipped_at, co.fulfilled_at,
         co.qb_invoice_id, co.qb_invoice_url,
         co.coupon_code, co.discount_percent,
         co.tracking_carrier, co.tracking_number, co.tracking_url,

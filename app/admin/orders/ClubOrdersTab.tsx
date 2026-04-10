@@ -26,6 +26,7 @@ interface ClubOrder {
   status: string
   created_at: string
   approved_at: string | null
+  invoice_sent_at: string | null
   paid_at: string | null
   shipped_at: string | null
   fulfilled_at: string | null
@@ -452,8 +453,8 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
                         <TimelineStep label="Approved" timestamp={order.approved_at} active={!!order.approved_at} />
                         <TimelineStep
                           label="Invoice Sent"
-                          timestamp={order.status === 'invoice_sent' || order.paid_at || order.shipped_at || order.fulfilled_at ? order.approved_at : null}
-                          active={['invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'].includes(order.status)}
+                          timestamp={order.invoice_sent_at}
+                          active={!!order.invoice_sent_at}
                         />
                         <TimelineStep
                           label="Needs Payment"
