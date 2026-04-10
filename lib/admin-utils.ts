@@ -49,6 +49,7 @@ export function getStatusColor(status: string): string {
     case 'pending_approval': return 'text-yellow-700 bg-yellow-100'
     case 'approved': return 'text-blue-700 bg-blue-100'
     case 'invoice_sent': return 'text-indigo-700 bg-indigo-100'
+    case 'needs_payment': return 'text-orange-700 bg-orange-100'
     case 'rejected': return 'text-red-700 bg-red-100'
     case 'paid': return 'text-green-700 bg-green-100'
     case 'shipped': return 'text-blue-700 bg-blue-100'
@@ -62,6 +63,7 @@ export const ORDER_STATUS_STYLES: Record<string, { label: string; bg: string; te
   pending_approval: { label: 'Pending Approval', bg: 'bg-yellow-100', text: 'text-yellow-800' },
   approved:         { label: 'Approved',          bg: 'bg-blue-100',   text: 'text-blue-800' },
   invoice_sent:     { label: 'Invoice Sent',      bg: 'bg-indigo-100', text: 'text-indigo-800' },
+  needs_payment:    { label: 'Needs Payment',     bg: 'bg-orange-100', text: 'text-orange-800' },
   paid:             { label: 'Paid',              bg: 'bg-green-100',  text: 'text-green-800' },
   shipped:          { label: 'Shipped',   bg: 'bg-blue-100',   text: 'text-blue-800' },
   fulfilled:        { label: 'Fulfilled',         bg: 'bg-emerald-100', text: 'text-emerald-800' },

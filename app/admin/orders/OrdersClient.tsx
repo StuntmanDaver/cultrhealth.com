@@ -150,7 +150,7 @@ export default function OrdersClient() {
   }, [data, orderData])
 
   // --------------- Club Order Fulfillment ---------------
-  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }) {
+  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { suppressEmails?: boolean; manualProcessed?: boolean }) {
     setClubUpdatingId(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
@@ -193,10 +193,6 @@ export default function OrdersClient() {
 
   async function handleBulkStatusUpdate(newStatus: string) {
     if (selectedClubOrders.size === 0) return
-    if (newStatus === 'shipped') {
-      alert('Bulk shipping is not supported. Update each order individually so tracking can be recorded.')
-      return
-    }
     const ids = Array.from(selectedClubOrders)
     setBulkUpdating(true)
     const results = await Promise.allSettled(

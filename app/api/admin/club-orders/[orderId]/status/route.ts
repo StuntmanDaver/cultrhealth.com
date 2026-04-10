@@ -25,6 +25,7 @@ const STAGE_TIMESTAMPS: Record<string, string> = {
 
 // Status labels for emails
 const STATUS_LABELS: Record<string, string> = {
+  needs_payment: 'Awaiting Payment',
   paid: 'Payment Confirmed',
   shipped: 'Order Shipped',
   fulfilled: 'Order Complete',
@@ -117,17 +118,6 @@ export async function POST(
 
     if (!newStatus) {
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
-    }
-
-    if (newStatus === 'shipped' && (!carrier || !trackingNumber)) {
-      if (authMethod === 'email_link') {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
-        return NextResponse.redirect(`${siteUrl}/admin/orders?tab=club-orders&openShipping=${orderId}`)
-      }
-      return NextResponse.json(
-        { error: 'carrier and trackingNumber are required when marking an order as shipped' },
-        { status: 400 }
-      )
     }
 
     // Fetch current order
@@ -433,15 +423,8 @@ async function sendCustomerStatusEmail(
       statusBg: '#DBEAFE',
       statusText: 'Your order is on its way to you.',
       body: `<p style="margin: 0 0 16px; font-size: 14px; color: #546E6B; line-height: 1.6;">
-        Great news — your order has been shipped!${carrier ? ` Your package is being delivered via <strong>${escapeHtml(carrier)}</strong>.` : ''}
-      </p>
-      ${trackingNumber ? `
-      <div style="background: #F5F0E8; border-radius: 12px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #B7E4C7;">
-        <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px; color: #2A4542;">Tracking Information</p>
-        ${carrier ? `<p style="margin: 0 0 4px; font-size: 14px; color: #546E6B;"><strong>Carrier:</strong> ${escapeHtml(carrier)}</p>` : ''}
-        <p style="margin: 0 0 4px; font-size: 14px; color: #546E6B;"><strong>Tracking #:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${escapeHtml(trackingNumber)}</code></p>
-        ${trackingUrl ? `<p style="margin: 8px 0 0;"><a href="${escapeHtml(trackingUrl)}" style="display: inline-block; background: #2A4542; color: white; padding: 10px 24px; border-radius: 9999px; text-decoration: none; font-weight: 600; font-size: 13px;">Track Your Package</a></p>` : ''}
-      </div>` : ''}`,
+        Great news — your order has been shipped! You will receive tracking information directly from our fulfillment partner once your package is in transit.
+      </p>`,
     },
     fulfilled: {
       subject: `Order Complete — ${order.order_number}`,

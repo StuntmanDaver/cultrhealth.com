@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Check, Loader2, RefreshCw, ChevronDown, ChevronUp, Package, Truck, CheckCircle2, Clock, FileText, DollarSign } from 'lucide-react'
+import { Check, Loader2, RefreshCw, ChevronDown, ChevronUp, Package, Truck, CheckCircle2, Clock, FileText, DollarSign, CreditCard } from 'lucide-react'
 import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
 import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 import { ORDER_STATUS_STYLES } from '@/lib/admin-utils'
@@ -46,6 +46,7 @@ const PIPELINE_STAGES = [
   { key: 'pending_approval', label: 'Pending', icon: Clock, color: 'yellow' },
   { key: 'approved', label: 'Approved', icon: Check, color: 'blue' },
   { key: 'invoice_sent', label: 'Invoiced', icon: FileText, color: 'indigo' },
+  { key: 'needs_payment', label: 'Needs Payment', icon: CreditCard, color: 'orange' },
   { key: 'paid', label: 'Paid', icon: DollarSign, color: 'green' },
   { key: 'shipped', label: 'Shipped', icon: Truck, color: 'blue' },
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
@@ -104,7 +105,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
   }
 
   // ── Status update action ──
-  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }) {
+  async function handleStatusUpdate(orderId: string, newStatus: string, extra?: { suppressEmails?: boolean; manualProcessed?: boolean }) {
     setUpdatingId(orderId)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
@@ -125,10 +126,6 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
   // ── Bulk Status update action ──
   async function handleBulkStatusUpdate(newStatus: string) {
     if (selectedOrders.size === 0) return
-    if (newStatus === 'shipped') {
-      alert('Bulk shipping is not supported. Update each order individually so tracking can be recorded.')
-      return
-    }
     const ids = Array.from(selectedOrders)
     setBulkUpdating(true)
     const results = await Promise.allSettled(
@@ -180,6 +177,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
               yellow: count > 0 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               indigo: count > 0 ? 'bg-indigo-100 text-indigo-800 border-indigo-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               green: count > 0 ? 'bg-green-100 text-green-800 border-green-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
+              orange: count > 0 ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               blue: count > 0 ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               emerald: count > 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
             }
@@ -455,7 +453,12 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
                         <TimelineStep
                           label="Invoice Sent"
                           timestamp={order.status === 'invoice_sent' || order.paid_at || order.shipped_at || order.fulfilled_at ? order.approved_at : null}
-                          active={['invoice_sent', 'paid', 'shipped', 'fulfilled'].includes(order.status)}
+                          active={['invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'].includes(order.status)}
+                        />
+                        <TimelineStep
+                          label="Needs Payment"
+                          timestamp={null}
+                          active={['needs_payment', 'paid', 'shipped', 'fulfilled'].includes(order.status)}
                         />
                         <TimelineStep label="Paid" timestamp={order.paid_at} active={!!order.paid_at} />
                         <TimelineStep label="Shipped" timestamp={order.shipped_at} active={!!order.shipped_at} />

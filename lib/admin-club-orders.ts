@@ -1,16 +1,17 @@
 // Shared club-order pipeline metadata and helpers
 // Safe to import from both API routes and client components.
 
-export const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'] as const;
+export const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'] as const;
 export type ClubOrderStage = typeof PIPELINE_ORDER[number];
 
-export const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'paid', 'shipped', 'fulfilled'];
+export const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'];
 export const ALL_PIPELINE_AND_CANCEL = [...PIPELINE_STATUSES, 'cancelled'];
 
 export const PIPELINE_LABELS: Record<string, string> = {
   pending_approval: 'Pending Approval',
   approved: 'Approved',
   invoice_sent: 'Invoice Sent',
+  needs_payment: 'Needs Payment',
   paid: 'Paid',
   shipped: 'Shipped',
   fulfilled: 'Fulfilled',
@@ -21,8 +22,9 @@ export const PIPELINE_LABELS: Record<string, string> = {
 
 // Next action after each status for UI and admin email buttons
 export const NEXT_ACTIONS: Record<string, { status: string; label: string; color: string }> = {
-  approved: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  invoice_sent: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
+  approved: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
+  invoice_sent: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
+  needs_payment: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
   shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 };
 

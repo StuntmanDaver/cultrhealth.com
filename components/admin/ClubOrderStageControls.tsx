@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle, CreditCard } from 'lucide-react'
 import {
   PIPELINE_STATUSES,
   PIPELINE_LABELS,
@@ -19,7 +18,7 @@ interface ClubOrderStageControlsProps {
   onStatusUpdate: (
     orderId: string,
     newStatus: string,
-    extra?: { carrier?: string; trackingNumber?: string; trackingUrl?: string; suppressEmails?: boolean; manualProcessed?: boolean }
+    extra?: { suppressEmails?: boolean; manualProcessed?: boolean }
   ) => void
 }
 
@@ -31,9 +30,6 @@ export default function ClubOrderStageControls({
   onApprove,
   onStatusUpdate,
 }: ClubOrderStageControlsProps) {
-  const [shippingRequest, setShippingRequest] = useState<{ suppressEmails?: boolean; manualProcessed?: boolean } | null>(null)
-  const [shippingForm, setShippingForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
-
   const currentIdx = PIPELINE_STATUSES.indexOf(currentStatus)
   const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE_STATUSES.length - 1 ? PIPELINE_STATUSES[currentIdx + 1] : null
   const moveTargets = getMoveTargets(currentStatus)
@@ -46,27 +42,14 @@ export default function ClubOrderStageControls({
   }
   const nextStatusTriggersEmail = nextStatus !== null && nextStatus in EMAIL_TRIGGER_LABELS
   const isTerminal = TERMINAL_STATUSES.includes(currentStatus)
-  const isShippingThis = shippingRequest !== null
   const manualProcessingOptions = [
     { value: 'approved', label: 'Approved (No QB / No Email)' },
+    { value: 'needs_payment', label: 'Needs Payment (No Email)' },
     { value: 'paid', label: 'Paid (No Email)' },
-    { value: 'shipped', label: 'Shipped (Tracking Required / No Email)' },
+    { value: 'shipped', label: 'Shipped (No Email)' },
     { value: 'fulfilled', label: 'Fulfilled (No Email)' },
     { value: 'cancelled', label: 'Cancelled' },
   ] as const
-
-  function openShippingForm(options?: { suppressEmails?: boolean; manualProcessed?: boolean }) {
-    setShippingRequest(options ?? {})
-  }
-
-  function closeShippingForm() {
-    setShippingRequest(null)
-    setShippingForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
-  }
-
-  useEffect(() => {
-    closeShippingForm()
-  }, [currentStatus])
 
   function handlePendingManualProcessed(target: string) {
     const targetLabel = PIPELINE_LABELS[target] || target
@@ -78,18 +61,13 @@ export default function ClubOrderStageControls({
       return
     }
 
-    if (target === 'shipped') {
-      openShippingForm({ suppressEmails: true, manualProcessed: true })
-      return
-    }
-
     onStatusUpdate(orderId, target, { suppressEmails: true, manualProcessed: true })
   }
 
   return (
     <div className="flex flex-col gap-3">
       {/* Email send warning — shown whenever the primary next step fires a customer email */}
-      {nextStatusTriggersEmail && !isShippingThis && currentStatus !== 'pending_approval' && (
+      {nextStatusTriggersEmail && currentStatus !== 'pending_approval' && (
         <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
           <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-800 leading-relaxed">
@@ -100,6 +78,7 @@ export default function ClubOrderStageControls({
           </p>
         </div>
       )}
+
       <div className="flex flex-wrap gap-2">
         {/* Primary action: Approve for pending, next step for others */}
         {currentStatus === 'pending_approval' && (
@@ -148,41 +127,37 @@ export default function ClubOrderStageControls({
                 )
                 if (!ok) return
               }
-              if (nextStatus === 'shipped') {
-                openShippingForm()
-              } else {
-                onStatusUpdate(orderId, nextStatus)
-              }
+              onStatusUpdate(orderId, nextStatus)
             }}
-            disabled={isUpdating || isApproving || isShippingThis}
+            disabled={isUpdating || isApproving}
             className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white font-medium disabled:opacity-50 transition-colors ${
-              nextStatus === 'paid' ? 'bg-green-600 hover:bg-green-700'
-                : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
-                  : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
-                    : 'bg-brand-primary hover:bg-brand-primaryHover'
+              nextStatus === 'needs_payment' ? 'bg-orange-500 hover:bg-orange-600'
+                : nextStatus === 'paid' ? 'bg-green-600 hover:bg-green-700'
+                  : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
+                    : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-brand-primary hover:bg-brand-primaryHover'
             }`}
           >
             {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-              nextStatus === 'paid' ? <DollarSign className="w-4 h-4" /> :
-                nextStatus === 'shipped' ? <Truck className="w-4 h-4" /> :
-                  nextStatus === 'fulfilled' ? <CheckCircle2 className="w-4 h-4" /> : null
+              nextStatus === 'needs_payment' ? <CreditCard className="w-4 h-4" /> :
+                nextStatus === 'paid' ? <DollarSign className="w-4 h-4" /> :
+                  nextStatus === 'shipped' ? <Truck className="w-4 h-4" /> :
+                    nextStatus === 'fulfilled' ? <CheckCircle2 className="w-4 h-4" /> : null
             )}
             {isUpdating ? 'Updating...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
           </button>
         )}
+
+        {/* Skip (No Email) button */}
         {nextStatus && currentStatus !== 'pending_approval' && (
           <button
             onClick={(e) => {
               e.stopPropagation()
               if (confirm(`Skip email trigger and move to "${PIPELINE_LABELS[nextStatus] || nextStatus}"?`)) {
-                if (nextStatus === 'shipped') {
-                  openShippingForm({ suppressEmails: true })
-                  return
-                }
                 onStatusUpdate(orderId, nextStatus, { suppressEmails: true })
               }
             }}
-            disabled={isUpdating || isApproving || isShippingThis}
+            disabled={isUpdating || isApproving}
             className="px-4 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary hover:bg-brand-primary/10 disabled:opacity-50 transition-colors font-medium"
           >
             {`Skip ${PIPELINE_LABELS[nextStatus] || nextStatus} (No Email)`}
@@ -192,7 +167,7 @@ export default function ClubOrderStageControls({
         {/* Move to — forward skip OR backward rollback */}
         {currentStatus !== 'pending_approval' && moveTargets.length > 0 && (
           <select
-            disabled={isUpdating || isApproving || isShippingThis}
+            disabled={isUpdating || isApproving}
             defaultValue=""
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => {
@@ -201,11 +176,6 @@ export default function ClubOrderStageControls({
               if (!target) return
               const note = getMoveNote(currentStatus, target)
               if (confirm(`Move to "${PIPELINE_LABELS[target] || target}"?\n\n${note}`)) {
-                if (target === 'shipped') {
-                  openShippingForm({ suppressEmails: true })
-                  e.target.value = ''
-                  return
-                }
                 onStatusUpdate(orderId, target, { suppressEmails: true })
               }
               e.target.value = ''
@@ -229,73 +199,13 @@ export default function ClubOrderStageControls({
               e.stopPropagation()
               if (confirm('Cancel this order?')) onStatusUpdate(orderId, 'cancelled')
             }}
-            disabled={isUpdating || isApproving || isShippingThis}
+            disabled={isUpdating || isApproving}
             className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors font-medium"
           >
             Cancel Order
           </button>
         )}
       </div>
-
-      {/* Inline Shipping Form */}
-      {isShippingThis && (
-        <div className="mt-2 bg-blue-50 rounded-lg p-4 space-y-2 border border-blue-100">
-          <h4 className="text-sm font-medium text-blue-900 mb-2">Shipping Details</h4>
-          <input
-            type="text"
-            placeholder="Carrier (e.g., USPS, UPS, FedEx)"
-            value={shippingForm.carrier}
-            onChange={(e) => setShippingForm(f => ({ ...f, carrier: e.target.value }))}
-            className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <input
-            type="text"
-            placeholder="Tracking Number"
-            value={shippingForm.trackingNumber}
-            onChange={(e) => setShippingForm(f => ({ ...f, trackingNumber: e.target.value }))}
-            className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <input
-            type="text"
-            placeholder="Tracking URL (optional)"
-            value={shippingForm.trackingUrl}
-            onChange={(e) => setShippingForm(f => ({ ...f, trackingUrl: e.target.value }))}
-            className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-white"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onStatusUpdate(orderId, 'shipped', {
-                  carrier: shippingForm.carrier,
-                  trackingNumber: shippingForm.trackingNumber,
-                  trackingUrl: shippingForm.trackingUrl || undefined,
-                  suppressEmails: shippingRequest?.suppressEmails,
-                  manualProcessed: shippingRequest?.manualProcessed,
-                })
-                closeShippingForm()
-              }}
-              disabled={isUpdating || !shippingForm.carrier || !shippingForm.trackingNumber}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
-            >
-              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
-              {isUpdating ? 'Shipping...' : 'Confirm Shipment'}
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                closeShippingForm()
-              }}
-              className="px-4 py-2 border border-blue-200 text-blue-700 rounded-lg text-sm hover:bg-blue-100 transition-colors font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
