@@ -465,7 +465,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
                         <TimelineStep label="Fulfilled" timestamp={order.fulfilled_at} active={!!order.fulfilled_at} />
                       </div>
                       {/* Activity log (audit trail) */}
-                      <ActivityLog orderId={order.id} />
+                      <ActivityLog orderId={order.id} refreshKey={order.status} />
                     </div>
 
                     {/* ═══ Context-Aware Actions ═══ */}
@@ -517,13 +517,12 @@ interface ActivityEntry {
   created_at: string
 }
 
-function ActivityLog({ orderId }: { orderId: string }) {
+function ActivityLog({ orderId, refreshKey }: { orderId: string; refreshKey?: string }) {
   const [entries, setEntries] = useState<ActivityEntry[]>([])
   const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function load() {
-    if (loaded) return
     setLoading(true)
     try {
       const res = await fetch(`/api/admin/club-orders/${orderId}/activity`)
@@ -537,7 +536,7 @@ function ActivityLog({ orderId }: { orderId: string }) {
     }
   }
 
-  useEffect(() => { load() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [orderId, refreshKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <p className="text-xs text-brand-primary/30 mt-3 pt-3 border-t border-brand-primary/5">Loading activity...</p>
   if (loaded && entries.length === 0) return null
