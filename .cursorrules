@@ -509,6 +509,10 @@ any file containing API keys, secrets, or tokens
 - Skip creator magic-link rate limiting on staging hosts and for listed bypass emails in `app/api/creators/magic-link/route.ts` so Safari/WebKit retries and E2E logins do not fail spuriously
 - Keep `app/api/creators/verify-email/route.ts` compatible with browser-clicked `GET` verification links as well as JSON `POST` verification; redirect pending creators to `/creators/pending`, active creators to `/creators/login`, paused/rejected creators to creator login with `inactive_account`, invalid links with `invalid_verification_link`, and unexpected verification failures with `email_verification_failed`
 - ALWAYS use `response.cookies.set()` or `response.cookies.delete()` for session cookie management to avoid comma-separated Set-Cookie header merging issues on Vercel. Since `cookies.set()` overwrites cookies of the same name even if domains differ, ensure you use distinct cookie names (like `v2`) instead of trying to clear both host and domain variants simultaneously.
+- **Admin Pending Clearance:** When Ops needs to clear manually-processed `pending_approval` club orders without triggering QuickBooks or status emails, they must use the dedicated manual-processing flow in the UI, which passes `suppressEmails: true` and `manualProcessed: true` to the status API.
+- **HMAC timingSafeEqual:** Always verify buffer lengths match before passing them to `crypto.timingSafeEqual()` to avoid `TypeError: Input buffers must have the same length` crashes.
+- **Email Link Redirects:** When an API route processes an action via an `email_link` and encounters missing required fields (like tracking numbers for shipping), it must redirect the user to the UI (`?tab=club-orders&openShipping=[orderId]`) instead of returning raw JSON errors.
+- **UI State Bypass:** Ensure mutually exclusive UI states (like an open inline shipping form vs skip/cancel buttons) properly disable conflicting controls to prevent the UI from getting stuck in invalid visual states when background actions complete.
 
 # ============================================================================
 # 19. JOIN PAGE SPECIFIC

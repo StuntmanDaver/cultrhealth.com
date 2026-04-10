@@ -1,3 +1,21 @@
+## [2026-04-09] - Admin Pending Order Manual Clearance & Pipeline Hardening
+
+### Added
+- **Manual Pending Clearance:** Added a dedicated manual-processing action for pending club orders in the admin dashboard (`app/admin/orders/OrdersClient.tsx` and `components/admin/ClubOrderStageControls.tsx`), allowing operations to clear already-handled orders without triggering QuickBooks invoices or customer/admin status emails.
+- **Bulk Manual Clearance:** Reframed bulk actions in `components/admin/ClubOrderBulkActions.tsx` as manual-processing actions, restricting bulk moves to safe, non-tracking statuses (`approved`, `paid`, `fulfilled`, `cancelled`).
+- **Pending Count Synchronization:** Implemented a shared `refreshPendingCount` function in `app/admin/orders/OrdersClient.tsx` to instantly update the pending badge and counts when a pending club order is manually cleared from the "All Orders" modal.
+- **Clearance Audit Trail:** Extended the status update API (`app/api/admin/club-orders/[orderId]/status/route.ts`) to accept a `manualProcessed` flag, writing it to the `admin_actions.metadata` audit log so operations can distinguish manual queue cleanup from standard pipeline progression.
+
+### Fixed
+- **HMAC Token Crash Vulnerability:** Added a strict buffer length check before calling `crypto.timingSafeEqual()` in `verifyStatusToken` (`app/api/admin/club-orders/[orderId]/status/route.ts`), preventing 500-error crashes from malformed HMAC tokens.
+- **Broken Shipped Email Link:** Fixed the API to redirect admins to the dashboard (`?tab=club-orders&openShipping=[orderId]`) when clicking an email link to mark an order as `shipped` without tracking details, rather than throwing a raw 400 JSON error.
+- **Non-Transactional Commission Reversal Crash:** Wrapped the creator commission rollback in a `try/catch` block inside the status route to prevent attribution database lookup failures from crashing the request and leaving the system in an inconsistent state after an order is cancelled.
+- **Shipping Form UI State Bypass:** Disabled the "Skip to" dropdown and "Cancel Order" buttons in `components/admin/ClubOrderStageControls.tsx` while the shipping form is active (`isShippingThis`), and added a `useEffect` to auto-close the form if the status changes externally, preventing the form from becoming stuck open.
+- **Revived Order Timestamp Bug:** Updated the `isForward` direction logic in the status pipeline loop to correctly generate timestamps when a `cancelled` order is revived to an active pipeline stage.
+- **Sequential Bulk Update UI Blocking:** Replaced the sequential `await fetch()` loop with `Promise.allSettled` in `app/admin/orders/OrdersClient.tsx` and `app/admin/orders/ClubOrdersTab.tsx`, allowing bulk status updates to resolve concurrently and unblock the UI.
+
+---
+
 ## [2026-04-09] - Admin Creator Impersonation
 
 ### Added

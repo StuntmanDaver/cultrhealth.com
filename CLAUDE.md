@@ -1061,6 +1061,10 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Join coupon precedence:** Built-in `CLUB_COUPONS` values shadow DB coupon rows on `join.cultrhealth.com`; admin-created affiliate/company codes must not reuse those normalized values.
 - **Retroactive Attribution:** When an admin approves an order, the system automatically checks if an unattributed coupon code now belongs to an active creator and maps the commission retroactively. This prevents lost commissions when internal promo codes are transferred to active affiliates.
 - **Admin coupon removal:** Permanently delete coupon codes only when they have no historical usage and no `order_attributions` references. Otherwise deactivate them so creator ROI and attribution history remain intact.
+- **Admin Pending Clearance:** When Ops needs to clear manually-processed `pending_approval` club orders without triggering QuickBooks or status emails, they must use the dedicated manual-processing flow in the UI, which passes `suppressEmails: true` and `manualProcessed: true` to the status API.
+- **HMAC timingSafeEqual:** Always verify buffer lengths match before passing them to `crypto.timingSafeEqual()` to avoid `TypeError: Input buffers must have the same length` crashes.
+- **Email Link Redirects:** When an API route processes an action via an `email_link` and encounters missing required fields (like tracking numbers for shipping), it must redirect the user to the UI (`?tab=club-orders&openShipping=[orderId]`) instead of returning raw JSON errors.
+- **UI State Bypass:** Ensure mutually exclusive UI states (like an open inline shipping form vs skip/cancel buttons) properly disable conflicting controls to prevent the UI from getting stuck in invalid visual states when background actions complete.
 
 ### HIPAA Compliance
 - Never log PHI (Protected Health Information)
