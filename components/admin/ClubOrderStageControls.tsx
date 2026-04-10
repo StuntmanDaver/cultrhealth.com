@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Loader2, Check, DollarSign, Truck, CheckCircle2 } from 'lucide-react'
+import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle } from 'lucide-react'
 import {
   PIPELINE_STATUSES,
   PIPELINE_LABELS,
@@ -37,6 +37,14 @@ export default function ClubOrderStageControls({
   const currentIdx = PIPELINE_STATUSES.indexOf(currentStatus)
   const nextStatus = currentIdx >= 0 && currentIdx < PIPELINE_STATUSES.length - 1 ? PIPELINE_STATUSES[currentIdx + 1] : null
   const moveTargets = getMoveTargets(currentStatus)
+
+  // Statuses that fire a customer-facing email (see route.ts sendCustomerStatusEmail)
+  const EMAIL_TRIGGER_LABELS: Record<string, string> = {
+    paid: 'Payment Confirmed',
+    shipped: 'Your Order Has Shipped',
+    fulfilled: 'Order Complete',
+  }
+  const nextStatusTriggersEmail = nextStatus !== null && nextStatus in EMAIL_TRIGGER_LABELS
   const isTerminal = TERMINAL_STATUSES.includes(currentStatus)
   const isShippingThis = shippingRequest !== null
   const manualProcessingOptions = [
@@ -80,6 +88,18 @@ export default function ClubOrderStageControls({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Email send warning — shown whenever the primary next step fires a customer email */}
+      {nextStatusTriggersEmail && !isShippingThis && currentStatus !== 'pending_approval' && (
+        <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+          <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-800 leading-relaxed">
+            <span className="font-semibold">Sends customer email.</span> Moving to{' '}
+            <span className="font-medium">{PIPELINE_LABELS[nextStatus!] || nextStatus}</span> will send the customer a{' '}
+            &ldquo;{EMAIL_TRIGGER_LABELS[nextStatus!]}&rdquo; notification. If this was already processed manually, use{' '}
+            <span className="font-medium">Skip (No Email)</span> to sync without notifying them again.
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         {/* Primary action: Approve for pending, next step for others */}
         {currentStatus === 'pending_approval' && (
@@ -119,6 +139,15 @@ export default function ClubOrderStageControls({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              if (nextStatusTriggersEmail) {
+                const emailLabel = EMAIL_TRIGGER_LABELS[nextStatus]
+                const ok = confirm(
+                  `This will send a "${emailLabel}" email to the customer.\n\n` +
+                  `If this order was already processed manually outside the dashboard, the customer will receive a duplicate notification.\n\n` +
+                  `Use "Skip ${PIPELINE_LABELS[nextStatus] || nextStatus} (No Email)" instead if you're syncing records.`
+                )
+                if (!ok) return
+              }
               if (nextStatus === 'shipped') {
                 openShippingForm()
               } else {
