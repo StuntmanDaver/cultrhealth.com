@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle, CreditCard } from 'lucide-react'
 import {
   PIPELINE_STATUSES,
@@ -8,6 +9,14 @@ import {
   getMoveTargets,
   getMoveNote
 } from '@/lib/admin-club-orders'
+
+interface ShipmentExtra {
+  carrier?: string
+  trackingNumber?: string
+  trackingUrl?: string
+  suppressEmails?: boolean
+  manualProcessed?: boolean
+}
 
 interface ClubOrderStageControlsProps {
   orderId: string
@@ -18,7 +27,7 @@ interface ClubOrderStageControlsProps {
   onStatusUpdate: (
     orderId: string,
     newStatus: string,
-    extra?: { suppressEmails?: boolean; manualProcessed?: boolean }
+    extra?: ShipmentExtra
   ) => void
 }
 
@@ -51,7 +60,39 @@ export default function ClubOrderStageControls({
     { value: 'cancelled', label: 'Cancelled' },
   ] as const
 
+  // ── Inline shipping form state ──
+  const [pendingShipment, setPendingShipment] = useState<{ suppressEmails: boolean; manualProcessed: boolean } | null>(null)
+  const [shipCarrier, setShipCarrier] = useState('')
+  const [shipTrackingNumber, setShipTrackingNumber] = useState('')
+  const [shipTrackingUrl, setShipTrackingUrl] = useState('')
+
+  function openShippingForm(opts: { suppressEmails: boolean; manualProcessed: boolean }) {
+    setPendingShipment(opts)
+    setShipCarrier('')
+    setShipTrackingNumber('')
+    setShipTrackingUrl('')
+  }
+
+  function handleConfirmShipment(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!pendingShipment) return
+    const extra: ShipmentExtra = {
+      carrier: shipCarrier || undefined,
+      trackingNumber: shipTrackingNumber || undefined,
+      trackingUrl: shipTrackingUrl || undefined,
+    }
+    if (pendingShipment.suppressEmails) extra.suppressEmails = true
+    if (pendingShipment.manualProcessed) extra.manualProcessed = true
+    onStatusUpdate(orderId, 'shipped', extra)
+    setPendingShipment(null)
+  }
+
   function handlePendingManualProcessed(target: string) {
+    // Shipped requires tracking info — open the inline form instead of a confirm dialog
+    if (target === 'shipped') {
+      openShippingForm({ suppressEmails: true, manualProcessed: true })
+      return
+    }
     const targetLabel = PIPELINE_LABELS[target] || target
     const note = target === 'cancelled'
       ? 'This will cancel the order without creating a QuickBooks invoice or sending status emails.'
@@ -64,10 +105,66 @@ export default function ClubOrderStageControls({
     onStatusUpdate(orderId, target, { suppressEmails: true, manualProcessed: true })
   }
 
+  // ── Inline shipping form (shown when a shipped transition is pending) ──
+  if (pendingShipment !== null) {
+    return (
+      <div className="flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+          <p className="text-sm font-semibold text-blue-800 flex items-center gap-2">
+            <Truck className="w-4 h-4" /> Enter shipment details
+          </p>
+          <div className="flex flex-col gap-2">
+            <input
+              type="text"
+              placeholder="Carrier (e.g. UPS, FedEx)"
+              value={shipCarrier}
+              onChange={(e) => setShipCarrier(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="px-3 py-2 text-sm rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            <input
+              type="text"
+              placeholder="Tracking number"
+              value={shipTrackingNumber}
+              onChange={(e) => setShipTrackingNumber(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="px-3 py-2 text-sm rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+            <input
+              type="text"
+              placeholder="Tracking URL (optional)"
+              value={shipTrackingUrl}
+              onChange={(e) => setShipTrackingUrl(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              className="px-3 py-2 text-sm rounded-lg border border-blue-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleConfirmShipment}
+              disabled={isUpdating}
+              className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+            >
+              {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Truck className="w-4 h-4" />}
+              {isUpdating ? 'Shipping...' : 'Confirm Shipment'}
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setPendingShipment(null) }}
+              disabled={isUpdating}
+              className="px-3 py-2 text-sm rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col gap-3">
       {/* Email send warning — shown whenever the primary next step fires a customer email */}
-      {nextStatusTriggersEmail && currentStatus !== 'pending_approval' && (
+      {nextStatusTriggersEmail && currentStatus !== 'pending_approval' && nextStatus !== 'shipped' && (
         <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
           <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-800 leading-relaxed">
@@ -118,6 +215,11 @@ export default function ClubOrderStageControls({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              // Shipped always opens the inline tracking form instead of a direct status call
+              if (nextStatus === 'shipped') {
+                openShippingForm({ suppressEmails: false, manualProcessed: false })
+                return
+              }
               if (nextStatusTriggersEmail) {
                 const emailLabel = EMAIL_TRIGGER_LABELS[nextStatus]
                 const ok = confirm(
@@ -153,6 +255,11 @@ export default function ClubOrderStageControls({
           <button
             onClick={(e) => {
               e.stopPropagation()
+              // Shipped requires tracking — open inline form even when skipping email
+              if (nextStatus === 'shipped') {
+                openShippingForm({ suppressEmails: true, manualProcessed: false })
+                return
+              }
               if (confirm(`Skip email trigger and move to "${PIPELINE_LABELS[nextStatus] || nextStatus}"?`)) {
                 onStatusUpdate(orderId, nextStatus, { suppressEmails: true })
               }
@@ -174,11 +281,16 @@ export default function ClubOrderStageControls({
               e.stopPropagation()
               const target = e.target.value
               if (!target) return
+              e.target.value = ''
+              // Shipped always requires tracking info regardless of direction
+              if (target === 'shipped') {
+                openShippingForm({ suppressEmails: true, manualProcessed: false })
+                return
+              }
               const note = getMoveNote(currentStatus, target)
               if (confirm(`Move to "${PIPELINE_LABELS[target] || target}"?\n\n${note}`)) {
                 onStatusUpdate(orderId, target, { suppressEmails: true })
               }
-              e.target.value = ''
             }}
             className="px-3 py-2 text-sm rounded-lg border border-brand-primary/20 bg-brand-primary/5 text-brand-primary cursor-pointer disabled:opacity-50 transition-colors hover:bg-brand-primary/10"
           >
