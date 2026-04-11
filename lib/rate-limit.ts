@@ -21,6 +21,11 @@ interface RateLimitConfig {
   windowMs: number
   /** Identifier prefix for Redis keys */
   prefix?: string
+  /**
+   * When true, deny the request if Redis is unavailable instead of allowing it.
+   * Use for sensitive endpoints (auth, magic link) where failing open is dangerous.
+   */
+  failClosed?: boolean
 }
 
 interface RateLimitResult {
@@ -110,7 +115,7 @@ async function createRedisRateLimiter(config: RateLimitConfig): Promise<RateLimi
     return null
   }
 
-  const { limit, windowMs, prefix = 'rl' } = config
+  const { limit, windowMs, prefix = 'rl', failClosed = false } = config
   const windowSec = Math.ceil(windowMs / 1000)
 
   return {
@@ -152,7 +157,16 @@ async function createRedisRateLimiter(config: RateLimitConfig): Promise<RateLimi
         }
       } catch (error) {
         console.error('Redis rate limit error:', error)
-        // Fallback to allowing the request on Redis error
+        // failClosed: deny the request when Redis is unavailable (for sensitive endpoints).
+        // failOpen (default): allow the request so non-auth endpoints stay available.
+        if (failClosed) {
+          return {
+            success: false,
+            limit,
+            remaining: 0,
+            reset: Math.floor((now + windowMs) / 1000),
+          }
+        }
         return {
           success: true,
           limit,
@@ -236,13 +250,15 @@ export const formLimiter = rateLimit({
 })
 
 /**
- * Strict rate limiter for sensitive endpoints
- * 3 attempts per 15 minutes per IP
+ * Strict rate limiter for sensitive endpoints (auth, magic link).
+ * 3 attempts per 15 minutes per IP.
+ * Fails closed: if Redis is unavailable, the request is denied rather than allowed through.
  */
 export const strictLimiter = rateLimit({
   limit: 3,
   windowMs: 15 * 60 * 1000, // 15 minutes
   prefix: 'strict',
+  failClosed: true,
 })
 
 // ===========================================
@@ -253,26 +269,27 @@ import { headers } from 'next/headers'
 
 export async function getClientIp(): Promise<string> {
   const headersList = await headers()
-  
-  // Check various headers for the real IP
-  const forwardedFor = headersList.get('x-forwarded-for')
-  if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim()
-  }
 
-  const realIp = headersList.get('x-real-ip')
-  if (realIp) {
-    return realIp
-  }
-
-  // Vercel-specific header
+  // x-vercel-forwarded-for is set by Vercel's infrastructure and cannot be
+  // spoofed by the client — always prefer it on Vercel deployments.
   const vercelForwardedFor = headersList.get('x-vercel-forwarded-for')
   if (vercelForwardedFor) {
     return vercelForwardedFor.split(',')[0].trim()
   }
 
-  // Fallback
+  // x-real-ip is set by reverse proxies and is generally trustworthy.
+  const realIp = headersList.get('x-real-ip')
+  if (realIp) {
+    return realIp
+  }
+
+  // x-forwarded-for is client-controlled and can be spoofed — use only as
+  // a last resort in non-Vercel environments (e.g. local dev with a proxy).
+  const forwardedFor = headersList.get('x-forwarded-for')
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim()
+  }
+
   return 'unknown'
 }
 

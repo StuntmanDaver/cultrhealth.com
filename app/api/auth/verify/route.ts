@@ -23,6 +23,12 @@ const TEAM_EMAILS = [
 ]
 
 function isStaging(): boolean {
+  // STAGING_MODE is a server-side-only env var set explicitly in the Vercel
+  // staging environment. It cannot be accidentally promoted to production because
+  // it is not embedded at build time like NEXT_PUBLIC_ variables.
+  if (process.env.STAGING_MODE === 'true') return true
+  // Legacy fallback: keep working for deployments that haven't set STAGING_MODE yet.
+  // TODO: remove this once STAGING_MODE=true is confirmed set on staging in Vercel.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
   return siteUrl.includes('staging')
 }
@@ -126,10 +132,12 @@ export async function GET(request: NextRequest) {
     if (isStagingAccess) {
       // Use per-email staging IDs so owner sessions remain isolated.
       customerId = getStagingCustomerId(email)
-      const sessionToken = await createSessionToken(email, customerId, 'staging_creator', 'admin')
+      // Only grant admin role to actual admin emails — not every staging user
+      const role = isAdminAccess ? 'admin' : 'member'
+      const sessionToken = await createSessionToken(email, customerId, undefined, role)
       const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
       setSessionOnResponse(response, sessionToken, cookieHostname)
-      console.log('Staging admin access granted:', { timestamp: new Date().toISOString() })
+      console.log('Staging access granted:', { role, timestamp: new Date().toISOString() })
       return response
     } else if (isAdminAccess) {
       customerId = getStagingCustomerId(email)

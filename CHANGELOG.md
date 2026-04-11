@@ -1,3 +1,21 @@
+## [2026-04-10] - Club Order Fulfillment Pipeline Redesign
+
+### Changed
+- **New Pipeline Stage:** Added `needs_payment` stage between `invoice_sent` and `paid`. Pipeline is now: `pending_approval` → `approved` → `invoice_sent` → `needs_payment` → `paid` → `shipped` → `fulfilled`.
+- **Shipped No Tracking Required:** Removed carrier/tracking number input from the admin dashboard. Tracking is now sent automatically by the fulfillment partner. Shipped is a single button click.
+- **Shipped Customer Email Updated:** Email now tells customers tracking will come directly from the fulfillment partner, rather than displaying tracking details.
+- **Bulk Shipped Allowed:** Removed the stale bulk-shipping restriction — bulk marking orders as `shipped` is now supported since no tracking entry is required.
+
+### Added
+- **needs_payment Status Styling:** Orange badge and `CreditCard` icon throughout pipeline bar, order timeline, status labels, and stage controls.
+- **Email Disclaimer on Stage Buttons:** Amber warning banner and confirm dialog appear before any stage transition that sends a customer-facing email (`paid`, `shipped`, `fulfilled`), warning admins about duplicate emails when syncing manually.
+
+### Fixed
+- `STATUS_LABELS` missing `needs_payment` — admin notification emails showed undefined as the status label.
+- Dead `carrier`/`trackingNumber`/`trackingUrl` params removed from `handleStatusUpdate` signatures in `ClubOrdersTab` and `OrdersClient` to match updated `ClubOrderStageControls` prop interface.
+
+---
+
 ## [2026-04-09] - Admin Pending Order Manual Clearance & Pipeline Hardening
 
 ### Added

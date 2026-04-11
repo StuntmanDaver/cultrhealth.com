@@ -220,6 +220,12 @@ const TEAM_EMAILS = [
 ]
 
 function isStaging(): boolean {
+  // STAGING_MODE is a server-side-only env var set explicitly in the Vercel
+  // staging environment. It cannot be accidentally promoted to production because
+  // it is not embedded at build time like NEXT_PUBLIC_ variables.
+  if (process.env.STAGING_MODE === 'true') return true
+  // Legacy fallback: keep working for deployments that haven't set STAGING_MODE yet.
+  // TODO: remove this once STAGING_MODE=true is confirmed set on staging in Vercel.
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
   return siteUrl.includes('staging')
 }

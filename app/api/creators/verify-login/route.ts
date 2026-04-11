@@ -96,11 +96,6 @@ export async function GET(request: NextRequest) {
 
     let postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/creators/portal/dashboard'
 
-    // Push owners straight to admin on production (and staging) if no specific redirect was passed
-    if (OWNERS.includes(email) && (!redirectParam || redirectParam === '/creators/portal/dashboard')) {
-      postLoginPath = '/admin'
-    }
-
     // Look up creator in DB
     let creatorId: string | undefined
     let creatorStatus: string | undefined
