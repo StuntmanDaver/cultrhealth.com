@@ -148,11 +148,8 @@ export async function POST(request: NextRequest) {
     const redirectParam = safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : ''
     const magicLink = `${baseUrl}/api/auth/verify?token=${encodeURIComponent(token)}${redirectParam}`
 
-    // Force send email if requested for testing, bypassing staging fast-path
-    const isTestEmail = normalizedEmail === 'david@cultrhealth.com'
-
-    // For staging access emails, return the link directly (no email needed), unless it's the test email
-    if (isStagingAccess && !isTestEmail) {
+    // For staging access emails, return the link directly (no email needed)
+    if (isStagingAccess) {
       console.log('Staging access granted:', {
         email: normalizedEmail,
         timestamp: new Date().toISOString(),
