@@ -5,27 +5,29 @@ import { useSearchParams } from 'next/navigation'
 import type { AnalyticsData, OrderSearchData, SearchOrderRow } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor, ORDER_STATUS_STYLES } from '@/lib/admin-utils'
 import ClubOrdersTab from './ClubOrdersTab'
-import ClubOrderStageControls from '@/components/admin/ClubOrderStageControls'
-import ClubOrderBulkActions from '@/components/admin/ClubOrderBulkActions'
 
 function getStatusLabel(status: string) {
   return ORDER_STATUS_STYLES[status]?.label || status
 }
 
 export default function OrdersClient() {
-  // --------------- Tab State ---------------
+  // --------------- Type Filter (replaces activeTab) ---------------
   const searchParams = useSearchParams()
-  const [activeTab, setActiveTab] = useState<'all' | 'club-orders'>(
-    searchParams.get('tab') === 'club-orders' ? 'club-orders' : 'all'
-  )
+  const [typeFilter, setTypeFilter] = useState<'all' | 'product' | 'club'>(() => {
+    const tab = searchParams.get('tab')
+    const type = searchParams.get('type')
+    if (tab === 'club-orders' || type === 'club') return 'club'
+    if (type === 'product') return 'product'
+    return 'all'
+  })
   const [pendingCount, setPendingCount] = useState(0)
 
-  // --------------- Analytics Data ---------------
+  // --------------- Analytics Data (product orders) ---------------
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [periodDays, setPeriodDays] = useState(30)
 
-  // --------------- Order Search State ---------------
+  // --------------- Product Order Search State ---------------
   const [orderSearch, setOrderSearch] = useState('')
   const [orderStatusFilter, setOrderStatusFilter] = useState('')
   const [orderDateFrom, setOrderDateFrom] = useState('')
@@ -34,17 +36,39 @@ export default function OrdersClient() {
   const [orderData, setOrderData] = useState<OrderSearchData | null>(null)
   const [orderLoading, setOrderLoading] = useState(false)
 
-  // --------------- Order Detail Modal State ---------------
+  // --------------- Product Order Fulfill Modal ---------------
   const [selectedOrder, setSelectedOrder] = useState<SearchOrderRow | null>(null)
-  const [selectedClubOrders, setSelectedClubOrders] = useState<Set<string>>(new Set())
-  const [bulkUpdating, setBulkUpdating] = useState(false)
-  const [clubUpdatingId, setClubUpdatingId] = useState<string | null>(null)
-  const [clubApprovingId, setClubApprovingId] = useState<string | null>(null)
   const [fulfillAction, setFulfillAction] = useState<'ship' | 'fulfill' | null>(null)
   const [fulfillForm, setFulfillForm] = useState({ carrier: '', trackingNumber: '', trackingUrl: '' })
   const [fulfilling, setFulfilling] = useState(false)
   const [fulfillError, setFulfillError] = useState<string | null>(null)
 
+  // --------------- URL Sync (typeFilter → URL) ---------------
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    url.searchParams.delete('tab') // migrate legacy ?tab=club-orders param
+    if (typeFilter === 'club') {
+      url.searchParams.set('type', 'club')
+    } else if (typeFilter === 'product') {
+      url.searchParams.set('type', 'product')
+    } else {
+      url.searchParams.delete('type')
+    }
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+  }, [typeFilter])
+
+  // --------------- URL Sync (URL → typeFilter, e.g. browser back/forward) ---------------
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    const type = searchParams.get('type')
+    let requested: 'all' | 'product' | 'club' = 'all'
+    if (tab === 'club-orders' || type === 'club') requested = 'club'
+    else if (type === 'product') requested = 'product'
+    setTypeFilter(current => current === requested ? current : requested)
+  }, [searchParams])
+
+  // --------------- Pending Count (for Club pill badge) ---------------
   const refreshPendingCount = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/club-orders')
@@ -68,27 +92,10 @@ export default function OrdersClient() {
 
   useEffect(() => {
     fetchAnalytics()
-  }, [fetchAnalytics])
+    refreshPendingCount()
+  }, [fetchAnalytics, refreshPendingCount])
 
-  useEffect(() => {
-    const requestedTab = searchParams.get('tab') === 'club-orders' ? 'club-orders' : 'all'
-    setActiveTab((currentTab) => currentTab === requestedTab ? currentTab : requestedTab)
-  }, [searchParams])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    const url = new URL(window.location.href)
-    if (activeTab === 'club-orders') {
-      url.searchParams.set('tab', 'club-orders')
-    } else {
-      url.searchParams.delete('tab')
-    }
-
-    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
-  }, [activeTab])
-
-  // --------------- Fetch Orders ---------------
+  // --------------- Fetch Product Orders ---------------
   const fetchOrders = useCallback(async (searchQ?: string, statusF?: string, dateF?: string, dateT?: string, pg?: number) => {
     setOrderLoading(true)
     try {
@@ -116,7 +123,6 @@ export default function OrdersClient() {
     }
   }, [orderSearch, orderStatusFilter, orderDateFrom, orderDateTo, orderPage])
 
-  // Fetch orders on mount and when filters change (debounced for search input)
   useEffect(() => {
     const timer = setTimeout(() => {
       setOrderPage(1)
@@ -126,7 +132,6 @@ export default function OrdersClient() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderSearch, orderStatusFilter, orderDateFrom, orderDateTo])
 
-  // Fetch when page changes (no debounce needed)
   useEffect(() => {
     if (orderPage > 1) {
       fetchOrders(orderSearch, orderStatusFilter, orderDateFrom, orderDateTo, orderPage)
@@ -136,89 +141,18 @@ export default function OrdersClient() {
 
   // --------------- CSV Export ---------------
   const exportOrders = useCallback(() => {
-    if (orderData?.orders) {
-      downloadCSV('cultr-orders',
-        ['Order #', 'Customer', 'Status', 'Amount', 'Source', 'Date'],
-        orderData.orders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.source, o.created_at])
-      )
-    } else if (data?.sales.recentOrders) {
-      downloadCSV('cultr-orders',
+    const rows = (orderData?.orders ?? data?.sales.recentOrders ?? []).filter(
+      o => !('source' in o) || (o as SearchOrderRow).source !== 'club_orders'
+    )
+    if (rows.length > 0) {
+      downloadCSV('cultr-product-orders',
         ['Order #', 'Customer', 'Status', 'Amount', 'Date'],
-        data.sales.recentOrders.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.created_at])
+        rows.map(o => [o.order_number, o.customer_email, o.status, o.total_amount, o.created_at])
       )
     }
   }, [data, orderData])
 
-  // --------------- Club Order Fulfillment ---------------
-  async function handleClubOrderStatusUpdate(orderId: string, newStatus: string, extra?: { suppressEmails?: boolean; manualProcessed?: boolean }) {
-    setClubUpdatingId(orderId)
-    try {
-      const res = await fetch(`/api/admin/club-orders/${orderId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus, ...extra }),
-      })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Failed to update status')
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: newStatus })
-      }
-      fetchAnalytics()
-      await Promise.all([fetchOrders(), refreshPendingCount()])
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to update')
-    } finally {
-      setClubUpdatingId(null)
-    }
-  }
-
-  async function handleClubOrderApprove(orderId: string) {
-    if (!confirm('Approve this order? This will create a QuickBooks invoice and email the customer.')) return
-    setClubApprovingId(orderId)
-    try {
-      const res = await fetch(`/api/admin/club-orders/${orderId}/approve`, { method: 'POST' })
-      const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Failed to approve order')
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, status: 'approved' })
-      }
-      fetchAnalytics()
-      await Promise.all([fetchOrders(), refreshPendingCount()])
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Failed to approve')
-    } finally {
-      setClubApprovingId(null)
-    }
-  }
-
-  async function handleBulkStatusUpdate(newStatus: string) {
-    if (selectedClubOrders.size === 0) return
-    const ids = Array.from(selectedClubOrders)
-    setBulkUpdating(true)
-    const results = await Promise.allSettled(
-      ids.map(orderId =>
-        fetch(`/api/admin/club-orders/${orderId}/status`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus, suppressEmails: true }),
-        }).then(res => {
-          if (!res.ok) throw new Error('failed')
-          return res
-        })
-      )
-    )
-    const successCount = results.filter(r => r.status === 'fulfilled').length
-    const failCount = results.filter(r => r.status === 'rejected').length
-    setSelectedClubOrders(new Set())
-    setBulkUpdating(false)
-    if (failCount > 0) alert(`${successCount} updated, ${failCount} failed`)
-    if (successCount > 0) {
-      fetchAnalytics()
-      await Promise.all([fetchOrders(), refreshPendingCount()])
-    }
-  }
-
-  // --------------- Order Fulfillment ---------------
+  // --------------- Product Order Fulfillment ---------------
   async function handleFulfill() {
     if (!selectedOrder || !fulfillAction) return
     setFulfilling(true)
@@ -239,7 +173,6 @@ export default function OrdersClient() {
       setSelectedOrder(null)
       setFulfillAction(null)
       setFulfillForm({ carrier: '', trackingNumber: '', trackingUrl: '' })
-      // Re-fetch both analytics and orders after fulfillment
       fetchAnalytics()
       fetchOrders()
     } catch (err) {
@@ -249,51 +182,50 @@ export default function OrdersClient() {
     }
   }
 
-  // --------------- Fetch Pending Count on Mount ---------------
-  useEffect(() => {
-    refreshPendingCount()
-  }, [refreshPendingCount])
+  // Product orders only — exclude club orders from this section (club orders are managed above)
+  const productOrders = (orderData?.orders ?? data?.sales.recentOrders ?? []).filter(
+    o => !('source' in o) || (o as SearchOrderRow).source !== 'club_orders'
+  )
+
+  const showClub = typeFilter !== 'product'
+  const showProduct = typeFilter !== 'club'
 
   return (
     <div className="space-y-6">
-      {/* Header + Tabs + Period Selector */}
+      {/* ── Header + Type Filter ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl text-brand-primary">Orders</h1>
         <div className="flex items-center gap-4">
-          {/* Tab buttons */}
+          {/* Type filter pills */}
           <div className="flex items-center gap-1 bg-brand-cream/60 rounded-lg p-1">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'all'
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
-              }`}
-            >
-              All Orders
-            </button>
-            <button
-              onClick={() => setActiveTab('club-orders')}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
-                activeTab === 'club-orders'
-                  ? 'bg-brand-primary text-white shadow-sm'
-                  : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
-              }`}
-            >
-              Club Orders
-              {pendingCount > 0 && (
-                <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
-                  activeTab === 'club-orders'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-red-500 text-white'
-                }`}>
-                  {pendingCount}
-                </span>
-              )}
-            </button>
+            {([
+              { key: 'all',     label: 'All Orders' },
+              { key: 'club',    label: 'Club Orders' },
+              { key: 'product', label: 'Product Orders' },
+            ] as const).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTypeFilter(key)}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                  typeFilter === key
+                    ? 'bg-brand-primary text-white shadow-sm'
+                    : 'text-brand-primary/60 hover:text-brand-primary hover:bg-white/50'
+                }`}
+              >
+                {label}
+                {key === 'club' && pendingCount > 0 && (
+                  <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-bold ${
+                    typeFilter === 'club' ? 'bg-white/20 text-white' : 'bg-red-500 text-white'
+                  }`}>
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-          {/* Period selector - only for All Orders tab */}
-          {activeTab === 'all' && (
+
+          {/* Period selector — only for product analytics */}
+          {showProduct && (
             <select
               value={periodDays}
               onChange={(e) => setPeriodDays(Number(e.target.value))}
@@ -308,286 +240,267 @@ export default function OrdersClient() {
         </div>
       </div>
 
-      {/* Club Orders Tab */}
-      {activeTab === 'club-orders' && (
+      {/* ══════════════════════════════════════
+          CLUB ORDERS SECTION
+          Self-contained: pipeline, list, bulk actions, QB, timeline, activity
+      ══════════════════════════════════════ */}
+      {showClub && (
         <ClubOrdersTab onPendingCountChange={setPendingCount} />
       )}
 
-      {/* All Orders Tab */}
-      {activeTab === 'all' && loading && (
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-xl" />)}
-        </div>
-      )}
-
-      {activeTab === 'all' && !loading && !data && (
-        <p className="text-brand-primary/60">Failed to load data.</p>
-      )}
-
-      {activeTab === 'all' && !loading && data && <>
-
-      {/* Sales by Status */}
-      {Object.keys(data.sales.ordersByStatus).length > 0 && (
-        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-          <h2 className="font-display text-xl text-brand-primary mb-4">Orders by Status</h2>
-          <div className="flex flex-wrap gap-3">
-            {Object.entries(data.sales.ordersByStatus).map(([status, count]) => (
-              <span
-                key={status}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(status)}`}
-              >
-                {getStatusLabel(status)}: {count}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Top Products */}
-      {data.sales.topProducts.length > 0 && (
-        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-          <h2 className="font-display text-xl text-brand-primary mb-4">Top Products</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-brand-primary/10">
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Product</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">SKU</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Qty Sold</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Revenue</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.sales.topProducts.map((product, index) => (
-                  <tr key={product.sku} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
-                    <td className="py-3 px-4 text-brand-primary">{product.name}</td>
-                    <td className="py-3 px-4 text-brand-primary/60 font-mono text-sm">{product.sku}</td>
-                    <td className="py-3 px-4 text-brand-primary text-right">{product.quantity}</td>
-                    <td className="py-3 px-4 text-brand-primary text-right font-medium">
-                      {formatCurrency(product.revenue)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Order Search & Management */}
-      <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <h2 className="font-display text-xl text-brand-primary">Order Search</h2>
-          <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">Export CSV</button>
-        </div>
-
-        {/* Search & Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <input
-            type="text"
-            placeholder="Search by order # or email..."
-            value={orderSearch}
-            onChange={(e) => setOrderSearch(e.target.value)}
-            className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
-          />
-          <select
-            value={orderStatusFilter}
-            onChange={(e) => setOrderStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="pending_approval">
-              {ORDER_STATUS_STYLES.pending_approval.label}
-            </option>
-            <option value="paid">Paid</option>
-            <option value="shipped">Shipped</option>
-            <option value="fulfilled">Fulfilled</option>
-            <option value="approved">Approved</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="refunded">Refunded</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <div className="flex items-center gap-1.5">
-            <label className="text-xs text-brand-primary/50">From</label>
-            <input type="date" value={orderDateFrom} onChange={(e) => setOrderDateFrom(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <label className="text-xs text-brand-primary/50">To</label>
-            <input type="date" value={orderDateTo} onChange={(e) => setOrderDateTo(e.target.value)} className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20" />
-          </div>
-        </div>
-
-        {/* Results summary */}
-        {orderData && (
-          <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-brand-primary/60">
-            <span>{orderData.total} order{orderData.total !== 1 ? 's' : ''} found</span>
-            {orderData.totalPages > 1 && (
-              <span>Page {orderData.page} of {orderData.totalPages}</span>
-            )}
-          </div>
-        )}
-
-        {/* Table */}
-        {orderLoading && !orderData ? (
-          <div className="py-12 text-center text-brand-primary/40">Loading orders...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            {/* Bulk action bar */}
-            <ClubOrderBulkActions
-              selectedCount={selectedClubOrders.size}
-              isBulkUpdating={bulkUpdating}
-              onBulkMove={handleBulkStatusUpdate}
-              onClearSelection={() => setSelectedClubOrders(new Set())}
-            />
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-brand-primary/10">
-                  <th className="w-10 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary cursor-pointer"
-                      checked={
-                        (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders').length > 0 &&
-                        (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders').every(o => selectedClubOrders.has(o.id))
-                      }
-                      onChange={(e) => {
-                        const clubOrders = (orderData?.orders ?? data.sales.recentOrders).filter(o => ('source' in o ? o.source : 'orders') === 'club_orders')
-                        if (e.target.checked) {
-                          setSelectedClubOrders(new Set([...Array.from(selectedClubOrders), ...clubOrders.map(o => o.id)]))
-                        } else {
-                          const next = new Set(selectedClubOrders)
-                          clubOrders.forEach(o => next.delete(o.id))
-                          setSelectedClubOrders(next)
-                        }
-                      }}
-                    />
-                  </th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Source</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Date</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(orderData?.orders ?? data.sales.recentOrders).map((order, index) => {
-                  const isClub = 'source' in order ? order.source === 'club_orders' : false;
-                  return (
-                  <tr
-                    key={`${order.id}-${index}`}
-                    className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} ${isClub && selectedClubOrders.has(order.id) ? 'bg-amber-50/50' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`}
-                    onClick={() => setSelectedOrder(order as SearchOrderRow)}
-                  >
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      {isClub && (
-                        <input
-                          type="checkbox"
-                          checked={selectedClubOrders.has(order.id)}
-                          onChange={(e) => {
-                            const next = new Set(selectedClubOrders)
-                            if (e.target.checked) next.add(order.id)
-                            else next.delete(order.id)
-                            setSelectedClubOrders(next)
-                          }}
-                          className="w-4 h-4 rounded border-brand-primary/30 text-brand-primary cursor-pointer"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-brand-primary font-mono text-sm">{order.order_number}</td>
-                    <td className="py-3 px-4 text-sm">
-                      {'customer_name' in order && (order as SearchOrderRow).customer_name && (
-                        <div className="text-brand-primary font-medium">{(order as SearchOrderRow).customer_name}</div>
-                      )}
-                      <div className="text-brand-primary/60">{order.customer_email}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {getStatusLabel(order.status)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-brand-primary text-right font-medium text-sm">
-                      {formatCurrency(order.total_amount)}
-                    </td>
-                    <td className="py-3 px-4 text-sm">
-                      <div className="flex flex-col gap-1">
-                        {'source' in order && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium w-fit ${(order as SearchOrderRow).source === 'club_orders' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'}`}>
-                            {(order as SearchOrderRow).source === 'club_orders' ? 'Club' : 'Product'}
-                          </span>
-                        )}
-                        {'coupon_code' in order && (order as SearchOrderRow).coupon_code && (
-                          <span className="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-green-50 text-green-700 w-fit">
-                            {(order as SearchOrderRow).coupon_code}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-brand-primary/60 text-sm">{formatDate(order.created_at)}</td>
-                    <td className="py-3 px-4">
-                      {order.status === 'paid' && !isClub && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order as SearchOrderRow); setFulfillAction('ship'); }}
-                          className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200"
-                        >
-                          Ship
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                )})}
-                {orderData?.orders.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-brand-primary/40 text-sm">No orders found matching your filters</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {orderData && orderData.totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-primary/10">
-            <span className="text-sm text-brand-primary/60">
-              Showing {((orderData.page - 1) * 20) + 1}-{Math.min(orderData.page * 20, orderData.total)} of {orderData.total}
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setOrderPage(p => Math.max(1, p - 1))}
-                disabled={orderData.page <= 1}
-                className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-brand-primary/60 px-2">
-                {orderData.page} / {orderData.totalPages}
-              </span>
-              <button
-                onClick={() => setOrderPage(p => Math.min(orderData.totalPages, p + 1))}
-                disabled={orderData.page >= orderData.totalPages}
-                className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                Next
-              </button>
+      {/* ══════════════════════════════════════
+          PRODUCT ORDERS SECTION
+          Analytics + search table + fulfill modal
+      ══════════════════════════════════════ */}
+      {showProduct && (
+        <>
+          {loading && (
+            <div className="animate-pulse space-y-4">
+              {[1, 2, 3].map(i => <div key={i} className="h-32 bg-white rounded-xl" />)}
             </div>
-          </div>
-        )}
-      </div>
+          )}
 
-      </>}
+          {!loading && !data && (
+            <p className="text-brand-primary/60">Failed to load analytics.</p>
+          )}
 
-      {/* ========== ORDER DETAIL MODAL ========== */}
-      {selectedOrder && activeTab === 'all' && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setSelectedOrder(null); setFulfillAction(null); setFulfillError(null) }}>
-          <div className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-auto p-6" onClick={e => e.stopPropagation()}>
+          {!loading && data && <>
+
+            {/* ── Orders by Status ── */}
+            {Object.keys(data.sales.ordersByStatus).length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h2 className="font-display text-xl text-brand-primary mb-4">
+                  {typeFilter === 'all' ? 'Product ' : ''}Orders by Status
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {Object.entries(data.sales.ordersByStatus).map(([status, count]) => (
+                    <span
+                      key={status}
+                      className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(status)}`}
+                    >
+                      {getStatusLabel(status)}: {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Top Products ── */}
+            {data.sales.topProducts.length > 0 && (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <h2 className="font-display text-xl text-brand-primary mb-4">Top Products</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Product</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">SKU</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Qty Sold</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Revenue</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.sales.topProducts.map((product, index) => (
+                        <tr key={product.sku} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                          <td className="py-3 px-4 text-brand-primary">{product.name}</td>
+                          <td className="py-3 px-4 text-brand-primary/60 font-mono text-sm">{product.sku}</td>
+                          <td className="py-3 px-4 text-brand-primary text-right">{product.quantity}</td>
+                          <td className="py-3 px-4 text-brand-primary text-right font-medium">
+                            {formatCurrency(product.revenue)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ── Product Order Search ── */}
+            <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 className="font-display text-xl text-brand-primary">
+                  {typeFilter === 'all' ? 'Product ' : ''}Order Search
+                </h2>
+                <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">
+                  Export CSV
+                </button>
+              </div>
+
+              {/* Filters */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by order # or email..."
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
+                />
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="fulfilled">Fulfilled</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs text-brand-primary/50">From</label>
+                  <input
+                    type="date"
+                    value={orderDateFrom}
+                    onChange={(e) => setOrderDateFrom(e.target.value)}
+                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs text-brand-primary/50">To</label>
+                  <input
+                    type="date"
+                    value={orderDateTo}
+                    onChange={(e) => setOrderDateTo(e.target.value)}
+                    className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
+                  />
+                </div>
+              </div>
+
+              {/* Results summary */}
+              {orderData && (
+                <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-brand-primary/60">
+                  <span>{productOrders.length} order{productOrders.length !== 1 ? 's' : ''} found</span>
+                  {orderData.totalPages > 1 && (
+                    <span>Page {orderData.page} of {orderData.totalPages}</span>
+                  )}
+                </div>
+              )}
+
+              {/* Table */}
+              {orderLoading && !orderData ? (
+                <div className="py-12 text-center text-brand-primary/40">Loading orders...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-brand-primary/10">
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Order #</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Customer</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
+                        <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Amount</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Date</th>
+                        <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productOrders.map((order, index) => (
+                        <tr
+                          key={`${order.id}-${index}`}
+                          className={`${index % 2 === 0 ? 'bg-brand-cream/30' : ''} cursor-pointer hover:bg-brand-primary/5 transition-colors`}
+                          onClick={() => setSelectedOrder(order as SearchOrderRow)}
+                        >
+                          <td className="py-3 px-4 text-brand-primary font-mono text-sm">{order.order_number}</td>
+                          <td className="py-3 px-4 text-sm">
+                            {'customer_name' in order && (order as SearchOrderRow).customer_name && (
+                              <div className="text-brand-primary font-medium">{(order as SearchOrderRow).customer_name}</div>
+                            )}
+                            <div className="text-brand-primary/60">{order.customer_email}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusLabel(order.status)}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-brand-primary text-right font-medium text-sm">
+                            {formatCurrency(order.total_amount)}
+                          </td>
+                          <td className="py-3 px-4 text-brand-primary/60 text-sm">{formatDate(order.created_at)}</td>
+                          <td className="py-3 px-4">
+                            {order.status === 'paid' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSelectedOrder(order as SearchOrderRow)
+                                  setFulfillAction('ship')
+                                }}
+                                className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200"
+                              >
+                                Ship
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {productOrders.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-brand-primary/40 text-sm">
+                            No orders found matching your filters
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {orderData && orderData.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-brand-primary/10">
+                  <span className="text-sm text-brand-primary/60">
+                    Showing {((orderData.page - 1) * 20) + 1}–{Math.min(orderData.page * 20, orderData.total)} of {orderData.total}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setOrderPage(p => Math.max(1, p - 1))}
+                      disabled={orderData.page <= 1}
+                      className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-brand-primary/60 px-2">
+                      {orderData.page} / {orderData.totalPages}
+                    </span>
+                    <button
+                      onClick={() => setOrderPage(p => Math.min(orderData.totalPages, p + 1))}
+                      disabled={orderData.page >= orderData.totalPages}
+                      className="px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>}
+        </>
+      )}
+
+      {/* ══════════════════════════════════════
+          PRODUCT ORDER DETAIL MODAL
+          Simple ship/fulfill for Stripe product orders
+      ══════════════════════════════════════ */}
+      {selectedOrder && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => { setSelectedOrder(null); setFulfillAction(null); setFulfillError(null) }}
+        >
+          <div
+            className="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-auto p-6"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg text-brand-primary">
                 Order <span className="font-mono">{selectedOrder.order_number}</span>
               </h3>
-              <button onClick={() => { setSelectedOrder(null); setFulfillAction(null) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+              <button
+                onClick={() => { setSelectedOrder(null); setFulfillAction(null) }}
+                className="text-brand-primary/40 hover:text-brand-primary text-xl"
+              >
+                &times;
+              </button>
             </div>
 
             <div className="space-y-3 mb-4">
@@ -597,7 +510,9 @@ export default function OrdersClient() {
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-primary/60">Status</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>{getStatusLabel(selectedOrder.status)}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
+                  {getStatusLabel(selectedOrder.status)}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-brand-primary/60">Amount</span>
@@ -623,18 +538,7 @@ export default function OrdersClient() {
             )}
 
             {/* Fulfillment Actions */}
-            {selectedOrder.source === 'club_orders' ? (
-              <div className="border-t border-brand-primary/10 pt-4 mt-4">
-                <ClubOrderStageControls
-                  orderId={selectedOrder.id}
-                  currentStatus={selectedOrder.status}
-                  isApproving={clubApprovingId === selectedOrder.id}
-                  isUpdating={clubUpdatingId === selectedOrder.id}
-                  onApprove={handleClubOrderApprove}
-                  onStatusUpdate={handleClubOrderStatusUpdate}
-                />
-              </div>
-            ) : (selectedOrder.status === 'paid' || selectedOrder.status === 'shipped') && (
+            {(selectedOrder.status === 'paid' || selectedOrder.status === 'shipped') && (
               <div className="border-t border-brand-primary/10 pt-4">
                 <div className="flex gap-2 mb-3">
                   {selectedOrder.status === 'paid' && (

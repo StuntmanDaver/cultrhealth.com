@@ -498,7 +498,7 @@ export default function AdminDashboardClient() {
                     <h2 className="font-display text-xl text-brand-primary">Fulfillment Pipeline</h2>
                     <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders across all stages</p>
                   </div>
-                  <Link href="/admin/orders?tab=club-orders" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+                  <Link href="/admin/orders?type=club" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
                     View details →
                   </Link>
                 </div>

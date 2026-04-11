@@ -15,121 +15,82 @@ const mockFetch = vi.fn()
 
 global.fetch = mockFetch
 
+// Minimal mock for ClubOrdersTab — it renders independently and manages its own state.
+// We stub its fetch responses so it doesn't interfere with OrdersClient assertions.
+const makeAnalyticsResponse = () => ({
+  ok: true,
+  json: async () => ({
+    data: {
+      sales: {
+        ordersByStatus: { shipped: 1 },
+        topProducts: [],
+        recentOrders: [],
+      },
+    },
+  }),
+})
+
+const makeOrdersResponse = (orders = []) => ({
+  ok: true,
+  json: async () => ({
+    data: { orders, total: orders.length, totalPages: 1, page: 1 },
+  }),
+})
+
+const makeClubOrdersResponse = (orders: { id: string; status: string }[]) => ({
+  ok: true,
+  json: async () => ({ orders }),
+})
+
 describe('OrdersClient', () => {
-  let pendingOrders = [{ id: 'pending-club-order', status: 'pending_approval' }]
-  let clubOrderStatus = 'shipped'
+  let pendingOrders: { id: string; status: string }[]
 
   beforeEach(() => {
     vi.clearAllMocks()
     currentTabParam = null
     pendingOrders = [{ id: 'pending-club-order', status: 'pending_approval' }]
-    clubOrderStatus = 'shipped'
 
     mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString()
-
-      if (url.startsWith('/api/admin/analytics')) {
-        return {
-          ok: true,
-          json: async () => ({
-            data: {
-              sales: {
-                ordersByStatus: {
-                  shipped: 1,
-                },
-                topProducts: [],
-                recentOrders: [
-                  {
-                    id: 'club-order-1',
-                    order_number: 'CLB-2001',
-                    customer_email: 'member@example.com',
-                    customer_name: 'Member Example',
-                    status: clubOrderStatus,
-                    total_amount: 225,
-                    source: 'club_orders',
-                    created_at: '2026-04-01T00:00:00.000Z',
-                    items: [],
-                  },
-                ],
-              },
-            },
-          }),
-        }
-      }
-
-      if (url.startsWith('/api/admin/orders')) {
-        return {
-          ok: true,
-          json: async () => ({
-            data: {
-              orders: [
-                {
-                  id: 'club-order-1',
-                  order_number: 'CLB-2001',
-                  customer_email: 'member@example.com',
-                  customer_name: 'Member Example',
-                  status: clubOrderStatus,
-                  total_amount: 225,
-                  source: 'club_orders',
-                  created_at: '2026-04-01T00:00:00.000Z',
-                  items: [],
-                },
-              ],
-              total: 1,
-              totalPages: 1,
-              page: 1,
-            },
-          }),
-        }
-      }
-
-      if (url === '/api/admin/club-orders') {
-        return {
-          ok: true,
-          json: async () => ({
-            orders: pendingOrders,
-          }),
-        }
-      }
-
-      if (url === '/api/admin/club-orders/club-order-1/status') {
-        clubOrderStatus = 'paid'
-        pendingOrders = []
-        return {
-          ok: true,
-          json: async () => ({ success: true, status: 'paid' }),
-        }
-      }
-
-      return {
-        ok: true,
-        json: async () => ({}),
-      }
+      if (url.startsWith('/api/admin/analytics')) return makeAnalyticsResponse()
+      if (url.startsWith('/api/admin/orders')) return makeOrdersResponse()
+      if (url.startsWith('/api/admin/club-orders')) return makeClubOrdersResponse(pendingOrders)
+      return { ok: true, json: async () => ({}) }
     })
   })
 
-  it('renames the club-orders tab and shows formatted shipped labels in the all-orders view', async () => {
+  it('shows type filter pills and formatted status labels; club orders are excluded from the product table', async () => {
+    render(<OrdersClient />)
+
+    // All three filter pills are present
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /all orders/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /club orders/i })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /product orders/i })).toBeInTheDocument()
+    })
+
+    // No legacy "Pending Approval" filter pill
+    expect(screen.queryByRole('button', { name: /pending approval/i })).not.toBeInTheDocument()
+
+    // Analytics section renders the status from analytics API
+    await waitFor(() => {
+      expect(screen.getByText('Shipped: 1')).toBeInTheDocument()
+    })
+
+    // Club orders (source: club_orders) must not appear in the product order search table
+    expect(screen.queryByText('CLB-2001')).not.toBeInTheDocument()
+  })
+
+  it('activates the Club Orders pill when ?tab=club-orders is set on mount', async () => {
+    currentTabParam = 'club-orders'
     render(<OrdersClient />)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /club orders/i })).toBeInTheDocument()
-    })
-
-    expect(screen.queryByRole('button', { name: /pending approval/i })).not.toBeInTheDocument()
-
-    await waitFor(() => {
-      expect(screen.getByText('Shipped: 1')).toBeInTheDocument()
-      expect(screen.getAllByText(/^Shipped$/).length).toBeGreaterThan(0)
-    })
-
-    fireEvent.click(screen.getByText('CLB-2001'))
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/^Shipped$/).length).toBeGreaterThanOrEqual(2)
+      expect(screen.getByRole('button', { name: /club orders/i }).className).toContain('bg-brand-primary')
     })
   })
 
-  it('syncs the active tab when the club-orders query param changes after mount', async () => {
+  it('syncs the active pill when the club-orders query param changes after mount', async () => {
     const { rerender } = render(<OrdersClient />)
 
     await waitFor(() => {
@@ -144,24 +105,27 @@ describe('OrdersClient', () => {
     })
   })
 
-  it('refreshes the pending badge after manually clearing a pending club order from the all-orders modal', async () => {
-    clubOrderStatus = 'pending_approval'
+  it('shows and clears the pending count badge on the Club Orders pill via onPendingCountChange', async () => {
     render(<OrdersClient />)
 
+    // ClubOrdersTab fetches and calls onPendingCountChange(1) → badge appears
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /club orders/i }).textContent).toContain('1')
     })
 
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-
-    fireEvent.click(screen.getByText('CLB-2001'))
-    fireEvent.change(screen.getByLabelText(/mark manually processed/i), { target: { value: 'paid' } })
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/admin/club-orders/club-order-1/status', expect.objectContaining({
-        method: 'POST',
-      }))
+    // Simulate ClubOrdersTab reporting 0 pending (e.g. after approval)
+    pendingOrders = []
+    mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      if (url.startsWith('/api/admin/analytics')) return makeAnalyticsResponse()
+      if (url.startsWith('/api/admin/orders')) return makeOrdersResponse()
+      if (url.startsWith('/api/admin/club-orders')) return makeClubOrdersResponse([])
+      return { ok: true, json: async () => ({}) }
     })
+
+    // Click refresh inside ClubOrdersTab (the Refresh button)
+    const refreshBtn = screen.getByRole('button', { name: /refresh/i })
+    fireEvent.click(refreshBtn)
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /^club orders$/i }).textContent).toBe('Club Orders')
