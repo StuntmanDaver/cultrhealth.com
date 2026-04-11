@@ -1,10 +1,10 @@
 // Shared club-order pipeline metadata and helpers
 // Safe to import from both API routes and client components.
 
-export const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'] as const;
+export const PIPELINE_ORDER = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'waiting_to_ship', 'shipped', 'fulfilled'] as const;
 export type ClubOrderStage = typeof PIPELINE_ORDER[number];
 
-export const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'shipped', 'fulfilled'];
+export const PIPELINE_STATUSES = ['pending_approval', 'approved', 'invoice_sent', 'needs_payment', 'paid', 'waiting_to_ship', 'shipped', 'fulfilled'];
 export const ALL_PIPELINE_AND_CANCEL = [...PIPELINE_STATUSES, 'cancelled'];
 
 export const PIPELINE_LABELS: Record<string, string> = {
@@ -13,6 +13,7 @@ export const PIPELINE_LABELS: Record<string, string> = {
   invoice_sent: 'Invoice Sent',
   needs_payment: 'Needs Payment',
   paid: 'Paid',
+  waiting_to_ship: 'Waiting to Ship',
   shipped: 'Shipped',
   fulfilled: 'Fulfilled',
   cancelled: 'Cancelled',
@@ -25,7 +26,8 @@ export const NEXT_ACTIONS: Record<string, { status: string; label: string; color
   approved: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
   invoice_sent: { status: 'needs_payment', label: 'Mark Needs Payment', color: '#ea580c' },
   needs_payment: { status: 'paid', label: 'Mark Paid', color: '#16a34a' },
-  // NOTE: paid→shipped intentionally omitted — shipping requires the inline tracking form,
+  paid: { status: 'waiting_to_ship', label: 'Mark Waiting to Ship', color: '#7c3aed' },
+  // NOTE: waiting_to_ship→shipped intentionally omitted — shipping requires the inline tracking form,
   // not a one-click email link.
   shipped: { status: 'fulfilled', label: 'Mark Fulfilled', color: '#059669' },
 };

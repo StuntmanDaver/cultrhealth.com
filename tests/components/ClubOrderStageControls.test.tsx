@@ -14,7 +14,7 @@ describe('ClubOrderStageControls', () => {
     render(
       <ClubOrderStageControls
         orderId="club-order-1"
-        currentStatus="paid"
+        currentStatus="waiting_to_ship"
         isApproving={false}
         isUpdating={false}
         onApprove={vi.fn()}
@@ -122,7 +122,7 @@ describe('ClubOrderStageControls', () => {
     render(
       <ClubOrderStageControls
         orderId="club-order-3"
-        currentStatus="paid"
+        currentStatus="waiting_to_ship"
         isApproving={false}
         isUpdating={false}
         onApprove={vi.fn()}

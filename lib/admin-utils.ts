@@ -52,6 +52,7 @@ export function getStatusColor(status: string): string {
     case 'needs_payment': return 'text-orange-700 bg-orange-100'
     case 'rejected': return 'text-red-700 bg-red-100'
     case 'paid': return 'text-green-700 bg-green-100'
+    case 'waiting_to_ship': return 'text-purple-700 bg-purple-100'
     case 'shipped': return 'text-blue-700 bg-blue-100'
     case 'fulfilled': return 'text-emerald-700 bg-emerald-100'
     case 'dismissed': return 'text-gray-500 bg-gray-100'
@@ -64,8 +65,9 @@ export const ORDER_STATUS_STYLES: Record<string, { label: string; bg: string; te
   approved:         { label: 'Approved',          bg: 'bg-blue-100',   text: 'text-blue-800' },
   invoice_sent:     { label: 'Invoice Sent',      bg: 'bg-indigo-100', text: 'text-indigo-800' },
   needs_payment:    { label: 'Needs Payment',     bg: 'bg-orange-100', text: 'text-orange-800' },
-  paid:             { label: 'Paid',              bg: 'bg-green-100',  text: 'text-green-800' },
-  shipped:          { label: 'Shipped',   bg: 'bg-blue-100',   text: 'text-blue-800' },
+  paid:             { label: 'Paid',              bg: 'bg-green-100',   text: 'text-green-800' },
+  waiting_to_ship:  { label: 'Waiting to Ship',  bg: 'bg-purple-100',  text: 'text-purple-800' },
+  shipped:          { label: 'Shipped',           bg: 'bg-blue-100',    text: 'text-blue-800' },
   fulfilled:        { label: 'Fulfilled',         bg: 'bg-emerald-100', text: 'text-emerald-800' },
   cancelled:        { label: 'Cancelled',         bg: 'bg-gray-100',   text: 'text-gray-600' },
   rejected:         { label: 'Rejected',          bg: 'bg-red-100',    text: 'text-red-800' },

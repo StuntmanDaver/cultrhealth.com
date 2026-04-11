@@ -49,6 +49,7 @@ const PIPELINE_STAGES = [
   { key: 'invoice_sent', label: 'Invoiced', icon: FileText, color: 'indigo' },
   { key: 'needs_payment', label: 'Needs Payment', icon: CreditCard, color: 'orange' },
   { key: 'paid', label: 'Paid', icon: DollarSign, color: 'green' },
+  { key: 'waiting_to_ship', label: 'Waiting to Ship', icon: Package, color: 'purple' },
   { key: 'shipped', label: 'Shipped', icon: Truck, color: 'blue' },
   { key: 'fulfilled', label: 'Fulfilled', icon: CheckCircle2, color: 'emerald' },
 ] as const
@@ -180,6 +181,7 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
               green: count > 0 ? 'bg-green-100 text-green-800 border-green-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               orange: count > 0 ? 'bg-orange-100 text-orange-800 border-orange-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               blue: count > 0 ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
+              purple: count > 0 ? 'bg-purple-100 text-purple-800 border-purple-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               emerald: count > 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
             }
             return (
@@ -459,9 +461,14 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
                         <TimelineStep
                           label="Needs Payment"
                           timestamp={null}
-                          active={['needs_payment', 'paid', 'shipped', 'fulfilled'].includes(order.status)}
+                          active={['needs_payment', 'paid', 'waiting_to_ship', 'shipped', 'fulfilled'].includes(order.status)}
                         />
                         <TimelineStep label="Paid" timestamp={order.paid_at} active={!!order.paid_at} />
+                        <TimelineStep
+                          label="Waiting to Ship"
+                          timestamp={null}
+                          active={['waiting_to_ship', 'shipped', 'fulfilled'].includes(order.status)}
+                        />
                         <TimelineStep label="Shipped" timestamp={order.shipped_at} active={!!order.shipped_at} />
                         <TimelineStep label="Fulfilled" timestamp={order.fulfilled_at} active={!!order.fulfilled_at} />
                       </div>

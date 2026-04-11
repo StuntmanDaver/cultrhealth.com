@@ -46,13 +46,13 @@ describe('ClubOrdersTab', () => {
     }))
   })
 
-  it('uses the shipped label in the pipeline summary instead of the old waiting-to-ship copy', async () => {
+  it('shows both Waiting to Ship and Shipped stages in the pipeline summary', async () => {
     render(<ClubOrdersTab />)
 
     await waitFor(() => {
       expect(screen.getAllByText('Shipped').length).toBeGreaterThan(0)
     })
 
-    expect(screen.queryByText('Waiting to Ship')).not.toBeInTheDocument()
+    expect(screen.getAllByText('Waiting to Ship').length).toBeGreaterThan(0)
   })
 })

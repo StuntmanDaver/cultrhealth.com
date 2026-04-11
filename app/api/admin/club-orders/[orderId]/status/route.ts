@@ -27,6 +27,7 @@ const STAGE_TIMESTAMPS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   needs_payment: 'Awaiting Payment',
   paid: 'Payment Confirmed',
+  waiting_to_ship: 'Processing — Waiting to Ship',
   shipped: 'Order Shipped',
   fulfilled: 'Order Complete',
 }
@@ -359,6 +360,7 @@ async function sendAdminStatusEmail(
 
   const statusColors: Record<string, string> = {
     paid: '#e8f5e9',
+    waiting_to_ship: '#f3e8ff',
     shipped: '#e3f2fd',
     fulfilled: '#e8f5e9',
     cancelled: '#fce4ec',

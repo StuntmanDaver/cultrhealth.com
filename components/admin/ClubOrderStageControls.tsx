@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle, CreditCard } from 'lucide-react'
+import { Loader2, Check, DollarSign, Truck, CheckCircle2, AlertTriangle, CreditCard, Package } from 'lucide-react'
 import {
   PIPELINE_STATUSES,
   PIPELINE_LABELS,
@@ -55,6 +55,7 @@ export default function ClubOrderStageControls({
     { value: 'approved', label: 'Approved (No QB / No Email)' },
     { value: 'needs_payment', label: 'Needs Payment (No Email)' },
     { value: 'paid', label: 'Paid (No Email)' },
+    { value: 'waiting_to_ship', label: 'Waiting to Ship (No Email)' },
     { value: 'shipped', label: 'Shipped (No Email)' },
     { value: 'fulfilled', label: 'Fulfilled (No Email)' },
     { value: 'cancelled', label: 'Cancelled' },
@@ -235,16 +236,18 @@ export default function ClubOrderStageControls({
             className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg text-white font-medium disabled:opacity-50 transition-colors ${
               nextStatus === 'needs_payment' ? 'bg-orange-500 hover:bg-orange-600'
                 : nextStatus === 'paid' ? 'bg-green-600 hover:bg-green-700'
-                  : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
-                    : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
-                      : 'bg-brand-primary hover:bg-brand-primaryHover'
+                  : nextStatus === 'waiting_to_ship' ? 'bg-purple-600 hover:bg-purple-700'
+                    : nextStatus === 'shipped' ? 'bg-blue-600 hover:bg-blue-700'
+                      : nextStatus === 'fulfilled' ? 'bg-emerald-600 hover:bg-emerald-700'
+                        : 'bg-brand-primary hover:bg-brand-primaryHover'
             }`}
           >
             {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               nextStatus === 'needs_payment' ? <CreditCard className="w-4 h-4" /> :
                 nextStatus === 'paid' ? <DollarSign className="w-4 h-4" /> :
-                  nextStatus === 'shipped' ? <Truck className="w-4 h-4" /> :
-                    nextStatus === 'fulfilled' ? <CheckCircle2 className="w-4 h-4" /> : null
+                  nextStatus === 'waiting_to_ship' ? <Package className="w-4 h-4" /> :
+                    nextStatus === 'shipped' ? <Truck className="w-4 h-4" /> :
+                      nextStatus === 'fulfilled' ? <CheckCircle2 className="w-4 h-4" /> : null
             )}
             {isUpdating ? 'Updating...' : `Mark ${PIPELINE_LABELS[nextStatus] || nextStatus}`}
           </button>

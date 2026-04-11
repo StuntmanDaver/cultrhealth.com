@@ -37,6 +37,7 @@ export default function ClubOrderBulkActions({
         <option value="approved">{PIPELINE_LABELS.approved}</option>
         <option value="needs_payment">{PIPELINE_LABELS.needs_payment}</option>
         <option value="paid">{PIPELINE_LABELS.paid}</option>
+        <option value="waiting_to_ship">{PIPELINE_LABELS.waiting_to_ship}</option>
         <option value="fulfilled">{PIPELINE_LABELS.fulfilled}</option>
         <option value="cancelled">{PIPELINE_LABELS.cancelled}</option>
       </select>
