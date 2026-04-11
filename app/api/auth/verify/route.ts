@@ -116,12 +116,24 @@ export async function GET(request: NextRequest) {
       'stewart@cultrhealth.com',
     ]
 
+    // Owners who hold both an admin role AND a creator role — they get a destination
+    // picker instead of being dropped straight into admin.
+    const DUAL_ROLE_EMAILS = [
+      'stewart@cultrhealth.com',
+    ]
+
     // Validate redirect is a safe relative path (prevent open redirect)
     let postLoginPath = typeof redirectParam === 'string' && redirectParam.startsWith('/') && !redirectParam.startsWith('//') ? redirectParam : '/members'
 
-    // Push owners straight to admin on production (and staging) if no specific redirect was passed
-    if (OWNERS.includes(email) && (!redirectParam || redirectParam === '/members')) {
+    // Push owners straight to admin on production (and staging) if no specific redirect was passed.
+    // Dual-role owners skip the straight-to-admin shortcut so they can choose their destination.
+    if (OWNERS.includes(email) && !DUAL_ROLE_EMAILS.includes(email) && (!redirectParam || redirectParam === '/members')) {
       postLoginPath = '/admin'
+    }
+
+    // Dual-role owners land on a destination picker when no explicit redirect was given.
+    if (DUAL_ROLE_EMAILS.includes(email) && (!redirectParam || redirectParam === '/members')) {
+      postLoginPath = '/login/choose-area'
     }
 
     // Check for staging bypass
