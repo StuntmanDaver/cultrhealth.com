@@ -113,6 +113,7 @@ export async function GET(request: NextRequest) {
       'alex@cultrhealth.com',
       'erik@cultrhealth.com',
       'david@cultrhealth.com',
+      'tony@cultrhealth.com',
       'stewart@cultrhealth.com',
     ]
 
