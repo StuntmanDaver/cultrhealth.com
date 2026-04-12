@@ -1,6 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/auth'
 import { LINKS } from '@/lib/config/links'
+import dynamic from 'next/dynamic'
+
+const CalendlyEmbed = dynamic(() => import('@/components/ui/CalendlyEmbed'), { ssr: false })
 
 export const metadata = { title: 'Schedule a Consultation — CULTR Health' }
 
@@ -27,11 +30,7 @@ export default async function ConsultationsPage() {
           <div className="bg-white rounded-2xl border border-cultr-sage overflow-hidden shadow-sm">
             {calendlyUrl ? (
               <>
-                <iframe
-                  title="Schedule Consultation"
-                  src={calendlyUrl}
-                  style={{ width: '100%', height: '100%', minHeight: '700px', border: '0px' }}
-                />
+                <CalendlyEmbed url={process.env.NEXT_PUBLIC_CALENDLY_URL!} />
                 <div className="p-3 bg-brand-cream/50 border-t border-cultr-sage/30 text-center flex flex-col sm:flex-row items-center justify-between px-6">
                   <p className="text-sm text-cultr-textMuted">
                     Scheduling by{' '}
