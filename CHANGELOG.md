@@ -1,3 +1,19 @@
+## [2026-04-12] - Calendly Scheduling Integration (Healthie Replacement)
+
+### Added
+- **Calendly Embed:** `/members/consultations` now renders the Calendly inline widget via official `widget.js` (client component `components/ui/CalendlyEmbed.tsx`). Reads `NEXT_PUBLIC_CALENDLY_URL` env var; shows fallback contact message when unset.
+- **Calendly Webhook:** `app/api/webhook/calendly/route.ts` fully replaces Healthie sync. On `invitee.created`: updates `member_onboarding` (`appointment_scheduled=TRUE`, `step→complete`), sends confirmation to patient, `support@cultrhealth.com`, and `admin@cultrhealth.com` via Resend. On `invitee.canceled`: reverts `appointment_scheduled=FALSE`, `step→schedule`.
+- **Webhook Auth:** Shared secret via `?secret=` query param. Registered at `https://www.cultrhealth.com/api/webhook/calendly?secret=...` via Calendly API.
+
+### Changed
+- **CSP Updated:** Added `https://assets.calendly.com` to `script-src` and `style-src`; `https://calendly.com` to `frame-src` in `next.config.js`.
+
+### Environment Variables Required
+- `NEXT_PUBLIC_CALENDLY_URL` — e.g. `https://calendly.com/david-cultrhealth/30min`
+- `CALENDLY_WEBHOOK_SECRET` — shared secret matching `?secret=` in registered webhook URL
+
+---
+
 ## [2026-04-10] - Club Order Fulfillment Pipeline Redesign
 
 ### Changed
