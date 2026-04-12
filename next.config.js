@@ -49,8 +49,8 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://jstest.authorize.net https://js.authorize.net",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://jstest.authorize.net https://js.authorize.net https://assets.calendly.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io https://assets.calendly.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https: http:",
               "connect-src 'self' https://api.stripe.com https://r.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io",
