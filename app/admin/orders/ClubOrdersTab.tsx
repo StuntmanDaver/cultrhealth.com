@@ -200,6 +200,8 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
           {[
             { key: 'all', label: 'All' },
             { key: 'active', label: 'Active' },
+            { key: 'cancelled', label: 'Cancelled' },
+            { key: 'fulfilled', label: 'Completed' },
           ].map(f => (
             <button
               key={f.key}
