@@ -188,7 +188,7 @@ export default function OrdersClient() {
   )
 
   const showClub = typeFilter !== 'product'
-  const showProduct = typeFilter !== 'club'
+  const showProduct = typeFilter === 'product'
 
   return (
     <div className="space-y-6">
@@ -269,7 +269,7 @@ export default function OrdersClient() {
             {Object.keys(data.sales.ordersByStatus).length > 0 && (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
                 <h2 className="font-display text-xl text-brand-primary mb-4">
-                  {typeFilter === 'all' ? 'Product ' : ''}Orders by Status
+                  Product Orders by Status
                 </h2>
                 <div className="flex flex-wrap gap-3">
                   {Object.entries(data.sales.ordersByStatus).map(([status, count]) => (
@@ -319,7 +319,7 @@ export default function OrdersClient() {
             <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <h2 className="font-display text-xl text-brand-primary">
-                  {typeFilter === 'all' ? 'Product ' : ''}Order Search
+                  Product Order Search
                 </h2>
                 <button onClick={exportOrders} className="text-xs text-brand-primary/60 hover:text-brand-primary underline">
                   Export CSV
