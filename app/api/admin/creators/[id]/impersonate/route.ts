@@ -30,7 +30,25 @@ export async function GET(
     const token = await createMagicLinkToken(creator.email)
     const redirectUrl = `${getBaseUrl(request)}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
-    return NextResponse.redirect(redirectUrl)
+    const response = NextResponse.redirect(redirectUrl)
+
+    // Preserve the admin's session so they can return to admin without re-authenticating.
+    // The creator verify-login will overwrite cultr_session_v2; we store the original
+    // admin token in cultr_admin_return_v2 so the admin layout can restore it on next visit.
+    const adminToken = request.cookies.get('cultr_session_v2')?.value
+    if (adminToken) {
+      const domain = request.nextUrl.hostname.includes('cultrhealth.com') ? '.cultrhealth.com' : undefined
+      response.cookies.set('cultr_admin_return_v2', adminToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 8, // 8 hours
+        path: '/',
+        ...(domain ? { domain } : {}),
+      })
+    }
+
+    return response
   } catch (error) {
     console.error(
       'Admin creator impersonation failed:',
