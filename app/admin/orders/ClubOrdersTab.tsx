@@ -167,14 +167,13 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
       })
 
   return (
-    <div className="space-y-4">
-      {/* ═══ Pipeline Visualization ═══ */}
-      <div className="bg-white rounded-xl border border-brand-primary/10 p-5">
-        <h3 className="text-sm font-medium text-brand-primary/60 uppercase tracking-wide mb-3">Fulfillment Pipeline</h3>
-        <div className="flex items-center gap-1">
-          {PIPELINE_STAGES.map((stage, idx) => {
+    <div className="space-y-3">
+      {/* ═══ Compact filter bar ═══ */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Stage pills */}
+          {PIPELINE_STAGES.map((stage) => {
             const count = counts[stage.key] || 0
-            const Icon = stage.icon
             const colorMap: Record<string, string> = {
               yellow: count > 0 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
               indigo: count > 0 ? 'bg-indigo-100 text-indigo-800 border-indigo-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
@@ -185,60 +184,49 @@ export default function ClubOrdersTab({ onPendingCountChange }: ClubOrdersTabPro
               emerald: count > 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-brand-primary/5 text-brand-primary/30 border-brand-primary/10',
             }
             return (
-              <div key={stage.key} className="flex items-center flex-1 min-w-0">
-                <button
-                  onClick={() => setStatusFilter(statusFilter === stage.key ? 'all' : stage.key)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium w-full transition-all ${colorMap[stage.color]} ${statusFilter === stage.key ? 'ring-2 ring-brand-primary/30 shadow-sm' : 'hover:shadow-sm'}`}
-                >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span className="truncate hidden sm:inline">{stage.label}</span>
-                  <span className="font-bold ml-auto">{count}</span>
-                </button>
-                {idx < PIPELINE_STAGES.length - 1 && (
-                  <div className="text-brand-primary/20 mx-0.5 shrink-0">&rarr;</div>
-                )}
-              </div>
+              <button
+                key={stage.key}
+                onClick={() => setStatusFilter(statusFilter === stage.key ? 'all' : stage.key)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium transition-all ${colorMap[stage.color]} ${statusFilter === stage.key ? 'ring-2 ring-brand-primary/30 shadow-sm' : ''}`}
+              >
+                {stage.label}
+                {count > 0 && <span className="font-bold">{count}</span>}
+              </button>
             )
           })}
-        </div>
-        {/* Quick filters */}
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-brand-primary/5">
-          <span className="text-xs text-brand-primary/40">Filter:</span>
+          {/* Divider */}
+          <span className="text-brand-primary/20 mx-1">|</span>
+          {/* Quick filters */}
           {[
             { key: 'all', label: 'All' },
             { key: 'active', label: 'Active' },
-            { key: 'cancelled', label: 'Cancelled' },
-            { key: 'fulfilled', label: 'Completed' },
           ].map(f => (
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
                 statusFilter === f.key
-                  ? 'bg-brand-primary text-white'
-                  : 'bg-brand-primary/5 text-brand-primary/50 hover:bg-brand-primary/10'
+                  ? 'bg-brand-primary text-white border-brand-primary'
+                  : 'bg-transparent text-brand-primary/50 border-brand-primary/20 hover:bg-brand-primary/5'
               }`}
             >
               {f.label}
             </button>
           ))}
         </div>
-      </div>
-
-      {/* ═══ Sub-header ═══ */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-brand-primary/60">
-          {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
-          {statusFilter !== 'all' && <span className="ml-1 text-brand-primary/40">({statusFilter})</span>}
-        </p>
-        <button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-brand-primary/50">
+            {filteredOrders.length} order{filteredOrders.length !== 1 ? 's' : ''}
+          </span>
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-brand-primary/20 rounded-lg hover:bg-brand-cream transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Error */}
