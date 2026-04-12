@@ -54,7 +54,7 @@ const nextConfig = {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https: http:",
               "connect-src 'self' https://api.stripe.com https://r.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io",
-              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://challenges.cloudflare.com https://gethealthie.com https://*.gethealthie.com",
+              "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://challenges.cloudflare.com https://gethealthie.com https://*.gethealthie.com https://calendly.com",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self' https://checkout.stripe.com",
