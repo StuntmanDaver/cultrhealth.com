@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { sql } from '@vercel/postgres'
 import {
   sendConsultationConfirmationToPatient,
@@ -13,7 +12,7 @@ import {
  *   - Marks member_onboarding.appointment_scheduled = TRUE
  *   - Sends confirmation to patient, support@cultrhealth.com, and admin@cultrhealth.com
  *
- * Signature verification uses HMAC-SHA256 via the Calendly-Webhook-Signature header.
+ * Auth: secret query param (?secret=...) matched against CALENDLY_WEBHOOK_SECRET env var.
  */
 
 const PROVIDER_EMAIL = 'support@cultrhealth.com'
@@ -27,42 +26,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
     }
 
-    // Calendly sends signature in format: "t=<timestamp>,v1=<signature>"
-    const signatureHeader = request.headers.get('calendly-webhook-signature')
-    if (!signatureHeader) {
-      return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+    // Verify shared secret passed as query param
+    const { searchParams } = new URL(request.url)
+    if (searchParams.get('secret') !== webhookSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const rawBody = await request.text()
-
-    const parts = Object.fromEntries(
-      signatureHeader.split(',').map(part => {
-        const [key, value] = part.split('=')
-        return [key, value]
-      })
-    )
-    const timestamp = parts.t
-    const receivedSignature = parts.v1
-
-    if (!timestamp || !receivedSignature) {
-      return NextResponse.json({ error: 'Invalid signature format' }, { status: 401 })
-    }
-
-    const payload = `${timestamp}.${rawBody}`
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(payload)
-      .digest('hex')
-
-    const expectedBuf = Buffer.from(expectedSignature)
-    const receivedBuf = Buffer.from(receivedSignature)
-    if (expectedBuf.length !== receivedBuf.length) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-    if (!crypto.timingSafeEqual(expectedBuf, receivedBuf)) {
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-
     const body = JSON.parse(rawBody)
     const eventType = body.event as string
 
