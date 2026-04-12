@@ -14,6 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   no_subscription: 'No active membership found for this email.',
   verification_failed: 'Verification failed. Please try again.',
   session_timeout: 'Your session timed out. Please log in again.',
+  access_denied: 'This email does not have admin access. Please use an admin email.',
 }
 
 export default function LoginPage() {

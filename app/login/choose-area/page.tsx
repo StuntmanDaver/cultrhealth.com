@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { getSession } from '@/lib/auth'
+import { getSession, isProviderEmail } from '@/lib/auth'
 import { LayoutDashboard, Megaphone, Shield } from 'lucide-react'
 
 // Owners who hold both admin + creator roles and need to pick a destination.
@@ -20,7 +20,7 @@ export default async function ChooseAreaPage() {
   // to the right place so they're never stuck on this screen.
   if (!DUAL_ROLE_EMAILS.includes(session.email.toLowerCase())) {
     const adminEmails = (process.env.ADMIN_ALLOWED_EMAILS || '').split(',').map(e => e.trim().toLowerCase())
-    if (adminEmails.includes(session.email.toLowerCase()) || session.role === 'admin') {
+    if (adminEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email) || session.role === 'admin') {
       redirect('/admin')
     }
     redirect('/members')

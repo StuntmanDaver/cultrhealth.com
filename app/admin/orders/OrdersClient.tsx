@@ -224,19 +224,18 @@ export default function OrdersClient() {
             ))}
           </div>
 
-          {/* Period selector — only for product analytics */}
-          {showProduct && (
-            <select
-              value={periodDays}
-              onChange={(e) => setPeriodDays(Number(e.target.value))}
-              className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
-            >
-              <option value={7}>Last 7 days</option>
-              <option value={30}>Last 30 days</option>
-              <option value={90}>Last 90 days</option>
-              <option value={365}>Last 365 days</option>
-            </select>
-          )}
+          {/* Period selector — always rendered to prevent layout shift on filter switch */}
+          <select
+            value={periodDays}
+            onChange={(e) => setPeriodDays(Number(e.target.value))}
+            className={`px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition-opacity ${showProduct ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+            aria-hidden={!showProduct}
+          >
+            <option value={7}>Last 7 days</option>
+            <option value={30}>Last 30 days</option>
+            <option value={90}>Last 90 days</option>
+            <option value={365}>Last 365 days</option>
+          </select>
         </div>
       </div>
 
