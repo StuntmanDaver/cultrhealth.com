@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { startCronRun } from '@/lib/cron-logger'
-import { addTagsToContact } from '@/lib/mailchimp'
+import { addTagsToContact } from '@/lib/contacts'
 
 export const dynamic = 'force-dynamic'
 

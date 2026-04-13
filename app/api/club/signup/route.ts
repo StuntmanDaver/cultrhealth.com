@@ -5,7 +5,7 @@ import { formLimiter, rateLimitResponse } from '@/lib/rate-limit'
 import { createClubVisitorToken } from '@/lib/auth'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { getCookieDomain } from '@/lib/utils'
-import { syncContactToMailchimp } from '@/lib/mailchimp'
+import { syncContactToMailchimp } from '@/lib/contacts'
 
 function hashIp(ip: string): string {
   return crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16)

@@ -7,7 +7,7 @@ import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/t
 import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
-import { syncContactToMailchimp } from '@/lib/mailchimp'
+import { syncContactToMailchimp } from '@/lib/contacts'
 import { formLimiter, rateLimitResponse } from '@/lib/rate-limit'
 
 interface OrderItem {

@@ -4,7 +4,7 @@ import { getSiphoxCustomerByPhone, getKitOrdersByCustomer, updateKitOrderStatus,
 import { registerKit } from '@/lib/siphox/client'
 import { SiphoxApiError } from '@/lib/siphox/errors'
 import { deriveKitLifecycleState } from '@/lib/siphox/kit-lifecycle'
-import { addTagsToContact } from '@/lib/mailchimp'
+import { addTagsToContact } from '@/lib/contacts'
 
 /** Empty labs response — used when DB is unavailable or customer has no data */
 const EMPTY_LABS_RESPONSE = {

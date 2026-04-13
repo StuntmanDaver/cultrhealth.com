@@ -4,7 +4,7 @@ import { calculateBMI } from '@/lib/utils/health';
 import { formatPhoneNumber } from '@/lib/utils/phone';
 import { updatePortalEhrPatientId } from '@/lib/portal-db';
 import { buildPartnerNote } from '@/lib/intake-utils';
-import { addTagsToContact } from '@/lib/mailchimp';
+import { addTagsToContact } from '@/lib/contacts';
 
 /**
  * POST /api/intake/submit

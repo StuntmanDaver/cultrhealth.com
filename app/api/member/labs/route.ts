@@ -4,7 +4,7 @@ import { getSiphoxCustomerByEmail, getKitOrdersByCustomer, updateKitOrderStatus,
 import { registerKit } from '@/lib/siphox/client'
 import { SiphoxApiError } from '@/lib/siphox/errors'
 import { deriveKitLifecycleState } from '@/lib/siphox/kit-lifecycle'
-import { addTagsToContact } from '@/lib/mailchimp'
+import { addTagsToContact } from '@/lib/contacts'
 
 const EMPTY_LABS_RESPONSE = {
   success: true,

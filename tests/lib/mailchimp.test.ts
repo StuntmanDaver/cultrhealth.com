@@ -1,128 +1,107 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const mockFetch = vi.fn()
-vi.stubGlobal('fetch', mockFetch)
+// vi.hoisted ensures this is available when vi.mock factory runs (vi.mock is hoisted)
+const mockContactsCreate = vi.hoisted(() => vi.fn())
 
-process.env.MAILCHIMP_API_KEY = 'test-api-key-us1'
-process.env.MAILCHIMP_AUDIENCE_ID = 'test-audience-123'
-process.env.MAILCHIMP_SERVER_PREFIX = 'us1'
+vi.mock('resend', () => ({
+  // Must use a regular function (not arrow) — arrow functions cannot be used with `new`
+  Resend: vi.fn(function MockResend() {
+    return { contacts: { create: mockContactsCreate } }
+  }),
+}))
 
-import { getEmailHash, syncContactToMailchimp, addTagsToContact } from '@/lib/mailchimp'
+process.env.RESEND_API_KEY = 'test-resend-key'
+process.env.RESEND_AUDIENCE_ID = 'test-audience-123'
 
-describe('mailchimp', () => {
+import { syncContactToResend, syncContactToMailchimp, addContactEvent, addTagsToContact } from '@/lib/contacts'
+
+describe('contacts (Resend)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) })
-    // Restore env vars in case a test deleted them
-    process.env.MAILCHIMP_API_KEY = 'test-api-key-us1'
-    process.env.MAILCHIMP_AUDIENCE_ID = 'test-audience-123'
-    process.env.MAILCHIMP_SERVER_PREFIX = 'us1'
+    mockContactsCreate.mockResolvedValue({ data: { id: 'contact-1' }, error: null })
+    process.env.RESEND_API_KEY = 'test-resend-key'
+    process.env.RESEND_AUDIENCE_ID = 'test-audience-123'
   })
 
-  describe('getEmailHash', () => {
-    it('returns MD5 hash of lowercase email', () => {
-      const hash = getEmailHash('Test@Example.com')
-      expect(hash).toBe(getEmailHash('test@example.com'))
-      expect(hash).toMatch(/^[a-f0-9]{32}$/)
-    })
-
-    it('trims whitespace before hashing', () => {
-      expect(getEmailHash('  test@example.com  ')).toBe(getEmailHash('test@example.com'))
-    })
-  })
-
-  describe('syncContactToMailchimp', () => {
-    it('sends PUT request with correct URL and auth', async () => {
-      await syncContactToMailchimp({
-        email: 'jane@test.com',
+  describe('syncContactToResend', () => {
+    it('calls contacts.create with correct audience and email', async () => {
+      await syncContactToResend({
+        email: 'Jane@Test.com',
         firstName: 'Jane',
         lastName: 'Doe',
-        tags: ['club-member'],
+        tags: ['cultr-member'],
       })
 
-      expect(mockFetch).toHaveBeenCalledTimes(1)
-      const [url, options] = mockFetch.mock.calls[0]
-      expect(url).toContain('https://us1.api.mailchimp.com/3.0/lists/test-audience-123/members/')
-      expect(options.method).toBe('PUT')
-      expect(options.headers['Content-Type']).toBe('application/json')
-      expect(options.headers['Authorization']).toContain('Basic ')
-    })
-
-    it('includes merge fields and tags in body', async () => {
-      await syncContactToMailchimp({
-        email: 'jane@test.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
-        phone: '+15551234567',
-        tags: ['club-order-placed', 'therapy-semaglutide'],
-        mergeFields: { THERAPY: 'Semaglutide', ORDER_NUM: 'CLB-ABC123' },
-      })
-
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-      expect(body.email_address).toBe('jane@test.com')
-      expect(body.status_if_new).toBe('subscribed')
-      expect(body.merge_fields.FNAME).toBe('Jane')
-      expect(body.merge_fields.LNAME).toBe('Doe')
-      expect(body.merge_fields.PHONE).toBe('+15551234567')
-      expect(body.merge_fields.THERAPY).toBe('Semaglutide')
-      expect(body.merge_fields.ORDER_NUM).toBe('CLB-ABC123')
-      expect(body.tags).toEqual(['club-order-placed', 'therapy-semaglutide'])
+      expect(mockContactsCreate).toHaveBeenCalledTimes(1)
+      const args = mockContactsCreate.mock.calls[0][0]
+      expect(args.audienceId).toBe('test-audience-123')
+      expect(args.email).toBe('jane@test.com') // lowercased
+      expect(args.firstName).toBe('Jane')
+      expect(args.lastName).toBe('Doe')
+      expect(args.unsubscribed).toBe(false)
     })
 
     it('skips silently when env vars not configured', async () => {
-      delete process.env.MAILCHIMP_API_KEY
+      delete process.env.RESEND_API_KEY
 
-      await syncContactToMailchimp({
-        email: 'jane@test.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
-        tags: ['test'],
-      })
+      await syncContactToResend({ email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe' })
 
-      expect(mockFetch).not.toHaveBeenCalled()
+      expect(mockContactsCreate).not.toHaveBeenCalled()
     })
 
-    it('does not throw on API failure', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: 'Invalid resource' }),
-      })
+    it('does not throw on Resend API error', async () => {
+      mockContactsCreate.mockResolvedValueOnce({ data: null, error: { message: 'conflict' } })
 
-      await syncContactToMailchimp({
-        email: 'jane@test.com',
-        firstName: 'Jane',
-        lastName: 'Doe',
-        tags: ['test'],
-      })
+      await expect(
+        syncContactToResend({ email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe' })
+      ).resolves.toBeUndefined()
+    })
+
+    it('does not throw on network failure', async () => {
+      mockContactsCreate.mockRejectedValueOnce(new Error('network error'))
+
+      await expect(
+        syncContactToResend({ email: 'jane@test.com', firstName: 'Jane', lastName: 'Doe' })
+      ).resolves.toBeUndefined()
     })
   })
 
-  describe('addTagsToContact', () => {
-    it('sends POST to tags endpoint with active status', async () => {
-      await addTagsToContact('jane@test.com', ['intake-complete'])
-
-      expect(mockFetch).toHaveBeenCalledTimes(1)
-      const [url, options] = mockFetch.mock.calls[0]
-      expect(url).toContain('/tags')
-      const body = JSON.parse(options.body)
-      expect(body.tags).toEqual([{ name: 'intake-complete', status: 'active' }])
+  describe('syncContactToMailchimp alias', () => {
+    it('is the same function as syncContactToResend', () => {
+      expect(syncContactToMailchimp).toBe(syncContactToResend)
     })
+  })
 
-    it('handles multiple tags', async () => {
-      await addTagsToContact('jane@test.com', ['labs-results-ready', 'tier-core'])
+  describe('addContactEvent', () => {
+    it('calls contacts.create with audience and normalised email', async () => {
+      await addContactEvent('Jane@Test.com', ['intake-complete'])
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body)
-      expect(body.tags).toEqual([
-        { name: 'labs-results-ready', status: 'active' },
-        { name: 'tier-core', status: 'active' },
-      ])
+      expect(mockContactsCreate).toHaveBeenCalledTimes(1)
+      const args = mockContactsCreate.mock.calls[0][0]
+      expect(args.audienceId).toBe('test-audience-123')
+      expect(args.email).toBe('jane@test.com')
+      expect(args.unsubscribed).toBe(false)
     })
 
     it('skips when env vars missing', async () => {
-      delete process.env.MAILCHIMP_API_KEY
+      delete process.env.RESEND_AUDIENCE_ID
 
-      await addTagsToContact('jane@test.com', ['test'])
-      expect(mockFetch).not.toHaveBeenCalled()
+      await addContactEvent('jane@test.com', ['labs-results-ready'])
+      expect(mockContactsCreate).not.toHaveBeenCalled()
+    })
+
+    it('does not throw on API error', async () => {
+      mockContactsCreate.mockResolvedValueOnce({ data: null, error: { message: 'bad request' } })
+
+      await expect(
+        addContactEvent('jane@test.com', ['labs-ordered'])
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('addTagsToContact alias', () => {
+    it('is the same function as addContactEvent', () => {
+      expect(addTagsToContact).toBe(addContactEvent)
     })
   })
 })

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import { syncContactToMailchimp } from '@/lib/mailchimp'
+import { syncContactToMailchimp } from '@/lib/contacts'
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
