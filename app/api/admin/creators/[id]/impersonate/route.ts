@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { sql } from '@vercel/postgres'
 import { createMagicLinkToken, verifyAdminAuth } from '@/lib/auth'
 import { getCreatorById } from '@/lib/creators/db'
 
@@ -25,6 +26,25 @@ export async function GET(
     const creator = await getCreatorById(id)
     if (!creator) {
       return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
+    }
+
+    // Audit log — every impersonation must be traceable (HIPAA)
+    try {
+      await sql`
+        INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+        VALUES (
+          ${auth.email},
+          ${'creator_impersonation'},
+          ${'creator'},
+          ${id},
+          ${'Admin login-as creator'},
+          ${JSON.stringify({ creatorEmail: creator.email })}
+        )
+      `
+    } catch {
+      // Audit log failure must never block the impersonation flow,
+      // but log loudly so it surfaces in Vercel logs
+      console.error('[impersonate] Failed to write audit log for creator impersonation', { creatorId: id })
     }
 
     const token = await createMagicLinkToken(creator.email)

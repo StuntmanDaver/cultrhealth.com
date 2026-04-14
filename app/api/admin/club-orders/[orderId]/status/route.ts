@@ -241,35 +241,72 @@ export async function POST(
     }
 
     // Keep creator attribution and admin order state aligned when orders are voided or reopened.
-    // Each step is in its own non-fatal try/catch so a failure on the status update doesn't
-    // silently mask that the commission ledger was already modified.
+    // Each step is in its own non-fatal try/catch so a commission failure never rolls back
+    // an already-committed status update. When sync fails, we log to admin_actions so ops
+    // can query for 'commission_sync_failed' rows and reconcile manually.
     try {
       const linkedAttribution = await getOrderAttributionByOrderId(order.id)
       if (newStatus === 'cancelled' && linkedAttribution) {
+        let commissionSyncFailed = false
         try {
           await reverseCommissionsForAttribution(linkedAttribution.id)
         } catch (err) {
-          console.warn(`[club-orders/status] Failed to reverse commissions for order ${order.id}:`, err)
+          console.error(`[club-orders/status] Failed to reverse commissions for order ${order.id}:`, err)
+          commissionSyncFailed = true
         }
         try {
           await updateOrderAttributionStatus(linkedAttribution.id, 'refunded')
         } catch (err) {
-          console.warn(`[club-orders/status] Failed to update attribution status to refunded for order ${order.id}:`, err)
+          console.error(`[club-orders/status] Failed to update attribution status to refunded for order ${order.id}:`, err)
+          commissionSyncFailed = true
+        }
+        if (commissionSyncFailed) {
+          try {
+            await sql`
+              INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+              VALUES (
+                ${actorEmail},
+                ${'commission_sync_failed'},
+                ${'club_order'},
+                ${orderId},
+                ${'Commission reversal failed on order cancellation — manual reconciliation required'},
+                ${JSON.stringify({ attributionId: linkedAttribution.id, newStatus, currentStatus })}
+              )
+            `
+          } catch { /* audit log failure should never block */ }
         }
       } else if (currentStatus === 'cancelled' && newStatus !== 'cancelled' && linkedAttribution?.status === 'refunded') {
+        let commissionSyncFailed = false
         try {
           await restoreCommissionsForAttribution(linkedAttribution.id)
         } catch (err) {
-          console.warn(`[club-orders/status] Failed to restore commissions for order ${order.id}:`, err)
+          console.error(`[club-orders/status] Failed to restore commissions for order ${order.id}:`, err)
+          commissionSyncFailed = true
         }
         try {
           await updateOrderAttributionStatus(linkedAttribution.id, 'pending')
         } catch (err) {
-          console.warn(`[club-orders/status] Failed to update attribution status to pending for order ${order.id}:`, err)
+          console.error(`[club-orders/status] Failed to update attribution status to pending for order ${order.id}:`, err)
+          commissionSyncFailed = true
+        }
+        if (commissionSyncFailed) {
+          try {
+            await sql`
+              INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+              VALUES (
+                ${actorEmail},
+                ${'commission_sync_failed'},
+                ${'club_order'},
+                ${orderId},
+                ${'Commission restore failed on order revival — manual reconciliation required'},
+                ${JSON.stringify({ attributionId: linkedAttribution.id, newStatus, currentStatus })}
+              )
+            `
+          } catch { /* audit log failure should never block */ }
         }
       }
     } catch (err) {
-      console.warn(`[club-orders/status] Failed to fetch attribution for order ${order.id}:`, err)
+      console.error(`[club-orders/status] Failed to fetch attribution for order ${order.id}:`, err)
     }
 
     // Log to admin_actions audit trail (non-fatal)

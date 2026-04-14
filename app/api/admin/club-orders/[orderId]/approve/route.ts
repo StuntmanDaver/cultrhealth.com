@@ -288,6 +288,54 @@ export async function POST(
               )
             }
             console.log(`[club-orders/approve] Commission recorded: creator=${finalAttributedCreatorId} direct=$${result.directCommission} override=$${result.overrideCommission} for order ${order.order_number}`)
+          } else {
+            // No placeholder row found — either recordZeroRevenueAttribution failed silently
+            // during the retroactive attribution path, or no attribution was recorded at order time.
+            // Check if an attribution row already exists with real revenue (meaning commission
+            // was already recorded at order time and no duplicate should be inserted).
+            const existingAttr = await pgClient.query(
+              `SELECT id FROM order_attributions WHERE order_id = $1`,
+              [order.id]
+            )
+
+            if (!existingAttr.rows[0]) {
+              // No row at all — insert one now and record commission (fallback path)
+              let codeId: string | null = null
+              if (order.coupon_code && finalAttributionMethod === 'coupon_code') {
+                const codeRow = await pgClient.query(
+                  `SELECT id FROM affiliate_codes WHERE UPPER(code) = UPPER($1) AND creator_id = $2 LIMIT 1`,
+                  [order.coupon_code, finalAttributedCreatorId]
+                )
+                codeId = (codeRow.rows[0]?.id as string) || null
+              }
+
+              const insertAttr = await pgClient.query(
+                `INSERT INTO order_attributions (
+                  order_id, creator_id, attribution_method, code_id, customer_email,
+                  net_revenue, direct_commission_rate, direct_commission_amount, is_self_referral, is_subscription
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,false)
+                ON CONFLICT (order_id) DO NOTHING
+                RETURNING id`,
+                [order.id, finalAttributedCreatorId, finalAttributionMethod || 'coupon_code', codeId, order.member_email, effectiveSubtotal, directRate, directAmount]
+              )
+
+              if (insertAttr.rows[0]) {
+                const attributionId = insertAttr.rows[0].id as string
+                const result = await insertCommissionLedgerEntries(
+                  pgClient, attributionId, finalAttributedCreatorId,
+                  effectiveSubtotal, directRate, directAmount, override
+                )
+                if (order.coupon_code && finalAttributionMethod === 'coupon_code') {
+                  await pgClient.query(
+                    `UPDATE affiliate_codes SET total_revenue = total_revenue + $1, updated_at = NOW()
+                     WHERE UPPER(code) = UPPER($2)`,
+                    [effectiveSubtotal, order.coupon_code]
+                  )
+                }
+                console.log(`[club-orders/approve] Commission recorded (fallback path): creator=${finalAttributedCreatorId} direct=$${result.directCommission} override=$${result.overrideCommission} for order ${order.order_number}`)
+              }
+            }
+            // else: attribution row exists with net_revenue > 0 — commission already recorded at order time, skip
           }
 
           await pgClient.query('COMMIT')
