@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Linkedin, Instagram, Facebook, Shield, Lock, Stethoscope, FlaskConical } from 'lucide-react';
 import { DispensingPharmacyInfo } from '@/components/compliance/DispensingPharmacyInfo';
-import { DISCLAIMERS, SERVED_STATE_COUNT } from '@/lib/config/compliance';
+import { DISCLAIMERS, JURISDICTION_STATEMENT } from '@/lib/config/compliance';
 
 const productLinks = [
   { href: '/pricing', label: 'Pricing' },
@@ -196,10 +196,10 @@ export function Footer() {
           {/* Bottom Section */}
           <div className="pt-4 border-t border-white/10">
             <p className="text-xs text-white/40 mb-3">
-              CULTR Health telehealth services are available in {SERVED_STATE_COUNT} states.{' '}
+              {JURISDICTION_STATEMENT}{' '}
               <Link href="/legal/medical-disclaimer#availability" className="underline hover:text-cultr-sage transition-colors">
-                Restrictions apply
-              </Link>.
+                See full details.
+              </Link>
             </p>
             <p className="text-xs text-white/40 mb-4">
               <strong className="text-white/60">Important Information:</strong> <span className="font-display font-bold">CULTR</span> Health operates a telehealth platform that connects members with independent licensed providers. {DISCLAIMERS.prescriptionRequired} {DISCLAIMERS.compoundedMedication}
