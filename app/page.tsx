@@ -8,7 +8,6 @@ import { PLANS } from '@/lib/config/plans';
 import { PROVIDERS } from '@/lib/config/social-proof';
 import { TrustStrip } from '@/components/site/TrustStrip';
 import { SocialProofBadge } from '@/components/site/SocialProofBadge';
-import { brandify } from '@/lib/utils';
 
 import {
   ArrowRight,
@@ -486,7 +485,7 @@ export default function HomePage() {
           <FAQAccordion items={[
             { question: 'What is included in the membership?', answer: 'All memberships include telehealth consultations with licensed providers, access to our platform, messaging support, and our core lab panel review. Higher tiers include more frequent consults, peptide protocol access, and priority support.' },
             { question: 'How do the peptide protocols work?', answer: 'After your consultation, your provider recommends specific peptides based on your labs, goals, and health history. All peptides are compounded at licensed US pharmacies and shipped directly to you with dosing instructions.' },
-            { question: 'Is CULTR available in my state?', answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure compliance with local requirements.') },
+            { question: 'Is CULTR available in my state?', answer: 'CULTR Health currently serves patients located in Florida only. If you are physically located in Florida, you are eligible to join.' },
           ]} />
 
           <div className="text-center mt-10">

@@ -278,7 +278,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'What states do you operate in?',
-                    answer: brandify('CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements. If we don\'t currently serve your state, join our waitlist and we\'ll notify you when we expand.'),
+                    answer: 'At this time, CULTR Health serves patients located in Florida only. Services are available only to patients who are physically located in Florida at the time of consultation and treatment.',
                   },
                 ]} />
               </div>
