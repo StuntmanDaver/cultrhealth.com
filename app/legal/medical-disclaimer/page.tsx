@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
-import { DISPENSING_PHARMACY, DISCLAIMERS, SERVED_STATES, EXCLUDED_STATES } from '@/lib/config/compliance';
+import { DISPENSING_PHARMACY, DISCLAIMERS, JURISDICTION_STATEMENT } from '@/lib/config/compliance';
 
 export const metadata: Metadata = {
   title: 'Medical Disclaimer',
@@ -109,21 +109,8 @@ export default function MedicalDisclaimerPage() {
             </p>
 
             <h2 id="availability" className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Service Availability</h2>
-            <p className="text-cultr-textMuted leading-relaxed mb-4">
-              CULTR Health telehealth services are currently available in the following states:
-            </p>
-            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 gap-2 mb-4 not-prose">
-              {SERVED_STATES.map((state) => (
-                <span key={state} className="text-center text-xs font-medium text-brand-primary bg-brand-cream border border-brand-primary/10 rounded px-2 py-1">
-                  {state}
-                </span>
-              ))}
-            </div>
-            <p className="text-cultr-textMuted leading-relaxed mb-2">
-              We do not currently serve {EXCLUDED_STATES.join(' or ')}. Service availability may change as regulations evolve.
-            </p>
-            <p className="text-sm text-cultr-textMuted/70 leading-relaxed">
-              Some states may have additional telemedicine requirements. Your provider will confirm service availability during your clinical evaluation.
+            <p className="text-cultr-textMuted leading-relaxed">
+              {JURISDICTION_STATEMENT}
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Contact</h2>
@@ -133,7 +120,7 @@ export default function MedicalDisclaimerPage() {
             </p>
 
             <p className="text-sm text-cultr-textMuted/50 border-t border-brand-primary/10 pt-6 mt-10">
-              Last updated: April 5, 2026
+              Last updated: April 14, 2026
             </p>
           </div>
         </div>
