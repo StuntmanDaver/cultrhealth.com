@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { JURISDICTION_STATEMENT } from '@/lib/config/compliance';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -27,11 +28,16 @@ export default function PrivacyPage() {
       {/* Content */}
       <section className="py-16 px-6 section-veil">
         <div className="max-w-4xl mx-auto">
-          <p className="text-sm text-cultr-textMuted mb-8">Last updated: April 5, 2026</p>
+          <p className="text-sm text-cultr-textMuted mb-8">Last updated: April 14, 2026</p>
 
           <div className="prose prose-cultr max-w-none">
             <p className="text-cultr-text leading-relaxed">
               Your privacy is critically important to us. This policy details how <span className="font-display font-bold">CULTR</span> Health (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) collects, uses, and protects your information.
+            </p>
+
+            <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">Geographic Scope</h2>
+            <p className="text-cultr-textMuted leading-relaxed">
+              {JURISDICTION_STATEMENT}
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">1. Information We Collect</h2>

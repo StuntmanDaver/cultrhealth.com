@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PROVIDERS } from '@/lib/config/social-proof';
-import { DISPENSING_PHARMACY, PROVIDER_CREDENTIALS } from '@/lib/config/compliance';
+import { DISPENSING_PHARMACY, PROVIDER_CREDENTIALS, JURISDICTION_STATEMENT } from '@/lib/config/compliance';
 
 export const metadata: Metadata = {
   title: 'Provider Credentials — CULTR Health',
@@ -130,6 +130,16 @@ export default function ProviderCredentialsPage() {
               <a href="mailto:support@cultrhealth.com" className="text-brand-primary underline">
                 support@cultrhealth.com
               </a>.
+            </p>
+          </div>
+
+          {/* Service Availability */}
+          <div>
+            <h2 className="text-xl font-display font-semibold text-brand-primary mb-4">
+              Service Availability
+            </h2>
+            <p className="text-sm text-brand-primary/70 leading-relaxed">
+              {JURISDICTION_STATEMENT}
             </p>
           </div>
         </div>
