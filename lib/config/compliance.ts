@@ -79,17 +79,16 @@ export const DISCLAIMERS = {
 
 // --- Geographic scope ---
 
-export const EXCLUDED_STATES = ['NY', 'LA'] as const;
+/** Approved verbatim jurisdiction statement — use this exact text everywhere on the site. */
+export const JURISDICTION_STATEMENT =
+  'Service Availability: CULTR Health telehealth services are currently available only in Florida. Services are available only to patients who are physically located in Florida at the time of consultation and treatment. We do not currently serve any other U.S. state, territory, or foreign jurisdiction.' as const;
 
-export const SERVED_STATES = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'MD', 'MA', 'ME',
-  'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
-  'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN',
-  'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
-] as const;
+export const SERVED_STATES = ['FL'] as const;
 
-export const SERVED_STATE_COUNT = SERVED_STATES.length;
+/** All other states/territories are not served. */
+export const EXCLUDED_STATES: readonly string[] = [];
+
+export const SERVED_STATE_COUNT = SERVED_STATES.length; // 1
 
 // --- Provider credentials ---
 
