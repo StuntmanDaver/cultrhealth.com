@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 
 import { brandify } from '@/lib/utils';
-import { TRUST_METRICS } from '@/lib/config/social-proof';
 
 export const metadata: Metadata = {
   title: 'How It Works — CULTR Health',
@@ -40,7 +39,7 @@ export default function HowItWorksPage() {
       <MarketingHero
         title="From quiz to clinician-guided plan in a few simple steps."
         subtitle="We use your goals, health history, and biomarker data to build a personalized plan for body composition, performance, recovery, and long-term optimization."
-        proofLine={`Available in ${TRUST_METRICS.statesCovered} states · 29-biomarker panel (upgradeable up to 60+) · Delivered to your door`}
+        proofLine="Currently serving Florida patients only · 29-biomarker panel (upgradeable up to 60+) · Delivered to your door"
         ctas={[
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
