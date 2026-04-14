@@ -1,3 +1,25 @@
+## [2026-04-13] - cultrclub-web Cloudflare Migration — GSD Planning
+
+### Planning
+- **GSD workspace replaced:** Retired SiPhox integration workspace (all 4 phases complete). New workspace targets `cultrclub-web` Cloudflare Pages migration.
+- **5 phases, 9 plans written:**
+  - Phase 1 (Bootstrap): Create `cultrclub-web` repo with Next.js 14 + wrangler.toml + brand config
+  - Phase 2 (Source Extraction): Copy app routes, lib files, components, and static assets from cultrhealth-website
+  - Phase 3 (Code Adaptation): `lib/db.ts` rewrite to `@neondatabase/serverless`, sql import swaps, Pool transaction pattern, edge runtime, middleware rewrite
+  - Phase 4 (Deploy & Validate): Cloudflare Pages setup, DNS, env vars, 11-point staging validation
+  - Phase 5 (Production Cutover): `cultrclub.com` go-live, `join.cultrhealth.com` → 301 redirect, cultrhealth.com middleware cleanup
+- **Source plan:** `/Users/davidk/.claude/plans/snazzy-humming-treasure.md` imported into GSD format
+- **New repo target:** `/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/`
+
+### Key Technical Decisions
+- `@neondatabase/serverless` with `fullResults: true` — matches `@vercel/postgres` result shape
+- `nodejs_compat` Wrangler flag — resolves all crypto/Buffer issues without code changes
+- `ADMIN_BASE_URL` env var — approval email links point to cultrhealth.com admin (not cultrclub.com)
+- Paid checkout (Stripe, CorePay, ConsentModal) excluded — cultrclub.com is free Club only
+- `join.cultrhealth.com` stays live until cultrclub.com staging validated (zero downtime cutover)
+
+---
+
 ## [2026-04-12] - Calendly Scheduling Integration (Healthie Replacement)
 
 ### Added

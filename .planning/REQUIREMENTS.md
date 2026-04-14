@@ -1,141 +1,48 @@
-# Requirements: SiPhox Health Integration
+# Requirements: cultrclub-web Cloudflare Migration
 
-**Defined:** 2026-03-14
-**Core Value:** Members can see their real biomarker data — organized, visual, and actionable — directly in their CULTR Health dashboard.
+**Defined:** 2026-04-13
+**Core Value:** CULTR Club experience at cultrclub.com — standalone Cloudflare Pages app sharing Neon DB with cultrhealth.com admin.
 
 ## v1 Requirements
 
-Requirements for initial release. Each maps to roadmap phases.
+### Repo & Config
 
-### API Foundation
+- [ ] **CF-01**: cultrclub-web repo exists at `/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/` with Next.js 14 App Router
+- [ ] **CF-02**: `wrangler.toml` configured with `nodejs_compat` flag and correct build output dir
+- [ ] **CF-03**: `next.config.js` has `images.unoptimized: true` and Turnstile-only CSP headers
+- [ ] **CF-04**: `package.json` has `build:cf`, `preview`, `deploy:staging`, `deploy:prod` scripts using `@cloudflare/next-on-pages`
+- [ ] **CF-05**: `@neondatabase/serverless` used for all DB access; `neon()` instantiated with `fullResults: true`
 
-- [x] **API-01**: SiPhox API client library with typed request/response for all endpoints (customers, orders, kits, reports, biomarkers, credits)
-- [x] **API-02**: Zod schemas for all SiPhox API responses with runtime validation
-- [x] **API-03**: SiPhox customer creation from CULTR member data with external_id mapping
-- [x] **API-04**: SiPhox customer lookup by external_id for existing member resolution
-- [x] **API-05**: Credit balance check before order placement with low-balance alerting
+### Source Extraction
 
-### Database
+- [ ] **EX-01**: All 6 app routes and 1 new health route exist in cultrclub-web
+- [ ] **EX-02**: All 15 lib files copied and adapted (sql import swapped to `@/lib/db`)
+- [ ] **EX-03**: All 3 component files and hooks copied
+- [ ] **EX-04**: All product images (24 PNGs), logos, and email images copied to public/
 
-- [x] **DB-01**: Database table for SiPhox customer mapping (member_id ↔ siphox_customer_id)
-- [x] **DB-02**: Database table for SiPhox kit orders (order_id, status, kit_type, tracking)
-- [x] **DB-03**: Database table for cached biomarker reports (JSONB storage, immutable after fetch)
-- [x] **DB-04**: Biomarker mapping config (~150+ entries: SiPhox name → display name, category, unit)
+### Code Adaptation
 
-### Checkout Integration
+- [ ] **CD-01**: `lib/db.ts` completely rewritten to use `@neondatabase/serverless` with `fullResults: true`
+- [ ] **CD-02**: All simple sql files have import swapped from `@vercel/postgres` to `@/lib/db`
+- [ ] **CD-03**: Transaction files (`app/api/club/orders/route.ts`, `lib/creators/commission.ts`) use `createPool()` + `Pool.connect()` instead of `db.connect()`
+- [ ] **CD-04**: `ADMIN_BASE_URL` env var used for approval email links (points to cultrhealth.com); `siteUrl` uses `NEXT_PUBLIC_SITE_URL`
+- [ ] **CD-05**: Welcome email in `app/api/club/signup/route.ts` links to `cultrclub.com` (not join.cultrhealth.com)
+- [ ] **CD-06**: `JoinLandingClient.tsx` cookie clear uses `getCookieDomain()` — no hardcoded `.cultrhealth.com`
+- [ ] **CD-07**: `lib/utils.ts` getCookieDomain() returns `.cultrclub.com` for cultrclub.com URLs
+- [ ] **CD-08**: All 6 API routes have `export const runtime = 'edge'` at top
+- [ ] **CD-09**: `app/layout.tsx` is minimal — no PaymentProviderLoader, includes brand fonts
+- [ ] **CD-10**: `middleware.ts` simplified — UTM tracking only, no join host detection, no HIPAA session timeout
 
-- [x] **CHK-01**: Auto-order SiPhox kit on Catalyst+/Concierge subscription checkout via Stripe webhook
-- [x] **CHK-02**: $135 optional blood test add-on line item for Core tier at checkout
-- [x] **CHK-03**: Deferred order fulfillment pattern for address resolution from checkout data
-- [x] **CHK-04**: Non-fatal SiPhox order failure handling (email support, don't block subscription)
+### Deployment
 
-### Kit Management
+- [ ] **DP-01**: Cloudflare Pages project created, connected to `cultrclub-web` repo
+- [ ] **DP-02**: All 17 env vars set in Cloudflare Pages dashboard (production)
+- [ ] **DP-03**: `staging.join.cultrhealth.com` CNAME points to Cloudflare Pages staging deployment
+- [ ] **DP-04**: All 11 staging validation checks pass before production cutover
 
-- [x] **KIT-01**: Kit registration page where member enters kit ID from physical kit
-- [x] **KIT-02**: Kit ID validation via SiPhox API before registration with clear error messages
-- [x] **KIT-03**: Kit registration submission linking kit to member's SiPhox customer
-- [x] **KIT-04**: 7-state order/kit status timeline (No Kit → Ordered → Shipped → Registered → Sample Mailed → Processing → Results Ready)
-- [x] **KIT-05**: Smart empty states with distinct messaging and CTAs per status
+### Production Cutover
 
-### Results Display
-
-- [x] **RES-01**: Fetch and cache biomarker reports from SiPhox API
-- [x] **RES-02**: Categorized biomarker display organized by body system (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended)
-- [x] **RES-03**: Reference range visualization bar for each biomarker (low/optimal/high color-coded)
-- [x] **RES-04**: N/A display for biomarkers not included in member's test panel
-- [x] **RES-05**: Biomarker detail drill-down (description, range context, value interpretation)
-- [x] **RES-06**: HIPAA-compliant data handling (no PHI in logs, analytics exclusion on labs routes)
-
-### Dashboard
-
-- [x] **DSH-01**: Dedicated labs section/tab on member dashboard
-- [ ] **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data *(deferred to v2 — requires LNG-01)*
-- [ ] **DSH-03**: BiomarkerTrends component wired to SiPhox report data *(deferred to v2 — requires LNG-01)*
-- [x] **DSH-04**: Category health scores (aggregate per body system)
-- [x] **DSH-05**: SiPhox suggestions displayed as actionable insight cards
-- [x] **DSH-06**: Dashboard summary widgets (optimal count, needs attention, improving)
-- [x] **DSH-07**: Tier-gated messaging (Club: upgrade CTA, Core: add-on CTA, Catalyst+/Concierge: included)
-
-### Notifications
-
-- [x] **NTF-01**: Email notification when biomarker results are ready (via Resend)
-
-## v2 Requirements
-
-Deferred to future release. Tracked but not in current roadmap.
-
-### Longitudinal Intelligence
-
-- **LNG-01**: Biomarker trend visualization across multiple test reports
-- **LNG-02**: Treatment correlation view (biomarker changes overlaid with medication start dates from Asher Med)
-- **LNG-03**: PDF lab report download with CULTR branding
-
-### Dashboard (deferred from v1)
-
-- **DSH-02**: BiologicalAgeCard powered by real SiPhox biomarker data *(requires LNG-01 — needs longitudinal data and biological age computation)*
-- **DSH-03**: BiomarkerTrends component wired to SiPhox report data *(requires LNG-01 — needs multiple reports over time)*
-
-### Extended Features
-
-- **EXT-01**: Recurring/subscription blood test ordering
-- **EXT-02**: Reorder kit from dashboard without new checkout
-
-## Out of Scope
-
-| Feature | Reason |
-|---------|--------|
-| Medical interpretation of results | Malpractice liability — use SiPhox reference ranges, frame as "optimization" |
-| Custom reference ranges | Requires clinical team validation — use SiPhox-provided ranges exclusively |
-| Camera barcode scanner for kit registration | Unreliable on web — manual text input with validation is simpler and more reliable |
-| Wearable data integration | Scope creep — SiPhox's own app handles this |
-| AI chatbot for biomarker Q&A | Liability risk — surface SiPhox suggestions instead |
-| Third-party lab result uploads | Multi-month PDF parsing project — use SiPhox BiomarkerAI for outside labs |
-| Club tier access | $0 tier has no revenue to offset kit cost |
-| Real-time sample GPS tracking | No courier provides this — use status-based tracking only |
-
-## Traceability
-
-| Requirement | Phase | Status |
-|-------------|-------|--------|
-| API-01 | Phase 1 | Complete |
-| API-02 | Phase 1 | Complete |
-| API-03 | Phase 1 | Complete |
-| API-04 | Phase 1 | Complete |
-| API-05 | Phase 1 | Complete |
-| DB-01 | Phase 1 | Complete |
-| DB-02 | Phase 1 | Complete |
-| DB-03 | Phase 1 | Complete |
-| DB-04 | Phase 1 | Complete |
-| CHK-01 | Phase 2 | Complete |
-| CHK-02 | Phase 2 | Complete |
-| CHK-03 | Phase 2 | Complete |
-| CHK-04 | Phase 2 | Complete |
-| KIT-01 | Phase 3 | Complete |
-| KIT-02 | Phase 3 | Complete |
-| KIT-03 | Phase 3 | Complete |
-| KIT-04 | Phase 3 | Complete |
-| KIT-05 | Phase 3 | Complete |
-| RES-01 | Phase 4 | Complete |
-| RES-02 | Phase 4 | Complete |
-| RES-03 | Phase 4 | Complete |
-| RES-04 | Phase 4 | Complete |
-| RES-05 | Phase 4 | Complete |
-| RES-06 | Phase 4 | Complete |
-| DSH-01 | Phase 4 | Complete |
-| DSH-02 | v2 | Deferred (LNG-01) |
-| DSH-03 | v2 | Deferred (LNG-01) |
-| DSH-04 | Phase 4 | Complete |
-| DSH-05 | Phase 4 | Complete |
-| DSH-06 | Phase 4 | Complete |
-| DSH-07 | Phase 4 | Complete |
-| NTF-01 | Phase 4 | Complete |
-
-**Coverage:**
-- v1 requirements: 30 total (2 deferred to v2)
-- Mapped to phases: 28
-- Deferred: 2 (DSH-02, DSH-03 → v2/LNG-01)
-- Unmapped: 0
-
----
-*Requirements defined: 2026-03-14*
-*Last updated: 2026-03-17 after plan 04-03 completion*
+- [ ] **CU-01**: `cultrclub.com` domain configured in Cloudflare Pages (production branch = `main`)
+- [ ] **CU-02**: `join.cultrhealth.com` → `https://cultrclub.com` 301 redirect via Cloudflare DNS
+- [ ] **CU-03**: cultrhealth.com `middleware.ts` cleaned up (join host detection blocks removed)
+- [ ] **CU-04**: `join.cultrhealth.com` Vercel domain alias removed (2-4 weeks after redirect confirmed working)

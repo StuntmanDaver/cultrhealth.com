@@ -1,95 +1,92 @@
-# Roadmap: SiPhox Health Integration
+# Roadmap: cultrclub-web Cloudflare Migration
 
 ## Overview
 
-This integration adds at-home blood testing to the CULTR Health platform by connecting the SiPhox Health API. The work moves through four phases: building the API client and database foundation, wiring automated kit ordering into the Stripe checkout flow, creating the member-facing kit registration experience, and delivering the full labs dashboard with categorized biomarker results. Each phase delivers a verifiable capability and unblocks the next. The existing BiologicalAgeCard and BiomarkerTrends components need wiring to real data, not rebuilding.
+Extract the CULTR Club free-tier experience from cultrhealth.com into a standalone Next.js 14 app (`cultrclub-web`) deployed to Cloudflare Pages at `cultrclub.com`. Admin stays on Vercel. Both apps share the same Neon PostgreSQL database. `join.cultrhealth.com` stays live throughout validation; deprecated only after cultrclub.com is confirmed stable.
+
+Five phases: bootstrap the new repo, extract source files, adapt code for Cloudflare Workers, deploy staging and validate, then go live and clean up.
 
 ## Phases
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
-
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Foundation** - SiPhox API client, Zod schemas, database tables, and customer sync layer (completed 2026-03-15)
-- [x] **Phase 2: Checkout Integration** - Automated kit ordering on subscription checkout via Stripe webhook (completed 2026-03-17)
-- [x] **Phase 3: Kit Registration** - Member-facing kit registration UI with status tracking (completed 2026-03-17)
-- [x] **Phase 4: Labs Dashboard** - Categorized biomarker results, dashboard widgets, and results notification (completed 2026-03-17)
+- [ ] **Phase 1: Bootstrap** — Create cultrclub-web repo with all config files
+- [ ] **Phase 2: Source Extraction** — Copy and adapt all source files from cultrhealth.com
+- [ ] **Phase 3: Code Adaptation** — Apply all Cloudflare-specific code changes
+- [ ] **Phase 4: Deploy & Validate** — Cloudflare Pages staging setup + 11-point validation
+- [ ] **Phase 5: Production Cutover** — Go live on cultrclub.com + deprecate join.cultrhealth.com
 
 ## Phase Details
 
-### Phase 1: Foundation
-**Goal**: The SiPhox API can be called reliably from server-side code, all responses are validated, and member-to-SiPhox customer mapping is persisted
+### Phase 1: Bootstrap
+**Goal**: The cultrclub-web repo exists with all config files needed to build and deploy to Cloudflare Pages
 **Depends on**: Nothing (first phase)
-**Requirements**: API-01, API-02, API-03, API-04, API-05, DB-01, DB-02, DB-03, DB-04
-**Success Criteria** (what must be TRUE):
-  1. A CULTR member can be created as a SiPhox customer via the API client and the mapping is stored in the database
-  2. An existing SiPhox customer can be looked up by CULTR member external_id without creating a duplicate
-  3. SiPhox credit balance can be checked and a low-balance condition is detected and logged
-  4. All SiPhox API responses are validated through Zod schemas before touching the database
-**Plans:** 2/2 plans complete
+**Requirements**: CF-01, CF-02, CF-03, CF-04
+**Success Criteria**:
+  1. `cultrclub-web/` directory exists with a valid Next.js 14 App Router structure
+  2. `wrangler.toml` has `nodejs_compat` flag and correct build output dir
+  3. All brand tokens, fonts, and animations present in tailwind.config.ts and globals.css
+  4. package.json has build:cf, preview, deploy:staging, deploy:prod scripts
+**Plans:** 0/1 plans complete
 
 Plans:
-- [x] 01-01-PLAN.md — SiPhox API client, Zod schemas, types, error class, biomarker mapping config
-- [x] 01-02-PLAN.md — Database migration (3 tables) and data access layer
+- [ ] 01-01-PLAN.md — Create repo skeleton: package.json, tsconfig, tailwind, next.config.js, wrangler.toml, globals.css
 
-### Phase 2: Checkout Integration
-**Goal**: When a member completes a Catalyst+, Concierge, or Core+add-on checkout, a SiPhox kit order is created automatically without manual intervention
+### Phase 2: Source Extraction
+**Goal**: All source files from cultrhealth.com that cultrclub-web needs are copied into the new repo
 **Depends on**: Phase 1
-**Requirements**: CHK-01, CHK-02, CHK-03, CHK-04
-**Success Criteria** (what must be TRUE):
-  1. Catalyst+ or Concierge subscription checkout triggers an automatic SiPhox kit order using the member's shipping address
-  2. Core tier checkout offers a $135 blood test add-on and, when selected, triggers a kit order
-  3. If the SiPhox API is down or credits are exhausted, the subscription still activates and support is notified via email
-  4. A refunded order triggers a support notification with full SiPhox context so staff can manually cancel if needed
-**Plans:** 2/2 plans complete
+**Requirements**: EX-01, EX-02, EX-03, EX-04
+**Success Criteria**:
+  1. All 7 app route files exist in cultrclub-web/app/
+  2. All 15 lib files exist in cultrclub-web/lib/
+  3. All components, hooks, and static assets are in place
+**Plans:** 0/2 plans complete
 
 Plans:
-- [x] 02-01-PLAN.md — Fulfillment orchestration: DB migration, fulfillment logic, cron retry, webhook extensions, email templates
-- [x] 02-02-PLAN.md — Core tier Checkout Session with optional $135 blood test add-on
+- [ ] 02-01-PLAN.md — Extract app routes (page.tsx, layout.tsx, globals.css, 6 API routes)
+- [ ] 02-02-PLAN.md — Extract lib files, components, hooks, and static assets (product images, logos)
 
-### Phase 3: Kit Registration
-**Goal**: A member who has received a physical blood test kit can register it in their portal and track its status through the lab lifecycle
+### Phase 3: Code Adaptation
+**Goal**: All extracted files are adapted for Cloudflare Workers runtime — @vercel/postgres removed, edge runtime declared, Cloudflare-specific fixes applied
 **Depends on**: Phase 2
-**Requirements**: KIT-01, KIT-02, KIT-03, KIT-04, KIT-05
-**Success Criteria** (what must be TRUE):
-  1. Member can enter a kit ID from their physical kit and see immediate validation feedback (valid, not found, already registered, expired)
-  2. After successful registration, the kit status updates to "Registered" in a visual 7-state timeline
-  3. Members with no kit order see a distinct empty state explaining how to get a kit (with upgrade or add-on CTA based on tier)
-  4. Members at each lifecycle stage (ordered, shipped, registered, processing, results ready) see stage-appropriate messaging and next-step CTAs
-**Plans:** 2/2 plans complete
+**Requirements**: CD-01 through CD-10
+**Success Criteria**:
+  1. Zero `@vercel/postgres` imports remain in cultrclub-web
+  2. `lib/db.ts` uses `@neondatabase/serverless` with `fullResults: true`
+  3. All transaction files use `createPool()` + `Pool.connect()`
+  4. All 6 API routes have `export const runtime = 'edge'`
+  5. Cookie domain uses `getCookieDomain()` — no hardcoded `.cultrhealth.com`
+  6. `ADMIN_BASE_URL` used for approval links; `siteUrl` for customer-facing links
+**Plans:** 0/2 plans complete
 
 Plans:
-- [x] 03-01-PLAN.md — Kit lifecycle module, registerKit client, DB fix, API routes, portal sidebar
-- [x] 03-02-PLAN.md — Labs page UI (registration form, timeline, empty states), dashboard summary card
+- [ ] 03-01-PLAN.md — lib/db.ts rewrite + sql import swaps across 6 simple files
+- [ ] 03-02-PLAN.md — Pool swap, admin URL fix, email link fix, cookie fix, edge runtime, layout, middleware
 
-### Phase 4: Labs Dashboard
-**Goal**: Members can view their complete biomarker results organized by body system, with reference ranges, health scores, and actionable insights directly in their CULTR dashboard
+### Phase 4: Deploy & Validate
+**Goal**: cultrclub-web deployed to Cloudflare Pages staging at staging.join.cultrhealth.com; all 11 validation checks pass
 **Depends on**: Phase 3
-**Requirements**: RES-01, RES-02, RES-03, RES-04, RES-05, RES-06, DSH-01, DSH-02, DSH-03, DSH-04, DSH-05, DSH-06, DSH-07, NTF-01
-**Success Criteria** (what must be TRUE):
-  1. Member with completed lab results sees biomarkers organized by category (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended) with color-coded reference range bars
-  2. ~~BiologicalAgeCard displays the member's real biological age from SiPhox data~~ *(deferred to v2 — requires LNG-01)*
-  3. ~~BiomarkerTrends shows real trend data~~ *(deferred to v2 — requires LNG-01)*; dashboard summary stats (optimal count, needs attention) shown on kit card
-  4. Biomarkers not included in the member's panel show "N/A" rather than being hidden, so members know what is available
-  5. Club tier members see an upgrade CTA instead of lab results; Core members without the add-on see an add-on CTA
-  6. Members receive an email notification when results are ready (cron-based, deduped)
-**Plans**: 3/3 plans complete
+**Requirements**: DP-01, DP-02, DP-03, DP-04
+**Success Criteria**:
+  1. `staging.join.cultrhealth.com` serves the cultrclub-web app from Cloudflare Pages
+  2. Club signup creates a `club_members` row in Neon; welcome email links to cultrclub.com
+  3. Admin approval link points to cultrhealth.com admin (not cultrclub.com)
+  4. All 11 verification checks pass
+**Plans:** 0/2 plans complete
 
 Plans:
-- [x] 04-01-PLAN.md — Biomarker mapping config and report fetching (completed 2026-03-17)
-- [x] 04-02-PLAN.md — Labs dashboard UI and results display (completed 2026-03-17)
-- [x] 04-03-PLAN.md — Dashboard widgets, tier gating, and results notification email (completed 2026-03-17)
+- [ ] 04-01-PLAN.md — Cloudflare Pages project setup, DNS CNAME, all 17 env vars
+- [ ] 04-02-PLAN.md — Run staging validation checklist (all 11 checks as tasks)
 
-## Progress
+### Phase 5: Production Cutover
+**Goal**: cultrclub.com is live, join.cultrhealth.com redirects there, cultrhealth.com middleware cleaned up
+**Depends on**: Phase 4 (all 11 validation checks passing)
+**Requirements**: CU-01, CU-02, CU-03, CU-04
+**Success Criteria**:
+  1. cultrclub.com serves the app from Cloudflare Pages production branch
+  2. join.cultrhealth.com → https://cultrclub.com (301 redirect)
+  3. cultrhealth.com middleware has no join host detection blocks
+  4. No regression on cultrhealth.com after middleware change
+**Plans:** 0/2 plans complete
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation | 2/2 | Complete   | 2026-03-15 |
-| 2. Checkout Integration | 2/2 | Complete | 2026-03-17 |
-| 3. Kit Registration | 2/2 | Complete | 2026-03-17 |
-| 4. Labs Dashboard | 3/3 | Complete | 2026-03-17 |
+Plans:
+- [ ] 05-01-PLAN.md — cultrclub.com domain + Cloudflare Pages production go-live
+- [ ] 05-02-PLAN.md — cultrhealth.com middleware cleanup + join.cultrhealth.com 301 redirect

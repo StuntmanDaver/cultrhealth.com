@@ -1,103 +1,81 @@
-# SiPhox Health Integration
+# cultrclub-web — Cloudflare Pages Migration
 
 ## What This Is
 
-Integration of SiPhox Health's at-home blood test kit platform into the CULTR Health Members area. Members receive blood test kits, register them in the portal, send samples back, and view comprehensive biomarker results in a dedicated labs dashboard section — powered by real data from SiPhox's API.
+Extract the CULTR Club join experience from `cultrhealth.com` into a standalone Next.js 14 app deployed to **Cloudflare Pages** at `cultrclub.com`. The free CULTR Club tier (landing, signup, product orders, member recognition) gets its own dedicated domain and deployment. Admin dashboard on `cultrhealth.com` (Vercel) stays unchanged — both apps share the same Neon PostgreSQL database.
+
+This is **Phase 1 of 2** in a full Cloudflare migration:
+- **Phase 1 (this project):** `cultrclub.com` standalone app
+- **Phase 2 (future):** Full `cultrhealth.com` + admin migration to Cloudflare
 
 ## Core Value
 
-Members can see their real biomarker data — organized, visual, and actionable — directly in their CULTR Health dashboard, closing the loop between treatment protocols and measurable health outcomes.
+The CULTR Club experience lives at `cultrclub.com` — its own brand, domain, and deployment — while sharing the same database and admin tooling as `cultrhealth.com`. Zero disruption to existing members or operations during migration.
 
 ## Requirements
 
-### Validated
+See: REQUIREMENTS.md
 
-- ✓ Member authentication via portal OTP (phone-based JWT) — existing
-- ✓ Member dashboard at `/dashboard` — existing
-- ✓ BiologicalAgeCard and BiomarkerTrends components in `components/dashboard/` — existing (placeholder)
-- ✓ Stripe subscription checkout with add-on support — existing
-- ✓ Stripe webhook handler for subscription events — existing
-- ✓ Membership tier configuration (Club, Core, Catalyst+, Concierge) — existing
+## Architecture
 
-### Active
+```
+cultrclub.com (Cloudflare Pages)          cultrhealth.com (Vercel)
+────────────────────────────────          ────────────────────────
+  Next.js 14 App Router                    Full app (unchanged)
+  Cloudflare Workers runtime               Node.js runtime
+  @neondatabase/serverless                 @vercel/postgres
+         │                                        │
+         └──────────────┬─────────────────────────┘
+                        │
+                  Neon PostgreSQL
+          (club_members, club_orders,
+           product_inventory, visitor_events,
+           affiliate/creator tables, etc.)
+```
 
-- [ ] SiPhox API client library with all endpoint coverage
-- [ ] Customer sync between CULTR members and SiPhox customers
-- [ ] Auto-order kit on Catalyst+/Concierge subscription checkout
-- [ ] $135 optional add-on for Core tier at checkout
-- [ ] Kit registration UI in member portal
-- [ ] Biomarker results fetching and caching from SiPhox reports
-- [ ] Labs dashboard section with categorized biomarker display
-- [ ] BiologicalAgeCard powered by real SiPhox data
-- [ ] BiomarkerTrends powered by real SiPhox data
-- [ ] N/A display for biomarkers with no data returned
-- [ ] ~150+ biomarkers organized by category (Metabolic, Nutritional, Heart, Hormonal, Inflammation, Thyroid, plus extended panel)
+## Scope — In
 
-### Out of Scope
+- `app/join-club/` landing + signup modal
+- `app/api/club/signup/route.ts` — member signup
+- `app/api/club/orders/route.ts` — product orders
+- `app/api/club/event/route.ts` — analytics events
+- `app/api/club/check-member/route.ts` — returning member check
+- `app/api/stock/route.ts` — inventory
+- `app/api/health/route.ts` — NEW: health ping
+- All supporting lib files, components, hooks, assets
 
-- Recurring/subscription blood tests — one-time kit per checkout only
-- Club tier access — blood testing not available for free tier
-- In-app sample collection instructions — SiPhox handles this via their kit materials
-- Direct payment to SiPhox — CULTR uses credits-based ordering via API
-- Custom biomarker reference ranges — use SiPhox-provided ranges
+## Scope — Out
 
-## Context
+- Paid Stripe/CorePay checkout (`app/join/[tier]/page.tsx`) — links to cultrhealth.com/pricing
+- Stripe SDK, CorePayForm, PaymentProviderLoader, ConsentModal, corepay-gateway.ts
+- compliance.ts, payment-types.ts, plans.ts (not needed on free-club-only app)
+- Admin dashboard — stays on cultrhealth.com
+- Any routes outside the club/join flow
 
-**SiPhox Health API:** REST API at `connect.siphoxhealth.com/api/v1/` with Bearer token auth. Covers customers, orders, kits, reports, biomarkers, and credits.
+## New Repo
 
-**API Endpoints:**
-| Group | Endpoints |
-|---|---|
-| Customers | `POST /customer`, `GET /customers`, `GET /customers/:id`, `POST /customer/add_data`, `GET /customer/add_data/jobs/:id` |
-| Orders | `POST /orders`, `GET /orders`, `GET /orders/:id` |
-| Kits | `GET /kits`, `GET /kits/:kitID/validate`, `POST /kits/:kitID/register` |
-| Reports | `GET /customers/:id/reports/:reportID` |
-| Biomarkers | `GET /biomarkers` |
-| Credits | `GET /credits` |
+**Repo name:** `cultrclub-web`
+**Location:** `/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/`
+**Runtime:** Cloudflare Workers (via `@cloudflare/next-on-pages`)
+**Build:** `npx @cloudflare/next-on-pages@1`
+**Database:** `@neondatabase/serverless` with `fullResults: true` (matches @vercel/postgres result shape)
 
-**Key Schemas:**
-- CreateOrderRequest: `recipient` (first_name*, last_name*, email*, phone, external_id, address*), `kit_types*` [{kitType, quantity}], `purchase_with_attached_payment` (bool), `is_notify_receiver` (bool), `is_test_order` (bool)
-- Address: street1, street2, city, state, zip, country
-- ProductOffering: id*, type (enum: "product"), name*, longDescription*, shortDescription, keywords, imageUrl, productUrl, biomarkers[]
-- Suggestion: _id, text, link, category, settings [{biomarker, value}]
+## Key Technical Constraints
 
-**Tier Integration:**
-- Catalyst+ ($499/mo): Kit included in price (auto-order on checkout)
-- Concierge ($1,099/mo): Kit included in price (auto-order on checkout)
-- Core ($199/mo): Optional $135 add-on at checkout
-- Club ($0/mo): Not eligible
-
-**Biomarker Categories (Longevity Essentials Program):**
-- Metabolic Health: A1C, Albumin, C-Peptide, eAG, Trig:HDL Ratio, Cortisol
-- Nutritional: 25-(OH) Vitamin D, Ferritin
-- Heart Health: ApoB:ApoA1 Ratio, ApoA1, ApoB, Total Cholesterol, HDL, LDL, LDL-C:ApoB Ratio, LDL-C:HDL-C Ratio, Total Chol:HDL Ratio, Triglycerides, VLDL, VLDL (Calc)
-- Hormonal Health: Cortisol:DHEA-S Ratio, DHEA-S, Estradiol, FSH, LH:FSH Ratio, LH, SHBG, Free Testosterone, Total Testosterone, Testosterone:Cortisol Ratio
-- Inflammation: hsCRP
-- Thyroid Health: TSH
-
-**Extended Panel:** ~150+ additional biomarkers across CBC, CMP, liver function, kidney function, urinalysis, heavy metals, and more. Full list provided by user.
-
-**Existing Dashboard Components:**
-- `components/dashboard/BiologicalAgeCard.tsx` — currently placeholder, will be powered by SiPhox
-- `components/dashboard/BiomarkerTrends.tsx` — currently placeholder, will be powered by SiPhox
+- `neon()` MUST use `fullResults: true` — otherwise `.rows` and `.rowCount` break silently
+- `nodejs_compat` flag in wrangler.toml resolves ALL crypto/Buffer issues (no code changes needed for attribution.ts, mailchimp.ts, etc.)
+- `images.unoptimized: true` in next.config.js — no image optimization server on Cloudflare Pages
+- `export const runtime = 'edge'` on all API route files
+- `ADMIN_BASE_URL` env var routes approval email links back to `cultrhealth.com`
+- Cookie domain: `.cultrclub.com` (not `.cultrhealth.com`)
+- All transactions: use `Pool.connect()` pattern (not `db.connect()` from @vercel/postgres)
 
 ## Constraints
 
-- **Auth:** SiPhox API uses Bearer token authentication — need `SIPHOX_API_KEY` env var
-- **Credits:** Orders use SiPhox credit system — CULTR pre-purchases credits, API deducts on order
-- **HIPAA:** Biomarker data is PHI — must follow existing HIPAA patterns (no logging, secure transport)
-- **Existing stack:** Must use Next.js 14 App Router, TypeScript, Tailwind CSS, existing auth system
-- **Brownfield:** Integration into existing codebase — follow established patterns (lib/ client, app/api/ routes, *Client.tsx components)
-
-## Key Decisions
-
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| SiPhox customer sync via external_id | Map CULTR member ID to SiPhox customer for reliable lookup | — Pending |
-| Credits-based ordering (not attached payment) | CULTR pre-buys credits, avoids per-order payment complexity | — Pending |
-| One-time kit per checkout | Simpler MVP, recurring tests can be added later | — Pending |
-| Categorized biomarker display | Longevity Essentials categories for clean organization, extended panel for comprehensive view | — Pending |
-| N/A for missing biomarkers | Show all possible biomarkers with N/A when no data, so members know what's available | — Pending |
+- **Never touch `join.cultrhealth.com` production** until `staging.join.cultrhealth.com` (on Cloudflare) is fully validated
+- Vercel stays live throughout the migration
+- Admin dashboard on cultrhealth.com requires no code changes
+- Same Neon DB — no schema changes needed
 
 ---
-*Last updated: 2026-03-14 after initialization*
+*Created: 2026-04-13 — replacing SiPhox integration project*
