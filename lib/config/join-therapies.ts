@@ -228,7 +228,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         note: '40 MG | 3 ML',
         description:
           'Mitochondria-derived peptide that activates AMPK signaling for improved insulin sensitivity, metabolic flexibility, and longevity-aligned energy regulation.',
-        price: 215,
+        price: 285,
         category: 'peptide',
         image: '/images/products/mots-c.png',
       },
