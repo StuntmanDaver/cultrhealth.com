@@ -2371,10 +2371,12 @@ export interface CustomerFullProfile {
     name: string
     email: string
     phone: string | null
-    address_line1: string | null
+    address_street: string | null
     address_city: string | null
     address_state: string | null
     address_zip: string | null
+    age: number | null
+    gender: string | null
     signup_type: string | null
     source: string | null
     created_at: string
@@ -2418,7 +2420,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
     const emptyResult = { rows: [] }
     const [memberResult, clubOrdersResult, productOrdersResult, membershipResult, intakeResult] = await Promise.all([
       sql`
-        SELECT id, name, email, phone, address_line1, address_city, address_state, address_zip, signup_type, source, created_at
+        SELECT id, name, email, phone, address_street, address_city, address_state, address_zip, age, gender, signup_type, source, created_at
         FROM club_members
         WHERE LOWER(email) = ${normalizedEmail}
         LIMIT 1
@@ -2457,10 +2459,12 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
       name: String(memberResult.rows[0].name),
       email: String(memberResult.rows[0].email),
       phone: memberResult.rows[0].phone ? String(memberResult.rows[0].phone) : null,
-      address_line1: memberResult.rows[0].address_line1 ? String(memberResult.rows[0].address_line1) : null,
+      address_street: memberResult.rows[0].address_street ? String(memberResult.rows[0].address_street) : null,
       address_city: memberResult.rows[0].address_city ? String(memberResult.rows[0].address_city) : null,
       address_state: memberResult.rows[0].address_state ? String(memberResult.rows[0].address_state) : null,
       address_zip: memberResult.rows[0].address_zip ? String(memberResult.rows[0].address_zip) : null,
+      age: memberResult.rows[0].age !== null && memberResult.rows[0].age !== undefined ? Number(memberResult.rows[0].age) : null,
+      gender: memberResult.rows[0].gender ? String(memberResult.rows[0].gender) : null,
       signup_type: memberResult.rows[0].signup_type ? String(memberResult.rows[0].signup_type) : null,
       source: memberResult.rows[0].source ? String(memberResult.rows[0].source) : null,
       created_at: String(memberResult.rows[0].created_at),
@@ -2514,6 +2518,81 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
   } catch (error) {
     console.error('Database error fetching customer full profile:', error)
     throw new DatabaseError('Failed to fetch customer profile', error)
+  }
+}
+
+// ===========================================
+// UPDATE CLUB MEMBER (admin edit)
+// ===========================================
+
+export interface ClubMemberPatch {
+  name?: string
+  phone?: string | null
+  address_street?: string | null
+  address_city?: string | null
+  address_state?: string | null
+  address_zip?: string | null
+  age?: number | null
+  gender?: string | null
+  signup_type?: string | null
+  source?: string | null
+}
+
+/**
+ * Update a `club_members` row by email, using COALESCE semantics so only
+ * explicitly-provided fields change. Fields passed as `undefined` are ignored;
+ * fields passed as `null` are coerced to null via `NULLIF` of a sentinel
+ * (not needed here because we pass literal null).
+ *
+ * NOTE: COALESCE replaces NULL params with the existing column, which means
+ * callers cannot use this helper to set a field to NULL. For this MVP that is
+ * acceptable — admins edit via text inputs and empty strings map to existing
+ * value preservation. If we later need to null out fields, switch to an
+ * "undefined vs null" discriminator and build the UPDATE dynamically.
+ */
+export async function updateClubMemberByEmail(
+  email: string,
+  patch: ClubMemberPatch
+): Promise<{ id: string } | null> {
+  try {
+    const normalized = email.toLowerCase()
+
+    // Map undefined → null so @vercel/postgres interpolates DB NULL and COALESCE
+    // falls back to the existing column value (i.e. "no change for this field").
+    const name = patch.name ?? null
+    const phone = patch.phone ?? null
+    const address_street = patch.address_street ?? null
+    const address_city = patch.address_city ?? null
+    const address_state = patch.address_state ?? null
+    const address_zip = patch.address_zip ?? null
+    const age = patch.age ?? null
+    const gender = patch.gender ?? null
+    const signup_type = patch.signup_type ?? null
+    const source = patch.source ?? null
+
+    const result = await sql`
+      UPDATE club_members
+      SET
+        name = COALESCE(${name}, name),
+        phone = COALESCE(${phone}, phone),
+        address_street = COALESCE(${address_street}, address_street),
+        address_city = COALESCE(${address_city}, address_city),
+        address_state = COALESCE(${address_state}, address_state),
+        address_zip = COALESCE(${address_zip}, address_zip),
+        age = COALESCE(${age}, age),
+        gender = COALESCE(${gender}, gender),
+        signup_type = COALESCE(${signup_type}, signup_type),
+        source = COALESCE(${source}, source),
+        updated_at = NOW()
+      WHERE LOWER(email) = ${normalized}
+      RETURNING id
+    `
+
+    if (result.rows.length === 0) return null
+    return { id: String(result.rows[0].id) }
+  } catch (error) {
+    console.error('Database error updating club member:', error)
+    throw new DatabaseError('Failed to update club member', error)
   }
 }
 

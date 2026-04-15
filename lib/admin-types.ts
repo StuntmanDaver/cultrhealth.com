@@ -267,10 +267,12 @@ export interface CustomerProfile {
     name: string
     email: string
     phone: string | null
-    address_line1: string | null
+    address_street: string | null
     address_city: string | null
     address_state: string | null
     address_zip: string | null
+    age: number | null
+    gender: string | null
     signup_type: string | null
     source: string | null
     created_at: string
