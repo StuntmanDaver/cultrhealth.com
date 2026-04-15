@@ -59,6 +59,108 @@ export default function CustomersClient() {
   const [customerDetailLoading, setCustomerDetailLoading] = useState(false)
   const [customerDetailTab, setCustomerDetailTab] = useState<'overview' | 'orders' | 'activity'>('overview')
 
+  // Customer detail — inline edit mode
+  type EditForm = {
+    name: string
+    phone: string
+    address_street: string
+    address_city: string
+    address_state: string
+    address_zip: string
+    age: string
+    gender: string
+    signup_type: string
+    source: string
+  }
+  const [editMode, setEditMode] = useState(false)
+  const [editForm, setEditForm] = useState<EditForm | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  // Reset edit state whenever the selected customer changes or the modal closes
+  useEffect(() => {
+    setEditMode(false)
+    setEditForm(null)
+    setSaveError(null)
+  }, [selectedCustomerEmail])
+
+  const closeCustomerModal = useCallback(() => {
+    setSelectedCustomerEmail(null)
+    setCustomerDetail(null)
+    setEditMode(false)
+    setEditForm(null)
+    setSaveError(null)
+  }, [])
+
+  const startEdit = useCallback(() => {
+    const m = customerDetail?.member
+    if (!m) return
+    setEditForm({
+      name: m.name ?? '',
+      phone: m.phone ?? '',
+      address_street: m.address_street ?? '',
+      address_city: m.address_city ?? '',
+      address_state: m.address_state ?? '',
+      address_zip: m.address_zip ?? '',
+      age: m.age !== null && m.age !== undefined ? String(m.age) : '',
+      gender: m.gender ?? '',
+      signup_type: m.signup_type ?? '',
+      source: m.source ?? '',
+    })
+    setSaveError(null)
+    setEditMode(true)
+  }, [customerDetail])
+
+  const cancelEdit = useCallback(() => {
+    setEditMode(false)
+    setEditForm(null)
+    setSaveError(null)
+  }, [])
+
+  const saveEdit = useCallback(async () => {
+    if (!selectedCustomerEmail || !editForm) return
+    setSaving(true)
+    setSaveError(null)
+    try {
+      // Build payload: empty strings map to undefined (no change); age parsed
+      const emptyToNull = (v: string) => (v.trim() === '' ? null : v.trim())
+      const payload: Record<string, unknown> = {
+        name: editForm.name.trim(),
+        phone: emptyToNull(editForm.phone),
+        address_street: emptyToNull(editForm.address_street),
+        address_city: emptyToNull(editForm.address_city),
+        address_state: emptyToNull(editForm.address_state),
+        address_zip: emptyToNull(editForm.address_zip),
+        age: editForm.age.trim() === '' ? null : Number(editForm.age),
+        gender: emptyToNull(editForm.gender),
+        signup_type: emptyToNull(editForm.signup_type),
+        source: emptyToNull(editForm.source),
+      }
+
+      const res = await fetch(`/api/admin/customers/${encodeURIComponent(selectedCustomerEmail)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setSaveError(json?.error || 'Failed to save changes')
+        return
+      }
+      if (json?.data) {
+        setCustomerDetail(json.data as CustomerProfile)
+      }
+      setEditMode(false)
+      setEditForm(null)
+      // Trigger a refetch of the customers list so the table reflects updates
+      setPeriodDays(p => p)
+    } catch {
+      setSaveError('Network error — please try again')
+    } finally {
+      setSaving(false)
+    }
+  }, [selectedCustomerEmail, editForm])
+
   // Sync date range when periodDays changes
   useEffect(() => {
     const start = new Date()
@@ -306,7 +408,7 @@ export default function CustomersClient() {
       {selectedCustomerEmail && (
         <div
           className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => { setSelectedCustomerEmail(null); setCustomerDetail(null) }}
+          onClick={closeCustomerModal}
         >
           <div
             className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-auto p-6"
@@ -320,7 +422,7 @@ export default function CustomersClient() {
                 <p className="text-sm text-brand-primary/60">{selectedCustomerEmail}</p>
               </div>
               <button
-                onClick={() => { setSelectedCustomerEmail(null); setCustomerDetail(null) }}
+                onClick={closeCustomerModal}
                 className="text-brand-primary/40 hover:text-brand-primary text-xl"
               >
                 &times;
@@ -358,9 +460,18 @@ export default function CustomersClient() {
                       </div>
                     </div>
 
-                    {customerDetail.member && (
+                    {/* Member Info section: read-only OR inline edit form */}
+                    {customerDetail.member && !editMode && (
                       <div className="space-y-2">
-                        <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide">Member Info</h4>
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide">Member Info</h4>
+                          <button
+                            onClick={startEdit}
+                            className="px-3 py-1.5 text-sm rounded-lg bg-brand-primary text-white hover:bg-brand-primaryHover"
+                          >
+                            Edit
+                          </button>
+                        </div>
                         <div className="bg-brand-cream/30 rounded-lg p-3 space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-brand-primary/60">Member Since</span>
@@ -372,6 +483,18 @@ export default function CustomersClient() {
                               <span className="text-brand-primary">{customerDetail.member.phone}</span>
                             </div>
                           )}
+                          {(customerDetail.member.age !== null && customerDetail.member.age !== undefined) && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Age</span>
+                              <span className="text-brand-primary">{customerDetail.member.age}</span>
+                            </div>
+                          )}
+                          {customerDetail.member.gender && (
+                            <div className="flex justify-between text-sm">
+                              <span className="text-brand-primary/60">Gender</span>
+                              <span className="text-brand-primary capitalize">{customerDetail.member.gender}</span>
+                            </div>
+                          )}
                           {customerDetail.member.signup_type && (
                             <div className="flex justify-between text-sm">
                               <span className="text-brand-primary/60">Signup Type</span>
@@ -380,11 +503,11 @@ export default function CustomersClient() {
                               </span>
                             </div>
                           )}
-                          {(customerDetail.member.address_city || customerDetail.member.address_state) && (
+                          {(customerDetail.member.address_street || customerDetail.member.address_city || customerDetail.member.address_state) && (
                             <div className="flex justify-between text-sm">
                               <span className="text-brand-primary/60">Address</span>
                               <span className="text-brand-primary text-right">
-                                {[customerDetail.member.address_line1, customerDetail.member.address_city, customerDetail.member.address_state, customerDetail.member.address_zip].filter(Boolean).join(', ')}
+                                {[customerDetail.member.address_street, customerDetail.member.address_city, customerDetail.member.address_state, customerDetail.member.address_zip].filter(Boolean).join(', ')}
                               </span>
                             </div>
                           )}
@@ -394,6 +517,150 @@ export default function CustomersClient() {
                               <span className="text-brand-primary">{customerDetail.member.source}</span>
                             </div>
                           )}
+                        </div>
+                      </div>
+                    )}
+
+                    {customerDetail.member && editMode && editForm && (
+                      <div className="space-y-2">
+                        <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide">Edit Member Info</h4>
+                        <div className="bg-brand-cream/30 rounded-lg p-4 space-y-3">
+                          <div className="grid grid-cols-1 gap-3">
+                            <div>
+                              <label className="block text-xs text-brand-primary/60 mb-1">Name *</label>
+                              <input
+                                type="text"
+                                value={editForm.name}
+                                onChange={e => setEditForm(f => f ? { ...f, name: e.target.value } : f)}
+                                className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                maxLength={200}
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-brand-primary/60 mb-1">Phone</label>
+                              <input
+                                type="text"
+                                value={editForm.phone}
+                                onChange={e => setEditForm(f => f ? { ...f, phone: e.target.value } : f)}
+                                className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                maxLength={40}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-brand-primary/60 mb-1">Street Address</label>
+                              <input
+                                type="text"
+                                value={editForm.address_street}
+                                onChange={e => setEditForm(f => f ? { ...f, address_street: e.target.value } : f)}
+                                className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                maxLength={200}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                              <div className="col-span-1">
+                                <label className="block text-xs text-brand-primary/60 mb-1">City</label>
+                                <input
+                                  type="text"
+                                  value={editForm.address_city}
+                                  onChange={e => setEditForm(f => f ? { ...f, address_city: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                  maxLength={100}
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <label className="block text-xs text-brand-primary/60 mb-1">State</label>
+                                <input
+                                  type="text"
+                                  value={editForm.address_state}
+                                  onChange={e => setEditForm(f => f ? { ...f, address_state: e.target.value.toUpperCase() } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full uppercase"
+                                  maxLength={2}
+                                  placeholder="FL"
+                                />
+                              </div>
+                              <div className="col-span-1">
+                                <label className="block text-xs text-brand-primary/60 mb-1">ZIP</label>
+                                <input
+                                  type="text"
+                                  value={editForm.address_zip}
+                                  onChange={e => setEditForm(f => f ? { ...f, address_zip: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                  maxLength={20}
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs text-brand-primary/60 mb-1">Age</label>
+                                <input
+                                  type="number"
+                                  min={13}
+                                  max={120}
+                                  value={editForm.age}
+                                  onChange={e => setEditForm(f => f ? { ...f, age: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-brand-primary/60 mb-1">Gender</label>
+                                <select
+                                  value={editForm.gender}
+                                  onChange={e => setEditForm(f => f ? { ...f, gender: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                >
+                                  <option value="">(unset)</option>
+                                  <option value="male">Male</option>
+                                  <option value="female">Female</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs text-brand-primary/60 mb-1">Signup Type</label>
+                                <select
+                                  value={editForm.signup_type}
+                                  onChange={e => setEditForm(f => f ? { ...f, signup_type: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                >
+                                  <option value="">(unset)</option>
+                                  <option value="products">Products</option>
+                                  <option value="membership">Membership</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-xs text-brand-primary/60 mb-1">Source</label>
+                                <input
+                                  type="text"
+                                  value={editForm.source}
+                                  onChange={e => setEditForm(f => f ? { ...f, source: e.target.value } : f)}
+                                  className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-full"
+                                  maxLength={100}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {saveError && (
+                            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{saveError}</p>
+                          )}
+
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              onClick={saveEdit}
+                              disabled={saving || !editForm.name.trim()}
+                              className="px-4 py-2 text-sm rounded-lg bg-brand-primary text-white hover:bg-brand-primaryHover disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {saving ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              disabled={saving}
+                              className="px-4 py-2 text-sm rounded-lg border border-brand-primary/20 text-brand-primary hover:bg-brand-cream/50 disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}
