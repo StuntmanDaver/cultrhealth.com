@@ -89,6 +89,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         category: 'glp1',
         catalogSku: 'SEMA-5MG-3ML',
         image: '/images/products/semaglutide-glp1.png',
+        secondaryImage: '/images/products/semaglutide-glp1-coa.png',
       },
       {
         id: 'tirzepatide',
