@@ -250,6 +250,7 @@ export function InvoiceDocument({ data }: InvoiceDocumentProps) {
         {/* Header */}
         <View style={styles.header}>
           <View>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image style={styles.logo} src={join(process.cwd(), 'public/cultr-health-logo.png')} />
             <Text style={styles.tagline}>PERSONALIZED LONGEVITY MEDICINE</Text>
           </View>

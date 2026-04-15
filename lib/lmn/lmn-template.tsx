@@ -205,6 +205,7 @@ export function LmnDocument({ data }: LmnDocumentProps) {
       <Page size="LETTER" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
+          {/* eslint-disable-next-line jsx-a11y/alt-text */}
           <Image style={styles.logo} src={join(process.cwd(), 'public/cultr-health-logo.png')} />
           <Text style={styles.tagline}>PERSONALIZED LONGEVITY MEDICINE</Text>
         </View>
