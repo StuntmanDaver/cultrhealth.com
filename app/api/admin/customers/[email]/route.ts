@@ -21,7 +21,7 @@ async function requireAdmin(): Promise<
 
   const adminEmails = process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
   const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-  const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email)
+  const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email) || session.role === 'admin'
 
   if (!isAdmin) {
     return {

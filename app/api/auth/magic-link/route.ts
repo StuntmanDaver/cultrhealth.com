@@ -137,11 +137,14 @@ export async function POST(request: NextRequest) {
     // Customer has active subscription (or staging bypass) - generate magic link
     const token = await createMagicLinkToken(normalizedEmail)
     
-    // Build magic link URL
-    const baseUrl = 
-      process.env.NEXT_PUBLIC_SITE_URL || 
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-      'http://localhost:3000')
+    // Build magic link URL — use the actual request origin so local dev on any
+    // port (3001, 3002, …) produces a working verify link instead of 404ing on
+    // the hardcoded :3000 fallback.
+    const requestOrigin = new URL(request.url).origin
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+      requestOrigin)
     
     // Validate redirect is a safe relative path (prevent open redirect)
     const safeRedirect = typeof redirectPath === 'string' && redirectPath.startsWith('/') && !redirectPath.startsWith('//') ? redirectPath : null

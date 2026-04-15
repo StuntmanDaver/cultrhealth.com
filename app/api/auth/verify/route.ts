@@ -88,11 +88,13 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token')
     const redirectParam = searchParams.get('redirect')
 
-    // Build base URL for redirects
+    // Build base URL for redirects — use request origin so local dev on any
+    // port produces working redirects instead of 404ing on hardcoded :3000.
+    const requestOrigin = new URL(request.url).origin
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-      'http://localhost:3000')
+      requestOrigin)
 
     const cookieHostname = request.nextUrl.hostname
 
@@ -229,10 +231,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Verify error:', error)
 
+    const requestOrigin = new URL(request.url).origin
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-      'http://localhost:3000')
+      requestOrigin)
 
     return NextResponse.redirect(`${baseUrl}/members?error=verification_failed`)
   }
