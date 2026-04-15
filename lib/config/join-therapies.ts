@@ -221,6 +221,17 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
         image: '/images/products/igf1-lr3.png',
       },
       {
+        id: 'mots-c',
+        name: 'MOTS-C',
+        badge: '',
+        note: '40 MG | 3 ML',
+        description:
+          'Mitochondria-derived peptide that activates AMPK signaling for improved insulin sensitivity, metabolic flexibility, and longevity-aligned energy regulation.',
+        price: 215,
+        category: 'peptide',
+        image: '/images/products/mots-c.png',
+      },
+      {
         id: 'bacteriostatic-water',
         name: 'Bacteriostatic Water',
         badge: '',
