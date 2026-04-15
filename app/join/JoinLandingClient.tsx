@@ -423,16 +423,19 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   }, [])
 
   const handleLogout = useCallback(() => {
+    const currentEmail = member?.email || ''
     localStorage.removeItem(CLUB_MEMBER_STORAGE_KEY)
     // Clear cookie with and without domain to cover both production and local
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax'
     document.cookie = 'cultr_club_visitor=; path=/; max-age=0; SameSite=Lax; domain=.cultrhealth.com'
     setMember(null)
-    setLoginEmail('')
-    setShowSignup(true)
     setOrderSubmitted(false)
     cart.clearCart()
-  }, [cart])
+    // Return to login modal (not signup) since this user already has an account
+    setLoginEmail(currentEmail)
+    setShowSignup(false)
+    setShowLogin(true)
+  }, [cart, member])
 
   // While checking member status (Priority 6 async fetch), show a brief loading overlay
   // to prevent bare-page flash where neither signup nor content is visible
@@ -467,6 +470,10 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
         <SignupModal
           onComplete={handleSignupComplete}
           onExistingMemberDetected={handleExistingMemberDetected}
+          onSignInInstead={() => {
+            setShowSignup(false)
+            setShowLogin(true)
+          }}
           visitorCtxRef={visitorCtxRef}
           memberIdRef={memberIdRef}
         />
@@ -792,7 +799,7 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
 // SIGNUP MODAL
 // =============================================
 
-function SignupModal({ onComplete, onExistingMemberDetected, visitorCtxRef, memberIdRef }: { onComplete: (data: ClubMember) => void; onExistingMemberDetected: (email: string) => void; visitorCtxRef: React.MutableRefObject<VisitorContext | null>; memberIdRef: React.MutableRefObject<string | null> }) {
+function SignupModal({ onComplete, onExistingMemberDetected, onSignInInstead, visitorCtxRef, memberIdRef }: { onComplete: (data: ClubMember) => void; onExistingMemberDetected: (email: string) => void; onSignInInstead: () => void; visitorCtxRef: React.MutableRefObject<VisitorContext | null>; memberIdRef: React.MutableRefObject<string | null> }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -1032,6 +1039,9 @@ function SignupModal({ onComplete, onExistingMemberDetected, visitorCtxRef, memb
 
           <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 mt-5 px-6 py-3.5 bg-brand-primary text-white font-medium rounded-full hover:bg-brand-primaryHover transition-colors disabled:opacity-50 shadow-sm">
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Join Free &amp; Start Shopping <ChevronRight className="w-4 h-4" /></>}
+          </button>
+          <button type="button" onClick={onSignInInstead} className="w-full mt-3 px-6 py-3 text-brand-primary font-medium hover:bg-brand-primary/5 transition-colors rounded-full text-sm">
+            Already have an account? Sign in
           </button>
         </form>
       </div>
