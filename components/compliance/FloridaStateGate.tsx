@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { SERVED_STATES } from '@/lib/config/compliance';
 
 const US_STATES = [
   { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
@@ -41,11 +42,12 @@ export function FloridaStateGate({ onPass }: Props) {
   const [selectedState, setSelectedState] = useState('');
   const [attempted, setAttempted] = useState(false);
 
-  const isBlocked = attempted && selectedState !== 'FL';
+  const isServed = (SERVED_STATES as readonly string[]).includes(selectedState);
+  const isBlocked = attempted && !isServed;
 
   function handleContinue() {
     setAttempted(true);
-    if (selectedState === 'FL') {
+    if (isServed) {
       onPass();
     }
   }
@@ -62,17 +64,16 @@ export function FloridaStateGate({ onPass }: Props) {
             Where are you located?
           </h2>
           <p className="text-cultr-textMuted text-sm">
-            CULTR Health is currently available in Florida only.
+            We currently serve patients in 30 U.S. states and D.C.
           </p>
         </div>
 
         {isBlocked ? (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-left">
-            <p className="text-amber-800 font-semibold mb-2">Not available in your state</p>
+            <p className="text-amber-800 font-semibold mb-2">Not available in your state yet</p>
             <p className="text-amber-700 text-sm leading-relaxed">
-              CULTR Health is currently available only in Florida. Services are available only to
-              patients who are physically located in Florida at the time of consultation and treatment.
-              We hope to expand to additional states in the future.
+              CULTR Health is currently available in 30 U.S. states and Washington D.C. Your state
+              is not yet in our service area. We&apos;re actively expanding — check back soon.
             </p>
           </div>
         ) : (

@@ -39,7 +39,7 @@ export default function HowItWorksPage() {
       <MarketingHero
         title="From quiz to clinician-guided plan in a few simple steps."
         subtitle="We use your goals, health history, and biomarker data to build a personalized plan for body composition, performance, recovery, and long-term optimization."
-        proofLine="Currently serving Florida patients only · 29-biomarker panel (upgradeable up to 60+) · Delivered to your door"
+        proofLine="Now serving patients in 30 states + D.C. · 29-biomarker panel (upgradeable up to 60+) · Delivered to your door"
         ctas={[
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'View Pricing', href: '/pricing', variant: 'ghost' },
@@ -277,7 +277,7 @@ export default function HowItWorksPage() {
                   },
                   {
                     question: 'What states do you operate in?',
-                    answer: 'At this time, CULTR Health serves patients located in Florida only. Services are available only to patients who are physically located in Florida at the time of consultation and treatment.',
+                    answer: 'CULTR Health currently serves patients in 30 U.S. states and Washington D.C.: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. Services are available only to patients physically located in one of these states at the time of consultation. Medications can be shipped to all U.S. states except California.',
                   },
                 ]} />
               </div>

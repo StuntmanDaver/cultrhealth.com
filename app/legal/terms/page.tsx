@@ -48,7 +48,7 @@ export default function TermsPage() {
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">3. Eligibility</h2>
             <p className="text-cultr-textMuted leading-relaxed">
-              You must be at least 18 years old and be physically located in Florida at the time of accessing our services. <span className="font-display font-bold">CULTR</span> Health telehealth services are currently available only in Florida. We do not currently serve any other U.S. state, territory, or foreign jurisdiction. Certain treatments may have additional eligibility requirements based on medical criteria determined by your provider.
+              You must be at least 18 years old and be physically located in one of our 30 eligible states or Washington D.C. at the time of accessing our services. <span className="font-display font-bold">CULTR</span> Health telehealth services are currently available in Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. We do not currently serve California, or other U.S. states, territories, or foreign jurisdictions for telehealth services. Certain treatments may have additional eligibility requirements based on medical criteria determined by your provider.
             </p>
 
             <h2 className="text-xl font-display font-bold text-cultr-forest mt-10 mb-4">4. Cancellation</h2>

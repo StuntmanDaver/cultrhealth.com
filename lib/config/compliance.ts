@@ -79,16 +79,26 @@ export const DISCLAIMERS = {
 
 // --- Geographic scope ---
 
+/** Telehealth service states (30 jurisdictions: 29 states + DC). */
+export const SERVED_STATES = [
+  'AZ', 'CO', 'CT', 'DE', 'FL', 'GA', 'IA', 'ID', 'LA', 'MD',
+  'ME', 'MN', 'MO', 'MT', 'ND', 'NH', 'NJ', 'NM', 'NV', 'NY',
+  'PA', 'RI', 'SD', 'TX', 'UT', 'VT', 'WA', 'WI', 'WY', 'DC',
+] as const;
+
+export type ServedState = typeof SERVED_STATES[number];
+
+export const SERVED_STATE_COUNT = SERVED_STATES.length; // 30
+
+/** States from which medications CANNOT be shipped. */
+export const SHIPPING_EXCLUDED_STATES = ['CA'] as const;
+
+export const SHIPPING_NOTE =
+  'Medications can be shipped to all U.S. states except California.' as const;
+
 /** Approved verbatim jurisdiction statement — use this exact text everywhere on the site. */
 export const JURISDICTION_STATEMENT =
-  'Service Availability: CULTR Health telehealth services are currently available only in Florida. Services are available only to patients who are physically located in Florida at the time of consultation and treatment. We do not currently serve any other U.S. state, territory, or foreign jurisdiction.' as const;
-
-export const SERVED_STATES = ['FL'] as const;
-
-/** All other states/territories are not served. */
-export const EXCLUDED_STATES: readonly string[] = [];
-
-export const SERVED_STATE_COUNT = SERVED_STATES.length; // 1
+  'Service Availability: CULTR Health telehealth services are available in 30 U.S. jurisdictions: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. Services are available only to patients who are physically located in one of these states at the time of consultation and treatment. Medications can be shipped to all U.S. states except California.' as const;
 
 // --- Provider credentials ---
 
@@ -97,7 +107,11 @@ export const PROVIDER_CREDENTIALS = {
     name: 'Dr. Ali Saberi, MD',
     npi: '1649495276',
     specialty: 'Internal Medicine',
-    states_licensed: ['FL'] as string[],
+    states_licensed: [
+      'AZ', 'CO', 'CT', 'DE', 'FL', 'GA', 'IA', 'ID', 'LA', 'MD',
+      'ME', 'MN', 'MO', 'MT', 'ND', 'NH', 'NJ', 'NM', 'NV', 'NY',
+      'PA', 'RI', 'SD', 'TX', 'UT', 'VT', 'WA', 'WI', 'WY', 'DC',
+    ] as string[],
   },
 } as const;
 
