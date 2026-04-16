@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { PackageSearch, Save, Loader2, AlertTriangle, CheckCircle, Package } from 'lucide-react'
 
-type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'coming_soon'
 
 interface InventoryRow {
   therapyId: string
@@ -18,6 +18,7 @@ const STATUS_OPTIONS: { value: StockStatus; label: string; color: string }[] = [
   { value: 'in_stock', label: 'In Stock', color: 'bg-green-100 text-green-700' },
   { value: 'low_stock', label: 'Low Stock', color: 'bg-amber-100 text-amber-700' },
   { value: 'out_of_stock', label: 'Out of Stock', color: 'bg-red-100 text-red-700' },
+  { value: 'coming_soon', label: 'Coming Soon', color: 'bg-blue-100 text-blue-700' },
 ]
 
 export default function InventoryClient() {

@@ -2809,12 +2809,12 @@ export async function getClubOrderFulfillmentCounts(): Promise<Record<string, nu
 }
 
 /**
- * Get inventory items that are low_stock or out_of_stock for dashboard alerts.
+ * Get inventory items that are low_stock, out_of_stock, or coming_soon for dashboard alerts.
  */
 export async function getInventoryAlerts(): Promise<{
   therapyId: string
   therapyName: string
-  stockStatus: 'low_stock' | 'out_of_stock'
+  stockStatus: 'low_stock' | 'out_of_stock' | 'coming_soon'
   stockQuantity: number | null
   updatedAt: string
 }[]> {
@@ -2822,15 +2822,15 @@ export async function getInventoryAlerts(): Promise<{
     const result = await sql`
       SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at
       FROM product_inventory
-      WHERE stock_status IN ('low_stock', 'out_of_stock')
+      WHERE stock_status IN ('low_stock', 'out_of_stock', 'coming_soon')
       ORDER BY
-        CASE stock_status WHEN 'out_of_stock' THEN 0 ELSE 1 END,
+        CASE stock_status WHEN 'out_of_stock' THEN 0 WHEN 'coming_soon' THEN 1 ELSE 2 END,
         stock_quantity ASC NULLS LAST
     `
     return result.rows.map(r => ({
       therapyId: r.therapy_id,
       therapyName: r.therapy_name,
-      stockStatus: r.stock_status as 'low_stock' | 'out_of_stock',
+      stockStatus: r.stock_status as 'low_stock' | 'out_of_stock' | 'coming_soon',
       stockQuantity: r.stock_quantity != null ? Number(r.stock_quantity) : null,
       updatedAt: r.updated_at,
     }))

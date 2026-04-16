@@ -109,6 +109,11 @@ export interface CreatorAdminRow {
   id: string
   email: string
   full_name: string
+  phone: string | null
+  social_handle: string | null
+  bio: string | null
+  age: number | null
+  gender: string | null
   status: string
   tier: number
   commission_rate: number
@@ -325,7 +330,7 @@ export interface MembershipAdminRow {
 export interface InventoryAlertRow {
   therapyId: string
   therapyName: string
-  stockStatus: 'low_stock' | 'out_of_stock'
+  stockStatus: 'low_stock' | 'out_of_stock' | 'coming_soon'
   stockQuantity: number | null
   updatedAt: string
 }

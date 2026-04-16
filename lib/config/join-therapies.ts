@@ -7,7 +7,7 @@
  * Restored Apr 2026 to match the legacy join.cultrhealth.com catalog.
  */
 
-export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock'
+export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'coming_soon'
 
 export interface JoinTherapy {
   id: string
