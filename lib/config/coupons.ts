@@ -8,6 +8,12 @@ export type ClubCoupon = {
   label: string
   expiresAt?: Date
   noBundleStack?: boolean  // true = disable bundle discount when this coupon is applied
+  /**
+   * When set, the coupon only discounts line items whose `therapyId` is in this list.
+   * The cart must contain at least one matching item for the coupon to validate, and
+   * the discount is applied only to the subtotal of matching items (not the whole order).
+   */
+  applicableTherapyIds?: string[]
 }
 
 export type UnifiedCouponResult = {
@@ -19,6 +25,7 @@ export type UnifiedCouponResult = {
   creatorName?: string
   codeId?: string
   codeType?: 'membership' | 'product' | 'general'
+  applicableTherapyIds?: string[]
 }
 
 export const CLUB_COUPONS: Record<string, ClubCoupon> = {
@@ -31,6 +38,23 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-04-11T23:59:59Z'), noBundleStack: true },
   'BUTCH10':    { discount: 10, label: 'Promo Code' },
   'OWNERLR3':   { discount: 70, label: 'Owner Discount' },
+  'RETA':       { discount: 50, label: 'R3TA 50% Off', applicableTherapyIds: ['retatrutide'], noBundleStack: true },
+}
+
+/**
+ * Returns a human-readable error when the supplied cart does not contain any item the coupon
+ * applies to, or `null` if the coupon is fine for the cart. Product-agnostic coupons always
+ * return `null`.
+ */
+export function getCouponProductEligibilityError(
+  coupon: Pick<ClubCoupon, 'applicableTherapyIds' | 'label'>,
+  items: Array<{ therapyId: string }>
+): string | null {
+  if (!coupon.applicableTherapyIds || coupon.applicableTherapyIds.length === 0) return null
+  const cartIds = new Set(items.map((i) => i.therapyId))
+  const hasMatch = coupon.applicableTherapyIds.some((id) => cartIds.has(id))
+  if (hasMatch) return null
+  return `This coupon is only valid for specific products. Add an eligible product to your cart to redeem ${coupon.label}.`
 }
 
 export function validateCoupon(code: string): ClubCoupon | null {
@@ -64,7 +88,13 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
   const internal = CLUB_COUPONS[normalized]
   if (internal) {
     if (internal.expiresAt && new Date() > internal.expiresAt) return null
-    return { discount: internal.discount, label: internal.label, isCreatorCode: false, noBundleStack: internal.noBundleStack }
+    return {
+      discount: internal.discount,
+      label: internal.label,
+      isCreatorCode: false,
+      noBundleStack: internal.noBundleStack,
+      applicableTherapyIds: internal.applicableTherapyIds,
+    }
   }
 
   // Priority 2: Check creator affiliate codes in DB (includes prelaunch codes)
