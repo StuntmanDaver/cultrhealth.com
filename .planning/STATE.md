@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 last_updated: "2026-04-14T03:17:47.177Z"
-last_activity: 2026-04-15 - Completed quick task 260415-kwb: i need a way to edit and update member/contact information in the admin dashboard.
+last_activity: 2026-04-16 - Completed quick task 260415-uma: add ability to delete customers and members from the admin dashboard
 progress:
   total_phases: 5
   completed_phases: 2
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260415-kwb | i need a way to edit and update member/contact information in the admin dashboard. | 2026-04-15 | 3a75165 | [260415-kwb-i-need-a-way-to-edit-and-update-member-c](./quick/260415-kwb-i-need-a-way-to-edit-and-update-member-c/) |
+| 260415-uma | add ability to delete customers and members from the admin dashboard | 2026-04-16 | ccf34e5 | [260415-uma-add-ability-to-delete-customers-and-memb](./quick/260415-uma-add-ability-to-delete-customers-and-memb/) |
 
 ### Source Plan
 
