@@ -56,7 +56,7 @@ export default function TherapiesPage() {
           { label: 'Take the Quiz', href: '/quiz' },
           { label: 'Compare Plans', href: '/pricing', variant: 'ghost' },
         ]}
-        size="compact"
+        size="default"
         backgroundImage="/images/hero-cultr-office.png"
       />
 
@@ -108,7 +108,7 @@ export default function TherapiesPage() {
       <section className="py-10 md:py-14 px-6 grad-light">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal className="mb-8">
-            <div className="relative w-full aspect-[16/6] md:aspect-[16/5] rounded-2xl overflow-hidden shadow-sm">
+            <div className="relative w-full aspect-[4/3] sm:aspect-[16/8] md:aspect-[16/6] rounded-2xl overflow-hidden shadow-sm">
               <Image
                 src="/images/therapies-banner.png"
                 alt="CULTR Health therapies"
