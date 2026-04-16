@@ -1,3 +1,43 @@
+## [2026-04-16] - Admin Member/Customer Management
+
+### Added
+- **Edit member info:** Inline Edit/Save/Cancel form in the Customer detail modal (Overview tab). Edits name, phone, address, age, gender, signup type, source via `PATCH /api/admin/customers/[email]`. Zod validation, audit-logged.
+- **Delete customers:** Red Delete button in Customer detail modal with confirmation overlay. Customers with orders get an amber warning showing order count + red warning if open/pending orders exist. Proceeds with `?force=true`. Order history preserved (denormalized snapshots). Audit-logged.
+- **Delete memberships:** Red Delete button on each Members table row with confirmation modal. Warns about active/trialing Stripe subscriptions (local DB record only, does not cancel Stripe). Audit-logged.
+- **DB helpers:** `updateClubMemberByEmail()`, `deleteClubMemberByEmail(email, force?)`, `getClubMemberOrderCount()`, `deleteMembershipByCustomerId()` in `lib/db.ts`.
+- **New API route:** `DELETE /api/admin/members/[customerId]` for membership deletion.
+
+### Fixed
+- **Magic link auth on localhost:** Replaced hardcoded `localhost:3000` with `new URL(request.url).origin` in magic-link and verify routes. Fixes 404 when Next.js runs on alternate ports (3001, 3002, etc.).
+- **`requireAdmin()` role check:** Added `session.role === 'admin'` to admin API auth checks (customer PATCH/DELETE, membership DELETE). Dev-login users were getting 403.
+- **`getCustomerFullProfile()` address column:** Fixed `address_line1` (non-existent) to `address_street` (canonical column per migration 017).
+- **Membership delete audit log:** Fixed copy-paste error logging `stripe_subscription_id` as "email" field.
+
+### Data
+- **DJ Buras** (`djburas@yahoo.com`): Phone updated to `5042355058` in both `club_members` and `club_orders` (pending order had typo `5042358058`).
+
+---
+
+## [2026-04-15] - Coming Soon Inventory Status + Join Product Image Revert
+
+### Added
+- **`coming_soon` stock status:** New 4th inventory status across admin dashboard, join page product cards, and dashboard alerts. Blue color scheme throughout (dropdown, badges, alert cards).
+- **Admin inventory dropdown:** "Coming Soon" option with `bg-blue-100 text-blue-700` styling.
+- **Admin dashboard alerts:** Blue alert cards with "SOON" tag for coming-soon products.
+- **Join page card badge:** Blue `bg-blue-500/80` badge on product cards; button reads "Coming Soon" instead of "Sold Out".
+
+### Changed
+- **`lib/config/product-catalog.ts`:** `StockStatus` type now includes `'coming_soon'`.
+- **`lib/config/join-therapies.ts`:** `JoinStockStatus` type now includes `'coming_soon'`.
+- **`lib/admin-types.ts`:** `InventoryAlertRow.stockStatus` includes `'coming_soon'`.
+- **`lib/db.ts`:** `getInventoryAlerts()` SQL query and return type include `'coming_soon'`.
+- **`app/api/admin/inventory/route.ts`:** PUT validation accepts `'coming_soon'`.
+
+### Fixed
+- **Join product images reverted:** Restored glutathione, NAD+, semaglutide, and tirzepatide images to pre-`aacf670` versions. The therapies page image refresh had replaced them with wrong images for the join page context.
+
+---
+
 ## [2026-04-16] - Admin Creator Network — Contact Info & Profile Details
 
 ### Changed

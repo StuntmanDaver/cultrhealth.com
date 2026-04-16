@@ -7,7 +7,7 @@
  * Restored Apr 2026 to match the legacy join.cultrhealth.com catalog.
  */
 
-export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'coming_soon'
+export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'
 
 export interface JoinTherapy {
   id: string
@@ -339,6 +339,6 @@ export function getStockStatus(therapy: JoinTherapy): JoinStockStatus {
 
 /** Get max orderable quantity for a therapy. Returns Infinity when unlimited. */
 export function getMaxOrderQuantity(therapy: JoinTherapy): number {
-  if (therapy.stockStatus === 'out_of_stock') return 0
+  if (therapy.stockStatus === 'out_of_stock' || therapy.stockStatus === 'restocking_soon') return 0
   return therapy.stockQuantity ?? Infinity
 }

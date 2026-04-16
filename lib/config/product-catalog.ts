@@ -14,7 +14,7 @@ export type ProductCategory =
   | 'wellness_supplement'
   | 'sexual_wellness'
 
-export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'coming_soon'
+export type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'
 
 export type ProductVariant = {
   label: string

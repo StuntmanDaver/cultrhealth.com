@@ -54,7 +54,7 @@ export async function PUT(request: Request) {
     const { therapyId, therapyName, stockStatus, stockQuantity } = body as {
       therapyId: string
       therapyName?: string
-      stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' | 'coming_soon'
+      stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'
       stockQuantity: number | null
     }
 
@@ -62,7 +62,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'therapyId and stockStatus are required' }, { status: 400 })
     }
 
-    if (!['in_stock', 'low_stock', 'out_of_stock', 'coming_soon'].includes(stockStatus)) {
+    if (!['in_stock', 'low_stock', 'out_of_stock', 'restocking_soon'].includes(stockStatus)) {
       return NextResponse.json({ error: 'Invalid stockStatus' }, { status: 400 })
     }
 

@@ -674,7 +674,7 @@ export const Card = ({
           <div className={cn("absolute z-20", compact ? "top-2.5 left-2.5" : "top-3 left-3")}>
             <span className={cn(
               "inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-sm",
-              stockLabel === 'Coming Soon'
+              stockLabel === 'Restocking Soon'
                 ? "bg-blue-500/80 text-white"
                 : disableAdd && !inCart
                   ? "bg-red-500/80 text-white"
@@ -726,7 +726,7 @@ export const Card = ({
                     : "bg-white text-brand-primary hover:scale-105 active:scale-95 shadow-sm"
                 )}
               >
-                {disableAdd ? <>{stockLabel === 'Coming Soon' ? 'Coming Soon' : 'Sold Out'}</> : <><Plus className="w-3 h-3" /> Add</>}
+                {disableAdd ? <>{stockLabel === 'Restocking Soon' ? 'Restocking Soon' : 'Sold Out'}</> : <><Plus className="w-3 h-3" /> Add</>}
               </button>
             )
           )}

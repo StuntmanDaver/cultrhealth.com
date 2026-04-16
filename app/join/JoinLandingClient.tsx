@@ -676,16 +676,16 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
     const sd = stockData[therapy.id]
     const stockStatus = sd?.status || 'in_stock'
-    const maxQty = stockStatus === 'out_of_stock' || stockStatus === 'coming_soon' ? 0 : (sd?.quantity ?? Infinity)
+    const maxQty = stockStatus === 'out_of_stock' || stockStatus === 'restocking_soon' ? 0 : (sd?.quantity ?? Infinity)
     const currentQty = cartItem?.quantity || 0
     const isOutOfStock = stockStatus === 'out_of_stock'
-    const isComingSoon = stockStatus === 'coming_soon'
+    const isRestocking = stockStatus === 'restocking_soon'
     const atMaxQty = currentQty >= maxQty
-    const disableAdd = isOutOfStock || isComingSoon || atMaxQty
+    const disableAdd = isOutOfStock || isRestocking || atMaxQty
 
     let stockLabel: string | undefined
-    if (isComingSoon) {
-      stockLabel = 'Coming Soon'
+    if (isRestocking) {
+      stockLabel = 'Restocking Soon'
     } else if (isOutOfStock) {
       stockLabel = 'Out of Stock'
     } else if (stockStatus === 'low_stock' && sd?.quantity != null) {

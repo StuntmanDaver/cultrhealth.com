@@ -244,7 +244,7 @@ export default function AdminDashboardClient() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data.inventoryAlerts.map((item) => {
                   const isOut = item.stockStatus === 'out_of_stock'
-                  const isSoon = item.stockStatus === 'coming_soon'
+                  const isSoon = item.stockStatus === 'restocking_soon'
                   return (
                     <div
                       key={item.therapyId}
@@ -262,7 +262,7 @@ export default function AdminDashboardClient() {
                         </p>
                         <p className={`text-xs ${isSoon ? 'text-blue-600' : isOut ? 'text-red-600' : 'text-amber-600'}`}>
                           {isSoon
-                            ? 'Coming Soon'
+                            ? 'Restocking Soon'
                             : isOut
                               ? 'Out of Stock'
                               : item.stockQuantity != null

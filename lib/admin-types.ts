@@ -330,7 +330,7 @@ export interface MembershipAdminRow {
 export interface InventoryAlertRow {
   therapyId: string
   therapyName: string
-  stockStatus: 'low_stock' | 'out_of_stock' | 'coming_soon'
+  stockStatus: 'low_stock' | 'out_of_stock' | 'restocking_soon'
   stockQuantity: number | null
   updatedAt: string
 }
