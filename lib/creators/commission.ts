@@ -125,8 +125,12 @@ export async function processOrderAttribution(params: {
   attribution: ResolvedAttribution
   isSubscription?: boolean
   subscriptionPaymentNumber?: number
+  // When true, writes order_attributions + increments codes/links/click_events
+  // but SKIPS commission_ledger. Used for the club-order path where commission
+  // is deferred until the order actually ships.
+  skipCommissionLedger?: boolean
 }): Promise<CommissionResult | null> {
-  const { orderId, netRevenue, customerEmail, attribution, isSubscription, subscriptionPaymentNumber } = params
+  const { orderId, netRevenue, customerEmail, attribution, isSubscription, subscriptionPaymentNumber, skipCommissionLedger } = params
 
   if (netRevenue <= 0) return null
 
@@ -178,8 +182,9 @@ export async function processOrderAttribution(params: {
     }
     attributionId = attrResult.rows[0].id
 
-    // Self-referrals: record attribution for tracking but skip commissions
-    if (!attribution.isSelfReferral) {
+    // Self-referrals: record attribution for tracking but skip commissions.
+    // Club-order path: skipCommissionLedger defers commission writes until shipment.
+    if (!attribution.isSelfReferral && !skipCommissionLedger) {
       await insertCommissionLedgerEntries(
         client, attributionId, attribution.creatorId,
         netRevenue, directRate, directAmount, override
@@ -293,6 +298,81 @@ export async function recordZeroRevenueAttribution(params: {
     throw error
   } finally {
     client.release()
+  }
+}
+
+// ===========================================
+// DEFERRED COMMISSION WRITE (club-order shipment path)
+// ===========================================
+
+// Writes commission_ledger rows for an order that already has an order_attributions
+// row but no commission entries yet. Called from the club-order status route when
+// the order transitions to 'shipped'. Idempotent: if entries already exist for this
+// attribution, returns the existing totals without inserting.
+export async function recordCommissionsForShippedOrder(params: {
+  orderId: string
+  netRevenue: number
+}): Promise<{ attributionId: string; directCommission: number; overrideCommission: number } | null> {
+  const { orderId, netRevenue } = params
+  if (netRevenue <= 0) return null
+
+  const attribution = await getOrderAttributionByOrderId(orderId)
+  if (!attribution) return null
+
+  // Self-referrals: attribution recorded, no commission
+  if (attribution.is_self_referral) return null
+
+  // Idempotency: if any non-reversed commission_ledger entries exist for this attribution, no-op
+  const existing = await db.query(
+    `SELECT id, commission_type, commission_amount FROM commission_ledger
+     WHERE order_attribution_id = $1 AND status != 'reversed'`,
+    [attribution.id]
+  )
+  if (existing.rows.length > 0) {
+    const direct = existing.rows.find((r) => (r as { commission_type: string }).commission_type === 'direct')
+    const ovr = existing.rows.find((r) => (r as { commission_type: string }).commission_type === 'override')
+    return {
+      attributionId: attribution.id,
+      directCommission: direct ? Number((direct as { commission_amount: string | number }).commission_amount) : 0,
+      overrideCommission: ovr ? Number((ovr as { commission_amount: string | number }).commission_amount) : 0,
+    }
+  }
+
+  const creator = await getCreatorById(attribution.creator_id)
+  const directRate = creator?.commission_rate != null ? Number(creator.commission_rate) : COMMISSION_CONFIG.directRate
+  const directAmount = Math.round((netRevenue * directRate) / 100 * 100) / 100
+  const override = await calculateOverrideCommission(attribution.creator_id, netRevenue, directAmount)
+
+  const client = await db.connect()
+  try {
+    await client.query('BEGIN')
+
+    // Update attribution's revenue/commission if the final shipped amount differs from what was stored
+    await client.query(
+      `UPDATE order_attributions
+       SET net_revenue = $1, direct_commission_rate = $2, direct_commission_amount = $3, updated_at = NOW()
+       WHERE id = $4`,
+      [netRevenue, directRate, directAmount, attribution.id]
+    )
+
+    await insertCommissionLedgerEntries(
+      client, attribution.id, attribution.creator_id,
+      netRevenue, directRate, directAmount, override
+    )
+
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('recordCommissionsForShippedOrder transaction failed:', error)
+    throw error
+  } finally {
+    client.release()
+  }
+
+  return {
+    attributionId: attribution.id,
+    directCommission: directAmount,
+    overrideCommission: override?.overrideAmount ?? 0,
   }
 }
 

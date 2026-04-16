@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Check, Loader2, RefreshCw, ChevronDown, ChevronUp, Package, Truck, CheckCircle2, Clock, FileText, DollarSign } from 'lucide-react'
+import { getStaleActionLabel } from '@/lib/admin-club-orders'
 
 interface OrderItem {
   therapyId: string
@@ -278,14 +279,13 @@ export default function PendingApprovalTab({ onPendingCountChange }: PendingAppr
                         </span>
                       )}
                       {(() => {
-                        if (['fulfilled', 'rejected', 'cancelled', 'dismissed'].includes(order.status)) return null
                         const latestTs = order.shipped_at || order.paid_at || order.approved_at || order.created_at
                         const hoursStale = (Date.now() - new Date(latestTs).getTime()) / (1000 * 60 * 60)
-                        if (hoursStale < 48) return null
-                        const days = Math.floor(hoursStale / 24)
+                        const stale = getStaleActionLabel(order.status, hoursStale)
+                        if (!stale) return null
                         return (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${hoursStale > 96 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                            {days}d stale
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${stale.severity === 'danger' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`} title="Stage stalled — click the order to advance it.">
+                            {stale.label}
                           </span>
                         )
                       })()}

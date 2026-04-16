@@ -240,12 +240,77 @@ export async function POST(
       return NextResponse.json({ error: 'Order status changed concurrently, please refresh' }, { status: 409 })
     }
 
-    // Keep creator attribution and admin order state aligned when orders are voided or reopened.
-    // Each step is in its own non-fatal try/catch so a commission failure never rolls back
-    // an already-committed status update. When sync fails, we log to admin_actions so ops
-    // can query for 'commission_sync_failed' rows and reconcile manually.
+    // Keep creator attribution and admin order state aligned when orders ship, roll back,
+    // or get voided. Each step is in its own non-fatal try/catch so a commission failure
+    // never rolls back an already-committed status update. When sync fails we log to
+    // admin_actions so ops can query for 'commission_sync_failed' rows and reconcile.
+    //
+    // Commission lifecycle for club orders:
+    //   1. Order created at checkout   → order_attributions row only (no commission_ledger)
+    //   2. Order transitions to shipped → recordCommissionsForShippedOrder writes ledger entries
+    //   3. Order rolled back from shipped/fulfilled → commissions reversed
+    //   4. Order cancelled / dismissed → commissions reversed
     try {
       const linkedAttribution = await getOrderAttributionByOrderId(order.id)
+
+      // (2) Write commission on shipped (idempotent)
+      if (newStatus === 'shipped' && linkedAttribution && !linkedAttribution.is_self_referral) {
+        const shippedSubtotal = order.subtotal_usd ? Number(order.subtotal_usd) : Number(linkedAttribution.net_revenue)
+        if (shippedSubtotal > 0) {
+          try {
+            const { recordCommissionsForShippedOrder } = await import('@/lib/creators/commission')
+            await recordCommissionsForShippedOrder({
+              orderId: order.id,
+              netRevenue: shippedSubtotal,
+            })
+          } catch (err) {
+            console.error(`[club-orders/status] Failed to record commissions on shipped for order ${order.id}:`, err)
+            try {
+              await sql`
+                INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+                VALUES (
+                  ${actorEmail},
+                  ${'commission_sync_failed'},
+                  ${'club_order'},
+                  ${orderId},
+                  ${'Failed to write commission on shipped — manual reconciliation required'},
+                  ${JSON.stringify({ attributionId: linkedAttribution.id, newStatus, shippedSubtotal })}
+                )
+              `
+            } catch { /* audit log failure should never block */ }
+          }
+        }
+      }
+
+      // (3) Rollback from shipped/fulfilled back to earlier stage → reverse commission
+      const SHIPPED_OR_LATER = ['shipped', 'fulfilled']
+      if (
+        linkedAttribution &&
+        SHIPPED_OR_LATER.includes(currentStatus) &&
+        !SHIPPED_OR_LATER.includes(newStatus) &&
+        newStatus !== 'cancelled' // cancelled handled below
+      ) {
+        try {
+          await reverseCommissionsForAttribution(linkedAttribution.id)
+        } catch (err) {
+          console.error(`[club-orders/status] Failed to reverse commissions on rollback for order ${order.id}:`, err)
+          try {
+            await sql`
+              INSERT INTO admin_actions (admin_email, action_type, entity_type, entity_id, reason, metadata)
+              VALUES (
+                ${actorEmail},
+                ${'commission_sync_failed'},
+                ${'club_order'},
+                ${orderId},
+                ${'Commission reversal failed on rollback from shipped — manual reconciliation required'},
+                ${JSON.stringify({ attributionId: linkedAttribution.id, from: currentStatus, to: newStatus })}
+              )
+            `
+          } catch { /* audit log failure should never block */ }
+        }
+      }
+
+      // (4) Cancelled path
       if (newStatus === 'cancelled' && linkedAttribution) {
         let commissionSyncFailed = false
         try {

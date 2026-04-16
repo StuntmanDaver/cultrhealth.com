@@ -34,15 +34,7 @@ export async function GET() {
         c.full_name as creator_name
       FROM club_orders co
       LEFT JOIN creators c ON co.attributed_creator_id = c.id
-      ORDER BY
-        CASE
-          WHEN co.status = 'pending_approval' THEN 0
-          WHEN co.status IN ('approved', 'invoice_sent') THEN 1
-          WHEN co.status = 'paid' THEN 2
-          WHEN co.status = 'shipped' THEN 3
-          ELSE 4
-        END,
-        co.created_at DESC
+      ORDER BY co.created_at DESC
       LIMIT 200
     `
 

@@ -8,12 +8,8 @@ import {
   ShoppingCart,
   Users,
   CreditCard,
-  Network,
-  Tag,
-  UserCheck,
-  Wallet,
-  QrCode,
-  Clock,
+  Sparkles,
+  Megaphone,
   X,
   LogOut,
   PackageSearch,
@@ -31,29 +27,15 @@ const NAV_GROUPS = [
     items: [
       { label: 'Orders', href: '/admin/orders', icon: ShoppingCart },
       { label: 'Inventory', href: '/admin/inventory', icon: PackageSearch },
-    ],
-  },
-  {
-    label: 'CUSTOMERS',
-    items: [
       { label: 'Customers', href: '/admin/customers', icon: Users },
       { label: 'Members', href: '/admin/members', icon: CreditCard },
     ],
   },
   {
-    label: 'CREATORS',
+    label: 'GROWTH',
     items: [
-      { label: 'Network', href: '/admin/creators', icon: Network },
-      { label: 'Coupons & Links', href: '/admin/creators/coupons', icon: Tag },
-      { label: 'Approvals', href: '/admin/creators/approvals', icon: UserCheck },
-      { label: 'Payouts', href: '/admin/creators/payouts', icon: Wallet },
-    ],
-  },
-  {
-    label: 'MARKETING',
-    items: [
-      { label: 'QR Analytics', href: '/admin/marketing', icon: QrCode },
-      { label: 'Waitlist', href: '/admin/marketing/waitlist', icon: Clock },
+      { label: 'Creators', href: '/admin/creators', icon: Sparkles },
+      { label: 'Marketing', href: '/admin/marketing', icon: Megaphone },
     ],
   },
 ]
@@ -90,7 +72,12 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   }
 
   const isActive = (href: string) => {
-    return pathname === href
+    if (pathname === href) return true
+    // "Creators" active for any /admin/creators/* subroute (approvals, payouts, etc.)
+    if (href === '/admin/creators' && pathname?.startsWith('/admin/creators/')) return true
+    // "Marketing" active for any /admin/marketing/* subroute
+    if (href === '/admin/marketing' && pathname?.startsWith('/admin/marketing/')) return true
+    return false
   }
 
   const sidebarContent = (

@@ -1025,6 +1025,18 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 
 ## Development Guidelines
 
+### Owner Email Exclusion (Admin Analytics)
+The accounts in `lib/config/owner-emails.ts` (`erik@`, `alex@`, `tony@`, `david@`, `stewart@cultrhealth.com`, `erik@threepointshospitality.com`) are filtered out of admin creator-network tables, commission/revenue/conversion aggregates, coupon performance attribution, and payout batches. Owner-attributed orders still exist in the DB and in their own `/creators/portal` dashboards — only admin-level aggregates exclude them so internal test activity never skews marketplace metrics. **Never** filter CULTR* / CULTRSTAFF by coupon code — those are company-level codes without individual creator attribution and must remain in revenue totals. Never assign owner accounts as code/PR reviewers.
+
+### Commission Ledger Lifecycle (Club Orders)
+Commission is deferred to shipment for club orders to stop creators from earning on abandoned checkouts:
+1. **At checkout** (`app/api/club/orders/route.ts`) — only writes `order_attributions` row. `processOrderAttribution({ skipCommissionLedger: true })`.
+2. **At `shipped` transition** (`app/api/admin/club-orders/[orderId]/status/route.ts`) — calls `recordCommissionsForShippedOrder()` (idempotent; no-op if already written).
+3. **Rollback from `shipped`/`fulfilled`** — calls `reverseCommissionsForAttribution()`.
+4. **Cancel / dismiss / Stripe refund** — already calls reversal helpers.
+5. **Cron `approveEligibleCommissions()`** — for club-order-linked attributions, only auto-approves if `club_orders.status IN ('shipped', 'fulfilled')`. Stripe path is unaffected.
+Every cancel/remove code path **must** call `reverseCommissionsForAttribution()` so creators never keep commission for work that got undone.
+
 ### Self-Correcting CLAUDE.md Rule
 **Every time Claude gets something wrong about this project — a wrong file path, incorrect assumption, outdated pattern, misunderstood convention — add the correction directly to CLAUDE.md.** Do not just re-prompt or fix inline. Update this file so the correction persists across every future session, every subagent, and every teammate. Over time, CLAUDE.md becomes a precision-tuned instruction set that makes Claude increasingly effective. This applies to all contributors: when you spot Claude making a recurring mistake, codify the fix here.
 

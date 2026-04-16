@@ -41,6 +41,26 @@ export const ALLOWED_TRANSITIONS: Record<string, string[]> = Object.fromEntries(
 
 export const TERMINAL_STATUSES = ['cancelled', 'fulfilled', 'rejected', 'dismissed'];
 
+// Returns an action-oriented stale label for the current stage, e.g. "Approve · 3d".
+// Null means the order is fresh (< 48h) or in a terminal state that shouldn't show a stale badge.
+export function getStaleActionLabel(status: string, hoursStale: number): { label: string; severity: 'warn' | 'danger' } | null {
+  if (TERMINAL_STATUSES.includes(status)) return null
+  if (hoursStale < 48) return null
+  const days = Math.floor(hoursStale / 24)
+  const severity: 'warn' | 'danger' = hoursStale > 96 ? 'danger' : 'warn'
+  const actionByStage: Record<string, string> = {
+    pending_approval: 'Approve',
+    approved: 'Send invoice',
+    invoice_sent: 'Mark paid',
+    needs_payment: 'Mark paid',
+    paid: 'Ship',
+    waiting_to_ship: 'Ship',
+    shipped: 'Mark fulfilled',
+  }
+  const verb = actionByStage[status] ?? 'Action needed'
+  return { label: `${verb} · ${days}d`, severity }
+}
+
 export function getMoveTargets(currentStatus: string): string[] {
   const currentIdx = PIPELINE_STATUSES.indexOf(currentStatus);
   const targets = currentIdx >= 0

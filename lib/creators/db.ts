@@ -1105,15 +1105,21 @@ export async function markCommissionsPaidForPayout(
 
 export async function approveEligibleCommissions(): Promise<{ approved: number; selfReferralsReverted: number }> {
   try {
-    // Approve eligible non-self-referral commissions past 30-day window
+    // Approve eligible non-self-referral commissions past the 30-day window.
+    // Guard: for attributions linked to a club_order, only approve if the order
+    // actually reached shipped/fulfilled. Attributions NOT linked to a club_order
+    // (Stripe subscription path, etc.) pass through unchanged because the Stripe
+    // webhook only creates commission rows after payment is confirmed.
     const approvedResult = await sql`
       UPDATE commission_ledger cl
       SET status = 'approved', updated_at = NOW()
       FROM order_attributions oa
+      LEFT JOIN club_orders co ON co.id::text = oa.order_id
       WHERE cl.order_attribution_id = oa.id
         AND cl.status = 'pending'
         AND oa.is_self_referral = FALSE
         AND oa.created_at < NOW() - INTERVAL '30 days'
+        AND (co.id IS NULL OR co.status IN ('shipped', 'fulfilled'))
     `
 
     // Revert self-referral commissions that have been pending past the 30-day window

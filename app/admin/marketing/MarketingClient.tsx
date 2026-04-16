@@ -13,10 +13,13 @@ import {
 import { formatDate } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
+type MarketingTab = 'qr' | 'waitlist'
+
 export default function MarketingClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [periodDays, setPeriodDays] = useState(30)
+  const [tab, setTab] = useState<MarketingTab>('qr')
 
   useEffect(() => {
     setLoading(true)
@@ -49,7 +52,7 @@ export default function MarketingClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="font-display text-2xl text-brand-primary">Marketing</h1>
         <select
           value={periodDays}
@@ -63,8 +66,27 @@ export default function MarketingClient() {
         </select>
       </div>
 
+      <nav className="flex gap-1 border-b border-brand-primary/10" aria-label="Marketing tabs">
+        {([
+          { id: 'qr', label: `QR Analytics${data.qrScans?.totalScans ? ` (${data.qrScans.totalScans})` : ''}` },
+          { id: 'waitlist', label: `Waitlist${data.waitlist?.total ? ` (${data.waitlist.total})` : ''}` },
+        ] as const).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              tab === t.id
+                ? 'border-cultr-forest text-cultr-forest'
+                : 'border-transparent text-cultr-textMuted hover:text-cultr-forest hover:border-brand-primary/30'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </nav>
+
       {/* Waitlist Sources */}
-      {Object.keys(data.waitlist.bySource).length > 0 && (
+      {tab === 'waitlist' && Object.keys(data.waitlist.bySource).length > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
           <h2 className="font-display text-xl text-brand-primary mb-4">Waitlist by Source</h2>
           <div className="flex flex-wrap gap-3">
@@ -81,7 +103,7 @@ export default function MarketingClient() {
       )}
 
       {/* QR Code Scan Analytics */}
-      {data.qrScans && data.qrScans.totalScans > 0 && (
+      {tab === 'qr' && data.qrScans && data.qrScans.totalScans > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
           <h2 className="font-display text-xl text-brand-primary mb-4">QR Code Scans</h2>
 
@@ -251,7 +273,7 @@ export default function MarketingClient() {
       )}
 
       {/* Recent Waitlist Signups */}
-      {data.waitlist.recent.length > 0 && (
+      {tab === 'waitlist' && data.waitlist.recent.length > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
           <h2 className="font-display text-xl text-brand-primary mb-4">Recent Waitlist Signups</h2>
           <div className="overflow-x-auto">

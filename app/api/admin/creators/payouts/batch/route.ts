@@ -9,6 +9,7 @@ import {
   createAdminAction,
 } from '@/lib/creators/db'
 import { COMMISSION_CONFIG } from '@/lib/config/affiliate'
+import { isOwnerEmail } from '@/lib/config/owner-emails'
 
 export async function POST(request: NextRequest) {
   const auth = await verifyAdminAuth(request)
@@ -27,7 +28,10 @@ export async function POST(request: NextRequest) {
     const start = period_start || new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0]
     const end = period_end || new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0]
 
-    const creators = await getAllActiveCreators()
+    // Owner accounts (stewart/david/etc.) are never included in payout batches
+    // even if they have approved commissions — internal test activity stays in
+    // the ledger for audit but is never paid out.
+    const creators = (await getAllActiveCreators()).filter((c) => !isOwnerEmail(c.email))
     const payoutResults: Array<{ creatorId: string; name: string; amount: number; commissionCount: number }> = []
     const skipped: Array<{ creatorId: string; name: string; amount: number; reason: string }> = []
 

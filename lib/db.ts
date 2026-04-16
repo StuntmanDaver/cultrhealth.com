@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres'
 import type { PaymentProvider } from '@/lib/payments/payment-types'
+import { OWNER_EMAILS_PG_ARRAY } from '@/lib/config/owner-emails'
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -735,17 +736,19 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
           discount_percent,
           attributed_creator_id,
           subtotal_usd as revenue,
+          coupon_discount_usd as discount_actual,
           created_at
         FROM club_orders
         WHERE coupon_code IS NOT NULL AND coupon_code != ''
-        
+
         UNION ALL
-        
+
         SELECT
           ac.code as coupon_code,
           ac.discount_value as discount_percent,
           ac.creator_id as attributed_creator_id,
           oa.net_revenue as revenue,
+          NULL::numeric as discount_actual,
           oa.created_at
         FROM order_attributions oa
         JOIN affiliate_codes ac ON oa.code_id = ac.id
@@ -760,9 +763,12 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
         COUNT(*)::int as usage_count,
         COALESCE(SUM(u.revenue), 0) as total_revenue,
         COALESCE(SUM(
-          CASE WHEN u.discount_percent > 0 AND u.discount_percent < 100
-          THEN u.revenue * u.discount_percent / (100.0 - u.discount_percent)
-          ELSE 0 END
+          CASE
+            WHEN u.discount_actual IS NOT NULL THEN u.discount_actual
+            WHEN u.discount_percent > 0 AND u.discount_percent < 100
+              THEN u.revenue * u.discount_percent / (100.0 - u.discount_percent)
+            ELSE 0
+          END
         ), 0) as total_discount,
         COALESCE(AVG(u.revenue), 0) as avg_order_value,
         c.full_name as creator_name,
@@ -777,6 +783,8 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
       ) ac_match ON TRUE
       WHERE u.created_at >= NOW() - make_interval(days => ${days})
         AND (ac_match.program_type IS NULL OR ac_match.program_type != 'prelaunch')
+        -- Exclude orders attributed to owner creators (company CULTR* coupons have no creator_id, so they pass through)
+        AND (c.id IS NULL OR LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[]))
       GROUP BY u.coupon_code, u.discount_percent, u.attributed_creator_id, c.full_name, ac_match.program_type
       ORDER BY usage_count DESC
     `
@@ -884,6 +892,8 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
           COALESCE(SUM(CASE WHEN cl.status = 'paid' AND cl.created_at >= NOW() - make_interval(days => ${days}) THEN cl.commission_amount ELSE 0 END), 0) as total_paid,
           COALESCE(SUM(CASE WHEN cl.status != 'reversed' THEN cl.commission_amount ELSE 0 END), 0) as total_lifetime
         FROM commission_ledger cl
+        JOIN creators c ON c.id = cl.beneficiary_creator_id
+        WHERE LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       `,
       sql`
         SELECT status, COUNT(*)::int as count FROM creators GROUP BY status
@@ -1116,6 +1126,7 @@ export async function getCreatorROI() {
         ), 0) AS total_commission_earned
       FROM creators c
       WHERE c.status = 'active'
+        AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       ORDER BY total_commission_earned DESC
     `
     return result.rows.map(r => ({
@@ -1171,6 +1182,7 @@ export async function getAllCreatorsForAdmin() {
             AND oa.status != 'refunded'
         ) as total_code_revenue
       FROM creators c
+      WHERE LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       ORDER BY c.created_at DESC
     `
     return result.rows
@@ -1196,6 +1208,7 @@ export async function getAllTrackingLinksForAdmin() {
         WHERE link_id IS NOT NULL
         GROUP BY link_id
       ) ce_stats ON ce_stats.link_id = tl.id
+      WHERE c.id IS NULL OR LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       ORDER BY tl.click_count DESC, tl.created_at DESC
     `
     // Use the live count from click_events if it's higher than the stale counter
@@ -1228,6 +1241,7 @@ export async function getCreatorLinkPerformance(days: number) {
       FROM click_events ce
       JOIN creators c ON ce.creator_id = c.id
       WHERE ce.clicked_at >= NOW() - make_interval(days => ${days})
+        AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       GROUP BY c.id, c.full_name
       ORDER BY total_clicks DESC
     `
@@ -1247,6 +1261,7 @@ export async function getAllAffiliateCodesForAdmin() {
         c.status as creator_status
       FROM affiliate_codes ac
       LEFT JOIN creators c ON ac.creator_id = c.id
+      WHERE c.id IS NULL OR LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       ORDER BY ac.use_count DESC, ac.created_at DESC
     `
     return result.rows
