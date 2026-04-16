@@ -2596,6 +2596,71 @@ export async function updateClubMemberByEmail(
   }
 }
 
+/**
+ * Check if a club member has orders before deletion.
+ * Returns { hasOrders, orderCount }.
+ */
+export async function getClubMemberOrderCount(email: string): Promise<{ hasOrders: boolean; orderCount: number }> {
+  try {
+    const normalized = email.toLowerCase()
+    const result = await sql`
+      SELECT COUNT(*)::integer AS count FROM club_orders WHERE LOWER(member_email) = ${normalized}
+    `
+    const count = Number(result.rows[0]?.count ?? 0)
+    return { hasOrders: count > 0, orderCount: count }
+  } catch (error) {
+    console.error('Database error checking club member order count:', error)
+    throw new DatabaseError('Failed to check club member order count', error)
+  }
+}
+
+/**
+ * Delete a club_members row by email.
+ * If the member has orders the FK constraint prevents deletion, so we check
+ * first and return a blockedByOrders count instead of throwing.
+ */
+export async function deleteClubMemberByEmail(
+  email: string
+): Promise<{ deleted: boolean; id: string | null; blockedByOrders?: number }> {
+  try {
+    const normalized = email.toLowerCase()
+
+    // Check for existing orders (FK constraint: club_orders.member_id references club_members.id)
+    const { hasOrders, orderCount } = await getClubMemberOrderCount(email)
+    if (hasOrders) {
+      return { deleted: false, id: null, blockedByOrders: orderCount }
+    }
+
+    const result = await sql`
+      DELETE FROM club_members WHERE LOWER(email) = ${normalized} RETURNING id
+    `
+    if (result.rows.length === 0) {
+      return { deleted: false, id: null }
+    }
+    return { deleted: true, id: String(result.rows[0].id) }
+  } catch (error) {
+    console.error('Database error deleting club member:', error)
+    throw new DatabaseError('Failed to delete club member', error)
+  }
+}
+
+/**
+ * Delete a memberships row by stripe_customer_id.
+ * Does NOT cancel the Stripe subscription -- caller must handle Stripe first
+ * if needed.
+ */
+export async function deleteMembershipByCustomerId(customerId: string): Promise<boolean> {
+  try {
+    const result = await sql`
+      DELETE FROM memberships WHERE stripe_customer_id = ${customerId} RETURNING id
+    `
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error deleting membership:', error)
+    throw new DatabaseError('Failed to delete membership', error)
+  }
+}
+
 // ===========================================
 // MEMBER LIFECYCLE MANAGEMENT
 // ===========================================

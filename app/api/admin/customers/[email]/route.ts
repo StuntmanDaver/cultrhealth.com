@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSession, isProviderEmail } from '@/lib/auth'
-import { getCustomerFullProfile, updateClubMemberByEmail, logAdminAction } from '@/lib/db'
+import { getCustomerFullProfile, updateClubMemberByEmail, deleteClubMemberByEmail, logAdminAction } from '@/lib/db'
 
 /**
  * Shared admin auth check. Returns either a NextResponse error or the
@@ -140,6 +140,62 @@ export async function PATCH(
     console.error('Admin customer update error:', error)
     return NextResponse.json(
       { error: 'Failed to update customer' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE /api/admin/customers/[email]
+// Admin-only deletion of a club_members row. Blocked if the customer has orders
+// (FK constraint on club_orders.member_id). Every successful delete is audited.
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { email: string } }
+) {
+  try {
+    const auth = await requireAdmin()
+    if (auth.ok === false) return auth.response
+
+    const email = decodeURIComponent(params.email)
+    if (!email || !email.includes('@')) {
+      return NextResponse.json(
+        { error: 'Valid email parameter required' },
+        { status: 400 }
+      )
+    }
+
+    const result = await deleteClubMemberByEmail(email)
+
+    if (result.blockedByOrders !== undefined && result.blockedByOrders > 0) {
+      return NextResponse.json(
+        {
+          error: 'Cannot delete customer with existing orders',
+          orderCount: result.blockedByOrders,
+        },
+        { status: 409 }
+      )
+    }
+
+    if (!result.deleted || !result.id) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      )
+    }
+
+    // Audit log
+    await logAdminAction(
+      'delete_customer',
+      result.id,
+      { email: email.toLowerCase() },
+      auth.session.email
+    )
+
+    return NextResponse.json({ success: true, deleted: true })
+  } catch (error) {
+    console.error('Admin customer delete error:', error)
+    return NextResponse.json(
+      { error: 'Failed to delete customer' },
       { status: 500 }
     )
   }
