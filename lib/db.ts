@@ -2620,15 +2620,15 @@ export async function getClubMemberOrderCount(email: string): Promise<{ hasOrder
  * first and return a blockedByOrders count instead of throwing.
  */
 export async function deleteClubMemberByEmail(
-  email: string
-): Promise<{ deleted: boolean; id: string | null; blockedByOrders?: number }> {
+  email: string,
+  force?: boolean
+): Promise<{ deleted: boolean; id: string | null; orderCount?: number }> {
   try {
     const normalized = email.toLowerCase()
 
-    // Check for existing orders (FK constraint: club_orders.member_id references club_members.id)
     const { hasOrders, orderCount } = await getClubMemberOrderCount(email)
-    if (hasOrders) {
-      return { deleted: false, id: null, blockedByOrders: orderCount }
+    if (hasOrders && !force) {
+      return { deleted: false, id: null, orderCount }
     }
 
     const result = await sql`
@@ -2637,7 +2637,7 @@ export async function deleteClubMemberByEmail(
     if (result.rows.length === 0) {
       return { deleted: false, id: null }
     }
-    return { deleted: true, id: String(result.rows[0].id) }
+    return { deleted: true, id: String(result.rows[0].id), orderCount }
   } catch (error) {
     console.error('Database error deleting club member:', error)
     throw new DatabaseError('Failed to delete club member', error)

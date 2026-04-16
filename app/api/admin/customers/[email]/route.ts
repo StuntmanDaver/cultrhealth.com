@@ -145,9 +145,10 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/admin/customers/[email]
-// Admin-only deletion of a club_members row. Blocked if the customer has orders
-// (FK constraint on club_orders.member_id). Every successful delete is audited.
+// DELETE /api/admin/customers/[email]?force=true
+// Admin-only deletion of a club_members row. Without ?force=true, returns the
+// order count so the UI can warn. With ?force=true, deletes even if orders exist
+// (order snapshots are denormalized and won't break). Every delete is audited.
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { email: string } }
@@ -164,13 +165,15 @@ export async function DELETE(
       )
     }
 
-    const result = await deleteClubMemberByEmail(email)
+    const force = new URL(request.url).searchParams.get('force') === 'true'
+    const result = await deleteClubMemberByEmail(email, force)
 
-    if (result.blockedByOrders !== undefined && result.blockedByOrders > 0) {
+    if (!result.deleted && result.orderCount !== undefined && result.orderCount > 0) {
       return NextResponse.json(
         {
-          error: 'Cannot delete customer with existing orders',
-          orderCount: result.blockedByOrders,
+          error: 'Customer has existing orders',
+          orderCount: result.orderCount,
+          requiresForce: true,
         },
         { status: 409 }
       )
@@ -187,7 +190,7 @@ export async function DELETE(
     await logAdminAction(
       'delete_customer',
       result.id,
-      { email: email.toLowerCase() },
+      { email: email.toLowerCase(), hadOrders: result.orderCount ?? 0, forced: force },
       auth.session.email
     )
 
