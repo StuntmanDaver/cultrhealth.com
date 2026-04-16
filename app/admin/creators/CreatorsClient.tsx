@@ -59,8 +59,8 @@ export default function CreatorsClient() {
   const exportCreators = useCallback(() => {
     if (!data) return
     downloadCSV('cultr-creators',
-      ['Name', 'Email', 'Status', 'Tier', 'Commission %', 'Override %', 'Recruits', 'Codes', 'Revenue', 'Joined'],
-      data.allCreators.map(c => [c.full_name, c.email, c.status, getTierName(c.tier), c.commission_rate, c.override_rate, c.recruit_count, c.code_count, c.total_code_revenue, c.created_at])
+      ['Name', 'Email', 'Phone', 'Social', 'Age', 'Gender', 'Status', 'Tier', 'Commission %', 'Override %', 'Recruits', 'Codes', 'Revenue', 'Joined'],
+      data.allCreators.map(c => [c.full_name, c.email, c.phone || '', c.social_handle || '', c.age ?? '', c.gender || '', c.status, getTierName(c.tier), c.commission_rate, c.override_rate, c.recruit_count, c.code_count, c.total_code_revenue, c.created_at])
     )
   }, [data])
 
@@ -159,7 +159,10 @@ export default function CreatorsClient() {
   }
 
   const filteredCreators = filterByDateRange(data.allCreators, tableStartDate, tableEndDate)
-    .filter(c => c.full_name.toLowerCase().includes(creatorSearch.toLowerCase()) || c.email.toLowerCase().includes(creatorSearch.toLowerCase()))
+    .filter(c => {
+      const q = creatorSearch.toLowerCase()
+      return c.full_name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || (c.phone && c.phone.includes(q)) || (c.social_handle && c.social_handle.toLowerCase().includes(q))
+    })
 
   return (
     <div className="space-y-6">
@@ -279,7 +282,7 @@ export default function CreatorsClient() {
               </div>
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder="Search name, email, phone, social..."
                 value={creatorSearch}
                 onChange={(e) => setCreatorSearch(e.target.value)}
                 className="px-3 py-2 border border-brand-primary/20 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 w-64"
@@ -291,7 +294,7 @@ export default function CreatorsClient() {
               <thead>
                 <tr className="border-b border-brand-primary/10">
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Name</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Email</th>
+                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Contact</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Status</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Tier</th>
                   <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Commission</th>
@@ -307,7 +310,11 @@ export default function CreatorsClient() {
                 {filteredCreators.map((c, i) => (
                   <tr key={c.id} className={`${i % 2 === 0 ? 'bg-brand-cream/30' : ''} hover:bg-brand-primary/5 transition-colors`}>
                     <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.full_name}</td>
-                    <td className="py-3 px-4 text-sm text-brand-primary/60">{c.email}</td>
+                    <td className="py-3 px-4 text-sm">
+                      <div className="text-brand-primary/60">{c.email}</div>
+                      {c.phone && <div className="text-brand-primary/50 text-xs mt-0.5">{c.phone}</div>}
+                      {c.social_handle && <div className="text-brand-primary/50 text-xs mt-0.5">{c.social_handle}</div>}
+                    </td>
                     <td className="py-3 px-4"><span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(c.status)}`}>{c.status}</span></td>
                     <td className="py-3 px-4 text-sm text-brand-primary">{getTierName(c.tier)}</td>
                     <td className="py-3 px-4 text-sm text-right text-brand-primary">{Number(c.commission_rate)}%</td>
@@ -480,12 +487,57 @@ export default function CreatorsClient() {
       {/* ========== CREATOR EDIT MODAL ========== */}
       {editingCreator && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setEditingCreator(null); setConfirmDelete(false) }}>
-          <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display text-lg text-brand-primary">
                 Edit {editingCreator.full_name}
               </h3>
               <button onClick={() => { setEditingCreator(null); setConfirmDelete(false) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+            </div>
+
+            {/* Contact & Profile Info */}
+            <div className="bg-brand-cream/50 rounded-lg p-4 mb-4 space-y-2">
+              <h4 className="text-xs font-semibold text-brand-primary/70 uppercase tracking-wide mb-2">Contact Info</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                <div>
+                  <span className="text-brand-primary/50 text-xs">Email</span>
+                  <p className="text-brand-primary truncate">{editingCreator.email}</p>
+                </div>
+                <div>
+                  <span className="text-brand-primary/50 text-xs">Phone</span>
+                  <p className="text-brand-primary">{editingCreator.phone || <span className="text-brand-primary/30 italic">Not provided</span>}</p>
+                </div>
+                <div>
+                  <span className="text-brand-primary/50 text-xs">Social</span>
+                  <p className="text-brand-primary">{editingCreator.social_handle || <span className="text-brand-primary/30 italic">Not provided</span>}</p>
+                </div>
+                <div>
+                  <span className="text-brand-primary/50 text-xs">Payout Method</span>
+                  <p className="text-brand-primary">{editingCreator.payout_method?.replace('_', ' ') || <span className="text-brand-primary/30 italic">Not set</span>}</p>
+                </div>
+                {(editingCreator.age || editingCreator.gender) && (
+                  <>
+                    {editingCreator.age && (
+                      <div>
+                        <span className="text-brand-primary/50 text-xs">Age</span>
+                        <p className="text-brand-primary">{editingCreator.age}</p>
+                      </div>
+                    )}
+                    {editingCreator.gender && (
+                      <div>
+                        <span className="text-brand-primary/50 text-xs">Gender</span>
+                        <p className="text-brand-primary capitalize">{editingCreator.gender}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              {editingCreator.bio && (
+                <div className="mt-2 pt-2 border-t border-brand-primary/10">
+                  <span className="text-brand-primary/50 text-xs">Bio</span>
+                  <p className="text-sm text-brand-primary/80 line-clamp-3">{editingCreator.bio}</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">

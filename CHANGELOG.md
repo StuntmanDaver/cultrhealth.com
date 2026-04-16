@@ -1,3 +1,10 @@
+## [2026-04-16] - Admin Creator Network — Contact Info & Profile Details
+
+### Changed
+- **`app/admin/creators/CreatorsClient.tsx`:** "Email" column renamed to "Contact" — now stacks email, phone, and social handle in the network table. Edit modal shows full contact/profile info (email, phone, social, payout method, age, gender, bio) in a cream-background section. Search expanded to match phone and social handle. CSV export includes Phone, Social, Age, Gender columns. Edit modal now scrollable (`max-h-[90vh]`).
+
+---
+
 ## [2026-04-14] - Florida-Only Jurisdiction Compliance Update
 
 ### Changed
