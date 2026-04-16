@@ -26,59 +26,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(canonicalUrl, 308)
   }
 
-  // Serve the restored join landing page from /join only at the root hostname path.
+  // Redirect join.cultrhealth.com → cultrclub.com (301 permanent)
+  // cultrclub.com is now hosted on Cloudflare Pages as a standalone app.
   if (isJoinHost) {
-    const url = request.nextUrl.clone()
-    const shouldTrackJoinLanding =
-      request.method === 'GET' &&
-      !url.pathname.startsWith('/api') &&
-      !url.pathname.startsWith('/_next') &&
-      !url.pathname.startsWith('/images') &&
-      !url.pathname.startsWith('/favicon') &&
-      !url.pathname.startsWith('/cultr-') &&
-      url.pathname !== '/robots.txt' &&
-      url.pathname !== '/sitemap.xml'
-
-    const response = url.pathname === '/'
-      ? (() => {
-          url.pathname = '/join'
-          return NextResponse.rewrite(url)
-        })()
-      : NextResponse.next()
-
-    // Capture visitor context on first visit (UTM params + referrer)
-    // Only set once — don't overwrite if already exists (preserves first-touch attribution)
-    if (shouldTrackJoinLanding && !request.cookies.get('cultr_visitor_ctx')) {
-      const utmSource = (request.nextUrl.searchParams.get('utm_source') || '').slice(0, 255)
-      const utmMedium = (request.nextUrl.searchParams.get('utm_medium') || '').slice(0, 255)
-      const utmCampaign = (request.nextUrl.searchParams.get('utm_campaign') || '').slice(0, 255)
-      const utmTerm = (request.nextUrl.searchParams.get('utm_term') || '').slice(0, 255)
-      const utmContent = (request.nextUrl.searchParams.get('utm_content') || '').slice(0, 255)
-      const referrer = (request.headers.get('referer') || '').slice(0, 2048)
-
-      const visitorCtx = JSON.stringify({
-        s: utmSource,
-        m: utmMedium,
-        c: utmCampaign,
-        t: utmTerm,
-        n: utmContent,
-        r: referrer,
-        l: request.nextUrl.pathname + request.nextUrl.search,
-        ts: Date.now(),
-      })
-
-      const domain = hostname.includes('cultrhealth.com') ? '.cultrhealth.com' : undefined
-      response.cookies.set('cultr_visitor_ctx', visitorCtx, {
-        httpOnly: false, // Client-side readable so JS can send with signup
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        path: '/',
-        ...(domain ? { domain } : {}),
-      })
-    }
-
-    return response
+    const redirectUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, 'https://cultrclub.com')
+    return NextResponse.redirect(redirectUrl, 301)
   }
 
   // Block /join on public non-join hosts, but keep localhost available for local development.

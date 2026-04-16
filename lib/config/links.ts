@@ -26,8 +26,8 @@ export const LINKS = {
   portalDashboard: '/portal/dashboard',
 }
 
-const DEFAULT_JOIN_SITE_URL = 'https://join.cultrhealth.com'
-const DEFAULT_STAGING_JOIN_SITE_URL = 'https://join.staging.cultrhealth.com'
+const DEFAULT_JOIN_SITE_URL = 'https://cultrclub.com'
+const DEFAULT_STAGING_JOIN_SITE_URL = 'https://staging.cultrclub.pages.dev'
 
 function trimTrailingSlash(url: string): string {
   return url.endsWith('/') ? url.slice(0, -1) : url
