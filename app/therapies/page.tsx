@@ -108,14 +108,14 @@ export default function TherapiesPage() {
       <section className="py-10 md:py-14 px-6 grad-light">
         <div className="max-w-6xl mx-auto">
           <ScrollReveal className="mb-8">
-            <div className="relative w-full aspect-[2/1] sm:aspect-[16/7] md:aspect-[16/6] rounded-2xl overflow-hidden shadow-sm">
+            <div className="relative w-full aspect-[11/6] rounded-2xl overflow-hidden shadow-sm">
               <Image
                 src="/images/therapies-banner.png"
                 alt="CULTR Health therapies"
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 1152px"
-                className="object-cover object-bottom"
+                className="object-contain"
               />
             </div>
           </ScrollReveal>
