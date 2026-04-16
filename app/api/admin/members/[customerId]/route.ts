@@ -22,7 +22,7 @@ export async function DELETE(
 
     const adminEmails = process.env.ADMIN_ALLOWED_EMAILS || process.env.PROTOCOL_BUILDER_ALLOWED_EMAILS || ''
     const allowedEmails = adminEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-    const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email)
+    const isAdmin = allowedEmails.includes(session.email.toLowerCase()) || isProviderEmail(session.email) || session.role === 'admin'
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
@@ -53,7 +53,7 @@ export async function DELETE(
       'delete_membership',
       customerId,
       {
-        email: membership.stripe_subscription_id,
+        stripe_customer_id: customerId,
         plan_tier: membership.plan_tier,
         subscription_status: membership.subscription_status,
         stripe_subscription_id: membership.stripe_subscription_id,
