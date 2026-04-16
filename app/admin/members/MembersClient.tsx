@@ -28,6 +28,10 @@ export default function MembersClient() {
   const [upgradeTarget, setUpgradeTarget] = useState<{ customerId: string; email: string; name: string; currentTier: string } | null>(null)
   const [upgradeTier, setUpgradeTier] = useState('')
 
+  // Delete member modal
+  const [deleteTarget, setDeleteTarget] = useState<{ customerId: string; email: string; planTier: string; status: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   // Add Member Modal
   const [isAddingMember, setIsAddingMember] = useState(false)
   const [addMemberForm, setAddMemberForm] = useState({
@@ -124,6 +128,30 @@ export default function MembersClient() {
       setMemberActionError(err instanceof Error ? err.message : 'Failed to upgrade subscription')
     } finally {
       setMemberActionLoading(null)
+    }
+  }
+
+  async function handleDeleteMember() {
+    if (!deleteTarget) return
+    clearMemberActionMessages()
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/admin/members/${deleteTarget.customerId}`, { method: 'DELETE' })
+      const result = await res.json()
+      if (!res.ok) {
+        setMemberActionError(result.error || 'Failed to delete membership')
+        setDeleteTarget(null)
+        setIsDeleting(false)
+        return
+      }
+      setMemberActionSuccess(`Membership record deleted for ${deleteTarget.email}.`)
+      setDeleteTarget(null)
+      setIsDeleting(false)
+      fetchAnalytics()
+    } catch {
+      setMemberActionError('Network error -- please try again')
+      setDeleteTarget(null)
+      setIsDeleting(false)
     }
   }
 
@@ -383,6 +411,17 @@ export default function MembersClient() {
                           {!isActive && !isPaused && !isCancelled && (
                             <span className="text-xs text-brand-primary/40 italic">{m.subscription_status}</span>
                           )}
+                          <button
+                            onClick={() => {
+                              clearMemberActionMessages()
+                              setDeleteTarget({ customerId: m.stripe_customer_id, email: m.email, planTier: m.plan_tier, status: m.subscription_status })
+                            }}
+                            disabled={isActionLoading}
+                            className="px-2.5 py-1 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50"
+                            title="Delete membership record"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -600,6 +639,54 @@ export default function MembersClient() {
               </button>
               <button onClick={() => setUpgradeTarget(null)} className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary">
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========== DELETE MEMBER MODAL ========== */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setDeleteTarget(null); setIsDeleting(false) }}>
+          <div className="bg-white rounded-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display text-lg text-red-600">Delete Membership Record</h3>
+              <button onClick={() => { setDeleteTarget(null); setIsDeleting(false) }} className="text-brand-primary/40 hover:text-brand-primary text-xl">&times;</button>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-red-700">
+                This will permanently delete the local membership record for{' '}
+                <span className="font-medium">{deleteTarget.email}</span>{' '}
+                (<span className="capitalize">{deleteTarget.planTier}</span> - {deleteTarget.status}).
+              </p>
+              <p className="text-xs text-red-600 mt-2">
+                This does NOT cancel any active Stripe subscription. If the subscription is still
+                active in Stripe, use the Cancel action first.
+              </p>
+            </div>
+            {(deleteTarget.status === 'active' || deleteTarget.status === 'trialing') && (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 mb-4">
+                <p className="text-sm text-amber-800 font-medium">WARNING: Active subscription detected</p>
+                <p className="text-xs text-amber-700 mt-1">
+                  This member has an active subscription. Deleting the local record without cancelling
+                  in Stripe first will cause a data mismatch.
+                </p>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteMember}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+              <button
+                onClick={() => { setDeleteTarget(null); setIsDeleting(false) }}
+                disabled={isDeleting}
+                className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary disabled:opacity-50"
+              >
+                Go Back
               </button>
             </div>
           </div>
