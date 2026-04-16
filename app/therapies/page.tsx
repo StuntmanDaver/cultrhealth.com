@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { THERAPY_PRODUCTS } from '@/lib/config/therapies';
@@ -106,6 +107,18 @@ export default function TherapiesPage() {
       {/* Therapy Grid with Goal Filter */}
       <section className="py-10 md:py-14 px-6 grad-light">
         <div className="max-w-6xl mx-auto">
+          <ScrollReveal className="mb-8">
+            <div className="relative w-full aspect-[16/6] md:aspect-[16/5] rounded-2xl overflow-hidden shadow-sm">
+              <Image
+                src="/images/therapies-banner.png"
+                alt="CULTR Health therapies"
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 1152px"
+                className="object-cover"
+              />
+            </div>
+          </ScrollReveal>
           <ScrollReveal className="mb-6 text-center">
             <h2 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-2">
               Compare by goal

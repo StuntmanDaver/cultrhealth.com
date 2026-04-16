@@ -1,3 +1,24 @@
+## [2026-04-14] - Florida-Only Jurisdiction Compliance Update
+
+### Changed
+- **`lib/config/compliance.ts`:** `SERVED_STATES` narrowed to `['FL']`; added `JURISDICTION_STATEMENT` constant with LegitScript-approved verbatim text; `EXCLUDED_STATES` set to empty (Florida-only, no partial exclusions).
+- **Footer:** Replaced `{SERVED_STATE_COUNT} states` with full `JURISDICTION_STATEMENT` import.
+- **FAQ answers (3 locations):** `app/faq/page.tsx`, `app/how-it-works/page.tsx`, `app/page.tsx` — "What states?" answer updated to Florida-only.
+- **`app/how-it-works/page.tsx`:** Hero proof line updated to "Currently serving Florida patients only"; removed unused `TRUST_METRICS` import.
+- **`app/legal/medical-disclaimer/page.tsx`:** Replaced 48-state grid with `JURISDICTION_STATEMENT` paragraph; updated last-modified date.
+- **`app/legal/terms/page.tsx`:** §3 Eligibility updated to require physical presence in Florida.
+- **`app/legal/privacy/page.tsx`:** Added "Geographic Scope" section with `JURISDICTION_STATEMENT`; updated last-modified date.
+- **`app/legal/provider-credentials/page.tsx`:** Added "Service Availability" section with `JURISDICTION_STATEMENT`.
+
+### Added
+- **`components/compliance/FloridaStateGate.tsx`:** Reusable client component — state dropdown, FL passes through, all other states show a blocked message. Used to gate quiz, intake, and checkout flows.
+- **`tests/components/FloridaStateGate.test.tsx`:** 5 unit tests covering pass, block, disabled state, and blocked message rendering.
+
+### Pending
+- Tasks 10–12: Add `FloridaStateGate` to `app/quiz/QuizClient.tsx`, `components/intake/IntakeFormClient.tsx`, `app/join/[tier]/page.tsx`. Plan at `/Users/davidk/.claude/plans/enchanted-napping-bentley.md`.
+
+---
+
 ## [2026-04-13] - cultrclub-web Cloudflare Migration — GSD Planning
 
 ### Planning
