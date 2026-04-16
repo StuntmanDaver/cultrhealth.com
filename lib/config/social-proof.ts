@@ -90,7 +90,7 @@ export const PROVIDERS: Provider[] = [
 
 export const TRUST_METRICS = {
   memberCount: "100+",
-  statesCovered: 48,
+  statesCovered: 30,
   avgRating: 4.9,
   reviewCount: 50,
   labsProcessed: "15,000+",

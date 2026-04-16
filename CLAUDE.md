@@ -554,7 +554,7 @@ The homepage is a single server component that builds all sections inline (does 
 - **Pages:** Homepage, Pricing, How It Works, FAQ, Community, Quiz, Therapies, Tools
 - **Science/Blog:** Removed Apr 2026 for LegitScript compliance (redirects to `/`)
 - **Community (`app/community/page.tsx`):** Curator.io-powered social feed with tabbed layout (Instagram, TikTok, YouTube). Shows "Coming Soon" when feed IDs not configured in env vars.
-- **LegitScript Compliance:** ConsentModal on checkout, FDA badges on therapy cards, ROSCA disclosure on pricing, state availability (48 states) on medical disclaimer, PrescriptionDisclaimer on therapies + pricing, LegitScript seal placeholder in footer (env: `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID`)
+- **LegitScript Compliance:** ConsentModal on checkout, FDA badges on therapy cards, ROSCA disclosure on pricing, state availability (30 U.S. jurisdictions) on medical disclaimer, PrescriptionDisclaimer on therapies + pricing, LegitScript seal placeholder in footer (env: `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID`)
 
 ### 2. Membership Plans (defined in `lib/config/plans.ts`)
 | Tier | Slug | Price | Best For | BNPL | Featured |
