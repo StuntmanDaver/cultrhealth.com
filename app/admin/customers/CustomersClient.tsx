@@ -77,11 +77,19 @@ export default function CustomersClient() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
 
-  // Reset edit state whenever the selected customer changes or the modal closes
+  // Customer detail — delete confirmation
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  // Reset edit + delete state whenever the selected customer changes or the modal closes
   useEffect(() => {
     setEditMode(false)
     setEditForm(null)
     setSaveError(null)
+    setDeleteConfirmOpen(false)
+    setDeleting(false)
+    setDeleteError(null)
   }, [selectedCustomerEmail])
 
   const closeCustomerModal = useCallback(() => {
@@ -90,6 +98,9 @@ export default function CustomersClient() {
     setEditMode(false)
     setEditForm(null)
     setSaveError(null)
+    setDeleteConfirmOpen(false)
+    setDeleting(false)
+    setDeleteError(null)
   }, [])
 
   const startEdit = useCallback(() => {
@@ -411,7 +422,7 @@ export default function CustomersClient() {
           onClick={closeCustomerModal}
         >
           <div
-            className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-auto p-6"
+            className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] overflow-auto p-6 relative"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -421,12 +432,22 @@ export default function CustomersClient() {
                 </h3>
                 <p className="text-sm text-brand-primary/60">{selectedCustomerEmail}</p>
               </div>
-              <button
-                onClick={closeCustomerModal}
-                className="text-brand-primary/40 hover:text-brand-primary text-xl"
-              >
-                &times;
-              </button>
+              <div className="flex items-center gap-2">
+                {customerDetail && !editMode && (
+                  <button
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    className="px-3 py-1.5 text-sm rounded-lg text-red-600 hover:bg-red-50 border border-red-200 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  onClick={closeCustomerModal}
+                  className="text-brand-primary/40 hover:text-brand-primary text-xl"
+                >
+                  &times;
+                </button>
+              </div>
             </div>
 
             {customerDetailLoading ? (
@@ -809,6 +830,86 @@ export default function CustomersClient() {
               <p className="text-center text-brand-primary/40 py-8 text-sm">Could not load customer data</p>
             )}
           </div>
+
+          {/* ========== DELETE CONFIRMATION OVERLAY ========== */}
+          {deleteConfirmOpen && (
+            <div className="absolute inset-0 bg-white/95 z-10 flex items-center justify-center p-6 rounded-xl">
+              <div className="max-w-sm w-full space-y-4">
+                <h3 className="font-display text-lg text-red-600">Delete Customer</h3>
+                <p className="text-sm text-brand-primary/70">
+                  <span className="font-medium text-brand-primary">{customerDetail?.member?.name || 'Customer'}</span>{' '}
+                  <span className="text-brand-primary/50">({selectedCustomerEmail})</span>
+                </p>
+
+                {customerDetail && customerDetail.totalOrders > 0 ? (
+                  <>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-sm text-red-700 font-medium">Cannot delete this customer</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        This customer has {customerDetail.totalOrders} order(s) on record. To preserve order history
+                        integrity, customers with existing orders cannot be deleted. Consider using the edit function to
+                        update their information instead.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setDeleteConfirmOpen(false)}
+                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-brand-primary/20 text-brand-primary hover:bg-brand-cream/50 transition-colors"
+                    >
+                      Go Back
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <p className="text-sm text-red-700">
+                        Are you sure you want to permanently delete this customer record? This action cannot be undone.
+                      </p>
+                    </div>
+
+                    {deleteError && (
+                      <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{deleteError}</p>
+                    )}
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={async () => {
+                          if (!selectedCustomerEmail) return
+                          setDeleting(true)
+                          setDeleteError(null)
+                          try {
+                            const res = await fetch(`/api/admin/customers/${encodeURIComponent(selectedCustomerEmail)}`, { method: 'DELETE' })
+                            const json = await res.json().catch(() => ({}))
+                            if (!res.ok) {
+                              setDeleteError(json?.error || 'Failed to delete customer')
+                              setDeleting(false)
+                              return
+                            }
+                            setDeleteConfirmOpen(false)
+                            closeCustomerModal()
+                            setPeriodDays(p => p)
+                          } catch {
+                            setDeleteError('Network error -- please try again')
+                            setDeleting(false)
+                          }
+                        }}
+                        disabled={deleting}
+                        className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                      >
+                        {deleting ? 'Deleting...' : 'Delete Customer'}
+                      </button>
+                      <button
+                        onClick={() => { setDeleteConfirmOpen(false); setDeleteError(null) }}
+                        disabled={deleting}
+                        className="px-4 py-2.5 text-brand-primary/60 text-sm hover:text-brand-primary disabled:opacity-50"
+                      >
+                        Go Back
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
