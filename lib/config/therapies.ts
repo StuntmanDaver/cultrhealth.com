@@ -19,7 +19,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     name: 'SEMA/B6 (reconstituted)',
     spec: '2.5–5 mg/mL | 1–5 mL',
     tag: 'GLP-1',
-    image: '/images/products/semaglutide-glp1.png',
+    image: '/images/products/semaglutide-glp1-therapies.png',
     shortDescription:
       'GLP-1 receptor agonist with pyridoxine (B6) prescribed for appetite regulation, blood sugar support, and weight management when clinically appropriate.',
     longDescription:
@@ -32,7 +32,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     name: 'TIRZ/B3 (reconstituted)',
     spec: '10–20 mg/mL | 1–3 mL',
     tag: 'GLP-1',
-    image: '/images/products/tirzepatide-glp1-gip.png',
+    image: '/images/products/tirzepatide-glp1-gip-therapies.png',
     shortDescription:
       'Dual GIP/GLP-1 receptor agonist with niacinamide prescribed for appetite regulation and metabolic support when clinically appropriate.',
     longDescription:
@@ -45,7 +45,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     name: 'NAD+ (reconstituted)',
     spec: '200 mg/mL | 5 mL',
     tag: 'Longevity',
-    image: '/images/products/nad-plus.png',
+    image: '/images/products/nad-plus-therapies.png',
     shortDescription:
       'Coenzyme involved in cellular energy production and DNA repair. Compounded injectable. Not FDA-approved.',
     longDescription:
@@ -70,7 +70,7 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     name: 'Glutathione (reconstituted)',
     spec: '200 mg/mL | 10–30 mL',
     tag: 'Antioxidant',
-    image: '/images/products/glutathione.png',
+    image: '/images/products/glutathione-therapies.png',
     shortDescription:
       'Endogenous antioxidant supporting cellular protection. Compounded injectable form. Not FDA-approved.',
     longDescription:
