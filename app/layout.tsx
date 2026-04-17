@@ -114,6 +114,7 @@ export default function RootLayout({
         {/* DNS prefetch for third-party services */}
         <link rel="dns-prefetch" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://cdn.curator.io" />
+        <link rel="dns-prefetch" href="https://js-na2.hs-scripts.com" />
         {/* Google Analytics */}
         {GA_MEASUREMENT_ID && (
           <>
@@ -134,6 +135,12 @@ export default function RootLayout({
             </Script>
           </>
         )}
+        {/* HubSpot */}
+        <Script
+          id="hs-script-loader"
+          src="//js-na2.hs-scripts.com/245823955.js"
+          strategy="afterInteractive"
+        />
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
         <MeshBackgroundDynamic />
