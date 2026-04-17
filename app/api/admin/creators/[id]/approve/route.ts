@@ -40,7 +40,7 @@ async function sendCreatorApprovalEmail(
   const baseUrl = getBaseUrl(request)
   const token = await createMagicLinkToken(creator.email)
   const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
-  const trackingLink = `${baseUrl}/r/${assets.defaultSlug}`
+  const trackingLink = `https://cultrclub.com/${assets.defaultSlug}`
   const resend = new Resend(process.env.RESEND_API_KEY)
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
   const safeName = escapeHtml(creator.full_name)

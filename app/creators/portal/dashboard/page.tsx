@@ -368,7 +368,7 @@ export default function CreatorDashboardPage() {
                         visible: { opacity: 1, y: 0 }
                       }}
                       key={link.id} className={i % 2 === 0 ? 'bg-stone-50/50' : ''}>
-                      <td className="py-3 px-5 text-sm font-mono text-cultr-forest">/r/{link.slug}</td>
+                      <td className="py-3 px-5 text-sm font-mono text-cultr-forest">cultrclub.com/{link.slug}</td>
                       <td className="py-3 px-5 text-sm text-cultr-textMuted">{link.destinationPath}</td>
                       <td className="py-3 px-5 text-sm text-right text-cultr-forest">{link.clickCount}</td>
                       <td className="py-3 px-5 text-sm text-right text-cultr-forest">{link.conversionCount}</td>

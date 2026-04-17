@@ -200,7 +200,7 @@ export default function ShareEarnPage() {
   const [customUrl, setCustomUrl] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const baseUrl = 'https://join.cultrhealth.com'
+  const baseUrl = 'https://cultrclub.com'
 
   const effectiveDest = useCustomUrl ? customUrl : newDest
 
@@ -268,7 +268,7 @@ export default function ShareEarnPage() {
             <div>
               <label className="block text-xs font-medium text-cultr-forest mb-1">Slug</label>
               <div className="flex items-center gap-1">
-                <span className="text-sm text-cultr-textMuted">{baseUrl}/r/</span>
+                <span className="text-sm text-cultr-textMuted">{baseUrl}/</span>
                 <input
                   type="text"
                   value={newSlug}
@@ -303,7 +303,7 @@ export default function ShareEarnPage() {
                     />
                   </div>
                   <p className="text-[11px] text-cultr-textMuted mt-1">
-                    Enter any path on join.cultrhealth.com — product pages, blog posts, science articles, etc.
+                    Enter any path on cultrclub.com — product pages, blog posts, science articles, etc.
                   </p>
                 </div>
               ) : (
@@ -342,7 +342,7 @@ export default function ShareEarnPage() {
               <CopyableLink
                 key={link.id}
                 label={link.is_default ? 'Default Link' : link.slug}
-                value={`${baseUrl}/r/${link.slug}`}
+                value={`${baseUrl}/${link.slug}`}
                 stats={`${link.click_count} clicks | ${link.conversion_count} conversions`}
               />
             ))
@@ -371,9 +371,9 @@ export default function ShareEarnPage() {
                 : code.is_primary ? 'Primary Code' : 'Code'
 
               const description = code.code_type === 'membership'
-                ? 'Share when referring someone to join.cultrhealth.com for a CULTR subscription'
+                ? 'Share when referring someone to cultrclub.com for a CULTR subscription'
                 : code.code_type === 'product'
-                ? 'Share for one-time peptide/product purchases on join.cultrhealth.com'
+                ? 'Share for one-time peptide/product purchases on cultrclub.com'
                 : null
 
               return (
@@ -411,7 +411,7 @@ export default function ShareEarnPage() {
             <SocialShareCard
               key={platform.platform}
               {...platform}
-              defaultLink={`${baseUrl}/r/${(links.find(l => l.is_default) || links[0])?.slug || 'your-link'}`}
+              defaultLink={`${baseUrl}/${(links.find(l => l.is_default) || links[0])?.slug || 'your-link'}`}
               defaultCode={(codes.find(c => c.is_primary && c.active) || codes[0])?.code || 'YOURCODE'}
             />
           ))}

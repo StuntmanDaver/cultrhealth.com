@@ -55,7 +55,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
     )
   }
 
-  const baseUrl = 'https://cultrhealth.com'
+  const baseUrl = 'https://cultrclub.com'
 
   return (
     <div className="min-h-screen bg-cultr-cream">
@@ -105,7 +105,7 @@ export default async function CreatorProfilePage({ params }: { params: Promise<{
         {/* Quick links */}
         <div className="space-y-3 mb-8">
           <Link
-            href={creator.defaultSlug ? `${baseUrl}/r/${creator.defaultSlug}` : '/quiz'}
+            href={creator.defaultSlug ? `${baseUrl}/${creator.defaultSlug}` : '/quiz'}
             className="flex items-center justify-between p-4 grad-dark text-white rounded-2xl hover:bg-cultr-forestDark transition-colors group"
           >
             <div>

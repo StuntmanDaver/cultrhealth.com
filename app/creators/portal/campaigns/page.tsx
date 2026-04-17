@@ -53,8 +53,8 @@ function CampaignCard({ campaign }: { campaign: Campaign }) {
   const { links, codes } = useCreator()
 
   const Icon = TYPE_ICONS[campaign.type]
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://cultrhealth.com'
-  const defaultLink = links.length > 0 ? `${baseUrl}/r/${links[0].slug}` : `${baseUrl}/r/your-link`
+  const baseUrl = 'https://cultrclub.com'
+  const defaultLink = links.length > 0 ? `${baseUrl}/${links[0].slug}` : `${baseUrl}/your-link`
   const defaultCode = codes.length > 0 ? codes[0].code : 'YOURCODE'
 
   const handleCopyCta = async () => {

@@ -169,7 +169,7 @@ async function main() {
     ORDER BY tl.click_count DESC LIMIT 15
   `
   for (const r of links.rows) {
-    console.log(`  /r/${String(r.slug).padEnd(16)} by ${String(r.creator_email).padEnd(32)} clicks=${String(r.click_count).padStart(4)} conv=${String(r.conversion_count).padStart(3)} rate=${r.conv_rate}%`)
+    console.log(`  cultrclub.com/${String(r.slug).padEnd(16)} by ${String(r.creator_email).padEnd(32)} clicks=${String(r.click_count).padStart(4)} conv=${String(r.conversion_count).padStart(3)} rate=${r.conv_rate}%`)
   }
 
   section('10. Owner emails in creators table')

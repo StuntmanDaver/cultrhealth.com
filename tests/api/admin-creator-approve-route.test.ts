@@ -139,7 +139,7 @@ describe('admin creator approve route', () => {
     expect(emailPayload.to).toBe('jane@example.com')
     expect(emailPayload.subject).toContain('Approved')
     expect(emailPayload.html).toContain('/api/creators/verify-login?token=approval-token')
-    expect(emailPayload.html).toContain('/r/')
+    expect(emailPayload.html).toContain('https://cultrclub.com/')
     expect(emailPayload.html).toContain('SMITH')
     expect(emailPayload.html).toContain('SMITH10')
   })

@@ -325,10 +325,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Determine the correct site URL based on request hostname
-    // This ensures approval links point to the correct domain (staging vs production)
+    // Admin-side approval links always resolve on cultrhealth.com (admin app),
+    // staging detection falls out of NEXT_PUBLIC_SITE_URL.
     let siteUrl: string
-    if (requestHost.includes('join.cultrhealth.com') || requestHost.includes('staging.cultrhealth.com')) {
+    if (requestHost.includes('staging.cultrhealth.com')) {
       siteUrl = `https://${requestHost}`
     } else {
       siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'

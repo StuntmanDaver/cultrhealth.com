@@ -27,19 +27,26 @@ afterEach(() => {
 })
 
 describe('join link helpers', () => {
-  it('routes paid checkout links through the join domain when the main site is staging', () => {
+  it('routes paid checkout links through cultrclub.com staging when the main site is staging', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://staging.cultrhealth.com'
 
-    expect(getJoinSiteUrl()).toBe('https://join.cultrhealth.com')
-    expect(getJoinCheckoutUrl('catalyst')).toBe('https://join.cultrhealth.com/join/catalyst')
+    expect(getJoinSiteUrl()).toBe('https://staging.cultrclub.com')
+    expect(getJoinCheckoutUrl('catalyst')).toBe('https://staging.cultrclub.com/join/catalyst')
+  })
+
+  it('routes paid checkout links through cultrclub.com in production', () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://cultrhealth.com'
+
+    expect(getJoinSiteUrl()).toBe('https://cultrclub.com')
+    expect(getJoinCheckoutUrl('catalyst')).toBe('https://cultrclub.com/join/catalyst')
   })
 
   it('preserves the selected core therapy in the checkout url', () => {
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://staging.cultrhealth.com'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://cultrhealth.com'
 
     expect(
       getJoinCheckoutUrl('core', { therapySlug: 'semaglutide' })
-    ).toBe('https://join.cultrhealth.com/join/core?therapy=semaglutide')
+    ).toBe('https://cultrclub.com/join/core?therapy=semaglutide')
   })
 })
 

@@ -59,8 +59,8 @@ export default function CouponsClient() {
   const exportTrackingLinks = useCallback(() => {
     if (!data) return
     downloadCSV('cultr-tracking-links',
-      ['Slug', 'Creator', 'Destination', 'Clicks', 'Conversions', 'Conv Rate', 'Active'],
-      data.allTrackingLinks.map(l => [`/r/${l.slug}`, l.creator_name, l.destination_path, l.click_count, l.conversion_count, l.click_count > 0 ? `${((l.conversion_count / l.click_count) * 100).toFixed(1)}%` : '0%', l.active ? 'Yes' : 'No'])
+      ['Share URL', 'Creator', 'Destination', 'Clicks', 'Conversions', 'Conv Rate', 'Active'],
+      data.allTrackingLinks.map(l => [`https://cultrclub.com/${l.slug}`, l.creator_name, l.destination_path, l.click_count, l.conversion_count, l.click_count > 0 ? `${((l.conversion_count / l.click_count) * 100).toFixed(1)}%` : '0%', l.active ? 'Yes' : 'No'])
     )
   }, [data])
 
@@ -314,7 +314,7 @@ export default function CouponsClient() {
                   .filter(l => !linkSearch || l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || (l.creator_name || '').toLowerCase().includes(linkSearch.toLowerCase()))
                   .map((l, i) => (
                   <tr key={l.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
-                    <td className="py-3 px-4 text-sm font-mono text-brand-primary">/r/{l.slug}</td>
+                    <td className="py-3 px-4 text-sm font-mono text-brand-primary">cultrclub.com/{l.slug}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary">{l.creator_name || '\u2014'}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary/60">{l.destination_path}</td>
                     <td className="py-3 px-4 text-sm text-right text-brand-primary">{l.click_count}</td>
