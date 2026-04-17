@@ -13,8 +13,10 @@ export const OWNER_EMAILS: readonly string[] = [
   'alex@cultrhealth.com',
   'tony@cultrhealth.com',
   'david@cultrhealth.com',
-  'stewart@cultrhealth.com',
   'erik@threepointshospitality.com',
+  // stewart@cultrhealth.com is a part owner but operates as a real creator
+  // with his own code (STEWART1) — his metrics should appear in admin
+  // dashboards alongside other creators.
 ] as const
 
 export function isOwnerEmail(email: string | null | undefined): boolean {
