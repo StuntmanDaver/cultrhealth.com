@@ -23,9 +23,10 @@ export async function GET() {
     }
 
     const result = await sql`
-      SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at, updated_by
+      SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at, updated_by,
+             COALESCE(site_source, 'join_cultrhealth') AS site_source
       FROM product_inventory
-      ORDER BY therapy_name ASC
+      ORDER BY site_source ASC, therapy_name ASC
     `
 
     return NextResponse.json({
@@ -36,6 +37,7 @@ export async function GET() {
         stockQuantity: r.stock_quantity != null ? Number(r.stock_quantity) : null,
         updatedAt: r.updated_at,
         updatedBy: r.updated_by,
+        siteSource: r.site_source,
       })),
     })
   } catch (err) {
@@ -51,16 +53,19 @@ export async function PUT(request: Request) {
     if (!session) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const body = await request.json()
-    const { therapyId, therapyName, stockStatus, stockQuantity } = body as {
+    const { therapyId, therapyName, stockStatus, stockQuantity, siteSource } = body as {
       therapyId: string
       therapyName?: string
       stockStatus: 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'
       stockQuantity: number | null
+      siteSource?: string
     }
 
     if (!therapyId || !stockStatus) {
       return NextResponse.json({ error: 'therapyId and stockStatus are required' }, { status: 400 })
     }
+
+    const site = siteSource || 'join_cultrhealth'
 
     if (!['in_stock', 'low_stock', 'out_of_stock', 'restocking_soon'].includes(stockStatus)) {
       return NextResponse.json({ error: 'Invalid stockStatus' }, { status: 400 })
@@ -73,25 +78,26 @@ export async function PUT(request: Request) {
     const displayName = therapyName || therapyId
 
     await sql`
-      INSERT INTO product_inventory (therapy_id, therapy_name, stock_status, stock_quantity, updated_at, updated_by)
-      VALUES (${therapyId}, ${displayName}, ${stockStatus}, ${stockQuantity}, NOW(), ${session.email})
-      ON CONFLICT (therapy_id) DO UPDATE SET
+      INSERT INTO product_inventory (therapy_id, therapy_name, stock_status, stock_quantity, updated_at, updated_by, site_source)
+      VALUES (${therapyId}, ${displayName}, ${stockStatus}, ${stockQuantity}, NOW(), ${session.email}, ${site})
+      ON CONFLICT (therapy_id, site_source) DO UPDATE SET
         stock_status = ${stockStatus},
         stock_quantity = ${stockQuantity},
         updated_at = NOW(),
         updated_by = ${session.email}
     `
 
-    // Bust Next.js ISR cache for the join page
+    // Bust Next.js ISR cache for the relevant join page
     revalidatePath('/join')
     revalidatePath('/join-club')
 
     // Verify the write persisted by reading it back
     const verify = await sql`
-      SELECT stock_status, stock_quantity FROM product_inventory WHERE therapy_id = ${therapyId}
+      SELECT stock_status, stock_quantity FROM product_inventory
+      WHERE therapy_id = ${therapyId} AND site_source = ${site}
     `
     if (verify.rows.length === 0 || verify.rows[0].stock_status !== stockStatus) {
-      console.error('[admin/inventory] PUT verification failed for', therapyId)
+      console.error('[admin/inventory] PUT verification failed for', therapyId, site)
       return NextResponse.json({ error: 'Save appeared to succeed but verification failed' }, { status: 500 })
     }
 

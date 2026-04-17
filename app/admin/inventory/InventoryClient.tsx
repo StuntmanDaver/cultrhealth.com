@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { PackageSearch, Save, Loader2, AlertTriangle, CheckCircle, Package } from 'lucide-react'
 
 type StockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'
+type SiteSource = 'join_cultrhealth' | 'cultrclub' | 'shop'
 
 interface InventoryRow {
   therapyId: string
@@ -12,6 +13,7 @@ interface InventoryRow {
   stockQuantity: number | null
   updatedAt: string
   updatedBy: string | null
+  siteSource: SiteSource
 }
 
 const STATUS_OPTIONS: { value: StockStatus; label: string; color: string }[] = [
@@ -21,6 +23,12 @@ const STATUS_OPTIONS: { value: StockStatus; label: string; color: string }[] = [
   { value: 'restocking_soon', label: 'Restocking Soon', color: 'bg-blue-100 text-blue-700' },
 ]
 
+const TABS: { value: SiteSource; label: string; description: string }[] = [
+  { value: 'join_cultrhealth', label: 'cultrhealth.com', description: 'join.cultrhealth.com products' },
+  { value: 'cultrclub', label: 'cultrclub.com', description: 'cultrclub.com products' },
+  { value: 'shop', label: 'Members Shop', description: 'Members shop SKUs' },
+]
+
 export default function InventoryClient() {
   const [inventory, setInventory] = useState<InventoryRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -28,6 +36,7 @@ export default function InventoryClient() {
   const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [edits, setEdits] = useState<Record<string, { stockStatus: StockStatus; stockQuantity: number | null }>>({})
+  const [activeTab, setActiveTab] = useState<SiteSource>('join_cultrhealth')
 
   const fetchInventory = useCallback(async () => {
     try {
@@ -44,67 +53,64 @@ export default function InventoryClient() {
 
   useEffect(() => { fetchInventory() }, [fetchInventory])
 
+  const rowKey = (row: InventoryRow) => `${row.siteSource}:${row.therapyId}`
+
   const getEditedValue = (row: InventoryRow) => {
-    return edits[row.therapyId] || { stockStatus: row.stockStatus, stockQuantity: row.stockQuantity }
+    return edits[rowKey(row)] || { stockStatus: row.stockStatus, stockQuantity: row.stockQuantity }
   }
 
-  const handleStatusChange = (therapyId: string, row: InventoryRow, newStatus: StockStatus) => {
+  const handleStatusChange = (row: InventoryRow, newStatus: StockStatus) => {
     const current = getEditedValue(row)
-    setEdits((prev) => ({
-      ...prev,
-      [therapyId]: { ...current, stockStatus: newStatus },
-    }))
+    setEdits((prev) => ({ ...prev, [rowKey(row)]: { ...current, stockStatus: newStatus } }))
     setSaved(null)
   }
 
-  const handleQuantityChange = (therapyId: string, row: InventoryRow, value: string) => {
+  const handleQuantityChange = (row: InventoryRow, value: string) => {
     const current = getEditedValue(row)
     const qty = value === '' ? null : parseInt(value, 10)
     setEdits((prev) => ({
       ...prev,
-      [therapyId]: { ...current, stockQuantity: isNaN(qty as number) ? null : qty },
+      [rowKey(row)]: { ...current, stockQuantity: isNaN(qty as number) ? null : qty },
     }))
     setSaved(null)
   }
 
-  const handleSave = async (therapyId: string) => {
-    const row = inventory.find((r) => r.therapyId === therapyId)
-    if (!row) return
+  const handleSave = async (row: InventoryRow) => {
     const edited = getEditedValue(row)
+    const key = rowKey(row)
 
-    setSaving(therapyId)
+    setSaving(key)
     setError('')
     try {
       const res = await fetch('/api/admin/inventory', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          therapyId,
+          therapyId: row.therapyId,
           therapyName: row.therapyName,
           stockStatus: edited.stockStatus,
           stockQuantity: edited.stockQuantity,
+          siteSource: row.siteSource,
         }),
       })
       if (!res.ok) {
         const data = await res.json()
         throw new Error(data.error || 'Failed to save')
       }
-      // Update local state
       setInventory((prev) =>
         prev.map((r) =>
-          r.therapyId === therapyId
+          rowKey(r) === key
             ? { ...r, stockStatus: edited.stockStatus, stockQuantity: edited.stockQuantity, updatedAt: new Date().toISOString() }
             : r
         )
       )
-      // Clear edit for this row
       setEdits((prev) => {
         const next = { ...prev }
-        delete next[therapyId]
+        delete next[key]
         return next
       })
-      setSaved(therapyId)
-      setTimeout(() => setSaved((prev) => (prev === therapyId ? null : prev)), 2000)
+      setSaved(key)
+      setTimeout(() => setSaved((prev) => (prev === key ? null : prev)), 2000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save')
     } finally {
@@ -113,10 +119,12 @@ export default function InventoryClient() {
   }
 
   const hasEdit = (row: InventoryRow) => {
-    const edit = edits[row.therapyId]
+    const edit = edits[rowKey(row)]
     if (!edit) return false
     return edit.stockStatus !== row.stockStatus || edit.stockQuantity !== row.stockQuantity
   }
+
+  const visibleRows = inventory.filter((r) => (r.siteSource || 'join_cultrhealth') === activeTab)
 
   if (loading) {
     return (
@@ -129,6 +137,8 @@ export default function InventoryClient() {
     )
   }
 
+  const activeTabMeta = TABS.find((t) => t.value === activeTab)!
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -138,8 +148,33 @@ export default function InventoryClient() {
           <h1 className="font-display text-2xl font-bold text-brand-primary">Inventory</h1>
         </div>
         <p className="text-sm text-brand-secondary/60">
-          Manage stock status for join.cultrhealth.com products. Changes take effect immediately.
+          Manage stock status per site. Changes take effect immediately.
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 bg-stone-100 rounded-xl p-1 w-fit">
+        {TABS.map((tab) => {
+          const count = inventory.filter((r) => (r.siteSource || 'join_cultrhealth') === tab.value).length
+          return (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === tab.value
+                  ? 'bg-white text-brand-primary shadow-sm'
+                  : 'text-stone-500 hover:text-brand-primary'
+              }`}
+            >
+              {tab.label}
+              <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                activeTab === tab.value ? 'bg-brand-primary/10 text-brand-primary' : 'bg-stone-200 text-stone-500'
+              }`}>
+                {count}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {error && (
@@ -151,6 +186,9 @@ export default function InventoryClient() {
 
       {/* Inventory table */}
       <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+        <div className="px-5 py-3 border-b border-stone-100 bg-stone-50/50">
+          <p className="text-xs text-brand-secondary/50">{activeTabMeta.description}</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -163,16 +201,16 @@ export default function InventoryClient() {
               </tr>
             </thead>
             <tbody>
-              {inventory.map((row) => {
+              {visibleRows.map((row) => {
                 const edited = getEditedValue(row)
                 const statusMeta = STATUS_OPTIONS.find((s) => s.value === edited.stockStatus)!
                 const dirty = hasEdit(row)
-                const isSaving = saving === row.therapyId
-                const justSaved = saved === row.therapyId
+                const key = rowKey(row)
+                const isSaving = saving === key
+                const justSaved = saved === key
 
                 return (
-                  <tr key={row.therapyId} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/50 transition-colors">
-                    {/* Product name */}
+                  <tr key={key} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/50 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2.5">
                         <Package className="w-4 h-4 text-brand-secondary/40 shrink-0" />
@@ -180,11 +218,10 @@ export default function InventoryClient() {
                       </div>
                     </td>
 
-                    {/* Status dropdown */}
                     <td className="px-5 py-4">
                       <select
                         value={edited.stockStatus}
-                        onChange={(e) => handleStatusChange(row.therapyId, row, e.target.value as StockStatus)}
+                        onChange={(e) => handleStatusChange(row, e.target.value as StockStatus)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer ${statusMeta.color}`}
                       >
                         {STATUS_OPTIONS.map((opt) => (
@@ -193,25 +230,22 @@ export default function InventoryClient() {
                       </select>
                     </td>
 
-                    {/* Quantity input */}
                     <td className="px-5 py-4">
                       <input
                         type="number"
                         min={0}
                         value={edited.stockQuantity ?? ''}
-                        onChange={(e) => handleQuantityChange(row.therapyId, row, e.target.value)}
+                        onChange={(e) => handleQuantityChange(row, e.target.value)}
                         placeholder="Unlimited"
                         className="w-28 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-sm text-brand-primary placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 focus:border-brand-primary"
                       />
                     </td>
 
-                    {/* Last updated */}
                     <td className="px-5 py-4 text-xs text-brand-secondary/50">
                       {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'}
                       {row.updatedBy && <span className="block text-[10px] text-brand-secondary/30">{row.updatedBy}</span>}
                     </td>
 
-                    {/* Save button */}
                     <td className="px-5 py-4 text-right">
                       {justSaved ? (
                         <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600">
@@ -219,7 +253,7 @@ export default function InventoryClient() {
                         </span>
                       ) : (
                         <button
-                          onClick={() => handleSave(row.therapyId)}
+                          onClick={() => handleSave(row)}
                           disabled={!dirty || isSaving}
                           className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                             dirty
@@ -238,10 +272,10 @@ export default function InventoryClient() {
                   </tr>
                 )
               })}
-              {inventory.length === 0 && (
+              {visibleRows.length === 0 && (
                 <tr>
                   <td colSpan={5} className="text-center py-10 text-brand-secondary/40 text-sm">
-                    No products found. Run migration 034 to seed inventory data.
+                    No products found for {activeTabMeta.label}. Run migration 053 to seed inventory data.
                   </td>
                 </tr>
               )}

@@ -333,6 +333,7 @@ export interface InventoryAlertRow {
   stockStatus: 'low_stock' | 'out_of_stock' | 'restocking_soon'
   stockQuantity: number | null
   updatedAt: string
+  siteSource: string
 }
 
 export interface AnalyticsData {

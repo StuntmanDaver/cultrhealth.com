@@ -1,3 +1,23 @@
+## [2026-04-17] - Inventory Site Separation (cultrhealth.com + cultrclub.com)
+
+### Added
+- **Migration 053 (`migrations/053_inventory_site_source.sql`):** Adds `site_source` column to `product_inventory`. Tags existing join therapies as `join_cultrhealth`, shop SKUs as `shop`. Changes unique key from `(therapy_id)` → `(therapy_id, site_source)` so the same therapy can have independent stock per site. Seeds cultrclub.com rows from existing join therapy set.
+- **Admin inventory tabs (`app/admin/inventory/InventoryClient.tsx`):** Three tabs — cultrhealth.com / cultrclub.com / Members Shop — each showing only their own products with counts. Saves include `siteSource` so updates go to the correct row.
+
+### Changed
+- **`app/api/admin/inventory/route.ts`:** GET returns `siteSource` per row; PUT accepts `siteSource` and uses composite `(therapy_id, site_source)` key for upserts and verification.
+- **`app/api/stock/route.ts` (cultrhealth.com):** Excludes `cultrclub` rows so join.cultrhealth.com never reads cultrclub-specific stock.
+- **`cultrclub-web/app/api/stock/route.ts`:** Filters to `cultrclub` rows only (with fallback to `join_cultrhealth` rows for legacy pre-migration data via `DISTINCT ON` + priority ordering).
+- **`lib/db.ts` `getInventoryAlerts()`:** Now returns `siteSource` on each alert row.
+- **`lib/admin-types.ts` `InventoryAlertRow`:** Added `siteSource: string` field.
+- **`app/admin/AdminDashboardClient.tsx`:** Inventory alert cards now show a site label (cultrhealth.com / cultrclub.com / Members Shop) so stock issues are immediately attributable to the right site.
+
+### Fixed
+- **`app/api/club/orders/route.ts` (cultrhealth.com):** Stock validation SELECT and inventory decrement UPDATE now filter to `site_source = 'join_cultrhealth'`. Previously unfiltered queries would have double-decremented both cultrhealth and cultrclub inventory rows on every order.
+- **`cultrclub-web/app/api/club/orders/route.ts`:** Same fix — SELECT and UPDATE now filter to `site_source = 'cultrclub'`.
+
+---
+
 ## [2026-04-17] - cultrclub.com Recognition, Stealth, Security (cultrclub-web repo)
 
 ### Added

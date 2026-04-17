@@ -247,7 +247,7 @@ export default function AdminDashboardClient() {
                   const isSoon = item.stockStatus === 'restocking_soon'
                   return (
                     <div
-                      key={item.therapyId}
+                      key={`${item.siteSource}:${item.therapyId}`}
                       className={`flex items-center justify-between rounded-lg px-4 py-3 ${
                         isSoon
                           ? 'bg-blue-100 border border-blue-200'
@@ -268,6 +268,9 @@ export default function AdminDashboardClient() {
                               : item.stockQuantity != null
                                 ? `Only ${item.stockQuantity} left`
                                 : 'Low Stock'}
+                        </p>
+                        <p className="text-[10px] mt-0.5 opacity-60">
+                          {item.siteSource === 'cultrclub' ? 'cultrclub.com' : item.siteSource === 'shop' ? 'Members Shop' : 'cultrhealth.com'}
                         </p>
                       </div>
                       <span className={`shrink-0 ml-3 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${

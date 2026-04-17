@@ -2832,10 +2832,12 @@ export async function getInventoryAlerts(): Promise<{
   stockStatus: 'low_stock' | 'out_of_stock' | 'restocking_soon'
   stockQuantity: number | null
   updatedAt: string
+  siteSource: string
 }[]> {
   try {
     const result = await sql`
-      SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at
+      SELECT therapy_id, therapy_name, stock_status, stock_quantity, updated_at,
+             COALESCE(site_source, 'join_cultrhealth') AS site_source
       FROM product_inventory
       WHERE stock_status IN ('low_stock', 'out_of_stock', 'restocking_soon')
       ORDER BY
@@ -2848,6 +2850,7 @@ export async function getInventoryAlerts(): Promise<{
       stockStatus: r.stock_status as 'low_stock' | 'out_of_stock' | 'restocking_soon',
       stockQuantity: r.stock_quantity != null ? Number(r.stock_quantity) : null,
       updatedAt: r.updated_at,
+      siteSource: r.site_source,
     }))
   } catch (error) {
     console.error('Database error fetching inventory alerts:', error)

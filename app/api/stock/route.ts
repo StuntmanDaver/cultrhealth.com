@@ -22,6 +22,7 @@ export async function GET() {
     const result = await sql`
       SELECT therapy_id, stock_status, stock_quantity
       FROM product_inventory
+      WHERE COALESCE(site_source, 'join_cultrhealth') != 'cultrclub'
     `
 
     const stock: Record<string, { status: string; quantity: number | null }> = {}
