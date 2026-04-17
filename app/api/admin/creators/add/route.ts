@@ -1,12 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { db } from '@vercel/postgres'
-import { verifyAdminAuth } from '@/lib/auth'
+import { Resend } from 'resend'
+import { createMagicLinkToken, verifyAdminAuth } from '@/lib/auth'
 import {
   createAdminAction,
   updateAffiliateCodeStripeIds,
 } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
+import { baseEmailTemplate, escapeHtml } from '@/lib/resend'
+
+function getBaseUrl(request: NextRequest): string {
+  return (
+    request.nextUrl.origin ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  )
+}
+
+async function sendCreatorWelcomeEmail(
+  request: NextRequest,
+  creator: { email: string; full_name: string },
+  assets: { defaultSlug: string; membershipCode: string; productCode: string }
+) {
+  if (!process.env.RESEND_API_KEY) {
+    console.error('Creator welcome notification skipped: RESEND_API_KEY not configured')
+    return
+  }
+
+  const baseUrl = getBaseUrl(request)
+  const token = await createMagicLinkToken(creator.email)
+  const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
+  const trackingLink = `https://cultrclub.com/${assets.defaultSlug}`
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
+  const safeName = escapeHtml(creator.full_name)
+
+  const content = `
+    <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">Hi ${safeName},</p>
+    <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Your CULTR Creator account is live. Your default tracking link and launch codes are ready below.</p>
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(183,228,199,0.2); border-radius: 14px; padding: 18px; margin-bottom: 24px;">
+      <p style="color: #FDFBF7; font-size: 14px; margin: 0 0 10px;"><strong>Tracking link:</strong> ${trackingLink}</p>
+      <p style="color: #FDFBF7; font-size: 14px; margin: 0 0 10px;"><strong>Membership code:</strong> ${assets.membershipCode}</p>
+      <p style="color: #FDFBF7; font-size: 14px; margin: 0;"><strong>Product code:</strong> ${assets.productCode}</p>
+    </div>
+    <a href="${magicLink}" style="display: inline-block; background-color: #B7E4C7; color: #2A4542; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; margin-bottom: 24px;">Open Creator Portal</a>
+    <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px;">This link expires in 15 minutes. You can always request a new one at <a href="${baseUrl}/creators/login" style="color: #B7E4C7;">cultrhealth.com/creators/login</a>.</p>
+  `
+
+  const result = await resend.emails.send({
+    from: fromEmail,
+    to: creator.email,
+    subject: 'Welcome to the CULTR Creator Program',
+    html: baseEmailTemplate(content),
+  })
+
+  if (result.error) {
+    throw new Error(result.error.message || 'Unknown Resend error')
+  }
+}
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -225,6 +277,17 @@ export async function POST(request: NextRequest) {
         default_slug: defaultSlug,
       },
     })
+
+    // Welcome email (non-blocking — creator is already created)
+    try {
+      await sendCreatorWelcomeEmail(
+        request,
+        { email: email.trim().toLowerCase(), full_name: full_name.trim() },
+        { defaultSlug, membershipCode, productCode }
+      )
+    } catch (emailError) {
+      console.error('Creator welcome email failed:', emailError)
+    }
 
     return NextResponse.json({
       success: true,
