@@ -193,7 +193,7 @@ async function sendClubWelcomeEmail(firstName: string, email: string) {
       </p>
       <div style="background: #D8F3DC; border-radius: 12px; padding: 28px 20px; text-align: center; margin-bottom: 8px;">
         <p style="margin: 0 0 16px; font-weight: 600; color: #2A4542;">Browse &amp; Order Therapies</p>
-        <a href="https://cultrclub.com" style="display: inline-block; background-color: #2A4542; color: #FFFFFF; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">Browse Therapies</a>
+        <a href="https://join.cultrhealth.com" style="display: inline-block; background-color: #2A4542; color: #FFFFFF; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">Browse Therapies</a>
       </div>
     </div>
     ${brandedEmailFooter()}

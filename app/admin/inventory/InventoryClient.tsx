@@ -138,7 +138,7 @@ export default function InventoryClient() {
           <h1 className="font-display text-2xl font-bold text-brand-primary">Inventory</h1>
         </div>
         <p className="text-sm text-brand-secondary/60">
-          Manage stock status for cultrclub.com products. Changes take effect immediately.
+          Manage stock status for join.cultrhealth.com products. Changes take effect immediately.
         </p>
       </div>
 

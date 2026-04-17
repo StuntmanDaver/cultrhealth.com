@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql, db } from '@vercel/postgres'
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
-import { validateCouponUnified, getCouponProductEligibilityError, type UnifiedCouponResult } from '@/lib/config/coupons'
+import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
 import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
@@ -88,17 +88,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: couponPolicy.couponError }, { status: 400 })
     }
 
-    // Enforce product-specific coupon eligibility (e.g. RETA → retatrutide only)
-    if (couponResult?.applicableTherapyIds?.length) {
-      const eligibilityError = getCouponProductEligibilityError(
-        { applicableTherapyIds: couponResult.applicableTherapyIds, label: couponResult.label },
-        orderItems
-      )
-      if (eligibilityError) {
-        return NextResponse.json({ error: eligibilityError }, { status: 400 })
-      }
-    }
-
     // Stock validation from DB — reject out-of-stock or over-limit items
     if (process.env.POSTGRES_URL) {
       const stockResult = await sql`SELECT therapy_id, therapy_name, stock_status, stock_quantity FROM product_inventory`
@@ -129,20 +118,8 @@ export async function POST(request: Request) {
       couponPolicy.forceNoBundleStack
     const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(orderItems)
     const subtotalAfterBundle = rawSubtotal - bundleDiscountAmount
-    // Coupon discount applied after bundle discount.
-    // For product-specific coupons, the discount only applies to the subtotal of matching items.
-    let couponDiscountAmount = 0
-    if (discountPercent > 0) {
-      if (couponResult?.applicableTherapyIds?.length) {
-        const eligibleIds = new Set(couponResult.applicableTherapyIds)
-        const eligibleSubtotal = orderItems.reduce((sum, item) => {
-          return item.price && eligibleIds.has(item.therapyId) ? sum + item.price * item.quantity : sum
-        }, 0)
-        couponDiscountAmount = Math.round(eligibleSubtotal * discountPercent) / 100
-      } else {
-        couponDiscountAmount = Math.round(subtotalAfterBundle * discountPercent) / 100
-      }
-    }
+    // Coupon discount applied after bundle discount
+    const couponDiscountAmount = discountPercent > 0 ? Math.round(subtotalAfterBundle * discountPercent) / 100 : 0
     const subtotal = subtotalAfterBundle - couponDiscountAmount
     const taxAmount = subtotal > 0 ? calculateTaxDollars(subtotal) : 0
     const total = subtotal + taxAmount
@@ -222,8 +199,8 @@ export async function POST(request: Request) {
         }
 
         const orderResult = await client.query(
-          `INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, token_expires_at, coupon_code, discount_percent, coupon_discount_usd, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_approval', $9, to_timestamp($10::double precision / 1000), $11, $12, $13, $14, $15, $16, $17)
+          `INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, token_expires_at, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_approval', $9, to_timestamp($10::double precision / 1000), $11, $12, $13, $14, $15, $16)
            RETURNING id`,
           [
             orderNumber,
@@ -238,7 +215,6 @@ export async function POST(request: Request) {
             expiresAt,
             appliedCouponCode,
             discountPercent > 0 ? discountPercent : null,
-            couponDiscountAmount > 0 ? couponDiscountAmount : null,
             FL_TAX_RATE,
             taxAmount > 0 ? taxAmount : 0,
             attributedCreatorId || null,
@@ -309,7 +285,6 @@ export async function POST(request: Request) {
             customerEmail: normalizedEmail,
             attribution: attrPayload,
             isSubscription: false,
-            skipCommissionLedger: true,
           })
         } catch (attrError) {
           console.error('[club/orders] Attribution processing failed (non-fatal):', {
@@ -353,7 +328,7 @@ export async function POST(request: Request) {
     // Determine the correct site URL based on request hostname
     // This ensures approval links point to the correct domain (staging vs production)
     let siteUrl: string
-    if (requestHost.includes('cultrclub.com') || requestHost.includes('join.cultrhealth.com') || requestHost.includes('staging.cultrhealth.com')) {
+    if (requestHost.includes('join.cultrhealth.com') || requestHost.includes('staging.cultrhealth.com')) {
       siteUrl = `https://${requestHost}`
     } else {
       siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
