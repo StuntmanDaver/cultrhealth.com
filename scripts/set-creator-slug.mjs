@@ -5,9 +5,13 @@
  * and is_default = TRUE, so their portal displays https://cultrclub.com/{slug}.
  *
  * Usage:
- *   POSTGRES_URL=... node scripts/set-creator-slug.mjs
+ *   node scripts/set-creator-slug.mjs <email> <slug>
+ *   EMAIL=... SLUG=... node scripts/set-creator-slug.mjs
  *
  * Idempotent: re-running after the slug is already owned is a no-op.
+ * If the creator already owns the target slug on a non-default row, it is
+ * promoted to default (preserving click_count / conversion_count history)
+ * and any other default is demoted.
  */
 import { neon } from '@neondatabase/serverless'
 import dotenv from 'dotenv'
@@ -19,10 +23,21 @@ dotenv.config({ path: join(__dirname, '../.env.local') })
 
 const sql = neon(process.env.POSTGRES_URL)
 
-const EMAIL = 'teamjoncollins21@gmail.com'
-const TARGET_SLUG = 'jon21'
+const [argEmail, argSlug] = process.argv.slice(2)
+const EMAIL = argEmail || process.env.EMAIL
+const TARGET_SLUG = argSlug || process.env.SLUG
 const DESTINATION_PATH = '/'
 const PUBLIC_BASE_URL = 'https://cultrclub.com'
+
+if (!EMAIL || !TARGET_SLUG) {
+  console.error('Usage: node scripts/set-creator-slug.mjs <email> <slug>')
+  process.exit(1)
+}
+
+if (!/^[a-zA-Z0-9-]{1,64}$/.test(TARGET_SLUG)) {
+  console.error(`Invalid slug "${TARGET_SLUG}" — must be alphanumeric + hyphens, 1-64 chars.`)
+  process.exit(1)
+}
 
 const normalizedSlug = TARGET_SLUG.toLowerCase()
 
