@@ -1,3 +1,29 @@
+## [2026-04-17] - cultrclub.com Recognition, Stealth, Security (cultrclub-web repo)
+
+### Added
+- **SSR member recognition (`app/page.tsx`):** `cultr_club_visitor` cookie resolved server-side, JWT verified, member hydrated from Neon, passed as `serverMember` prop. Eliminates signup-modal flash for recognized members.
+- **"Already a member? Log in" link** on signup modal (`JoinLandingClient.tsx`). Pre-migration customers (whose cookies live on `.cultrhealth.com`, not `.cultrclub.com`) can recover via email + phone match against the shared `club_members` table.
+- **Stealth layer — full crawler blackout:**
+  - `app/robots.ts` — explicit disallows for 40+ bots (Googlebot, GPTBot, ClaudeBot, CCBot, Google-Extended, PerplexityBot, Applebot-Extended, Bytespider, Meta-ExternalAgent, SEO crawlers) + wildcard catch-all.
+  - `app/layout.tsx` — `robots: { index: false, follow: false, noarchive: true, nosnippet: true, noimageindex: true, nocache: true }` metadata; no description/OG/Twitter card.
+  - `public/_headers` — Cloudflare Pages native header rules (CSP, X-Robots-Tag, X-Frame-Options, etc.) for static assets.
+  - `middleware.ts` — same headers applied to Worker-served HTML/SSR (Cloudflare Pages `_headers` doesn't cover Worker routes).
+- **`<title>—</title>`** — brand string removed from public HTML surface (`app/layout.tsx`).
+
+### Changed
+- **`lib/utils.ts` `getCookieDomain(hostname?)`:** now prefers live request hostname over build-time `NEXT_PUBLIC_SITE_URL`. Robust against env drift in Cloudflare Pages edge runtime.
+- **`/api/club/{signup,login}` routes:** pass request hostname into `getCookieDomain()` so cookie domain always matches the origin the user arrived on.
+- **`middleware.ts`:** 301 redirect `www.cultrclub.com → cultrclub.com` — one canonical hostname in CT logs / passive DNS.
+
+### Fixed
+- **Email enumeration on `/api/club/login`:** previously returned distinct responses for unknown email (404 "No account found…") vs known email + wrong phone (401 "Phone number does not match…"). Now unified to `401 "Email or phone number is incorrect."`.
+
+### Operational
+- **Cloudflare dashboard (manual step):** enable Security → Bots → "Block AI Bots" toggle on the `cultrclub.com` zone for edge-level scraper blocking (catches UA-spoofing bots that ignore robots.txt).
+- Test members `0245056c-…` (`smoketest+…`) and `f6f75a6c-…` (`audittest+…`) removed from `club_members`.
+
+---
+
 ## [2026-04-16] - Admin Member/Customer Management
 
 ### Added
