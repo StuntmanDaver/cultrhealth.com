@@ -2,24 +2,22 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import { getActiveQuestions, calculateRecommendation, type QuizResult } from '@/lib/config/quiz';
-import { getJoinCheckoutUrl } from '@/lib/config/links';
 import { PLANS } from '@/lib/config/plans';
 import { trackQuizStart, trackQuizStep, trackQuizComplete, trackEvent } from '@/lib/analytics';
 import { ArrowLeft, ArrowRight, Check, Sparkles, X } from 'lucide-react';
 
 export function QuizClient() {
-  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
   const sessionId = useRef(crypto.randomUUID());
   const [showLeadModal, setShowLeadModal] = useState(false);
-  const [pendingJoinHref, setPendingJoinHref] = useState('');
   const [leadForm, setLeadForm] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [leadSubmitting, setLeadSubmitting] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [leadError, setLeadError] = useState<string | null>(null);
 
   // Compute active questions based on current answers
   const activeQuestions = getActiveQuestions(answers);
@@ -140,51 +138,49 @@ export function QuizClient() {
 
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLeadError(null);
     setLeadSubmitting(true);
+
+    // 1. PATCH quiz_responses with lead info — server also mirrors into the waitlist
+    //    table (surfaces in admin → Marketing → Waitlist + founder notification).
     try {
-      await fetch('/api/quiz/submit', {
+      const res = await fetch('/api/quiz/submit', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId: sessionId.current, ...leadForm }),
+        body: JSON.stringify({
+          sessionId: sessionId.current,
+          ...leadForm,
+          recommendedTier: result?.recommendedTier,
+          primaryGoal: result?.primaryGoal,
+        }),
       });
-    } catch { /* fire-and-forget */ }
-    setLeadSubmitting(false);
-    setShowLeadModal(false);
-    handleJoinClick(pendingJoinHref);
-  };
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Could not save your info. Please try again.');
+      }
+    } catch (err) {
+      setLeadSubmitting(false);
+      setLeadError(err instanceof Error ? err.message : 'Could not save your info. Please try again.');
+      return;
+    }
 
-  const handleJoinClick = (href: string) => {
-    // Track to GA4 / GTM DataLayer
+    // 3. Track GA / dataLayer
     trackEvent('quiz_join_click', {
       event_category: 'quiz',
       recommended_tier: result?.recommendedTier,
       recommended_therapy: result?.coreTherapy?.slug || null,
-      destination_url: href
     });
-    
-    // Also push a specific datalayer event for ease of use
     if (typeof window !== 'undefined') {
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({
         event: 'quiz_cta_clicked',
         quiz_recommended_tier: result?.recommendedTier,
-        quiz_destination_url: href
       });
     }
 
-    // Track join click (fire-and-forget)
-    fetch('/api/quiz/submit', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: sessionId.current }),
-    }).catch(() => { /* fire-and-forget */ });
-
-    if (href.startsWith('http')) {
-      window.location.assign(href);
-      return;
-    }
-
-    router.push(href);
+    // 4. Show in-modal success state — no external navigation
+    setLeadSubmitting(false);
+    setLeadSubmitted(true);
   };
 
   // ─── Results View ───
@@ -197,11 +193,6 @@ export function QuizClient() {
     const pricePrefix = !result.coreTherapy && result.recommendedTier === 'core'
       ? 'Starting at'
       : undefined;
-    // Core tier always needs a therapy param — join page redirects to /pricing without one
-    // Default to semaglutide (cheapest at $149) when no specific therapy was recommended
-    const joinHref = result.recommendedTier === 'core'
-      ? getJoinCheckoutUrl('core', { therapySlug: result.coreTherapy?.slug ?? 'semaglutide' })
-      : getJoinCheckoutUrl(result.recommendedTier);
 
     return (
       <>
@@ -248,7 +239,7 @@ export function QuizClient() {
               <Button
                 size="lg"
                 className="w-full"
-                onClick={() => { setPendingJoinHref(joinHref); setShowLeadModal(true); }}
+                onClick={() => { setLeadError(null); setLeadSubmitted(false); setShowLeadModal(true); }}
               >
                 Get Started — {plan.name}
               </Button>
@@ -290,73 +281,103 @@ export function QuizClient() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
             <button
-              onClick={() => { setShowLeadModal(false); handleJoinClick(pendingJoinHref); }}
+              onClick={() => setShowLeadModal(false)}
               className="absolute top-4 right-4 text-cultr-textMuted hover:text-cultr-forest transition-colors"
-              aria-label="Skip and continue"
+              aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 grad-mint px-3 py-1.5 rounded-full mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-cultr-forest" />
-                <span className="text-xs font-display font-medium text-cultr-forest">Almost there</span>
+            {leadSubmitted ? (
+              <div className="text-center py-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full grad-mint mb-4">
+                  <Check className="w-7 h-7 text-cultr-forest" />
+                </div>
+                <h2 className="text-2xl font-display font-bold text-cultr-forest mb-2">You&apos;re on the list.</h2>
+                <p className="text-sm text-cultr-textMuted mb-6">
+                  Thanks{leadForm.firstName ? `, ${leadForm.firstName}` : ''}. A CULTR provider will reach out to you shortly to get you started.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <Link href="/pricing" className="w-full">
+                    <Button size="lg" className="w-full">Browse all plans</Button>
+                  </Link>
+                  <button
+                    onClick={() => setShowLeadModal(false)}
+                    className="text-sm text-cultr-textMuted hover:text-cultr-forest transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-1">Claim your plan</h2>
-              <p className="text-sm text-cultr-textMuted">Enter your info and we&apos;ll have a provider reach out to get you started.</p>
-            </div>
+            ) : (
+              <>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 grad-mint px-3 py-1.5 rounded-full mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-cultr-forest" />
+                    <span className="text-xs font-display font-medium text-cultr-forest">Almost there</span>
+                  </div>
+                  <h2 className="text-2xl font-display font-bold text-cultr-forest mb-1">Claim your plan</h2>
+                  <p className="text-sm text-cultr-textMuted">Enter your info and we&apos;ll have a provider reach out to get you started.</p>
+                </div>
 
-            <form onSubmit={handleLeadSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-cultr-forest mb-1">First name</label>
-                  <input
-                    type="text"
-                    required
-                    value={leadForm.firstName}
-                    onChange={e => setLeadForm(f => ({ ...f, firstName: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
-                    placeholder="Jane"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-cultr-forest mb-1">Last name</label>
-                  <input
-                    type="text"
-                    required
-                    value={leadForm.lastName}
-                    onChange={e => setLeadForm(f => ({ ...f, lastName: e.target.value }))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
-                    placeholder="Smith"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-cultr-forest mb-1">Email</label>
-                <input
-                  type="email"
-                  required
-                  value={leadForm.email}
-                  onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
-                  placeholder="jane@example.com"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-cultr-forest mb-1">Phone</label>
-                <input
-                  type="tel"
-                  required
-                  value={leadForm.phone}
-                  onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
-                  placeholder="(555) 000-0000"
-                />
-              </div>
-              <Button size="lg" className="w-full" isLoading={leadSubmitting}>
-                Continue to checkout
-              </Button>
-            </form>
+                <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-cultr-forest mb-1">First name</label>
+                      <input
+                        type="text"
+                        required
+                        value={leadForm.firstName}
+                        onChange={e => setLeadForm(f => ({ ...f, firstName: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
+                        placeholder="Jane"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-cultr-forest mb-1">Last name</label>
+                      <input
+                        type="text"
+                        required
+                        value={leadForm.lastName}
+                        onChange={e => setLeadForm(f => ({ ...f, lastName: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
+                        placeholder="Smith"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-cultr-forest mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={leadForm.email}
+                      onChange={e => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
+                      placeholder="jane@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-cultr-forest mb-1">Phone</label>
+                    <input
+                      type="tel"
+                      required
+                      value={leadForm.phone}
+                      onChange={e => setLeadForm(f => ({ ...f, phone: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-xl border border-cultr-sage focus:border-cultr-forest focus:outline-none text-sm text-cultr-forest"
+                      placeholder="(555) 000-0000"
+                    />
+                  </div>
+                  {leadError && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2" role="alert">
+                      {leadError}
+                    </p>
+                  )}
+                  <Button size="lg" className="w-full" isLoading={leadSubmitting}>
+                    Submit &amp; get started
+                  </Button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}

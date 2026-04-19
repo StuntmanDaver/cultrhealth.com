@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { z } from 'zod'
+import { createWaitlistEntry } from '@/lib/db'
+import { sendFounderNotification } from '@/lib/resend'
 
 const postSchema = z.object({
   sessionId: z.string().min(1),
@@ -15,6 +17,8 @@ const patchSchema = z.object({
   lastName: z.string().min(1).optional(),
   email: z.string().email().optional(),
   phone: z.string().min(7).optional(),
+  recommendedTier: z.string().optional(),
+  primaryGoal: z.string().optional(),
 })
 
 export async function POST(request: Request) {
@@ -49,7 +53,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const { sessionId, firstName, lastName, email, phone } = parsed.data
+    const { sessionId, firstName, lastName, email, phone, recommendedTier, primaryGoal } = parsed.data
 
     if (firstName || email) {
       await sql`
@@ -63,6 +67,36 @@ export async function PATCH(request: Request) {
           lead_captured_at = CASE WHEN ${email ?? null}::text IS NOT NULL THEN NOW() ELSE lead_captured_at END
         WHERE session_id = ${sessionId}
       `
+
+      // Mirror the lead into the waitlist table so it surfaces in the admin
+      // Marketing dashboard (Waitlist tab) and triggers a founder notification.
+      if (email && firstName) {
+        const fullName = `${firstName}${lastName ? ' ' + lastName : ''}`.trim()
+        const source = recommendedTier ? `quiz:${recommendedTier}` : 'quiz'
+        try {
+          const entry = await createWaitlistEntry({
+            name: fullName,
+            email,
+            phone: phone ?? 'Not Provided',
+            treatment_reason: primaryGoal ?? '',
+            source,
+          })
+          if (process.env.RESEND_API_KEY) {
+            sendFounderNotification({
+              waitlist_id: entry.id,
+              name: fullName,
+              email,
+              phone: phone ?? 'Not Provided',
+              social_handle: '',
+              treatment_reason: primaryGoal ?? '',
+              timestamp: new Date(),
+            }).catch(() => { /* non-fatal */ })
+          }
+        } catch (waitlistError) {
+          // Quiz lead was still saved on quiz_responses — don't fail the request.
+          console.error('Quiz→waitlist mirror failed:', waitlistError)
+        }
+      }
     } else {
       await sql`
         UPDATE quiz_responses SET clicked_join = true WHERE session_id = ${sessionId}

@@ -1,3 +1,18 @@
+## [2026-04-19] - Quiz Lead Capture v2 — On-Domain Funnel (hotfix)
+
+### Fixed
+- **Post-submit 404 (`app/quiz/QuizClient.tsx`):** The lead-capture modal previously called `getJoinCheckoutUrl(tier)` after submission, which navigated the user to `cultrclub.com/join/{tier}` — a 404 page. cultrhealth.com must never link to cultrclub.com. Removed `getJoinCheckoutUrl` / `useRouter` / `handleJoinClick` usage from the quiz entirely. After submit the modal now renders an in-modal success state ("You're on the list") with a CTA to `/pricing` (internal). X button just closes.
+
+### Added
+- **`/api/quiz/submit` PATCH mirrors into `waitlist`:** When lead info (firstName + email) is present, the handler now calls `createWaitlistEntry` with `source: 'quiz:{tier}'` and fires `sendFounderNotification` (non-fatal on failure). Quiz leads now appear in **two** admin surfaces — Marketing → Quiz Leads *and* Marketing → Waitlist — so founder/ops sees every captured contact in the canonical lead list.
+- PATCH schema accepts optional `recommendedTier` and `primaryGoal` to populate `treatment_reason` and `source` on the waitlist row.
+
+### Changed
+- Quiz results "Get Started" button label updated; button no longer computes `joinHref`.
+- Modal: loading/error/success states surfaced inline; removed the "Skip and continue" semantics on the close button since there's nowhere external to skip to.
+
+---
+
 ## [2026-04-19] - Quiz Lead Capture + Admin Dashboard
 
 ### Added
