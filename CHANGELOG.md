@@ -1,3 +1,25 @@
+## [2026-04-19] - Quiz Lead Capture + Admin Dashboard
+
+### Added
+- **Migration 056 (`migrations/056_quiz_lead_capture.sql`):** Adds `lead_first_name`, `lead_last_name`, `lead_email`, `lead_phone`, `lead_captured_at` columns to `quiz_responses` + partial index on `lead_email`.
+- **Lead capture modal on quiz results (`app/quiz/QuizClient.tsx`):** Clicking "Get Started — {plan}" now opens a modal collecting name/email/phone before redirecting to checkout. X button lets unwilling leads skip through. Replaces the prior direct-to-checkout flow that left us with zero follow-up signal on abandons.
+- **Admin Marketing → Quiz Leads tab (`app/admin/marketing/MarketingClient.tsx`):** New third tab alongside QR Analytics + Waitlist. Surfaces four summary cards (Completed Quiz / Contact Captured / Clicked Join / Capture Rate) and a contact table with name, email, phone, recommended tier, and join-click status.
+- **`getQuizLeads(days)` in `lib/db.ts`:** Returns up to 200 most-recent quiz responses with lead fields coerced to typed JS values.
+- **`QuizLeadRow` type + `AnalyticsData.quizLeads`** in `lib/admin-types.ts`; plumbed through `/api/admin/analytics`.
+
+### Changed
+- **`/api/quiz/submit` PATCH (`app/api/quiz/submit/route.ts`):** Now accepts optional `firstName`, `lastName`, `email`, `phone`. When present, writes them via `COALESCE(${value}, column)` so partial updates preserve prior fields, and stamps `lead_captured_at` the first time an email arrives.
+
+### Fixed
+- **SQL parameter type inference:** `CASE WHEN ${email} IS NOT NULL THEN NOW() ELSE lead_captured_at END` needed a `::text` cast — Postgres throws `could not determine data type of parameter $N` when a parameter only appears inside an `IS NOT NULL` comparison.
+- **Defensive admin UI guard:** `(data.quizLeads ?? []).filter(...)` in the Quiz Leads ternary, so the panel renders even if the analytics payload is partially degraded.
+
+### Operational
+- Migration 056 applied to the shared Neon instance (`ep-long-fire-ahzubhy7`) before the production deploy.
+- Staging shipped as `049b67a` → `staging`. Production shipped as cherry-pick `a795acb` → `production` (see memory: `feedback_prod_promotion_cherrypick.md`).
+
+---
+
 ## [2026-04-17] - Inventory Site Separation (cultrhealth.com + cultrclub.com)
 
 ### Added
