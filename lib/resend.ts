@@ -158,8 +158,11 @@ interface FounderNotificationData {
   timestamp: Date
 }
 
-export async function sendFounderNotification(data: FounderNotificationData): Promise<{ success: boolean; error?: string }> {
-  const founderEmail = process.env.FOUNDER_EMAIL
+export async function sendFounderNotification(
+  data: FounderNotificationData,
+  options?: { to?: string }
+): Promise<{ success: boolean; error?: string }> {
+  const founderEmail = options?.to || process.env.FOUNDER_EMAIL
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
 
   if (!founderEmail) {

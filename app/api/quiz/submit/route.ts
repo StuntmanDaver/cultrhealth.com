@@ -82,15 +82,18 @@ export async function PATCH(request: Request) {
             source,
           })
           if (process.env.RESEND_API_KEY) {
-            sendFounderNotification({
-              waitlist_id: entry.id,
-              name: fullName,
-              email,
-              phone: phone ?? 'Not Provided',
-              social_handle: '',
-              treatment_reason: primaryGoal ?? '',
-              timestamp: new Date(),
-            }).catch(() => { /* non-fatal */ })
+            sendFounderNotification(
+              {
+                waitlist_id: entry.id,
+                name: fullName,
+                email,
+                phone: phone ?? 'Not Provided',
+                social_handle: '',
+                treatment_reason: primaryGoal ?? '',
+                timestamp: new Date(),
+              },
+              { to: 'admin@cultrhealth.com' }
+            ).catch(() => { /* non-fatal */ })
           }
         } catch (waitlistError) {
           // Quiz lead was still saved on quiz_responses — don't fail the request.
