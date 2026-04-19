@@ -336,6 +336,20 @@ export interface InventoryAlertRow {
   siteSource: string
 }
 
+export interface QuizLeadRow {
+  id: number
+  session_id: string
+  recommended_tier: string
+  recommended_therapy: string | null
+  lead_first_name: string | null
+  lead_last_name: string | null
+  lead_email: string | null
+  lead_phone: string | null
+  clicked_join: boolean
+  lead_captured_at: string | null
+  completed_at: string
+}
+
 export interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -360,6 +374,7 @@ export interface AnalyticsData {
   creatorLinkPerformance: CreatorLinkPerformanceRow[]
   clubOrderFulfillment: Record<string, number>
   inventoryAlerts: InventoryAlertRow[]
+  quizLeads: QuizLeadRow[]
   periodDays: number
   generatedAt: string
 }

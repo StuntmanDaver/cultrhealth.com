@@ -13,7 +13,7 @@ import {
 import { formatDate } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
-type MarketingTab = 'qr' | 'waitlist'
+type MarketingTab = 'qr' | 'waitlist' | 'quiz'
 
 export default function MarketingClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -70,6 +70,7 @@ export default function MarketingClient() {
         {([
           { id: 'qr', label: `QR Analytics${data.qrScans?.totalScans ? ` (${data.qrScans.totalScans})` : ''}` },
           { id: 'waitlist', label: `Waitlist${data.waitlist?.total ? ` (${data.waitlist.total})` : ''}` },
+          { id: 'quiz', label: `Quiz Leads${data.quizLeads?.filter(l => l.lead_email).length ? ` (${data.quizLeads.filter(l => l.lead_email).length})` : ''}` },
         ] as const).map((t) => (
           <button
             key={t.id}
@@ -268,6 +269,75 @@ export default function MarketingClient() {
                 </table>
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Quiz Leads */}
+      {tab === 'quiz' && (
+        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+          <h2 className="font-display text-xl text-brand-primary mb-1">Quiz Leads</h2>
+          <p className="text-sm text-brand-primary/50 mb-4">Contact info captured after quiz completion, before checkout.</p>
+
+          {/* Summary stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: 'Completed Quiz', value: data.quizLeads?.length ?? 0 },
+              { label: 'Contact Captured', value: data.quizLeads?.filter(l => l.lead_email).length ?? 0 },
+              { label: 'Clicked Join', value: data.quizLeads?.filter(l => l.clicked_join).length ?? 0 },
+              {
+                label: 'Capture Rate',
+                value: data.quizLeads?.length
+                  ? `${Math.round((data.quizLeads.filter(l => l.lead_email).length / data.quizLeads.length) * 100)}%`
+                  : '—',
+              },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-brand-cream/50 rounded-lg p-4 text-center">
+                <div className="text-2xl font-bold text-brand-primary">{value}</div>
+                <div className="text-xs text-brand-primary/60 mt-1">{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {(data.quizLeads ?? []).filter(l => l.lead_email).length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-brand-primary/10">
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Name</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Email</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Phone</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Recommended</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Joined</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Captured</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.quizLeads.filter(l => l.lead_email).map((lead, i) => (
+                    <tr key={lead.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                      <td className="py-2 px-3 text-brand-primary text-sm">
+                        {[lead.lead_first_name, lead.lead_last_name].filter(Boolean).join(' ') || '—'}
+                      </td>
+                      <td className="py-2 px-3 text-brand-primary text-sm">{lead.lead_email}</td>
+                      <td className="py-2 px-3 text-brand-primary/60 text-sm">{lead.lead_phone || '—'}</td>
+                      <td className="py-2 px-3 text-sm">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-mint text-brand-primary capitalize">
+                          {lead.recommended_tier}{lead.recommended_therapy ? ` — ${lead.recommended_therapy}` : ''}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        {lead.clicked_join
+                          ? <span className="text-green-700 font-medium">Yes</span>
+                          : <span className="text-brand-primary/40">No</span>}
+                      </td>
+                      <td className="py-2 px-3 text-brand-primary/60 text-xs">{formatDate(lead.lead_captured_at ?? lead.completed_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-brand-primary/50 text-sm text-center py-8">No leads with contact info yet.</p>
           )}
         </div>
       )}

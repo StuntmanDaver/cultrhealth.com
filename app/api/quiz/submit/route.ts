@@ -11,6 +11,10 @@ const postSchema = z.object({
 
 const patchSchema = z.object({
   sessionId: z.string().min(1),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(7).optional(),
 })
 
 export async function POST(request: Request) {
@@ -45,11 +49,25 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const { sessionId } = parsed.data
+    const { sessionId, firstName, lastName, email, phone } = parsed.data
 
-    await sql`
-      UPDATE quiz_responses SET clicked_join = true WHERE session_id = ${sessionId}
-    `
+    if (firstName || email) {
+      await sql`
+        UPDATE quiz_responses
+        SET
+          clicked_join = true,
+          lead_first_name = COALESCE(${firstName ?? null}, lead_first_name),
+          lead_last_name  = COALESCE(${lastName ?? null},  lead_last_name),
+          lead_email      = COALESCE(${email ?? null},     lead_email),
+          lead_phone      = COALESCE(${phone ?? null},     lead_phone),
+          lead_captured_at = CASE WHEN ${email ?? null}::text IS NOT NULL THEN NOW() ELSE lead_captured_at END
+        WHERE session_id = ${sessionId}
+      `
+    } else {
+      await sql`
+        UPDATE quiz_responses SET clicked_join = true WHERE session_id = ${sessionId}
+      `
+    }
 
     return NextResponse.json({ success: true }, { status: 200 })
   } catch (error) {

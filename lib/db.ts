@@ -2857,3 +2857,33 @@ export async function getInventoryAlerts(): Promise<{
     throw new DatabaseError('Failed to fetch inventory alerts', error)
   }
 }
+
+export async function getQuizLeads(days = 90) {
+  try {
+    const result = await sql`
+      SELECT id, session_id, recommended_tier, recommended_therapy,
+             lead_first_name, lead_last_name, lead_email, lead_phone,
+             clicked_join, lead_captured_at, completed_at
+      FROM quiz_responses
+      WHERE completed_at >= NOW() - make_interval(days => ${days})
+      ORDER BY completed_at DESC
+      LIMIT 200
+    `
+    return result.rows.map(r => ({
+      id: Number(r.id),
+      session_id: r.session_id as string,
+      recommended_tier: r.recommended_tier as string,
+      recommended_therapy: r.recommended_therapy as string | null,
+      lead_first_name: r.lead_first_name as string | null,
+      lead_last_name: r.lead_last_name as string | null,
+      lead_email: r.lead_email as string | null,
+      lead_phone: r.lead_phone as string | null,
+      clicked_join: Boolean(r.clicked_join),
+      lead_captured_at: r.lead_captured_at as string | null,
+      completed_at: r.completed_at as string,
+    }))
+  } catch (error) {
+    console.error('Database error fetching quiz leads:', error)
+    return []
+  }
+}
