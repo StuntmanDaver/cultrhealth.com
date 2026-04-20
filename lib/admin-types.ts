@@ -35,7 +35,22 @@ export interface WaitlistStats {
     email: string
     created_at: string
     source?: string
+    coupon_code?: string
   }[]
+}
+
+export interface ClubMemberAdminRow {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  social_handle: string | null
+  address_city: string | null
+  address_state: string | null
+  signup_type: string | null
+  coupon_code: string | null
+  source: string | null
+  created_at: string
 }
 
 export interface MembershipStats {
@@ -310,6 +325,16 @@ export interface CustomerProfile {
     plan_tier: string
     created_at: string
   } | null
+  quizResponses: {
+    id: number
+    session_id: string
+    recommended_tier: string
+    recommended_therapy: string | null
+    answers: Record<string, string | string[]>
+    clicked_join: boolean
+    lead_captured_at: string | null
+    completed_at: string
+  }[]
   lifetimeValue: number
   totalOrders: number
 }
@@ -375,6 +400,7 @@ export interface AnalyticsData {
   clubOrderFulfillment: Record<string, number>
   inventoryAlerts: InventoryAlertRow[]
   quizLeads: QuizLeadRow[]
+  clubMembers: ClubMemberAdminRow[]
   periodDays: number
   generatedAt: string
 }

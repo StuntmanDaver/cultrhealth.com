@@ -14,6 +14,7 @@ export interface WaitlistEntry {
   social_handle?: string
   treatment_reason?: string
   source?: string
+  coupon_code?: string
   status: string
   created_at: Date
   updated_at: Date
@@ -26,6 +27,7 @@ export interface CreateWaitlistInput {
   social_handle?: string
   treatment_reason?: string
   source?: string
+  coupon_code?: string
 }
 
 export interface MembershipEntry {
@@ -76,7 +78,7 @@ export class DatabaseError extends Error {
 // ===========================================
 
 export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{ id: string; isNew: boolean }> {
-  const { name, email, phone, social_handle, treatment_reason, source } = input
+  const { name, email, phone, social_handle, treatment_reason, source, coupon_code } = input
 
   try {
     // Ensure table and index exist
@@ -84,14 +86,15 @@ export async function createWaitlistEntry(input: CreateWaitlistInput): Promise<{
 
     // Upsert: insert or update if email already exists
     const result = await sql`
-      INSERT INTO waitlist (name, email, phone, social_handle, treatment_reason, source, status, created_at, updated_at)
-      VALUES (${name}, ${email.toLowerCase()}, ${phone}, ${social_handle || null}, ${treatment_reason || null}, ${source || null}, 'new', NOW(), NOW())
+      INSERT INTO waitlist (name, email, phone, social_handle, treatment_reason, source, coupon_code, status, created_at, updated_at)
+      VALUES (${name}, ${email.toLowerCase()}, ${phone}, ${social_handle || null}, ${treatment_reason || null}, ${source || null}, ${coupon_code || null}, 'new', NOW(), NOW())
       ON CONFLICT (lower(email))
       DO UPDATE SET
         name = EXCLUDED.name,
         phone = EXCLUDED.phone,
         social_handle = EXCLUDED.social_handle,
         treatment_reason = EXCLUDED.treatment_reason,
+        coupon_code = COALESCE(EXCLUDED.coupon_code, waitlist.coupon_code),
         updated_at = NOW()
       RETURNING id, (xmax = 0) as is_new
     `
@@ -121,11 +124,13 @@ async function ensureWaitlistTable() {
         social_handle TEXT,
         treatment_reason TEXT,
         source TEXT,
+        coupon_code VARCHAR(50),
         status TEXT NOT NULL DEFAULT 'new',
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `
+    await sql`ALTER TABLE waitlist ADD COLUMN IF NOT EXISTS coupon_code VARCHAR(50)`
     await sql`
       CREATE UNIQUE INDEX IF NOT EXISTS waitlist_email_lower_idx ON waitlist (lower(email))
     `
@@ -2423,6 +2428,16 @@ export interface CustomerFullProfile {
     plan_tier: string
     created_at: string
   } | null
+  quizResponses: {
+    id: number
+    session_id: string
+    recommended_tier: string
+    recommended_therapy: string | null
+    answers: Record<string, string | string[]>
+    clicked_join: boolean
+    lead_captured_at: string | null
+    completed_at: string
+  }[]
   lifetimeValue: number
   totalOrders: number
 }
@@ -2433,7 +2448,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
 
     // Run queries in parallel — each wrapped in .catch() so one missing table doesn't crash all
     const emptyResult = { rows: [] }
-    const [memberResult, clubOrdersResult, productOrdersResult, membershipResult, intakeResult] = await Promise.all([
+    const [memberResult, clubOrdersResult, productOrdersResult, membershipResult, intakeResult, quizResult] = await Promise.all([
       sql`
         SELECT id, name, email, phone, address_street, address_city, address_state, address_zip, age, gender, signup_type, source, created_at
         FROM club_members
@@ -2466,6 +2481,13 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
         WHERE LOWER(customer_email) = ${normalizedEmail}
         ORDER BY created_at DESC
         LIMIT 1
+      `.catch(() => emptyResult),
+      sql`
+        SELECT id, session_id, answers, recommended_tier, recommended_therapy,
+               clicked_join, lead_captured_at, completed_at
+        FROM quiz_responses
+        WHERE LOWER(lead_email) = ${normalizedEmail}
+        ORDER BY completed_at DESC
       `.catch(() => emptyResult),
     ])
 
@@ -2517,6 +2539,17 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
       created_at: String(intakeResult.rows[0].created_at),
     } : null
 
+    const quizResponses = quizResult.rows.map(r => ({
+      id: Number(r.id),
+      session_id: String(r.session_id),
+      answers: typeof r.answers === 'string' ? JSON.parse(r.answers) : (r.answers ?? {}),
+      recommended_tier: String(r.recommended_tier),
+      recommended_therapy: r.recommended_therapy ? String(r.recommended_therapy) : null,
+      clicked_join: Boolean(r.clicked_join),
+      lead_captured_at: r.lead_captured_at ? String(r.lead_captured_at) : null,
+      completed_at: String(r.completed_at),
+    }))
+
     // Calculate lifetime value from all orders
     const clubTotal = clubOrders.reduce((sum, o) => sum + (o.subtotal_usd || 0), 0)
     const productTotal = productOrders.reduce((sum, o) => sum + o.total_amount, 0)
@@ -2527,6 +2560,7 @@ export async function getCustomerFullProfile(email: string): Promise<CustomerFul
       productOrders,
       membership,
       intakeStatus,
+      quizResponses,
       lifetimeValue: clubTotal + productTotal,
       totalOrders: clubOrders.length + productOrders.length,
     }
@@ -2884,6 +2918,35 @@ export async function getQuizLeads(days = 90) {
     }))
   } catch (error) {
     console.error('Database error fetching quiz leads:', error)
+    return []
+  }
+}
+
+export async function getClubMembersForAdmin() {
+  try {
+    const result = await sql`
+      SELECT id, name, email, phone, social_handle,
+             address_city, address_state, signup_type,
+             coupon_code, source, created_at
+      FROM club_members
+      ORDER BY created_at DESC
+      LIMIT 500
+    `
+    return result.rows.map(r => ({
+      id: r.id as string,
+      name: r.name as string,
+      email: r.email as string,
+      phone: r.phone as string | null,
+      social_handle: r.social_handle as string | null,
+      address_city: r.address_city as string | null,
+      address_state: r.address_state as string | null,
+      signup_type: r.signup_type as string | null,
+      coupon_code: r.coupon_code as string | null,
+      source: r.source as string | null,
+      created_at: r.created_at as string,
+    }))
+  } catch (error) {
+    console.error('Database error fetching club members for admin:', error)
     return []
   }
 }

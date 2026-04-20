@@ -3,6 +3,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { AnalyticsData, CustomerAdminRow, CustomerProfile } from '@/lib/admin-types'
 import { downloadCSV, formatDate, formatCurrency, getStatusColor, filterByDateRange } from '@/lib/admin-utils'
+import { QUIZ_QUESTIONS } from '@/lib/config/quiz'
+
+// Resolve a quiz answer id (or array of ids) against QUIZ_QUESTIONS option labels.
+function resolveQuizAnswerLabel(questionId: string, answer: string | string[] | undefined): string {
+  if (!answer) return '—'
+  const q = QUIZ_QUESTIONS.find(x => x.id === questionId)
+  if (!q) return Array.isArray(answer) ? answer.join(', ') : String(answer)
+  const labelFor = (id: string) => q.options.find(o => o.id === id)?.label ?? id
+  return Array.isArray(answer) ? answer.map(labelFor).join(', ') : labelFor(answer)
+}
+
+function getQuizQuestionLabel(questionId: string): string {
+  return QUIZ_QUESTIONS.find(q => q.id === questionId)?.question ?? questionId
+}
 
 type SortField = 'name' | 'email' | 'address_city' | 'address_state' | 'signup_type' | 'source' | 'order_count' | 'total_spent' | 'created_at' | 'age' | 'gender' | 'converted' | 'avg_order_value' | 'browser' | 'device_type'
 type SortDir = 'asc' | 'desc'
@@ -784,6 +798,50 @@ export default function CustomersClient() {
                 {/* Activity Tab */}
                 {customerDetailTab === 'activity' && (
                   <div className="space-y-4">
+                    {/* Quiz History — any quiz_responses rows where lead_email matches this customer */}
+                    {customerDetail.quizResponses.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">
+                          Quiz History ({customerDetail.quizResponses.length})
+                        </h4>
+                        <div className="space-y-3">
+                          {customerDetail.quizResponses.map(qr => (
+                            <div key={qr.id} className="bg-brand-cream/30 rounded-lg p-3 space-y-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-mint text-brand-primary capitalize">
+                                    Recommended: {qr.recommended_tier}
+                                    {qr.recommended_therapy ? ` — ${qr.recommended_therapy}` : ''}
+                                  </span>
+                                </div>
+                                <span className="text-xs text-brand-primary/50">{formatDate(qr.completed_at)}</span>
+                              </div>
+                              <div className="text-xs">
+                                {qr.clicked_join
+                                  ? <span className="text-green-700 font-medium">Clicked Join ✓</span>
+                                  : <span className="text-brand-primary/40">Did not click join</span>}
+                              </div>
+                              {Object.keys(qr.answers).length > 0 && (
+                                <details className="text-xs">
+                                  <summary className="cursor-pointer text-brand-primary/60 hover:text-brand-primary">
+                                    View {Object.keys(qr.answers).length} answer(s)
+                                  </summary>
+                                  <div className="mt-2 space-y-1.5 pl-2 border-l-2 border-brand-primary/10">
+                                    {Object.entries(qr.answers).map(([qid, answer]) => (
+                                      <div key={qid}>
+                                        <span className="text-brand-primary/50">{getQuizQuestionLabel(qid)}</span>
+                                        <span className="block text-brand-primary">{resolveQuizAnswerLabel(qid, answer)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {customerDetail.intakeStatus && (
                       <div>
                         <h4 className="text-xs font-medium text-brand-primary/60 uppercase tracking-wide mb-2">Intake Status</h4>
@@ -820,7 +878,9 @@ export default function CustomersClient() {
                       </div>
                     )}
 
-                    {!customerDetail.intakeStatus && !customerDetail.clubOrders.some(o => o.coupon_code) && (
+                    {!customerDetail.intakeStatus
+                      && !customerDetail.clubOrders.some(o => o.coupon_code)
+                      && customerDetail.quizResponses.length === 0 && (
                       <p className="text-center text-brand-primary/40 py-8 text-sm">No activity data available</p>
                     )}
                   </div>
