@@ -1,218 +1,254 @@
 # External Integrations
 
-**Analysis Date:** 2026-03-22
+*Last updated: 2026-04-20*
+*Scope: cultrhealth.com + cultrclub.com*
 
-## APIs & External Services
-
-**Medical/Fulfillment:**
-- **Asher Med Partner Portal** — HIPAA-compliant patient onboarding, GLP-1 and peptide order fulfillment, ID/consent file uploads (presigned S3 URLs)
-  - SDK/Client: custom fetch wrapper in `lib/asher-med-api.ts`
-  - Auth: `X-API-KEY` header
-  - Env vars: `ASHER_MED_API_KEY`, `ASHER_MED_PARTNER_ID`, `ASHER_MED_API_URL`, `ASHER_MED_ENVIRONMENT` (`production` | `sandbox`)
-  - Endpoints: patient create/lookup, order create/update, file upload presigned URLs
-  - Config: `lib/config/asher-med.ts` (medication options, API URLs)
-  - Mapping: `lib/config/product-to-asher-mapping.ts` (SKU → Asher Med product)
-
-- **SiPhox Health** — At-home blood test kit fulfillment and biomarker lab results
-  - SDK/Client: custom fetch wrapper in `lib/siphox/client.ts` with Zod validation on all responses
-  - Auth: Bearer token (`SIPHOX_API_KEY`)
-  - Base URL: `SIPHOX_API_URL` (default: `https://connect.siphoxhealth.com/api/v1`)
-  - Operations: customer create, kit order, kit validation, report fetch, credits check
-  - Schemas: `lib/siphox/schemas.ts` (Zod); Types: `lib/siphox/types.ts`
-  - Biomarker mapping: `lib/config/siphox-biomarkers.ts` (50 biomarkers)
-  - DB tables: `siphox_customers`, `siphox_kit_orders`, `siphox_reports` (migrations 020–022)
-  - Cron jobs: `/api/cron/siphox-fulfillment` (every 15 min), `/api/cron/siphox-results` (every hour) — configured in `vercel.json`
-
-**Social/Content:**
-- **Curator.io** — Social media feed aggregation on Community page (`app/community/page.tsx`)
-  - SDK/Client: CDN script loaded by `components/site/CommunityFeed.tsx`
-  - Auth: Public feed IDs via env vars
-  - Env vars: `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM`, `NEXT_PUBLIC_CURATOR_FEED_TIKTOK`, `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE`
-  - Behavior: shows "Coming Soon" when feed IDs are absent
-
-**AI:**
-- **OpenAI** (via AI SDK v6) — Protocol generation and meal plan creation
-  - SDK: `@ai-sdk/openai` ^3.0.21, `ai` ^6.0.59
-  - Auth: `OPENAI_API_KEY`
-  - Routes: `app/api/protocol/generate/route.ts`, `app/api/meal-plan/route.ts`
-
-**SMS:**
-- **Twilio** — OTP delivery for portal phone authentication
-  - SDK: `twilio` ^5.12.2
-  - Auth: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_VERIFY_SERVICE_SID`
-  - Route: `app/api/portal/send-otp/`, `app/api/portal/verify-otp/`
-  - Staging bypass: OTP `123456` always accepted when `SIPHOX_API_KEY` or staging URL detected
-
-**Analytics:**
-- **Google Analytics 4** — Page tracking and e-commerce conversion events
-  - Integration: gtag.js script injected in `app/layout.tsx` (conditional on `NEXT_PUBLIC_GA_MEASUREMENT_ID`)
-  - Client: `lib/analytics.ts` — typed wrapper for gtag events (page_view, purchase, sign_up, add_to_cart, etc.)
-  - Env vars: `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`
-  - DNS prefetch: declared in `<head>` for `js.stripe.com` and `cdn.curator.io`
-
-**Security:**
-- **Cloudflare Turnstile** — Bot protection on forms
-  - SDK: `@marsidev/react-turnstile` ^1.0.2 (client-side widget)
-  - Server verify: `lib/turnstile.ts` → `https://challenges.cloudflare.com/turnstile/v0/siteverify`
-  - Auth: `TURNSTILE_SECRET_KEY` (server), public site key configured in component
-
-## Data Storage
-
-**Databases:**
-- **Neon PostgreSQL** — Primary database for all application data
-  - Connection: `POSTGRES_URL` env var
-  - Client: `@vercel/postgres` ^0.10.0 SDK (`sql` tagged template literal)
-  - Entry point: `lib/db.ts` (core tables), `lib/creators/db.ts` (affiliate), `lib/siphox/db.ts` (labs)
-  - Migration runner: `scripts/run-migration.mjs` (manual execution)
-  - 24 migration files in `migrations/` (002–024)
-
-**Caching/Rate Limiting:**
-- **Upstash Redis** — Optional distributed rate limiting backend
-  - Client: REST API called directly via `fetch` (no SDK dependency)
-  - Auth: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
-  - Fallback: in-memory `Map` store when Redis env vars absent
-  - Implementation: `lib/rate-limit.ts`
-  - Preconfigured limiters: `apiLimiter` (10 req/min), `formLimiter` (5/hr), `strictLimiter` (3/15min)
-
-**File Storage:**
-- **AWS S3** (via Asher Med) — Patient ID documents and consent forms
-  - Presigned URLs issued by Asher Med API; never stored directly
-  - Upload routes: `app/api/intake/upload/route.ts`
-  - Staging bypass: mock presigned URLs returned when `ASHER_MED_API_KEY` is absent
-
-## Authentication & Identity
-
-**Member/Provider/Admin Auth:**
-- Custom magic link flow (no third-party auth provider)
-- JWT tokens via `jose` library (HS256); `lib/auth.ts`
-- Magic link token: 15-minute expiry, delivered via Resend email
-- Session token: 7-day expiry, stored as `cultr_session` HttpOnly cookie
-- Roles: `member` | `creator` | `admin`
-- Dev mode: session auto-granted as `admin` role in `process.env.NODE_ENV === 'development'`
-- Staging bypass: magic link token returned in API response (no email sent); team emails auto-provisioned
-
-**Portal Auth (OTP-based):**
-- Phone number + 6-digit SMS OTP (Twilio Verify Service)
-- Dual-token: 15-min access token (`cultr_portal_access`) + 7-day refresh token (`cultr_portal_refresh`)
-- Implementation: `lib/portal-auth.ts`, `lib/portal-db.ts`
-- DB table: `portal_sessions` (migration 014)
-
-**Creator Auth:**
-- Separate magic link flow via `/creators/login`
-- `verifyCreatorAuth()` in `lib/auth.ts` — checks session cookie, then DB lookup by email
-- Active creator status required (`status === 'active'`)
-
-## Payment Processing
-
-**Stripe** — Primary subscription and checkout processor
-- SDK: `stripe` ^20.2.0 (server), `@stripe/react-stripe-js` ^5.6.0 + `@stripe/stripe-js` ^8.7.0 (client)
-- Auth: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
-- API version: `2026-02-25.clover`
-- Routes: `app/api/checkout/route.ts`, `app/api/stripe/checkout/route.ts`, `app/api/webhook/stripe/route.ts`
-- Features: subscriptions, one-time product checkout, customer portal (`bpc_1StZxKC1JUIZB7aRXhaSarRI`), coupon codes (FOUNDER15: 15% off forever, FIRSTMONTH: 50% off first month)
-- Client env: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- DB table: `stripe_idempotency` (migration 007)
-
-**Klarna** — BNPL (Buy Now Pay Later) — feature-flagged
-- Auth: `KLARNA_API_KEY`, `KLARNA_API_SECRET`, `NEXT_PUBLIC_KLARNA_CLIENT_ID`
-- Env: `KLARNA_API_URL` (sandbox: `https://api.playground.klarna.com`)
-- Feature flag: `NEXT_PUBLIC_ENABLE_KLARNA=false` (default disabled)
-- Implementation: `lib/payments/klarna-api.ts`, `app/api/checkout/klarna/`, `app/api/webhook/klarna/route.ts`
-
-**Affirm** — BNPL — feature-flagged
-- Auth: `AFFIRM_PRIVATE_API_KEY`, `NEXT_PUBLIC_AFFIRM_PUBLIC_KEY`
-- Env: `AFFIRM_API_URL` (sandbox: `https://sandbox.affirm.com`), `NEXT_PUBLIC_AFFIRM_SCRIPT_URL`
-- Feature flag: `NEXT_PUBLIC_ENABLE_AFFIRM=false` (default disabled)
-- Implementation: `lib/payments/affirm-api.ts`, `app/api/checkout/affirm/`, `app/api/webhook/affirm/route.ts`
-
-**Authorize.net** — Direct credit card processing (high-risk merchant) — feature-flagged
-- Auth: `AUTHORIZE_NET_TRANSACTION_KEY`, `NEXT_PUBLIC_AUTHORIZE_NET_API_LOGIN_ID`, `NEXT_PUBLIC_AUTHORIZE_NET_PUBLIC_CLIENT_KEY`, `AUTHORIZE_NET_WEBHOOK_SIGNATURE_KEY`
-- Env: `AUTHORIZE_NET_ENVIRONMENT` (`sandbox` | `production`)
-- Feature flag: `NEXT_PUBLIC_ENABLE_AUTHORIZE_NET=false` (default disabled)
-- Primary provider flag: `NEXT_PUBLIC_PRIMARY_PAYMENT_PROVIDER=stripe` (can switch to `authorize_net`)
-- Implementation: `lib/payments/authorize-net-api.ts`, `app/api/checkout/authorize-net/`, `app/api/webhook/authorize-net/route.ts`
-
-**BNPL Amount Limits** (from `lib/config/payments.ts`):
-- Klarna: $35 min
-- Affirm: configurable per plan
-
-## Accounting & Invoicing
-
-**QuickBooks Online** — Invoice creation and payment recording for CULTR Club orders
-- Auth: OAuth2 (refresh token stored in DB, rotated on each use)
-- Env vars: `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET`, `QUICKBOOKS_REALM_ID`, `QUICKBOOKS_REFRESH_TOKEN`, `QUICKBOOKS_REDIRECT_URI`, `QUICKBOOKS_SANDBOX`
-- Token URL: `https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer`
-- Implementation: `lib/quickbooks.ts` — token management, customer/invoice creation
-- DB table: `quickbooks_tokens` (migration 011) — persists rotated refresh tokens
-- Triggered by: admin club order approval (`app/api/admin/club-orders/[orderId]/approve/route.ts`)
-
-## Monitoring & Observability
-
-**Error Tracking:**
-- None detected (no Sentry, Datadog, or similar SDK present)
-
-**Logs:**
-- `console.log` / `console.error` used throughout server-side code
-- All `console.*` calls removed in production builds (`removeConsole: true` in `next.config.js`)
-- HIPAA logging rule: PHI must never appear in logs (enforced via `code-audit.sh` post-tool hook)
-
-**Rate Limiting:**
-- IP-based via `lib/rate-limit.ts` (Upstash Redis in production, in-memory fallback in dev)
-
-## Email
-
-**Resend** — All transactional emails
-- SDK: `resend` ^4.0.0
-- Auth: `RESEND_API_KEY`
-- Wrapper: `lib/resend.ts` — includes `escapeHtml()` XSS guard applied to all user-supplied values before template injection
-- From address: `FROM_EMAIL` env var (fallback: `CULTR <onboarding@resend.dev>`)
-- Email types: magic link, welcome, order confirmations, creator notifications, club order approval/invoice
-
-## CI/CD & Deployment
-
-**Hosting:**
-- Vercel
-- Active project: `cultrhealth-com` (prj_ZW0ClHb8kXgpuytARXj8fG4NAaH0)
-
-**CI Pipeline:**
-- None (no GitHub Actions or similar)
-- Pre-commit quality gates enforced via `.claude/hooks/` (run-tests, type-check, code-audit)
-
-**Branch → Environment mapping:**
-| Branch | Environment | URL |
-|---|---|---|
-| `staging` | Staging | staging.cultrhealth.com |
-| `production` | Production | cultrhealth.com + join.cultrhealth.com |
-| `main` | No deploy (disabled in `vercel.json`) | — |
-
-## Webhooks & Callbacks
-
-**Incoming webhooks:**
-- `POST /api/webhook/stripe/route.ts` — Stripe subscription events (verified via `STRIPE_WEBHOOK_SECRET`)
-- `POST /api/webhook/affirm/route.ts` — Affirm payment events
-- `POST /api/webhook/klarna/route.ts` — Klarna payment events
-- `POST /api/webhook/authorize-net/route.ts` — Authorize.net transaction events (HMAC signature verification)
-- `POST /api/webhook/quickbooks/route.ts` — QuickBooks Online events
-
-**Outgoing callbacks:**
-- BNPL providers redirect to `NEXT_PUBLIC_SITE_URL/success` on completion
-- QuickBooks OAuth2 callback: `QUICKBOOKS_REDIRECT_URI` → `app/api/quickbooks/callback/`
-
-**Subdomain routing:**
-- `join.cultrhealth.com` and `join.staging.cultrhealth.com` are Vercel domain aliases
-- `middleware.ts` rewrites these hostnames to `/join` internally; API routes, static assets, and `/r/` tracking links pass through unchanged
-
-## Affiliate Attribution
-
-**Click tracking:**
-- Cookie: `cultr_attribution` (30-day window)
-- Redirect handler: `app/r/[slug]/route.ts` — sets attribution cookie, logs `click_events` DB record
-- Implementation: `lib/creators/attribution.ts`
-
-**Coupon codes:**
-- Validated via `lib/config/coupons.ts` (`validateCouponUnified()`)
-- Synced to Stripe promotion codes (column `stripe_promotion_code_id` on `affiliate_codes`)
+Both apps share the same Neon Postgres database and the same external vendor accounts (Stripe, Resend, Mailchimp, Cloudflare Turnstile). Where an integration is used by only one app, the matrix makes that explicit.
 
 ---
 
-*Integration audit: 2026-03-22*
+## Integration Matrix
+
+| Integration | cultrhealth.com | cultrclub.com | Auth Method | Purpose |
+|---|---|---|---|---|
+| **Stripe** | Yes (`^20.2.0`) | Yes (`^22.0.1`) | Secret key + webhook signing secret | Subscriptions, Checkout sessions, Customer Portal, one-time payments |
+| **Stripe Customer Portal** | Yes | No | Portal ID `bpc_1StZxKC1JUIZB7aRXhaSarRI` | Self-service subscription management for members |
+| **CorePay (Authorize.Net ARB)** | Yes | No | API Login ID + Transaction Key | Alternative recurring card gateway for Core subscriptions |
+| **Resend** | Yes | Yes | `RESEND_API_KEY` | All transactional email (magic links, order receipts, creator notifications, admin alerts) |
+| **Mailchimp** | Yes | Yes | Basic auth (API key) + audience ID + server prefix | Marketing audience sync + tagged event lifecycle (intake-complete, labs-ready) |
+| **Twilio** | Yes | No | Account SID + auth token | SMS OTP delivery for portal/admin login |
+| **Cloudflare Turnstile** | Yes | Yes | Site key (public) + `TURNSTILE_SECRET_KEY` | Bot protection on all public forms |
+| **Neon Postgres** | Yes | Yes | `POSTGRES_URL` | Primary data store. Main app via `@vercel/postgres` (TCP pool); club via `@neondatabase/serverless` (HTTP) |
+| **Upstash Redis** (optional) | Yes | No | REST URL + token | Rate limiting + idempotency cache; both repos fall back to in-memory when unset |
+| **QuickBooks Online** | Yes | No | OAuth2 (access + refresh tokens in `quickbooks_tokens` table) | Invoice + customer + payment sync for club orders |
+| **OpenAI (via Vercel AI SDK)** | Yes | No | `OPENAI_API_KEY` | Dosing explanations + meal-plan generation |
+| **SiPhox Health** | Yes | No | Bearer token `SIPHOX_API_KEY` | At-home lab kit ordering + biomarker ingestion |
+| **Healthie EMR** | Yes (code complete, awaiting activation) | No | GraphQL API key | EHR: patients, appointments, form answer groups, documents |
+| **Calendly** | Yes | No | Query-param shared secret `CALENDLY_WEBHOOK_SECRET` | Post-onboarding provider scheduling (replaced Healthie embed Apr 12 2026) |
+| **Google Analytics 4** | Yes | No | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Page + conversion tracking (main site only; club is stealth/noindex) |
+| **Curator.io** | Yes | No | Public feed IDs (Instagram / TikTok / YouTube) | Community page social feed embed |
+| **AWS S3** | Present in deps, minimal active use | No | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Historical: presigned upload URLs (Asher Med era). Current uploads flow through SiPhox/Healthie instead. |
+| **LegitScript** | Yes (placeholder) | No | Seal ID `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID` | Healthcare merchant verification badge (post-certification) |
+| **HubSpot** | Yes (embed script) | No | Tracking code | Site-wide visitor tracking embed (per recent commit `61fb4ff`) |
+| **Asher Med Partner Portal** | Code remains, no active calls | No | `X-API-KEY` header | Former intake/Rx fulfillment. Removed for LegitScript Apr 4 2026; see CONCERNS. |
+| **NOWPayments** | Removed | No | — | Former crypto/Bitcoin gateway. Code removed Mar 30 2026. |
+| **Affirm / Klarna / Authorize.net (direct)** | Removed | No | — | Former BNPL + direct-card routes. Removed Mar 30 2026. |
+
+---
+
+## cultrhealth.com Integrations
+
+### Stripe (primary payments)
+- SDK: `stripe ^20.2.0`, `@stripe/stripe-js ^8.7.0`, `@stripe/react-stripe-js ^5.6.0`
+- Env: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- Routes:
+  - `app/api/checkout/route.ts` — generic Stripe checkout
+  - `app/api/checkout/subscription/route.ts` — subscription checkout
+  - `app/api/checkout/product/route.ts` — one-time product checkout
+  - `app/api/webhook/stripe/route.ts` — webhook handler (dedupes via `stripe_idempotency` table, migration 007)
+- Customer portal link: `https://billing.stripe.com/p/login/...` (`lib/config/links.ts`)
+- Coupons: `FOUNDER15` (15% off forever), `FIRSTMONTH` (50% off first month), plus Stripe promotion codes (migration 016)
+
+### CorePay (secondary recurring gateway)
+- Module: `lib/payments/corepay-gateway.ts`
+- Route: `app/api/checkout/corepay/route.ts`
+- Env: `COREPAY_API_LOGIN_ID`, `COREPAY_TRANSACTION_KEY`, `COREPAY_API_URL`
+- Uses Authorize.Net ARB (Automated Recurring Billing) API under CorePay merchant credentials
+- Tax calculation: `lib/config/tax.ts` — Florida sales tax (per jurisdiction compliance, memory Apr 14 2026)
+
+### Resend (transactional email)
+- Env: `RESEND_API_KEY`, `FROM_EMAIL`, `FOUNDER_EMAIL`
+- Module: `lib/resend.ts` — `getResendClient()`, `escapeHtml()`, `brandedEmailHeader()`, `brandedEmailFooter()`, `EMAIL_FONT_IMPORT`
+- All 7 API routes that send email use `escapeHtml()` on user-supplied strings (XSS hardening deployed Mar 18 2026)
+- Image URLs must use `getEmailSiteUrl()` helper — never raw `NEXT_PUBLIC_SITE_URL` (localhost breaks email logos)
+
+### Twilio (SMS OTP)
+- Env: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
+- Routes:
+  - `app/api/portal/send-otp/route.ts`
+  - `app/api/portal/verify-otp/route.ts`
+- Used for the patient/member portal login flow alongside magic links
+
+### Mailchimp (marketing sync)
+- Env: `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_SERVER_PREFIX`
+- Module: `lib/mailchimp.ts` — `syncContactToMailchimp()`, `addTagsToContact()`, `getEmailHash()` (MD5 via Node `crypto`)
+- Non-throwing (logs errors, never rejects) — Mailchimp outages do not block signup flow
+
+### QuickBooks Online
+- Env: `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET`, `QUICKBOOKS_REALM_ID`, `QUICKBOOKS_REFRESH_TOKEN`, `QUICKBOOKS_SANDBOX`
+- Module: `lib/quickbooks.ts` — OAuth2 token refresh, customer upsert, invoice creation, payment recording
+- Tokens cached in-memory + persisted to `quickbooks_tokens` table (migration 011)
+- Webhook: `app/api/webhook/quickbooks/route.ts`
+- API: https://developer.intuit.com/app/developer/qbo/docs/api/accounting
+
+### SiPhox Health (at-home labs)
+- Env: `SIPHOX_API_KEY`, `SIPHOX_API_URL` (default `https://connect.siphoxhealth.com/api/v1`)
+- Module: `lib/siphox/client.ts` (Bearer auth, Zod schema validation)
+- Sub-modules: `biomarkers.ts`, `fulfillment.ts`, `kit-lifecycle.ts`, `reports.ts`, `schemas.ts`, `errors.ts`, `db.ts`
+- DB: `siphox_*` tables (migrations 020, 021, 022, 027, 039)
+- Cron jobs:
+  - `app/api/cron/siphox-fulfillment/route.ts`
+  - `app/api/cron/siphox-results/route.ts`
+  - `app/api/cron/siphox-status-sync/route.ts`
+- Admin dashboard: `app/api/admin/siphox-smoke/route.ts`
+- HIPAA: never log response bodies or biomarker values
+
+### Healthie EMR
+- GraphQL endpoints: `https://staging-api.gethealthie.com/graphql` / `https://api.gethealthie.com/graphql`
+- Env: `HEALTHIE_API_KEY`, `HEALTHIE_API_URL`, `HEALTHIE_WEBHOOK_SIGNING_KEY`
+- Module: `lib/healthie/` — `client.ts`, `mutations.ts`, `queries.ts`, `portal-mapper.ts`, `webhooks.ts`, `patient-sync.ts`, `lab-sync.ts`, `schemas.ts`, `types.ts`, `index.ts`
+- Webhook: `app/api/webhook/healthie/route.ts` (HMAC signature via `verifyHealthieWebhook`)
+- 7 critical bugs fixed Apr 5 2026; integration waiting on Healthie-side API key enablement (Plus plan)
+- Config: `isHealthieConfigured()` guards all call sites so missing key = soft-disabled
+
+### Calendly (scheduling)
+- Webhook: `app/api/webhook/calendly/route.ts`
+- Env: `CALENDLY_WEBHOOK_SECRET` (query-param `?secret=` auth — see CONCERNS note about header vs query signing)
+- On booking event: sets `member_onboarding.appointment_scheduled = TRUE`, emails patient + `support@cultrhealth.com` + `admin@cultrhealth.com`
+- Embed: Calendly widget loads via CSP allowlist (`frame-src 'self' ... https://calendly.com`; `script-src ... https://assets.calendly.com`)
+- Must use `www.calendly.com` URL form (per memory Apr 12 2026)
+
+### OpenAI (via Vercel AI SDK)
+- Packages: `ai ^6.0.59`, `@ai-sdk/openai ^3.0.21`, `@ai-sdk/react ^3.0.61`
+- Env: `OPENAI_API_KEY`
+- Routes:
+  - `app/api/meal-plan/route.ts`
+  - `app/api/member/dosing/explain/route.ts`
+  - `app/api/creators/dosing/explain/route.ts`
+
+### Cloudflare Turnstile
+- Env: `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`
+- Client: `@marsidev/react-turnstile ^1.0.2`
+- Server: `lib/turnstile.ts` — verifies against `https://challenges.cloudflare.com/turnstile/v0/siteverify`
+- CSP: `script-src ... https://challenges.cloudflare.com`, `frame-src ... https://challenges.cloudflare.com`
+
+### Google Analytics 4
+- Env: `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+- Loaded via `next/script` in `app/layout.tsx`
+- Event tracking helper: `lib/analytics.ts`
+
+### Curator.io
+- Env: `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM`, `NEXT_PUBLIC_CURATOR_FEED_TIKTOK`, `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE`
+- Component: `components/site/CommunityFeed.tsx`
+- Renders "Coming Soon" when feed IDs are unset
+
+### HubSpot
+- Site-wide tracking script embed (commit `61fb4ff`)
+- Loaded in `app/layout.tsx`
+
+### LegitScript (compliance seal)
+- Env: `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID` — placeholder until certification complete
+- Footer seal component reads this env var
+
+### Upstash Redis (optional)
+- Env: `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
+- Module: `lib/rate-limit.ts` — creates Redis-backed limiter when env present, else in-memory
+- Use `failClosed: true` on sensitive endpoints (auth, magic link) so Redis outage denies requests
+
+### Webhook Endpoints (cultrhealth.com)
+| Path | Purpose | Auth |
+|---|---|---|
+| `/api/webhook/stripe` | Stripe events (checkout, invoice, subscription) | `stripe-signature` header + `STRIPE_WEBHOOK_SECRET` |
+| `/api/webhook/calendly` | Booking events | Query-param `?secret=` + `CALENDLY_WEBHOOK_SECRET` |
+| `/api/webhook/healthie` | Patient/appointment/form events | HMAC header + `HEALTHIE_WEBHOOK_SIGNING_KEY` |
+| `/api/webhook/quickbooks` | Invoice/payment status updates | OAuth2 token check |
+
+### Cron Endpoints (cultrhealth.com)
+| Path | Frequency | Purpose |
+|---|---|---|
+| `/api/cron/approve-commissions` | Daily | Auto-approve commissions after 30-day refund window |
+| `/api/cron/update-tiers` | Daily | Recalculate creator tiers by recruit count |
+| `/api/cron/asher-sync` | Daily (legacy, likely no-op) | Former Asher Med order sync |
+| `/api/cron/siphox-fulfillment` | Hourly | Poll SiPhox for fulfillment status |
+| `/api/cron/siphox-results` | Hourly | Poll SiPhox for new biomarker results |
+| `/api/cron/siphox-status-sync` | Hourly | Sync kit lifecycle states |
+| `/api/cron/stale-orders` | Daily | Flag/expire stalled club orders |
+
+---
+
+## cultrclub.com Integrations
+
+### Stripe (server-only)
+- SDK: `stripe ^22.0.1` (no client-side `@stripe/stripe-js` package)
+- Env: `STRIPE_SECRET_KEY` (shared with main app)
+- Checkout is server-initiated: club order routes create a pending order row and return a redirect URL to Stripe Checkout. Stripe webhook events are processed by the **cultrhealth.com** `/api/webhook/stripe` endpoint, not by this repo.
+
+### Resend
+- Env: `RESEND_API_KEY`, `FROM_EMAIL` (shared)
+- Module: `lib/resend.ts` — same branded-email helper surface as the main app; `escapeHtml()` required on all interpolated values
+- `getEmailSiteUrl()` defaults to `https://cultrclub.com` (not main site) for email asset URLs
+
+### Mailchimp
+- Env: `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_SERVER_PREFIX` (shared with main app — same list)
+- Module: `lib/mailchimp.ts` — identical surface to main app but uses `crypto.subtle.digest('MD5', ...)` (Web Crypto) instead of Node `crypto.createHash()` to stay Worker-safe
+- Called from `app/api/club/orders/route.ts` on successful order creation
+
+### Cloudflare Turnstile
+- Env: `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` (shared with main app)
+- Module: `lib/turnstile.ts`
+- Used on signup, login, and order-creation forms
+
+### Neon Postgres (via serverless HTTP)
+- Env: `POSTGRES_URL` (shared connection string)
+- Module: `lib/db.ts` — `neon(..., { fullResults: true })` — `fullResults` is non-negotiable (see STACK.md)
+
+### Creator Attribution (cross-domain)
+- Module: `lib/creators/attribution.ts`, `lib/creators/commission.ts`, `lib/creators/db.ts`
+- Route: `app/[slug]/route.ts` — tracking-link redirect, writes to shared `click_events` + sets `cultr_attribution` cookie on `.cultrclub.com`
+- Commission recording on order creation writes to shared `order_attributions` + `commission_ledger`
+
+### Webhook Endpoints (cultrclub.com)
+None — this repo is purely a customer-facing store. All webhook processing (Stripe, Healthie, Calendly, QuickBooks) lives on cultrhealth.com.
+
+### Cron Endpoints (cultrclub.com)
+None — Cloudflare Pages has no native cron scheduler in this setup. Time-driven jobs (commission approval, tier updates, SiPhox sync) run from cultrhealth.com.
+
+---
+
+## Cloudflare Pages Gotchas (cultrclub.com only)
+
+These quirks matter when debugging integrations on cultrclub.com:
+
+1. **`next.config.js` `headers()` is dropped on Pages Workers.** Static-asset headers go in `public/_headers`; SSR/Worker responses need headers set from `middleware.ts`. The main `cultrhealth.com` app has the opposite problem — `next.config.js` `headers()` is authoritative there.
+2. **Cookie domain must come from `request.nextUrl.hostname`, never from `NEXT_PUBLIC_SITE_URL`.** The env var can be stale or missing at edge; always derive from request host (see `lib/utils.ts` `getCookieDomain()`).
+3. **`neon()` requires `{ fullResults: true }`** — without it, `.rows` is undefined and every DB call silently returns nothing.
+4. **All route files must declare `export const runtime = 'edge'`** — `@cloudflare/next-on-pages` will reject routes that try to use the default Node.js runtime.
+5. **`images.unoptimized: true`** — no Next image optimizer on Pages; images must be pre-sized.
+6. **`nodejs_compat` flag** in `wrangler.toml` enables `jose`, `crypto.subtle`, `Buffer` — if removed, JWT + Mailchimp MD5 break silently.
+7. **`ADMIN_BASE_URL` env var** must point at the cultrhealth.com admin so cross-app approval/confirmation links reach the right host (per memory Apr 13 2026).
+
+---
+
+## Required Environment Variables — Quick Reference
+
+**Required for both apps:**
+- `POSTGRES_URL`
+- `STRIPE_SECRET_KEY`
+- `RESEND_API_KEY`
+- `FROM_EMAIL`
+- `TURNSTILE_SECRET_KEY`, `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+- `JWT_SECRET`, `SESSION_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
+
+**cultrhealth.com only:**
+- `STRIPE_WEBHOOK_SECRET`
+- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`
+- `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET`, `QUICKBOOKS_REALM_ID`, `QUICKBOOKS_REFRESH_TOKEN`
+- `HEALTHIE_API_KEY`, `HEALTHIE_API_URL`, `HEALTHIE_WEBHOOK_SIGNING_KEY`
+- `SIPHOX_API_KEY`, `SIPHOX_API_URL`
+- `CALENDLY_WEBHOOK_SECRET`
+- `OPENAI_API_KEY`
+- `COREPAY_API_LOGIN_ID`, `COREPAY_TRANSACTION_KEY`, `COREPAY_API_URL`
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`
+- `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID`
+- `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM`, `NEXT_PUBLIC_CURATOR_FEED_TIKTOK`, `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE`
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional)
+- `PROTOCOL_BUILDER_ALLOWED_EMAILS` (provider access control)
+- `STAGING_ACCESS_EMAILS` (subscription-check bypass for testing)
+
+**cultrclub.com only:**
+- `MAILCHIMP_API_KEY`, `MAILCHIMP_AUDIENCE_ID`, `MAILCHIMP_SERVER_PREFIX` (also used by main app — same list)
+- `ADMIN_BASE_URL` — absolute URL pointing to cultrhealth.com admin
+
+**Forbidden to reference in docs or code output:** contents of `.env*` files, any `*_SECRET_KEY` / `*_API_KEY` / `*_PRIVATE_KEY` values.
