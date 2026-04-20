@@ -24,10 +24,17 @@ yarn-error.log*
 
 # local env files
 .env
+.env.production
 .env*.local
 
 # vercel
 .vercel
+
+# temp scripts
+scripts/_tmp_*
+
+# claude worktrees
+.claude/worktrees/
 
 # typescript
 *.tsbuildinfo
