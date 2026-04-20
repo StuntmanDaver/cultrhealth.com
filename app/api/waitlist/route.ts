@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await formLimiter.check(clientIp)
 
     if (!rateLimitResult.success) {
-      console.log('Rate limit exceeded:', { ip: clientIp, reset: rateLimitResult.reset })
       return rateLimitResponse(rateLimitResult)
     }
 
@@ -57,7 +56,8 @@ export async function POST(request: NextRequest) {
       email,
       phone = 'Not Provided',
       social_handle = '',
-      treatment_reason = ''
+      treatment_reason = '',
+      coupon_code = '',
     } = result.data as any
 
     // 3. Try to save to database (if configured)
@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
           social_handle,
           treatment_reason,
           source: isNewsletter ? 'newsletter' : undefined,
+          coupon_code: coupon_code ? coupon_code.trim().toUpperCase() : undefined,
         })
         waitlistId = dbResult.id
       } catch (dbError) {
@@ -80,17 +81,6 @@ export async function POST(request: NextRequest) {
         throw dbError // Fail explicitly so we don't lose the signup
       }
     }
-
-    // Log the submission
-    console.log('Waitlist signup:', {
-      waitlist_id: waitlistId,
-      name,
-      email,
-      phone,
-      social_handle,
-      treatment_reason,
-      timestamp: new Date().toISOString()
-    })
 
     // 4. Send founder notification email (if configured)
     if (process.env.RESEND_API_KEY) {
@@ -106,8 +96,6 @@ export async function POST(request: NextRequest) {
       }).catch((emailError) => {
         console.error('Failed to send founder notification:', emailError)
       })
-    } else {
-      console.warn('Email notifications disabled: RESEND_API_KEY not configured')
     }
 
     // 5. Return success

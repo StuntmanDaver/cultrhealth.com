@@ -8,6 +8,7 @@ import { ArrowRight, Loader2, CheckCircle, Sparkles, Star } from 'lucide-react';
 export function ClubBanner() {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [couponCode, setCouponCode] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -22,7 +23,7 @@ export function ClubBanner() {
       const response = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, source: 'club' }),
+        body: JSON.stringify({ email, source: 'club', coupon_code: couponCode.trim() || undefined }),
       });
 
       if (response.ok) {
@@ -73,47 +74,63 @@ export function ClubBanner() {
               <span className="text-cultr-forest font-medium text-sm">{message}</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    required
+                    className="
+                      w-full px-4 py-3 rounded-full
+                      grad-white border border-cultr-sage
+                      text-cultr-text placeholder-cultr-textMuted
+                      focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50
+                      transition-colors text-sm
+                    "
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={status === 'loading'}
                   className="
-                    w-full px-4 py-3 rounded-full
-                    grad-white border border-cultr-sage
-                    text-cultr-text placeholder-cultr-textMuted
-                    focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50
-                    transition-colors text-sm
+                    inline-flex items-center justify-center gap-2
+                    px-6 py-3 rounded-full whitespace-nowrap
+                    grad-dark text-white font-medium text-sm
+                    hover:bg-cultr-forestDark
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    transition-colors group
                   "
-                />
+                >
+                  {status === 'loading' ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Joining...
+                    </>
+                  ) : (
+                    <>
+                      Join Free
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={status === 'loading'}
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="Promo code (optional)"
+                maxLength={50}
                 className="
-                  inline-flex items-center justify-center gap-2
-                  px-6 py-3 rounded-full whitespace-nowrap
-                  grad-dark text-white font-medium text-sm
-                  hover:bg-cultr-forestDark
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  transition-colors group
+                  w-full sm:w-56 px-4 py-2 rounded-full
+                  grad-white border border-cultr-sage/60
+                  text-cultr-text placeholder-cultr-textMuted
+                  focus:outline-none focus:border-cultr-forest focus:ring-1 focus:ring-cultr-forest/50
+                  transition-colors text-sm
                 "
-              >
-                {status === 'loading' ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Joining...
-                  </>
-                ) : (
-                  <>
-                    Join Free
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
+              />
             </form>
           )}
 

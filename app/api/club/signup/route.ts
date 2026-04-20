@@ -32,8 +32,9 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender, visitorContext } = body
+    const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender, visitorContext, couponCode } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
+    const normalizedCouponCode = typeof couponCode === 'string' && couponCode.trim() ? couponCode.trim().toUpperCase() : null
 
     // Extract visitor tracking data
     const vc = visitorContext || {}
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
           INSERT INTO club_members (
             name, email, phone, social_handle,
             address_street, address_city, address_state, address_zip,
-            source, signup_type, age, gender,
+            source, signup_type, age, gender, coupon_code,
             utm_source, utm_medium, utm_campaign, utm_term, utm_content,
             referrer_url, landing_page, user_agent, ip_hash,
             device_type, browser, os, screen_resolution, first_visit_at
@@ -86,7 +87,7 @@ export async function POST(request: Request) {
           VALUES (
             ${name.trim()}, ${normalizedEmail}, ${phone?.trim() || null}, ${socialHandle?.trim() || null},
             ${addressStreet}, ${addressCity}, ${addressState}, ${addressZip},
-            'join_landing', ${validSignupType}, ${memberAge}, ${memberGender},
+            'join_landing', ${validSignupType}, ${memberAge}, ${memberGender}, ${normalizedCouponCode},
             ${utmSource}, ${utmMedium}, ${utmCampaign}, ${utmTerm}, ${utmContent},
             ${referrerUrl}, ${landingPage}, ${userAgent}, ${ipHash},
             ${deviceType}, ${browser}, ${os}, ${screenResolution},
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
             signup_type = ${validSignupType},
             age = COALESCE(${memberAge}, club_members.age),
             gender = COALESCE(${memberGender}, club_members.gender),
+            coupon_code = COALESCE(EXCLUDED.coupon_code, club_members.coupon_code),
             utm_source = COALESCE(club_members.utm_source, ${utmSource}),
             utm_medium = COALESCE(club_members.utm_medium, ${utmMedium}),
             utm_campaign = COALESCE(club_members.utm_campaign, ${utmCampaign}),

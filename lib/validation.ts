@@ -31,6 +31,12 @@ export const waitlistSchema = z.object({
     .max(500, 'Response must be less than 500 characters')
     .optional()
     .or(z.literal('')),
+
+  coupon_code: z
+    .string()
+    .max(50, 'Coupon code must be less than 50 characters')
+    .optional()
+    .or(z.literal('')),
 })
 
 export const newsletterSchema = z.object({
@@ -38,6 +44,12 @@ export const newsletterSchema = z.object({
     .string()
     .min(1, 'Email is required')
     .email('Please enter a valid email address'),
+
+  coupon_code: z
+    .string()
+    .max(50, 'Coupon code must be less than 50 characters')
+    .optional()
+    .or(z.literal('')),
 })
 
 export type WaitlistFormData = z.infer<typeof waitlistSchema>

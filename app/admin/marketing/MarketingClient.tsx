@@ -13,7 +13,7 @@ import {
 import { formatDate } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
-type MarketingTab = 'qr' | 'waitlist' | 'quiz'
+type MarketingTab = 'qr' | 'waitlist' | 'quiz' | 'club'
 
 export default function MarketingClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -71,6 +71,7 @@ export default function MarketingClient() {
           { id: 'qr', label: `QR Analytics${data.qrScans?.totalScans ? ` (${data.qrScans.totalScans})` : ''}` },
           { id: 'waitlist', label: `Waitlist${data.waitlist?.total ? ` (${data.waitlist.total})` : ''}` },
           { id: 'quiz', label: `Quiz Leads${data.quizLeads?.filter(l => l.lead_email).length ? ` (${data.quizLeads.filter(l => l.lead_email).length})` : ''}` },
+          { id: 'club', label: `Club Members${data.clubMembers?.length ? ` (${data.clubMembers.length})` : ''}` },
         ] as const).map((t) => (
           <button
             key={t.id}
@@ -342,6 +343,56 @@ export default function MarketingClient() {
         </div>
       )}
 
+      {/* Club Members */}
+      {tab === 'club' && (
+        <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+          <h2 className="font-display text-xl text-brand-primary mb-1">Club Members</h2>
+          <p className="text-sm text-brand-primary/50 mb-4">All signups from cultrhealth.com and cultrclub.com.</p>
+          {(data.clubMembers ?? []).length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-brand-primary/10">
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Name</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Email</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Phone</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Coupon</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Type</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Location</th>
+                    <th className="text-left py-2 px-3 text-brand-primary/60 font-medium text-xs">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.clubMembers.map((m, i) => (
+                    <tr key={m.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                      <td className="py-2 px-3 text-brand-primary text-sm">{m.name}</td>
+                      <td className="py-2 px-3 text-brand-primary text-sm">{m.email}</td>
+                      <td className="py-2 px-3 text-brand-primary/60 text-sm">{m.phone || '—'}</td>
+                      <td className="py-2 px-3">
+                        {m.coupon_code
+                          ? <span className="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-mint text-brand-primary">{m.coupon_code}</span>
+                          : <span className="text-brand-primary/30 text-sm">—</span>}
+                      </td>
+                      <td className="py-2 px-3 text-sm">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-cream text-brand-primary capitalize">
+                          {m.signup_type || 'products'}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-brand-primary/60 text-xs">
+                        {[m.address_city, m.address_state].filter(Boolean).join(', ') || '—'}
+                      </td>
+                      <td className="py-2 px-3 text-brand-primary/60 text-xs">{formatDate(m.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-brand-primary/50 text-sm text-center py-8">No club members yet.</p>
+          )}
+        </div>
+      )}
+
       {/* Recent Waitlist Signups */}
       {tab === 'waitlist' && data.waitlist.recent.length > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
@@ -352,6 +403,7 @@ export default function MarketingClient() {
                 <tr className="border-b border-brand-primary/10">
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Name</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Email</th>
+                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Coupon</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Source</th>
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Date</th>
                 </tr>
@@ -361,6 +413,11 @@ export default function MarketingClient() {
                   <tr key={entry.id} className={index % 2 === 0 ? 'bg-brand-cream/30' : ''}>
                     <td className="py-3 px-4 text-brand-primary">{entry.name}</td>
                     <td className="py-3 px-4 text-brand-primary">{entry.email}</td>
+                    <td className="py-3 px-4">
+                      {entry.coupon_code
+                        ? <span className="px-2 py-0.5 rounded-full text-xs font-mono font-medium bg-mint text-brand-primary">{entry.coupon_code}</span>
+                        : <span className="text-brand-primary/30 text-sm">—</span>}
+                    </td>
                     <td className="py-3 px-4 text-brand-primary/60">{entry.source || 'direct'}</td>
                     <td className="py-3 px-4 text-brand-primary/60 text-sm">
                       {formatDate(entry.created_at)}
