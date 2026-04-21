@@ -110,8 +110,8 @@ export async function GET(request: NextRequest) {
       // DB lookup failed
     }
 
-    // No DB record — auto-create for staging bypass emails
-    if (!creatorId && (isStaging() || isStagingEmail(email))) {
+    // No DB record — auto-create only on the staging environment itself (not just staging emails)
+    if (!creatorId && isStaging()) {
       try {
         const { createCreator, updateCreatorStatus, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } = await import('@/lib/creators/db')
         const { generateCreatorCodes } = await import('@/lib/config/affiliate')
@@ -192,7 +192,7 @@ export async function GET(request: NextRequest) {
 
     // Pending creators go to pending page
     if (creatorStatus === 'pending') {
-      const sessionToken = await createSessionToken(email, 'creator_pending', creatorId, 'creator')
+      const sessionToken = await createSessionToken(email, creatorId, creatorId, 'creator')
       const response = NextResponse.redirect(`${baseUrl}/creators/pending`)
       setCookieOnResponse(response, sessionToken, cookieHostname)
       return response
@@ -203,7 +203,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Create session with creator role
-    const sessionToken = await createSessionToken(email, 'creator_customer', creatorId, 'creator')
+    const sessionToken = await createSessionToken(email, creatorId, creatorId, 'creator')
     const response = NextResponse.redirect(`${baseUrl}${postLoginPath}`)
     setCookieOnResponse(response, sessionToken, cookieHostname)
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { createCreator, getCreatorByEmail, updateCreatorStatus, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } from '@/lib/creators/db'
+import { createCreator, getCreatorByEmail, updateCreatorStatus, updateCreatorEmailVerified, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
 import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
@@ -113,6 +113,7 @@ export async function POST(request: NextRequest) {
     // Auto-approve whitelisted emails
     if (AUTO_APPROVE_EMAILS.includes(email.toLowerCase())) {
       await updateCreatorStatus(creator.id, 'active', 'system-auto-approve')
+      await updateCreatorEmailVerified(creator.id)
 
       let defaultSlug = full_name
         .toLowerCase()
