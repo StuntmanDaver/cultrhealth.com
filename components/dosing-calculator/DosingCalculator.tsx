@@ -218,7 +218,7 @@ export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalcu
         <div className="max-w-4xl mx-auto">
           <Link
             href={chrome.backHref}
-            className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors mb-6"
+            className="inline-flex items-center gap-2 -mx-2 -my-2 px-2 py-2 min-h-[44px] text-white/70 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
             {chrome.backLabel}
@@ -251,8 +251,10 @@ export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalcu
           </ScrollReveal>
 
           <div className="grid lg:grid-cols-2 gap-8">
-            {/* Inputs */}
-            <div className="space-y-6">
+            {/* Inputs — DOM order keeps screen readers + keyboard nav linear,
+                visual order on mobile puts the result FIRST so users can see
+                the meter react as they edit. */}
+            <div className="space-y-6 order-2 lg:order-1">
               {/* Vial */}
               <div className="grad-light border border-cultr-sage rounded-2xl p-6">
                 <HeadingRow icon={<FlaskConical className="w-5 h-5 text-cultr-forest" />} title="Vial Amount" />
@@ -312,7 +314,7 @@ export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalcu
                         setDose(unit === 'mcg' ? 250 : 0.25)
                       }}
                       className={cn(
-                        'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                        'px-4 py-2.5 min-h-[44px] min-w-[44px] rounded-full text-sm font-medium transition-all',
                         doseUnit === unit
                           ? 'bg-cultr-forest text-white'
                           : 'bg-white border border-cultr-sage text-cultr-text hover:border-cultr-forest/50'
@@ -373,8 +375,8 @@ export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalcu
               />
             </div>
 
-            {/* Results */}
-            <div className="lg:sticky lg:top-24 h-fit space-y-6">
+            {/* Results — visually first on mobile (order-1), second on desktop. */}
+            <div className="lg:sticky lg:top-24 h-fit space-y-6 order-1 lg:order-2">
               {/* Capacity banner — above the meter so it's impossible to miss */}
               <CapacityWarningBanner
                 capacityStatus={result.capacityStatus}
@@ -528,7 +530,7 @@ function PillRow({
           type="button"
           onClick={() => onSelect(option)}
           className={cn(
-            'px-4 py-2 rounded-full text-sm font-medium transition-all',
+            'px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium transition-all',
             selected === option
               ? 'bg-cultr-forest text-white'
               : 'bg-white border border-cultr-sage text-cultr-text hover:border-cultr-forest/50'

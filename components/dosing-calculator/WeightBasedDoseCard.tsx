@@ -111,7 +111,7 @@ export function WeightBasedDoseCard({
                     type="button"
                     onClick={() => setWeightUnit(u)}
                     className={cn(
-                      'px-3 py-2 text-sm font-medium transition-colors',
+                      'px-3 py-2.5 min-h-[44px] min-w-[44px] text-sm font-medium transition-colors',
                       weightUnit === u
                         ? 'bg-cultr-forest text-white'
                         : 'text-cultr-text hover:bg-cultr-mint/40'
@@ -146,7 +146,7 @@ export function WeightBasedDoseCard({
                     type="button"
                     onClick={() => setDosePerKgUnit(u)}
                     className={cn(
-                      'px-3 py-2 text-sm font-medium transition-colors',
+                      'px-3 py-2.5 min-h-[44px] min-w-[44px] text-sm font-medium transition-colors',
                       dosePerKgUnit === u
                         ? 'bg-cultr-forest text-white'
                         : 'text-cultr-text hover:bg-cultr-mint/40'

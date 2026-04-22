@@ -263,7 +263,7 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors',
+        'inline-flex items-center justify-center gap-1.5 rounded-full border px-4 py-2.5 min-h-[44px] text-sm font-medium transition-colors',
         disabled
           ? 'border-cultr-sage/50 text-cultr-textMuted cursor-not-allowed'
           : 'border-cultr-sage text-cultr-forest hover:bg-cultr-mint/60 hover:border-cultr-forest/50'

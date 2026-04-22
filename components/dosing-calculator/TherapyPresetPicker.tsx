@@ -61,7 +61,7 @@ export function TherapyPresetPicker({
                 }
               }}
               className={cn(
-                'px-4 py-2 rounded-full text-sm font-medium transition-all',
+                'px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium transition-all',
                 isActive
                   ? 'bg-cultr-forest text-white shadow-sm'
                   : 'bg-white border border-cultr-sage text-cultr-text hover:border-cultr-forest/50'
@@ -89,7 +89,7 @@ export function TherapyPresetPicker({
                   onClick={() => onPresetChange(preset)}
                   title={preset.summary}
                   className={cn(
-                    'group relative px-4 py-2 rounded-full text-sm font-medium transition-all border-l-4',
+                    'group relative px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium transition-all border-l-4',
                     isActive
                       ? 'bg-cultr-mint text-cultr-forest border-l-cultr-forest shadow-sm'
                       : 'bg-white text-cultr-text border-l-transparent border border-cultr-sage hover:border-cultr-forest/50'
