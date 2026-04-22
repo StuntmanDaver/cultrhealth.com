@@ -289,6 +289,84 @@ export default function AdminDashboardClient() {
             </div>
           )}
 
+          {/* Fulfillment Pipeline Summary */}
+          {data.clubOrderFulfillment && Object.values(data.clubOrderFulfillment).some(c => c > 0) && (() => {
+            const OVERVIEW_PIPELINE = [
+              { key: 'pending_approval', label: PIPELINE_LABELS.pending_approval || 'Pending Approval', color: 'yellow' },
+              { key: 'approved', label: PIPELINE_LABELS.approved || 'Approved', color: 'blue' },
+              { key: 'invoice_sent', label: PIPELINE_LABELS.invoice_sent || 'Invoiced', color: 'indigo' },
+              { key: 'paid', label: PIPELINE_LABELS.paid || 'Paid', color: 'green' },
+              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Shipped', color: 'blue' },
+              { key: 'fulfilled', label: PIPELINE_LABELS.fulfilled || 'Fulfilled', color: 'emerald' },
+            ]
+            const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
+              yellow:  { bg: 'bg-yellow-50',  text: 'text-yellow-700',  activeBg: 'bg-yellow-100' },
+              blue:    { bg: 'bg-blue-50',    text: 'text-blue-700',    activeBg: 'bg-blue-100' },
+              indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  activeBg: 'bg-indigo-100' },
+              green:   { bg: 'bg-green-50',   text: 'text-green-700',   activeBg: 'bg-green-100' },
+              emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', activeBg: 'bg-emerald-100' },
+            }
+            const totalActive = OVERVIEW_PIPELINE.reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
+
+            return (
+              <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-display text-xl text-brand-primary">Fulfillment Pipeline</h2>
+                    <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders across all stages</p>
+                  </div>
+                  <Link href="/admin/orders?type=club" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
+                    View details →
+                  </Link>
+                </div>
+                <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                  {OVERVIEW_PIPELINE.map((stage, idx) => {
+                    const count = data.clubOrderFulfillment[stage.key] || 0
+                    const colors = colorMap[stage.color] || colorMap.blue
+                    const isActive = count > 0
+                    return (
+                      <div key={stage.key} className="flex items-center">
+                        <div className={`flex flex-col items-center justify-center rounded-lg px-4 py-3 min-w-[90px] transition-colors ${isActive ? colors.activeBg : 'bg-gray-50'}`}>
+                          <span className={`text-2xl font-bold ${isActive ? colors.text : 'text-gray-300'}`}>
+                            {count}
+                          </span>
+                          <span className={`text-xs font-medium mt-0.5 ${isActive ? colors.text : 'text-gray-400'}`}>
+                            {stage.label}
+                          </span>
+                        </div>
+                        {idx < OVERVIEW_PIPELINE.length - 1 && (
+                          <span className="text-brand-primary/20 mx-1 text-lg shrink-0">→</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* External Tools */}
+          <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
+            <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
+            <div className="flex flex-wrap gap-3">
+              <a href="https://app.gethealthie.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Healthie Dashboard →
+              </a>
+              <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Stripe Dashboard →
+              </a>
+              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Google Analytics →
+              </a>
+              <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Search Console →
+              </a>
+              <a href="https://clarity.microsoft.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
+                Microsoft Clarity →
+              </a>
+            </div>
+          </div>
+
           {/* Revenue Trend Chart */}
           {data.revenueTimeSeries && data.revenueTimeSeries.length > 0 && (
             <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
@@ -482,80 +560,88 @@ export default function AdminDashboardClient() {
             )
           })()}
 
-          {/* Fulfillment Pipeline Summary */}
-          {data.clubOrderFulfillment && Object.values(data.clubOrderFulfillment).some(c => c > 0) && (() => {
-            const OVERVIEW_PIPELINE = [
-              { key: 'pending_approval', label: PIPELINE_LABELS.pending_approval || 'Pending Approval', color: 'yellow' },
-              { key: 'approved', label: PIPELINE_LABELS.approved || 'Approved', color: 'blue' },
-              { key: 'invoice_sent', label: PIPELINE_LABELS.invoice_sent || 'Invoiced', color: 'indigo' },
-              { key: 'paid', label: PIPELINE_LABELS.paid || 'Paid', color: 'green' },
-              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Shipped', color: 'blue' },
-              { key: 'fulfilled', label: PIPELINE_LABELS.fulfilled || 'Fulfilled', color: 'emerald' },
+          {/* CULTR Club Site Analytics */}
+          {data.clubSiteFunnel && (() => {
+            const f = data.clubSiteFunnel
+            const signupRate    = f.pageViewSessions > 0 ? Math.round((f.signupSessions    / f.pageViewSessions) * 1000) / 10 : 0
+            const checkoutRate  = f.signupSessions   > 0 ? Math.round((f.checkoutSessions  / f.signupSessions)   * 1000) / 10 : 0
+            const orderRate     = f.checkoutSessions > 0 ? Math.round((f.orderSessions     / f.checkoutSessions) * 1000) / 10 : 0
+            const overallRate   = f.pageViewSessions > 0 ? Math.round((f.orderSessions     / f.pageViewSessions) * 1000) / 10 : 0
+
+            const funnelSteps = [
+              { label: 'Sessions',  value: f.totalSessions,    color: 'bg-brand-primary/10 text-brand-primary' },
+              { label: 'Viewers',   value: f.pageViewSessions, color: 'bg-indigo-50 text-indigo-700' },
+              { label: 'Signups',   value: f.signupSessions,   color: 'bg-blue-50 text-blue-700' },
+              { label: 'Checkouts', value: f.checkoutSessions, color: 'bg-yellow-50 text-yellow-700' },
+              { label: 'Orders',    value: f.orderSessions,    color: 'bg-green-50 text-green-700' },
             ]
-            const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
-              yellow:  { bg: 'bg-yellow-50',  text: 'text-yellow-700',  activeBg: 'bg-yellow-100' },
-              blue:    { bg: 'bg-blue-50',    text: 'text-blue-700',    activeBg: 'bg-blue-100' },
-              indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  activeBg: 'bg-indigo-100' },
-              green:   { bg: 'bg-green-50',   text: 'text-green-700',   activeBg: 'bg-green-100' },
-              emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', activeBg: 'bg-emerald-100' },
-            }
-            const totalActive = OVERVIEW_PIPELINE.reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
+            const convRates = [signupRate, checkoutRate, orderRate]
 
             return (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-5">
                   <div>
-                    <h2 className="font-display text-xl text-brand-primary">Fulfillment Pipeline</h2>
-                    <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders across all stages</p>
+                    <h2 className="font-display text-xl text-brand-primary">CULTR Club Site Analytics</h2>
+                    <p className="text-sm text-brand-primary/60 mt-1">cultrclub.com visitor funnel · last {periodDays} days</p>
                   </div>
-                  <Link href="/admin/orders?type=club" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
-                    View details →
-                  </Link>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-full ${overallRate >= 5 ? 'bg-green-50 text-green-700' : overallRate >= 2 ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-600'}`}>
+                      {overallRate}% end-to-end
+                    </span>
+                    <a
+                      href="https://clarity.microsoft.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm"
+                    >
+                      Clarity Recordings →
+                    </a>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 overflow-x-auto pb-2">
-                  {OVERVIEW_PIPELINE.map((stage, idx) => {
-                    const count = data.clubOrderFulfillment[stage.key] || 0
-                    const colors = colorMap[stage.color] || colorMap.blue
-                    const isActive = count > 0
-                    return (
-                      <div key={stage.key} className="flex items-center">
-                        <div className={`flex flex-col items-center justify-center rounded-lg px-4 py-3 min-w-[90px] transition-colors ${isActive ? colors.activeBg : 'bg-gray-50'}`}>
-                          <span className={`text-2xl font-bold ${isActive ? colors.text : 'text-gray-300'}`}>
-                            {count}
-                          </span>
-                          <span className={`text-xs font-medium mt-0.5 ${isActive ? colors.text : 'text-gray-400'}`}>
-                            {stage.label}
-                          </span>
-                        </div>
-                        {idx < OVERVIEW_PIPELINE.length - 1 && (
-                          <span className="text-brand-primary/20 mx-1 text-lg shrink-0">→</span>
+
+                {/* Funnel */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-2 mb-6">
+                  {funnelSteps.map((step, idx) => (
+                    <div key={step.label} className="flex items-center">
+                      <div className={`flex flex-col items-center justify-center rounded-lg px-5 py-4 min-w-[100px] ${step.color}`}>
+                        <span className="text-2xl font-bold">{step.value.toLocaleString()}</span>
+                        <span className="text-xs font-medium mt-1 opacity-80">{step.label}</span>
+                        {idx >= 2 && idx <= 4 && (
+                          <span className="text-[10px] mt-0.5 opacity-60">{convRates[idx - 2]}% conv.</span>
                         )}
                       </div>
-                    )
-                  })}
+                      {idx < funnelSteps.length - 1 && (
+                        <span className="text-brand-primary/20 mx-1 text-lg shrink-0">→</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
+
+                {/* Top Pages */}
+                {f.topPages.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-brand-primary/50 uppercase tracking-wider mb-3">Top Pages</p>
+                    <div className="space-y-2">
+                      {f.topPages.map((p) => {
+                        const maxViews = f.topPages[0]?.views || 1
+                        const pct = Math.round((p.views / maxViews) * 100)
+                        const label = p.page.replace(/^https?:\/\/[^/]+/, '') || '/'
+                        return (
+                          <div key={p.page} className="flex items-center gap-3">
+                            <span className="text-sm text-brand-primary/70 font-mono truncate w-48 shrink-0" title={label}>{label}</span>
+                            <div className="flex-1 bg-brand-primary/5 rounded-full h-2">
+                              <div className="bg-brand-primary/30 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-sm text-brand-primary/60 w-10 text-right shrink-0">{p.views}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })()}
-
-          {/* External Tools */}
-          <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-            <h2 className="font-display text-lg text-brand-primary mb-3">External Tools</h2>
-            <div className="flex flex-wrap gap-3">
-              <a href="https://app.gethealthie.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Healthie Dashboard →
-              </a>
-              <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Stripe Dashboard →
-              </a>
-              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Google Analytics →
-              </a>
-              <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-brand-primary/5 text-brand-primary border border-brand-primary/10 rounded-lg hover:bg-brand-primary/10 transition-colors text-sm">
-                Search Console →
-              </a>
-            </div>
-          </div>
 
           {/* Cron Jobs Health */}
           <div className="bg-white rounded-xl border border-brand-primary/10 p-6">

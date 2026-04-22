@@ -634,7 +634,7 @@ export async function getSalesStats(days = 30): Promise<SalesStats> {
         COALESCE(SUM(subtotal_usd), 0) as total_revenue
       FROM club_orders
       WHERE created_at >= NOW() - make_interval(days => ${days})
-        AND status IN ('invoice_sent', 'paid', 'shipped', 'fulfilled')
+        AND status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
     `
 
     // Get orders by status
@@ -1001,7 +1001,7 @@ export async function getMembershipStats(): Promise<{ total: number; byTier: Rec
     }
 
     return {
-      total: parseInt(membershipsTotalResult.rows[0]?.count || '0', 10) + clubTotal,
+      total: Object.values(byTier).reduce((s, n) => s + n, 0),
       byTier,
       byStatus,
     }
@@ -2312,7 +2312,8 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
     // Merge both result sets by date bucket
     const merged = new Map<string, { revenue: number; orders: number }>()
     for (const r of [...clubResult.rows, ...ordersResult.rows]) {
-      const key = String(r.date)
+      // @vercel/postgres returns date columns as JS Date objects — normalize to YYYY-MM-DD
+      const key = new Date(r.date).toISOString().slice(0, 10)
       const existing = merged.get(key) || { revenue: 0, orders: 0 }
       existing.revenue += parseFloat(r.revenue) || 0
       existing.orders += parseInt(r.orders, 10) || 0
@@ -2320,7 +2321,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
     }
 
     return Array.from(merged.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
       .map(([date, data]) => ({ date, revenue: data.revenue, orders: data.orders }))
   } catch (error) {
     console.error('Database error fetching revenue time series:', error)
@@ -3003,5 +3004,53 @@ export async function getClubMembersForAdmin() {
   } catch (error) {
     console.error('Database error fetching club members for admin:', error)
     return []
+  }
+}
+
+export async function getClubSiteFunnel(days = 30) {
+  try {
+    const [funnelResult, pagesResult] = await Promise.all([
+      sql`
+        SELECT
+          COUNT(DISTINCT session_id)::integer                                                          AS total_sessions,
+          COUNT(DISTINCT CASE WHEN event_type = 'page_view'       THEN session_id END)::integer       AS page_view_sessions,
+          COUNT(DISTINCT CASE WHEN event_type = 'signup'          THEN session_id END)::integer       AS signup_sessions,
+          COUNT(DISTINCT CASE WHEN event_type = 'begin_checkout'  THEN session_id END)::integer       AS checkout_sessions,
+          COUNT(DISTINCT CASE WHEN event_type = 'order_submitted' THEN session_id END)::integer       AS order_sessions
+        FROM visitor_events
+        WHERE created_at >= NOW() - make_interval(days => ${days})
+      `,
+      sql`
+        SELECT
+          SPLIT_PART(page_url, '?', 1) AS page,
+          COUNT(*)::integer            AS views
+        FROM visitor_events
+        WHERE event_type = 'page_view'
+          AND page_url IS NOT NULL
+          AND created_at >= NOW() - make_interval(days => ${days})
+        GROUP BY 1
+        ORDER BY views DESC
+        LIMIT 8
+      `,
+    ])
+
+    const r = funnelResult.rows[0]
+    return {
+      totalSessions:    Number(r?.total_sessions)    || 0,
+      pageViewSessions: Number(r?.page_view_sessions) || 0,
+      signupSessions:   Number(r?.signup_sessions)   || 0,
+      checkoutSessions: Number(r?.checkout_sessions) || 0,
+      orderSessions:    Number(r?.order_sessions)    || 0,
+      topPages: pagesResult.rows.map(p => ({
+        page:  p.page  as string,
+        views: Number(p.views),
+      })),
+    }
+  } catch (error) {
+    console.error('Database error fetching club site funnel:', error)
+    return {
+      totalSessions: 0, pageViewSessions: 0, signupSessions: 0,
+      checkoutSessions: 0, orderSessions: 0, topPages: [],
+    }
   }
 }

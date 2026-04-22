@@ -383,6 +383,15 @@ export interface QuizLeadRow {
   completed_at: string
 }
 
+export interface ClubSiteFunnel {
+  totalSessions: number
+  pageViewSessions: number
+  signupSessions: number
+  checkoutSessions: number
+  orderSessions: number
+  topPages: { page: string; views: number }[]
+}
+
 export interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
@@ -409,6 +418,7 @@ export interface AnalyticsData {
   inventoryAlerts: InventoryAlertRow[]
   quizLeads: QuizLeadRow[]
   clubMembers: ClubMemberAdminRow[]
+  clubSiteFunnel: ClubSiteFunnel
   periodDays: number
   generatedAt: string
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isAdminEmail } from '@/lib/auth'
-import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts, getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel, getRevenueTimeSeries, getAllMembershipsForAdmin, getCreatorLinkPerformance, getClubOrderFulfillmentCounts, getInventoryAlerts, getQuizLeads, getClubMembersForAdmin } from '@/lib/db'
+import { getSalesStats, getWaitlistStats, getMembershipStats, getCouponStats, getCreatorCommissionStats, getQrScanStats, getPrelaunchStats, getAllCreatorsForAdmin, getAllTrackingLinksForAdmin, getAllAffiliateCodesForAdmin, getAllCustomersForAdmin, getAdminDashboardCounts, getInvoiceAging, getRefundStats, getRevenueByTier, getBnplAdoption, getCreatorROI, getIntakeFunnel, getRevenueTimeSeries, getAllMembershipsForAdmin, getCreatorLinkPerformance, getClubOrderFulfillmentCounts, getInventoryAlerts, getQuizLeads, getClubMembersForAdmin, getClubSiteFunnel } from '@/lib/db'
 
 // Admin-only endpoint for analytics data
 export async function GET(request: NextRequest) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '30', 10)
 
     // Fetch all analytics data
-    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats, allCreators, allTrackingLinks, allCouponCodes, allCustomers, dashboardCounts, invoiceAging, refundStats, revenueByTier, bnplAdoption, creatorROI, intakeFunnel, revenueTimeSeries, allMemberships, creatorLinkPerformance, clubOrderFulfillment, inventoryAlerts, quizLeads, clubMembers] = await Promise.all([
+    const [salesStats, waitlistStats, membershipStats, couponStats, creatorStats, qrScanStats, prelaunchStats, allCreators, allTrackingLinks, allCouponCodes, allCustomers, dashboardCounts, invoiceAging, refundStats, revenueByTier, bnplAdoption, creatorROI, intakeFunnel, revenueTimeSeries, allMemberships, creatorLinkPerformance, clubOrderFulfillment, inventoryAlerts, quizLeads, clubMembers, clubSiteFunnel] = await Promise.all([
       getSalesStats(days).catch(() => ({
         totalOrders: 0,
         totalRevenue: 0,
@@ -98,6 +98,10 @@ export async function GET(request: NextRequest) {
       getInventoryAlerts().catch(() => []),
       getQuizLeads(days).catch(() => []),
       getClubMembersForAdmin().catch(() => []),
+      getClubSiteFunnel(days).catch(() => ({
+        totalSessions: 0, pageViewSessions: 0, signupSessions: 0,
+        checkoutSessions: 0, orderSessions: 0, topPages: [],
+      })),
     ])
 
     return NextResponse.json({
@@ -128,6 +132,7 @@ export async function GET(request: NextRequest) {
         inventoryAlerts,
         quizLeads,
         clubMembers,
+        clubSiteFunnel,
         periodDays: days,
         generatedAt: new Date().toISOString(),
       },
