@@ -45,7 +45,7 @@ describe('club orders catalog sync', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     process.env.POSTGRES_URL = 'postgres://test'
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://join.cultrhealth.com'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://cultrhealth.com'
     process.env.JWT_SECRET = 'test-jwt-secret'
     delete process.env.RESEND_API_KEY
 
@@ -68,7 +68,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -124,7 +124,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -190,7 +190,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -272,7 +272,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -346,7 +346,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -434,7 +434,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',
@@ -515,7 +515,7 @@ describe('club orders catalog sync', () => {
 
     const request = new Request('http://localhost:3000/api/club/orders', {
       method: 'POST',
-      headers: { 'content-type': 'application/json', host: 'join.cultrhealth.com' },
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
       body: JSON.stringify({
         email: 'member@example.com',
         name: 'Member Example',

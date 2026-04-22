@@ -46,7 +46,7 @@ function setJoinLocation() {
     configurable: true,
     value: {
       ...window.location,
-      hostname: 'join.cultrhealth.com',
+      hostname: 'cultrhealth.com',
       protocol: 'https:',
       pathname: '/',
       search: '',

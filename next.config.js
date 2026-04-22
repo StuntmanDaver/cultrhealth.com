@@ -172,7 +172,7 @@ const nextConfig = {
         destination: '/members/:path*',
         permanent: true,
       },
-      // /join bare → /pricing (join.cultrhealth.com is separate via middleware)
+      // /join bare → /pricing (legacy route)
       {
         source: '/join',
         destination: '/pricing',

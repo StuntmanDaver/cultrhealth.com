@@ -1,10 +1,12 @@
 /**
- * Curated therapy list for join.cultrhealth.com landing page.
+ * Curated therapy list for the /join landing page.
  *
  * This is a SEPARATE config from lib/config/therapies.ts (which powers
  * the main therapies page on staging/production).
  *
- * Restored Apr 2026 to match the legacy join.cultrhealth.com catalog.
+ * Restored Apr 2026 from the legacy catalog. The dedicated subdomain
+ * was retired Apr 22 2026; the catalog now lives under /join on the
+ * main domain.
  */
 
 export type JoinStockStatus = 'in_stock' | 'low_stock' | 'out_of_stock' | 'restocking_soon'

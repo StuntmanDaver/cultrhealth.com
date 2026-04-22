@@ -37,7 +37,7 @@ describe('club session cookies', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     delete process.env.POSTGRES_URL
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://join.cultrhealth.com'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://cultrhealth.com'
     delete process.env.RESEND_API_KEY
     mockFormLimiterCheck.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 })
     mockStrictLimiterCheck.mockResolvedValue({ success: true, limit: 3, remaining: 2, reset: 0 })
