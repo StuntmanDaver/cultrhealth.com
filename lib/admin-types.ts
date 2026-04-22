@@ -244,8 +244,16 @@ export interface RevenueByTierRow {
 export interface CreatorROIRow {
   id: string
   fullName: string
+  /** Customer discount dollars given via this creator's coupons (period-scoped when days set). */
   totalDiscountGiven: number
+  /** Commission earned by the creator (excludes reversed). */
   totalCommissionEarned: number
+  /** Post-discount revenue the business collected from this creator's orders. */
+  totalNetRevenue: number
+  /** Pre-discount revenue (what the customer would have paid without a coupon). */
+  grossRevenue: number
+  /** Business take-home: net revenue minus commission. Always ≥ 0 unless selling below cost. */
+  netBusinessImpact: number
 }
 
 export interface IntakeFunnel {

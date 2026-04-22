@@ -158,13 +158,25 @@ export async function processOrderAttribution(params: {
   try {
     await client.query('BEGIN')
 
+    // Snapshot the coupon's discount rate so historical ROI stays stable if
+    // the code's discount_value is edited later (e.g. STEWART1 10%→20%).
+    let discountRateSnapshot: number | null = null
+    if (attribution.codeId) {
+      const codeRow = await client.query(
+        `SELECT discount_value FROM affiliate_codes WHERE id = $1`,
+        [attribution.codeId]
+      )
+      const raw = codeRow.rows[0]?.discount_value
+      if (raw != null) discountRateSnapshot = Number(raw)
+    }
+
     // Insert order attribution
     const attrResult = await client.query(
       `INSERT INTO order_attributions (
         order_id, creator_id, attribution_method, link_id, code_id, click_event_id,
         customer_email, net_revenue, direct_commission_rate, direct_commission_amount,
-        is_self_referral, is_subscription, subscription_payment_number
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+        is_self_referral, is_subscription, subscription_payment_number, discount_rate
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
       ON CONFLICT (order_id) DO NOTHING
       RETURNING id`,
       [
@@ -173,6 +185,7 @@ export async function processOrderAttribution(params: {
         customerEmail, netRevenue, directRate, directAmount,
         attribution.isSelfReferral || false, isSubscription || false,
         subscriptionPaymentNumber ?? null,
+        discountRateSnapshot,
       ]
     )
 
@@ -254,18 +267,31 @@ export async function recordZeroRevenueAttribution(params: {
   try {
     await client.query('BEGIN')
 
+    // Snapshot the coupon's discount rate so zero-revenue placeholders carry
+    // the correct rate forward when they're later updated with a real amount.
+    let discountRateSnapshot: number | null = null
+    if (attribution.codeId) {
+      const codeRow = await client.query(
+        `SELECT discount_value FROM affiliate_codes WHERE id = $1`,
+        [attribution.codeId]
+      )
+      const raw = codeRow.rows[0]?.discount_value
+      if (raw != null) discountRateSnapshot = Number(raw)
+    }
+
     const result = await client.query(
       `INSERT INTO order_attributions (
         order_id, creator_id, attribution_method, link_id, code_id, click_event_id,
         customer_email, net_revenue, direct_commission_rate, direct_commission_amount,
-        is_self_referral, is_subscription
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,0,0,0,$8,false)
+        is_self_referral, is_subscription, discount_rate
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,0,0,0,$8,false,$9)
       ON CONFLICT (order_id) DO NOTHING
       RETURNING id`,
       [
         orderId, attribution.creatorId, attribution.method,
         attribution.linkId || null, attribution.codeId || null, attribution.clickEventId || null,
         customerEmail, attribution.isSelfReferral || false,
+        discountRateSnapshot,
       ]
     )
 

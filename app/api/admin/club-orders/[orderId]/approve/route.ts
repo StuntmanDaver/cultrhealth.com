@@ -301,22 +301,25 @@ export async function POST(
             if (!existingAttr.rows[0]) {
               // No row at all — insert one now and record commission (fallback path)
               let codeId: string | null = null
+              let discountRateSnapshot: number | null = null
               if (order.coupon_code && finalAttributionMethod === 'coupon_code') {
                 const codeRow = await pgClient.query(
-                  `SELECT id FROM affiliate_codes WHERE UPPER(code) = UPPER($1) AND creator_id = $2 LIMIT 1`,
+                  `SELECT id, discount_value FROM affiliate_codes WHERE UPPER(code) = UPPER($1) AND creator_id = $2 LIMIT 1`,
                   [order.coupon_code, finalAttributedCreatorId]
                 )
                 codeId = (codeRow.rows[0]?.id as string) || null
+                const rawDisc = codeRow.rows[0]?.discount_value
+                if (rawDisc != null) discountRateSnapshot = Number(rawDisc)
               }
 
               const insertAttr = await pgClient.query(
                 `INSERT INTO order_attributions (
                   order_id, creator_id, attribution_method, code_id, customer_email,
-                  net_revenue, direct_commission_rate, direct_commission_amount, is_self_referral, is_subscription
-                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,false)
+                  net_revenue, direct_commission_rate, direct_commission_amount, is_self_referral, is_subscription, discount_rate
+                ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,false,$9)
                 ON CONFLICT (order_id) DO NOTHING
                 RETURNING id`,
-                [order.id, finalAttributedCreatorId, finalAttributionMethod || 'coupon_code', codeId, order.member_email, effectiveSubtotal, directRate, directAmount]
+                [order.id, finalAttributedCreatorId, finalAttributionMethod || 'coupon_code', codeId, order.member_email, effectiveSubtotal, directRate, directAmount, discountRateSnapshot]
               )
 
               if (insertAttr.rows[0]) {

@@ -901,7 +901,10 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
         WHERE LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       `,
       sql`
-        SELECT status, COUNT(*)::int as count FROM creators GROUP BY status
+        SELECT status, COUNT(*)::int as count
+        FROM creators
+        WHERE LOWER(email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+        GROUP BY status
       `,
     ])
 
@@ -1092,11 +1095,20 @@ export async function getBnplAdoption(days: number) {
   }
 }
 
-export async function getCreatorROI() {
-  // NOTE: Discount calculation uses the CURRENT affiliate_codes.discount_value,
-  // not the rate at order time. If a code's discount changes (e.g. 10% → 20%),
-  // historical orders will show the new rate's discount amount, not the original.
-  // This is acceptable since discount_value rarely changes and no snapshot is stored.
+export async function getCreatorROI(days?: number) {
+  // Discount Given prefers the persisted club_orders.coupon_discount_usd (post
+  // migration 052) and the snapshotted order_attributions.discount_rate (post
+  // migration 062); both fall back to the subtotal*pct/(100-pct) formula when
+  // null. net_revenue is stored post-discount, so formula = pre-discount - post
+  // when discount applies to the whole order.
+  //
+  // Gross revenue = net_revenue + discount_given, used to derive the real
+  // "business net" = gross - discount - commission.
+  //
+  // When `days` is provided, limits club_orders, order_attributions, and
+  // commission_ledger rows to the last N days so the ROI table respects the
+  // admin page's period selector.
+  const dateFilterDays = typeof days === 'number' && days > 0 ? days : null
   try {
     const result = await sql`
       SELECT
@@ -1105,41 +1117,80 @@ export async function getCreatorROI() {
           SELECT SUM(discount_amount)
           FROM (
             SELECT
-              co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent) as discount_amount
+              COALESCE(
+                co.coupon_discount_usd,
+                co.subtotal_usd * co.discount_percent / (100.0 - co.discount_percent)
+              ) as discount_amount
             FROM club_orders co
             WHERE co.attributed_creator_id = c.id
               AND co.discount_percent > 0 AND co.discount_percent < 100
               AND co.subtotal_usd > 0
               AND co.status NOT IN ('refunded', 'cancelled', 'dismissed', 'rejected')
+              AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
             UNION ALL
             SELECT
-              oa.net_revenue * ac2.discount_value / (100.0 - ac2.discount_value) as discount_amount
+              oa.net_revenue * COALESCE(oa.discount_rate, ac2.discount_value) /
+                (100.0 - COALESCE(oa.discount_rate, ac2.discount_value)) as discount_amount
             FROM order_attributions oa
             JOIN affiliate_codes ac2 ON ac2.id = oa.code_id
             WHERE oa.creator_id = c.id
               AND oa.attribution_method = 'coupon_code'
-              AND ac2.discount_value > 0 AND ac2.discount_value < 100
+              AND COALESCE(oa.discount_rate, ac2.discount_value) > 0
+              AND COALESCE(oa.discount_rate, ac2.discount_value) < 100
               AND oa.net_revenue > 0
               AND oa.status != 'refunded'
               AND (oa.order_id LIKE 'ORD-%' OR oa.order_id LIKE 'SUB-%' OR oa.order_id LIKE 'INV-%')
+              AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
           ) all_discounts
         ), 0) AS total_discount_given,
         COALESCE((
+          SELECT SUM(co.subtotal_usd)
+          FROM club_orders co
+          WHERE co.attributed_creator_id = c.id
+            AND co.subtotal_usd > 0
+            AND co.status NOT IN ('refunded', 'cancelled', 'dismissed', 'rejected')
+            AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+        ), 0)
+        +
+        COALESCE((
+          SELECT SUM(oa.net_revenue)
+          FROM order_attributions oa
+          WHERE oa.creator_id = c.id
+            AND oa.net_revenue > 0
+            AND oa.status != 'refunded'
+            AND (oa.order_id LIKE 'ORD-%' OR oa.order_id LIKE 'SUB-%' OR oa.order_id LIKE 'INV-%')
+            AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+        ), 0) AS total_net_revenue,
+        COALESCE((
           SELECT SUM(cl.commission_amount)
           FROM commission_ledger cl
-          WHERE cl.beneficiary_creator_id = c.id AND cl.status != 'reversed'
+          WHERE cl.beneficiary_creator_id = c.id
+            AND cl.status != 'reversed'
+            AND (${dateFilterDays}::int IS NULL OR cl.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
         ), 0) AS total_commission_earned
       FROM creators c
       WHERE c.status = 'active'
         AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
       ORDER BY total_commission_earned DESC
     `
-    return result.rows.map(r => ({
-      id: r.id,
-      fullName: r.full_name,
-      totalDiscountGiven: parseFloat(r.total_discount_given || '0'),
-      totalCommissionEarned: parseFloat(r.total_commission_earned || '0'),
-    }))
+    return result.rows.map(r => {
+      const netRevenue = parseFloat(r.total_net_revenue || '0')
+      const discount = parseFloat(r.total_discount_given || '0')
+      const commission = parseFloat(r.total_commission_earned || '0')
+      // Gross = what customers would have paid without the coupon
+      const grossRevenue = netRevenue + discount
+      // Business net = gross - discount - commission = net_revenue - commission
+      const netBusinessImpact = netRevenue - commission
+      return {
+        id: r.id,
+        fullName: r.full_name,
+        totalDiscountGiven: discount,
+        totalCommissionEarned: commission,
+        totalNetRevenue: netRevenue,
+        grossRevenue,
+        netBusinessImpact,
+      }
+    })
   } catch (error) {
     console.error('Database error fetching creator ROI:', error)
     throw new DatabaseError('Failed to fetch creator ROI', error)
@@ -1174,7 +1225,10 @@ export async function getIntakeFunnel(days: number) {
 // ADMIN DASHBOARD — FULL DATA VIEWS
 // ===========================================
 
-export async function getAllCreatorsForAdmin() {
+export async function getAllCreatorsForAdmin(days?: number) {
+  // When `days` is provided, total_code_revenue is scoped to that window so it
+  // aligns with the admin page's period selector. Otherwise it stays lifetime.
+  const dateFilterDays = typeof days === 'number' && days > 0 ? days : null
   try {
     const result = await sql`
       SELECT
@@ -1185,6 +1239,7 @@ export async function getAllCreatorsForAdmin() {
           FROM order_attributions oa
           WHERE oa.creator_id = c.id
             AND oa.status != 'refunded'
+            AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
         ) as total_code_revenue
       FROM creators c
       WHERE LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])

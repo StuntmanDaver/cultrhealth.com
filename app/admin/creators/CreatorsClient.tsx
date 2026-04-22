@@ -350,31 +350,38 @@ export default function CreatorsClient() {
       {/* Creator ROI */}
       {data.creatorROI.length > 0 && (
         <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
-          <h2 className="font-display text-xl text-brand-primary mb-4">Creator ROI</h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="font-display text-xl text-brand-primary">Creator ROI</h2>
+            <span className="text-xs text-brand-primary/50">Last {periodDays} days</span>
+          </div>
+          <p className="text-xs text-brand-primary/50 mb-4">
+            Gross = pre-discount revenue · Net Revenue = what customers paid · Business Net = Net Revenue − Commission paid
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Discount Given</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Commission Earned</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Net</th>
+                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm" title="What customers would have paid without a coupon">Gross</th>
+                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm" title="Customer discount dollars given">Discount</th>
+                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm" title="Commission earned by the creator (excludes reversed)">Commission</th>
+                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm" title="Net Revenue − Commission paid. Money that actually lands with the business.">Business Net</th>
                 </tr>
               </thead>
               <tbody>
-                {data.creatorROI.map((c, i) => {
-                  const net = c.totalCommissionEarned - c.totalDiscountGiven
-                  return (
-                    <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
-                      <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.fullName}</td>
-                      <td className="py-3 px-4 text-sm text-right text-red-600">{formatCurrency(c.totalDiscountGiven)}</td>
-                      <td className="py-3 px-4 text-sm text-right text-green-600">{formatCurrency(c.totalCommissionEarned)}</td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        <span className={net >= 0 ? 'text-green-600' : 'text-red-600'}>{net >= 0 ? '+' : ''}{formatCurrency(net)}</span>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {data.creatorROI.map((c, i) => (
+                  <tr key={c.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
+                    <td className="py-3 px-4 text-sm font-medium text-brand-primary">{c.fullName}</td>
+                    <td className="py-3 px-4 text-sm text-right text-brand-primary">{formatCurrency(c.grossRevenue)}</td>
+                    <td className="py-3 px-4 text-sm text-right text-red-600">&minus;{formatCurrency(c.totalDiscountGiven)}</td>
+                    <td className="py-3 px-4 text-sm text-right text-red-600">&minus;{formatCurrency(c.totalCommissionEarned)}</td>
+                    <td className="py-3 px-4 text-sm text-right">
+                      <span className={c.netBusinessImpact >= 0 ? 'text-green-600' : 'text-red-600'}>
+                        {c.netBusinessImpact >= 0 ? '+' : ''}{formatCurrency(c.netBusinessImpact)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
