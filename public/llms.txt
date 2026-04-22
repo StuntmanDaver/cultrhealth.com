@@ -40,7 +40,6 @@ Content categories:
 - /pricing - Membership tiers and pricing
 - /faq - Frequently asked questions
 - /how-it-works - Service explanation
-- /join - Join-domain shopping and checkout flow
 
 ## Last Updated
-2026-04-05
+2026-04-22
