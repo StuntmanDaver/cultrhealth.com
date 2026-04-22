@@ -45,5 +45,7 @@ next-env.d.ts
 .agents/
 .windsurf/
 .claude/hooks/
-.claude/skills/
+.claude/skills/*
+# Project-specific skills (shared with team)
+!.claude/skills/siphox-api/
 skills-lock.json
