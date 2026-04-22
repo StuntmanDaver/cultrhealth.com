@@ -24,7 +24,7 @@ const STATUS_OPTIONS: { value: StockStatus; label: string; color: string }[] = [
 ]
 
 const TABS: { value: SiteSource; label: string; description: string }[] = [
-  { value: 'join_cultrhealth', label: 'cultrhealth.com', description: 'join.cultrhealth.com products' },
+  { value: 'join_cultrhealth', label: 'cultrhealth.com', description: 'cultrhealth.com legacy catalog' },
   { value: 'cultrclub', label: 'cultrclub.com', description: 'cultrclub.com products' },
   { value: 'shop', label: 'Members Shop', description: 'Members shop SKUs' },
 ]
