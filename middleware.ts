@@ -5,11 +5,6 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   const isProductionDeployment = process.env.VERCEL_ENV === 'production'
   const isVercelHost = hostname.endsWith('.vercel.app')
-  const isJoinHost =
-    hostname === 'join.cultrhealth.com' ||
-    hostname === 'join.staging.cultrhealth.com' ||
-    hostname.startsWith('join.localhost:') ||
-    hostname === 'join.localhost'
   const isLocalDevHost =
     hostname === 'localhost' ||
     hostname.startsWith('localhost:') ||
@@ -26,13 +21,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(canonicalUrl, 308)
   }
 
-  // join.cultrhealth.com is shut down — serve 404 for all requests.
-  if (isJoinHost) {
-    return NextResponse.rewrite(new URL('/not-found', request.url))
-  }
-
-  // Block /join on public non-join hosts, but keep localhost available for local development.
-  if (request.nextUrl.pathname.startsWith('/join') && !isJoinHost && !isLocalDevHost) {
+  // Block /join on public production hosts (join.cultrhealth.com removed Apr 2026).
+  if (request.nextUrl.pathname.startsWith('/join') && !isLocalDevHost) {
     return NextResponse.rewrite(new URL('/not-found', request.url))
   }
 

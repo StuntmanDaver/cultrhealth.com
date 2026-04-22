@@ -8,10 +8,9 @@ This file provides guidance to Claude Code when working with the CULTR Health We
 
 **CULTR Health** is a HIPAA-compliant telehealth platform for GLP-1 weight loss medications, wellness peptides, and longevity optimization. Built with Next.js 14 App Router, TypeScript, Tailwind CSS, and integrated with Asher Med Partner Portal, Stripe payments, and a full creator affiliate system.
 
-- **Production URL:** https://cultrhealth.com (waitlist site, `production` branch)
-- **Staging URL:** https://staging.cultrhealth.com (full app, `staging` branch)
-- **Join Club URL:** https://join.cultrhealth.com (CULTR Club landing page, `production` branch, subdomain alias via middleware)
-- **Hosting:** Vercel (automatic deployments per branch)
+- **Production URL:** https://cultrhealth.com (Cloudflare Pages, sibling repo `cultrhealth-web`, branch `main`)
+- **Staging URL:** https://staging.cultrhealth.com (Vercel, `staging` branch)
+- **Hosting:** Cloudflare Pages for production, Vercel for staging (`staging.cultrhealth.com` and legacy `join.cultrhealth.com`). `join.cultrhealth.com` was removed Apr 22 2026 — subdomain no longer resolves.
 - **Brand Tagline:** "Change the CULTR, rebrand yourself."
 - **Social Handle:** @cultrhealth (all platforms)
 
