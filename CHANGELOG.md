@@ -1,3 +1,23 @@
+## [2026-04-22] - Dosing calculator operational upgrade (staging)
+
+### Added
+- **Shared `<DosingCalculator />` component** at `components/dosing-calculator/` — single implementation now backs `/tools/dosing-calculator` (public), `/members/dosing-calculator`, and `/creators/portal/dosing-calculator`. Eliminates drift between the three ~600-line duplicates.
+- **Two-tier CULTR therapy presets** (`lib/config/calculator-presets.ts`, `TherapyPresetPicker.tsx`): categories GLP-1, Longevity, Growth, Repair, Blends, Sexual Wellness, Custom → specific therapies (TIRZ/B3, SEMA/B6, R3TA, NAD+, Sermorelin, TESA/IPA, CJC/IPA, BPC-157, TB-500, GHK-Cu, Glutathione, PT-141, Oxytocin). Picking a therapy prefills vial, water, dose, unit, frequency, and cycle length.
+- **Explicit capacity error banner** (`CapacityWarningBanner.tsx`): full-width red alert above the syringe meter whenever draw volume exceeds syringe capacity, with exact mL required, exact mL available, and the next-larger syringe suggestion. Amber near-limit notice at 70–90 % of capacity.
+- **Enhanced `SyringeMeter`** with three-zone coloring (sage ≤70 %, amber 70–90 %, red >90 %), centered percentage overlay, fill-vs-capacity caption, `prefers-reduced-motion` support, and a defensive tick cap (~120) so custom syringe sizes can never render thousands of SVG elements.
+- **Weight-based dose mode** (`WeightBasedDoseCard.tsx`): collapsible Advanced accordion with lb/kg + mcg/kg / mg/kg toggles and live preview; Apply writes the computed dose into the main dose field.
+- **Therapy cycle planner** (`TherapyPlanCard.tsx`): frequency × therapy-length inputs drive a 2×2 grid showing total peptide needed, total vials, days per vial, and estimated refill date.
+- **Patient instruction card** (`InstructionCard.tsx` + `lib/dosing-calculator/instruction-card-pdf.tsx` + `app/api/dosing-calculator/instruction-pdf/route.ts`): in-page three-step card (Mix / Draw / Administer) with Copy, Print (scoped `@media print` stylesheet), PDF Download (branded @react-pdf/renderer template, rate-limited via `apiLimiter`), and Share (Web Share API + clipboard fallback).
+- **URL deep-linking** (`lib/dosing-calculator/url-state.ts`): calculator hydrates from query params (`preset`, `vial`, `water`, `dose`, `unit`, `syringe`, `weight`, `weightUnit`, `freq`, `len`) and re-encodes its state with a 250 ms debounced `router.replace`. All params clamped to safe ranges + enum whitelists.
+- **Unit tests** for the extended math (`tests/lib/peptide-calculator.test.ts`, 17 cases) and URL state round-trip (`tests/lib/dosing-calculator/url-state.test.ts`, 9 cases).
+
+### Changed
+- **`lib/peptide-calculator.ts`** extended with structured `CapacityStatus` ('none' | 'ok' | 'near' | 'exceeds'), `capacityPct`, `recommendedSyringeMl`, and an optional `TherapyTotals` block. Added `deriveDoseFromWeight` and `frequencyLabel` helpers.
+- Three client shells (`PublicDosingCalculatorClient.tsx`, `DosingCalculatorClient.tsx`, `CreatorDosingCalculatorClient.tsx`) reduced to variant pass-throughs.
+- Custom number inputs (vial / water / dose / syringe) clamp to `[min, max]` on change to match the URL-state sanitizer, and the internal state only resyncs from the parent `value` prop when genuinely different from the current string — avoids clobbering partial entries like `"2."` while typing.
+
+---
+
 ## [2026-04-20] - Cloudflare Pages migration — cultrhealth-web sibling repo
 
 ### Added

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { getSession, getMembershipTier, hasFeatureAccess } from '@/lib/auth'
 import { DosingCalculatorClient } from './DosingCalculatorClient'
@@ -22,5 +23,9 @@ export default async function DosingCalculatorPage() {
     redirect('/pricing?upgrade=catalyst')
   }
 
-  return <DosingCalculatorClient email={session.email} />
+  return (
+    <Suspense fallback={null}>
+      <DosingCalculatorClient email={session.email} />
+    </Suspense>
+  )
 }

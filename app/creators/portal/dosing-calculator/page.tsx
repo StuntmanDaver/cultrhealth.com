@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { CreatorDosingCalculatorClient } from './CreatorDosingCalculatorClient'
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 }
 
 export default function CreatorDosingCalculatorPage() {
-  return <CreatorDosingCalculatorClient />
+  return (
+    <Suspense fallback={null}>
+      <CreatorDosingCalculatorClient />
+    </Suspense>
+  )
 }

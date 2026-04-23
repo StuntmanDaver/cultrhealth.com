@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { PublicDosingCalculatorClient } from './PublicDosingCalculatorClient'
 
 export const metadata = {
@@ -6,5 +7,9 @@ export const metadata = {
 }
 
 export default function PublicDosingCalculatorPage() {
-  return <PublicDosingCalculatorClient backHref="/tools" />
+  return (
+    <Suspense fallback={null}>
+      <PublicDosingCalculatorClient backHref="/tools" />
+    </Suspense>
+  )
 }

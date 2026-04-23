@@ -152,8 +152,11 @@ app/                              # Next.js 14 App Router
 │   ├── LibraryLogin.tsx          # Auth gate
 │   ├── [category]/page.tsx       # Category pages (metabolic, repair, growth-factors, bioregulators)
 │   ├── calorie-calculator/       # Calorie calculator tool
-│   ├── dosing-calculator/        # Peptide dosing calculator
 │   ├── peptide-faq/              # Peptide FAQ section
+│   # Note: dosing-calculator lives at app/tools/dosing-calculator (public),
+│   # app/members/dosing-calculator (members), and
+│   # app/creators/portal/dosing-calculator (creators). All three delegate
+│   # to the shared <DosingCalculator /> in components/dosing-calculator/.
 │   ├── cart/                     # Shopping cart
 │   ├── quote-success/            # Quote confirmation
 │   └── shop/                     # Members shop
