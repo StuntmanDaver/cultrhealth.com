@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { MemberDashboard } from '@/components/library/MemberDashboard'
+import { UserIdentifier } from '@/components/ui/UserIdentifier'
 
 import { PLANS, type PlanTier, type LibraryAccess } from '@/lib/config/plans'
 
@@ -50,6 +51,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-brand-cream">
+      {email && <UserIdentifier email={email} />}
       <header className="border-b border-brand-primary/10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <h1 className="text-2xl font-display font-bold text-brand-primary">Dashboard</h1>

@@ -36,7 +36,7 @@ vi.mock('@/lib/intake-utils', () => ({
   buildPartnerNote: vi.fn(() => 'Test partner note'),
 }))
 
-vi.mock('@/lib/mailchimp', () => ({
+vi.mock('@/lib/contacts', () => ({
   addTagsToContact: vi.fn().mockResolvedValue(undefined),
 }))
 
@@ -327,7 +327,7 @@ describe('Intake Submission E2E', () => {
 
   describe('Mailchimp tagging', () => {
     it('tags contact as intake-complete', async () => {
-      const { addTagsToContact } = await import('@/lib/mailchimp')
+      const { addTagsToContact } = await import('@/lib/contacts')
 
       await POST(makeRequest(VALID_INTAKE))
 

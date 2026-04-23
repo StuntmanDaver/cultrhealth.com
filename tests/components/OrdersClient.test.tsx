@@ -5,10 +5,17 @@ import OrdersClient from '@/app/admin/orders/OrdersClient'
 
 let currentTabParam: string | null = null
 
+// A stable reference per render cycle prevents the URL→typeFilter sync effect
+// from firing on every re-render and resetting state back to 'all' after clicks.
+// Tests that simulate URL-driven tab changes must call refreshSearchParams()
+// before rerender() to produce a new reference that triggers the effect.
+let stableSearchParams = { get: (key: string) => (key === 'tab' ? currentTabParam : null) }
+function refreshSearchParams() {
+  stableSearchParams = { get: (key: string) => (key === 'tab' ? currentTabParam : null) }
+}
+
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: (key: string) => (key === 'tab' ? currentTabParam : null),
-  }),
+  useSearchParams: () => stableSearchParams,
 }))
 
 const mockFetch = vi.fn()
@@ -48,6 +55,7 @@ describe('OrdersClient', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     currentTabParam = null
+    refreshSearchParams()
     pendingOrders = [{ id: 'pending-club-order', status: 'pending_approval' }]
 
     mockFetch.mockImplementation(async (input: RequestInfo | URL) => {
@@ -71,6 +79,9 @@ describe('OrdersClient', () => {
 
     // No legacy "Pending Approval" filter pill
     expect(screen.queryByRole('button', { name: /pending approval/i })).not.toBeInTheDocument()
+
+    // Switch to Product Orders tab — analytics only renders in that view
+    fireEvent.click(screen.getByRole('button', { name: /product orders/i }))
 
     // Analytics section renders the status from analytics API
     await waitFor(() => {
@@ -98,6 +109,7 @@ describe('OrdersClient', () => {
     })
 
     currentTabParam = 'club-orders'
+    refreshSearchParams()
     rerender(<OrdersClient />)
 
     await waitFor(() => {

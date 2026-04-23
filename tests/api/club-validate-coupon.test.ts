@@ -4,16 +4,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockValidateCouponUnified = vi.fn()
 const mockIsExpiredCoupon = vi.fn()
+const mockGetCouponProductEligibilityError = vi.fn()
 
 vi.mock('@/lib/config/coupons', () => ({
   validateCouponUnified: mockValidateCouponUnified,
   isExpiredCoupon: mockIsExpiredCoupon,
+  getCouponProductEligibilityError: mockGetCouponProductEligibilityError,
 }))
 
 describe('club validate coupon', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockIsExpiredCoupon.mockReturnValue(false)
+    mockGetCouponProductEligibilityError.mockReturnValue(null)
   })
 
   it('rejects coupons for bacteriostatic-water-only carts', async () => {

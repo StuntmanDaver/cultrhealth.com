@@ -19,6 +19,7 @@ describe('Join therapies configuration', () => {
       'bpc157-tb500',
       'melanotan-2',
       'igf1-lr3',
+      'mots-c',
       'bacteriostatic-water',
     ])
   })

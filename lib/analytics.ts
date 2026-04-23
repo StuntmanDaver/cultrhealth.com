@@ -9,6 +9,8 @@ declare global {
       config?: Record<string, unknown>
     ) => void
     dataLayer: unknown[]
+    // Microsoft Clarity
+    clarity: (command: string, ...args: unknown[]) => void
   }
 }
 
@@ -314,6 +316,24 @@ export function trackQuizStep(
     quiz_question_id: questionId,
     quiz_answer: formattedAnswer
   })
+}
+
+// Identify a known user in Microsoft Clarity + write to visitor_events DB.
+// Call this once after login or signup when you first know the user's email.
+export function identifySession(email: string): void {
+  if (typeof window === 'undefined') return
+
+  // Tag the Clarity session so sessions appear under this email in the dashboard
+  if (typeof window.clarity === 'function') {
+    window.clarity('identify', email)
+  }
+
+  // Fire-and-forget ping to our DB — ties the Clarity _clsk session cookie to the email
+  fetch('/api/track/identify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  }).catch(() => {})
 }
 
 // Track quiz completion and capture all answers
