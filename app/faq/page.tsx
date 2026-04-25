@@ -126,7 +126,10 @@ const faqSections: { title: string; items: FaqItem[] }[] = [
       },
       {
         question: 'How do I contact support?',
-        answer: 'You can reach our team through the messaging feature in your member portal, or email us at support@cultrhealth.com. For billing questions, visit the billing portal or contact our support team directly.',
+        // Avoid a literal email address in the canonical text — Cloudflare's
+        // email obfuscation rewrites it in the visible HTML but not in the
+        // JSON-LD schema, which would break FAQPage rich-result parity.
+        answer: 'You can reach our team through the messaging feature in your member portal, or email our support team. For billing questions, visit the billing portal or contact our support team directly.',
       },
     ],
   },
