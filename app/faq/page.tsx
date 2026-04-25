@@ -21,30 +21,125 @@ export const metadata: Metadata = {
   },
 };
 
-const faqItems = [
-  { question: 'What is included in my membership?', answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like the Peptide Library and Protocol Engine.' },
-  { question: 'Can I cancel my membership?', answer: 'Yes, memberships are month-to-month with no long-term contracts. You can cancel at any time before your next renewal date through your member portal. There are no cancellation fees, and your access continues until the end of your current billing period.' },
-  { question: 'Can I switch plans?', answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.' },
-  { question: 'Do you accept HSA/FSA?', answer: 'Yes! CULTR memberships are HSA/FSA eligible. We accept HSA/FSA cards directly and provide all necessary documentation for reimbursement from your health savings account.' },
-  { question: 'Who is CULTR Health for?', answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions.' },
-  { question: 'What if I am not eligible for treatment?', answer: 'Our providers adhere to strict medical guidelines and only prescribe when clinically appropriate. If you are not a candidate for a specific treatment due to safety reasons or contraindications, we will discuss alternative options. If no services can be rendered, we offer a full refund of your initial consultation fee.' },
-  { question: 'Do you prescribe medications?', answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 agonists (semaglutide, tirzepatide), hormone therapy, peptides, and other longevity-focused treatments.' },
-  { question: 'How do telehealth visits work?', answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking.' },
-  { question: 'What states do you operate in?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements.' },
-  { question: 'What is the Peptide Library?', answer: 'The Peptide Library is our comprehensive database of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, potential side effects, and real-world outcomes data.' },
-  { question: 'How does the Protocol Engine work?', answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology.' },
-  { question: 'How do I calculate my peptide dose?', answer: 'Our free peptide calculator at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.' },
-  { question: 'What labs are included?', answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles, inflammation markers, vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships.' },
-  { question: 'Where do medications come from?', answer: 'All medications are sourced from licensed US pharmacies, including 503A and 503B compounding pharmacies for specialized formulations.' },
-  { question: 'Is my data secure?', answer: 'Absolutely. Our platform is fully HIPAA-compliant with end-to-end encryption. We never sell your data to third parties.' },
-  { question: 'How do I contact support?', answer: 'You can reach our team through the messaging feature in your member portal, or email us at support@cultrhealth.com.' },
+// ─── Single source of truth for FAQs ─────────────────────────────────────
+// `answer` (plain string) feeds both the FAQPage JSON-LD schema and the
+// default visible accordion text. `richAnswer` is an optional override
+// rendered in the accordion only — used when a Q&A needs embedded links or
+// the brandify() styling. Schema text MUST match visible text verbatim for
+// Google FAQ rich-result eligibility, so the rich version is built from the
+// same string content (plus formatting), not a different copy.
+
+type FaqItem = {
+  question: string
+  answer: string
+  richAnswer?: React.ReactNode
+}
+
+const faqSections: { title: string; items: FaqItem[] }[] = [
+  {
+    title: 'Membership',
+    items: [
+      {
+        question: 'What is included in my membership?',
+        answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like personalized protocols and the Protocol Engine.',
+      },
+      {
+        question: 'Can I cancel my membership?',
+        answer: 'Yes, memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date. You can cancel through your member portal with no cancellation fees, and your access continues until the end of your current billing period.',
+      },
+      {
+        question: 'Can I switch plans?',
+        answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
+      },
+    ],
+  },
+  {
+    title: 'Medical & Telehealth',
+    items: [
+      {
+        question: 'Who is CULTR Health for?',
+        answer: 'CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.',
+        richAnswer: brandify('CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.'),
+      },
+      {
+        question: 'What if I am not eligible for treatment?',
+        answer: 'Our providers adhere to strict medical guidelines and only prescribe when clinically appropriate. If you are not a candidate for a specific treatment (e.g., GLP-1s, TRT) due to safety reasons or contraindications, we will discuss alternative options. If no services can be rendered, we offer a full refund of your initial consultation fee.',
+      },
+      {
+        question: 'Do you prescribe medications?',
+        answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 receptor agonists, hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
+      },
+      {
+        question: 'How do telehealth visits work?',
+        answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
+      },
+      {
+        question: 'What states do you operate in?',
+        answer: 'CULTR Health currently serves patients in 30 U.S. states and Washington D.C.: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. Services are available only to patients physically located in one of these states at the time of consultation. Medications can be shipped to all U.S. states except California.',
+      },
+    ],
+  },
+  {
+    title: 'Products & Protocols',
+    items: [
+      {
+        question: 'How are protocols personalized?',
+        answer: 'Your provider reviews your lab results, health history, and goals to recommend research-backed protocols tailored to you. Each recommendation includes dosing guidelines, cycling recommendations, and safety considerations. Your provider adjusts protocols over time based on your progress and follow-up labs.',
+      },
+      {
+        question: 'How does the Protocol Engine work?',
+        answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology to suggest the most effective approach. Your provider reviews and approves all recommendations.',
+      },
+      {
+        question: 'How do I calculate my peptide dose?',
+        answer: 'Our free peptide calculator at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.',
+        richAnswer: (
+          <>
+            Our free <Link href="/tools/dosing-calculator" className="text-cultr-forest font-medium underline decoration-cultr-sage decoration-2 underline-offset-4 hover:decoration-cultr-forest">peptide calculator</Link> at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.
+          </>
+        ),
+      },
+      {
+        question: 'What labs are included?',
+        answer: 'We test 29 critical biomarkers (upgradeable up to 60+) through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
+      },
+      {
+        question: 'Where do medications come from?',
+        answer: 'All medications are sourced from licensed US pharmacies, including 503A and 503B compounding pharmacies for specialized formulations. We only work with pharmacies that meet our quality standards and comply with all FDA regulations.',
+      },
+    ],
+  },
+  {
+    title: 'Support & Safety',
+    items: [
+      {
+        question: 'How fast do you respond to messages?',
+        answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge members have 24/7 messaging access with expedited responses.',
+      },
+      {
+        question: 'What if I have side effects?',
+        answer: 'We provide detailed education on managing common side effects for all treatments. For mild issues, message your care team through the portal. For moderate concerns, schedule a follow-up consultation. For severe reactions or emergencies, seek immediate medical attention by calling 911 or visiting your nearest emergency room.',
+      },
+      {
+        question: 'Is my data secure?',
+        answer: 'Absolutely. Our platform is fully HIPAA-compliant with end-to-end encryption. We never sell your data to third parties. Your health information is protected by the same standards used by major healthcare systems.',
+      },
+      {
+        question: 'How do I contact support?',
+        answer: 'You can reach our team through the messaging feature in your member portal, or email us at support@cultrhealth.com. For billing questions, visit the billing portal or contact our support team directly.',
+      },
+    ],
+  },
 ]
+
+// Flattened across all sections — feeds the FAQPage JSON-LD schema.
+const allFaqs = faqSections.flatMap((s) => s.items)
 
 export default function FAQPage() {
   const faqSchema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqItems.map((item) => ({
+    mainEntity: allFaqs.map((item) => ({
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: {
@@ -88,125 +183,24 @@ export default function FAQPage() {
         </div>
       </section>
 
-      {/* FAQ Sections */}
+      {/* FAQ Sections — derived from faqSections so schema and visible stay in sync */}
       <section className="py-24 px-6 section-veil">
         <div className="max-w-3xl mx-auto space-y-16 w-full">
-
-          {/* Membership */}
-          <ScrollReveal>
-            <div>
-              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 pb-2 border-b border-cultr-sage">
-                Membership
-              </h2>
-              <FAQAccordion items={[
-                {
-                  question: 'What is included in my membership?',
-                  answer: 'All memberships include access to our HIPAA-compliant platform, telehealth consultations with licensed providers, comprehensive lab panel reviews, secure messaging with your care team, and educational resources. Higher tiers unlock more frequent consultations, priority messaging, and access to advanced features like personalized protocols and the Protocol Engine.',
-                },
-                {
-                  question: 'Can I cancel my membership?',
-                  answer: 'Yes, memberships begin with an initial 2-month clinical protocol. After that, your membership renews month-to-month unless canceled before your next renewal date. You can cancel through your member portal with no cancellation fees, and your access continues until the end of your current billing period.',
-                },
-                {
-                  question: 'Can I switch plans?',
-                  answer: 'Absolutely. You can upgrade or downgrade your tier at any time through your billing portal. Upgrades take effect immediately with prorated billing. Downgrades apply at the start of your next billing cycle.',
-                },
-              ]} />
-            </div>
-          </ScrollReveal>
-
-          {/* Medical & Telehealth */}
-          <ScrollReveal>
-            <div>
-              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 pb-2 border-b border-cultr-sage">
-                Medical & Telehealth
-              </h2>
-              <FAQAccordion items={[
-                {
-                  question: 'Who is CULTR Health for?',
-                  answer: brandify('CULTR is for adults looking to optimize their health through longevity science, metabolic health, and personalized protocols. We specialize in preventive care and optimization—not acute illnesses or primary care conditions. Our members typically want more comprehensive testing and personalized guidance than traditional healthcare provides.'),
-                },
-                {
-                  question: 'What if I am not eligible for treatment?',
-                  answer: 'Our providers adhere to strict medical guidelines and only prescribe when clinically appropriate. If you are not a candidate for a specific treatment (e.g., GLP-1s, TRT) due to safety reasons or contraindications, we will discuss alternative options. If no services can be rendered, we offer a full refund of your initial consultation fee.',
-                },
-                {
-                  question: 'Do you prescribe medications?',
-                  answer: 'Yes, when clinically indicated. Our licensed providers can prescribe medications including GLP-1 receptor agonists, hormone therapy, peptides, and other longevity-focused treatments. All prescriptions are sent to licensed compounding pharmacies or your preferred retail pharmacy.',
-                },
-                {
-                  question: 'How do telehealth visits work?',
-                  answer: 'Visits are conducted via secure, HIPAA-compliant video calls. You can join from your phone, tablet, or computer. Most appointments are available within 24-48 hours of booking. Your provider will review your health history, discuss your goals, and create a personalized protocol.',
-                },
-                {
-                  question: 'What states do you operate in?',
-                  answer: 'CULTR Health currently serves patients in 30 U.S. states and Washington D.C.: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. Services are available only to patients physically located in one of these states at the time of consultation. Medications can be shipped to all U.S. states except California.',
-                },
-              ]} />
-            </div>
-          </ScrollReveal>
-
-          {/* Products & Protocols */}
-          <ScrollReveal>
-            <div>
-              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 pb-2 border-b border-cultr-sage">
-                Products & Protocols
-              </h2>
-              <FAQAccordion items={[
-                {
-                  question: 'How are protocols personalized?',
-                  answer: 'Your provider reviews your lab results, health history, and goals to recommend research-backed protocols tailored to you. Each recommendation includes dosing guidelines, cycling recommendations, and safety considerations. Your provider adjusts protocols over time based on your progress and follow-up labs.',
-                },
-                {
-                  question: 'How does the Protocol Engine work?',
-                  answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology to suggest the most effective approach. Your provider reviews and approves all recommendations.',
-                },
-                {
-                  question: 'How do I calculate my peptide dose?',
-                  answer: (
-                    <>
-                      Our free <Link href="/tools/dosing-calculator" className="text-cultr-forest font-medium underline decoration-cultr-sage decoration-2 underline-offset-4 hover:decoration-cultr-forest">peptide calculator</Link> at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.
-                    </>
-                  ),
-                },
-                {
-                  question: 'What labs are included?',
-                  answer: 'We test 29 critical biomarkers (upgradeable up to 60+) through the SiPhox EasyDraw Core Program — including heart health (ApoB, Lp(a), full lipid panel), metabolic health (HbA1c, C-Peptide, cortisol), hormonal balance (testosterone, estradiol, DHEA-S, thyroid), inflammation (hs-CRP), and nutritional status (Vitamin D, ferritin). Additional panels available as upgrades. Lab interpretation is included in all memberships.',
-                },
-                {
-                  question: 'Where do medications come from?',
-                  answer: 'All medications are sourced from licensed US pharmacies, including 503A and 503B compounding pharmacies for specialized formulations. We only work with pharmacies that meet our quality standards and comply with all FDA regulations.',
-                },
-              ]} />
-            </div>
-          </ScrollReveal>
-
-          {/* Support & Safety */}
-          <ScrollReveal>
-            <div>
-              <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 pb-2 border-b border-cultr-sage">
-                Support & Safety
-              </h2>
-              <FAQAccordion items={[
-                {
-                  question: 'How fast do you respond to messages?',
-                  answer: 'Response times vary by membership tier. Core members receive standard response times (24-48 hours). Higher tiers have priority access with faster response times. Concierge members have 24/7 messaging access with expedited responses.',
-                },
-                {
-                  question: 'What if I have side effects?',
-                  answer: 'We provide detailed education on managing common side effects for all treatments. For mild issues, message your care team through the portal. For moderate concerns, schedule a follow-up consultation. For severe reactions or emergencies, seek immediate medical attention by calling 911 or visiting your nearest emergency room.',
-                },
-                {
-                  question: 'Is my data secure?',
-                  answer: 'Absolutely. Our platform is fully HIPAA-compliant with end-to-end encryption. We never sell your data to third parties. Your health information is protected by the same standards used by major healthcare systems.',
-                },
-                {
-                  question: 'How do I contact support?',
-                  answer: 'You can reach our team through the messaging feature in your member portal, or email us at support@cultrhealth.com. For billing questions, visit the billing portal or contact our support team directly.',
-                },
-              ]} />
-            </div>
-          </ScrollReveal>
+          {faqSections.map((section) => (
+            <ScrollReveal key={section.title}>
+              <div>
+                <h2 className="text-2xl font-display font-bold text-cultr-forest mb-6 pb-2 border-b border-cultr-sage">
+                  {section.title}
+                </h2>
+                <FAQAccordion
+                  items={section.items.map((item) => ({
+                    question: item.question,
+                    answer: item.richAnswer ?? item.answer,
+                  }))}
+                />
+              </div>
+            </ScrollReveal>
+          ))}
         </div>
       </section>
 

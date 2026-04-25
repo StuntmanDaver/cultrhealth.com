@@ -92,11 +92,12 @@ export function WeightBasedDoseCard({
         <div className="space-y-5 border-t border-cultr-sage/40 p-6">
           {/* Weight row */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">
+            <label htmlFor="wbd-weight" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">
               Body weight
             </label>
             <div className="flex gap-2">
               <input
+                id="wbd-weight"
                 type="number"
                 inputMode="decimal"
                 value={weight}
@@ -126,11 +127,12 @@ export function WeightBasedDoseCard({
 
           {/* Dose-per-kg row */}
           <div>
-            <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">
+            <label htmlFor="wbd-dose-per-kg" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-cultr-textMuted">
               Target dose per kg
             </label>
             <div className="flex gap-2">
               <input
+                id="wbd-dose-per-kg"
                 type="number"
                 inputMode="decimal"
                 value={dosePerKg}

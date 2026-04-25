@@ -40,6 +40,10 @@ interface DosingCalculatorProps {
   /** Slot rendered between the header and the calculator body — used by the
    * members/creators surfaces to mount the AI dosing engine panel. */
   afterHeader?: React.ReactNode
+  /** Pre-load a therapy preset on mount. Used by /tools/dosing-calculator/[slug]
+   * static pages so the URL stays canonical (no `?preset=` query). Takes priority
+   * over any `?preset=` search param. */
+  initialPresetId?: string
 }
 
 const VIAL_OPTIONS = [5, 10, 15, 50, 100] as const
@@ -60,7 +64,7 @@ function chromeFor(variant: DosingCalculatorVariant, backHref?: string): Variant
   return { backHref: backHref ?? '/tools', backLabel: 'Back to Tools' }
 }
 
-export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalculatorProps) {
+export function DosingCalculator({ variant, backHref, afterHeader, initialPresetId }: DosingCalculatorProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const chrome = chromeFor(variant, backHref)
@@ -73,8 +77,11 @@ export function DosingCalculator({ variant, backHref, afterHeader }: DosingCalcu
     return decodeUrlState(params)
   }, [searchParams])
 
-  const initialPreset = initialUrl.presetId
-    ? THERAPY_PRESETS.find((p) => p.id === initialUrl.presetId) ?? null
+  // Per-preset static pages pass a prop instead of `?preset=`. Prop wins so
+  // the URL stays canonical (`/tools/dosing-calculator/bpc-157` not `?preset=`).
+  const resolvedPresetId = initialPresetId ?? initialUrl.presetId
+  const initialPreset = resolvedPresetId
+    ? THERAPY_PRESETS.find((p) => p.id === resolvedPresetId) ?? null
     : null
 
   // ── Core input state ────────────────────────────────────────────────
@@ -578,6 +585,7 @@ function CustomNumberInput({
       <input
         type="number"
         inputMode="decimal"
+        aria-label={`Custom ${placeholder} value`}
         placeholder={`Custom ${placeholder}`}
         value={internal}
         step={step}
