@@ -6,6 +6,8 @@ import { DosingCalculatorClient } from './DosingCalculatorClient'
 export const metadata = {
   title: 'CULTR Calculator | Peptide Dosing Calculator',
   description: 'Calculate peptide reconstitution and dosing with our precision calculator.',
+  // Member-only variant — defer SEO authority to the public /tools/dosing-calculator page.
+  robots: { index: false, follow: false, nocache: true },
 }
 
 export default async function DosingCalculatorPage() {

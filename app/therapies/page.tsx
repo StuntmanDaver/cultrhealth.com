@@ -130,6 +130,25 @@ export default function TherapiesPage() {
 
           <TherapiesClient products={THERAPY_PRODUCTS} />
 
+          <ScrollReveal className="mt-10">
+            <div className="rounded-2xl border border-cultr-sage/40 bg-mint/40 px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+              <div>
+                <p className="text-sm font-display font-semibold text-cultr-forest">
+                  Already prescribed? Verify your dose.
+                </p>
+                <p className="text-xs text-cultr-textMuted mt-1">
+                  Free <span className="font-display font-medium">peptide calculator</span> with a visual U-100 syringe meter — supports BPC-157, Semaglutide, Tirzepatide, and 30+ peptides.
+                </p>
+              </div>
+              <Link
+                href="/tools/dosing-calculator"
+                className="inline-flex items-center gap-1 text-sm font-medium text-cultr-forest hover:gap-2 transition-all whitespace-nowrap"
+              >
+                Open the peptide calculator <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </ScrollReveal>
+
           <div className="mt-8 text-center">
             <PrescriptionDisclaimer />
           </div>

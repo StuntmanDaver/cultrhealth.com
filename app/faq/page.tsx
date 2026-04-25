@@ -33,6 +33,7 @@ const faqItems = [
   { question: 'What states do you operate in?', answer: 'CULTR operates in most US states. During signup, we verify availability in your location. Telehealth regulations vary by state, and we ensure full compliance with local requirements.' },
   { question: 'What is the Peptide Library?', answer: 'The Peptide Library is our comprehensive database of research-backed peptide protocols. Each entry includes mechanism of action, dosing guidelines, cycling recommendations, potential side effects, and real-world outcomes data.' },
   { question: 'How does the Protocol Engine work?', answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology.' },
+  { question: 'How do I calculate my peptide dose?', answer: 'Our free peptide calculator at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.' },
   { question: 'What labs are included?', answer: 'We test 50+ biomarkers including comprehensive metabolic panels, full hormone profiles, inflammation markers, vitamins and minerals, and advanced lipid panels. Lab interpretation is included in all memberships.' },
   { question: 'Where do medications come from?', answer: 'All medications are sourced from licensed US pharmacies, including 503A and 503B compounding pharmacies for specialized formulations.' },
   { question: 'Is my data secure?', answer: 'Absolutely. Our platform is fully HIPAA-compliant with end-to-end encryption. We never sell your data to third parties.' },
@@ -159,6 +160,14 @@ export default function FAQPage() {
                 {
                   question: 'How does the Protocol Engine work?',
                   answer: 'The Protocol Engine analyzes your biomarkers, health history, and goals to generate personalized protocol recommendations. It considers interactions between different treatments, optimal timing, and your unique biology to suggest the most effective approach. Your provider reviews and approves all recommendations.',
+                },
+                {
+                  question: 'How do I calculate my peptide dose?',
+                  answer: (
+                    <>
+                      Our free <Link href="/tools/dosing-calculator" className="text-cultr-forest font-medium underline decoration-cultr-sage decoration-2 underline-offset-4 hover:decoration-cultr-forest">peptide calculator</Link> at cultrhealth.com/tools/dosing-calculator converts vial strength and bacteriostatic water volume into the exact dose volume to draw on a U-100 insulin syringe. It supports 30+ peptides including BPC-157, Semaglutide, Tirzepatide, TB-500, and GHK-Cu, with a visual syringe meter that matches the line on the barrel in your hand.
+                    </>
+                  ),
                 },
                 {
                   question: 'What labs are included?',

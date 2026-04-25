@@ -74,6 +74,15 @@ export default function HowItWorksPage() {
               </ScrollReveal>
             ))}
           </div>
+          <ScrollReveal delay={400} direction="up">
+            <p className="mt-8 text-center text-sm text-cultr-textMuted">
+              Already on a peptide protocol? Try our free{' '}
+              <Link href="/tools/dosing-calculator" className="text-cultr-forest font-medium underline decoration-cultr-sage decoration-2 underline-offset-4 hover:decoration-cultr-forest">
+                peptide calculator
+              </Link>
+              {' '}with a visual U-100 syringe meter.
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
