@@ -159,7 +159,7 @@ const breadcrumbSchema = {
 
 export default function PublicDosingCalculatorPage() {
   return (
-    <main className="flex flex-col">
+    <main className="flex flex-col grad-page">
       {/* JSON-LD — four schemas, validated against Rich Results Test */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
@@ -338,7 +338,7 @@ export default function PublicDosingCalculatorPage() {
           {CROSS_SELL_PEPTIDES.map((peptide) => (
             <li key={peptide.id}>
               <Link
-                href={`/tools/dosing-calculator?preset=${peptide.id}`}
+                href={`/tools/dosing-calculator/${peptide.slug}`}
                 className="glass-card rounded-2xl p-5 h-full flex flex-col group hover:border-cultr-forest/30 transition-colors"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-2">

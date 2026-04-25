@@ -2,6 +2,13 @@
 
 import { DosingCalculator } from '@/components/dosing-calculator/DosingCalculator'
 
-export function PublicDosingCalculatorClient({ backHref = '/tools' }: { email?: string; backHref?: string }) {
-  return <DosingCalculator variant="public" backHref={backHref} />
+export function PublicDosingCalculatorClient({
+  backHref = '/tools',
+  initialPresetId,
+}: {
+  email?: string
+  backHref?: string
+  initialPresetId?: string
+}) {
+  return <DosingCalculator variant="public" backHref={backHref} initialPresetId={initialPresetId} />
 }

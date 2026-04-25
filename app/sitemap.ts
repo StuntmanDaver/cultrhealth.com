@@ -1,8 +1,18 @@
 import { MetadataRoute } from 'next'
+import { PRESET_PAGES } from './tools/dosing-calculator/[slug]/preset-content'
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Per-preset peptide calculator pages — each ranks for its own long-tail
+  // ("BPC-157 calculator", "semaglutide reconstitution calculator", etc.)
+  const presetPages: MetadataRoute.Sitemap = PRESET_PAGES.map((p) => ({
+    url: `${BASE_URL}/tools/dosing-calculator/${p.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }))
+
   // Static public pages — ordered by SEO priority (high → low)
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -85,5 +95,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  return staticPages
+  return [...staticPages, ...presetPages]
 }

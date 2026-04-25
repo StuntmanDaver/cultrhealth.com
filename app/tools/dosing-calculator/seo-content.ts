@@ -19,6 +19,7 @@ export interface CalculatorHowToStep {
 
 export interface CrossSellPeptide {
   id: string          // preset id from lib/config/calculator-presets.ts
+  slug: string        // clean URL slug — links to /tools/dosing-calculator/[slug]
   name: string        // display name
   compound: string    // chemical / generic
   typicalDose: string // human-readable dose summary
@@ -120,18 +121,18 @@ export const CALCULATOR_FAQS: CalculatorFaqItem[] = [
 // ─────────────────────────────────────────────────────────────────────────
 
 export const CROSS_SELL_PEPTIDES: CrossSellPeptide[] = [
-  { id: 'glp1-sema',         name: 'Semaglutide',     compound: 'GLP-1 agonist',                 typicalDose: '0.25–2.4 mg weekly',  category: 'GLP-1' },
-  { id: 'glp1-tirz',         name: 'Tirzepatide',     compound: 'GLP-1 / GIP agonist',           typicalDose: '2.5–15 mg weekly',    category: 'GLP-1' },
-  { id: 'glp1-r3ta',         name: 'Retatrutide',     compound: 'Triple agonist',                typicalDose: '1–12 mg weekly',      category: 'GLP-1' },
-  { id: 'repair-bpc157',     name: 'BPC-157',         compound: 'Body Protection Compound',      typicalDose: '250 mcg 1–2× daily',  category: 'Repair' },
-  { id: 'repair-tb500',      name: 'TB-500',          compound: 'Thymosin Beta-4 fragment',      typicalDose: '2.5 mg twice weekly', category: 'Repair' },
-  { id: 'repair-ghkcu',      name: 'GHK-Cu',          compound: 'Copper tripeptide',             typicalDose: '1 mg daily',          category: 'Repair' },
-  { id: 'repair-glutathione',name: 'Glutathione',     compound: 'Master antioxidant',            typicalDose: '50 mg weekly',        category: 'Repair' },
-  { id: 'longevity-nad',     name: 'NAD+',            compound: 'Cellular energy cofactor',      typicalDose: '50 mg daily',         category: 'Longevity' },
-  { id: 'growth-sermorelin', name: 'Sermorelin',      compound: 'Growth hormone secretagogue',   typicalDose: '250 mcg nightly',     category: 'Growth' },
-  { id: 'blend-cjc-ipa',     name: 'CJC-1295 / Ipamorelin', compound: 'GHRH + GH secretagogue',  typicalDose: '250 mcg nightly',     category: 'Growth' },
-  { id: 'blend-tesa-ipa',    name: 'Tesamorelin / Ipamorelin', compound: 'GHRH + GH secretagogue', typicalDose: '300 mcg nightly',   category: 'Growth' },
-  { id: 'sexual-pt141',      name: 'PT-141',          compound: 'Bremelanotide',                 typicalDose: '1 mg as needed',      category: 'Sexual Wellness' },
+  { id: 'glp1-sema',         slug: 'semaglutide',            name: 'Semaglutide',              compound: 'GLP-1 agonist',                 typicalDose: '0.25–2.4 mg weekly',  category: 'GLP-1' },
+  { id: 'glp1-tirz',         slug: 'tirzepatide',            name: 'Tirzepatide',              compound: 'GLP-1 / GIP agonist',           typicalDose: '2.5–15 mg weekly',    category: 'GLP-1' },
+  { id: 'glp1-r3ta',         slug: 'retatrutide',            name: 'Retatrutide',              compound: 'Triple agonist',                typicalDose: '1–12 mg weekly',      category: 'GLP-1' },
+  { id: 'repair-bpc157',     slug: 'bpc-157',                name: 'BPC-157',                  compound: 'Body Protection Compound',      typicalDose: '250 mcg 1–2× daily',  category: 'Repair' },
+  { id: 'repair-tb500',      slug: 'tb-500',                 name: 'TB-500',                   compound: 'Thymosin Beta-4 fragment',      typicalDose: '2.5 mg twice weekly', category: 'Repair' },
+  { id: 'repair-ghkcu',      slug: 'ghk-cu',                 name: 'GHK-Cu',                   compound: 'Copper tripeptide',             typicalDose: '1 mg daily',          category: 'Repair' },
+  { id: 'repair-glutathione',slug: 'glutathione',            name: 'Glutathione',              compound: 'Master antioxidant',            typicalDose: '50 mg weekly',        category: 'Repair' },
+  { id: 'longevity-nad',     slug: 'nad',                    name: 'NAD+',                     compound: 'Cellular energy cofactor',      typicalDose: '50 mg daily',         category: 'Longevity' },
+  { id: 'growth-sermorelin', slug: 'sermorelin',             name: 'Sermorelin',               compound: 'Growth hormone secretagogue',   typicalDose: '250 mcg nightly',     category: 'Growth' },
+  { id: 'blend-cjc-ipa',     slug: 'cjc-1295-ipamorelin',    name: 'CJC-1295 / Ipamorelin',    compound: 'GHRH + GH secretagogue',        typicalDose: '250 mcg nightly',     category: 'Growth' },
+  { id: 'blend-tesa-ipa',    slug: 'tesamorelin-ipamorelin', name: 'Tesamorelin / Ipamorelin', compound: 'GHRH + GH secretagogue',        typicalDose: '300 mcg nightly',     category: 'Growth' },
+  { id: 'sexual-pt141',      slug: 'pt-141',                 name: 'PT-141',                   compound: 'Bremelanotide',                 typicalDose: '1 mg as needed',      category: 'Sexual Wellness' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -140,13 +141,13 @@ export const CROSS_SELL_PEPTIDES: CrossSellPeptide[] = [
 
 export const CALCULATOR_REFERENCES: CalculatorReference[] = [
   {
-    title: 'FDA — Human Drug Compounding (503A and 503B Pharmacies)',
-    url: 'https://www.fda.gov/drugs/human-drug-compounding',
+    title: 'FDA — Human Drug Compounding Laws (503A and 503B)',
+    url: 'https://www.fda.gov/drugs/human-drug-compounding/human-drug-compounding-laws',
     source: 'U.S. Food & Drug Administration',
   },
   {
-    title: 'FDA — Safe Disposal of Used Needles and Other Sharps',
-    url: 'https://www.fda.gov/safe-needle-disposal',
+    title: 'FDA — Safely Using Sharps (Needles and Syringes) at Home',
+    url: 'https://www.fda.gov/medical-devices/consumer-products/safely-using-sharps-needles-and-syringes-home-work-and-travel',
     source: 'U.S. Food & Drug Administration',
   },
   {
