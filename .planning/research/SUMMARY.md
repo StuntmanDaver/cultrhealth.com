@@ -1,198 +1,458 @@
-# Project Research Summary
+# v2.0 Research Synthesis — Stripe → CorePay (Authorize.Net) Replacement
 
-**Project:** SiPhox Health Blood Test Kit Integration
-**Domain:** At-home lab testing integration — kit ordering, registration, and biomarker results for a telehealth platform
-**Researched:** 2026-03-14
-**Confidence:** HIGH (stack verified against existing codebase; architecture patterns match established integrations; pitfalls confirmed against live code)
+**Synthesized:** 2026-04-27
+**Source files:**
+- `.planning/research/STACK.md` (v2.0 — Stripe removal + Authorize.Net buildout)
+- `.planning/research/FEATURES.md` (v2.0 — gap map vs Stripe behavior)
+- `.planning/research/ARCHITECTURE.md` (v2.0 — webhook/CIM/migration topology)
+- `.planning/research/PITFALLS.md` (v2.0 — Stripe→Authorize.Net migration risks)
 
-## Executive Summary
+**Overall confidence:** HIGH for stack, features, and migration sequencing. MEDIUM for two specific Authorize.Net behaviors flagged for sandbox spike (CIM card-update cascade, Account Updater coverage).
 
-This integration adds SiPhox Health blood testing to the CULTR platform: Catalyst+ and Concierge members receive a kit automatically at checkout, Core members can add one for $135, and all eligible members view their biomarker results in a new Labs dashboard tab. The full cycle spans four steps — member-to-SiPhox customer sync, automated kit ordering via Stripe webhook, member-initiated kit registration, and biomarker results display. Crucially, the codebase already contains two fully-built but unwired dashboard components (`BiologicalAgeCard.tsx`, `BiomarkerTrends.tsx`) and an existing scoring engine (`lib/resilience.ts`), which means roughly half the Phase 2 deliverables are UI work that reduces to prop-wiring rather than net-new builds.
-
-The recommended approach is zero new dependencies: native `fetch` for the SiPhox API client (matching the Asher Med pattern exactly), existing Zod for response validation, existing Recharts for trend charts, and Neon PostgreSQL for three new tables (customer mapping, order tracking, report cache). The SiPhox client is architecturally identical to `lib/asher-med-api.ts` — a typed request wrapper, a custom error class, and grouped functions per endpoint. The critical data flow difference from Asher Med is that CULTR pushes data to SiPhox (kit orders, customer creation) and polls SiPhox for completion status (report ready), whereas Asher Med is primarily receive-only from a patient-data perspective.
-
-The top risks are concentrated in Phase 2 (checkout integration): a race condition between Stripe checkout and shipping address availability, credit exhaustion with no alerting, the Core tier's Payment Links being unable to support dynamic add-ons (requiring a Checkout Session migration), and refunded orders that have already consumed SiPhox credits. All four are avoidable with a deferred fulfillment pattern and pre-order credit check. The biomarker ID mismatch between SiPhox naming and the local resilience engine is a Phase 3 risk that requires a mapping table built and unit-tested before any results UI is written.
-
-## Key Findings
-
-### Recommended Stack
-
-The integration requires no new production dependencies. Every required capability — HTTP client, response validation, charting, payments, database, auth — is already in the project. The SiPhox API client should live at `lib/siphox-api.ts`, mirroring `lib/asher-med-api.ts` line by line except for the `Authorization: Bearer` header instead of `X-API-KEY`. Zod `safeParse()` validates every SiPhox response before it touches the database or UI. Report data is cached in PostgreSQL JSONB alongside the member record, not in Redis. Recharts `ReferenceArea` handles range band visualization; the existing custom SVG patterns in `BiologicalAgeCard.tsx` and `BiomarkerTrends.tsx` handle simpler inline visualizations.
-
-**Core technologies:**
-- Native `fetch` (Node 18+ built-in): SiPhox REST API client — follows Asher Med pattern exactly, no new library
-- `zod` (^3.23.0, existing): runtime validation of every SiPhox response — external APIs can change schema without warning
-- `recharts` (^3.7.0, existing): biomarker trend lines and ReferenceArea range bands — already in bundle
-- `@vercel/postgres` (^0.10.0, existing): three new tables for customer mapping, order tracking, report caching
-- `stripe` (^20.2.0, existing): extend existing checkout flow; Core tier requires Checkout Session migration
-- `lib/resilience.ts` (existing): retry and circuit breaker patterns apply directly to SiPhox API calls
-
-**New environment variables required:** `SIPHOX_API_KEY`, `SIPHOX_API_URL`, `SIPHOX_ENVIRONMENT` (production/staging/test), `SIPHOX_NOTIFY_RECEIVER`
-
-**Total new npm dependencies: 0**
-
-### Expected Features
-
-**Must have (table stakes) — Phases 1-3:**
-- Kit auto-ordering on Catalyst+/Concierge checkout — members pay for testing in their tier; kit must arrive without extra steps
-- Kit add-on ($135) for Core tier at checkout — requires Stripe Checkout Session migration for Core tier
-- Customer sync (CULTR member to SiPhox customer) — every kit order requires an existing SiPhox customer record
-- Kit registration UI — physical kit arrives with unique ID; member registers it before mailing sample
-- Order and kit status tracking — 7-state visual timeline (Ordered, Shipped, Registered, Sample Mailed, Processing, Results Ready)
-- Smart empty states per lifecycle stage — distinct messaging and CTA at each step
-- Categorized biomarker results display — 150+ markers by body system, color-coded
-- Reference range visualization — horizontal range bar with member's value marked
-- N/A display (two-tier, not a wall) — tested results first, untested markers collapsed in secondary section
-- Results notification email via Resend — members notified when report is ready
-
-**Should have (differentiators) — Phase 3-4:**
-- Biological age card wired to real data — `BiologicalAgeCard.tsx` is already fully built; needs prop wiring only
-- Category health scores — weighted aggregate per body system; extends existing `calculateResilienceScore()` algorithm
-- SiPhox suggestions display — API returns pre-built suggestions; render as actionable cards with zero CULTR clinical liability
-- Biomarker detail drill-down — expanded per-marker view with description, range context, trend, and related suggestions
-- Dashboard summary widgets — at-a-glance counts; `BiomarkerTrends.tsx` summary stats grid already built
-- Tier-gated access messaging — reuses existing `TierGate` component; Club members see upgrade CTA
-- PDF report download — `@react-pdf/renderer` already in stack; follows existing invoice template pattern
-
-**Defer to Phase 5 (future milestone):**
-- Biomarker trend visualization — requires 2+ reports over time; `BiomarkerTrends.tsx` already architected for it
-- Treatment correlation view — overlay protocol start dates on biomarker trends; unique CULTR moat over all standalone testing competitors; requires Phase 1-4 data foundation
-
-**Defer indefinitely (anti-features):**
-- Custom reference ranges (clinical validation burden and liability; use SiPhox-provided ranges only)
-- AI chatbot for biomarker Q&A (liability; SiPhox BiomarkerAI product already exists)
-- Wearable data integration (SiPhox's own app handles this)
-- Camera-based barcode scanner for kit registration (unreliable on web; manual text input is sufficient)
-- Third-party PDF lab uploads (SiPhox BiomarkerAI already exists)
-- Recurring/subscription blood tests (separate billing complexity; one-time kit per checkout only)
-
-### Architecture Approach
-
-The integration follows the codebase's established four-layer pattern: `lib/config/` for constants and mapping definitions, `lib/siphox-api.ts` for the API client, `lib/siphox-db.ts` for database operations, and `app/api/siphox/*` routes as the authenticated HTTP surface for client components. One existing file gets a non-fatal extension (`app/api/webhook/stripe/route.ts` adds ~20 lines inside `handleCheckoutCompleted()`). Two existing dashboard components get their props wired to real data (`BiologicalAgeCard.tsx`, `BiomarkerTrends.tsx`). One existing page gets a tabbed layout addition (`app/dashboard/page.tsx`). All SiPhox API calls happen server-side only; client components call CULTR's own API routes, never SiPhox directly (HIPAA requirement and API key security).
-
-**Major components:**
-1. `lib/config/siphox.ts` — biomarker display name map (`SIPHOX_BIOMARKER_MAP`), category definitions, kit type constants, tier eligibility rules; single source of truth for SiPhox-to-CULTR translation
-2. `lib/siphox-api.ts` — REST client for all SiPhox endpoint groups (customers, orders, kits, reports, biomarkers, credits); `siphoxRequest<T>()` wrapper with Bearer auth, Zod validation, and custom `SiPhoxApiError`
-3. `lib/siphox-db.ts` — DB operations for three new tables; `orderSiPhoxKit()` orchestrates address resolution, find-or-create customer, and kit order creation
-4. `migrations/019_siphox_tables.sql` — `siphox_customers` (CULTR phone to SiPhox ID mapping), `siphox_orders` (kit lifecycle with 8 status values), `siphox_reports` (JSONB report cache with extracted `biological_age` column)
-5. `app/api/siphox/labs/route.ts` — authenticated GET returning kit status, reports, biomarkers, and biological age for the Labs tab
-6. `app/api/siphox/register-kit/route.ts` — authenticated POST for kit validation and registration
-7. `components/dashboard/LabsDashboardClient.tsx` — new Labs tab UI: status timeline, registration form, categorized results; renders existing `BiologicalAgeCard` and `BiomarkerTrends` with real data
-
-**Total new files: 8. Files modified: 5 (all additive changes, no rewrites).**
-
-### Critical Pitfalls
-
-1. **SiPhox customer creation race condition** — Stripe `checkout.session.completed` fires before the member's shipping address is available from intake. Prevention: store order intent locally as `status: 'pending_address'`; trigger actual SiPhox API call when intake `ShippingAddressForm` is submitted. This is the most architecturally significant decision — it determines the entire order flow design.
-
-2. **SiPhox credit exhaustion with no alerting** — Members can complete checkout when CULTR has zero SiPhox credits, resulting in a paid order with no fulfillment. Prevention: call `GET /credits` before every `POST /orders`; set order to `status: 'pending_credits'` if insufficient; send admin alert via Resend when balance drops below threshold.
-
-3. **Biomarker ID mismatch between SiPhox and resilience engine** — `lib/resilience.ts` uses IDs like `hs-crp` and `hba1c`; SiPhox returns `hsCRP` and `A1C`. Without a mapping table, `calculateResilienceScore()` produces 0% completeness for members with real results. Prevention: build `lib/config/siphox.ts` biomarker map first and unit-test that every `BIOMARKER_DEFINITIONS` entry has a SiPhox mapping before writing any UI.
-
-4. **Core tier Payment Links cannot support optional add-ons** — Stripe Payment Links are static URLs. The $135 Core add-on requires a server-side Checkout Session. Prevention: migrate Core checkout to `app/api/checkout/route.ts`-style session creation before building the add-on UI; keep Payment Links for Catalyst+/Concierge where the kit is auto-included.
-
-5. **Refunded orders orphaning SiPhox credits** — Member checks out Core + $135 add-on, then requests refund. Stripe refunds both charges; SiPhox credit is already consumed. Prevention: deferred fulfillment with 24-48 hour window before creating the SiPhox order; extend existing `handleChargeRefunded` in the Stripe webhook to cancel pending SiPhox orders before credit is consumed.
-
-## Implications for Roadmap
-
-Based on research, suggested phase structure (4 phases plus a future Phase 5):
-
-### Phase 1: Foundation — API Client and Database
-**Rationale:** Zero external dependencies, fully testable in isolation, required by every subsequent phase. Order a real test kit now so lab results are available when Phase 4 UI is built (lab turnaround is 5-10 business days).
-**Delivers:** Complete SiPhox API client, Zod schemas for all responses, three DB tables with indexes, and the DB operations layer. No member-facing changes.
-**Addresses:** Customer sync (table-stakes), `external_id` setup (Pitfall 11), environment-aware `is_test_order` flag (Pitfall 13)
-**Avoids:** Duplicate customer creation on webhook retry (Pitfall 15) via idempotent find-or-create in `lib/siphox-db.ts`
-**Files:** `lib/config/siphox.ts`, `lib/siphox-api.ts`, `lib/siphox-db.ts`, `migrations/019_siphox_tables.sql`
-
-### Phase 2: Checkout Integration — Automated Kit Ordering
-**Rationale:** Enables kits to start shipping as soon as members check out, before any member-facing UI exists. Kits take days to arrive and samples take days to process — this clock starts only once ordering is wired. Contains the highest-risk pitfalls; all four must be designed here, not bolted on later.
-**Delivers:** Automatic kit ordering on Catalyst+/Concierge checkout; $135 Core add-on with Checkout Session migration; deferred fulfillment pattern (pending_address state machine); credit monitoring and admin alerting; refund cancellation hook.
-**Implements:** Non-fatal block in `handleCheckoutCompleted()` (~20 lines); Core tier Checkout Session migration; `handleChargeRefunded()` extension
-**Avoids:** Race condition (Pitfall 1), credit exhaustion (Pitfall 2), Payment Link limitation (Pitfall 5), refund orphan (Pitfall 10), tier downgrade edge case (Pitfall 14)
-
-### Phase 3: Kit Registration — First Member-Facing Feature
-**Rationale:** Simplest possible member interaction (one input, one API call, one status update). Validates the auth flow before building the complex results display. Gives early adopters something to do while their sample processes.
-**Delivers:** Kit registration UI with validate-before-register flow; specific error messages per failure mode (not found, already registered, expired, not yet in system); 7-state status timeline; smart per-stage empty states.
-**Avoids:** Silent registration failures (Pitfall 6); GA4 on authenticated lab pages must be resolved here before any labs page ships (Pitfall 9 — inherited from portal research, applies with greater urgency to biomarker data)
-**Addresses:** All Kit Registration and Kit Status Tracking table-stakes features
-
-### Phase 4: Results Display — Full Labs Dashboard
-**Rationale:** Depends on real reports existing in SiPhox (requires Phase 1-3 running; lab turnaround is 5-10 business days). Build the biomarker mapping table before writing any UI.
-**Delivers:** Categorized biomarker results with reference range visualization; biological age card wired to real data; category health scores; SiPhox suggestions display; biomarker detail drill-down; dashboard summary widgets; tier-gated access messaging; PDF report download; results notification email.
-**Uses:** Existing `BiologicalAgeCard.tsx` (wiring only); existing `BiomarkerTrends.tsx` (wiring + category extension); existing `TierGate` component; existing `@react-pdf/renderer`; existing Recharts `ReferenceArea`
-**Avoids:** Biomarker ID mismatch (Pitfall 4 — mapping table built first); unit mismatch (Pitfall 12 — conversion layer in data transform); wall of N/A (Pitfall 8 — two-tier display); PHI in logs and analytics (Pitfall 3 and 9)
-
-### Phase 5: Longitudinal Intelligence (future milestone — defer)
-**Rationale:** Requires 2+ reports accumulated over time; can only be built after real members have gone through multiple test cycles.
-**Delivers:** Biomarker trend sparklines and delta calculations across multiple reports; treatment correlation view overlaying medication start dates from Asher Med order history on biomarker trend charts.
-**Note:** This is CULTR's unique long-term moat — the only health platform that can answer "is my treatment working?" with real biomarker data. `BiomarkerTrends.tsx` is already architected for multi-report data; the Phase 5 work is primarily data infrastructure (historical storage), cross-system SQL joins (SiPhox reports x `asher_orders`), and timeline overlay visualization.
-
-### Phase Ordering Rationale
-
-- Phase 1 must come first: the API client and DB tables are prerequisites for all API calls in Phase 2. Nothing works without them.
-- Phase 2 before Phase 3: kits must be ordered before members can register them. The deferred fulfillment pattern also resolves the address race condition that would otherwise block end-to-end Phase 3 testing.
-- Phase 3 before Phase 4: kit registration must work before reports exist. Also validates auth flow with a simple operation before building the complex results UI.
-- Phase 4 cannot be fully tested until a real kit completes the lab cycle (5-10 business days). Ordering a test kit in Phase 1 avoids being blocked waiting for lab results when Phase 4 code is ready.
-- Phase 5 is deferred by design: longitudinal data only accumulates after Phase 1-4 have been live and real members have tested multiple times.
-
-### Research Flags
-
-Phases needing deeper research or early API confirmation:
-
-- **Phase 1:** Confirm exact SiPhox API response schemas with a partner API key before finalizing Zod schemas. Public docs are minimal; the report schema in ARCHITECTURE.md is inferred (confidence: LOW). Request a sandbox API key from SiPhox at project kickoff.
-- **Phase 2:** Test that Stripe Checkout Sessions support a recurring subscription line item plus a one-time add-on in the same session. PITFALLS.md flags the mode constraint (`subscription` vs `payment`). Verify in Stripe sandbox before writing the Core checkout migration.
-- **Phase 3-4:** Confirm with SiPhox whether they support webhooks for report completion. If webhooks are available, the polling strategy described in Pitfall 7 is unnecessary. This is a single email to the SiPhox partner team and could save significant cron infrastructure.
-
-Phases with standard, well-documented patterns (skip additional research):
-
-- **Phase 1 API client structure:** Direct structural copy of `lib/asher-med-api.ts`. No novel patterns.
-- **Phase 4 PDF generation:** Follows existing `lib/invoice/invoice-generator.tsx` and `lib/lmn/` patterns exactly; same `@react-pdf/renderer` library.
-- **Phase 4 tier gating:** Reuses `components/library/TierGate.tsx` unchanged.
-- **Phase 5 data joins:** Standard PostgreSQL joins between existing tables; no new infrastructure or libraries.
-
-## Confidence Assessment
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Stack | HIGH | Zero new dependencies confirmed. All required capabilities verified in existing project. SiPhox client structure has a direct analog in `lib/asher-med-api.ts`. |
-| Features | MEDIUM-HIGH | Table-stakes features confirmed via competitor analysis and existing component shells. SiPhox-specific capabilities (exact biomarker count, suggestion schema, webhook availability) need live API confirmation. |
-| Architecture | HIGH | Component boundaries follow established codebase patterns. Data flow maps cleanly onto existing Asher Med and Stripe webhook patterns. DB schema design is conservative (JSONB for variable report data, dedicated columns for frequent queries). |
-| Pitfalls | HIGH | All critical pitfalls verified against live code. Race condition (Pitfall 1) is confirmed to already exist for Asher Med in the Stripe webhook handler. Payment Link limitation (Pitfall 5) confirmed against Stripe docs. Biomarker ID mismatch (Pitfall 4) confirmed by reading both `lib/resilience.ts` and SiPhox biomarker names from PROJECT.md. |
-
-**Overall confidence:** HIGH
-
-### Gaps to Address
-
-- **SiPhox API schema confirmation:** The SiPhox report response schema is inferred from PROJECT.md endpoint descriptions and general lab API patterns (confidence: LOW per ARCHITECTURE.md). Zod schemas must be validated against a real API response before Phase 4 UI is built. Request a sandbox API key early in Phase 1.
-- **SiPhox webhook availability:** Unknown whether SiPhox supports report-completion webhooks. This determines whether the polling strategy for Pitfall 7 is necessary at all. Confirm with SiPhox partner team before building any polling infrastructure in Phase 4.
-- **Stripe session mode for subscription + one-time add-on:** The Core tier add-on requires mixing a recurring subscription with a one-time $135 charge. Stripe supports this but the exact `invoice_creation` configuration needs a sandbox test before Phase 2 implementation.
-- **SiPhox credit balance and per-kit cost:** The pre-order credit check (Pitfall 2 prevention) requires knowing actual balance and per-kit cost. Confirm current credit balance and wholesale cost with SiPhox before going live with ordering.
-- **Address availability at webhook time:** The deferred fulfillment pattern assumes shipping address is collected during intake. Confirm `ShippingAddressForm` is consistently completed before Kit Registration is needed; if members commonly skip intake, a fallback address prompt on the Labs dashboard is required.
-- **BiomarkerCategory type extension conflict:** `lib/resilience.ts` uses `BiomarkerCategory` for the resilience score engine; `BiomarkerTrends.tsx` uses the same type for category colors. Extending the type union to include SiPhox categories must be verified not to break the resilience scoring algorithm, which has fixed `BIOMARKER_DEFINITIONS` weights per category.
-
-## Sources
-
-### Primary (HIGH confidence)
-- `lib/asher-med-api.ts` — definitive pattern for SiPhox client structure; bearer token auth, error class, typed wrappers
-- `components/dashboard/BiologicalAgeCard.tsx` — fully built gauge, sparkline, status messaging; requires only prop wiring
-- `components/dashboard/BiomarkerTrends.tsx` — fully built sparklines, trend indicators, category grouping, summary stats; requires only prop wiring and category extension
-- `lib/resilience.ts` — biomarker definitions with weights, optimal/acceptable ranges, scoring algorithm; confirmed ID naming mismatch with SiPhox
-- `app/api/webhook/stripe/route.ts` — confirmed race condition pattern (lines 149-168), idempotency handling (lines 72-76), refund flow (line 107)
-- PROJECT.md (internal) — SiPhox API endpoint surface, kit types, biomarker categories, tier pricing, integration constraints
-
-### Secondary (MEDIUM confidence)
-- [SiPhox Health Partner FAQ](https://siphoxhealth.com/partner/faq) — API capabilities, co-branded dashboard vs API-only tiers
-- [SiPhox White Label for Telehealth](https://siphoxhealth.com/articles/how-can-telehealth-companies-add-white-label-blood-testing) — Integration timeline, implementation process
-- [InsideTracker Personal Health Dashboard](https://info.insidetracker.com/personal-health-dashboard) — Competitor feature reference (10 healthspan categories, InnerAge)
-- [Stripe Checkout optional items](https://docs.stripe.com/payments/checkout/optional-items) — Payment Link limitation confirmation
-- [HIPAA Encryption Requirements 2025](https://www.keragon.com/hipaa/hipaa-explained/hipaa-encryption-requirements) — PHI storage requirements for JSONB biomarker cache
-- [Webhook Race Condition Solution Guide](https://excessivecoding.com/blog/billing-webhook-race-condition-solution-guide) — Deferred fulfillment pattern validation
-- [PMC: Patient-Facing Health Data Visualizations](https://pmc.ncbi.nlm.nih.gov/articles/PMC6785326/) — UX patterns for lab results display
-- [Function Health vs Superpower Comparison](https://www.productpep.com/blog/2025/10/7/is-function-health-a-superpower) — Competitor feature baseline
-
-### Tertiary (LOW confidence — needs live API confirmation)
-- SiPhox report response schema (inferred from PROJECT.md and analogous lab APIs) — exact field names, biomarker ID format, suggestion schema, webhook support; must be confirmed with a sandbox API key before Phase 4 implementation
+> **Roadmapper:** read this file end-to-end. The bottom-line decisions and the seven locked-in architectural choices below should drive phase boundaries. Open questions in §6 must be resolved in sandbox **before** Phase 1 ships.
 
 ---
-*Research completed: 2026-03-14*
-*Ready for roadmap: yes*
+
+## 1. Bottom-Line Decisions (the eight things that matter)
+
+1. **Do NOT install the `authorizenet` npm package.** It ships axios with an open DoS CVE (issue #102), pulls in `winston-daily-rotate-file` (writes to `fs`), is CommonJS-only, and breaks edge runtime. Keep extending the existing `gatewayFetch()` in `lib/payments/corepay-gateway.ts` — every Authorize.Net request shares the same `merchantAuthentication`-wrapped envelope.
+2. **Migration `004_payment_provider.sql` already shipped.** Half the "rename `stripe_*` → `provider_*`" work is done. The remaining work is **dual-write + expand-contract cutover**, NOT fresh column renames. Four tables (`creator_customer_portfolio`, `siphox_kit_orders`, `pending_intakes`, `affiliate_codes` cleanup) still need provider columns added or `stripe_*` columns dropped.
+3. **Inngest / Vercel Workflow are NOT needed.** Authorize.Net webhooks are stateless single-step (verify → write → 200), the platform retries natively, and a Postgres `webhook_events` idempotency table covers everything. Use `crypto.createHmac('sha512', …)` (Node) or `crypto.subtle.verify(…)` (edge) — both built-in.
+4. **`ARBUpdateSubscriptionRequest` does NOT prorate, does NOT charge difference, and only takes effect on the next billing cycle.** Mid-cycle upgrades must be implemented as **cancel-and-recreate with proration math** + a one-shot CIM `createTransactionRequest` for the prorated charge.
+5. **Run BOTH webhook handlers in parallel during the migration window.** Killing `app/api/webhook/stripe/route.ts` on day 1 would orphan in-flight Stripe events for ~hundreds of unmigrated subs. The Stripe handler becomes a maintenance route until `COUNT(*) WHERE payment_provider='stripe' AND status='active' = 0`.
+6. **One CIM customer profile per email (lifetime). Many payment profiles per customer profile (one per saved card).** ARB references a customer-profile + payment-profile by ID; this decoupling is what makes pause/resume and card-update flows clean.
+7. **Vercel Fluid Compute (300s default, 800s max) is the runtime.** The "60-90s legacy serverless" assumption in early scoping is wrong for this Pro project. Sequential Authorize.Net calls (3-8s happy path) fit trivially in a single function — no async pattern needed for checkout.
+8. **The single new runtime dependency is `@sentry/nextjs@^10.50.0`.** Install via `npx @sentry/wizard@latest -i nextjs`. Everything else is built-in (`fetch`, `node:crypto`, `crypto.subtle`, `@vercel/postgres`, `zod`, `jose`, `resend`, `@react-pdf/renderer`).
+
+---
+
+## 2. Stack Additions
+
+### Install (single command)
+
+```bash
+# Only new runtime dependency
+npx @sentry/wizard@latest -i nextjs
+# Resolves to: @sentry/nextjs@^10.50.0
+# Auto-creates: instrumentation.ts, sentry.{server,edge,client}.config.ts
+# Auto-wraps: next.config.js with withSentryConfig()
+```
+
+### Do NOT install
+
+| Package | Reason |
+|---|---|
+| `authorizenet` | axios CVE (issue #102), CJS-only, `winston-daily-rotate-file` requires `fs`, 946KB unpacked, stale `@types` from 2023-11 |
+| `@types/authorizenet` | Last updated 2023-11; describes 1.0.8, runtime is 1.0.10. We own our types in `payment-types.ts` |
+| `axios` | Native `fetch()` already in use; would be a regression |
+| `inngest` | No multi-step workflows in v2.0 scope; native HMAC + cron sufficient |
+| `@vercel/workflow` | Same reasoning; also beta-tier with frequent API changes |
+| `crypto-js` / `jsrsasign` | Node `crypto.createHmac` and Web `crypto.subtle` are built-in |
+| Redis (Upstash) for webhook idempotency | Postgres `INSERT … ON CONFLICT DO NOTHING` is sufficient |
+| BullMQ / SQS / any queue | Authorize.Net retries natively; webhooks are single-step |
+| Datadog APM (alongside Sentry) | Sentry covers errors + perf + edge in one tool |
+
+### Remove after Phase 7 (post-cutover)
+
+```bash
+npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js
+```
+
+Conditions: re-onboarding window closed, all `app/api/stripe/**` + `app/api/webhook/stripe/**` deleted, schema drops migrated, Sentry shows zero traffic to Stripe-prefixed routes for 14 consecutive days.
+
+### Use what's already in the stack
+
+| Package | Purpose in v2.0 |
+|---|---|
+| `next@^14.2.0` | App Router routes, middleware, instrumentation hook |
+| `@vercel/postgres@^0.10.0` | `webhook_events`, `coupon_redemptions`, `migration_tokens` tables |
+| `zod@^3.23.0` | Validate webhook event schemas |
+| `jose@^6.1.3` | Re-onboarding magic-link tokens |
+| `resend@^4.0.0` | Receipts + dunning + re-onboarding emails |
+| `@react-pdf/renderer@^4.3.2` | Branded receipt PDFs (existing `lib/invoice/` is the model) |
+| `node:crypto` | `createHmac('sha512',…)` + `timingSafeEqual` for webhook verify |
+| `crypto.subtle` | Edge-runtime HMAC verify path (cultrclub-web parity) |
+
+---
+
+## 3. Feature Table (table-stakes / differentiator / anti-feature)
+
+Categorized by area. Complexity: **S** = small, **M** = medium, **L** = large.
+
+### Lifecycle (subscription state machine)
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 3.1 | Cancel (soft, end-of-period default) — soft-cancel + `ARBCancelSubscription` + `access_until` cron downgrade | Table-stakes | M |
+| 3.2 | Cancel (immediate, no refund) — admin-only path | Table-stakes | S |
+| 3.3 | Update card on file via Accept.js + CIM `updatePaymentProfile` | Table-stakes | M |
+| 3.4 | Mid-cycle upgrade with proration math (cancel-and-recreate + one-shot CIM charge for diff) | Table-stakes | L |
+| 3.5 | Initial subscription charge (split: `createTransaction` month 1 + ARB starting month 2) | Table-stakes | M |
+| 3.6 | Reactivate canceled sub before `access_until` (no charge) | Table-stakes | S |
+| 3.7 | Pause via cancel-and-recreate w/ retained CIM profile + auto-resume cron | Differentiator | L |
+| 3.8 | Downgrade with end-of-period swap | Differentiator | L |
+| 3.9 | Switch billing anchor date | Differentiator | L |
+| 3.10 | Annual plans | Differentiator | M |
+
+### Coupons (Authorize.Net has no native primitive)
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 4.1 | DB-ize coupon entity + CRUD (replaces hardcoded `CLUB_COUPONS`) | Table-stakes | M |
+| 4.2 | Coupon validation API (extend `validateCouponUnified()`) | Table-stakes | S |
+| 4.3 | Apply coupon at checkout: bake `effectiveAmount` into ARB sub | Table-stakes | M |
+| 4.4 | `FOUNDER15` (forever) — bake-once, no scheduled update | Table-stakes | S |
+| 4.5 | `FIRSTMONTH` (once) — split: `createTransaction` month 1 discounted + ARB month 2 full price | Table-stakes | M |
+| 4.6 | Creator-code attribution preserved on ARB charges via `coupon_redemptions` table | Table-stakes | M |
+| 4.7 | Migration job: re-apply Stripe coupons to ARB subs at cutover | Table-stakes | L |
+
+### Portal (`/portal/billing` — zero hosted UI from Authorize.Net)
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 5.1 | View active sub (tier, price, next billing, last 4) | Table-stakes | S |
+| 5.2 | Update card on file (Accept.js + CIM update) | Table-stakes | M |
+| 5.3 | Cancel subscription (soft, end-of-period default) | Table-stakes | S |
+| 5.4 | Billing history (last 12mo from CULTR DB) | Table-stakes | M |
+| 5.5 | Branded receipt PDF download (reuse `@react-pdf/renderer`) | Table-stakes | M |
+| 5.6 | Update billing email | Table-stakes | S |
+| 5.7 | Cancellation flow with reason capture | Table-stakes | S |
+| 5.8 | "End-of-period" vs "Immediate" cancel toggle | Table-stakes | S |
+| 5.9 | Resume canceled sub within 30-day grace | Table-stakes | M |
+
+### Webhooks (HMAC-SHA512 + idempotency + provider-agnostic dispatcher)
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 6.1 | HMAC-SHA512 verifier (raw body, `X-ANET-Signature`, length-checked `timingSafeEqual`) | Table-stakes | S |
+| 6.2 | `webhook_events` idempotency table (provider+event_id PK) | Table-stakes | S |
+| 6.3 | `lib/webhooks/dispatcher.ts` — provider-agnostic side-effect helpers | Table-stakes | M |
+| 6.4 | Subscription created → activate membership + Healthie + SiPhox + attribution + welcome | Table-stakes | M |
+| 6.5 | Payment captured → record transaction, fire receipt | Table-stakes | M |
+| 6.6 | Refund → reverse commission via existing helper | Table-stakes | S |
+| 6.7 | Subscription suspended → start dunning ladder | Table-stakes | M |
+| 6.8 | Subscription terminated/cancelled → downgrade to Club | Table-stakes | S |
+| 6.9 | Daily reconciliation cron (`ARBGetSubscriptionStatus`; alert on drift) | Table-stakes | M |
+| 6.10 | Sentry alert on HMAC mismatch / unknown event types / >5s latency | Table-stakes | M |
+
+### Refunds & Voids
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 7.1 | Unified `/api/refunds/create` — voids if pre-settle, refunds if post | Table-stakes | M |
+| 7.2 | Admin "Refund" button on transaction detail | Table-stakes | S |
+| 7.3 | Refund email with mechanism-matched language | Table-stakes | S |
+| 7.4 | Refund commission reversal | Table-stakes | S |
+| 7.5 | Partial refund | Table-stakes | S |
+
+### Receipts
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 8.1 | Branded receipt email on every successful charge | Table-stakes | M |
+| 8.2 | PDF attachment via `@react-pdf/renderer` | Table-stakes | M |
+| 8.3 | Disable Authorize.Net plain-text merchant-interface receipt | Table-stakes | S |
+| 8.4 | Failed payment email | Table-stakes | S |
+| 8.5 | Successful renewal email (Stripe parity) | Table-stakes | S |
+| 8.6 | Subscription canceled confirmation email | Table-stakes | S |
+| 8.7 | Card-on-file expiring soon (-30d, -7d) | Table-stakes | S |
+
+### Dunning
+
+| # | Feature | Tier | Complexity |
+|---|---|---|---|
+| 9.1 | Webhook handler for `subscription.suspended` / `subscription.failed` | Table-stakes | M |
+| 9.2 | `past_due` state on subscription entity | Table-stakes | S |
+| 9.3 | Dunning email cadence: +0, +24h, +72h, +7d, +14d | Table-stakes | M |
+| 9.4 | Retry job: re-attempt failed charges via stored CIM profile | Table-stakes | M |
+| 9.5 | Account Updater enabled at merchant level | Table-stakes | S |
+| 9.6 | Final cancellation + downgrade after retry exhaustion | Table-stakes | S |
+
+---
+
+## 4. Architecture Decisions Locked In (the seven choices research has settled)
+
+These are NOT open questions for the roadmapper. Research has resolved them.
+
+### 4.1 Both webhook handlers run in parallel during migration window
+
+`app/api/webhook/stripe/route.ts` stays alive through Phases 1-6; deleted (or 410-Gone'd) only when `SELECT COUNT(*) FROM memberships WHERE payment_provider='stripe' AND subscription_status='active' = 0`. Killing it earlier orphans in-flight events for unmigrated subs.
+
+### 4.2 One CIM customer profile per email (lifetime), many payment profiles
+
+- Customer profile: lifetime per email; up to 10 payment profiles + 100 shipping per customer profile (Authorize.Net hard limit).
+- Payment profile: one per saved card.
+- ARB subscription: independent object that *references* customer-profile + payment-profile by ID.
+- Memberships table: add `provider_payment_profile_id VARCHAR(255)`.
+
+### 4.3 Card update default: Path B (new payment profile + `ARBUpdateSubscriptionRequest`)
+
+- **Path A:** `updateCustomerPaymentProfile` in place. Confidence MEDIUM-HIGH; explicit guarantee not found in docs.
+- **Path B:** `createCustomerPaymentProfile` (new ID) → `ARBUpdateSubscriptionRequest` to point ARB at new ID. Verbose but unambiguous.
+
+**Default to Path B** until Path A is proven in sandbox spike (§6 Q1).
+
+### 4.4 Stripe in-flight invoice handling: `voidInvoice()` BEFORE `subscriptions.cancel()`
+
+Hard rule for migration code: `stripe.invoices.list({ subscription: legacyId, status: 'open' })` → `stripe.invoices.voidInvoice(id)` → THEN `stripe.subscriptions.cancel(legacyId)`. Skipping the void step risks an in-flight Stripe invoice posting after the new CorePay sub starts — a real double-charge.
+
+### 4.5 Vercel Fluid Compute (300s default timeout) — no async pattern needed for checkout
+
+Sequential calls in checkout: `createCustomerProfile` (1-3s) + `ARBCreateSubscription` (2-5s) = 3-8s happy path. Synchronous checkout returns redirect immediately; heavy side-effects (Healthie, SiPhox, Mailchimp) happen via `webhook/corepay` on `subscription.created` — same pattern as today's Stripe flow.
+
+### 4.6 Coupon source-of-truth: `coupon_redemptions` at redeem time; `order_attributions` for commission
+
+| Question | Source |
+|---|---|
+| "Did this customer redeem code X?" | `coupon_redemptions` (snapshots discount %, original amount, applied_to_billing_cycles) |
+| "What's a creator's earned commission?" | `order_attributions` + `commission_ledger` (existing tables; lifecycle is non-trivial — don't re-engineer) |
+| "Which creator gets attribution?" | JOIN `coupon_redemptions.code_id → affiliate_codes.id → creators.id` |
+
+`FOUNDER15` (forever) bakes pre-discounted amount into ARB sub at creation; `FIRSTMONTH` (once) uses ARB `trialOccurrences` + `trialAmount`.
+
+### 4.7 Webhook side-effects extracted to `lib/webhooks/dispatcher.ts`
+
+Today, `app/api/webhook/stripe/route.ts` is 1020 lines with side effects inlined. Phase 2 lifts these into provider-agnostic helpers:
+
+```ts
+onSubscriptionActivated({ provider, providerCustomerId, providerSubscriptionId, email, planTier, attributionCookie?, couponCode? })
+onSubscriptionCancelled({ provider, providerSubscriptionId, reason? })
+onSubscriptionPastDue({ provider, providerSubscriptionId })
+onPaymentSucceeded({ provider, providerSubscriptionId, amountCents })
+onRefunded({ provider, providerTransactionId, amountCents })
+```
+
+DRY across providers.
+
+---
+
+## 5. Top 5 Pitfalls (likelihood × impact)
+
+### 5.1 Coupon timing race (the 2 AM PT cron edge case)
+
+**What goes wrong:** "FOUNDER15 = 15% off forever" requires `ARBUpdateSubscriptionRequest` BEFORE each renewal. ARB processes daily at ~2:00 AM PT. Cron after 2:00 AM PT → member charged full price.
+
+**Likelihood:** HIGH. **Impact:** HIGH (silent revenue/commission errors).
+
+**Mitigation:** Architecture-level — bake pre-discounted amount into `provider_subscriptions.next_billing_amount` at coupon redemption. No cron-timing dependency. Auto-credit fallback if missed.
+
+### 5.2 Creator commission backfill miss at cutover
+
+**What goes wrong:** Re-onboarding has no attribution carryforward. Existing Stripe subs lose 100% creator attribution day-of-cutover.
+
+**Likelihood:** Certain at cutover. **Impact:** Critical (50% creator revenue gone).
+
+**Mitigation:** Pre-cutover backfill script populates `subscription_attributions` table from existing Stripe subs. Re-onboarding endpoint reads this and inherits creator_id/code_id.
+
+### 5.3 Subscription status drift / double charge during migration
+
+**What goes wrong:** Member's Stripe sub renews while Authorize.Net sub also charges (member ignored re-onboarding email until after Stripe renewal day).
+
+**Likelihood:** High during cutover window. **Impact:** Critical (lawsuit + reputation).
+
+**Mitigation:** 4-step ops sequence:
+1. Disable creation of new Stripe subscriptions (feature flag).
+2. `cancel_at_period_end: true` on every active Stripe sub.
+3. Re-onboarding ARB `startDate = stripe_period_end + 1`.
+4. Stripe webhook handler runs for 30 days post-cutover.
+
+**Plus:** void open Stripe invoices BEFORE canceling subscription.
+
+### 5.4 Healthie integration miss in strip-Stripe sweep
+
+**What goes wrong:** CorePay webhook deployed without Healthie hook → new members post-Healthie-API-arrival never get EHR records.
+
+**Likelihood:** Medium. **Impact:** High (silent broken EHR creation).
+
+**Mitigation:** Add TODO stub in CorePay webhook NOW; maintain `INTEGRATION_TRIGGER_MATRIX.md`; integration test mocks all downstream calls.
+
+### 5.5 DB column rename without expand-contract (cross-app breakage)
+
+**What goes wrong:** cultrhealth.com (Vercel) and cultrclub-web (Cloudflare Pages) deploy independently but share Neon DB. Direct `ALTER TABLE … RENAME COLUMN` breaks both during deploy window.
+
+**Likelihood:** Medium (engineering rigor). **Impact:** Critical (cross-app site-down).
+
+**Mitigation:** 3-deploy expand-contract:
+1. **Expand:** Already done (migration 004). Backfill values. Code reads `COALESCE(new, old)`, writes both. Wait 1 hour.
+2. **Switch:** Code reads/writes only new column. Wait 24 hours.
+3. **Contract:** DROP old column (or rename to `_legacy`).
+
+Gated on cross-app deploy checklist. Clean macOS-duplicate `*_2.sql`, `*_4.sql` migration files first.
+
+---
+
+## 6. Open Questions for Sandbox Verification BEFORE Phase 1
+
+### Q1: CIM payment profile update cascade to ARB? (Path A vs Path B)
+**Default if unverified:** Path B.
+**To verify:** Sandbox — create ARB sub → `updateCustomerPaymentProfile` with new opaqueData → trigger next charge → confirm new card was billed.
+
+### Q2: Vercel staging on Fluid Compute or legacy serverless?
+**Default if unverified:** Fluid (300s).
+**To verify:** `vercel project inspect` on cultrhealth.com staging. Look for `runtimeVersion` or `compute.fluid` flags.
+**If legacy (60s):** Async pattern needed for checkout.
+
+### Q3: Existing Sentry project on cultrhealth.com?
+**Default if unverified:** Wizard creates new.
+**To verify:** Sentry dashboard for `cultrhealth` org. Check `.env.example` for `SENTRY_*`.
+
+### Q4: Account Updater enabled on the CorePay merchant account?
+**Default if unverified:** Assume not. Manual card-expiry email pipeline required.
+**To verify:** Authorize.Net merchant interface → Account → Security Settings → Account Updater.
+**Note:** Paid add-on. Confirm cost.
+
+### Q5: CIM payment profile retention policy?
+**Default if unverified:** Retain indefinitely (deletion is unrecoverable).
+**To verify:** Authorize.Net merchant interface for retention auto-purge. Test: what happens to ARB sub when payment profile is deleted?
+
+### Q6: Authorize.Net first-charge limitation — does ARB charge day 1?
+**Default per docs:** ARB schedules first charge per the schedule, NOT on creation.
+**To verify:** Sandbox — `ARBCreateSubscriptionRequest` with `paymentSchedule.startDate = today` → does first transaction post immediately?
+**If does NOT charge day 1:** Must split: `createTransactionRequest` for month 1 + ARB starting `+1 month`.
+
+---
+
+## 7. Suggested Phase Decomposition (8 phases — continues v1.0 numbering)
+
+### Phase 6 — Skills (independently shippable, pure docs)
+
+- `corepay-api/SKILL.md` — Authorize.Net ARB + CIM + Accept.js + webhook reference.
+- `healthie-api/SKILL.md` — Healthie EHR (gated on Plus-plan API key).
+- `corpay-crossborder/SKILL.md` — reference-only for future creator international payouts.
+- `siphox-api/SKILL.md` — refresh: known auth-header bug, smart polling, biomarker mapping.
+
+### Phase 7 — Schema/gateway plumbing (no customer-facing changes)
+
+- Migration `063_webhook_events.sql`.
+- Migration `064_provider_payment_profile_id.sql`.
+- `lib/payments/authorize-net-cim.ts` — CIM helpers.
+- `lib/payments/authorize-net-arb.ts` — ARB lifecycle helpers.
+- `lib/payments/authorize-net-charges.ts` — `chargeOpaqueData`, `refundTransaction`, `voidTransaction`, `getTransactionDetails`.
+- `app/api/webhook/corepay/route.ts` — HMAC-SHA512 verifier, idempotency. Zero live customers.
+- `instrumentation.ts` + Sentry boot validation (fail loud at startup if DSN missing).
+- `app/api/cron/reconcile-arb-subscriptions/route.ts` — deploy-gated; not in `vercel.json` until Phase 9.
+
+### Phase 8 — Subscription lifecycle core (refactor; no behavior change)
+
+- `lib/webhooks/dispatcher.ts` — provider-agnostic side-effect helpers.
+- Update Stripe + CorePay webhook routes to call dispatcher.
+- `getProviderIds(membership)` helper. COALESCE shim across `lib/db.ts`, `lib/admin-types.ts`, `lib/creators/db.ts` (5 sites), `lib/siphox/db.ts` (4 sites), admin clients.
+
+### Phase 9 — Coupon engine
+
+- Migration `065_coupon_redemptions.sql`.
+- `validateCouponForSubscription(code, planSlug, email)`.
+- `lib/coupons/redemption.ts` — `recordCouponRedemption(...)` called from both checkout routes.
+- Drop Stripe coupon sync in admin routes.
+- FOUNDER15 prefund (bake-once into ARB amount).
+- FIRSTMONTH split (`trialOccurrences` + `trialAmount` OR two-step).
+- Creator attribution backfill table for cutover.
+
+### Phase 10 — Self-service portal UI (`/portal/billing` complete)
+
+- Update `app/join/[tier]/page.tsx` + `app/pricing/PricingClient.tsx` — feature flag.
+- Update `app/api/checkout/corepay/route.ts` — drop `stripe_customer_id: 'corepay_…'` hack.
+- Update `app/success/page.tsx` — handle `provider=corepay`.
+- Update `app/api/intake/submit/route.ts` — match `provider_subscription_id`.
+- New `app/portal/billing/page.tsx` + `BillingClient.tsx`.
+- New `app/api/portal/billing/{cancel,pause,resume,update-card}/route.ts`.
+- Add `reconcile-arb-subscriptions` to `vercel.json` crons.
+- Roll out: staging flag-flipped → 5% canary → ramp.
+
+### Phase 11 — Receipts + dunning ladder
+
+- Receipt template via `@react-pdf/renderer`.
+- Disable Authorize.Net merchant-interface receipts.
+- Receipt-on-charge pipeline.
+- Failed payment email + dunning ladder (+0/+24h/+72h/+7d/+14d).
+- Retry cron (re-attempt failed charges via stored CIM profile).
+- Successful renewal email.
+- Card-on-file expiring (-30d, -7d).
+- Account Updater enable (gated on Q4).
+- Final cancellation + downgrade after retry exhaustion.
+
+### Phase 12 — Migration cutover (re-onboarding flow)
+
+- Migration `066_migration_tokens.sql` (token_hash SHA-256, state machine, 30-day expiry).
+- New `app/migrate/[token]/page.tsx` + `MigrateClient.tsx`.
+- New `app/api/migrate/complete/route.ts` — atomic flow:
+  1. Revalidate token.
+  2. CIM `createCustomerProfileRequest`.
+  3. ARB `createSubscription`. (On failure: rollback CIM via `deleteCustomerProfile`.)
+  4. Stripe in-flight invoice void.
+  5. Stripe `subscriptions.cancel(legacyId)`. (On failure: log to Sentry; don't throw.)
+  6. DB transaction: update `memberships` + `migration_tokens` atomically.
+  7. Confirmation email.
+- `scripts/seed-migration-tokens.mjs` — throttle ≤10 calls/sec.
+- `app/api/cron/sunset-stripe-subscriptions/route.ts`.
+- 4-step ops sequence (per §5.3 mitigation).
+
+### Phase 13 — Refunds + admin reporting + hardening tests
+
+- Convert 6 admin routes to `lib/payments/provider.ts` adapter.
+- Unified `/api/refunds/create`.
+- Admin "Refund" + "Settlement status" UI.
+- Member self-service refund request.
+- MRR / cohort retention / coupon ROI / dunning effectiveness dashboards.
+- Delete Stripe checkout routes + webhook (gated on `COUNT WHERE provider='stripe' AND active=0`).
+- Migration `067_drop_stripe_coupon_columns.sql`.
+- Migration `068_drop_legacy_stripe_columns.sql` (gated on cross-app deploy checklist).
+- `npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js`.
+- Drop `STRIPE_*` env vars.
+- Hardening tests: full happy path + 5 failure modes per §5.
+
+---
+
+## 8. Migration 004 Finding — Schema Work Is Partially Done
+
+Migration `004_payment_provider.sql` already shipped to production:
+
+- `memberships.payment_provider`, `provider_customer_id`, `provider_subscription_id`
+- `orders.payment_provider`, `provider_transaction_id`
+- `CHECK (payment_provider IN ('stripe','authorize_net','klarna','affirm'))`
+
+Legacy `stripe_*` columns preserved alongside. **Remaining work is dual-write + expand-contract cutover, NOT fresh column renames.**
+
+### Tables that DO still need provider columns added/touched
+
+| Table | Missing column / cleanup | Owner | Phase |
+|---|---|---|---|
+| `creator_customer_portfolio` | `provider_subscription_id` | shared (cultrhealth + cultrclub-web) | 7 → 8 → 13 |
+| `siphox_kit_orders` | `provider_subscription_id` | cultrhealth | 7 → 8 → 13 |
+| `pending_intakes` | provider-equivalent of `stripe_payment_intent_id` (which actually stores `cs_…` checkout session IDs — misnamed) | cultrhealth | 7 → 8 → 13 |
+| `affiliate_codes` | DROP `stripe_coupon_id` + `stripe_promotion_code_id` (no add — pure cleanup) | cultrhealth | 9 → 13 |
+
+### What `stripe_events` is (PROJECT.md imprecision)
+
+PROJECT.md says "drop `stripe_events`." The actual table is `stripe_idempotency` (migration `007`). New `webhook_events` replaces it for both providers; `stripe_idempotency` dropped after Phase 13.
+
+### Cleanup prerequisite
+
+`migrations/` has macOS-duplicate files that must be cleaned first:
+- `058_add_creator_jonas_machado 2.sql`, `058_add_creator_jonas_machado 4.sql`
+- `059_update_jonas_machado_commission 2.sql`, `059_update_jonas_machado_commission 4.sql`
+- `057_signup_coupon_codes 2.sql`
+
+These risk accidental delete-twice if a tooling glob picks up the wrong files. Clean before Phase 7 ships.
+
+---
+
+## 9. Confidence Assessment
+
+| Area | Confidence | Rationale |
+|---|---|---|
+| Stack additions | HIGH | Verified against npm registry, Authorize.Net docs, project source |
+| Feature gap map | HIGH | Stripe + Authorize.Net docs are authoritative |
+| Architecture | HIGH for runtime/Postgres/Vercel; MEDIUM for two Authorize.Net subtleties (Path A cascade, Account Updater) |
+| Pitfalls | HIGH | v2.0 risks anchored to ARCHITECTURE.md risk register + CLAUDE.md incident log |
+
+### Gaps to address during planning
+
+1. **Q1-Q6 sandbox verifications (§6).** Block defaults; do BEFORE Phase 7 (the first build phase).
+2. **Cross-app deploy coordination.** Build a runbook checklist before Phase 13.
+3. **CorePay merchant interface admin credentials.** Confirm someone has them before Phase 7.
+
+---
+
+*Synthesized 2026-04-27 from STACK.md, FEATURES.md, ARCHITECTURE.md, PITFALLS.md.*
+*Roadmapper consumes this next: read §1, §4, §5, §6, §7 first; reference §3 + §8 as you decompose phases.*

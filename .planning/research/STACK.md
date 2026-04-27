@@ -1,255 +1,383 @@
-# Technology Stack
+# v2.0 Stack — Stripe Removal + Authorize.Net Buildout
 
-**Project:** SiPhox Health Blood Test Kit Integration
-**Researched:** 2026-03-14
+**Project:** CULTR Health — Stripe → CorePay (Authorize.Net) replacement
+**Researched:** 2026-04-27
+**Overall confidence:** HIGH (every recommendation verified against npm registry, Authorize.Net official docs, and the existing project source)
 
-## Recommended Stack
-
-### SiPhox API Client
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Native `fetch` (Node 18+) | Built-in | HTTP client for SiPhox REST API | The codebase already uses native `fetch` for Asher Med API (`lib/asher-med-api.ts`). Follow the same `asherRequest<T>()` pattern -- typed wrapper function with Bearer token auth, error handling, and query param serialization. No new HTTP library needed. |
-| `zod` | ^3.23.0 (existing) | Runtime validation of SiPhox API responses | Already in the codebase (`lib/validation.ts`). SiPhox is an external API returning health data -- every response MUST be validated at runtime before touching DB or UI. Define Zod schemas for all SiPhox response shapes and `safeParse()` before passing data downstream. TypeScript types alone are insufficient for external API data. |
-
-**Confidence: HIGH** -- The `asherRequest<T>()` pattern in `lib/asher-med-api.ts` (lines 250-320) is proven. It handles auth headers, query params, content type detection, and error extraction. The SiPhox client should be structurally identical: `siphoxRequest<T>(endpoint, options)` with Bearer token instead of X-API-KEY header.
-
-**Do NOT use axios, got, ky, or any HTTP client library.** Native `fetch` is available in Node 18+ and is already the codebase standard. Adding a new HTTP library for one integration creates an inconsistency.
-
-### SiPhox Response Validation Pattern
-
-```typescript
-// lib/siphox/schemas.ts
-import { z } from 'zod'
-
-const SiPhoxBiomarkerSchema = z.object({
-  _id: z.string(),
-  name: z.string(),
-  unit: z.string().optional(),
-  value: z.number().nullable(),
-  referenceRange: z.object({
-    low: z.number().optional(),
-    high: z.number().optional(),
-  }).optional(),
-})
-
-const SiPhoxReportSchema = z.object({
-  _id: z.string(),
-  biomarkers: z.array(SiPhoxBiomarkerSchema),
-  createdAt: z.string(),
-  status: z.string(),
-})
-
-// Usage in API client
-export async function getReport(customerId: string, reportId: string) {
-  const raw = await siphoxRequest(`/customers/${customerId}/reports/${reportId}`)
-  const result = SiPhoxReportSchema.safeParse(raw)
-  if (!result.success) {
-    throw new SiPhoxApiError(`Invalid report response: ${result.error.message}`)
-  }
-  return result.data
-}
-```
-
-**Confidence: HIGH** -- Zod `safeParse()` is the standard pattern for external API validation. This catches schema drift (SiPhox changes their API) before bad data enters the system.
-
-### Data Visualization
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `recharts` | ^3.7.0 (existing, update to ^3.8.0) | Biomarker trend charts, range visualization | Already in the codebase for creator analytics (`components/creators/AnalyticsCharts.tsx`). Recharts 3.x supports `ReferenceArea` for optimal/acceptable range bands, `LineChart` for biomarker trends over time, `RadialBarChart` for score gauges. No new charting library needed. |
-| Custom SVG components | -- | Gauge arcs, sparklines, range bars | Already in the codebase. `BiologicalAgeCard.tsx` has a custom SVG gauge. `BiomarkerTrends.tsx` has custom SVG sparklines. Continue this pattern for simple visualizations. Use Recharts only when you need axes, tooltips, or responsive containers. |
-
-**Confidence: HIGH** -- Recharts 3.8.0 (released March 6, 2025) is the latest stable. The project is on ^3.7.0 which will auto-resolve to 3.8.0 on next `npm install`. Key Recharts features for this integration:
-
-- **`ReferenceArea`** -- Draws colored bands on charts for optimal/acceptable/suboptimal ranges. Perfect for showing where a biomarker value falls relative to reference ranges.
-- **`LineChart` + `Area`** -- Biomarker value trends over multiple reports.
-- **`RadialBarChart`** -- Overall health score gauge (alternative to the custom SVG gauge already in BiologicalAgeCard).
-- **`ResponsiveContainer`** -- Built into v3 charts, handles mobile/desktop resizing.
-
-**Do NOT add nivo, tremor, visx, Chart.js, or ApexCharts.** Recharts is already a dependency, is actively maintained (5 days since last release), covers all required chart types, and adding a second charting library creates bundle bloat and inconsistent styling.
-
-### Biomarker Range Visualization (Recharts ReferenceArea)
-
-```typescript
-// Example: Biomarker value chart with optimal range band
-<LineChart data={biomarkerHistory}>
-  <CartesianGrid strokeDasharray="3 3" />
-  <XAxis dataKey="date" />
-  <YAxis domain={['auto', 'auto']} />
-  {/* Optimal range band (green) */}
-  <ReferenceArea y1={optimalLow} y2={optimalHigh} fill="#10B981" fillOpacity={0.1} />
-  {/* Acceptable range band (yellow) */}
-  <ReferenceArea y1={acceptableLow} y2={acceptableHigh} fill="#F59E0B" fillOpacity={0.05} />
-  <Line type="monotone" dataKey="value" stroke="#2A4542" strokeWidth={2} />
-  <Tooltip />
-</LineChart>
-```
-
-### Biomarker Range Bar (Custom Tailwind Component)
-
-For individual biomarker cards, the range bar visualization does NOT need Recharts. Use a custom Tailwind component (the existing `BiomarkerTrends.tsx` pattern of inline SVG + Tailwind divs is the right approach):
-
-```typescript
-// Horizontal range bar showing value position within reference range
-function RangeBar({ value, low, high, optimalLow, optimalHigh }) {
-  // Calculate percentage position of value within full range
-  // Render as stacked Tailwind divs with colored segments
-  // No chart library needed for this
-}
-```
-
-**Confidence: HIGH** -- The existing codebase already does this. `BiologicalAgeCard.tsx` line 98 has a gradient range bar. `BiomarkerTrends.tsx` line 69 has SVG sparklines. This is the right pattern for small inline visualizations.
-
-### Database & Caching
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `@vercel/postgres` | ^0.10.0 (existing) | Store SiPhox customer mappings, cached biomarker data, kit status | Already the database layer. Add tables for `siphox_customers` (member-to-SiPhox ID mapping), `siphox_kits` (kit registration and status), `siphox_reports` (cached report data). |
-| Next.js `fetch` cache | Built-in | Cache SiPhox API responses on server | Use `next: { revalidate: 3600 }` on `fetch()` calls for biomarker reference data (changes rarely). For patient-specific report data, use `no-store` and cache in DB instead. |
-| DB-level caching | -- | Store parsed biomarker results in PostgreSQL | SiPhox report data should be fetched once, parsed, and stored in local DB. Subsequent dashboard loads read from DB, not SiPhox API. Refresh when user explicitly requests or webhook fires. |
-
-**Confidence: HIGH** -- The DB-caching-over-API-caching approach is correct for health data because:
-1. SiPhox API has rate limits (undocumented but assumed for partner APIs)
-2. Report data is immutable after lab processing (no reason to re-fetch)
-3. Dashboard page loads should never depend on a third-party API being available
-4. Cached data enables offline-first dashboard rendering
-
-**Do NOT use Redis/Upstash for SiPhox data caching.** The project has optional Upstash Redis for rate limiting, but biomarker data belongs in PostgreSQL alongside the patient record. Redis is wrong for structured health data that needs querying by category, date range, and biomarker type.
-
-**Do NOT use `unstable_cache`.** It is experimental in Next.js 14 and being replaced by `use cache` in Next.js 15. Stick with DB-level caching for durability and the built-in `fetch` cache for transient API responses.
-
-### Caching Strategy Detail
-
-| Data Type | Cache Location | TTL | Invalidation |
-|-----------|---------------|-----|--------------|
-| SiPhox customer ID mapping | PostgreSQL `siphox_customers` | Permanent | Never (1:1 mapping doesn't change) |
-| Kit registration status | PostgreSQL `siphox_kits` | Permanent, refreshed on status change | Poll SiPhox `/kits` endpoint daily via cron, or on user dashboard load if status != 'completed' |
-| Biomarker report results | PostgreSQL `siphox_reports` + JSONB column | Permanent once processed | Fetched once when report status = 'completed', never re-fetched |
-| Biomarker reference list | Next.js `fetch` cache | 24 hours (`revalidate: 86400`) | `GET /biomarkers` returns static catalog, changes rarely |
-| SiPhox credit balance | No cache | N/A | Always fetch fresh from `GET /credits` before ordering |
-
-### HIPAA Data Handling
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Existing HIPAA patterns | -- | PHI handling for biomarker data | Biomarker results are PHI. Follow existing patterns: no console.log of values, no client-side error messages with data, `private, no-cache` response headers on authenticated routes (already configured in `next.config.js`). |
-| `@vercel/postgres` | ^0.10.0 (existing) | Encrypted at rest via Neon PostgreSQL | Neon provides encryption at rest (AES-256) and in transit (TLS). No additional encryption layer needed for biomarker storage. |
-
-**Confidence: HIGH** -- The codebase already handles PHI from Asher Med (patient data, intake forms, orders). Biomarker data follows the same classification and handling rules.
-
-### Stripe Integration (Extend Existing)
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| `stripe` | ^20.2.0 (existing) | Add $135 blood test kit add-on to Core tier checkout | Extend existing checkout flow in `app/api/checkout/route.ts`. Add a line item for the SiPhox kit when Core tier + add-on selected. Catalyst+ and Concierge auto-include it (modify checkout to always add the line item for those tiers). |
-
-**Confidence: HIGH** -- The existing Stripe checkout already supports multiple line items, subscription + product bundles, and coupon codes. Adding a kit line item is a configuration change, not an architectural one.
-
-### API Error Handling & Resilience
-
-| Technology | Version | Purpose | Why |
-|------------|---------|---------|-----|
-| Existing `lib/resilience.ts` patterns | -- | Retry logic for SiPhox API calls | The codebase has retry and circuit breaker patterns. Apply to SiPhox API calls, especially for order creation (must succeed) and report fetching (can gracefully degrade). |
-| Custom `SiPhoxApiError` class | -- | Typed error handling | Follow `AsherMedApiError` pattern from `lib/asher-med-api.ts` line 239. Include `statusCode`, `response`, and `endpoint` for debugging. |
-
-**Confidence: HIGH** -- The pattern is established. The SiPhox client should mirror the Asher Med client's error handling exactly.
-
-### SiPhox API Client Architecture
-
-```
-lib/siphox/
-  api.ts           # Core API client (siphoxRequest<T>, auth, error handling)
-  schemas.ts       # Zod schemas for all SiPhox API responses
-  types.ts         # TypeScript types (inferred from Zod schemas)
-  customers.ts     # Customer CRUD operations
-  orders.ts        # Kit order operations
-  kits.ts          # Kit validation and registration
-  reports.ts       # Report fetching and parsing
-  biomarkers.ts    # Biomarker catalog and reference data
-  credits.ts       # Credit balance checking
-```
-
-This mirrors the structure of existing integrations (`lib/asher-med-api.ts` is monolithic but the SiPhox client benefits from splitting by endpoint group due to the larger surface area).
-
-## Alternatives Considered
-
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| HTTP Client | Native `fetch` | `axios` | Adds 29KB, the codebase uses `fetch` everywhere. Axios offers interceptors but `siphoxRequest<T>()` handles auth/error centrally without them. |
-| HTTP Client | Native `fetch` | `ky` | Cleaner API than fetch but adds a dependency for no real benefit when the wrapper function handles everything. |
-| Response Validation | `zod` (existing) | `io-ts`, `yup`, `typebox` | Zod is already in the project. Adding a second validation library creates confusion about which to use where. |
-| Charting | `recharts` (existing) | `nivo` | Nivo has more chart types but adds ~150KB. Recharts covers LineChart, AreaChart, RadialBarChart, and ReferenceArea -- all we need. Already in the bundle. |
-| Charting | `recharts` (existing) | `tremor` | Tremor is built on Recharts anyway. It provides higher-level dashboard components but fights with the existing Tailwind design system. |
-| Charting | `recharts` (existing) | `visx` (Airbnb) | Lower-level D3 wrapper requiring more custom code. Overkill when Recharts already handles the chart types needed. |
-| Charting | Custom SVG + Tailwind | `react-gauge-chart` | Adding a library for one gauge component is wasteful. The existing `BiologicalAgeCard.tsx` already has a custom gauge that can be adapted. |
-| Data Caching | PostgreSQL DB cache | Redis (Upstash) | Biomarker data is structured, queryable, and persistent. Redis is for ephemeral cache (rate limits, sessions). Wrong tool for health records. |
-| Data Caching | PostgreSQL DB cache | `unstable_cache` | Experimental API being deprecated in Next.js 15. DB caching is durable and portable. |
-| State Management | React Context (existing) | Zustand, Jotai, Redux | The codebase uses React Context for all shared state. Biomarker data flows server->client via props or context. No state library needed. |
-
-## New Dependencies to Install
-
-```bash
-# No new production dependencies needed
-# All required libraries are already in the project:
-#   - zod (validation)
-#   - recharts (charts)
-#   - @vercel/postgres (database)
-#   - stripe (payments)
-#   - jose (auth)
-
-# Optional: update recharts to latest
-npm install recharts@^3.8.0
-```
-
-**Total new dependencies: 0**
-
-This is the ideal outcome. The existing stack covers every requirement for this integration. The work is entirely in new application code (API client, database tables, UI components), not in new library adoption.
-
-## Environment Variables to Add
-
-```bash
-# SiPhox Health API (required)
-SIPHOX_API_KEY=sk_xxxxxxxxxxxxxxxxxxxx          # Bearer token for API auth
-SIPHOX_API_URL=https://connect.siphoxhealth.com/api/v1  # Base URL
-
-# SiPhox Configuration (required)
-SIPHOX_KIT_TYPE=longevity_essentials             # Kit type to order (from SiPhox catalog)
-SIPHOX_NOTIFY_RECEIVER=true                      # Email kit recipients
-
-# SiPhox Configuration (optional)
-SIPHOX_IS_TEST_ORDER=false                       # Set true for staging (if SiPhox supports test mode)
-```
-
-**SiPhox Partner Portal Setup Required:**
-1. Confirm API credentials with SiPhox partner team
-2. Verify available kit types and their IDs
-3. Confirm credit balance and pricing per kit
-4. Request webhook URL configuration (if SiPhox supports webhooks for report completion)
-5. Obtain full API documentation (the public docs are minimal -- partner-level docs are needed)
-
-## Key File Patterns to Follow
-
-| Pattern | Existing Example | SiPhox Equivalent |
-|---------|-----------------|-------------------|
-| API client module | `lib/asher-med-api.ts` | `lib/siphox/api.ts` |
-| Config constants | `lib/config/asher-med.ts` | `lib/config/siphox.ts` |
-| Database operations | `lib/creators/db.ts` | `lib/siphox/db.ts` |
-| API route handler | `app/api/intake/submit/route.ts` | `app/api/siphox/*/route.ts` |
-| Client component | `app/intake/IntakeFormClient.tsx` | `app/dashboard/labs/LabsDashboardClient.tsx` |
-| Webhook handler | `app/api/webhook/stripe/route.ts` | `app/api/webhook/siphox/route.ts` (if supported) |
-
-## Sources
-
-- [SiPhox Health Partner Program](https://siphoxhealth.com/partner) -- REST API overview, partner capabilities
-- [SiPhox Partner FAQ](https://siphoxhealth.com/partner/faq) -- API implementation timeline, customization options
-- [Recharts GitHub Releases](https://github.com/recharts/recharts/releases) -- v3.8.0 latest (March 2025)
-- [Recharts ReferenceArea API](https://recharts.org/en-US/api/ReferenceArea) -- Range band visualization
-- [Next.js 14 Data Fetching and Caching](https://nextjs.org/docs/14/app/building-your-application/data-fetching/fetching-caching-and-revalidating) -- Server-side fetch caching
-- [Next.js unstable_cache](https://nextjs.org/docs/app/api-reference/functions/unstable_cache) -- Deprecated, use DB caching instead
-- [Zod Documentation](https://zod.dev/) -- Runtime validation for API responses
-- [Fetch Wrapper Best Practices for Next.js](https://dev.to/dmitrevnik/fetch-wrapper-for-nextjs-a-deep-dive-into-best-practices-53dh) -- Typed fetch wrapper patterns
+> **TL;DR:** The existing `gatewayFetch()` pattern in `lib/payments/corepay-gateway.ts` is the right foundation — keep it and extend. **Do not** install the official `authorizenet` npm SDK; it ships axios with an open DoS CVE (issue #102), pulls in `winston-daily-rotate-file` (which writes to `fs`), is CommonJS-only, and would fail any Cloudflare Pages bundle-size constraint. The only mandatory new runtime dependency is `@sentry/nextjs`. Inngest is **not** needed for v2.0; native `crypto.createHmac` + a single Vercel cron covers every webhook + retry path defined in the milestone.
 
 ---
 
-*Stack analysis: 2026-03-14*
+## Existing CorePay Scaffolding (verified)
+
+Reading `lib/payments/corepay-gateway.ts` (148 lines), `lib/payments/payment-types.ts`, and `lib/config/payments.ts` shows the foundation is already correct.
+
+### What's there
+
+| Capability | File | Notes |
+|---|---|---|
+| Native `fetch()` to `https://(api\|apitest).authorize.net/xml/v1/request.api` | `corepay-gateway.ts:71-89` | Universal — works on Node, edge, and Cloudflare Workers without polyfills |
+| Auto-injected `merchantAuthentication` envelope | `corepay-gateway.ts:64-69` | Spreads request body, adds auth — pattern reusable for every API call |
+| Sandbox/production URL switch via `COREPAY_ENVIRONMENT` env | `lib/config/payments.ts:34-44` | Matches Authorize.Net's only two documented base URLs |
+| Accept.js URL switch (sandbox `jstest.authorize.net` / prod `js.authorize.net`) | `lib/config/payments.ts:38-40` | Already correctly versioned at `/v1/Accept.js` (custom-form) |
+| `AuthorizeNetOpaqueData` and `AuthorizeNetTransactionResponse` types | `lib/payments/payment-types.ts:31-63` | Match the documented response codes (1=Approved, 2=Declined, 3=Error, 4=Held) |
+| `ARBCreateSubscriptionRequest` builder with bill-to, order, schedule | `corepay-gateway.ts:95-147` | Maps cleanly to Authorize.Net's documented shape |
+| Tax integration via `calculateTaxCents` | `corepay-gateway.ts:98-99` | Already accounts for stacked totals |
+| Feature flag (`NEXT_PUBLIC_ENABLE_COREPAY`) and provider switcher | `lib/config/payments.ts:10-28` | Lets us land code dark and flip per-environment |
+
+### What's missing (gaps the milestone must close)
+
+| Gap | Where it lands |
+|---|---|
+| ARB cancel / suspend (zero-amount) / resume / update | New helpers in `corepay-gateway.ts` (`cancelSubscription`, `updateSubscription`) — same `gatewayFetch()` envelope, different request keys (`ARBCancelSubscriptionRequest`, `ARBUpdateSubscriptionRequest`, `ARBGetSubscriptionStatusRequest`) |
+| Customer Information Manager (CIM) profile create / get / update / delete | New `corepay-cim.ts` — `createCustomerProfileRequest`, `createCustomerPaymentProfileRequest`, `updateCustomerPaymentProfileRequest`, `deleteCustomerProfileRequest` |
+| One-time charge (`createTransactionRequest` with `authCaptureTransaction`) | New `corepay-charges.ts` (or fold into `corepay-gateway.ts`) |
+| Refund (`refundTransaction`) and Void (`voidTransaction`) | Same file — these share the `createTransactionRequest` envelope |
+| Webhook signature verifier (HMAC-SHA512, raw body, `X-ANET-Signature`) | New `lib/payments/corepay-webhook.ts` + route handler at `app/api/webhook/corepay/route.ts` |
+| Sentry initialization for server / edge / client | `instrumentation.ts` + `sentry.{server,edge,client}.config.ts` (autogenerated by wizard) |
+| Coupon engine (FOUNDER15 / FIRSTMONTH / creator codes) | New `lib/payments/corepay-coupons.ts` — Authorize.Net has no native coupon primitive; ARB amount must be discounted server-side before the call |
+| Self-service portal UI | New `/portal/billing` route group; thin client over the four ARB lifecycle helpers |
+| Provider-agnostic DB rename (`stripe_*` → `provider_*`) | New migration (next sequence after 060); column-rename + view aliases for one release cycle |
+
+> **Implementation note:** The `gatewayFetch<T>()` generic in `corepay-gateway.ts:50-89` already handles every Authorize.Net request key (`ARBCreateSubscriptionRequest`, `createCustomerProfileRequest`, `createTransactionRequest`, etc.) — they all share the same `merchantAuthentication`-wrapped envelope shape. Every new operation is a 5-10 line wrapper around this helper, not a new HTTP client.
+
+---
+
+## Authorize.Net Server SDK Decision
+
+### Decision: Do NOT install `authorizenet` npm package. Keep extending the native `fetch()` approach.
+
+**Confidence:** HIGH
+
+### Why direct `fetch()` is the right call
+
+I verified the SDK against the npm registry, GitHub repo, and live source code. Findings:
+
+| Observation | Source | Implication |
+|---|---|---|
+| Latest version `authorizenet@1.0.10` published 2025-04-28 | `npm view authorizenet` | Released ~12 months ago; ~2 versions/year cadence |
+| Open issue #102: "Upgrade axios to >= 1.13.5 to address DoS vulnerability" | github.com/AuthorizeNet/sdk-node — currently 32 open issues | The pinned `axios@1.8.3` has a known DoS CVE; SDK has not shipped a fix |
+| Pulls in `winston@^3.11.0` + `winston-daily-rotate-file@^4.7.1` | `package.json` deps | `winston-daily-rotate-file` requires `fs` writes — incompatible with edge runtime, and bloats serverless cold start |
+| Uses `axios.request()` + `https-proxy-agent` (Node-only) | `lib/apicontrollersbase.js`, verified via raw GitHub fetch | Won't run on edge runtime; project ships some routes to Cloudflare Workers (cultrclub.com) — same DB calls today, but reusing this code there is foreclosed |
+| CommonJS only (`"main": "lib/authorizenet.js"`, `var x = require('axios')`) | `package.json` + source inspection | Forces CJS interop on a project that's already mixed ESM/CJS — extra `tsconfig` friction |
+| `@types/authorizenet@1.0.2` last updated 2023-11-06 | npm + DefinitelyTyped | Type definitions are 2.5 years stale; will not match the 1.0.10 runtime shape |
+| README points users to "samples" repo for ARB / CIM examples | Official SDK README | Indicates the SDK abstracts request building only — same shape the project's `gatewayFetch` helper already produces |
+
+The SDK abstracts exactly **one thing** the project already does: building the JSON envelope. It costs:
+- 946 KB unpacked size
+- 4 transitive dependencies including `axios` (with open CVE) and `winston` + `winston-daily-rotate-file` (with `fs` writes)
+- Stale TypeScript types
+- Loss of edge-runtime portability
+
+vs. the existing `gatewayFetch()` (40 lines) which gives:
+- Zero new dependencies (uses Web `fetch()`)
+- Native TypeScript types (we own them)
+- Edge + Node + Cloudflare Workers compatibility
+- No CVE exposure
+
+**Verdict:** Extend `corepay-gateway.ts` with operation-specific helpers. The SDK is a net negative.
+
+### What to build instead
+
+```ts
+// New helpers — all reuse gatewayFetch<T>() unchanged
+export async function cancelSubscription(subscriptionId: string)
+export async function updateSubscription(subscriptionId: string, params: Partial<CreateSubscriptionParams>)
+export async function getSubscriptionStatus(subscriptionId: string)
+export async function chargeOpaqueData(params: ChargeParams)
+export async function refundTransaction(transId: string, amount: number, last4: string)
+export async function voidTransaction(transId: string)
+export async function createCustomerProfile(params: CreateCustomerProfileParams)
+export async function createCustomerPaymentProfile(profileId: string, opaqueData: AuthorizeNetOpaqueData)
+export async function deleteCustomerPaymentProfile(profileId: string, paymentProfileId: string)
+```
+
+Each is 10-30 lines. All share the `gatewayFetch<T>()` envelope helper unchanged.
+
+---
+
+## Accept.js (client-side tokenization)
+
+### Decision: Continue using the existing `<script src={COREPAY_CONFIG.acceptJsUrl}>` pattern. No npm package.
+
+**Confidence:** HIGH
+
+### Verified against Authorize.Net official docs
+
+| Question | Answer | Source |
+|---|---|---|
+| What's the current Accept.js version? | `/v1/Accept.js` (custom-form, what the project uses today) and `/v3/AcceptUI.js` (hosted form) | developer.authorize.net/api/reference/features/acceptjs.html |
+| What's the production URL? | `https://js.authorize.net/v1/Accept.js` | Same — already in `lib/config/payments.ts:39` |
+| What's the sandbox URL? | `https://jstest.authorize.net/v1/Accept.js` | Same — already in `lib/config/payments.ts:40` |
+| What's the response shape? | `{ opaqueData: { dataDescriptor, dataValue }, messages: { resultCode, message[] } }` | Matches `AuthorizeNetOpaqueData` type in `payment-types.ts:31-34` |
+| What is `dataDescriptor`? | Constant string `"COMMON.ACCEPT.INAPP.PAYMENT"` for `/v1/Accept.js` | Doc-confirmed |
+| What is `dataValue`? | The single-use payment nonce | Doc-confirmed |
+| **What's the token TTL?** | **15 minutes** — "The nonce is valid for 15 minutes." | Authorize.Net docs (verbatim) |
+
+### Integration pattern (already correct)
+
+The existing `components/payments/CorePayForm.tsx` (per the milestone context) loads `Accept.js` via a script tag and calls `Accept.dispatchData()`. There is no npm package for Accept.js — Authorize.Net only ships it as a hosted script. This is the correct pattern.
+
+### Implications for v2.0
+
+- The 15-minute TTL is short enough that **the server must call `chargeOpaqueData` or `createSubscription` immediately** after the client submits the nonce. If the user pauses for >15 min between Accept.js tokenization and clicking "Confirm Payment," the request will fail with E00027.
+- For CIM workflows: tokenize once via Accept.js, immediately call `createCustomerPaymentProfileRequest` to convert the 15-min nonce into a permanent `customerPaymentProfileId`. After that, the saved-card token is reusable indefinitely (until the customer updates their card or it expires).
+- **Self-service "update card" flow:** must re-tokenize via Accept.js on the client, then immediately call `updateCustomerPaymentProfileRequest` server-side. Cannot transmit raw PAN.
+
+---
+
+## Webhook Signing
+
+### Decision: Use Node's built-in `crypto.createHmac('sha512', signatureKey)` — no library.
+
+**Confidence:** HIGH
+
+### Verified scheme
+
+| Detail | Value | Source |
+|---|---|---|
+| Header name | `X-ANET-Signature` | developer.authorize.net/api/reference/features/webhooks.html (verbatim quote: *"Authorize.net sends the hash in a custom header, X-ANET-Signature."*) |
+| Algorithm | HMAC-SHA512 | Same — *"The client application can generate the same HMAC-SHA512 hash using the webhook notification's body and the merchant's Signature Key."* |
+| Header value format | `sha512=<UPPERCASE_HEX>` (note: 7-char `sha512=` prefix; case is documented as uppercase but real-world implementations show casing inconsistencies — normalize before compare) | Authorize.Net dev community + AuthorizeNet docs |
+| Body input | **Raw, unparsed request body** — never `JSON.stringify(req.body)` after parsing | Critical: re-stringifying alters whitespace/key order and breaks HMAC |
+| Signature Key source | Authorize.Net Merchant Interface → Account → Settings → Security Settings → API Credentials and Keys → "New Signature Key" | Authorize.Net merchant docs |
+
+### Verifier libraries
+
+**There are none worth using.** I checked: no `@authorizenet/webhook` package on npm, no community library with meaningful adoption. Stripe-style signature-verification SDKs do not exist for Authorize.Net.
+
+### Implementation pattern
+
+```ts
+// lib/payments/corepay-webhook.ts
+import { createHmac, timingSafeEqual } from 'node:crypto';
+
+export function verifyWebhookSignature(rawBody: string, signatureHeader: string | null): boolean {
+  if (!signatureHeader || !signatureHeader.startsWith('sha512=')) return false;
+
+  const signatureKey = process.env.COREPAY_SIGNATURE_KEY;
+  if (!signatureKey) throw new Error('COREPAY_SIGNATURE_KEY not set');
+
+  const expected = createHmac('sha512', signatureKey).update(rawBody).digest('hex').toUpperCase();
+  const received = signatureHeader.slice(7).toUpperCase(); // strip "sha512="
+
+  // Length-equal Buffer.compare (CLAUDE.md HMAC timingSafeEqual rule)
+  const a = Buffer.from(expected);
+  const b = Buffer.from(received);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
+```
+
+### Critical Next.js gotcha (App Router)
+
+In Next.js 14 App Router, `request.json()` consumes the body and re-parses it; the raw bytes are gone. The webhook route **must** read the body as text first:
+
+```ts
+// app/api/webhook/corepay/route.ts
+export async function POST(request: Request) {
+  const rawBody = await request.text();              // CRITICAL: text first, not json
+  const signature = request.headers.get('x-anet-signature');
+  if (!verifyWebhookSignature(rawBody, signature)) {
+    return new Response('Invalid signature', { status: 401 });
+  }
+  const event = JSON.parse(rawBody);                  // Now safe to parse
+  // ...dispatch by event.eventType (net.authorize.payment.authcapture.created, etc.)
+}
+```
+
+### Per CLAUDE.md house rules
+
+- **HMAC `timingSafeEqual`:** Always verify buffer lengths match before passing to `crypto.timingSafeEqual()` — otherwise it throws `TypeError: Input buffers must have the same length` and crashes the webhook handler. (Codified in CLAUDE.md based on a prior incident.)
+- **Email link redirects:** When approval-style links arrive at the webhook with missing required fields, redirect to the admin UI rather than returning raw JSON. Authorize.Net webhook events do *not* require redirect handling (they're machine-to-machine), but any companion email-action endpoints do.
+
+---
+
+## Observability
+
+### Decision: `@sentry/nextjs@^10.50.0` — install via `npx @sentry/wizard@latest -i nextjs`.
+
+**Confidence:** HIGH
+
+### Verification
+
+| Detail | Value | Source |
+|---|---|---|
+| Latest version | `10.50.0` (published 2026-04-23) | `npm view @sentry/nextjs` |
+| Peer dependency | `next: ^13.2.0 \|\| ^14.0 \|\| ^15.0.0-rc.0 \|\| ^16.0.0-0` | Same — covers project's `next: ^14.2.0` |
+| Node engine requirement | `>=18` | Same — matches project's Node 18+ requirement |
+| Active dist-tags | `latest: 10.50.0`, `v9: 9.47.1`, `v8: 8.55.1`, `v7: 7.120.4` | Major versions still receive backports; v10 is current line |
+
+### Why Sentry over alternatives
+
+The milestone explicitly calls for Sentry. I considered alternatives:
+
+| Option | Verdict |
+|---|---|
+| **Sentry (`@sentry/nextjs`)** | Best fit — automatic Next.js App Router instrumentation, edge-runtime support, source maps, error boundaries, and HIPAA-friendly redaction via `beforeSend` hook. Already specified in the milestone goals. |
+| OpenTelemetry + Honeycomb / Datadog | Heavier setup, no Next.js wizard, harder PHI redaction story |
+| Vercel built-in analytics | No error capture; only RUM/web vitals |
+| Self-hosted Glitchtip | Sentry-compatible but requires self-hosted infra; not worth the operational burden for v2.0 scope |
+| Console + Resend "founder alert" emails (status quo) | Not searchable, no stacktrace grouping, no rate-limiting on alert spam |
+
+### Setup pattern (the wizard does the work)
+
+`npx @sentry/wizard@latest -i nextjs` will create:
+- `instrumentation.ts` (registers server/edge configs) — required by Next.js 14's instrumentation hook
+- `sentry.server.config.ts` — Node runtime initialization
+- `sentry.edge.config.ts` — edge runtime initialization
+- `sentry.client.config.ts` — browser initialization
+- Wraps `next.config.js` with `withSentryConfig()` for source-map upload + ad-blocker tunneling
+
+**HIPAA addendum:** Add a `beforeSend(event)` hook to scrub PHI fields (email subject, intake answers, lab values) before transmission to Sentry. Per CLAUDE.md: never log PHI.
+
+---
+
+## Orchestration Decision
+
+### Decision: NO Inngest, NO Vercel Workflow. Use native HMAC verification + the existing 15-min Vercel cron pattern.
+
+**Confidence:** HIGH
+
+### Reasoning
+
+The v2.0 milestone scope (per `.planning/PROJECT.md` and the question) covers:
+
+1. ARB lifecycle (sync, RPC-style — no orchestration needed)
+2. CIM profile management (sync, RPC-style — no orchestration needed)
+3. One-time charges, refunds, voids (sync — no orchestration needed)
+4. **Webhook handler with signature verification** (single-step: verify → dispatch → DB write — no multi-step orchestration)
+5. **Custom self-service portal** (interactive UI — no orchestration needed)
+6. Hard-cutover migration (one-time script, not a recurring workflow)
+
+The two existing periodic jobs already use `app/api/cron/*` routes (commission auto-approval, tier updates). Adding webhook retry doesn't change that pattern.
+
+### Inngest is overkill for this scope
+
+I verified Inngest's value proposition against the milestone: Inngest's differentiator is *"step functions are the core differentiator — long-running workflows that survive failures and can sleep for days between steps."* That's compelling for AI agent pipelines, multi-day onboarding flows, or fan-out-fan-in batches. Authorize.Net webhooks are stateless single-step events: receive → verify → write to DB → respond 200. No sleep, no fan-out, no retry-with-backoff that Authorize.Net's own webhook delivery doesn't already provide.
+
+### Authorize.Net webhook retries (built-in)
+
+Per Authorize.Net's webhook documentation, the platform automatically retries delivery on non-2xx responses:
+- Initial delivery + retries with exponential backoff
+- Marks webhooks as failed after a defined retry window
+- A "Test" button in the merchant interface for manual replay
+
+This means the webhook handler only needs to be **idempotent** — not orchestrated. Idempotency is achievable with a simple `webhook_events` table keyed on `event.notificationId` (Authorize.Net's UUID per event):
+
+```sql
+CREATE TABLE corepay_webhook_events (
+  notification_id TEXT PRIMARY KEY,
+  event_type      TEXT NOT NULL,
+  raw_payload     JSONB NOT NULL,
+  processed_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+-- INSERT ON CONFLICT DO NOTHING  → if duplicate, skip processing, return 200
+```
+
+### When to revisit (post-v2.0)
+
+If post-v2.0 work introduces:
+- Multi-step provider workflows (e.g., "intake submitted → wait 24h → if no payment, send reminder → wait 48h → escalate to provider")
+- Long-running AI protocol generation chains
+- Cross-system saga patterns (Authorize.Net charge + Healthie booking + Resend confirmation, with rollback if any step fails)
+
+…then Inngest becomes appropriate. None of those are in v2.0 scope.
+
+### Vercel Cron stays for non-event work
+
+The 15-min cron approach (per memory: `app/api/cron/approve-commissions/`, `app/api/cron/update-tiers/`) handles:
+- Commission auto-approval after 30-day refund window
+- Creator tier recalculation
+- (Net-new for v2.0): Sweep `corepay_webhook_events` for failed-but-retriable jobs older than N hours that didn't return 200; this is belt-and-suspenders since Authorize.Net retries natively.
+
+No orchestration platform needed.
+
+---
+
+## What NOT to Add
+
+Explicit anti-recommendations — these were considered and rejected:
+
+| Package / pattern | Why not |
+|---|---|
+| **`authorizenet` (official Node SDK)** | Open axios DoS CVE (#102), CommonJS-only, requires `winston-daily-rotate-file` which writes to `fs`, breaks edge runtime, 946 KB unpacked, stale `@types`. The existing `gatewayFetch()` is strictly better. |
+| **`@types/authorizenet`** | Last updated 2023-11-06 — types describe the 1.0.8 SDK, not the 1.0.10 runtime. We own our types in `payment-types.ts`. |
+| **`axios`** | The project already uses native `fetch()` in `corepay-gateway.ts`. Adding axios would be a regression and the same CVE-prone path the SDK takes. |
+| **`inngest`** | No multi-step workflows in v2.0 scope. Adds a hosted dependency, dashboard, billing surface. Native `crypto.createHmac` + idempotency table covers webhook reliability. |
+| **`@vercel/workflow`** | Same reasoning as Inngest. Plus it's beta-tier and changes API often. |
+| **`stripe-webhook-middleware` / Stripe-style webhook helpers** | Wrong vendor; Authorize.Net's signature scheme is different (header name, algorithm, header format). Build the verifier in-house. |
+| **`crypto-js` or `jsrsasign`** | Userland HMAC libraries. Node.js's built-in `crypto.createHmac` is faster, has zero supply-chain risk, and works everywhere we deploy. |
+| **`form-data` or `qs`** | Authorize.Net APIs accept JSON; no form-encoded payloads in v2.0. |
+| **A second observability tool** (e.g., Datadog APM + Sentry) | Sentry covers errors, performance, and edge runtime in one tool. Adding APM doubles instrumentation surface for marginal v2.0 benefit. |
+| **A third-party "Stripe-to-Authorize.Net adapter" library** | None of these exist with meaningful adoption; the npm packages I found (e.g., `payment-gateway-abstraction`) are abandoned and would just be a thin wrapper over what we're already building. |
+| **Redis for webhook idempotency** | Postgres `INSERT … ON CONFLICT DO NOTHING` against `corepay_webhook_events.notification_id` is sufficient. The project already uses Neon + `@vercel/postgres`. Adding Upstash Redis here would create a new failure mode. |
+| **A queue (BullMQ / SQS)** | Same scope reasoning — webhooks are single-step, Authorize.Net retries natively. No queue needed. |
+
+---
+
+## Required `npm install` commands
+
+Single block, copy-paste ready:
+
+```bash
+# 1. Sentry (only new runtime dependency)
+#    The wizard creates instrumentation.ts + sentry.{server,edge,client}.config.ts
+#    and wraps next.config.js with withSentryConfig().
+npx @sentry/wizard@latest -i nextjs
+
+# That's it. No other production deps required.
+```
+
+### What that installs (resolved at the time of this research)
+
+| Package | Version | Purpose |
+|---|---|---|
+| `@sentry/nextjs` | `^10.50.0` | Error capture + performance for App Router (server/edge/client) |
+
+### Existing dependencies that the v2.0 work will use (no install needed)
+
+| Package | Already at | How v2.0 uses it |
+|---|---|---|
+| `next` | `^14.2.0` | App Router routes, middleware, instrumentation hook |
+| `@vercel/postgres` | `^0.10.0` | `corepay_webhook_events` idempotency table, ARB subscription mirror, CIM profile cache |
+| `zod` | `^3.23.0` | Validate webhook event schemas before processing |
+| `jose` | `^6.1.3` | Customer portal session JWTs (already used elsewhere) |
+| `resend` | `^4.0.0` | Outbound transactional emails on subscription state changes |
+| `node:crypto` | (built-in) | `createHmac('sha512', …)` for `X-ANET-Signature` verification + `timingSafeEqual` |
+
+### Packages to remove after migration completes
+
+(Not part of the install step — listed here for the cleanup phase.)
+
+```bash
+npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js
+```
+
+These three packages drive the Stripe code path. They can be removed only after:
+1. The hard-cutover re-onboarding flow has run and the 30-day window has closed
+2. All `app/api/stripe/**`, `app/api/webhook/stripe/**`, and `lib/stripe.ts` (if present) are deleted
+3. The DB migration renaming `stripe_*` → `provider_*` is in production
+4. `setup:stripe` script and any documentation references are pruned
+5. Sentry shows zero traffic to Stripe-prefixed routes for 14 consecutive days
+
+---
+
+## Sources
+
+### Authoritative (HIGH confidence)
+- [Authorize.Net Webhooks reference (X-ANET-Signature, HMAC-SHA512)](https://developer.authorize.net/api/reference/features/webhooks.html)
+- [Authorize.Net Accept.js reference (15-min TTL, opaqueData shape)](https://developer.authorize.net/api/reference/features/acceptjs.html)
+- [Authorize.Net API base URLs (api.authorize.net + apitest.authorize.net)](https://developer.authorize.net/api/reference/index.html)
+- [npm registry — `authorizenet` package metadata](https://www.npmjs.com/package/authorizenet) (verified via `npm view authorizenet`)
+- [npm registry — `@sentry/nextjs` 10.50.0 metadata](https://www.npmjs.com/package/@sentry/nextjs) (verified via `npm view @sentry/nextjs`)
+- [GitHub — AuthorizeNet/sdk-node repo (open issues, commit log, source files)](https://github.com/AuthorizeNet/sdk-node)
+- [GitHub — AuthorizeNet/sdk-node `apicontrollersbase.js` (uses axios + https-proxy-agent)](https://github.com/AuthorizeNet/sdk-node/blob/master/lib/apicontrollersbase.js)
+- [Sentry Next.js installation guide](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
+
+### Supporting (MEDIUM confidence)
+- [Hashbuilds — Inngest vs Trigger.dev vs Vercel Cron comparison](https://www.hashbuilds.com/articles/next-js-background-jobs-inngest-vs-trigger-dev-vs-vercel-cron)
+- [Inngest official Vercel integration docs](https://www.inngest.com/docs/deploy/vercel)
+- [Habarov — AuthorizeNet Webhook HMAC-SHA512 verification (Node.js Lambda example)](https://habarov.com/authorizenet-webhook-hmac-sha512-verification-in-lambda-nodejs/)
+- [Authorize.Net Developer Community — HMAC-SHA512 comparing problem in Node.js](https://community.developer.authorize.net/t5/Integration-and-Testing/HMAC-SHA512-comparing-Problem-in-Nodejs/td-p/68873)
+- [@types/authorizenet — npm (last updated 2023-11-06; stale)](https://www.npmjs.com/package/@types/authorizenet)

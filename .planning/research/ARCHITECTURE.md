@@ -1,753 +1,718 @@
-# Architecture Patterns
+# v2.0 Architecture — Stripe Removal + Authorize.Net Integration
 
-**Domain:** SiPhox Health Lab API Integration into CULTR Health Platform
-**Researched:** 2026-03-14
-**Overall confidence:** HIGH (component boundaries and data flows follow proven codebase patterns)
+*Researched: 2026-04-27*
+*Domain: telehealth subscription billing migration (Stripe → Authorize.Net ARB + CIM)*
+*Overall confidence: HIGH for runtime/Postgres/Vercel facts; MEDIUM for Authorize.Net subtleties (verified against developer docs but recommend a sandbox spike to confirm card-update cascade behavior)*
 
----
+## Critical Pre-Existing Facts That Constrain The Design
 
-## Recommended Architecture
+Before any architecture decision, these facts about the current repo were verified during research and shape every recommendation below:
 
-The integration follows the codebase's established layered pattern: a dedicated API client in `lib/`, configuration constants in `lib/config/`, API routes in `app/api/`, and interactive UI in `*Client.tsx` components. No new architectural concepts are needed -- this is the same shape as the Asher Med, QuickBooks, and Stripe integrations.
+1. **Migration `004_payment_provider.sql` already shipped (in production DB).** It added `memberships.payment_provider`, `memberships.provider_customer_id`, `memberships.provider_subscription_id`, `orders.payment_provider`, `orders.provider_transaction_id`, plus a `CHECK (payment_provider IN ('stripe','authorize_net','klarna','affirm'))` constraint. The `stripe_*` columns were preserved alongside. **The "rename `stripe_*` to `provider_*`" plan in PROJECT.md is partially obsolete — half the work is done. The actual remaining work is dual-write + cutover, not column renames.**
 
-### System Diagram
+2. **`app/api/checkout/corepay/route.ts` already exists and is wired to `lib/payments/corepay-gateway.ts`.** It currently writes membership rows with hardcoded `stripe_customer_id: 'corepay_<id>'` and `stripe_subscription_id: 'corepay_<id>'` strings stuffed into the legacy columns — a debt-laden bridge.
 
-```
-                    CULTR Health Platform
- +---------------------------------------------------------+
- |                                                         |
- |  lib/config/siphox.ts        lib/siphox-api.ts          |
- |  (biomarker categories,      (SiPhox API client:        |
- |   kit types, tier rules)      customers, orders,        |
- |                               kits, reports)            |
- |         |                          |                    |
- |         v                          v                    |
- |  app/api/siphox/           app/api/webhook/stripe/      |
- |  +-labs/route.ts           route.ts (extended)          |
- |  +-register-kit/route.ts                                |
- |  +-reports/route.ts                                     |
- |         |                          |                    |
- |         v                          v                    |
- |  components/dashboard/      DB: siphox_customers,       |
- |  LabsDashboardClient.tsx         siphox_orders,         |
- |  BiologicalAgeCard.tsx           siphox_reports         |
- |  BiomarkerTrends.tsx        (caching + mapping)         |
- |                                                         |
- +---------------------------------------------------------+
-              |                           |
-              v                           v
-     SiPhox Health API            Stripe Payment Links
-     connect.siphoxhealth.com     (checkout sessions)
-```
+3. **`affiliate_codes` already has `stripe_coupon_id` + `stripe_promotion_code_id`** (migration `016_stripe_promotion_codes.sql`). The CULTR-internal coupon engine does not need a new table — it needs to stop syncing to Stripe and become the source of truth.
 
-### Component Boundaries
+4. **Vercel default function timeout is 300s under Fluid Compute (current default for new Pro projects).** The "60-90s default" assumption in the question is based on legacy serverless. Fluid is the modern default, so 2-3 sequential Authorize.Net calls of 2-5s each fit comfortably in a single function. ([Vercel Functions Limits](https://vercel.com/docs/functions/limitations))
 
-| Component | Responsibility | Communicates With | Layer |
-|-----------|---------------|-------------------|-------|
-| `lib/config/siphox.ts` | Biomarker category definitions, kit type constants, tier-to-kit mapping rules, display metadata | Nothing (pure constants) | Configuration |
-| `lib/siphox-api.ts` | SiPhox REST API client -- all HTTP calls to `connect.siphoxhealth.com/api/v1/` | SiPhox API (external), `lib/config/siphox.ts` | Infrastructure |
-| `lib/siphox-db.ts` | DB operations for SiPhox mapping tables (customer sync, order tracking, report caching) | `@vercel/postgres` | Infrastructure |
-| `app/api/siphox/labs/route.ts` | Fetch member's lab reports + biomarker data, return structured for dashboard | `lib/siphox-api.ts`, `lib/siphox-db.ts`, `lib/portal-auth.ts` | API |
-| `app/api/siphox/register-kit/route.ts` | Accept kit ID from member, validate + register via SiPhox API | `lib/siphox-api.ts`, `lib/siphox-db.ts`, `lib/portal-auth.ts` | API |
-| `app/api/siphox/reports/[reportId]/route.ts` | Fetch single report detail from SiPhox, return biomarker values | `lib/siphox-api.ts`, `lib/siphox-db.ts`, `lib/portal-auth.ts` | API |
-| `app/api/webhook/stripe/route.ts` | EXTENDED: On checkout.session.completed for Catalyst+/Concierge, auto-create SiPhox order | `lib/siphox-api.ts`, `lib/siphox-db.ts` (addition to existing file) | API |
-| `components/dashboard/LabsDashboardClient.tsx` | Labs tab UI: kit status, registration form, biomarker results display, N/A handling | CULTR API routes (`/api/siphox/*`) | UI |
-| `components/dashboard/BiologicalAgeCard.tsx` | EXISTING: Wire to real SiPhox age data instead of placeholder props | `/api/siphox/labs` | UI |
-| `components/dashboard/BiomarkerTrends.tsx` | EXISTING: Wire to real SiPhox biomarker data instead of placeholder props | `/api/siphox/labs` | UI |
-| `migrations/019_siphox_tables.sql` | DB schema for customer mapping, order tracking, report caching | PostgreSQL | Data |
+5. **Authorize.Net webhook signature header is `X-ANET-Signature`, HMAC-SHA512.** Confirmed against [official webhook docs](https://developer.authorize.net/api/reference/features/webhooks.html). cultrhealth.com runs on Cloudflare Pages where `crypto.subtle` is native (no `nodejs_compat` needed for SHA-512 HMAC verify).
+
+6. **Tables on the cultrclub-web side reference `creator_customer_portfolio.stripe_subscription_id` directly** (`/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/lib/creators/db.ts:1252-1397`). Any column rename has to ship to that repo too — they share the DB.
+
+7. **`pending_intakes.stripe_payment_intent_id` is misnamed — it actually stores Stripe checkout session IDs (`cs_…`), not payment intents.** Documented inline at `app/api/webhook/stripe/route.ts:300-304`. The intake submit endpoint matches against `body.stripeSessionId`. Whatever new column we add for the CorePay flow must hold either an Authorize.Net subscription ID or a generated checkout token — there's no equivalent of "checkout session" in Authorize.Net's hosted form world.
 
 ---
 
-## Data Flow
+## Webhook Architecture During Migration
 
-### Flow 1: Checkout --> SiPhox Kit Order (Automated)
+### Recommendation: Run both webhook handlers in parallel, with feature-flag gating, until the legacy Stripe subs hit zero.
 
-This is the primary "happy path" for Catalyst+ and Concierge members.
+| Component | Status | Why |
+|---|---|---|
+| `app/api/webhook/stripe/route.ts` | **Keep, do not delete during migration** | Existing Stripe subs (~hundreds at current scale) will still fire `invoice.payment_succeeded`, `customer.subscription.deleted`, `charge.refunded` for 30+ days into migration. Killing this route mid-migration would orphan those events. |
+| `app/api/webhook/corepay/route.ts` | **New — Phase 1 deliverable** | Receives `net.authorize.*` events. HMAC-SHA512 verifies via `crypto.subtle.importKey` + `verify` (works in both Vercel Node and CF Pages edge runtimes). |
+| `lib/webhooks/dispatcher.ts` (new) | **Lift the side-effect logic OUT of `webhook/stripe/route.ts`** | Today, `webhook/stripe/route.ts` is 1021 lines with side effects inlined: `createMembership`, `triggerSiphoxFulfillment`, `ensureHealthiePatient`, `processOrderAttribution`, `sendWelcomeEmail`, `syncContactToMailchimp`. Lift these into provider-agnostic helpers (`onSubscriptionActivated(email, planTier, providerSubId, providerCustId, attributionCookie)`) so both handlers call the same primitives. |
 
-```
-1. Member completes Stripe checkout for Catalyst+ or Concierge plan
-2. Stripe fires `checkout.session.completed` webhook
-3. Existing webhook handler creates membership record (unchanged)
-4. NEW: Webhook checks plan_tier metadata
-   - If tier is 'catalyst' or 'concierge':
-     a. Look up member's shipping address from portal session / intake data
-     b. Call lib/siphox-api.ts:findOrCreateCustomer() with member info
-        - Uses external_id = CULTR member ID for reliable sync
-        - Creates SiPhox customer if not found
-     c. Store mapping in siphox_customers table
-     d. Call lib/siphox-api.ts:createOrder() with:
-        - recipient address from member profile
-        - kit_types: [{ kitType: 'longevity-essentials', quantity: 1 }]
-        - purchase_with_attached_payment: false (use credits)
-        - is_notify_receiver: true (SiPhox sends kit tracking)
-     e. Store order in siphox_orders table (status: 'ordered')
-     f. Log order ID, kit type (no PHI)
-5. SiPhox ships kit directly to member (handled by SiPhox)
-```
+### Why "hard cutover" doesn't mean "kill Stripe webhook on day 1"
 
-**Error handling:** SiPhox order creation is non-fatal (try/catch, same pattern as Asher Med PATCH). Membership is always created even if SiPhox call fails. Failed orders logged for manual retry via admin.
+A hard cutover for *new signups* is fine — flip a feature flag and `app/join/[tier]/page.tsx` posts to `/api/checkout/corepay` instead of `/api/checkout`. But existing subs have to be migrated one-by-one through the re-onboarding flow. During the 30-day re-onboarding window (per PROJECT.md Key Decisions), a Stripe subscription that hasn't been re-onboarded yet is still alive and *needs* its webhook handler. The Stripe webhook becomes a maintenance route, not a primary intake.
 
-### Flow 2: Core Tier Add-On at Checkout
+### Webhook Sunset Sequence
 
-For Core members who opt into the $135 lab test.
+1. **Phase 1** (new code path live): both handlers active. New signups go to CorePay. Existing Stripe subs continue to bill via Stripe webhook.
+2. **Phase 2** (re-onboarding open): `migration_tokens` table seeded for every active Stripe sub. Email campaign sends them the re-onboarding link. As they convert, their Stripe sub is cancelled (we cancel — don't wait for them to stop paying), CorePay sub is created. Both webhooks still active.
+3. **Phase 3** (sunset cron): A `cron/sunset-stripe-subscriptions.ts` job runs daily. For any unmigrated Stripe sub past day 30, force-cancel via Stripe API (`stripe.subscriptions.cancel`). Send a "your CULTR membership has ended — reactivate with new card" email. Stripe webhook will receive `customer.subscription.deleted` and the existing `handleSubscriptionDeleted` already updates `memberships.subscription_status = 'cancelled'`.
+4. **Phase 4** (Stripe handler retired): Once `SELECT COUNT(*) FROM memberships WHERE payment_provider = 'stripe' AND subscription_status = 'active' = 0`, the Stripe webhook handler can be deleted. Keep the file as a 410 Gone responder for ~6 months in case Stripe retries old events.
 
-```
-1. Core checkout page shows optional "At-Home Lab Test" add-on ($135)
-2. If selected, checkout session metadata includes siphox_addon: true
-3. Stripe checkout includes the $135 line item
-4. On webhook completion:
-   - Same SiPhox order creation as Flow 1
-   - Triggered by metadata flag rather than tier check
-```
+### Idempotency Across Both Providers
 
-**Implementation note:** This requires either (a) a Stripe Checkout Session (not Payment Link) to support dynamic add-ons, or (b) a separate Stripe product/price for the lab add-on that gets added to the existing payment link. The simpler path is adding a line item to a Checkout Session. The Core tier currently uses a Payment Link (`buy.stripe.com/...`), so this may need to be migrated to a Checkout Session creation flow -- or the add-on can be a separate post-checkout purchase.
-
-### Flow 3: Kit Registration (Member-Initiated)
-
-After receiving the physical kit, members register it in their portal.
-
-```
-1. Member logs into portal (/portal/login via phone OTP)
-2. Navigates to Labs tab in dashboard
-3. UI shows "Register Your Kit" section with input field
-4. Member enters kit ID (printed on physical kit)
-5. Client POSTs to /api/siphox/register-kit with { kitId }
-6. Route:
-   a. Verify portal session (verifyPortalSession from lib/portal-auth.ts)
-   b. Look up member's siphox_customer_id from siphox_customers table
-   c. Call lib/siphox-api.ts:validateKit(kitId) -- pre-check
-   d. If valid, call lib/siphox-api.ts:registerKit(kitId, customerData)
-   e. Update siphox_orders table: status = 'kit_registered'
-   f. Return { success: true, kitId, status: 'registered' }
-7. UI updates to show "Kit Registered -- Send your sample!"
-```
-
-### Flow 4: Results Fetching and Display
-
-After SiPhox processes the sample and generates a report.
-
-```
-1. Member visits Labs tab in dashboard
-2. Client fetches /api/siphox/labs
-3. Route:
-   a. Verify portal session
-   b. Look up siphox_customer_id from siphox_customers
-   c. Check siphox_reports cache in DB
-      - If cached report exists and is < 1 hour old: return cached
-      - Otherwise: call lib/siphox-api.ts:getReports(customerId)
-   d. For each report:
-      - Fetch full report data via getReport(customerId, reportId)
-      - Transform SiPhox biomarker data into CULTR display format
-      - Map SiPhox biomarker names to lib/config/siphox.ts categories
-      - Store/update in siphox_reports cache table
-   e. Return structured data:
-      {
-        kitStatus: 'ordered' | 'registered' | 'sample_received'
-                   | 'processing' | 'completed',
-        reports: [{
-          id, date, biomarkers: [{
-            id, name, category, value, unit, referenceRange, status
-          }]
-        }],
-        biologicalAge: { ... } | null,
-        availableBiomarkers: [...] // full list with N/A for missing
-      }
-4. LabsDashboardClient renders:
-   - Kit status timeline (if no results yet)
-   - BiologicalAgeCard (if bio age data available)
-   - BiomarkerTrends grouped by category
-   - N/A markers for biomarkers in the panel but not in results
-```
-
-### Flow 5: Customer Sync (CULTR Member <--> SiPhox Customer)
-
-```
-Mapping Strategy:
-- CULTR uses portal phone number as primary member identity
-- SiPhox uses their own customer ID
-- Bridge table: siphox_customers
-  - cultr_phone_e164 (from portal session)
-  - siphox_customer_id (from SiPhox API)
-  - siphox_external_id (CULTR-generated, passed as external_id to SiPhox)
-  - email (for fallback lookup)
-
-Sync Direction: CULTR --> SiPhox (one-way push)
-- Customer created in SiPhox when first kit is ordered
-- external_id field used for reliable re-identification
-- No SiPhox --> CULTR webhook needed (we poll for reports)
-
-External ID Format: cultr_{membership_id or phone_hash}
-- Deterministic, privacy-preserving
-- Survives SiPhox customer recreation
-- Unique per CULTR member
-```
-
----
-
-## Address Resolution for Kit Shipping
-
-SiPhox kit orders require a shipping address. The address must be resolved at checkout webhook time. Here is the lookup priority chain:
-
-```
-1. Stripe Checkout Session -> session.customer_details.address
-   (Stripe collects shipping address during checkout)
-
-2. Portal session -> portal_sessions.phone -> pending_intakes.intake_data
-   (Shipping address captured during medical intake)
-
-3. Club members -> club_members table
-   (address_street, address_city, address_state, address_zip)
-
-4. Asher Med patient -> getPatientById(asherPatientId)
-   (address1, city, stateAbbreviation, zipcode)
-```
-
-If no address can be resolved at webhook time, store the SiPhox customer record but skip the order. Set siphox_orders.status = 'pending_address'. The Labs dashboard can prompt the member to enter their shipping address before a kit can be ordered.
-
-**Confidence:** MEDIUM -- Stripe checkout sessions do include customer address when configured, but the current checkout flow uses Payment Links which may or may not collect shipping address. Need to verify Stripe Payment Link configuration.
-
----
-
-## Patterns to Follow
-
-### Pattern 1: External API Client (matches lib/asher-med-api.ts)
-
-The SiPhox client follows the exact same structure as `lib/asher-med-api.ts`:
-
-```typescript
-// lib/siphox-api.ts
-
-class SiPhoxApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode?: number,
-    public response?: unknown
-  ) {
-    super(message);
-    this.name = 'SiPhoxApiError';
-  }
-}
-
-async function siphoxRequest<T>(
-  endpoint: string,
-  options: {
-    method?: 'GET' | 'POST';
-    body?: unknown;
-    params?: Record<string, string | number | undefined>;
-  } = {}
-): Promise<T> {
-  const apiKey = process.env.SIPHOX_API_KEY;
-  if (!apiKey) {
-    throw new SiPhoxApiError('SIPHOX_API_KEY is not configured');
-  }
-
-  const baseUrl = process.env.SIPHOX_API_URL
-    || 'https://connect.siphoxhealth.com/api/v1';
-
-  // Bearer token auth (differs from Asher Med's X-API-KEY)
-  const headers: Record<string, string> = {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
-  };
-
-  // ... fetch, error handling matching Asher Med pattern
-}
-
-// Typed wrapper functions for each endpoint group
-// Customers
-export async function createCustomer(data: CreateSiPhoxCustomerInput): Promise<SiPhoxCustomer> { }
-export async function getCustomers(params?: { external_id?: string }): Promise<SiPhoxCustomer[]> { }
-export async function getCustomerById(id: string): Promise<SiPhoxCustomer> { }
-export async function addCustomerData(data: CustomerDataInput): Promise<{ jobId: string }> { }
-
-// Orders
-export async function createOrder(data: CreateSiPhoxOrderInput): Promise<SiPhoxOrder> { }
-export async function getOrders(params?: PaginationParams): Promise<SiPhoxOrder[]> { }
-export async function getOrderById(id: string): Promise<SiPhoxOrder> { }
-
-// Kits
-export async function getKits(): Promise<SiPhoxKit[]> { }
-export async function validateKit(kitId: string): Promise<KitValidation> { }
-export async function registerKit(kitId: string, data: KitRegistrationInput): Promise<SiPhoxKit> { }
-
-// Reports
-export async function getReport(customerId: string, reportId: string): Promise<SiPhoxReport> { }
-
-// Biomarkers
-export async function getBiomarkerDefinitions(): Promise<SiPhoxBiomarker[]> { }
-
-// Credits
-export async function getCredits(): Promise<{ balance: number }> { }
-
-// Utility
-export function isSiPhoxConfigured(): boolean {
-  return !!process.env.SIPHOX_API_KEY;
-}
-```
-
-**Key differences from Asher Med client:**
-- Auth: `Authorization: Bearer <token>` (not `X-API-KEY` header)
-- Base URL: Configurable via `SIPHOX_API_URL` env var with sensible default
-- Simpler payloads: Customer creation needs only name, email, address, external_id
-
-### Pattern 2: Non-Fatal Side Effect in Webhook (matches Asher Med PATCH pattern)
-
-The SiPhox kit ordering happens inside the existing Stripe webhook, following the same non-fatal pattern used for Asher Med partner notes and creator attribution:
-
-```typescript
-// Inside handleCheckoutCompleted() in webhook/stripe/route.ts
-
-// ... existing membership creation code (unchanged) ...
-
-// NEW: Auto-order SiPhox kit for eligible tiers
-const planTier = session.metadata?.plan_tier;
-const siphoxAddon = session.metadata?.siphox_addon === 'true';
-const eligibleForKit = planTier === 'catalyst'
-                    || planTier === 'concierge'
-                    || siphoxAddon;
-
-if (eligibleForKit) {
-  try {
-    const { orderSiPhoxKit } = await import('@/lib/siphox-db');
-    await orderSiPhoxKit({
-      customerEmail,
-      customerName,
-      planTier,
-      stripeSessionId: session.id,
-      // Address from Stripe session or member profile
-    });
-    console.log('SiPhox kit ordered:', { planTier, sessionId: session.id });
-  } catch (siphoxError) {
-    console.error('Failed to order SiPhox kit:', siphoxError);
-    // Non-fatal -- membership still created
-  }
-}
-```
-
-This addition is ~15 lines inside the existing `handleCheckoutCompleted()` function. No structural changes to the webhook handler.
-
-### Pattern 3: Auth-Gated API Route (matches portal pattern)
-
-```typescript
-// app/api/siphox/labs/route.ts
-import { verifyPortalSession } from '@/lib/portal-auth';
-
-export async function GET(request: NextRequest) {
-  const session = await verifyPortalSession(request);
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Look up SiPhox customer for this portal phone
-  const siphoxCustomer = await getSiPhoxCustomerByPhone(session.phone);
-  if (!siphoxCustomer) {
-    return NextResponse.json({
-      kitStatus: null,
-      reports: [],
-      biologicalAge: null,
-      availableBiomarkers: getFullBiomarkerList(), // show what's possible
-    });
-  }
-
-  // Fetch and return data...
-}
-```
-
-All three SiPhox API routes use `verifyPortalSession()` -- the same auth guard used by existing portal endpoints. No new auth infrastructure needed.
-
-### Pattern 4: Report Caching (DB-backed, time-limited)
-
-SiPhox reports are immutable once generated. Cache aggressively to minimize API calls.
-
-```
-Cache strategy:
-- siphox_reports table stores full JSONB report data
-- TTL: 1 hour for "processing" status, permanent for "completed"
-- On cache miss: fetch from SiPhox API, store in DB
-- On cache hit: return DB data directly
-- Reports never change once completed -- effectively permanent cache
-- fetched_at column tracks when cache was last refreshed
-```
-
----
-
-## Anti-Patterns to Avoid
-
-### Anti-Pattern 1: Polling SiPhox for Kit Status via Cron
-
-**What:** Setting up a cron job to poll SiPhox for kit/report status changes.
-**Why bad:** Unnecessary API calls; wastes SiPhox credits/rate limit; adds operational complexity; most poll results will show no change.
-**Instead:** Fetch status on-demand when member visits their Labs tab. Cache results in DB. Reports are only actionable when the member is looking at them. The latency of a live API call on tab visit is acceptable (~200-500ms, same as Asher Med pattern).
-
-### Anti-Pattern 2: Storing Raw Biomarker Values Without Context
-
-**What:** Storing just `{ name: "hsCRP", value: 0.8 }` in the cache.
-**Why bad:** Loses reference ranges, units, and status interpretation. Forces re-computation on every render.
-**Instead:** Store the full transformed result including category, unit, reference range, and computed status (optimal/acceptable/suboptimal/critical). Transform once on fetch, serve pre-computed from cache.
-
-### Anti-Pattern 3: Creating a Separate Auth System for Labs
-
-**What:** Building a new auth flow or token system for the labs section.
-**Why bad:** The portal OTP auth already gates the member dashboard. Adding another layer creates confusion and maintenance burden.
-**Instead:** Use the existing `verifyPortalSession()` from `lib/portal-auth.ts`. The labs routes are just more portal-authenticated endpoints.
-
-### Anti-Pattern 4: Direct SiPhox API Calls from Client Components
-
-**What:** Having `LabsDashboardClient.tsx` call SiPhox directly.
-**Why bad:** Exposes API key to client; bypasses auth; no caching; HIPAA violation (PHI transiting client without server-side control).
-**Instead:** All SiPhox communication goes through CULTR API routes (`/api/siphox/*`), which handle auth, caching, and PHI-safe responses.
-
-### Anti-Pattern 5: Tightly Coupling UI to SiPhox Schema
-
-**What:** Using SiPhox's internal biomarker IDs and category names directly in UI components.
-**Why bad:** If SiPhox changes their schema, every UI component breaks. Also, SiPhox categories don't match CULTR's desired display organization.
-**Instead:** Define CULTR's biomarker taxonomy in `lib/config/siphox.ts` with a mapping layer that translates SiPhox names to CULTR display names. UI only references CULTR's canonical IDs.
-
----
-
-## Database Schema
-
-### New Tables (migration 019)
+The existing `stripe_idempotency` table (migration `007`) is Stripe-specific (`event_id` PK). For CorePay, add a sibling table:
 
 ```sql
--- SiPhox customer mapping (CULTR member <--> SiPhox customer)
-CREATE TABLE IF NOT EXISTS siphox_customers (
-  id SERIAL PRIMARY KEY,
-  cultr_phone_e164 VARCHAR(20) NOT NULL,
-  siphox_customer_id VARCHAR(100),
-  siphox_external_id VARCHAR(100) NOT NULL,
-  email VARCHAR(255),
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(cultr_phone_e164),
-  UNIQUE(siphox_external_id)
+CREATE TABLE webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider VARCHAR(20) NOT NULL,        -- 'stripe' | 'authorize_net'
+  event_id VARCHAR(255) NOT NULL,       -- provider's event ID
+  event_type VARCHAR(100) NOT NULL,
+  received_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  processed_at TIMESTAMPTZ,
+  UNIQUE (provider, event_id)
+);
+```
+
+Then deprecate `stripe_idempotency` only after Stripe handler is retired. (Don't migrate historical Stripe idempotency rows — they're not needed once Stripe is dead.)
+
+---
+
+## DB Migration Sequencing (Zero-Downtime?)
+
+### Verdict: Zero-downtime is achievable, and migration `004` already paid for half of it. No app-down deploy required.
+
+Postgres `ALTER TABLE RENAME COLUMN` is in fact instant (it only rewrites the catalog), but renaming `stripe_*` → `provider_*` would still break every running pod that still has the old column name in its query strings. The right pattern is the **expand → contract** ([Brandur](https://brandur.org/fragments/postgres-table-rename), [GoCardless](https://gocardless.com/blog/zero-downtime-postgres-migrations-the-hard-parts/)) — but in CULTR's case we can compress it because migration `004` already shipped the additive columns.
+
+### Recommended Sequence (5 deploys, no app downtime)
+
+| Step | Action | Downtime | Notes |
+|---|---|---|---|
+| **1** | (already done) Migration `004` added `payment_provider`, `provider_customer_id`, `provider_subscription_id`, `provider_transaction_id` | None | Existing |
+| **2** | Code deploy A: dual-read. Every `SELECT stripe_subscription_id FROM memberships` becomes `SELECT COALESCE(provider_subscription_id, stripe_subscription_id) AS subscription_id`. Every `WHERE stripe_subscription_id = $1` becomes `WHERE COALESCE(provider_subscription_id, stripe_subscription_id) = $1`. Add a typed helper `getProviderIds(membership): { provider: string, customerId: string, subscriptionId: string }` to centralize this logic. | None | Reads still work for both legacy Stripe rows and new CorePay rows. |
+| **3** | Code deploy B: dual-write. New CorePay signups write to `provider_*` columns + `payment_provider = 'authorize_net'`. The current `corepay/route.ts` hack (`stripe_customer_id: 'corepay_…'`) is removed. Stripe webhook also starts populating `provider_customer_id = stripe_customer_id` and `payment_provider = 'stripe'` so legacy rows get caught up. | None | At this point, both column families are populated for new writes; legacy reads continue to work via COALESCE. |
+| **4** | Backfill migration `063_backfill_provider_ids.sql`: `UPDATE memberships SET provider_customer_id = stripe_customer_id, provider_subscription_id = stripe_subscription_id, payment_provider = 'stripe' WHERE provider_customer_id IS NULL`. Run in batches (`WHERE id > $cursor LIMIT 1000`) to avoid long locks. Same for `orders`. Same for `creator_customer_portfolio`, `siphox_kit_orders`, `pending_intakes`. | None | Pure data move; no schema change. |
+| **5** | After Stripe sunset (Phase 4): code deploy C drops the COALESCE shims, reads only `provider_*`. Migration `064_drop_legacy_stripe_columns.sql` drops `stripe_customer_id`, `stripe_subscription_id`, `stripe_payment_intent_id` (and corresponding indexes). | None | Schema-only. The `_2.sql` macOS-dup migrations should be cleaned up first to avoid running a delete twice. |
+
+### Why NOT do `RENAME COLUMN` directly
+
+`ALTER TABLE memberships RENAME COLUMN stripe_subscription_id TO provider_subscription_id` is instant on the catalog, but:
+- Old code in flight (a function still executing during deploy) will fail with `column "stripe_subscription_id" does not exist`.
+- Every other repo (`cultrclub-web`, `cultrhealth-web`) that mirrors this code has to deploy at the same instant. **They don't deploy together** — cultrhealth.com is on CF Pages with manual `wrangler` deploys, staging is on Vercel auto-deploy from `staging` branch, cultrclub-web is its own CF Pages auto-deploy on push.
+- It would couple migration to a synchronized 3-app deploy, which is fragile.
+
+The expand→contract approach lets each app upgrade independently.
+
+### "Drop `stripe_events` table" claim in PROJECT.md
+
+The actual table is `stripe_idempotency` (migration `007`) — there's no `stripe_events` table. The PROJECT.md note is imprecise. What gets dropped is `stripe_idempotency` once the Stripe webhook handler is retired (Phase 4). The new `webhook_events` table replaces it for both providers.
+
+---
+
+## CIM Hierarchy: Customer Profile vs Payment Profile
+
+### Recommendation: One CIM customer profile per email (lifetime). Many payment profiles per customer profile (one per saved card). Use `ARBUpdateSubscriptionRequest` with the customer-profile + payment-profile IDs to set or update the card on a subscription.
+
+### The CIM data model (verified)
+
+Per Authorize.Net docs ([Customer Profiles](https://developer.authorize.net/api/reference/features/customer-profiles.html)):
+- **Customer Profile** — top level. Contains email, description, customer ID. **Up to 10 payment profiles + up to 100 shipping profiles per customer profile.**
+- **Payment Profile** — child of customer profile. One per card-on-file. References billing address.
+- **Subscription (ARB)** — independent object that *references* a customer profile + payment profile by ID. ARB and CIM are two services that *can* be linked (highly recommended for SaaS) but are technically separable.
+
+### Why "one customer profile per email" wins
+
+1. **A user upgrades plan tiers** — old sub cancelled, new sub created. Same card, same email. If we created a new customer profile per subscription, we'd duplicate card data and lose the link between their billing history and their account.
+2. **A user's card expires** — they update once via `/portal/billing`. That update should apply to their currently-active subscription with no change in subscription state.
+3. **Future: members buying products à la carte alongside their subscription.** A one-time CIM transaction (CIM `createCustomerProfileTransactionRequest`) reuses the same payment profile — no re-tokenization needed.
+
+### How `memberships` table maps to CIM
+
+```sql
+ALTER TABLE memberships
+  ADD COLUMN IF NOT EXISTS provider_payment_profile_id VARCHAR(255);
+
+-- Reading:
+-- provider_customer_id        = CIM customerProfileId  (lifetime per email)
+-- provider_payment_profile_id = CIM customerPaymentProfileId  (current default card)
+-- provider_subscription_id    = ARB subscriptionId
+```
+
+**Lookup flow on signup:**
+
+```
+1. POST /api/checkout/corepay
+2. Server: SELECT provider_customer_id FROM memberships WHERE email = $1 LIMIT 1
+3a. If found → reuse customerProfileId. Call createCustomerPaymentProfileRequest with new opaqueData (Accept.js nonce). Get new paymentProfileId.
+3b. If not found → call createCustomerProfileRequest (creates customer + initial payment profile in one call). Get both IDs.
+4. Call ARBCreateSubscriptionRequest with profile.customerProfileId + profile.customerPaymentProfileId.
+5. INSERT INTO memberships (provider_customer_id, provider_payment_profile_id, provider_subscription_id, payment_provider='authorize_net', …)
+```
+
+### Update-card flow (the killer feature for `/portal/billing`)
+
+Per [Authorize.Net knowledge base](https://support.authorize.net/knowledgebase/Knowledgearticle/?code=KA-04444), `ARBUpdateSubscriptionRequest` accepts a customer profile reference. Two equivalent paths to "update card on file":
+
+**Path A (recommended) — Update the payment profile in place:**
+```
+POST /api/portal/billing/update-card
+1. Accept.js tokenizes new card → opaqueData
+2. Server: updateCustomerPaymentProfileRequest with the existing paymentProfileId + new opaqueData
+3. ARB subscription continues to reference the same paymentProfileId; next billing uses the new card automatically.
+4. No ARBUpdateSubscriptionRequest needed.
+```
+**Confidence: MEDIUM-HIGH.** Authorize.Net docs strongly imply this is the intended flow but explicit "next billing uses new card" guarantee was not found in the public docs. **Recommend a sandbox spike to verify** before relying on it in production. ([Authorize.Net Developer Community](https://community.developer.cybersource.com/t5/The-authorize-net-Developer-Blog/Update-2-CIM-Profiles-for-ARB-Subscriptions/ba-p/53552))
+
+**Path B (defensive) — Create new payment profile, point ARB at it:**
+```
+1. Accept.js tokenizes new card → opaqueData
+2. Server: createCustomerPaymentProfileRequest → new paymentProfileId
+3. Server: ARBUpdateSubscriptionRequest({ subscriptionId, profile: { customerProfileId, customerPaymentProfileId: newPaymentProfileId }})
+4. UPDATE memberships SET provider_payment_profile_id = $newId WHERE …
+5. (Optional) Delete or set inactive the old payment profile.
+```
+
+Path B is more verbose but unambiguous in the API. **Default to Path B until Path A is proven in sandbox.**
+
+---
+
+## ARB ↔ DB State Sync Pattern
+
+### Recommendation: Webhook-primary, polling fallback. Authorize.Net DOES emit webhooks for ARB lifecycle and for failed payments, but the event taxonomy is sparser than Stripe's.
+
+### Available webhook events ([Authorize.Net webhooks ref](https://developer.authorize.net/api/reference/features/webhooks.html))
+
+| Event | Fires when | Maps to `memberships.subscription_status` |
+|---|---|---|
+| `net.authorize.customer.subscription.created` | New ARB sub | `active` |
+| `net.authorize.customer.subscription.updated` | Card updated, amount changed, etc. | (no status change — refresh metadata) |
+| `net.authorize.customer.subscription.suspended` | Card decline retries exhausted | `paused` |
+| `net.authorize.customer.subscription.terminated` | Manual cancel via API | `cancelled` |
+| `net.authorize.customer.subscription.cancelled` | Customer-initiated cancel | `cancelled` |
+| `net.authorize.customer.subscription.expiring` | One billing cycle left (totalOccurrences) | (no change — alert only) |
+| `net.authorize.customer.subscription.expired` | All cycles consumed | `expired` |
+| `net.authorize.customer.subscription.failed` | Payment failed (per cycle) | `past_due` (then `paused` on suspend) |
+| `net.authorize.payment.authcapture.created` | Each successful billing | (no status change — record `last_billed_at`) |
+| `net.authorize.payment.refund.created` | Refund posted | Trigger `reverseCommissionsForAttribution` |
+
+**Note:** CULTR's plan uses `totalOccurrences: '9999'` (effectively perpetual) so `expiring`/`expired` are unlikely to fire in practice.
+
+### Why polling is still needed (defense-in-depth)
+
+Search results surfaced multiple cases ([Cybersource community: ARB Subscription webhooks not working](https://community.developer.cybersource.com/t5/Integration-and-Testing/ARB-Subscription-webhooks-not-working/td-p/63173)) of webhook delivery failures in Authorize.Net. The right pattern is:
+
+1. **Webhook is primary** — every event updates `memberships.subscription_status`, `last_billed_at`, etc. with idempotency on `(provider, event_id)`.
+2. **Daily reconciliation cron `cron/reconcile-arb-subscriptions.ts`** — for every `memberships` row where `payment_provider = 'authorize_net' AND subscription_status IN ('active', 'past_due', 'paused')`:
+   - Call `ARBGetSubscriptionStatusRequest({ subscriptionId })`.
+   - If returned status differs from DB, update DB + log a `cron_runs` warning.
+   - This catches the rare missed-webhook case.
+
+This mirrors how the existing SiPhox cron pattern (every 15 min for fulfillment, every 30 min for status sync) handles delivery uncertainty in `vercel.json`.
+
+### Sentry signal
+
+Wrap the reconcile cron in a Sentry message when DB and Authorize.Net disagree, with severity `warning`. Do not treat each disagreement as an alert — there will be a brief window during a webhook in-flight. Alert at threshold: ≥3 disagreements in a single run, or any single subscription disagreed on for 2+ consecutive runs.
+
+---
+
+## Creator Commission Attribution — New Data Flow
+
+### Recommendation: Make `coupon_redemptions` the source of truth at redeem time. Continue writing `order_attributions` (downstream/denormalized) for backwards compatibility with admin dashboards and the Creator ROI engine. Remove the `stripe_promotion_code_id` / `stripe_coupon_id` columns from `affiliate_codes` once Stripe is sunset.
+
+### Today's flow (Stripe-mediated)
+
+```
+Stripe Checkout user enters FOUNDER15
+  → Stripe applies discount, fires checkout.session.completed
+  → webhook/stripe/route.ts: resolveCouponCodeFromStripeDiscounts(session.total_details.breakdown.discounts)
+  → calls getAffiliateCodeByStripeIds({stripePromotionCodeId, stripeCouponId}) — JOINs affiliate_codes by Stripe sync IDs
+  → resolveAttribution({email, attributionCookie, couponCode})
+  → processOrderAttribution(...) → INSERT order_attributions row + (skipCommissionLedger for club)
+```
+
+This depends on Stripe's coupon engine. After Stripe is gone, no `total_details.breakdown.discounts` exists.
+
+### Proposed new flow (CULTR-internal)
+
+```
+Customer enters FOUNDER15 in /join/[tier] form (or /portal/billing)
+  → POST /api/checkout/corepay { planSlug, email, opaqueData, billing, couponCode }
+  → Server: validateCoupon(couponCode) — already exists in lib/config/coupons.ts
+            + getAffiliateCodeByCode(couponCode) — already exists in lib/creators/db.ts
+  → Server computes discounted amount: amountCents = planPrice * (1 - discount/100)
+  → createSubscription({ ..., amountCents })  -- ARB sub created at discounted rate
+  → INSERT INTO coupon_redemptions (
+       code, code_id, customer_email, order_id, provider_subscription_id,
+       discount_percentage, discount_amount_cents, applied_at
+     )
+  → ALSO: processOrderAttribution(...) → order_attributions row (for ROI/admin)
+```
+
+### New table: `coupon_redemptions`
+
+```sql
+CREATE TABLE coupon_redemptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code VARCHAR(50) NOT NULL,
+  code_id UUID REFERENCES affiliate_codes(id),  -- NULL for CLUB_COUPONS / FOUNDER15 / FIRSTMONTH
+  code_source VARCHAR(20) NOT NULL,             -- 'club_coupon' | 'creator_code' | 'system_promo'
+  customer_email VARCHAR(255) NOT NULL,
+  order_id VARCHAR(50),                         -- our internal order ID
+  provider_subscription_id VARCHAR(255),        -- ARB sub ID if subscription
+  provider_transaction_id VARCHAR(255),         -- ARB / CIM tx ID if one-time
+  discount_percentage NUMERIC(5,2) NOT NULL,
+  discount_amount_cents INTEGER NOT NULL,
+  original_amount_cents INTEGER NOT NULL,
+  redeemed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  applied_to_billing_cycles INTEGER DEFAULT 1   -- FOUNDER15=999, FIRSTMONTH=1
 );
 
--- SiPhox kit orders (tracks lifecycle: ordered -> registered -> completed)
-CREATE TABLE IF NOT EXISTS siphox_orders (
-  id SERIAL PRIMARY KEY,
-  siphox_customer_id VARCHAR(100) NOT NULL,
-  siphox_order_id VARCHAR(100),
-  kit_type VARCHAR(50) NOT NULL DEFAULT 'longevity-essentials',
-  status VARCHAR(30) NOT NULL DEFAULT 'ordered',
-    -- ordered | pending_address | shipped | kit_registered
-    -- | sample_received | processing | completed | failed
-  kit_id VARCHAR(100),
-  stripe_session_id VARCHAR(255),
-  plan_tier VARCHAR(20),
-  is_addon BOOLEAN DEFAULT FALSE,
-  ordered_at TIMESTAMPTZ DEFAULT NOW(),
-  registered_at TIMESTAMPTZ,
+CREATE INDEX idx_coupon_redemptions_email ON coupon_redemptions(lower(customer_email));
+CREATE INDEX idx_coupon_redemptions_code ON coupon_redemptions(upper(code));
+CREATE INDEX idx_coupon_redemptions_subscription ON coupon_redemptions(provider_subscription_id);
+```
+
+### Source-of-truth split
+
+| Concern | Source | Why |
+|---|---|---|
+| **"Did this customer redeem code X?"** | `coupon_redemptions` | One row per redemption. Tracks original + discount amounts at the moment of redemption. Also handles non-creator codes (CLUB_COUPONS, FOUNDER15). |
+| **"What's a creator's earned commission?"** | `order_attributions` + `commission_ledger` | Existing tables; their lifecycle (deferred for club, retroactive attribution, reversal helpers) is non-trivial and shouldn't be re-engineered. |
+| **"Which creator gets attribution for this redemption?"** | JOIN: `coupon_redemptions.code_id → affiliate_codes.id → creators.id` | Same `creators.id` flows into `order_attributions.attributed_creator_id`. |
+
+The **denormalization** is intentional: `order_attributions` stores `discount_rate` (per migration `062_order_attributions_discount_snapshot.sql`) so historical Creator ROI doesn't drift when a code's discount value changes. `coupon_redemptions` snapshots `discount_percentage` for the same reason at the redemption level.
+
+### Recurring discount handling (FOUNDER15 = "15% off forever")
+
+Authorize.Net ARB doesn't natively understand percentage coupons — you set the `amount` once at sub creation. Two implementation choices:
+
+1. **Pre-discounted amount (recommended)** — At sub creation, set `amount = price × (1 - discount)`. Simple. Forever. Works for FOUNDER15. **Tradeoff:** if the underlying plan price changes later, the discounted price doesn't auto-track. (Mitigation: when plan prices change, run a migration script that sweeps active subs and calls `ARBUpdateSubscriptionRequest` to update the amount.)
+2. **First-month-only discounts (FIRSTMONTH = 50% off first month)** — Use `trialOccurrences` + `trialAmount` in `ARBCreateSubscriptionRequest`. The first cycle bills at trialAmount, subsequent at amount. ([Authorize.Net ARB API](https://developer.authorize.net/api/reference/index.html#recurring-billing))
+
+Both are properly addressable; just different code paths in `createSubscription()`.
+
+### Owner-email exclusion stays
+
+`lib/config/owner-emails.ts` filtering applies at admin-aggregate read time, not at write time. The new `coupon_redemptions` writes happen unfiltered; admin queries continue to filter via the existing helper. No change to that policy.
+
+---
+
+## Existing-Subscriber Migration Architecture
+
+### Recommendation: New `migration_tokens` table. Stripe sub kept alive until the customer completes re-onboarding (or 30-day window expires). Stripe sub cancelled by us *immediately after* CorePay sub creation succeeds — not by waiting for `customer.subscription.deleted`. Idempotency-keyed migration prevents double-charging.
+
+### The `migration_tokens` table
+
+```sql
+CREATE TABLE migration_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  membership_id UUID NOT NULL REFERENCES memberships(id) ON DELETE CASCADE,
+  customer_email VARCHAR(255) NOT NULL,
+  legacy_stripe_subscription_id VARCHAR(255) NOT NULL,
+  legacy_plan_tier VARCHAR(20) NOT NULL,
+  token_hash VARCHAR(64) NOT NULL UNIQUE,            -- SHA-256 of the URL token (raw token never stored)
+  state VARCHAR(20) NOT NULL DEFAULT 'pending',
+  -- 'pending' (sent) | 'in_progress' (link clicked) | 'completed' | 'expired' | 'sunset'
+  new_corepay_subscription_id VARCHAR(255),          -- populated on completion
+  email_sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  link_clicked_at TIMESTAMPTZ,
   completed_at TIMESTAMPTZ,
-  error_message TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  expires_at TIMESTAMPTZ NOT NULL,                   -- email_sent_at + 30 days
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- SiPhox report cache (stores transformed biomarker data)
-CREATE TABLE IF NOT EXISTS siphox_reports (
-  id SERIAL PRIMARY KEY,
-  siphox_customer_id VARCHAR(100) NOT NULL,
-  siphox_report_id VARCHAR(100) NOT NULL,
-  report_date TIMESTAMPTZ,
-  report_data JSONB NOT NULL,  -- full transformed report with biomarkers
-  biological_age NUMERIC(5,2), -- extracted for quick query
-  fetched_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(siphox_customer_id, siphox_report_id)
-);
-
-CREATE INDEX idx_siphox_customers_phone ON siphox_customers(cultr_phone_e164);
-CREATE INDEX idx_siphox_orders_customer ON siphox_orders(siphox_customer_id);
-CREATE INDEX idx_siphox_orders_status ON siphox_orders(status);
-CREATE INDEX idx_siphox_reports_customer ON siphox_reports(siphox_customer_id);
+CREATE INDEX idx_migration_tokens_state ON migration_tokens(state);
+CREATE INDEX idx_migration_tokens_expires ON migration_tokens(expires_at) WHERE state IN ('pending','in_progress');
+CREATE INDEX idx_migration_tokens_email ON migration_tokens(lower(customer_email));
 ```
 
-### Schema Design Rationale
+### Token format
 
-**Why a separate `siphox_customers` table (not extending `portal_sessions` or `memberships`)?**
-- SiPhox customer lifecycle is independent of portal sessions (which expire/recreate)
-- SiPhox customer ID is an external system mapping, not an auth concern
-- Follows the same separation pattern as `asher_orders` having its own patient mapping
-- Clean boundary: `siphox_customers` is a sync table, `portal_sessions` is an auth table
+- **Raw token:** 32 random bytes, base64url-encoded → 43 chars. Generated server-side via `crypto.getRandomValues(new Uint8Array(32))` (works in both Node and edge runtimes).
+- **Storage:** SHA-256 of raw token only (`token_hash`). Never store the raw token in DB. Email contains the raw token in the URL.
+- **URL:** `https://cultrhealth.com/migrate/<rawToken>`. Page hashes the token, looks up the row, validates `state = 'pending' OR 'in_progress'` and `expires_at > NOW()`, marks `state = 'in_progress'` and renders the re-onboarding form.
+- **Expiration:** 30 days from email send.
 
-**Why JSONB for `report_data`?**
-- Biomarker reports have variable structure (different panels return different biomarkers)
-- Avoids creating 150+ columns or a complex biomarker-per-row schema
-- JSONB is queryable (`report_data->'biomarkers'`) for admin/analytics if needed
-- Follows the pattern of `pending_intakes.intake_data` JSONB in the existing schema
+This is the same pattern as `lib/portal-auth.ts` OTP storage — proven in this repo.
 
-**Why `biological_age` as a dedicated column?**
-- Most frequent query: "show bio age card on dashboard"
-- Extracting from JSONB on every page load is wasteful
-- Dedicated column enables simple `SELECT biological_age FROM siphox_reports WHERE ...`
+### The flow — ordering matters
+
+```
+1. Cron (one-time job to seed): for every memberships row where payment_provider='stripe' AND subscription_status='active':
+   INSERT INTO migration_tokens (...) VALUES (...) ON CONFLICT DO NOTHING
+   Send re-onboarding email via Resend with the raw token URL.
+
+2. User clicks link → /migrate/<token>
+   - Look up token, validate, mark in_progress.
+   - Render Accept.js form pre-filled with email + plan tier.
+
+3. User enters new card → POST /api/migrate/complete { token, opaqueData, billing }
+   This must be transactional (atomic):
+
+   a. Server: revalidate token (state in pending/in_progress, not expired).
+   b. Authorize.Net: createCustomerProfileRequest → customerProfileId, paymentProfileId
+   c. Authorize.Net: ARBCreateSubscriptionRequest → newSubscriptionId
+      WARN: If this fails after (b), rollback by calling deleteCustomerProfileRequest. Sentry alert.
+   d. Stripe: stripe.subscriptions.cancel(legacyStripeSubscriptionId, { cancellation_details: { comment: 'CULTR migration' }})
+      WARN: If THIS fails after (c) success, log to Sentry as 'manual_intervention_required' — customer
+      now has BOTH active. Do NOT throw — the migration succeeded; bill collection is the cleanup task.
+   e. DB transaction:
+        UPDATE memberships SET
+          payment_provider = 'authorize_net',
+          provider_customer_id = $cust,
+          provider_payment_profile_id = $payProfile,
+          provider_subscription_id = $newSub,
+          subscription_status = 'active',
+          updated_at = NOW()
+        WHERE id = $membershipId;
+        UPDATE migration_tokens SET state='completed', completed_at=NOW(),
+          new_corepay_subscription_id=$newSub WHERE id = $tokenId;
+   f. Send confirmation email.
+
+4. Sunset cron (daily): for every migration_tokens row where state IN ('pending','in_progress')
+   AND expires_at < NOW():
+   - UPDATE migration_tokens SET state='sunset'
+   - stripe.subscriptions.cancel(legacy_stripe_subscription_id) -- forced cancel
+   - UPDATE memberships SET subscription_status='cancelled'
+   - Send "your CULTR membership has ended — reactivate with new card" email
+```
+
+### Preventing double-charge
+
+Two scenarios:
+
+**Scenario A: User re-onboards on day 5. Stripe charges day 7. CorePay charges day 10.**
+
+The Stripe webhook `invoice.payment_succeeded` for that day-7 charge fires *after* we cancelled. Solution: The Stripe API `cancel` immediately sets the sub to `canceled` — Stripe will not generate further invoices. The day-7 charge would only happen if the user's billing date was day 5 and the cancel was day 6, in which case there's no double charge anyway. **The risk is the in-flight invoice** — Stripe's documented behavior is that calling `cancel` while an invoice is `open` does NOT void the invoice. So:
+
+> **Hard rule for the migration code:** Before cancelling the Stripe sub, call `stripe.invoices.list({ subscription: legacyId, status: 'open' })`. If any open invoices exist, void them via `stripe.invoices.voidInvoice(id)` *first*, then cancel the sub. ([Stripe API: cancel subscription](https://docs.stripe.com/api/subscriptions/cancel))
+
+**Scenario B: User re-onboards via two different devices simultaneously.**
+
+The token is single-use by virtue of the state machine: step 3a moves `in_progress → completed` atomically. The second request finds `state = 'completed'` and 409s. (Use `UPDATE … WHERE state IN ('pending', 'in_progress') RETURNING …` and check `rowCount = 1` before proceeding.)
 
 ---
 
-## Biomarker Data Transformation
+## Vercel Function Timeout & Async Patterns
 
-The critical translation layer between SiPhox's schema and CULTR's UI.
+### Recommendation: Single function for happy path. Move heavy side effects (Healthie patient creation, SiPhox kit fulfillment, Mailchimp sync) to the post-payment webhook handler — same pattern as today's Stripe flow.
 
-### SiPhox Report Structure (input -- assumed from API docs)
+### Timeout reality check
 
-```typescript
-// What SiPhox returns from GET /customers/:id/reports/:reportID
-interface SiPhoxReport {
-  _id: string;
-  createdAt: string;
-  biomarkers: Array<{
-    name: string;          // e.g., "hsCRP", "A1C", "Total Testosterone"
-    value: number;
-    unit: string;
-    referenceRange?: { low: number; high: number };
-  }>;
-  suggestions?: Array<{
-    _id: string;
-    text: string;
-    link?: string;
-    category?: string;
-  }>;
+Per [Vercel Functions Limits](https://vercel.com/docs/functions/limitations) (verified Apr 2026):
+
+- **Fluid Compute (default for new Pro projects):** 300s default, max 800s on Pro/Enterprise. cultrhealth.com staging is on Pro, so this applies.
+- **Legacy serverless:** 60s on Pro, 10s on Hobby.
+- The "60-90s" assumption in the question reflects legacy. Confirm with `vercel project inspect` whether Fluid Compute is enabled on the staging project.
+
+### What CorePay checkout actually does
+
+Synchronous Authorize.Net calls in the happy path:
+1. `createCustomerProfileRequest` (or look-up + `createCustomerPaymentProfileRequest`) — 1-3s
+2. `ARBCreateSubscriptionRequest` — 2-5s
+
+Total: ~3-8s in the happy path. Comfortably within 60s legacy serverless, trivially within 300s Fluid.
+
+### What the Stripe webhook does today (and CorePay webhook should mirror)
+
+The async work that fires on `checkout.session.completed`:
+- `createMembership` (DB) — fast
+- `ensureHealthiePatient` (Healthie API) — 1-3s, may stall on cold start
+- `triggerSiphoxFulfillment` (SiPhox API) — 1-2s
+- `processOrderAttribution` + `upsertPortfolioEntry` (DB) — fast
+- `sendWelcomeEmail` (Resend) — 200-500ms
+- `syncContactToMailchimp` (non-blocking, fire-and-forget) — 200-500ms
+
+Today this is all in the webhook, which Stripe gives 30s to respond before retrying. Authorize.Net webhooks have similar retry semantics (per their docs: 5 retries with exponential backoff). Mirror the pattern: `webhook/corepay/route.ts` does the same side-effect orchestration on `subscription.created`.
+
+### Recommended pattern: synchronous checkout, async fulfillment
+
+```
+POST /api/checkout/corepay
+  ↓ (synchronous, must return ≤30s for good UX)
+  Authorize.Net: createCustomerProfile + ARBCreateSubscription
+  DB: INSERT memberships row, INSERT pending_intakes row, INSERT coupon_redemptions row
+  → Return { redirectUrl: '/success?provider=corepay&subscription_id=...' } immediately
+  
+[async, via webhook on success or retry]
+POST /api/webhook/corepay  (event: net.authorize.customer.subscription.created)
+  ↓ (no user-facing latency)
+  Idempotency check (webhook_events table)
+  ensureHealthiePatient + triggerSiphoxFulfillment + processOrderAttribution
+  + sendWelcomeEmail + syncContactToMailchimp
+```
+
+**Why this is better than 2-step async at the checkout endpoint:**
+- Single round-trip from the browser → fewer failure modes.
+- Webhook idempotency naturally handles retry — if SiPhox fulfillment fails on first webhook delivery, Authorize.Net retries the webhook and we get another chance.
+- Matches the existing Stripe pattern, so the lift-and-shift to provider-agnostic helpers (`lib/webhooks/dispatcher.ts`) is straightforward.
+
+### Don't `export const runtime = 'edge'` on cultrhealth.com checkout
+
+cultrhealth.com (this repo, Vercel staging + CF Pages prod) uses Node runtime by default. Authorize.Net SDK calls happen via `fetch()` to their JSON API (already done in `corepay-gateway.ts`), so edge would *technically* work — but the existing Stripe webhook (`headers()` from `next/headers`, `Stripe.Event` type imports, signature constructEvent) and the lift-and-shift helpers are Node-compatible by default. **Stick with Node runtime for cultrhealth.com checkout/webhook routes.** Edge runtime is a cultrclub-web concern (next section).
+
+---
+
+## Cloudflare Edge Compatibility
+
+### Verdict: cultrclub-web does NOT need to do CorePay subscriptions. Keep paid checkout on cultrhealth.com (Node runtime). cultrclub-web continues to be product-only orders, which currently bypass Stripe entirely.
+
+### What runs where today
+
+| App | Runtime | Touches Stripe? |
+|---|---|---|
+| cultrhealth.com (CF Pages prod, Vercel staging) | Node | YES — checkout, webhook, admin pause/cancel/upgrade. CF Pages relies on `nodejs_compat` flag. |
+| cultrclub.com (CF Pages, edge) | Edge | **NO.** Per cultrclub-web architecture: club orders write `club_orders` rows for admin approval. No payment is taken. Paid upgrades link to `cultrhealth.com/pricing`. |
+
+This means **the Cloudflare edge compat question is mostly moot for the v2.0 milestone**. The CorePay code path is on cultrhealth.com, which runs Node on Vercel staging and on `nodejs_compat`-flagged Workers on CF Pages prod.
+
+### Edge compatibility audit (in case things change)
+
+If CorePay calls *did* need to run on cultrclub-web edge:
+
+| Concern | Edge runtime answer |
+|---|---|
+| **Accept.js client-side tokenization** | Pure browser code. Loads from `https://js.authorize.net/v1/Accept.js` (or sandbox) regardless of host runtime. Confirmed via [Accept.js docs](https://developer.authorize.net/api/reference/features/acceptjs.html): only requires HTTPS host. **Works.** |
+| **HMAC-SHA512 webhook verification** | Native via `crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-512' }, false, ['verify'])` + `crypto.subtle.verify(...)`. **Works without `nodejs_compat`.** Don't use Node's `crypto.createHmac` in edge code — that does require the flag. |
+| **HMAC `timingSafeEqual` for buffer compare** | Use `crypto.subtle.verify` directly (it's constant-time by spec) instead of comparing computed hashes. Avoids the buffer-length mismatch bug already documented in CLAUDE.md (`HMAC timingSafeEqual` rule). |
+| **Authorize.Net JSON API calls** | `fetch()` is native. **Works.** |
+| **`crypto.getRandomValues(new Uint8Array(32))` for tokens** | Native Web Crypto. **Works.** |
+| **Authorize.Net SDK (npm `authorizenet`)** | Heavy CommonJS package built for Node. **Avoid** — use raw `fetch` to the JSON API (which is what `corepay-gateway.ts` already does). |
+
+### Webhook signature verification — edge-compatible reference
+
+```ts
+// app/api/webhook/corepay/route.ts (works in both Node and edge)
+async function verifyAuthorizeNetSignature(
+  rawBody: string,
+  signatureHeader: string,
+  signatureKey: string
+): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(signatureKey),
+    { name: 'HMAC', hash: 'SHA-512' },
+    false,
+    ['verify']
+  );
+  // Authorize.Net format: 'sha512=<hexHash>' — strip the prefix
+  const expected = signatureHeader.replace(/^sha512=/i, '').toLowerCase();
+  // Convert hex string to Uint8Array
+  const expectedBytes = new Uint8Array(
+    expected.match(/.{1,2}/g)!.map((b) => parseInt(b, 16))
+  );
+  return crypto.subtle.verify('HMAC', key, expectedBytes, encoder.encode(rawBody));
 }
 ```
 
-**Confidence on report schema:** LOW -- SiPhox API docs are not publicly available. This schema is inferred from the PROJECT.md endpoint descriptions and general patterns for lab report APIs. The mapping layer design is sound regardless of the exact schema, but field names may need adjustment when real API access is available.
-
-### CULTR Display Structure (output)
-
-```typescript
-// What the dashboard components expect
-interface CultrLabResult {
-  id: string;             // CULTR canonical ID (e.g., 'hscrp', 'a1c')
-  siphoxName: string;     // Original SiPhox name (for debugging/mapping updates)
-  name: string;           // Display name (e.g., "High-Sensitivity CRP")
-  category: SiPhoxCategory;
-  value: number | null;   // null = N/A (biomarker in panel but not in results)
-  unit: string;
-  referenceRange: { low: number; high: number } | null;
-  status: 'optimal' | 'acceptable' | 'suboptimal' | 'critical' | 'na';
-}
-```
-
-### Mapping Layer Design
-
-```typescript
-// lib/config/siphox.ts
-
-export type SiPhoxCategory =
-  | 'metabolic'
-  | 'nutritional'
-  | 'heart'
-  | 'hormonal'
-  | 'inflammation'
-  | 'thyroid'
-  | 'cbc'
-  | 'cmp'
-  | 'liver'
-  | 'kidney'
-  | 'other';
-
-// Map SiPhox biomarker names --> CULTR display metadata
-// This is the single source of truth for name translation
-export const SIPHOX_BIOMARKER_MAP: Record<string, {
-  id: string;
-  displayName: string;
-  category: SiPhoxCategory;
-  lowerIsBetter?: boolean;
-}> = {
-  // Metabolic Health
-  'A1C':           { id: 'a1c', displayName: 'HbA1c', category: 'metabolic' },
-  'Albumin':       { id: 'albumin', displayName: 'Albumin', category: 'metabolic' },
-  'C-Peptide':     { id: 'c-peptide', displayName: 'C-Peptide', category: 'metabolic' },
-  'eAG':           { id: 'eag', displayName: 'Estimated Avg Glucose', category: 'metabolic' },
-  'Cortisol':      { id: 'cortisol', displayName: 'Cortisol', category: 'metabolic' },
-
-  // Nutritional
-  '25-(OH) Vitamin D': { id: 'vitamin-d', displayName: 'Vitamin D', category: 'nutritional' },
-  'Ferritin':          { id: 'ferritin', displayName: 'Ferritin', category: 'nutritional' },
-
-  // Heart Health
-  'ApoB':              { id: 'apob', displayName: 'ApoB', category: 'heart', lowerIsBetter: true },
-  'ApoA1':             { id: 'apoa1', displayName: 'ApoA1', category: 'heart' },
-  'Total Cholesterol':  { id: 'total-chol', displayName: 'Total Cholesterol', category: 'heart' },
-  'HDL':               { id: 'hdl', displayName: 'HDL Cholesterol', category: 'heart' },
-  'LDL':               { id: 'ldl', displayName: 'LDL Cholesterol', category: 'heart', lowerIsBetter: true },
-  'Triglycerides':     { id: 'triglycerides', displayName: 'Triglycerides', category: 'heart', lowerIsBetter: true },
-  'VLDL':              { id: 'vldl', displayName: 'VLDL', category: 'heart', lowerIsBetter: true },
-
-  // Hormonal Health
-  'Total Testosterone':  { id: 'total-testosterone', displayName: 'Total Testosterone', category: 'hormonal' },
-  'Free Testosterone':   { id: 'free-testosterone', displayName: 'Free Testosterone', category: 'hormonal' },
-  'DHEA-S':             { id: 'dhea-s', displayName: 'DHEA-S', category: 'hormonal' },
-  'Estradiol':          { id: 'estradiol', displayName: 'Estradiol', category: 'hormonal' },
-  'SHBG':               { id: 'shbg', displayName: 'SHBG', category: 'hormonal' },
-  'FSH':                { id: 'fsh', displayName: 'FSH', category: 'hormonal' },
-  'LH':                 { id: 'lh', displayName: 'LH', category: 'hormonal' },
-
-  // Inflammation
-  'hsCRP':              { id: 'hscrp', displayName: 'hsCRP', category: 'inflammation', lowerIsBetter: true },
-
-  // Thyroid
-  'TSH':                { id: 'tsh', displayName: 'TSH', category: 'thyroid' },
-
-  // ... 150+ additional entries for extended panel
-};
-
-// Tier eligibility rules
-export const SIPHOX_TIER_CONFIG: Record<string, {
-  included: boolean;
-  addonPrice: number | null;
-}> = {
-  club:      { included: false, addonPrice: null },
-  core:      { included: false, addonPrice: 135 },
-  catalyst:  { included: true,  addonPrice: null },
-  concierge: { included: true,  addonPrice: null },
-};
-```
-
-### Category Reconciliation with Existing Components
-
-The existing `BiomarkerTrends.tsx` uses `BiomarkerCategory` from `lib/resilience.ts`:
-`inflammation | metabolic | hormonal | longevity | oxidative | mitochondrial`
-
-SiPhox uses different categories:
-`metabolic | nutritional | heart | hormonal | inflammation | thyroid` plus extended panel categories.
-
-**Resolution approach:** Extend the `BiomarkerCategory` type in `lib/resilience.ts` to include the new SiPhox categories. Add corresponding color entries in `BiomarkerTrends.tsx`'s `categoryColors` map. This is a ~10-line additive change to each file.
-
-```typescript
-// Extended BiomarkerCategory (lib/resilience.ts)
-export type BiomarkerCategory =
-  | 'inflammation'
-  | 'metabolic'
-  | 'hormonal'
-  | 'longevity'
-  | 'oxidative'
-  | 'mitochondrial'
-  // SiPhox categories
-  | 'heart'
-  | 'nutritional'
-  | 'thyroid'
-  | 'cbc'
-  | 'cmp'
-  | 'liver'
-  | 'kidney'
-  | 'other'
-```
+This is constant-time by spec (no timingSafeEqual needed) and edge-compatible.
 
 ---
 
-## Suggested Build Order
+## Suggested Build Order (Phase Sequencing)
 
-Components have clear dependencies. Build bottom-up:
+Order is driven by reversibility (early phases are reversible without customer impact) and dependencies.
 
-```
-Phase 1: Foundation (no UI, no webhook changes)
-  1. lib/config/siphox.ts              -- biomarker map, kit types, tier rules
-  2. lib/siphox-api.ts                 -- SiPhox REST client (all endpoints)
-  3. migrations/019_siphox_tables.sql  -- DB schema (3 tables)
-  4. lib/siphox-db.ts                  -- DB operations (CRUD for all 3 tables)
+### Phase 0 — Documentation (independently shippable)
 
-Phase 2: Automated Ordering (webhook integration)
-  5. Extend webhook/stripe/route.ts    -- auto-order on checkout completion
-  6. lib/siphox-db.ts:orderSiPhoxKit() -- orchestrates: resolve address,
-                                          find-or-create customer, create order
+Per PROJECT.md, four Claude skills. Pure docs. Can ship at any point and have zero coupling to the rest of the work.
 
-Phase 3: Kit Registration (first member-facing feature)
-  7. app/api/siphox/register-kit/route.ts  -- kit validation + registration
-  8. LabsDashboardClient.tsx (partial)      -- kit registration UI only
+### Phase 1 — Core CorePay primitives (no customer-facing changes yet)
 
-Phase 4: Results Display (full dashboard)
-  9.  app/api/siphox/labs/route.ts              -- reports + biomarker data
-  10. app/api/siphox/reports/[reportId]/route.ts -- single report detail
-  11. Extend lib/resilience.ts                   -- add new BiomarkerCategory values
-  12. Extend BiomarkerTrends.tsx                 -- add category colors
-  13. LabsDashboardClient.tsx (complete)          -- full labs tab with results
-  14. Wire BiologicalAgeCard.tsx                  -- real data from SiPhox
-  15. Wire BiomarkerTrends.tsx                    -- real data from SiPhox
-  16. Update app/dashboard/page.tsx               -- add Labs tab to dashboard
-```
+**Goal:** Have a working CorePay code path that creates real ARB subscriptions in sandbox, but keep all production traffic on Stripe.
 
-**Rationale for this order:**
-- Phase 1 has zero external dependencies and produces testable, isolated units
-- Phase 2 enables kits to start shipping as soon as members check out, before any member-facing UI exists
-- Phase 3 is the first member-visible feature (simplest possible: one text input, one API call, one status update)
-- Phase 4 depends on reports existing in SiPhox (which requires kit registration + sample processing + lab turnaround time -- typically 5-10 business days)
+- Add `lib/payments/authorize-net-cim.ts` — CIM customer/payment profile helpers (`getOrCreateCustomerProfile`, `createPaymentProfile`, `updatePaymentProfile`).
+- Add `lib/payments/authorize-net-arb.ts` — ARB lifecycle helpers (`createSubscription`, `cancelSubscription`, `getSubscriptionStatus`, `updateSubscriptionPaymentProfile`). Refactor existing `lib/payments/corepay-gateway.ts` into this; delete the old name.
+- Migration `063_webhook_events.sql` + `063_provider_payment_profile_id.sql` (additive: add `memberships.provider_payment_profile_id`, `migration_tokens` table NOT yet — wait until phase 5).
+- New `app/api/webhook/corepay/route.ts` — HMAC-SHA512 verification, idempotency via `webhook_events` table. Initially handles only `subscription.created` and `payment.refund.created`. **No live customers.**
+- Sandbox test: complete one full signup → cancel → refund cycle in Authorize.Net sandbox.
 
-**Implication for roadmap:** Phase 4 cannot be fully tested until a real kit goes through the full cycle. Consider ordering a test kit early in Phase 1 so results are available by the time Phase 4 UI is built.
+**Reversible:** Delete the routes; nobody is using them yet.
+
+### Phase 2 — Provider-agnostic helpers (refactor; no behavior change)
+
+**Goal:** Lift Stripe webhook side-effects into provider-agnostic primitives so both providers feed the same downstream pipelines.
+
+- New `lib/webhooks/dispatcher.ts`:
+  - `onSubscriptionActivated({ provider, providerCustomerId, providerSubscriptionId, email, planTier, attributionCookie?, couponCode? })`
+  - `onSubscriptionCancelled({ provider, providerSubscriptionId, reason? })`
+  - `onSubscriptionPastDue({ provider, providerSubscriptionId })`
+  - `onPaymentSucceeded({ provider, providerSubscriptionId, amountCents })`
+  - `onRefunded({ provider, providerTransactionId, amountCents })`
+- Update `app/api/webhook/stripe/route.ts` — replace inline calls to `triggerSiphoxFulfillment`, `ensureHealthiePatient`, `processOrderAttribution`, etc. with calls to `lib/webhooks/dispatcher.ts`. Verify nothing changed by running the existing `webhook/stripe` integration tests.
+- Wire `app/api/webhook/corepay/route.ts` to the same dispatcher.
+- Add the dual-read shim: `getProviderIds(membership)` helper, replace direct `stripe_subscription_id` reads with `COALESCE(provider_subscription_id, stripe_subscription_id)` in admin/member/portfolio queries.
+
+**Reversible:** Refactor only. Tests catch regressions.
+
+### Phase 3 — CULTR coupon engine (replace Stripe coupon resolution)
+
+**Goal:** New coupon table, dual-validation works at checkout. Stripe coupon sync is now write-only (will be deleted in Phase 6).
+
+- Migration `064_coupon_redemptions.sql`.
+- Extend `lib/config/coupons.ts` with `validateCouponForSubscription(code, planSlug, email): { valid, discountPercentage, billingCycles, codeId, codeSource }`.
+- New `lib/coupons/redemption.ts` — `recordCouponRedemption(...)`, called from both checkout routes (Stripe + CorePay) during phase 3 dual-write.
+- Update `app/api/checkout/route.ts` (Stripe path) to ALSO write `coupon_redemptions` rows when Stripe applies a discount. (Currently the discount info comes back via `total_details.breakdown.discounts` only at webhook time. May need to either pass the code through `metadata.coupon_code` and resolve at webhook, or call `getAffiliateCodeByCode` at checkout time.) **Recommended:** Resolve at webhook on Stripe path; resolve at checkout on CorePay path. Document the asymmetry.
+
+**Reversible:** Stop writing `coupon_redemptions` to roll back.
+
+### Phase 4 — CorePay checkout for new signups (feature-flagged)
+
+**Goal:** Behind a flag, new signups can complete via CorePay. Existing Stripe subs unaffected.
+
+- Update `app/join/[tier]/page.tsx` (and `app/pricing/PricingClient.tsx` plan-CTA buttons) to read a feature flag (`USE_COREPAY_FOR_SIGNUP`). When true, render Accept.js form; when false, redirect to Stripe Checkout.
+- Update `app/api/checkout/corepay/route.ts` to:
+  - Use the new CIM helpers (delete the `stripe_customer_id: 'corepay_…'` hack).
+  - Write `provider_*` columns and `payment_provider = 'authorize_net'`.
+  - Call coupon redemption helper.
+  - Return `redirectUrl` to `/success?provider=corepay&subscription_id=…`.
+- Update `app/success/page.tsx` to handle both providers — read provider from query param, fetch subscription details via the relevant API.
+- Update `app/api/intake/submit/route.ts` to also key on `provider_subscription_id` when `payment_provider = 'authorize_net'`.
+
+**Test on staging first** with the flag flipped. Roll out to production with the flag still off; flip the flag for a 5% canary; ramp.
+
+**Reversible:** Flip the flag back.
+
+### Phase 5 — Existing-subscriber re-onboarding migration
+
+**Goal:** Move all active Stripe subs to CorePay over a 30-day window.
+
+- Migration `065_migration_tokens.sql`.
+- New `app/migrate/[token]/page.tsx` + `MigrateClient.tsx` — Accept.js form, email/plan pre-filled.
+- New `app/api/migrate/complete/route.ts` — the transactional flow described in "Existing-Subscriber Migration Architecture" above.
+- One-time seeding job (run from `scripts/seed-migration-tokens.mjs` or a `/api/admin/migrate/start` endpoint): for every active Stripe sub, INSERT a `migration_tokens` row + send the Resend email.
+- New `app/api/cron/sunset-stripe-subscriptions/route.ts` — daily cron, force-cancels expired tokens.
+- Add to `vercel.json` crons.
+
+**Reversible until first email goes out.** After that, irreversible — but the customers remain billed via Stripe until they re-onboard, so worst case you can stall.
+
+### Phase 6 — Admin Stripe routes converted, Stripe code deleted
+
+**Goal:** Drop dependence on Stripe SDK. Admin pause/cancel/upgrade now operate against ARB.
+
+- Convert each of the 6 admin routes to provider-agnostic dispatch:
+  - `app/api/admin/members/[customerId]/pause/route.ts`
+  - `app/api/admin/members/[customerId]/cancel/route.ts`
+  - `app/api/admin/members/[customerId]/upgrade/route.ts`
+  - `app/api/admin/members/add/route.ts`
+  - `app/api/admin/creators/codes/route.ts` (drop Stripe coupon sync)
+  - `app/api/admin/creators/[id]/approve/route.ts` (drop Stripe coupon creation)
+- New `lib/payments/provider.ts`:
+  ```ts
+  pauseSubscription(membership): Promise<void>
+  cancelSubscription(membership, reason?): Promise<void>
+  upgradeSubscription(membership, newPlanSlug, prorationBehavior): Promise<void>
+  ```
+  Delegates to the right provider based on `membership.payment_provider`.
+- Delete `app/api/checkout/route.ts`, `app/api/checkout/subscription/route.ts`, `app/api/checkout/product/route.ts` (replaced by CorePay equivalents).
+- Delete `app/api/webhook/stripe/route.ts` once `SELECT COUNT(*) FROM memberships WHERE payment_provider='stripe' AND subscription_status='active'` is 0.
+- Migration `066_drop_stripe_coupon_columns.sql` — drop `affiliate_codes.stripe_coupon_id`, `affiliate_codes.stripe_promotion_code_id`.
+- `package.json`: remove `stripe` from dependencies. Drop `STRIPE_*` env vars from `.env.example` and Vercel/CF Pages env config.
+- Migration `067_drop_legacy_stripe_columns.sql` — drop `memberships.stripe_customer_id`, `memberships.stripe_subscription_id`, `orders.stripe_payment_intent_id`, `orders.stripe_customer_id`, `siphox_kit_orders.stripe_subscription_id`, `creator_customer_portfolio.stripe_subscription_id`, `pending_intakes.stripe_payment_intent_id`. (Coordinated with cultrclub-web deploy.)
+
+**Phase 6 is the riskiest, save it for last.** Don't drop columns until both apps have deployed the COALESCE-removal release.
 
 ---
 
-## File Inventory
+## Files To Modify By Component
 
-### New files to create (8 files)
+### New files (created during v2.0)
 
-| File | Purpose | Depends On |
-|------|---------|------------|
-| `lib/config/siphox.ts` | Biomarker map, kit types, tier rules, category colors | Nothing |
-| `lib/siphox-api.ts` | SiPhox REST client (all 6 endpoint groups) | `lib/config/siphox.ts` |
-| `lib/siphox-db.ts` | DB ops: customer sync, order tracking, report cache | `@vercel/postgres`, `lib/siphox-api.ts` |
-| `migrations/019_siphox_tables.sql` | 3 new tables + indexes | Migration 014+ |
-| `app/api/siphox/labs/route.ts` | GET: member's lab data for dashboard | `lib/siphox-*`, `lib/portal-auth.ts` |
-| `app/api/siphox/register-kit/route.ts` | POST: register kit ID | `lib/siphox-*`, `lib/portal-auth.ts` |
-| `app/api/siphox/reports/[reportId]/route.ts` | GET: single report detail | `lib/siphox-*`, `lib/portal-auth.ts` |
-| `components/dashboard/LabsDashboardClient.tsx` | Labs tab: status, registration, results | `/api/siphox/*` routes |
+| File | Purpose | Phase |
+|---|---|---|
+| `.claude/skills/corepay-api/SKILL.md` | Authorize.Net API reference skill | 0 |
+| `.claude/skills/healthie-api/SKILL.md` | Healthie EHR reference skill | 0 |
+| `.claude/skills/corpay-crossborder/SKILL.md` | Reference-only (future use) | 0 |
+| `.claude/skills/siphox-api/SKILL.md` | Refresh existing skill | 0 |
+| `lib/payments/authorize-net-cim.ts` | CIM profile helpers (replaces inline ARB-only `corepay-gateway.ts`) | 1 |
+| `lib/payments/authorize-net-arb.ts` | ARB lifecycle helpers | 1 |
+| `lib/payments/provider.ts` | Provider-agnostic adapter for admin actions | 6 |
+| `lib/webhooks/dispatcher.ts` | Provider-agnostic side-effect dispatcher | 2 |
+| `lib/coupons/redemption.ts` | CULTR-internal coupon engine | 3 |
+| `migrations/063_webhook_events.sql` | New idempotency table | 1 |
+| `migrations/063_provider_payment_profile_id.sql` | `memberships.provider_payment_profile_id` | 1 |
+| `migrations/064_coupon_redemptions.sql` | New coupon redemptions table | 3 |
+| `migrations/065_migration_tokens.sql` | Re-onboarding token table | 5 |
+| `migrations/066_drop_stripe_coupon_columns.sql` | Drop `affiliate_codes.stripe_*` | 6 |
+| `migrations/067_drop_legacy_stripe_columns.sql` | Drop all `*.stripe_*` ID columns | 6 |
+| `app/api/webhook/corepay/route.ts` | HMAC-SHA512 verifier + dispatcher | 1 |
+| `app/api/migrate/complete/route.ts` | Atomic re-onboarding endpoint | 5 |
+| `app/api/cron/reconcile-arb-subscriptions/route.ts` | Daily ARB ↔ DB drift detector | 1 (deploy-gated to phase 4) |
+| `app/api/cron/sunset-stripe-subscriptions/route.ts` | Daily expired-token sweep | 5 |
+| `app/migrate/[token]/page.tsx` | Re-onboarding landing page | 5 |
+| `app/migrate/[token]/MigrateClient.tsx` | Accept.js client form | 5 |
+| `app/portal/billing/page.tsx` | Self-service portal | 4 (replaces Stripe customer portal) |
+| `app/portal/billing/BillingClient.tsx` | Cancel/pause/resume/update card UI | 4 |
+| `app/api/portal/billing/cancel/route.ts` | Self-service cancel | 4 |
+| `app/api/portal/billing/pause/route.ts` | Self-service pause (suspend-emulation) | 4 |
+| `app/api/portal/billing/resume/route.ts` | Self-service resume | 4 |
+| `app/api/portal/billing/update-card/route.ts` | Self-service card update | 4 |
+| `scripts/seed-migration-tokens.mjs` | One-time seed of migration_tokens for active Stripe subs | 5 |
 
-### Files to modify (5 files, all additive changes)
+### Modified files (existing files that change)
 
-| File | Change | Lines Added | Risk |
-|------|--------|-------------|------|
-| `app/api/webhook/stripe/route.ts` | Add SiPhox kit ordering in `handleCheckoutCompleted()` | ~20 | LOW -- non-fatal try/catch block |
-| `components/dashboard/BiomarkerTrends.tsx` | Extend `categoryColors` map with new SiPhox categories | ~15 | LOW -- additive only |
-| `lib/resilience.ts` | Extend `BiomarkerCategory` union type | ~8 | LOW -- type-only change |
-| `app/dashboard/page.tsx` | Restructure to tabbed layout, add Labs tab | ~30 | MEDIUM -- restructures existing page |
-| `components/dashboard/BiologicalAgeCard.tsx` | No structural change -- already accepts real data via props | 0 | NONE -- just wire up correct props |
+| File | Change | Phase |
+|---|---|---|
+| `app/api/checkout/corepay/route.ts` | Drop `stripe_customer_id: 'corepay_…'` hack; use real provider_* columns; integrate coupon engine | 4 |
+| `app/api/webhook/stripe/route.ts` | Lift inline side-effects into `lib/webhooks/dispatcher.ts` calls. Eventually deleted in phase 6. | 2, 6 |
+| `app/api/checkout/route.ts` | Either delete (if CorePay replaces) or hide behind feature flag | 4, 6 |
+| `app/api/checkout/subscription/route.ts` | Same | 4, 6 |
+| `app/api/checkout/product/route.ts` | Same — products move to CorePay one-time CIM transaction (`createCustomerProfileTransactionRequest`) | 4, 6 |
+| `app/api/intake/submit/route.ts` | Add provider_subscription_id matching | 4 |
+| `app/success/page.tsx` | Handle `provider=corepay` query param | 4 |
+| `app/join/[tier]/page.tsx` | Feature-flag CorePay vs Stripe | 4 |
+| `app/pricing/PricingClient.tsx` | Same — CTA dispatches based on flag | 4 |
+| `app/api/admin/members/[customerId]/pause/route.ts` | Use `lib/payments/provider.ts` adapter | 6 |
+| `app/api/admin/members/[customerId]/cancel/route.ts` | Same | 6 |
+| `app/api/admin/members/[customerId]/upgrade/route.ts` | Same | 6 |
+| `app/api/admin/members/[customerId]/route.ts` | Same | 6 |
+| `app/api/admin/members/add/route.ts` | Same | 6 |
+| `app/api/admin/creators/codes/route.ts` | Drop Stripe coupon sync (`stripe_promotion_code_id` write paths) | 3 |
+| `app/api/admin/creators/[id]/approve/route.ts` | Drop Stripe coupon creation | 3 |
+| `app/admin/members/MembersClient.tsx` | Read `provider_*` instead of `stripe_*` | 2 |
+| `app/admin/creators/coupons/CouponsClient.tsx` | Hide `stripe_promotion_code_id` column | 3 |
+| `lib/db.ts` | `MembershipEntry` interface, `createMembership`, `updateMembershipBySubscriptionId`, `getMembershipBySubscriptionId`, `getMembershipByCustomerId` — add `payment_provider`, `provider_*` fields. Cross-table JOIN on line 2529 (`m.stripe_customer_id = o.stripe_customer_id`) needs updating to use COALESCE shim. | 2, 6 |
+| `lib/admin-types.ts` | Update Membership type | 2 |
+| `lib/creators/db.ts` | `creator_customer_portfolio.stripe_subscription_id` → `provider_subscription_id` (5 query sites) | 2, 6 |
+| `lib/config/affiliate.ts` | Drop `stripe_coupon_id` / `stripe_promotion_code_id` from `AffiliateCode` type | 6 |
+| `lib/siphox/db.ts` | `siphox_kit_orders.stripe_subscription_id` → `provider_subscription_id` (4 query sites) | 2, 6 |
+| `lib/payments/payment-types.ts` | Drop `'stripe'` from `PaymentProvider` union (eventually) | 6 |
+| `lib/payments/corepay-gateway.ts` | Refactor into `authorize-net-arb.ts` (just an `ARBCreateSubscription` wrapper today; needs cancel, update, status, etc.) | 1 |
+| `lib/config/plans.ts` | Drop `STRIPE_COUPON_IDS` const (FOUNDER15: qU4zNw5W, FIRSTMONTH: tuQ4qFpe). Coupon resolution now via `lib/coupons/redemption.ts`. | 3 |
+| `package.json` | Remove `stripe` dependency | 6 |
+| `vercel.json` crons | Add `reconcile-arb-subscriptions` and `sunset-stripe-subscriptions` | 1, 5 |
+| (cultrhealth-web/ sibling repo) | Deploy parallel changes for CF Pages prod | All deploy phases |
+
+### Files in cultrclub-web (sibling repo) requiring changes
+
+| File | Change | Phase |
+|---|---|---|
+| `cultrclub-web/lib/creators/db.ts:1252-1397` | `creator_customer_portfolio.stripe_subscription_id` reads — switch to COALESCE shim, then to `provider_subscription_id` only after phase 6 | 2, 6 |
+| `cultrclub-web/lib/config/affiliate.ts:120` | Drop `stripe_subscription_id` field from interface | 6 |
+
+cultrclub-web does NOT need the CorePay code path (it doesn't take payments).
 
 ---
 
-## Environment Variables
+## Risk Register
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SIPHOX_API_KEY` | Yes | Bearer token for SiPhox API authentication |
-| `SIPHOX_API_URL` | No | Base URL override (default: `https://connect.siphoxhealth.com/api/v1`) |
-| `SIPHOX_IS_TEST` | No | Set `true` for test orders (maps to `is_test_order` in create order API) |
-| `SIPHOX_NOTIFY_RECEIVER` | No | Set `false` to suppress SiPhox kit notification emails (default: `true`) |
-
----
-
-## HIPAA Considerations
-
-Biomarker data is Protected Health Information. Follow the codebase's established HIPAA patterns:
-
-- **No PHI in logs:** Log only IDs, statuses, timestamps -- never biomarker values, patient names, or addresses
-- **Server-side only:** All SiPhox API calls happen in API route handlers, never in client components
-- **Cache security:** `siphox_reports.report_data` JSONB contains PHI -- same DB-level security as `pending_intakes.intake_data` JSONB
-- **No client caching headers:** Lab data routes must include `Cache-Control: private, no-cache` (matches existing authenticated route pattern)
-- **Secure transport:** HTTPS to SiPhox API (enforced by their `connect.siphoxhealth.com` endpoint)
-- **Minimal client response:** API routes return only what the UI needs to display -- no raw SiPhox API responses forwarded to client
-
----
-
-## Scalability Considerations
-
-| Concern | At 100 members | At 10K members | At 100K members |
-|---------|---------------|----------------|-----------------|
-| SiPhox API calls | On-demand per tab visit; ~10/day | Cache in DB reduces to ~100/day | Need SiPhox webhook for push updates |
-| Report storage | ~100 JSONB rows, negligible | ~10K rows, ~50MB | Consider archival to S3 |
-| Kit ordering | 1-2/day, inline in webhook | 50+/day, still inline | Queue via background job |
-| Credit monitoring | Manual check | Admin dashboard alert | Auto-reorder credits via API |
+| Risk | Severity | Mitigation |
+|---|---|---|
+| Path A card-update flow doesn't actually cascade to active subs (next billing uses old card) | HIGH | Sandbox spike in Phase 1. If confirmed, default to Path B (create new payment profile + ARBUpdateSubscription). |
+| Authorize.Net webhook delivery flakiness (community-reported) | MEDIUM | Daily reconciliation cron from Phase 1 onward. |
+| Double-charge during migration (Stripe in-flight invoice + new CorePay charge) | HIGH | Void open Stripe invoices BEFORE cancel during the migration transaction. Documented in "Existing-Subscriber Migration" section. |
+| Two apps (cultrhealth.com + cultrclub-web) deploying out of sync drops a column the other app still reads | HIGH | Phase 6 column drops MUST happen after both apps have deployed the COALESCE-removal release. Coordinate via PROJECT.md/deploy-runbook. |
+| Stripe webhook retries an old event after handler is deleted | LOW | Keep `app/api/webhook/stripe/route.ts` as a 410 Gone responder for 6 months post-Phase 6. |
+| Authorize.Net rate limits during one-time migration_tokens seeding | MEDIUM | Throttle the seeding job to ≤10 calls/sec. Run in batches during off-hours. |
+| Customer enters CorePay form, Authorize.Net sub creation succeeds, DB write fails | HIGH | Wrap Steps 5b-5e in defensive try/catch; on DB failure, IMMEDIATELY call `ARBCancelSubscription` to roll back the just-created sub. Sentry on the rollback. |
+| Re-onboarding emails marked as spam / users miss them | MEDIUM | Send via Resend's transactional pipeline (already used). Send a reminder on day 14 and a final on day 25. |
+| `class-variance-authority` listed in deps but unused (per CLAUDE.md) — adds noise during the "remove stripe" cleanup | LOW | Take the opportunity to clean up unused deps in Phase 6's package.json edit. |
 
 ---
 
 ## Sources
 
-- SiPhox Health Partner Program: [siphoxhealth.com/partner](https://siphoxhealth.com/partner)
-- SiPhox Health Partner FAQ: [siphoxhealth.com/partner/faq](https://siphoxhealth.com/partner/faq)
-- Existing codebase patterns: `lib/asher-med-api.ts`, `lib/quickbooks.ts`, `app/api/webhook/stripe/route.ts`, `lib/portal-auth.ts`
-- SiPhox API endpoint reference: PROJECT.md (provided by user)
-
----
-
-*Architecture analysis: 2026-03-14*
+- [Authorize.Net Webhook API Reference](https://developer.authorize.net/api/reference/features/webhooks.html) — confirmed `X-ANET-Signature` HMAC-SHA512 header and full ARB event taxonomy
+- [Authorize.Net Customer Profiles Reference](https://developer.authorize.net/api/reference/features/customer-profiles.html) — confirmed CIM 10 payment profiles per customer profile, profile lookup by email/customerID
+- [Authorize.Net Accept.js Reference](https://developer.authorize.net/api/reference/features/acceptjs.html) — confirmed CDN-loaded, browser-only, runtime-agnostic
+- [Authorize.Net KB: ARB + CIM](https://support.authorize.net/knowledgebase/Knowledgearticle/?code=KA-04444) — `ARBUpdateSubscriptionRequest` accepts customerProfileId/paymentProfileId
+- [Authorize.Net Developer Community: ARB webhook reliability](https://community.developer.cybersource.com/t5/Integration-and-Testing/ARB-Subscription-webhooks-not-working/td-p/63173) — community-reported delivery issues that justify polling fallback
+- [Vercel Functions Limits](https://vercel.com/docs/functions/limitations) — Fluid Compute 300s default; 800s max on Pro
+- [Brandur: Postgres safe table renames with views](https://brandur.org/fragments/postgres-table-rename) — expand→contract pattern
+- [GoCardless: Zero-downtime Postgres migrations](https://gocardless.com/blog/zero-downtime-postgres-migrations-the-hard-parts/) — additive-then-subtractive guidance
+- [Cloudflare Workers Web Crypto](https://developers.cloudflare.com/workers/runtime-apis/web-standards/) — `crypto.subtle` works in edge without `nodejs_compat`
+- Internal: `migrations/004_payment_provider.sql` — already-shipped additive provider columns
+- Internal: `app/api/webhook/stripe/route.ts` (1021 lines) — the side-effect reference for what `lib/webhooks/dispatcher.ts` must implement
+- Internal: `lib/payments/corepay-gateway.ts` — current ARB-create scaffolding
+- Internal: `app/api/checkout/corepay/route.ts` — current CorePay checkout (with `stripe_customer_id: 'corepay_…'` hack to remove)
+- Internal: `migrations/062_order_attributions_discount_snapshot.sql` — precedent for snapshotting discount values at attribution time
+- Internal: `lib/config/coupons.ts` — `CLUB_COUPONS` + `validateCoupon` patterns to extend
+- Internal: `migrations/016_stripe_promotion_codes.sql` — the `affiliate_codes.stripe_*` columns to drop in Phase 6

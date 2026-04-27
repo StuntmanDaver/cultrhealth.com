@@ -1,228 +1,544 @@
-# Feature Landscape: SiPhox Health Blood Test Integration
+# v2.0 Features — What Stripe Gave Us For Free, And What We Must Build
 
-**Domain:** At-home blood test kit ordering, registration, and biomarker results display for telehealth platform
-**Researched:** 2026-03-14
-**Overall confidence:** MEDIUM-HIGH (API schemas from PROJECT.md, competitor patterns validated via multiple sources, existing component shells verified in codebase)
+**Milestone:** Stripe → CorePay (Authorize.Net) replacement
+**Researched:** 2026-04-27
+**Overall confidence:** HIGH (Authorize.Net + Stripe docs are the authoritative source on every gap below)
 
----
-
-## Table Stakes
-
-Features users expect. Missing any of these = the integration feels broken or pointless.
-
-### Kit Ordering & Fulfillment
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| **Kit auto-ordering on Catalyst+/Concierge checkout** | These tiers include blood testing in their price. Kit must arrive without extra steps after subscribing. Every DTC testing competitor ships a kit immediately after purchase. | Medium | Stripe webhook (`checkout.session.completed`) triggers SiPhox `POST /orders` with member shipping address. Must check SiPhox credit balance via `GET /credits` before ordering. Handle order failure gracefully (email support, don't block subscription). Store `siphox_order_id` in DB. |
-| **Kit add-on for Core tier at checkout** | $135 optional add-on at checkout. Standard upsell pattern -- Stripe checkout supports multiple line items natively. | Low | Add line item to Stripe checkout session with metadata flag (`blood_test_addon: true`). Same SiPhox order flow once payment succeeds. |
-| **Customer sync (CULTR member -> SiPhox customer)** | Every SiPhox order requires a customer record. Must create SiPhox customer before first kit order and maintain the mapping. | Medium | `POST /customer` on first kit order. Store `siphox_customer_id` in local DB (new column on `users` table or separate mapping table). Use `external_id` field set to CULTR member ID for bidirectional lookup via `GET /customers`. Handle idempotency: check if customer already exists before creating. |
-| **Results notification** | Members need to know when results are ready without checking the portal daily. Every competitor (SiPhox's own app, InsideTracker, Superpower) sends email when results arrive. | Low | Email via Resend when report status detected as complete. Poll SiPhox `GET /customers/:id/reports/:reportID` on a schedule or use webhook if SiPhox supports it. Fallback: check on member portal login. |
-
-### Kit Registration & Tracking
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| **Kit registration UI** | Physical kit arrives with a unique ID printed on it. Member must link kit to their account before mailing the sample. Standard flow for Everlywell, SiPhox, LetsGetChecked, and every at-home testing company. | Medium | Two-step: (1) `GET /kits/:kitID/validate` to confirm kit ID is valid and unregistered, (2) `POST /kits/:kitID/register` to link kit to customer. Manual text input for kit ID -- no camera barcode scanning (unreliable on web). Clear error states: "Kit not found", "Kit already registered", "Invalid format". |
-| **Order/kit status tracking** | Members need to know "did my kit ship?", "was my sample received?", "are results ready?" -- the most common reason to check the portal after ordering. Hims, Ro, and every DTC health platform show clear status timelines. | Medium | Poll `GET /orders/:id` for shipment/fulfillment status. Display as visual timeline: Ordered -> Shipped -> Kit Received -> Kit Registered -> Sample Mailed -> Processing -> Results Ready. Cache status in local DB to reduce API calls. Show estimated timelines at each step ("Results typically ready in 5-7 business days"). |
-| **Smart empty states** | Each stage of the flow needs distinct messaging and CTAs. "Your kit is on its way!" is different from "Register your kit to get started" is different from "Results processing, check back in 5-7 days." Blank screens with no guidance = support tickets. | Low | State machine with 7 states: No Kit -> Ordered -> Shipped -> Registered -> Sample Mailed -> Processing -> Results Ready. Each state gets a card with: illustration/icon, status message, next action CTA, estimated timeline. Reuses existing component patterns (`ScrollReveal`, card layout). |
-
-### Biomarker Results Display
-
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| **Categorized biomarker results** | The core value proposition of this entire integration. Members must see their numbers organized by body system (Metabolic, Heart, Hormonal, Inflammation, Thyroid, Nutritional, Extended). Every competitor organizes by system -- dumping 150 markers in a flat list is unusable. | High | Fetch `GET /customers/:id/reports/:reportID`. Map 150+ biomarkers into categories matching the Longevity Essentials Program (defined in PROJECT.md). Render category sections with collapsible/expandable groups. Color-coded status per marker. Existing `BiomarkerTrends.tsx` has category grouping scaffolded but uses old category names (inflammation, metabolic, hormonal, longevity, oxidative, mitochondrial) -- must align to SiPhox categories. |
-| **Reference range visualization** | Users must understand "is this good or bad?" at a glance. Every lab report (Quest, Labcorp, InsideTracker, SiPhox's own dashboard) shows a range bar with the patient's value marked on it. Without this, numbers are meaningless to non-medical users. | Medium | Horizontal range bar for each biomarker: low (red/amber) | optimal (green) | high (red/amber) with marker showing member's value position. Use SiPhox-provided reference ranges exclusively (per PROJECT.md constraint -- no custom ranges). Color: green for optimal, amber for borderline, red for out-of-range. Accessible: don't rely solely on color -- add labels/icons. |
-| **N/A display for untested biomarkers** | Show all possible biomarkers with "N/A" or "No data" when the report doesn't include them. Sets expectations for what's available and serves as upsell surface for future testing. Explicitly required in PROJECT.md. | Low | Render full category layout with all known biomarkers. For any marker not present in report results, show grayed-out card with "N/A" or "Not tested" and optionally which panel includes it. |
-| **HIPAA-compliant data handling** | Biomarker results are PHI. Existing HIPAA patterns must be followed throughout. Not a visible feature but a hard requirement -- violation = legal exposure. | Low | No PHI in server logs, error tracking, or analytics. HTTPS for all SiPhox API calls. Cache results in DB with same access controls as patient data. Follow existing patterns from `lib/auth.ts` and `lib/asher-med-api.ts`. |
+> Supersedes prior FEATURES.md (SiPhox Health blood test research, 2026-03-14).
 
 ---
 
-## Differentiators
+## TL;DR — The Gap Map
 
-Features that set CULTR apart from competitors. Not expected by users, but create real value and justify the premium membership price.
+Stripe is a *subscription platform* with a hosted UI surface; Authorize.Net is a *gateway* with a recurring-billing engine bolted on. Replacing Stripe means rebuilding the **subscription orchestration layer** ourselves. Anything Stripe rendered (portal, hosted checkout, receipts, dunning UI) or computed (proration, retry timing, MRR adjustments for coupons) is now CULTR's responsibility.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| **Biological age card (real data)** | Hero metric that makes abstract biomarker data emotionally resonant. "You're aging 3 years slower than your chronological age." InsideTracker's InnerAge and Superpower's Biological Age are their highest-engagement features. Transforms clinical data into a story. | Medium | `BiologicalAgeCard.tsx` already fully built with gauge visualization, sparkline trend, status messages (Exceptional/Strong/Healthy/Room for optimization/Accelerated), and target display. Props: `chronologicalAge`, `biologicalAge`, `ageGap`, `historicalData`. Needs: (1) calculation algorithm -- SiPhox may not provide bio-age directly, so compute from biomarker values using existing `BIOMARKER_DEFINITIONS` weights in `lib/resilience.ts` (PhenoAge-like model from hsCRP, glucose, etc.), (2) wire to real report data, (3) store chronological age from member profile. |
-| **Biomarker trend visualization** | Shows progress over time across multiple tests. "Your ApoB dropped 22% since starting treatment." This is what closes the loop between treatment and outcomes -- the entire thesis of this integration. InsideTracker, Superpower, and TrackBiomarkers all show longitudinal trend lines. | Medium | `BiomarkerTrends.tsx` already built with sparklines, trend indicators (improving/stable/declining), percent change, category grouping, summary stats (optimal count, improving count, declining count), and both compact and expanded card modes. Needs: storing multiple reports over time (historical data table), computing deltas between reports, and graceful single-test state (no trend line yet, just current values with "First measurement" label). Only meaningful after 2+ tests. |
-| **SiPhox suggestions display** | SiPhox API returns a `Suggestion` schema: `{ _id, text, link, category, settings: [{biomarker, value}] }`. Free insights without building recommendation logic. Surface these as actionable cards tied to specific biomarker results. | Low | Parse suggestions from report response. Render as cards grouped by category with link-out for more detail. Connect to CULTR's own science library (`/science/[slug]`) where article topics match suggestion categories. Low engineering effort, high perceived value. |
-| **Category health scores** | Aggregate score per body system (e.g., "Heart Health: 85/100") instead of making members interpret 10+ individual markers per category. InsideTracker uses 10 healthspan category scores as their primary navigation. Simplifies complexity. | Medium | Weighted average of individual biomarker scores within each category. Existing `lib/resilience.ts` already has a scoring algorithm with weighted `BIOMARKER_DEFINITIONS` and `calculateResilienceScore()`. Extend to work with SiPhox category groupings and the full 150+ marker set. Display as circular progress or gauge per category in a grid. |
-| **Biomarker detail drill-down** | Tap any biomarker to see: full name, description, what it measures, optimal vs your value, reference range context, trend chart (if multiple tests), and related suggestions. The difference between a "dashboard" and a "data dump." Every serious competitor has this. | Medium | Per-biomarker detail view (modal or page). Content: description from SiPhox `GET /biomarkers` response, reference range visualization, current value with status, trend sparkline from historical data, related suggestions. Existing `BiomarkerCard` component in `BiomarkerTrends.tsx` has most of the compact view; needs an expanded detail view. |
-| **Dashboard summary widgets** | At-a-glance stats: "X biomarkers optimal, Y need attention, Z improving since last test." Quick triage before diving into details. Prevents information overload on the main labs page. | Low | `BiomarkerTrends.tsx` already has a summary stats grid (Average Score, Optimal, Improving, Needs Attention). Wire to real data. Add: date of last test, days since sample, next recommended test date. |
-| **PDF report download** | Members want to share results with their primary care doctor or keep records. Standard in InsideTracker, Function Health, SiPhox's own app. Useful for HSA/FSA reimbursement documentation. | Medium | `@react-pdf/renderer` already in the stack (used for invoices and LMN documents). Create a lab report template showing: member info, test date, all biomarkers organized by category with values/ranges/status, summary scores, and CULTR branding. Follow existing invoice template patterns in `lib/invoice/`. |
-| **Treatment correlation view** | "Your hsCRP dropped 40% since starting BPC-157 three months ago." Connect biomarker changes to the member's active CULTR protocols and medications. **This is the unique differentiator no standalone testing company can offer.** SiPhox, InsideTracker, and Superpower have no treatment data -- CULTR does via Asher Med. | High | Requires joining: (1) biomarker trend data from SiPhox reports, (2) order/prescription history from `asher_orders` table and Asher Med API, (3) medication start dates and durations from `MEDICATION_OPTIONS`. Timeline overlay showing "Started Semaglutide" / "Added BPC-157" markers on biomarker trend charts. Very high perceived value but complex data join. Phase 3 feature -- needs Phase 1-2 data foundation first. |
-| **Tier-gated lab access messaging** | Club members ($0) see "Upgrade to Core to add blood testing" with pricing and CTA. Creates upgrade pressure and explains the value proposition. Core members see "Add blood testing for $135" on their dashboard. | Low | Reuses existing `TierGate` component from `components/library/TierGate.tsx`. Check member tier from session/subscription data. Show appropriate messaging and CTA per tier. |
-
----
-
-## Anti-Features
-
-Features to explicitly NOT build. Each is either out of scope, a liability risk, or scope creep that delays the core integration.
-
-| Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-----------|-------------------|
-| **Medical interpretation of results** | CULTR is a telehealth platform, not a diagnostic service. Interpreting lab values as medical advice creates malpractice liability. InsideTracker carefully frames everything as "wellness optimization" and still faces regulatory scrutiny. State medical board regulations vary on what constitutes "practicing medicine." | Use SiPhox-provided reference ranges and suggestions (SiPhox carries the clinical liability for those). Frame all language as "optimization" not "diagnosis." Include disclaimer on every results page: "These results are for informational purposes and do not constitute medical advice. Discuss results with your healthcare provider." |
-| **Custom reference ranges** | Maintaining proprietary "optimal" ranges requires ongoing clinical validation, medical advisory board review, and documentation. Gets outdated, creates liability, and is explicitly out of scope per PROJECT.md. Competitors who do this (InsideTracker with "longevity-optimized" ranges) have full-time clinical teams. | Use SiPhox-provided reference ranges exclusively. Display them faithfully. If CULTR wants longevity-optimized ranges later, that's a separate clinical decision requiring medical advisory input and legal review. |
-| **Barcode/QR camera scanner for kit registration** | Web-based camera barcode scanning is unreliable: requires camera permissions (users decline), lighting and focus issues, browser compatibility gaps, and graceful fallback needed anyway. Native apps do this well; web apps do not. Failed scans = frustrated users who end up typing the ID manually anyway. | Manual text input for kit ID. The kit ID is printed on the box as a string (e.g., "KIT-ABC123"). Users type 8-12 characters. Validate via `GET /kits/:kitID/validate` with clear error messaging ("Kit not found -- check the ID printed on your box"). |
-| **Recurring/subscription blood tests** | Explicitly out of scope per PROJECT.md. Adds significant complexity: recurring SiPhox orders, credit inventory management, reorder timing logic, subscription billing for add-on tests, and cancellation flows. | One-time kit per checkout. If recurring testing is wanted, it's a separate milestone with its own ordering, billing, and inventory management. |
-| **Wearable data integration (Apple Health, Oura, Whoop, etc.)** | Scope creep. SiPhox's own app already integrates with these wearables. Rebuilding web-based wearable sync requires OAuth integrations per vendor, continuous data ingestion pipelines, and storage for streaming data. Months of work for marginal value in a web portal. | Link to SiPhox's app for wearable data integration. Focus CULTR's portal on the unique value: connecting biomarkers to treatment protocols, which no wearable integration provides. |
-| **AI chatbot for biomarker Q&A** | Superpower does this ("ask why your Magnesium is low"). Building an AI chat interface that interprets health data is a massive liability risk (medical advice without a license) and a large engineering effort (RAG pipeline, guardrails, citation verification, prompt injection prevention). The existing AI SDK is for protocol generation by providers, not patient-facing health interpretation. | Surface SiPhox's pre-built suggestions (they handle liability). Link to CULTR's science library articles for educational content. If AI Q&A is wanted later, scope it as a separate project with legal review. |
-| **Third-party lab result uploads (PDF parsing)** | SiPhox and some competitors let users upload PDF lab results from Quest, Labcorp, etc. Building PDF parsing, OCR, and data normalization for hundreds of lab report formats is a multi-month project with low accuracy and high maintenance. SiPhox's own BiomarkerAI product does this -- no need to rebuild it. | Only display SiPhox results in CULTR's portal. Members with outside labs can use SiPhox's BiomarkerAI tool directly (it's free). |
-| **Club tier blood test access** | Club is $0/mo free tier. Blood test kits have real per-unit cost (SiPhox credits, estimated $30-60 wholesale). Giving away tests to free users burns margin with no subscription revenue to offset. PROJECT.md explicitly excludes Club from eligibility. | Blood testing available to Core ($135 add-on), Catalyst+ (included), and Concierge (included) only. Club members see a locked/upgrade messaging card on the labs section. |
-| **Real-time sample tracking (GPS/logistics)** | No courier or lab provides real-time GPS tracking of mailed-in blood samples. The sample goes USPS/FedEx in a prepaid envelope. There's no tracking API for "your blood vial is in sorting facility X." | Status-based tracking only: Kit Shipped -> Kit Registered -> Sample Mailed -> Processing -> Results Ready. Show estimated timelines at each step. If SiPhox provides sample-received confirmation via API, surface that as a status update. |
+| Stripe-provided behavior | Authorize.Net equivalent | CULTR must build |
+|---|---|---|
+| Hosted billing portal (`billing.stripe.com`) | None | Yes — full `/portal/billing` |
+| Hosted Checkout + Payment Element | Accept.js (form widget only, no flow) | Yes — checkout flow + state |
+| Coupon system (FOREVER/REPEATING/ONCE) | None — must store in our DB | Yes — coupon engine |
+| Smart Retries (ML-driven dunning) | "Automatic Retry" (binary on/off, internal logic opaque) | Partial — we control retry cadence ourselves |
+| Receipt emails | Optional, plain-text, no PDF, can't be styled | Yes — branded receipts via Resend |
+| Pause subscription | None (suspend ≠ pause; suspend is failure-only) | Yes — emulate via cancel-and-recreate |
+| Mid-cycle upgrade with proration | `ARBUpdateSubscriptionRequest` updates amount but **does not prorate, does not charge difference** | Yes — proration math + immediate charge via CIM |
+| Account Updater (free) | Account Updater **paid add-on**, V/MC only, batch-only (4th of month) | Confirm enabled; build fallback |
+| Webhook event suite | 8 ARB events only (no `invoice.payment_succeeded` analog with line items) | Yes — synthesize "invoice paid" from `subscription.updated` + transaction polling |
 
 ---
 
-## Feature Dependencies
+## 1. Self-Service Portal
+
+Stripe's `billing.stripe.com` is a *complete product*. Authorize.Net has zero hosted customer-facing UI. Everything below must be built into `/portal/billing`.
+
+### Stripe portal — full feature inventory (what members can do today)
+
+Verified against [Stripe customer portal docs](https://docs.stripe.com/customer-management/configure-portal):
+
+1. View active subscriptions and current price/interval
+2. Update payment method (card swap, mobile-optimized form)
+3. Update billing address
+4. Update email address
+5. Update tax ID
+6. View full invoice history
+7. Download invoice PDFs (Stripe-rendered, branded with merchant logo)
+8. Download receipt PDFs
+9. Cancel subscription (immediate or end-of-period)
+10. Provide cancellation reason (configurable list, optional)
+11. Receive retention coupon offer at cancellation step (configurable per merchant)
+12. Upgrade/downgrade subscription with auto-proration preview ("you will be charged $X today")
+13. Switch between billing intervals (month ↔ year) where Price IDs allow it
+14. View paused state (read-only — pause itself is merchant-controlled)
+15. Localized in 30+ languages with currency formatting
+16. Deep-link entry points (`flow_data.type: 'subscription_update' | 'subscription_cancel' | 'payment_method_update'`)
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 1.1 | View active subscription (tier, price, next billing date, payment method last 4) | **S** | DB schema rename `stripe_*` → `provider_*` |
+| 1.2 | Update card on file (Accept.js form → CIM `updatePaymentProfile`) | **M** | Accept.js client key; CIM customer profile must exist |
+| 1.3 | Cancel subscription (`ARBCancelSubscriptionRequest`) | **S** | ARB subscription ID stored on user |
+| 1.4 | View billing history (last 12 months of transactions from CULTR DB, NOT Authorize.Net's reporting API which has 30-day windowing limits) | **M** | Persist every successful charge as a CULTR `invoice` row at webhook time; we cannot rely on the gateway as system-of-record |
+| 1.5 | Download branded receipt for any past charge (PDF via @react-pdf/renderer — already in stack) | **M** | 1.4 + invoice template (model on existing `lib/invoice/`) |
+| 1.6 | Update billing email (CULTR account email is decoupled from gateway profile email) | **S** | Update CIM profile + CULTR users table |
+| 1.7 | Cancellation flow with reason capture (free-text + radio list) | **S** | New `cancellation_reasons` table, used for churn analytics |
+| 1.8 | "End of period" vs "Immediate" cancel toggle (default end-of-period to preserve paid-through service) | **S** | Soft-cancel state machine: ARB cancel + CULTR `access_until` timestamp |
+| 1.9 | Resume canceled subscription (within 30-day grace) | **M** | New ARB sub via CIM token; idempotency keys |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 1.10 | Retention coupon offer at cancel step (e.g. "Stay for 50% off next month — apply CULTRSTAY") | **M** | Coupon engine §2 + cancellation flow 1.7 |
+| 1.11 | Plan comparison + upgrade preview ("Upgrading to Catalyst+ today: $300 prorated charge now, $499 on May 27") | **L** | Proration math §3.4 |
+| 1.12 | Pause subscription (emulated; see §3) | **L** | Cancel-and-recreate pattern §3.2 |
+| 1.13 | Switch billing day (month-anchor to date-X — not natively supported by ARB; requires sub recreation) | **L** | Same engine as 1.12 |
+| 1.14 | Saved payment methods list (multiple cards via CIM payment profile array) — Stripe portal only shows "default" by default | **M** | Multiple CIM payment profile IDs per CIM customer |
+| 1.15 | Tax ID / receipt customization for HSA/FSA reimbursement | **M** | Receipt template fields |
+| 1.16 | Branded subdomain (`billing.cultrhealth.com` for trust signal) | **S** | Vercel domain + middleware route |
+
+### Anti-features — Stripe had it, we don't need it
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 1.A | Localization in 30+ languages | US-only (Florida-led jurisdiction); English-only is fine |
+| 1.B | Tax ID / VAT entry | Not B2B, not international — no use case |
+| 1.C | Multi-currency | USD-only per Out-of-Scope in PROJECT.md line 81 |
+| 1.D | Switching between billing intervals (month ↔ year) | CULTR has zero annual plans today; can defer |
+| 1.E | Customer-facing chargeback / dispute interface | Disputes go through provider operations, not member self-service |
+| 1.F | Test-mode toggle in portal | Internal-only concern; not member-facing |
+
+---
+
+## 2. Coupons / Discounts
+
+**The hard truth:** Authorize.Net ARB has *no native coupon concept*. There is no `ARBApplyDiscountRequest`. The "% off forever" semantic must be encoded in our DB and applied to the `amount` field of every ARB charge cycle — which means **the price stored on the ARB subscription itself is the post-discount amount**, and we must re-write that amount any time the discount semantics change.
+
+Verified: [Stripe coupon duration patterns](https://docs.stripe.com/api/coupons) supports `forever | repeating | once`. No equivalent in Authorize.Net.
+
+### Coupon types CULTR uses today (per `lib/config/plans.ts` + `lib/config/coupons.ts`)
+
+| Coupon | Type | Effect | Cited as |
+|---|---|---|---|
+| `FOUNDER15` | forever | 15% off every billing cycle, indefinitely | `STRIPE_CONFIG.coupons.FOUNDER15` |
+| `FIRSTMONTH` | once | 50% off first invoice only | `STRIPE_CONFIG.coupons.FIRSTMONTH` |
+| Creator codes (e.g. `JON21`, `STEWART1`) | once on first sub charge + commission attribution | 10% customer discount + 20% creator commission | `validateCouponUnified()` in `coupons.ts` |
+| `CULTR30`, `RETA`, `OWNERLR3`, etc. | once (product-level for club orders) | 10–70% off matching items | `CLUB_COUPONS` map |
+
+### Recommended pattern — "discount-bake" on the ARB subscription
+
+For each subscription:
+1. Resolve the coupon at checkout → compute `effectiveAmount = baseAmount * (1 - discountPercent/100)`
+2. Create the ARB subscription with `amount = effectiveAmount` (the "baked" amount)
+3. Store `coupon_code`, `original_amount`, `discount_percent`, `discount_duration` on the CULTR `subscriptions` row — **the gateway is dumb about discounts; CULTR is the source of truth**
+4. For `once` coupons: charge the first month via CIM `createTransactionRequest` at `effectiveAmount`, then create the ARB at full `baseAmount` with the schedule starting next month
+5. For `forever` coupons: ARB amount stays at `effectiveAmount` indefinitely
+6. For `repeating` coupons (e.g. "20% off for 3 months"): ARB initial amount = discounted; cron job updates the ARB to full price after N months via `ARBUpdateSubscriptionRequest`
+
+**Why this pattern:** ARB cannot apply a multiplier per cycle. The amount is baked in. So our coupon engine becomes a **schedule of amount updates** rather than a runtime calculation.
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 2.1 | Coupon entity + CRUD (`coupons` table: code, type, value, duration, max_redemptions, expires_at) | **M** | Migration + admin UI (existing `CLUB_COUPONS` is hardcoded — DB-ize it) |
+| 2.2 | Coupon validation API (`/api/checkout/validate-coupon`) — already exists in skeleton form for club | **S** | Reuse `validateCouponUnified()` shape |
+| 2.3 | Apply coupon at checkout: bake `effectiveAmount` into ARB sub | **M** | Checkout API + ARB create |
+| 2.4 | `FOUNDER15` (forever) — bake-once pattern, no scheduled update | **S** | 2.3 |
+| 2.5 | `FIRSTMONTH` (once) — split into `createTransaction` (month 1 discounted) + ARB starting month 2 at full price | **M** | Two API calls per checkout; idempotency critical |
+| 2.6 | Creator-code attribution (existing `order_attributions` table) — preserve attribution flow on ARB charges by emitting our own "subscription cycle" event from webhook | **M** | Webhook handler §5; attribution table already exists |
+| 2.7 | Migration job: re-apply Stripe coupons to ARB subs at cutover (for active `FOUNDER15` users) | **L** | Admin tool; one-shot script for ~50% migration window |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 2.8 | Repeating coupons ("3 months of 20% off") via cron-scheduled ARB amount updates | **M** | 2.3 + cron job |
+| 2.9 | Stackable coupons (e.g. tier discount + creator code) | **L** | Application order matters; rule engine |
+| 2.10 | Promo code analytics dashboard (redemptions, conversion lift, revenue impact) | **M** | Existing admin dashboard pattern |
+| 2.11 | Coupon-bound to specific tier (`FOUNDER15` only valid for Catalyst+) | **S** | Coupon entity field |
+| 2.12 | Coupon expiration notifications (email at -7 days for repeating coupons) | **S** | Resend integration |
+
+### Anti-features — Skip
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 2.A | Coupon import/export CSV | Coupon count is small enough to manage in admin UI |
+| 2.B | Per-customer coupon application (Stripe `customer.discount`) | We apply at checkout only; no need for customer-attached coupons |
+| 2.C | Currency-specific coupon amounts | USD-only (see 1.C) |
+
+---
+
+## 3. Subscription Lifecycle (pause / cancel / resume / upgrade)
+
+This is the biggest behavioral gap. Stripe gives you state-machine primitives; Authorize.Net gives you "create / cancel / update amount / handle suspended-on-decline" and that's it.
+
+### What Authorize.Net actually supports (verified)
+
+| Operation | API | Notes |
+|---|---|---|
+| Create | `ARBCreateSubscriptionRequest` | Cannot charge first payment immediately on the same call — see §3.5 |
+| Cancel | `ARBCancelSubscriptionRequest` | Permanent. No "cancel at period end" — cancellation stops future charges immediately, but **does not refund the current period** |
+| Update amount | `ARBUpdateSubscriptionRequest` | Updates amount/payment info. **Does not prorate. Does not charge difference. Takes effect on next scheduled cycle** |
+| Update interval | Not allowed | Cannot change month → year on existing sub |
+| Update start date | Only if no successful payments yet | Useless for active subscribers |
+| Pause | **Not supported** | "Suspended" status exists but is a system-set failure state — you cannot suspend manually via API |
+| Resume from suspended | Update payment info with `ARBUpdateSubscriptionRequest` | Only works if suspension was payment-failure-driven |
+
+Source: [Authorize.Net API ARBUpdateSubscriptionRequest community thread](https://community.developer.cybersource.com/t5/Integration-and-Testing/Updating-ARB-Subscription-status-to-quot-Suspended-quot/td-p/61472) and [official ARB docs](https://developer.authorize.net/api/reference/features/recurring-billing.html).
+
+### 3.1 Cancel — UX impact
+
+**Stripe behavior:** member cancels → Stripe marks `cancel_at_period_end = true` → service runs through paid-through date → no refund needed.
+
+**Authorize.Net behavior:** `ARBCancelSubscriptionRequest` stops future charges but does NOT refund the in-flight cycle. Member has *already paid* through the next renewal date.
+
+**CULTR pattern (v2.0):** Default to **soft-cancel**:
+1. Member clicks "Cancel" → CULTR marks `subscriptions.access_until = current_period_end`
+2. CULTR fires `ARBCancelSubscriptionRequest` immediately (so no surprise charge next month)
+3. Member retains library/portal access until `access_until`
+4. At `access_until`, cron job runs and downgrades user to Club tier
+5. Optional: "Reactivate" button before `access_until` runs `ARBCreateSubscriptionRequest` (no charge — it's already paid through)
+
+### 3.2 Pause — emulated only
+
+The plan in PROJECT.md says "cancel + retain card-on-file, recreate on resume." Verified this is the only path — there is no first-class pause.
+
+**UX impact on member:**
+- **Gap in service:** Member loses tier access at next billing date (since the cancel was processed; no future charges = no future service unless we explicitly grant grace)
+- **Billing date shift:** When member resumes, the new ARB sub starts whenever they hit "Resume." So if they paused on the 15th and resumed on the 22nd, their new billing anchor is the 22nd. Stripe's pause preserves the original anchor; ours cannot.
+- **Risk:** Card-on-file might expire during pause window. CIM handles this via Account Updater, but if member opts into "no auto-resume," their card may be invalid by then.
+
+**Recommended pattern:**
+1. Cancel current ARB sub, **but retain the CIM customer + payment profile** (this is the critical insight — CIM is decoupled from ARB)
+2. Set `subscriptions.status = 'paused'`, `paused_until = N days from now` (default 30, max 90)
+3. Optional auto-resume: cron job fires `ARBCreateSubscriptionRequest` with the stored CIM profile on `paused_until`
+4. Manual resume: portal button creates new ARB sub immediately
+
+### 3.3 Resume — clean if CIM profile retained
+
+If the CIM customer/payment profile is intact (which it should be — CIM is independent of ARB), resume = `ARBCreateSubscriptionRequest` with `paymentProfileId` reference. No card re-entry needed.
+
+If the CIM profile was deleted (don't do this on cancel; mark inactive), member must re-enter card via Accept.js.
+
+### 3.4 Mid-cycle plan upgrade (Core $149 → Catalyst+ $499)
+
+**The critical answer:** `ARBUpdateSubscriptionRequest` *does* allow amount changes, BUT:
+- It takes effect on the **next scheduled cycle**, not immediately
+- It does **not prorate**
+- It does **not charge the difference**
+
+[Verified via Authorize.Net community](https://community.developer.cybersource.com/t5/Integration-and-Testing/Can-we-change-ARB-Subscription-Amount/td-p/17480): "Authorize.net does not offer proration automation for customers switching plans in the middle of a billing cycle, which means businesses would need to engage in manual calculations every time a subscriber changes their amount mid-cycle."
+
+**What members expect from Stripe today:**
+- Click "Upgrade to Catalyst+" → see modal: "You'll be charged $X today (prorated for remaining 18 days), then $499/mo starting June 27"
+- Click confirm → instant charge → instant tier upgrade in member dashboard
+- Single line item in invoice history: "Pro-rated upgrade Core → Catalyst+"
+
+**CULTR pattern (recommended):** **Cancel-and-recreate with proration math:**
 
 ```
-Customer Sync (CULTR member -> SiPhox) ────────────────┐
-                                                        |
-                                                        v
-Kit Auto-Order (Catalyst+/Concierge) ──────> Order Status Tracking ──> Results Notification
-                                                        ^
-Kit Add-On (Core checkout) ─────────────────────────────┘
-                                                        |
-                                                        v
-                                               Kit Registration UI
-                                               (validate + register)
-                                                        |
-                                                        v
-                                              Smart Empty States
-                                              (per-stage messaging)
-                                                        |
-                                                        v
-                                    ┌───────── Biomarker Results Display ──────────┐
-                                    |            (categorized, color-coded)         |
-                                    v                      |                       v
-                           Reference Range           N/A Display            HIPAA Compliance
-                           Visualization           (untested markers)       (cross-cutting)
-                                    |
-                    ┌───────────────┼───────────────────────────────────┐
-                    v               v                                   v
-          Category Health    SiPhox Suggestions              Biomarker Detail
-          Scores             Display                         Drill-Down
-                    |                                               |
-                    v                                               v
-          Biological Age Card                              PDF Report Download
-          (computed from scores)
-                    |
-                    v
-          Biomarker Trend Visualization ────────> Treatment Correlation View
-          (requires 2+ reports)                   (Phase 3, requires order history)
-                    |
-                    v
-          Dashboard Summary Widgets
-          (aggregates all the above)
+Member on Core ($149/mo), 18 days remaining in current cycle. Upgrades to Catalyst+ ($499/mo).
+
+1. Compute proration:
+   - daily_core_credit = 149 / 30 = 4.97
+   - remaining_credit  = 4.97 * 18 = 89.40
+   - daily_cat_charge  = 499 / 30 = 16.63
+   - remaining_charge  = 16.63 * 18 = 299.40
+   - prorated_charge   = remaining_charge - remaining_credit = 210.00
+
+2. Charge $210 immediately via CIM `createTransactionRequest` (one-shot, NOT a subscription)
+3. Cancel current Core ARB sub (`ARBCancelSubscriptionRequest`)
+4. Create new Catalyst+ ARB sub starting on the original billing anchor (so renewal cadence is preserved)
+5. Update `subscriptions.tier` immediately on success
+6. Webhook from step 2 emits `provider.transaction.captured` → CULTR generates receipt + sends to member
 ```
 
-**Critical path:** Customer Sync -> Kit Ordering -> Kit Registration -> Results Display
+**Downgrade pattern (v2.1):** Hold off until end-of-period to avoid refund mess. At period end, swap subscriptions.
 
-Everything downstream of "Biomarker Results Display" can be built incrementally. The ordering/registration pipeline and results display must ship together or the integration has no value.
+### Table stakes — Must build for v2.0
 
-**Tier-gated access** is orthogonal -- it gates entry to the entire flow, not a specific feature within it.
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 3.1 | Cancel (soft, end-of-period default) | **M** | `subscriptions.access_until`; cron downgrade job |
+| 3.2 | Cancel (immediate, with no refund) | **S** | Admin path only; member-facing path is 3.1 |
+| 3.3 | Update card on file (CIM `updatePaymentProfile` via Accept.js) | **M** | §1.2 |
+| 3.4 | Mid-cycle upgrade with proration (immediate charge + cancel-recreate) | **L** | §3.4 pattern; idempotency keys per upgrade attempt |
+| 3.5 | Initial subscription charge (ARB cannot charge day 1; must split: CIM `createTransaction` + ARB starting next cycle) | **M** | This is a **must** — ARB schedules first charge per the schedule, not on creation |
+| 3.6 | Reactivate canceled sub (before `access_until`) — no charge | **S** | New ARB sub via stored CIM profile |
+| 3.7 | Provider-agnostic schema rename (`stripe_*` → `provider_*`, drop `stripe_events`) | **M** | DB migration; per PROJECT.md active req line 68 |
 
----
+### Differentiators — v2.1+ candidates
 
-## MVP Recommendation
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 3.8 | Pause (emulated cancel-and-recreate) | **L** | 3.1 + auto-resume cron + UX warnings |
+| 3.9 | Downgrade with end-of-period swap | **L** | Scheduled job to swap subs at period end |
+| 3.10 | Switch billing anchor date | **L** | Cancel-and-recreate same plan, new schedule |
+| 3.11 | Annual plan support | **M** | New ARB schedule type; new pricing |
+| 3.12 | Bulk migration tool (Stripe → Authorize.Net cutover) | **L** | Required for migration in PROJECT.md req line 67 |
 
-### Phase 1: Core Pipeline (must ship as a unit)
+### Anti-features — Skip
 
-These features form the complete loop from "subscribe" to "see results." Shipping any subset is incomplete.
-
-1. **SiPhox API client** (`lib/siphox-api.ts`) -- typed client for all endpoints
-2. **Customer sync** -- create/lookup SiPhox customer from CULTR member
-3. **Kit auto-ordering** -- Stripe webhook triggers SiPhox order for Catalyst+/Concierge
-4. **Kit add-on** -- $135 Stripe line item for Core tier checkout
-5. **Kit registration UI** -- validate + register kit ID
-6. **Order/kit status tracking** -- visual timeline with 7 states
-7. **Smart empty states** -- per-stage messaging and CTAs
-8. **Biomarker results display** -- categorized, color-coded, 150+ markers
-9. **Reference range visualization** -- range bar per marker with position indicator
-10. **N/A display** -- grayed-out cards for untested markers
-11. **Results notification** -- email when report is complete
-
-### Phase 2: Insights Layer (ship after Phase 1 is stable)
-
-12. **Biological age card** -- wire `BiologicalAgeCard.tsx` to computed score from report data
-13. **Category health scores** -- weighted aggregate per body system
-14. **SiPhox suggestions display** -- render API suggestions as actionable cards
-15. **Biomarker detail drill-down** -- expanded view with description, range, trend
-16. **Dashboard summary widgets** -- at-a-glance optimal/attention/improving counts
-17. **Tier-gated lab access messaging** -- upgrade CTAs for Club/Core members
-18. **PDF report download** -- branded lab report via `@react-pdf/renderer`
-
-### Phase 3: Longitudinal Intelligence (future milestone)
-
-19. **Biomarker trend visualization** -- sparklines and deltas across multiple reports
-20. **Treatment correlation view** -- overlay protocol start dates on biomarker trends
-
-### Defer indefinitely:
-- Wearable integration (SiPhox's own app handles this)
-- AI chatbot for Q&A (liability, engineering cost)
-- Third-party lab uploads (SiPhox BiomarkerAI exists)
-- Custom reference ranges (clinical validation burden)
-- Recurring test subscriptions (separate billing complexity)
-- Camera-based barcode scanner (unreliable on web)
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 3.A | Trial periods on subscriptions | CULTR has no trial today; not in active reqs |
+| 3.B | Subscription "schedules" (future-dated changes) | Over-engineering for v2.0; admin can manually handle edge cases |
+| 3.C | Multi-product subscriptions (one sub with multiple line items) | All CULTR plans are single-tier; addons are one-time charges |
 
 ---
 
-## Complexity Budget
+## 4. Refunds & Voids
 
-| Phase | Feature Count | Estimated Effort | Primary Work |
-|-------|---------------|-----------------|--------------|
-| Phase 1 | 11 features | High (2-3 weeks) | SiPhox API client, Stripe webhook integration, new DB tables/columns, kit registration UI, results display with 150+ markers, status tracking state machine |
-| Phase 2 | 7 features | Medium (1-2 weeks) | Mostly UI/visualization using existing component shells (`BiologicalAgeCard`, `BiomarkerTrends`). Scoring algorithm extension. PDF template. |
-| Phase 3 | 2 features | High (1-2 weeks) | Historical data storage, cross-system data joins (SiPhox reports x Asher Med orders), timeline overlay visualization |
+Authorize.Net's distinction matters and bleeds into UX. Verified via [Authorize.Net knowledge base](https://support.authorize.net/knowledgebase/article/000001368/en-us):
+
+| Action | When valid | Latency | Customer-facing UX |
+|---|---|---|---|
+| **Void** | Same day, before nightly settlement (typically before 4 PM PT) | Instant — no money moved | "Refunded immediately" |
+| **Refund** | After settlement (T+1 or later) | 3–5 business days for funds to return to card | "Refund issued, may take 3–5 business days" |
+
+Stripe abstracts this — `refunds.create()` works on any captured charge regardless of settlement state. Stripe internally voids if pre-settlement, refunds if post.
+
+### CULTR pattern
+
+A unified `/api/refunds/create` endpoint that:
+1. Looks up the original transaction
+2. Checks settlement status via `getTransactionDetailsRequest`
+3. If unsettled → `voidTransactionRequest` (returns "instant" status to UI)
+4. If settled → `createTransactionRequest` with `transactionType: refundTransaction` (returns "3–5 business days" status)
+5. Records both as a single `refunds` row with method = void | credit
+6. Fires receipt-style email to customer with the language matched to the actual mechanism
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 4.1 | Refund/void unified API endpoint | **M** | Authorize.Net SDK / corepay-gateway |
+| 4.2 | Admin "Refund" button on order/transaction detail (existing admin pattern) | **S** | 4.1 |
+| 4.3 | Refund email to customer (branded; clear language about timing) | **S** | Resend integration |
+| 4.4 | Refund commission reversal (existing `reverseCommissionsForAttribution`) — must trigger on refund webhook | **S** | Helper exists per CLAUDE.md "Commission Ledger Lifecycle" |
+| 4.5 | Partial refund support | **S** | 4.1 with amount param |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 4.6 | Member-self-service refund request (in portal, captures reason, admin approves) | **M** | New `refund_requests` table; admin queue |
+| 4.7 | Auto-refund within 7-day "money-back guarantee" window if member cancels | **M** | 4.1 + cancellation flow integration |
+| 4.8 | Settlement status indicator in admin UI ("Settled at 4:32 PM") | **S** | Pull from getTransactionDetails |
+
+### Anti-features — Skip
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 4.A | Dispute (chargeback) UI | Disputes flow through merchant operations, not member portal |
+| 4.B | Reason codes (Stripe's standardized refund reason taxonomy) | Free-text reason is sufficient for our scale |
 
 ---
 
-## Competitor Feature Matrix
+## 5. Receipts & Notifications
 
-| Feature | SiPhox (own app) | InsideTracker | Superpower | Function Health | CULTR (planned) |
-|---------|-----------------|---------------|------------|-----------------|-----------------|
-| Biomarker count | 60+ | 48 | 100+ | 100+ | **150+** (via SiPhox extended panel) |
-| Category grouping | Yes | Yes (10 cats) | Yes | Yes | Yes |
-| Color-coded status | Yes | Yes (R/Y/G) | Yes | Yes | Yes |
-| Reference ranges | Standard | Longevity-optimized | Standard | Standard | Standard (SiPhox) |
-| Biological age | No | Yes (InnerAge) | Yes (Bio Age) | No | **Yes** (Phase 2) |
-| Trend tracking | Yes | Yes | Yes | Yes | **Yes** (Phase 3) |
-| AI suggestions | BiomarkerAI | Action Plan | Chat with data | Clinician notes | **SiPhox suggestions** (Phase 2) |
-| Wearable sync | Yes (6+ devices) | Yes (5 devices) | No | No | No (anti-feature) |
-| PDF upload | Yes (BiomarkerAI) | No | Yes | No | No (anti-feature) |
-| PDF download | Yes | Yes | Unknown | Yes | **Yes** (Phase 2) |
-| Treatment correlation | **No** | **No** | **No** | **No** | **Yes** (Phase 3) |
-| Integrated telehealth | **No** | **No** | **No** | **No** | **Yes** (core platform) |
-| Kit ordering in-app | Yes | Separate | Yes | Yes | **Yes** (auto on checkout) |
-| Provider access to results | No | No | No | No | **Future potential** |
+[Verified via Authorize.Net email receipt docs](https://support.authorize.net/knowledgebase/article/000001326/en-us): Authorize.Net does send a customer email receipt **if** "Email transaction receipt to customer" is enabled in merchant interface AND the customer's email is submitted with the transaction. **However:**
+- The receipt is plain-text style with a configurable header/footer
+- Cannot be branded beyond the header/footer text
+- No PDF attachment
+- No itemization beyond a single line
+- Customer's email must be passed on every transaction
 
-**CULTR's moat:** No standalone testing company connects biomarker results to active treatment protocols. SiPhox, InsideTracker, and Superpower have zero treatment data. CULTR has the member's medication history, dosing, and protocol timeline via Asher Med. The treatment correlation view (Phase 3) is where CULTR becomes the only place a member can answer "is my treatment working?" with real data. But this only matters if Phase 1-2 work flawlessly.
+This is a downgrade from Stripe's auto-emitted, fully branded, itemized HTML receipts with PDF attachments.
+
+### Receipt-on-charge pattern
+
+Disable Authorize.Net's built-in email and emit our own from the webhook handler:
+
+```
+Webhook: net.authorize.payment.authcapture.created
+       ↓
+       lookupTransactionDetails() — get amount, last 4, AVS, etc.
+       ↓
+       lookupSubscription() — match to CULTR sub via ARB ID
+       ↓
+       generateReceiptPDF() — @react-pdf/renderer (already in stack for invoices)
+       ↓
+       Resend.send({ template: 'receipt', attachments: [pdf] })
+```
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 5.1 | Branded receipt email on every successful charge | **M** | Webhook handler + Resend + receipt template |
+| 5.2 | PDF receipt attachment (reuse existing `lib/invoice/`) | **M** | 5.1 |
+| 5.3 | Disable Authorize.Net merchant-interface email receipts | **S** | Settings change in merchant portal |
+| 5.4 | Failed payment email ("We couldn't process your payment, please update your card") | **S** | Webhook `subscription.failed` |
+| 5.5 | Successful renewal email (Stripe sent these by default; pleasant continuity) | **S** | Webhook `subscription.created` cycle event |
+| 5.6 | Subscription canceled confirmation email | **S** | Cancel flow §3.1 |
+| 5.7 | Card-on-file expiring soon (-30d, -7d) | **S** | Cron job querying CIM payment profiles |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 5.8 | SMS notification for failed payment (high-value patient continuity case) | **M** | Twilio (in PROJECT.md long-term reqs) |
+| 5.9 | Receipt customization (member can set "show on bank statement as MEDICAL/Rx" — for HSA reimbursement) | **S** | Receipt template fields |
+| 5.10 | Annual usage summary email | **S** | Aggregate from invoice history |
+| 5.11 | Renewal reminder email (-7 days before next charge) | **S** | Cron job |
+
+### Anti-features — Skip
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 5.A | Auto-translate receipts | English-only |
+| 5.B | Customer Stripe-hosted receipt URL | Our PDF + email is sufficient and on-brand |
+
+---
+
+## 6. Failed Payment Recovery
+
+[Verified via Authorize.Net Automatic Retry docs](https://support.authorize.net/knowledgebase/article/000002356/en-us):
+
+| Capability | Authorize.Net Automatic Retry | Stripe Smart Retries |
+|---|---|---|
+| Retry decision | Binary on/off — once enabled, **cannot be disabled** | ML model with 500+ attributes |
+| Retry timing | Opaque internal logic; subscription suspended on decline, retried on payment-info update | 1 wk, 2 wk, 3 wk, 1 mo, or 2 mo configurable; default 8 tries in 2 wks |
+| Recovery rate | Unknown / not published | ~38% standalone, 57% with combined recovery tools |
+| Customer interaction | None — purely server-side | Email reminders + customer portal payment update |
+
+**The critical limitation:** Authorize.Net Automatic Retry suspends the subscription on the first decline and **stops trying** until the merchant updates the payment information. There is no automatic retry **cadence**. It's "retry once after card update."
+
+### CULTR pattern — build the retry loop ourselves
+
+Webhook receives `net.authorize.customer.subscription.suspended`:
+
+1. Mark `subscriptions.status = 'past_due'`
+2. Email member: "Your CULTR Catalyst+ subscription is on hold — update your card to keep going"
+3. Cron job at +24h: re-attempt charge via `createTransaction` with stored CIM profile (yes, the same one — temporary issuer issues happen)
+4. Cron at +72h: second attempt + escalating email
+5. Cron at +7d: third attempt + final warning + tier downgrade preview
+6. Cron at +14d: cancel ARB, downgrade to Club tier, send "subscription ended" email
+
+This is the **dunning ladder** Stripe Smart Retries gives you for free.
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 6.1 | Webhook handler for `subscription.suspended` and `subscription.failed` (already in active reqs line 65) | **M** | HMAC-SHA512 verification per PROJECT.md |
+| 6.2 | Past-due state on subscription entity | **S** | DB schema |
+| 6.3 | Dunning email cadence (+0, +24h, +72h, +7d, +14d) | **M** | Resend + cron |
+| 6.4 | Retry job (cron) — re-attempt failed charges with stored CIM profile | **M** | CIM profile must persist through suspension |
+| 6.5 | Account Updater enabled at merchant level (handles V/MC card expiration auto-update) | **S** | Merchant interface setting; verify cost |
+| 6.6 | Final cancellation + downgrade after retry exhaustion | **S** | 6.4 |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 6.7 | Smart retry timing (basic — avoid weekends, use issuer pattern data) | **L** | Custom logic; not ML |
+| 6.8 | "Update card from email" deep link (one-click to portal `/portal/billing/update-card?token=...`) | **S** | Signed token; existing magic-link pattern |
+| 6.9 | Retry attempt history visible to admin (debug failed charges) | **S** | Existing admin pattern |
+| 6.10 | Pre-decline "card expiring" alert at -30d, -7d | **S** | §5.7 dovetails here |
+| 6.11 | Voluntary card update reminder when AVS mismatches creep up | **M** | Pattern detection |
+
+### Anti-features — Skip
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 6.A | ML-driven retry timing | Out of scope; Stripe's recovers ~38% — our heuristic ladder will get most of that with a fraction of the build cost |
+| 6.B | Multi-currency retry behavior | USD only |
+
+---
+
+## 7. Reporting & Analytics (admin)
+
+Stripe Dashboard provided extensive reporting that admin uses today (informally — not all surfaced in CULTR's own admin). Authorize.Net has the [Merchant Interface](https://account.authorize.net/) reporting, but it's **30-day windowed** and **not API-friendly**.
+
+### Reality check
+
+CULTR already has a robust admin dashboard (per CLAUDE.md "Admin Dashboard Top 5 Features"). The migration is mostly **pivoting data sources** from Stripe API → CULTR DB (which is already system-of-record for orders/attributions). The Authorize.Net gateway is a *transaction processor*, not a reporting source.
+
+### Table stakes — Must build for v2.0
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 7.1 | Persist every successful charge to `transactions` table at webhook time (system-of-record shift) | **M** | Webhook handler + idempotency |
+| 7.2 | Admin: subscription list with provider-agnostic columns (no `stripe_subscription_id` references) | **S** | Schema rename §3.7 |
+| 7.3 | Admin: refund/void from transaction detail | **S** | §4.2 |
+| 7.4 | Admin: failed payment list (past-due subscriptions) | **S** | §6.2 state |
+| 7.5 | Admin: MRR calculation excluding active coupons (or including, configurable per coupon) | **M** | Coupon entity §2 |
+
+### Differentiators — v2.1+ candidates
+
+| # | Feature | Complexity | Dependencies |
+|---|---|---|---|
+| 7.6 | Cohort retention chart (Stripe didn't have this either; we'd build it ourselves regardless) | **M** | DB queries |
+| 7.7 | Revenue forecast based on active subscriptions | **M** | DB queries |
+| 7.8 | Settlement reconciliation (match daily settlement batch to CULTR's expected receivable) | **L** | Authorize.Net batch reporting |
+| 7.9 | Coupon ROI dashboard (revenue impact, conversion lift) | **M** | §2.10 |
+| 7.10 | Failed payment recovery rate metric (dunning effectiveness) | **S** | §6 outcomes |
+
+### Anti-features — Skip
+
+| # | What Stripe offered | Why skip |
+|---|---|---|
+| 7.A | Sigma SQL reporting | Overkill; CULTR has direct DB access |
+| 7.B | Stripe Atlas/Tax integration | Out of scope (no tax automation needed) |
+
+---
+
+## Cross-cutting concerns
+
+### CC-1: Schema migration `stripe_*` → `provider_*` (per PROJECT.md req line 68)
+- Renames: `stripe_customer_id` → `provider_customer_id`, `stripe_subscription_id` → `provider_subscription_id`, etc.
+- Add `provider` enum column (`stripe` | `authorize_net`) to support gradual migration
+- Drop `stripe_events` (replaced by HMAC webhook log if needed)
+- **Complexity: M.** Affects ~12 tables based on CLAUDE.md schema. Touches every payment code path.
+
+### CC-2: HMAC-SHA512 webhook signature verification
+- Authorize.Net signs webhook bodies with merchant signature key
+- Per CLAUDE.md note: `crypto.timingSafeEqual()` requires equal-length buffers — must validate hash length before compare
+- Edge runtime support: needs `nodejs_compat` or equivalent if it ever moves to Cloudflare Pages
+- **Complexity: M.** New endpoint + signature lib + per-event handler.
+
+### CC-3: Migration cutover for existing Stripe subscribers (per PROJECT.md req line 67)
+- ~50% churn risk accepted per project decision (line 121)
+- Re-onboarding flow: send email → magic link → Accept.js card capture → ARB sub creation
+- 30-day window per PROJECT.md
+- Stripe subs continue running in parallel until each member migrates or the window closes
+- **Complexity: L.** Includes admin dashboard for migration progress, daily metrics emails, fallback "extend window" path.
+
+### CC-4: Idempotency keys
+- Stripe handles idempotency natively (`Idempotency-Key` header)
+- Authorize.Net does **not** — multiple `ARBCreateSubscriptionRequest` calls with same data create multiple subscriptions
+- CULTR must layer idempotency via DB-side `idempotency_keys` table keyed on (operation, intent_id)
+- Critical for: checkout (don't double-charge), upgrades (don't double-prorate), refunds (don't double-credit)
+- **Complexity: M.** New table + middleware on every mutation endpoint.
+
+### CC-5: Sentry observability (per PROJECT.md req line 69)
+- Wrap every Authorize.Net SDK call with span/breadcrumb capture
+- Tag webhook events with their `eventType` for filterability
+- Alert on: HMAC signature mismatch, unknown event types, processing latency > 5s
+- **Complexity: M.** Already have Sentry-style patterns; add the wrapper.
+
+### CC-6: PCI scope minimization
+- Per PROJECT.md constraint line 128: server never touches PAN
+- Accept.js + opaque data tokens stays SAQ A-EP
+- CIM payment profiles stored at gateway, referenced by ID only in CULTR DB
+- **Complexity: S** if pattern is followed; **catastrophic** if violated. Must be reviewed in code audit hook.
 
 ---
 
 ## Sources
 
-### Primary (HIGH confidence)
-- PROJECT.md -- SiPhox API schema, endpoint coverage, tier pricing, biomarker categories, constraints, out-of-scope items
-- `components/dashboard/BiologicalAgeCard.tsx` -- Existing component with gauge, sparkline, status messaging, fully implemented UI
-- `components/dashboard/BiomarkerTrends.tsx` -- Existing component with sparklines, trend indicators, category grouping, summary stats
-- `lib/resilience.ts` -- Biomarker definitions with weights, optimal/acceptable ranges, scoring algorithm, 6 categories
+### Authorize.Net (authoritative — HIGH confidence)
+- [Authorize.Net ARB API Reference](https://developer.authorize.net/api/reference/features/recurring-billing.html)
+- [Accept.js API Reference](https://developer.authorize.net/api/reference/features/acceptjs.html)
+- [Webhook Notifications knowledge article](https://support.authorize.net/knowledgebase/Knowledgearticle/?code=KA-07621) — full event list
+- [ARB Automatic Retry knowledge article](https://support.authorize.net/knowledgebase/article/000002356/en-us)
+- [Account Updater datasheet](https://www.authorize.net/content/dam/documents/en/account-updater.pdf)
+- [Email Receipts settings](https://support.authorize.net/knowledgebase/article/000001326/en-us)
+- [Void vs Refund knowledge article](https://support.authorize.net/knowledgebase/article/000001368/en-us)
+- [ARB Subscription pause community thread](https://community.developer.cybersource.com/t5/Integration-and-Testing/Pause-and-Resume-an-ARB-Subscription/td-p/19038) — confirms no first-class pause
+- [ARB amount update community thread](https://community.developer.cybersource.com/t5/Integration-and-Testing/Can-we-change-ARB-Subscription-Amount/td-p/17480) — confirms no proration
+- [ARBUpdateSubscriptionRequest status limitation](https://community.developer.cybersource.com/t5/Integration-and-Testing/Updating-ARB-Subscription-status-to-quot-Suspended-quot/td-p/61472) — confirms no API status updates
+- [totalOccurrences=9999 perpetual subscription pattern](https://community.developer.cybersource.com/t5/Integration-and-Testing/ARB-Question-about-totalOccurrences/td-p/32221)
 
-### Market Research (MEDIUM confidence)
-- [SiPhox Health Partner FAQ](https://siphoxhealth.com/partner/faq) -- API capabilities, co-branded dashboard vs API, white label tiers
-- [SiPhox White Label for Telehealth](https://siphoxhealth.com/articles/how-can-telehealth-companies-add-white-label-blood-testing) -- Integration timeline, implementation process
-- [SiPhox BiomarkerAI - Y Combinator](https://www.ycombinator.com/launches/Ljp-siphox-health-biomarkerai-transform-your-pdf-blood-test-results-into-simple-actionable-insights) -- AI analysis features
-- [InsideTracker Personal Health Dashboard](https://info.insidetracker.com/personal-health-dashboard) -- 10 healthspan categories, InnerAge, Action Plan
-- [Function Health vs Superpower Comparison](https://www.productpep.com/blog/2025/10/7/is-function-health-a-superpower) -- Feature comparison, UX quality assessment
-- [Elo Health Blood Biomarker Tests 2026 Review](https://elo.health/blogs/articles/the-best-comprehensive-blood-biomarker-tests-2026-review) -- Market landscape overview
-- [Outliyr Best Blood Biomarker Testing 2026](https://outliyr.com/best-blood-biomarker-testing-services) -- 11+ services compared
-- [Ultrahuman Blood Vision](https://blog.ultrahuman.com/blog/introducing-blood-vision-with-ultratrace/) -- 100+ biomarkers, AI interpretation features
-- [TopFlight Biomarker Tracking App Development](https://topflightapps.com/ideas/biomarker-tracking-app-development/) -- Feature checklist for biomarker apps
+### Stripe (authoritative — HIGH confidence)
+- [Stripe customer portal docs](https://docs.stripe.com/customer-management)
+- [Configure portal](https://docs.stripe.com/customer-management/configure-portal)
+- [Portal deep links / flow_data](https://docs.stripe.com/customer-management/portal-deep-links)
+- [Smart Retries docs](https://docs.stripe.com/billing/revenue-recovery/smart-retries)
+- [Pause subscriptions](https://docs.stripe.com/billing/subscriptions/pause)
+- [Cancellation page with retention coupons](https://docs.stripe.com/customer-management/cancellation-page)
+- [Update subscription API](https://docs.stripe.com/api/subscriptions/update)
 
-### Academic/UX Research (MEDIUM-HIGH confidence)
-- [PMC: Patient-Facing Health Data Visualizations](https://pmc.ncbi.nlm.nih.gov/articles/PMC6785326/) -- Systematic review of visualization patterns
-- [PMC: Usable Data Visualization for Digital Biomarkers](https://pmc.ncbi.nlm.nih.gov/articles/PMC9719035/) -- Usability analysis
-- [UXmatters: Color Psychology in Health Apps](https://www.uxmatters.com/mt/archives/2024/07/leveraging-the-psychology-of-color-in-ux-design-for-health-and-wellness-apps.php) -- Color-coding best practices
-- [PMC: Biological Age from Blood Chemistry - BioAge toolkit](https://pmc.ncbi.nlm.nih.gov/articles/PMC8602613/) -- PhenoAge, Klemera-Doubal algorithms
-- [Nature: Biological Age Estimation from Blood Biomarkers](https://www.nature.com/articles/s42003-023-05456-z) -- ML approaches for bio-age calculation
+### Industry analysis (MEDIUM confidence — multi-source verified)
+- [Stripe Smart Retries recovery rate analysis](https://stripe.com/blog/how-we-built-it-smart-retries) — ~38% standalone
+- [SubscriptionFlow on ARB automation gaps](https://www.subscriptionflow.com/2023/03/how-to-automate-recurring-billing-in-authorize-net/)
+- [fjorge analysis on ARB pain points](https://fjorge.com/blog/a-few-things-to-overcome-with-authorize-net-arb)
+
+### CULTR project context
+- `/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr Health Website/.planning/PROJECT.md` (v2.0 milestone scope)
+- `/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr Health Website/lib/config/plans.ts` (tier pricing + Stripe IDs)
+- `/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr Health Website/lib/config/coupons.ts` (existing coupon shape)
+- `/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr Health Website/CLAUDE.md` (Commission Ledger Lifecycle, Cookie patterns, schema overview)
