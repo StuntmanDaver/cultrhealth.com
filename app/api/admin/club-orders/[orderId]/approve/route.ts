@@ -358,8 +358,8 @@ export async function POST(
     // is already persisted; email errors are non-fatal.
     try {
       await Promise.all([
-        sendApprovalEmailToCustomer(emailData),
-        sendApprovalConfirmationToAdmin(emailData),
+        sendApprovalEmailToCustomer({ ...emailData, qbInvoiceUrl }),
+        sendApprovalConfirmationToAdmin({ ...emailData, qbInvoiceId, qbInvoiceUrl }),
       ])
       console.log('[club-orders/approve] Approval emails sent for', order.order_number)
     } catch {
@@ -404,6 +404,8 @@ async function sendApprovalConfirmationToAdmin(data: {
   discountPercent: number
   taxAmount: number
   total: number
+  qbInvoiceId?: string | null
+  qbInvoiceUrl?: string | null
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
@@ -475,7 +477,9 @@ async function sendApprovalConfirmationToAdmin(data: {
     ` : ''}
 
     <p style="color: #3A5956; font-size: 14px; margin-top: 24px;">
-      The order is now marked as approved. Next steps: contact the customer to finalize payment and shipping details.
+      ${data.qbInvoiceId
+        ? `QuickBooks invoice <strong>${escapeHtml(data.qbInvoiceId)}</strong> has been created and sent to the customer.`
+        : 'The order is now marked as approved. Next steps: contact the customer to finalize payment and shipping details.'}
     </p>
 
   </div>
@@ -484,11 +488,6 @@ async function sendApprovalConfirmationToAdmin(data: {
   })
 }
 
-// TODO (Version 2): Implement Option A — Automated Payment Link
-// - Generate Stripe checkout link or QuickBooks invoice URL on approval
-// - Include "Pay Now" button in this email with one-click payment
-// - Customer completes payment automatically without manual admin follow-up
-// Currently using Option C (manual workaround): admin sends payment details separately
 
 async function sendApprovalEmailToCustomer(data: {
   name: string
@@ -502,6 +501,7 @@ async function sendApprovalEmailToCustomer(data: {
   discountPercent: number
   taxAmount: number
   total: number
+  qbInvoiceUrl?: string | null
 }) {
   if (!process.env.RESEND_API_KEY) {
     console.error('[club-orders/approve] CRITICAL: RESEND_API_KEY not set — email not sent')
@@ -590,9 +590,18 @@ async function sendApprovalEmailToCustomer(data: {
 
       <div style="background: #F5F0E8; border-radius: 12px; padding: 20px; margin-bottom: 8px; border-left: 4px solid #B7E4C7;">
         <p style="margin: 0 0 12px; font-weight: 600; font-size: 14px; color: #2A4542;">Next Step: Payment</p>
+        ${data.qbInvoiceUrl ? `
+        <p style="margin: 0 0 16px; font-size: 14px; color: #546E6B; line-height: 1.5;">
+          Your invoice is ready. Click the button below to pay securely online.
+        </p>
+        <div style="text-align: center; margin: 4px 0 16px;">
+          <a href="${escapeHtml(data.qbInvoiceUrl)}" style="display: inline-block; background-color: #2A4542; color: #FFFFFF; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 15px;">Pay Invoice</a>
+        </div>
+        ` : `
         <p style="margin: 0 0 12px; font-size: 14px; color: #546E6B; line-height: 1.5;">
           Our team will send you a payment link within 1-2 business days. You can reference your order number below when following up.
         </p>
+        `}
         <p style="margin: 0; font-size: 13px; color: #7E8D8A;">
           <strong>Your Order Number:</strong> <code style="background: white; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-weight: 600; color: #2A4542;">${escapeHtml(data.orderNumber)}</code>
         </p>

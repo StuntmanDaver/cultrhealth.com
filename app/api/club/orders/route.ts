@@ -199,8 +199,8 @@ export async function POST(request: Request) {
         }
 
         const orderResult = await client.query(
-          `INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, token_expires_at, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_approval', $9, to_timestamp($10::double precision / 1000), $11, $12, $13, $14, $15, $16)
+          `INSERT INTO club_orders (order_number, member_id, member_name, member_email, member_phone, items, subtotal_usd, notes, status, approval_token, token_expires_at, coupon_code, discount_percent, tax_rate, tax_amount_usd, attributed_creator_id, attribution_method, coupon_discount_usd)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_approval', $9, to_timestamp($10::double precision / 1000), $11, $12, $13, $14, $15, $16, $17)
            RETURNING id`,
           [
             orderNumber,
@@ -219,6 +219,7 @@ export async function POST(request: Request) {
             taxAmount > 0 ? taxAmount : 0,
             attributedCreatorId || null,
             attributionMethod,
+            couponDiscountAmount > 0 ? couponDiscountAmount : null,
           ]
         )
         orderId = orderResult.rows[0]?.id

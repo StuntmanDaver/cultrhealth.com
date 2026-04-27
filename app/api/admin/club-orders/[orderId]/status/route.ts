@@ -536,8 +536,13 @@ async function sendCustomerStatusEmail(
       statusBg: '#DBEAFE',
       statusText: 'Your order is on its way to you.',
       body: `<p style="margin: 0 0 16px; font-size: 14px; color: #546E6B; line-height: 1.6;">
-        Great news — your order has been shipped! You will receive tracking information directly from our fulfillment partner once your package is in transit.
-      </p>`,
+        Great news — your order has been shipped!${carrier && trackingNumber ? ' Here are your tracking details:' : ' You will receive tracking information directly from our fulfillment partner.'}
+      </p>
+      ${carrier && trackingNumber ? `<div style="background: #EFF6FF; border-radius: 12px; padding: 16px; margin: 4px 0 16px; border: 1px solid #BFDBFE;">
+        <p style="margin: 0 0 8px; font-weight: 600; font-size: 14px; color: #2A4542;">Tracking Details</p>
+        <p style="margin: 0 0 4px; font-size: 14px; color: #546E6B;"><strong>Carrier:</strong> ${escapeHtml(carrier)}</p>
+        <p style="margin: 0; font-size: 14px; color: #546E6B;"><strong>Tracking #:</strong> ${trackingUrl ? `<a href="${escapeHtml(trackingUrl)}" style="color: #2A4542; font-weight: 600; text-decoration: underline;">${escapeHtml(trackingNumber)}</a>` : `<code style="background: white; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-weight: 600; color: #2A4542;">${escapeHtml(trackingNumber)}</code>`}</p>
+      </div>` : ''}`,
     },
     fulfilled: {
       subject: `Order Complete — ${order.order_number}`,
