@@ -35,7 +35,7 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTR10':    { discount: 10, label: 'Promo Code' },
   'SUMMER20':   { discount: 20, label: 'Summer Promo' },
   'LOYALTY15':  { discount: 15, label: 'Returning Customer' },
-  'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-04-11T23:59:59Z'), noBundleStack: true },
+  'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-06-30T23:59:59Z'), noBundleStack: true },
   'BUTCH10':    { discount: 10, label: 'Promo Code' },
   'OWNERLR3':   { discount: 70, label: 'Owner Discount' },
   'RETA':       { discount: 50, label: 'R3TA 50% Off', applicableTherapyIds: ['retatrutide'], noBundleStack: true },
