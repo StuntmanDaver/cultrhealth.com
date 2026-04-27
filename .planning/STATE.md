@@ -1,64 +1,75 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: executing
-last_updated: "2026-04-17T22:55:54.648Z"
-last_activity: 2026-04-14 -- Phase 03 execution started
+milestone: null
+milestone_name: null
+status: between_milestones
+last_updated: "2026-04-27T19:15:00.000Z"
+last_activity: 2026-04-27 — v1.0 closed; awaiting /gsd-new-milestone for v2.0 Stripe→CorePay
 progress:
-  total_phases: 8
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 11
-  percent: 73
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (created 2026-04-13)
+See: .planning/PROJECT.md (updated 2026-04-27)
 
-**Core value:** CULTR Club experience at cultrclub.com — standalone Cloudflare Pages app sharing Neon DB with cultrhealth.com admin.
-**Current focus:** Phase 03 — code-adaptation
+**Core value:** HIPAA-compliant telehealth for GLP-1 weight loss medications, wellness peptides, and longevity optimization.
+**Current focus:** Between milestones — v1.0 (cultrclub-web Cloudflare migration) shipped Apr 22 2026; v2.0 (Stripe → CorePay/Authorize.Net replacement) is planned and awaiting milestone scaffolding.
 
 ## Current Position
 
-Phase: 03 (code-adaptation) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 03
-Last activity: 2026-04-14 -- Phase 03 execution started
+Phase: — (no active milestone)
+Status: Awaiting `/gsd-new-milestone`
+Last activity: 2026-04-27 — v1.0 milestone closed
 
-Progress: [░░░░░░░░░░] 0%
+## Deferred Items
 
-## Performance Metrics
+Items acknowledged and deferred at v1.0 close on 2026-04-27. These are **not** part of any GSD milestone — they live in `.planning/quick/` and `.planning/debug/` for ad-hoc execution.
 
-**Velocity:**
-
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+| Category | Item | Status |
+|---|---|---|
+| debug | creator-revenue-admin-sync | awaiting_human_verify |
+| debug | join-page-returning-members | awaiting_human_verify |
+| quick_task | 1-optimize-creator-portal-ux-content-group | missing |
+| quick_task | 2-end-to-end-test-jon-collins-creator-acco | missing |
+| quick_task | 260329-upf-make-the-entire-website-extremely-hipaa- | missing |
+| quick_task | 260330-i46-club-order-fulfillment-pipeline-in-admin | missing |
+| quick_task | 260331-fpi-audit-admin-dashboard-fix-fulfillment-sy | missing |
+| quick_task | 260415-uma-add-ability-to-delete-customers-and-memb | missing |
+| quick_task | 3-change-jon-collins-jon21-coupon-to-10-cu | missing |
+| quick_task | 4-admin-revenue-chart-date-filters | missing |
+| quick_task | 5-admin-order-search-customer-detail | missing |
+| quick_task | 6-admin-member-lifecycle | missing |
+| quick_task | 7-create-a-methodical-system-to-check-the- | missing |
 
 ## Accumulated Context
 
-### Decisions
+### Recent Milestone Decisions (v1.0)
 
-| Decision | Phase | Rationale |
-|---|---|---|
-| Use `@neondatabase/serverless` with `fullResults: true` | Phase 3 | Matches @vercel/postgres result shape (.rows, .rowCount) — prevents silent breakage |
-| `nodejs_compat` flag in wrangler.toml | Phase 1 | Resolves ALL crypto/Buffer issues without code changes |
-| `images.unoptimized: true` | Phase 1 | No image optimization server on Cloudflare Pages |
-| `ADMIN_BASE_URL` env var for approval links | Phase 3 | Approval emails must link to cultrhealth.com admin, not cultrclub.com |
-| Excluded paid checkout from cultrclub-web | Scope | Simplifies app — paid upgrades link to cultrhealth.com/pricing |
-| New repo at `/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/` | Phase 1 | Clean separation; GSD workspace stays in cultrhealth-website during migration |
+Full record archived in `.planning/milestones/v1.0-ROADMAP.md`. Summary:
 
-### Quick Tasks Completed
+| Decision | Rationale |
+|---|---|
+| `@neondatabase/serverless` with `fullResults: true` | Preserves `.rows` / `.rowCount` shape — zero call-site changes |
+| `nodejs_compat` flag in wrangler.toml | Resolves all crypto/Buffer issues without code changes |
+| `images.unoptimized: true` | No image optimization server on Cloudflare Pages |
+| `ADMIN_BASE_URL` env var for approval links | Approval emails must link to cultrhealth.com admin, not cultrclub.com |
+| Vercel alias removal via API (not dashboard) | Dashboard removal silently re-attaches on next deploy |
+| `join.cultrhealth.com` retired (NXDOMAIN, not 301) | Cleaner — no stale traffic to maintain |
 
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260415-kwb | i need a way to edit and update member/contact information in the admin dashboard. | 2026-04-15 | 3a75165 | [260415-kwb-i-need-a-way-to-edit-and-update-member-c](./quick/260415-kwb-i-need-a-way-to-edit-and-update-member-c/) |
-| 260415-uma | add ability to delete customers and members from the admin dashboard | 2026-04-16 | ccf34e5 | [260415-uma-add-ability-to-delete-customers-and-memb](./quick/260415-uma-add-ability-to-delete-customers-and-memb/) |
+### Open Blockers
 
-### Source Plan
+None.
 
-Migration plan: `/Users/davidk/.claude/plans/snazzy-humming-treasure.md`
+### Next Steps
+
+1. `/gsd-new-milestone` — scaffold v2.0 Stripe → CorePay replacement
+   - Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md`
+   - 8 phases (0 — Skills through 7 — Hardening)
+2. Optional: `/gsd-cleanup` — archive orphan phase directories under `.planning/phases/` (`01-foundation`, `02-checkout-integration`, `03-kit-registration`) which predate v1.0 and were never folded into a roadmap.
