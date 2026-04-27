@@ -249,6 +249,179 @@ export default function PublicDosingCalculatorPage() {
         </ol>
       </section>
 
+      {/* Formulas + variable definitions — explicit code blocks for LLM verbatim
+       * extraction. AI Overviews and Perplexity citations quote labeled formulas
+       * more reliably than prose. Three solve-modes follow this block. */}
+      <section id="how-the-math-works" className="px-6 py-16 md:py-20 max-w-4xl mx-auto w-full">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-3">
+          How the peptide dose math works
+        </h2>
+        <p className="text-cultr-textMuted mb-8 max-w-2xl">
+          Every peptide reconstitution and dose calculation reduces to three formulas. Each one
+          uses the same five variables, and the calculator above runs them in real time as you
+          change inputs.
+        </p>
+
+        <h3 className="text-xl md:text-2xl font-display font-semibold text-cultr-forest mb-3">
+          Variables
+        </h3>
+        <div className="glass-card rounded-2xl p-5 md:p-6 mb-8 overflow-x-auto">
+          <table className="w-full text-sm md:text-base">
+            <thead>
+              <tr className="text-left border-b border-cultr-sage/40">
+                <th className="py-2 pr-4 font-display font-semibold text-cultr-forest">Variable</th>
+                <th className="py-2 pr-4 font-display font-semibold text-cultr-forest">Unit</th>
+                <th className="py-2 font-display font-semibold text-cultr-forest">Definition</th>
+              </tr>
+            </thead>
+            <tbody className="text-cultr-textMuted">
+              <tr className="border-b border-cultr-sage/20">
+                <td className="py-2 pr-4 font-mono text-cultr-forest">vial_mg</td>
+                <td className="py-2 pr-4">milligrams</td>
+                <td className="py-2">Total peptide mass in the vial as printed on the pharmacy label.</td>
+              </tr>
+              <tr className="border-b border-cultr-sage/20">
+                <td className="py-2 pr-4 font-mono text-cultr-forest">water_ml</td>
+                <td className="py-2 pr-4">milliliters</td>
+                <td className="py-2">Bacteriostatic water added to reconstitute the vial.</td>
+              </tr>
+              <tr className="border-b border-cultr-sage/20">
+                <td className="py-2 pr-4 font-mono text-cultr-forest">concentration_mg_per_ml</td>
+                <td className="py-2 pr-4">mg/mL</td>
+                <td className="py-2">Peptide mass per milliliter of solution after reconstitution.</td>
+              </tr>
+              <tr className="border-b border-cultr-sage/20">
+                <td className="py-2 pr-4 font-mono text-cultr-forest">dose_mcg</td>
+                <td className="py-2 pr-4">micrograms</td>
+                <td className="py-2">Prescribed dose. 1 mg = 1,000 mcg.</td>
+              </tr>
+              <tr className="border-b border-cultr-sage/20">
+                <td className="py-2 pr-4 font-mono text-cultr-forest">dose_ml</td>
+                <td className="py-2 pr-4">milliliters</td>
+                <td className="py-2">Volume to draw on the syringe for one dose.</td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4 font-mono text-cultr-forest">syringe_units</td>
+                <td className="py-2 pr-4">units (U-100)</td>
+                <td className="py-2">Reading on the U-100 insulin syringe barrel. 100 units = 1 mL.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="text-xl md:text-2xl font-display font-semibold text-cultr-forest mb-3">
+          Formulas
+        </h3>
+        <pre className="bg-cultr-forest text-cultr-offwhite rounded-2xl p-5 md:p-6 mb-4 overflow-x-auto text-sm md:text-base font-mono leading-relaxed">
+{`// 1. Concentration after reconstitution
+concentration_mg_per_ml = vial_mg / water_ml
+
+// 2. Dose volume on the syringe
+dose_ml = (dose_mcg / 1000) / concentration_mg_per_ml
+
+// 3. U-100 insulin syringe units (100 units per 1 mL)
+syringe_units = dose_ml * 100`}
+        </pre>
+        <p className="text-cultr-textMuted text-sm md:text-base">
+          Worked example: a 5 mg vial reconstituted with 3 mL of bacteriostatic water gives
+          <span className="font-mono text-cultr-forest"> concentration_mg_per_ml = 5 / 3 = 1.67</span>.
+          A 250 mcg dose is <span className="font-mono text-cultr-forest">dose_ml = (250 / 1000) / 1.67 = 0.15 mL</span>,
+          which reads <span className="font-mono text-cultr-forest">syringe_units = 0.15 * 100 = 15</span> units
+          on a U-100 insulin syringe.
+        </p>
+      </section>
+
+      {/* Solve-mode sections — three URL-anchored modes for LLM citation.
+       * #solve-dose, #solve-water, #solve-vial-strength. Each documents the
+       * inputs, formula, and a worked example. */}
+      <section className="px-6 py-16 md:py-20 grad-light border-y border-cultr-sage">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-cultr-forest mb-4 text-center">
+            Three peptide calculator modes
+          </h2>
+          <p className="text-cultr-textMuted mb-12 text-center max-w-2xl mx-auto">
+            Reconstitution math has three common shapes depending on which value you already know
+            and which one you need to solve for. The calculator above handles all three.
+          </p>
+
+          <div id="solve-dose" className="mb-14 scroll-mt-24">
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-3">
+              Mode 1 — Solve for dose volume
+            </h3>
+            <p className="text-cultr-textMuted mb-4">
+              <strong>Use when:</strong> you know the vial strength, how much bacteriostatic water you
+              added, and the dose your provider prescribed. Solve for the milliliters and U-100 units
+              to draw on the syringe. This is the default mode of the calculator above and the most
+              common day-to-day calculation.
+            </p>
+            <pre className="bg-cultr-forest text-cultr-offwhite rounded-2xl p-5 mb-4 overflow-x-auto text-sm font-mono leading-relaxed">
+{`// Inputs:  vial_mg, water_ml, dose_mcg
+// Output:  dose_ml, syringe_units
+
+concentration_mg_per_ml = vial_mg / water_ml
+dose_ml                 = (dose_mcg / 1000) / concentration_mg_per_ml
+syringe_units           = dose_ml * 100`}
+            </pre>
+            <p className="text-cultr-textMuted text-sm md:text-base">
+              <strong>Worked example:</strong> 5 mg vial, 3 mL water, 250 mcg dose →
+              concentration is 1.67 mg/mL, dose volume is 0.15 mL, syringe reading is 15 units.
+            </p>
+          </div>
+
+          <div id="solve-water" className="mb-14 scroll-mt-24">
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-3">
+              Mode 2 — Solve for bacteriostatic water volume
+            </h3>
+            <p className="text-cultr-textMuted mb-4">
+              <strong>Use when:</strong> you know the vial strength and the concentration you want.
+              Solve for how much bacteriostatic water to add. This is useful when you want a specific
+              dose volume to land on a clean syringe line — for example, sizing a Tirzepatide vial so
+              a 5 mg dose draws to exactly 0.5 mL.
+            </p>
+            <pre className="bg-cultr-forest text-cultr-offwhite rounded-2xl p-5 mb-4 overflow-x-auto text-sm font-mono leading-relaxed">
+{`// Inputs:  vial_mg, target_concentration_mg_per_ml
+// Output:  water_ml
+
+water_ml = vial_mg / target_concentration_mg_per_ml`}
+            </pre>
+            <p className="text-cultr-textMuted text-sm md:text-base">
+              <strong>Worked example:</strong> a 20 mg Tirzepatide vial at a target 10 mg/mL needs
+              <span className="font-mono text-cultr-forest"> water_ml = 20 / 10 = 2 mL</span> of
+              bacteriostatic water. A 5 mg dose then draws to 0.5 mL — 50 units on a U-100 syringe.
+            </p>
+          </div>
+
+          <div id="solve-vial-strength" className="scroll-mt-24">
+            <h3 className="text-2xl md:text-3xl font-display font-bold text-cultr-forest mb-3">
+              Mode 3 — Solve for vial strength (back-calculate concentration)
+            </h3>
+            <p className="text-cultr-textMuted mb-4">
+              <strong>Use when:</strong> you know the dose you need and the volume you want to draw,
+              and you want to back-solve for the concentration the vial must be reconstituted to.
+              This is useful when planning a protocol against a fixed syringe size — for example,
+              sizing every dose to land below 0.3 mL on a 0.3 mL syringe.
+            </p>
+            <pre className="bg-cultr-forest text-cultr-offwhite rounded-2xl p-5 mb-4 overflow-x-auto text-sm font-mono leading-relaxed">
+{`// Inputs:  dose_mcg, target_dose_ml
+// Output:  required_concentration_mg_per_ml
+
+required_concentration_mg_per_ml = (dose_mcg / 1000) / target_dose_ml
+
+// Then size the water volume against your vial:
+water_ml = vial_mg / required_concentration_mg_per_ml`}
+            </pre>
+            <p className="text-cultr-textMuted text-sm md:text-base">
+              <strong>Worked example:</strong> you want a 250 mcg dose to draw to 0.10 mL (10 units)
+              on a 0.3 mL syringe. Required concentration is
+              <span className="font-mono text-cultr-forest"> (250 / 1000) / 0.10 = 2.5 mg/mL</span>.
+              For a 5 mg vial that means
+              <span className="font-mono text-cultr-forest"> water_ml = 5 / 2.5 = 2 mL</span> of
+              bacteriostatic water.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Education — five h2 questions covering core search intent */}
       <section className="px-6 py-16 md:py-20 grad-light border-y border-cultr-sage">
         <div className="max-w-4xl mx-auto space-y-14">
