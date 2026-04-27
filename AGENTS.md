@@ -6,7 +6,7 @@ This file provides guidance to Codex when working with the CULTR Health Website 
 
 ## Repository Overview
 
-**CULTR Health** is a HIPAA-compliant telehealth platform for GLP-1 weight loss medications, wellness peptides, and longevity optimization. Built with Next.js 14 App Router, TypeScript, Tailwind CSS, and integrated with Asher Med Partner Portal, Stripe payments, and a full creator affiliate system.
+**CULTR Health** is a HIPAA-compliant telehealth platform for GLP-1 weight loss medications, wellness peptides, and longevity optimization. Built with Next.js 14 App Router, TypeScript, Tailwind CSS, and integrated with Stripe payments and a full creator affiliate system.
 
 - **Production URL:** https://cultrhealth.com (waitlist site, `production` branch)
 - **Staging URL:** https://staging.cultrhealth.com (full app, `staging` branch)
@@ -42,14 +42,13 @@ This file provides guidance to Codex when working with the CULTR Health Website 
 - **Bot Protection:** Cloudflare Turnstile (@marsidev/react-turnstile ^1.0.2)
 - **AI:** AI SDK v6 (@ai-sdk/openai ^3.0.21, @ai-sdk/react ^3.0.61, `ai` ^6.0.59) — protocol generation, meal plans
 - **Caching/Rate Limiting:** Upstash Redis (optional)
-- **File Storage:** AWS S3 via Asher Med presigned URLs
+- **File Storage:** AWS S3 presigned URLs
 - **Analytics:** Google Analytics 4 (via NEXT_PUBLIC_GA_MEASUREMENT_ID)
 - **Validation:** Zod schemas (`lib/validation.ts`)
 
 ### External Integrations
 | Integration | Purpose | Auth Method |
 |---|---|---|
-| **Asher Med Partner Portal** | HIPAA-compliant patient onboarding, order fulfillment | X-API-KEY header |
 | **Stripe** | Subscription payments, checkout sessions, webhooks | Secret key + webhook signing |
 | **Resend** | Welcome emails, order confirmations, creator notifications | API key |
 | **Cloudflare Turnstile** | Bot protection on forms | Secret key |
@@ -122,24 +121,48 @@ app/                              # Next.js 14 App Router
 ├── how-it-works/page.tsx         # How It Works page
 ├── faq/page.tsx                  # FAQ page
 ├── community/page.tsx            # Community social feed (Curator.io integration)
-├── science/                      # Science library / blog
+├── therapies/                    # Core therapies page
+│   ├── page.tsx
+│   └── TherapiesClient.tsx
+├── tools/                        # Tools page
+│   ├── page.tsx
+│   ├── calorie-calculator/
+│   ├── dosing-calculator/
+│   ├── peptide-faq/
+│   └── stacking-guides/
+├── science/                      # Exists physically but 301-redirects to / (LegitScript compliance)
 │   ├── page.tsx
 │   └── [slug]/page.tsx
 ├── products/page.tsx             # Redirects to /pricing (301 via next.config.js)
+├── terms/page.tsx                # Terms of service (separate from /legal/)
 ├── success/page.tsx              # Post-checkout success
 ├── login/page.tsx                # Member login (magic link)
 ├── dashboard/page.tsx            # Member dashboard
+├── onboarding/                   # Member onboarding flow
+│   ├── page.tsx
+│   └── OnboardingClient.tsx
 │
-├── join/                         # Checkout flow
+├── go/[destination]/             # QR code redirect handler (analytics tracking)
+│
+├── join/                         # Checkout flow (/join bare 301s to /pricing)
 │   ├── layout.tsx
 │   └── [tier]/page.tsx           # Tier-specific checkout (core, catalyst, concierge, club)
+│
+├── portal/                       # Member portal (authenticated)
+│   ├── layout.tsx
+│   ├── login/page.tsx            # Portal login
+│   ├── dashboard/page.tsx        # Member dashboard
+│   ├── documents/page.tsx        # Documents
+│   ├── labs/page.tsx             # Lab results
+│   ├── profile/page.tsx          # Profile settings
+│   └── stacking/page.tsx         # Protocol stacking
 │
 ├── intake/                       # Medical intake forms
 │   ├── page.tsx
 │   ├── IntakeFormClient.tsx      # Multi-step form controller
 │   └── success/page.tsx
 │
-├── library/                      # Member resource library
+├── members/                      # Member resource library (/library/* redirects here)
 │   ├── page.tsx                  # Main library landing
 │   ├── layout.tsx                # Library layout
 │   ├── LibraryContent.tsx        # Content renderer
@@ -150,6 +173,9 @@ app/                              # Next.js 14 App Router
 │   ├── peptide-faq/              # Peptide FAQ section
 │   ├── cart/                     # Shopping cart
 │   ├── quote-success/            # Quote confirmation
+│   ├── consultations/            # Telehealth consultations
+│   ├── labs/                     # Lab results
+│   ├── stacking-guides/          # Stacking guide content
 │   └── shop/                     # Members shop
 │       ├── page.tsx
 │       ├── ShopClient.tsx
@@ -201,11 +227,17 @@ app/                              # Next.js 14 App Router
 │   ├── club-orders/
 │   │   ├── page.tsx              # Club orders management (HMAC-protected approvals)
 │   │   └── ClubOrdersClient.tsx
-│   └── creators/
-│       ├── page.tsx              # Creator management
-│       ├── approvals/page.tsx    # Application reviews
-│       ├── campaigns/page.tsx    # Campaign management
-│       └── payouts/page.tsx      # Payout processing
+│   ├── creators/
+│   │   ├── page.tsx              # Creator management
+│   │   ├── approvals/page.tsx    # Application reviews
+│   │   ├── campaigns/page.tsx    # Campaign management
+│   │   └── payouts/page.tsx      # Payout processing
+│   ├── customers/                # Customer management
+│   ├── dosing-rules/             # Dosing rules engine management
+│   ├── intakes/                  # Intake form review
+│   ├── inventory/                # Product inventory management
+│   ├── marketing/                # Marketing / quiz leads
+│   └── members/                  # Member management
 │
 ├── r/[slug]/route.ts             # Click tracking redirect handler (sets attribution cookies)
 │
@@ -298,7 +330,14 @@ app/                              # Next.js 14 App Router
     │   ├── approve-commissions/route.ts  # Auto-approve commissions after 30-day window
     │   └── update-tiers/route.ts         # Auto-update creator tiers by recruit count
     │
-    └── waitlist/route.ts                  # Waitlist signup
+    ├── portal/                           # Member portal APIs
+    ├── quiz/                             # Quiz submission & lead capture
+    ├── onboarding/                       # Member onboarding status & flow
+    ├── stock/                            # Inventory stock check
+    ├── supplement-order/                 # Supplement order submission
+    ├── quickbooks/                       # QuickBooks OAuth2 callback & token management
+    │
+    └── waitlist/route.ts                 # Waitlist signup
 ```
 
 ### Components Directory (`components/`)
@@ -312,10 +351,11 @@ components/
 │   ├── SectionWrapper.tsx        # Section layout wrapper
 │   └── Spinner.tsx               # Loading spinner
 │
-├── site/                         # Marketing site components (11 files)
+├── site/                         # Marketing site components
 │   ├── Header.tsx                # Floating pill navbar (morphs on scroll, 1080px max-width, 60px border-radius, backdrop-blur)
 │   ├── Footer.tsx                # Two-tier footer (trust badges + links + social icons incl. TikTok/YouTube SVGs)
-│   ├── LayoutShell.tsx           # Conditional header/footer wrapper (hides on /creators/portal and /admin)
+│   ├── LayoutShell.tsx           # Server wrapper — delegates to LayoutShellClient
+│   ├── LayoutShellClient.tsx     # Client component: hides chrome based on route/hostname
 │   ├── CommunityFeed.tsx         # Curator.io social feed widget (client component, tabbed: Instagram/TikTok/YouTube)
 │   ├── PricingCard.tsx           # Pricing tier card (dynamically imported on homepage)
 │   ├── ProductCard.tsx           # Product display card
@@ -323,7 +363,18 @@ components/
 │   ├── CTASection.tsx            # Call-to-action section (used at bottom of homepage)
 │   ├── FAQAccordion.tsx          # Expandable FAQ (dynamically imported on homepage)
 │   ├── NewsletterSignup.tsx      # Email signup form (dynamically imported on homepage)
-│   └── ClubBanner.tsx            # CULTR Club promo banner (dynamically imported on homepage)
+│   ├── ClubBanner.tsx            # CULTR Club promo banner (dynamically imported on homepage)
+│   ├── BiomarkerExplainer.tsx    # Biomarker explainer section
+│   ├── BiomarkerScroll.tsx       # Scrolling biomarker display
+│   ├── HowItWorksSteps.tsx       # How It Works step cards (shared component)
+│   ├── LeadCapturePrompt.tsx     # Lead capture prompt component
+│   ├── MarketingHero.tsx         # Shared marketing hero section
+│   ├── SocialProofBadge.tsx      # Social proof badge component
+│   ├── TestimonialsSection.tsx   # Testimonials section
+│   ├── TherapiesGrid.tsx         # Therapies grid display
+│   ├── TherapyGoalFilter.tsx     # Therapy goal filter UI
+│   ├── TrustMarquee.tsx          # Scrolling trust marquee
+│   └── TrustStrip.tsx            # Trust strip / badges bar
 │
 ├── sections/                     # Page section components (9 files — NOT imported anywhere, likely legacy/unused)
 │   ├── Hero.tsx
@@ -378,6 +429,35 @@ components/
 │   ├── BiologicalAgeCard.tsx     # Biological age display
 │   └── BiomarkerTrends.tsx       # Biomarker trend charts
 │
+├── admin/                        # Admin UI components
+│   ├── AdminLayoutClient.tsx     # Admin layout client wrapper
+│   ├── AdminSidebar.tsx          # Admin navigation sidebar
+│   ├── ClubOrderBulkActions.tsx  # Bulk actions for club orders
+│   ├── ClubOrderStageControls.tsx # Stage control buttons for club orders
+│   ├── MetricCard.tsx            # Metric display card
+│   └── PrelaunchCodesSection.tsx # Prelaunch codes management section
+│
+├── compliance/                   # Compliance UI components
+│   (ConsentModal, PrescriptionDisclaimer, FDAStatusBadge, TestimonialDisclaimer, DispensingPharmacyInfo)
+│
+├── portal/                       # Member portal components
+│   ├── BiomarkerCategoryCard.tsx
+│   ├── BiomarkerDetailModal.tsx
+│   ├── KitDetailCard.tsx
+│   ├── KitEmptyState.tsx
+│   ├── KitRegistrationForm.tsx
+│   ├── KitTimeline.tsx
+│   ├── LabsResultsView.tsx
+│   ├── PortalSidebar.tsx
+│   └── ReferenceRangeBar.tsx
+│
+├── dosing-ai/                    # AI dosing engine components
+│   ├── AiDosingEnginePanel.tsx
+│   ├── AiDosingQuestionFlow.tsx
+│   └── RecommendationCard.tsx
+│
+├── CultrBackground.tsx           # Mesh gradient background (wraps @paper-design/shaders-react)
+│
 └── (legacy root-level — superseded by components/site/)
     ├── Footer.tsx
     ├── Navigation.tsx
@@ -387,17 +467,26 @@ components/
 ### Library Directory (`lib/`)
 ```
 lib/
-├── config/                       # Configuration files (11 files)
+├── config/                       # Configuration files
 │   ├── affiliate.ts              # Affiliate types, commission config (10% direct, 20% cap), tier config, FTC disclosures
-│   ├── asher-med.ts              # Asher Med API configuration
+│   ├── compliance.ts             # Compliance statements (JURISDICTION_STATEMENT, FDA, ROSCA)
+│   ├── coupons.ts                # Coupon definitions and validateCouponUnified()
+│   ├── feature-flags.ts          # Feature flag configuration
+│   ├── join-therapies.ts         # join.cultrhealth.com product cards & pricing (source of truth for join catalog)
 │   ├── links.ts                  # Centralized URL registry (social, internal routes, external services)
+│   ├── owner-emails.ts           # Owner email list (filtered from admin analytics aggregates)
 │   ├── payments.ts               # Payment provider configuration
 │   ├── plans.ts                  # Membership tiers: Club ($0), Core ($199), Catalyst+ ($499), Concierge ($1099)
 │   ├── product-catalog.ts        # Peptide product catalog with SKUs, prices (70% markup), stock status
-│   ├── product-to-asher-mapping.ts # SKU → Asher Med product mapping
+│   ├── product-to-asher-mapping.ts # SKU → legacy Asher Med product mapping (historical)
 │   ├── products.ts               # Product definitions
 │   ├── quiz.ts                   # Quiz question/answer configuration
-│   └── social-proof.ts           # Testimonials, providers, trust metrics, trust badges
+│   ├── siphox-biomarkers.ts      # SiPhox biomarker definitions
+│   ├── social-proof.ts           # Testimonials, providers, trust metrics, trust badges
+│   ├── tax.ts                    # Tax rate configuration
+│   ├── therapies.ts              # Core therapies configuration
+│   ├── us-states.ts              # US state list (used for jurisdiction/shipping)
+│   └── vitamin-catalog.ts        # Vitamin/supplement catalog
 │
 ├── contexts/                     # React Context providers (2 files)
 │   ├── CreatorContext.tsx         # Creator portal state (profile, metrics, auth)
@@ -429,16 +518,31 @@ lib/
 │
 ├── stores/                       # State management (directory exists but empty)
 │
+├── dosing-engine/                # AI dosing rules engine
+├── healthie/                     # Healthie EHR integration (historical; Calendly now used for scheduling)
+├── siphox/                       # SiPhox at-home lab kit integration
+├── utils/                        # Utility sub-modules directory
+│
+├── admin-club-orders.ts          # Club order pipeline: PIPELINE_ORDER, PIPELINE_STATUSES (import from here, not hardcode)
+├── admin-types.ts                # Shared TypeScript types for admin UI
+├── admin-utils.ts                # Admin helper utilities
 ├── analytics.ts                  # Analytics event tracking
-├── asher-med-api.ts              # Asher Med API client (orders, patients, uploads)
 ├── auth.ts                       # JWT auth utilities (sign, verify, middleware)
-├── blog-content.ts               # Blog/science content loading (gray-matter + marked)
+├── blog-content.ts               # Blog/science content loading (gray-matter + marked — file exists, blog removed from nav)
 ├── calorie-calculator.ts         # Calorie calculation algorithms
 ├── cart-context.tsx              # Shopping cart React context
+├── contacts.ts                   # Contact list utilities
+├── cron-logger.ts                # Cron job execution logger
 ├── data-normalization.ts         # Data normalization utilities
 ├── db.ts                         # Database connection & query utilities (@vercel/postgres)
+├── hipaa-logger.ts               # HIPAA-compliant audit logging
+├── intake-utils.ts               # Intake form utility helpers
 ├── library-content.ts            # Library content loading & rendering
+├── mailchimp.ts                  # Mailchimp email list integration
 ├── peptide-calculator.ts         # Peptide dosage calculator (syringe visualization)
+├── portal-auth.ts                # Member portal JWT auth utilities
+├── portal-db.ts                  # Member portal database operations
+├── portal-orders.ts              # Member portal order helpers
 ├── protocol-templates.ts         # Treatment protocol templates
 ├── quickbooks.ts                 # QuickBooks Online OAuth2 integration (customers, invoices, payments)
 ├── rate-limit.ts                 # API rate limiting
@@ -451,7 +555,7 @@ lib/
 
 ### Other Directories
 ```
-migrations/                       # SQL database migrations (11 files)
+migrations/                       # SQL database migrations (62+ files, 002 through 062 plus backfill files)
 ├── 002_orders_table.sql
 ├── 003_lmn_table.sql
 ├── 004_payment_provider.sql
@@ -462,22 +566,13 @@ migrations/                       # SQL database migrations (11 files)
 ├── 009_creator_affiliate_portal.sql
 ├── 010_club_orders.sql           # club_members + club_orders tables
 ├── 010_consult_requests.sql      # consult_requests table
-└── 011_quickbooks_tokens.sql     # quickbooks_tokens OAuth storage
+├── 011_quickbooks_tokens.sql     # quickbooks_tokens OAuth storage
+├── ... (012 through 062 — see migrations/ directory for full list)
+├── backfill_click_conversions.sql
+└── backfill_creator_attributions.sql
 
 content/                          # Markdown content (gray-matter frontmatter)
-├── blog/                         # Science/blog articles (12 posts)
-│   ├── biomarker-basics.md
-│   ├── fasting-metabolic-health.md
-│   ├── glp1-beyond-weight-loss.md
-│   ├── inflammation-markers.md
-│   ├── mitochondrial-health.md
-│   ├── nad-and-longevity.md
-│   ├── peptide-stacking.md
-│   ├── sleep-and-recovery.md
-│   ├── tb500-tissue-repair.md
-│   ├── testosterone-optimization.md
-│   ├── thyroid-deep-dive.md
-│   └── understanding-bpc-157.md
+├── (blog/ removed Apr 2026 — LegitScript compliance; blog-content.ts still exists in lib/ but blog is not publicly linked)
 └── library/                      # Peptide library content (6 files)
     ├── index.md
     ├── bioregulators.md
@@ -556,7 +651,8 @@ The homepage is a single server component that builds all sections inline (does 
 ## Key Features by Domain
 
 ### 1. Public Marketing Site
-- **Pages:** Homepage, Pricing, How It Works, FAQ, Science Library, Community, Quiz
+- **Pages:** Homepage, Pricing, How It Works, FAQ, Core Therapies, Tools, Community, Quiz
+- **Science/Blog:** Removed Apr 2026 for LegitScript compliance (`app/science/` exists but 301-redirects to `/`)
 - **Community (`app/community/page.tsx`):** Curator.io-powered social feed with tabbed layout (Instagram, TikTok, YouTube). Shows "Coming Soon" when feed IDs not configured in env vars.
 
 ### 2. Membership Plans (defined in `lib/config/plans.ts`)
@@ -571,17 +667,19 @@ Stripe config includes customer portal (`bpc_1StZxKC1JUIZB7aRXhaSarRI`), coupon 
 
 ### 3. Patient Experience
 - Multi-step medical intake forms (12 form components in `components/intake/`)
-- ID upload, consent signature capture (presigned S3 URLs via Asher Med)
-- Member dashboard with order tracking
+- ID upload, consent signature capture (presigned S3 URLs)
+- Member portal (`app/portal/`) with dashboard, labs, documents, profile, stacking
+- Member onboarding flow (`app/onboarding/`)
 - Renewal flow for recurring prescriptions
 
-### 4. Members Library & Shop
+### 4. Members Library & Shop (`app/members/` — `/library/*` redirects here)
 - Peptide protocol library (metabolic, repair, growth factors, bioregulators)
 - Dosing calculator with syringe visualization
 - Calorie calculator
 - Members shop with product catalog (peptides, blends, accessories — prices include 70% markup)
 - Shopping cart with quote generation
 - Tier-gated content access via `TierGate` component
+- Telehealth consultations, lab results, stacking guides
 
 ### 5. Provider Tools
 - Protocol builder (AI-powered via AI SDK, access-controlled by `PROTOCOL_BUILDER_ALLOWED_EMAILS`)
@@ -609,6 +707,11 @@ Stripe config includes customer portal (`bpc_1StZxKC1JUIZB7aRXhaSarRI`), coupon 
 - Order management & fulfillment
 - Club orders management (expandable list, HMAC-protected one-click approval links)
 - Analytics dashboard
+- Customer & member management (`customers/`, `members/`)
+- Intake form review (`intakes/`)
+- Product inventory management (`inventory/`)
+- Dosing rules engine management (`dosing-rules/`)
+- Marketing / quiz leads (`marketing/`)
 - All admin actions logged in `admin_actions` table
 
 ### 8. Payment Processing
@@ -654,8 +757,8 @@ Feature flags: `NEXT_PUBLIC_ENABLE_KLARNA`, `NEXT_PUBLIC_ENABLE_AFFIRM`
 - **payment_provider** — Multi-provider payment records (migration `004`)
 
 ### Other Tables
-- **asher_med_tables** — Asher Med integration data (migration `008`)
 - **rejuvenation_data** — Rejuvenation data (migration `005`)
+- **asher_med_tables** — Legacy Asher Med integration data (migration `008`; Asher Med removed Apr 2026, table retained for historical records)
 
 ---
 
@@ -664,7 +767,7 @@ Feature flags: `NEXT_PUBLIC_ENABLE_KLARNA`, `NEXT_PUBLIC_ENABLE_AFFIRM`
 ### User Types
 | Role | Auth Method | Entry Route | Protected Area |
 |---|---|---|---|
-| **Patients/Members** | JWT via magic link | `/login` | `/library`, `/intake`, `/dashboard`, `/renewal` |
+| **Patients/Members** | JWT via magic link | `/login` | `/members`, `/portal`, `/intake`, `/dashboard`, `/renewal` |
 | **Providers** | JWT + email allowlist | `/login` | `/provider/protocol-builder` |
 | **Creators** | Separate JWT (creator-specific) | `/creators/login` | `/creators/portal/*` |
 | **Admins** | JWT + admin role check | `/admin` | `/admin/*` |
@@ -697,9 +800,6 @@ On `staging.cultrhealth.com`, the magic link flow is bypassed for ease of testin
 | `POSTGRES_URL` | PostgreSQL connection string (Neon via Vercel Postgres) |
 | `JWT_SECRET` | JWT token signing (32+ chars) |
 | `SESSION_SECRET` | Session encryption (32+ chars) |
-| `ASHER_MED_API_KEY` | Asher Med partner authentication |
-| `ASHER_MED_PARTNER_ID` | Asher Med partner ID |
-| `ASHER_MED_API_URL` | Asher Med endpoint (sandbox or production) |
 | `NEXT_PUBLIC_SITE_URL` | Public site URL (for redirects, emails) |
 
 ### Optional
@@ -723,7 +823,6 @@ On `staging.cultrhealth.com`, the magic link flow is bypassed for ease of testin
 | `NEXT_PUBLIC_CURATOR_FEED_INSTAGRAM` | Curator.io Instagram feed ID |
 | `NEXT_PUBLIC_CURATOR_FEED_TIKTOK` | Curator.io TikTok feed ID |
 | `NEXT_PUBLIC_CURATOR_FEED_YOUTUBE` | Curator.io YouTube feed ID |
-| `ASHER_MED_ENVIRONMENT` | production or sandbox |
 
 ---
 
@@ -795,7 +894,7 @@ npm run setup:stripe
 - Caching headers:
   - HTML pages: `public, max-age=0, s-maxage=60, stale-while-revalidate=0` (always fresh)
   - Images/fonts: `public, max-age=31536000, immutable` (1 year cache)
-- Redirects: `/products` → `/pricing` (301 permanent), `/products/*` → `/pricing` (301)
+- Redirects: `/products` → `/pricing`, `/products/*` → `/pricing`, `/join` → `/pricing`, `/science` → `/`, `/science/*` → `/`, `/library` → `/members`, `/library/*` → `/members/*` (all 301 permanent)
 
 ---
 
@@ -806,16 +905,18 @@ Floating pill navbar that morphs on scroll via `requestAnimationFrame`:
 - **Trigger:** `window.scrollY > 50`
 - **Unscrolled:** Full-width bar, `bg-brand-cream/[0.97]`, `h-[68px]`, `rounded-none`, `backdrop-blur-sm`
 - **Scrolled:** Floating pill, `max-w-[1080px]`, `bg-brand-cream/[0.88]`, `h-[54px]`, `rounded-[60px]`, `backdrop-blur-[20px]`, shadow
-- **Left nav links:** Take the Quiz (`/quiz`), Pricing (`/pricing`), Therapies (`/therapies`), How It Works (`/how-it-works`), Science (`/science`)
-- **Right nav links:** Members (`/library`, has ChevronDown dropdown indicator), Creators (`/creators`), Community (`/community`)
+- **Left nav links:** Pricing (`/pricing`), Core Therapies (`/therapies`), How It Works (`/how-it-works`), Tools (`/tools`)
+- **Right nav links:** Members (`/portal/login`, has ChevronDown dropdown indicator), Creators (`/creators`), Community (`/community`)
 - **Active state:** Current route highlighted with `bg-brand-primary/[0.08]` rounded bg on matching nav link
 - **CTA:** "Get Started" button (links to `/quiz`, `bg-brand-primary`, `rounded-full`, `text-white`)
 - **Logo:** "CULTR" text with "Health" subtitle that fades out on scroll (opacity → 0, max-h → 0)
 - **Mobile:** Animated 3-bar hamburger → drawer, locks body scroll (`document.body.style.overflow = 'hidden'`)
 
-### Layout Shell (`components/site/LayoutShell.tsx`)
+### Layout Shell (`components/site/LayoutShell.tsx` + `LayoutShellClient.tsx`)
 - Shows Header + Footer on all routes
-- **HIDE_CHROME_PREFIXES:** `/creators/portal`, `/admin`, `/join-club`
+- **HIDE_CHROME_PREFIXES:** `/creators/portal`, `/admin`, `/portal`, `/members`
+- **HIDE_CHROME_EXACT:** `/join`
+- **HIDE_CHROME_HOSTNAMES:** `join.cultrhealth.com`, `join.staging.cultrhealth.com`, `join.localhost`
 - Main content: `pt-20 min-h-[calc(100vh-80px)]` when chrome is visible, `min-h-screen` when hidden
 
 ### Creator Portal Layout (`app/creators/portal/layout.tsx`)
@@ -843,21 +944,35 @@ LINKS = {
 
 ## Agents, Skills, and Plugins
 
-### Codex Configuration (`.Codex/`)
+### Claude Code Configuration (`.claude/`)
+This project uses Claude Code (Anthropic) as its primary AI agent. Codex agents should reference `.claude/` for project-level AI settings.
+
 ```
-.Codex/
-└── settings.local.json           # Local permission settings
+.claude/
+├── commands/
+│   └── pre-deploy.md             # /pre-deploy slash command — full 12-step deployment checklist
+├── hooks/
+│   ├── run-tests.sh
+│   ├── type-check.sh
+│   ├── code-audit.sh
+│   └── marketing-check.sh
+└── settings.local.json           # Allowed tool permissions (WebFetch, WebSearch, Bash subsets)
 ```
 
-**Allowed permissions** (`.Codex/settings.local.json`):
-- `WebFetch` for: docs.klarna.com, docs.affirm.com, docs.google.com, Google Sheets (doc-08-68-sheets.googleusercontent.com)
+**Allowed permissions** (`.claude/settings.local.json`):
+- `WebFetch` for: docs.klarna.com, docs.affirm.com, docs.google.com, Google Sheets
 - `WebSearch` — enabled globally
 - `Bash` for: `npx tsc`, `npx next dev`, `xargs kill`, `git status`, `vercel` (all subcommands), `git add`, `git commit`, `git push`
+
+**PostToolUse Hooks** (run automatically after every Write/Edit on `.ts`/`.tsx` files):
+- `run-tests.sh` — runs `npx vitest run`; blocks on test failure
+- `type-check.sh` — runs `npx tsc --noEmit`; blocks on type errors
+- `code-audit.sh` — ESLint + console.log + HIPAA PHI + secrets scan; blocks on violations
 
 ### MCP Server Configuration (`.cursor/mcp.json`)
 Currently empty (`"mcpServers": {}`). MCP servers can be configured here for Cursor IDE integration.
 
-### Codex-Mem Plugin (MCP — Persistent Memory)
+### Claude-Mem Plugin (MCP — Persistent Memory)
 Cross-session memory database available via MCP tools for recalling past work, decisions, and research:
 
 | Tool | Purpose |
@@ -875,13 +990,13 @@ Never fetch full details without filtering first. 10x token savings.
 
 **Observation types:** `session-request`, `bugfix` (red), `feature` (purple), `refactor`, `change`, `discovery` (blue), `decision`
 
-### Available Skills (invoked via Skill tool)
+### Available Skills (invoked via Skill tool in Claude Code)
 | Skill | Trigger | Description |
 |---|---|---|
-| `keybindings-help` | User asks about keyboard shortcuts, rebinding keys | Customize `~/.Codex/keybindings.json` |
-| `Codex-mem:do` | "Execute this plan" | Execute an implementation plan using subagents |
-| `Codex-mem:make-plan` | "Make a plan for..." | Create an implementation plan with documentation discovery |
-| `Codex-mem:mem-search` | "Did we already solve this?", "How did we do X last time?" | Search persistent cross-session memory database |
+| `keybindings-help` | User asks about keyboard shortcuts, rebinding keys | Customize `~/.claude/keybindings.json` |
+| `claude-mem:do` | "Execute this plan" | Execute an implementation plan using subagents |
+| `claude-mem:make-plan` | "Make a plan for..." | Create an implementation plan with documentation discovery |
+| `claude-mem:mem-search` | "Did we already solve this?", "How did we do X last time?" | Search persistent cross-session memory database |
 
 ### IDE Diagnostics (MCP)
 | Tool | Purpose |
@@ -984,7 +1099,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 
 **Ralph Status Reporting:** Each loop iteration ends with a `RALPH_STATUS` block containing STATUS, TASKS_COMPLETED, FILES_MODIFIED, TESTS_STATUS, WORK_TYPE, EXIT_SIGNAL, and RECOMMENDATION.
 
-**Full Ralph Documentation:** See `ralph-Codex/AGENTS.md` for comprehensive Ralph system docs including loop architecture, exit detection (dual-condition: completion indicators + EXIT_SIGNAL gate), circuit breaker patterns (auto-recovery, cooldown timer), session management, CLI configuration, test suite (490 tests), and library components.
+**Full Ralph Documentation:** See `ralph-claude-code/CLAUDE.md` for comprehensive Ralph system docs including loop architecture, exit detection (dual-condition: completion indicators + EXIT_SIGNAL gate), circuit breaker patterns (auto-recovery, cooldown timer), session management, CLI configuration, test suite (490 tests), and library components.
 
 ---
 
@@ -1004,7 +1119,7 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Button variants:** `primary` (forest bg, cream text), `secondary` (transparent, forest border), `ghost` (transparent, forest text). All use `rounded-full`. Has `isLoading` prop with built-in spinner. Managed via manual variant objects + `cn()` utility, NOT CVA.
 - **Context providers:** State shared via React Context (`CreatorContext`, `IntakeFormContext`, `CartContext`)
 - **API route pattern:** All API routes in `app/api/` follow Next.js App Router convention (`route.ts` with named exports `GET`, `POST`, etc.)
-- **Markdown content:** Blog and library content stored as `.md` files in `content/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify
+- **Markdown content:** Library content stored as `.md` files in `content/library/` with gray-matter frontmatter, rendered via `marked`, sanitized via DOMPurify. Blog content removed Apr 2026 (LegitScript compliance).
 - **Social proof data:** Testimonials, providers, trust metrics, trust badges centralized in `lib/config/social-proof.ts`
 - **Join catalog source:** `join.cultrhealth.com` product cards are driven by `lib/config/join-therapies.ts`; restoring `/join` page components alone does not restore the legacy join catalog.
 - **Join catalog pricing:** Change retail amounts in `lib/config/join-therapies.ts` only; update any internal markdown that duplicates those dollar figures (e.g. `Peptides-Growth-Factors.md`, `Verification-Checklist.md`) and record the change in `CHANGELOG.md`.
@@ -1012,9 +1127,8 @@ CB_OUTPUT_DECLINE_THRESHOLD=70
 - **Lifetime SQL Metrics:** When calculating "lifetime" metrics alongside period metrics in the same query, apply the date interval constraint conditionally per column (e.g., `SUM(CASE WHEN created_at >= ... THEN amount ELSE 0 END)`) rather than filtering the entire table in the `WHERE` clause.
 - **Intake checkout linkage:** Preserve checkout `session_id` across `/success` → `/onboarding` → `/intake` → `/login` so custom intake submissions can reattach to the originating `pending_intakes` row. `app/api/intake/submit` must also fall back to the latest pending intake by authenticated email when the session id is absent.
 - **Intake scheduling handoff:** After a successful custom intake submission, redirect to `/onboarding` with `next=schedule` while preserving `session_id` when present. `OnboardingClient` must keep the schedule CTA active even if `/api/onboarding/status` is stale or temporarily unavailable.
-- **Healthie scheduling URLs:** When a Healthie booking link includes `provider_ids`, it must also include `org_level=true` or the calendar can show no availability. Do not hardcode/preserve `appt_type_ids` in the booking URL because stale type filters can hide newly schedulable appointment types. Healthie also refuses to render its scheduling embed inside plain `http://localhost` due to `frame-ancestors`, so local blank iframes are not reliable evidence of a production scheduling failure.
 - **Ghost Session Prevention:** NEVER use `response.headers.append('Set-Cookie', ...)` in Next.js `NextResponse`. Vercel's Edge runtime merges multiple `append` calls into a single comma-separated string, which violates the HTTP specification and causes Safari/Chrome to silently reject the cookies (leading to infinite session timeout loops). ALWAYS use `response.cookies.set()` or `response.cookies.delete()`. Since `cookies.set()` overwrites cookies of the same name even if domains differ, ensure you use distinct cookie names (like `v2`) instead of trying to clear both host and domain variants simultaneously.
-- **Member magic-link fallback:** `app/api/auth/verify/route.ts` must default post-login redirects to `/members`. `/dashboard` is only for flows that pass an explicit safe redirect.
+- **Member magic-link fallback:** `app/api/auth/verify/route.ts` must default post-login redirects to `/members` (not `/dashboard`). `/dashboard` is only for flows that pass an explicit safe redirect.
 - **Creator staging login rate limit:** `app/api/creators/magic-link/route.ts` skips magic-link rate limiting on staging hosts and for listed bypass emails so Safari/WebKit retries and E2E logins do not fail spuriously.
 - **Creator email verification links:** `app/api/creators/verify-email/route.ts` must support browser-clicked `GET` verification links as well as the JSON `POST` verification flow. After verification, pending creators should land on `/creators/pending`, active creators on `/creators/login`, and paused/rejected creators should route to creator login with `inactive_account`. Invalid links should return to creator login with `invalid_verification_link`, and unexpected verification failures should use a dedicated safe `email_verification_failed` error.
 - **Intake payload compatibility:** Custom intake submissions must persist `dateOfBirth`, `gender`, structured `shippingAddress`, `personalInformation`, and `medicationPackages` inside `pending_intakes.intake_data`; downstream member, portal, and medical-record readers rely on those keys.
@@ -1078,15 +1192,15 @@ An exhaustive `.cursorrules` file exists at the project root with 23 sections of
 
 | Category | Count |
 |---|---|
-| Page routes | ~45 pages |
-| API endpoints | 72 routes |
-| React components | 61 files |
-| Library/utility files | 49 files |
-| Database migrations | 8 SQL files |
-| Content (blog + library) | 18 markdown files |
+| Page routes | ~55 pages |
+| API endpoints | 80+ routes |
+| React components | 80+ files |
+| Library/utility files | 60+ files |
+| Database migrations | 62+ SQL files |
+| Content (library only, blog removed) | 6 markdown files |
 | Tests | 8 test files |
 | Public assets | 22 files |
 | Config files (root) | ~29 files |
 | Agent/skill files | 8 files |
 | Ralph config files | 18 files |
-| **Total source files** | **~400+ files** |
+| **Total source files** | **~500+ files** |

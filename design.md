@@ -1,6 +1,6 @@
-lets # Cultr Health Design System (Replicated from Eli Health)
+# CULTR Health Design System
 
-> **Reference:** [eli.health/products/cortisol](https://eli.health/products/cortisol)
+> **Living document** — reflects the actual design tokens in `tailwind.config.ts` and component implementations.
 
 ---
 
@@ -18,46 +18,59 @@ A seamless blend of scientific precision and lifestyle wellness. The aesthetic i
 
 ## 2. Color System
 
-### 2.1 Base Neutrals
+### 2.1 Brand Colors (defined in `tailwind.config.ts`)
 
 | Token | Hex | Tailwind | Usage |
 |-------|-----|----------|-------|
-| Canvas | `#FAFAF9` | `stone-50` | Primary page background |
-| Surface | `#FFFFFF` | `white` | Cards, modals, inputs |
-| Text Primary | `#1A1A1A` | `stone-900` | Headlines, body |
-| Text Secondary | `#57534E` | `stone-600` | Subtitles, captions |
-| Text Muted | `#A8A29E` | `stone-400` | Placeholders, hints |
-| Border | `#E7E5E4` | `stone-200` | Card borders, dividers |
-| Border Focus | `#000000` | `black` | Focus states |
+| `forest` / `brand-primary` | `#2B4542` | `forest` | Primary bg, text, buttons, CTAs |
+| `forest-light` / `brand-primaryLight` | `#3D5E5B` | `forest-light` | Hover states |
+| `forest-dark` / `brand-primaryHover` | `#1F3533` | `forest-dark` | Pressed/active states |
+| `brand-secondary` | `#506C64` | `brand-secondary` | Secondary elements |
+| `cream` / `brand-cream` | `#FCFBF7` | `cream` | Page backgrounds, body bg |
+| `cream-dark` / `brand-creamDark` | `#F5F2ED` | `cream-dark` | Card backgrounds, sections |
+| `sage` | `#B7E4C7` | `sage` | Accent color, badges, highlights |
+| `mint` | `#D7F3DC` | `mint` | Light highlights, trust badge backgrounds |
 
-### 2.2 Aura Gradients (Blurred Background Orbs)
+### 2.2 Aura Gradient Colors (decorative blobs)
 
-Used as blurred blobs (`filter: blur(100px)`) behind products or text.
+Used as blurred orbs (`blur-3xl`, `opacity-40–60`) for visual depth.
 
-| Name | From | To | Usage |
-|------|------|----|-------|
-| Purple/Lavender | `#9333EA` | `#E9D5FF` | Cortisol, Stress |
-| Sage/Mint | `#10B981` | `#D1FAE5` | Progesterone, Calm |
-| Orange/Peach | `#F97316` | `#FFEDD5` | Testosterone, Energy |
-| Yellow/Peach | `#FDE047` | `#FFEDD5` | General highlight |
-| Multi | Purple + Yellow + Orange | - | Hero sections |
+| Name | Hex | Usage |
+|------|-----|-------|
+| `aura-purple` | `#9333EA` | Hero accents, decorative |
+| `aura-lavender` | `#E9D5FF` | Hero accents |
+| `aura-sage` | `#10B981` | Health/wellness sections |
+| `aura-mint` | `#D1FAE5` | Soft background fills |
+| `aura-orange` | `#F97316` | Energy/action sections |
+| `aura-peach` | `#FFEDD5` | Warm accents |
+| `aura-yellow` | `#FDE047` | General highlights |
 
-### 2.3 Feature Card Backgrounds
+### 2.3 Legacy Aliases (`cultr-*`)
 
-| Variant | Tailwind Class | Usage |
-|---------|----------------|-------|
-| Blue | `bg-blue-100` | Primary products |
-| Green | `bg-green-100` | Secondary products |
-| Orange | `bg-orange-100` | Tertiary products |
+Kept for backwards compatibility — prefer `forest`/`cream`/`sage`/`mint` tokens in new code.
+
+| Token | Resolves To |
+|-------|------------|
+| `cultr-forest` | `#2B4542` |
+| `cultr-forestLight` | `#3D5E5B` |
+| `cultr-sage` | `#B7E4C7` |
+| `cultr-mint` | `#D7F3DC` |
+| `cultr-offwhite` | `#FCFBF7` |
+| `cultr-text` | `#2B4542` |
+| `cultr-textMuted` | `#6B7280` |
+
+**Never use:** `cultr-copper`, `cultr-charcoal` — these tokens do not exist.
 
 ### 2.4 Functional Colors
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Action Primary | `#000000` | Buttons, CTAs |
-| Action Hover | `#292524` | Button hover |
-| Success | `#059669` | Confirmations |
-| Error | `#DC2626` | Validation errors |
+| Purpose | Token | Hex |
+|---------|-------|-----|
+| Page background | `cream` | `#FCFBF7` |
+| Primary CTA | `forest` | `#2B4542` |
+| CTA hover | `forest-light` | `#3D5E5B` |
+| Success | Tailwind `green-600` | `#16A34A` |
+| Error | Tailwind `red-600` | `#DC2626` |
+| Muted text | `cultr-textMuted` / `gray-500` | `#6B7280` |
 
 ---
 
@@ -65,172 +78,154 @@ Used as blurred blobs (`filter: blur(100px)`) behind products or text.
 
 ### 3.1 Font Families
 
-**Display Font:** `Fraunces` (Variable, Google Fonts)
-- Usage: H1-H3, Pull Quotes, Stat Numbers, Product Titles
-- Characteristics: High contrast, optical sizing, italic variations
-- CSS: `font-family: var(--font-display), 'Fraunces', Georgia, serif;`
+**Display Font:** `Fraunces` (Variable, Google Fonts) — `font-fraunces`
+- Usage: Pull quotes, hero subtext, decorative headings
+- CSS var: `--font-fraunces`
 
-**Body Font:** `Inter` (Variable, Google Fonts)
+**Heading Font:** `Playfair Display` — `font-display`
+- Usage: H1–H3, section headers, card titles
+- CSS var: `--font-display`
+
+**Body Font:** `Inter` (Variable, Google Fonts) — `font-body` / `font-sans`
 - Usage: UI elements, body text, buttons, labels, navigation
-- Characteristics: Clean, legible, high x-height, neutral
-- CSS: `font-family: var(--font-body), 'Inter', system-ui, sans-serif;`
+- CSS var: `--font-body`
+
+**Brand rule:** "CULTR" and "CULTR HEALTH" always use `font-display` (Playfair Display). The slogan "Change the CULTR, rebrand yourself." uses `font-body` (Inter) with "rebrand" in lowercase italic.
 
 ### 3.2 Type Scale
 
 | Name | Desktop | Mobile | Font | Weight | Usage |
 |------|---------|--------|------|--------|-------|
-| Display XL | `text-7xl` (72px) | `text-4xl` (36px) | Fraunces | 400 | Hero headlines |
-| Display LG | `text-5xl` (48px) | `text-3xl` (30px) | Fraunces | 400 | Section headers |
-| Display MD | `text-3xl` (30px) | `text-2xl` (24px) | Fraunces | 400 | Card titles |
-| Body LG | `text-xl` (20px) | `text-lg` (18px) | Inter | 400 | Lead paragraphs |
-| Body MD | `text-base` (16px) | `text-base` | Inter | 400 | Default body |
-| Body SM | `text-sm` (14px) | `text-sm` | Inter | 400 | Captions |
-| Label | `text-sm` | `text-xs` | Inter | 500 | Form labels, tags |
+| Display XL | `text-7xl` (72px) | `text-4xl` (36px) | font-display | 400 | Hero headlines |
+| Display LG | `text-5xl` (48px) | `text-3xl` (30px) | font-display | 400 | Section headers |
+| Display MD | `text-3xl` (30px) | `text-2xl` (24px) | font-display | 400 | Card titles |
+| Body LG | `text-xl` (20px) | `text-lg` (18px) | font-body | 400 | Lead paragraphs |
+| Body MD | `text-base` (16px) | `text-base` | font-body | 400 | Default body |
+| Body SM | `text-sm` (14px) | `text-sm` | font-body | 400 | Captions, hints |
+| Label | `text-sm` | `text-xs` | font-body | 500 | Form labels, tags |
 
 ### 3.3 Typography Patterns
 
-**Italic Accent:** Headlines often use italics for emphasis on key phrases.
-```
-"What if you could check your hormone levels at any time, *just like your heart rate?*"
-```
+**Italic Accent:** Headlines use italics on key phrases (via Playfair Display italic variant).
 
-**Mixed Serif/Sans:** Use serif for emotional/aspirational text, sans for functional/data text.
+**Mixed Serif/Sans:** Use `font-display` for aspirational/brand text, `font-body` for functional/data text.
 
 ---
 
 ## 4. Components
 
-### 4.1 Buttons
+### 4.1 Buttons (`components/ui/Button.tsx`)
 
-**Primary Button (Black Pill)**
+All buttons use `rounded-full`. Managed via manual variant objects + `cn()` utility (NOT CVA).
+
+**Primary Button (forest bg)**
 ```css
-/* Tailwind */
-px-7 py-3.5 bg-black text-white text-sm font-medium rounded-full
-hover:bg-stone-800 hover:scale-[1.03]
-transition-all duration-200
+bg-brand-primary text-cream rounded-full px-6 py-3
+hover:bg-forest-light
+transition-colors duration-200
 disabled:opacity-50 disabled:cursor-not-allowed
 ```
 
-**Secondary Button (Outline Pill)**
+**Secondary Button (outline)**
 ```css
-px-7 py-3.5 bg-transparent text-black text-sm font-medium rounded-full
-border border-stone-300
-hover:bg-stone-100 hover:border-stone-400 hover:scale-[1.03]
-transition-all duration-200
+border border-forest text-forest bg-transparent rounded-full px-6 py-3
+hover:bg-forest/5
+transition-colors duration-200
 ```
 
-**Ghost/Text Link**
+**Ghost Button (text only)**
 ```css
-text-stone-900 text-sm font-medium
-hover:text-stone-600
-/* Often with arrow icon suffix */
+text-forest bg-transparent rounded-full px-6 py-3
+hover:bg-forest/5
+transition-colors duration-200
 ```
+
+**Loading state:** Has built-in `isLoading` prop that shows a spinner and disables interaction.
 
 ### 4.2 Cards
 
-**Product Feature Card**
+**Content/Info Card**
 ```css
-rounded-2xl p-8 bg-blue-100 /* or green-100, orange-100 */
+bg-cream-dark rounded-2xl p-6 border border-forest/10
 transition-all duration-300
-hover:-translate-y-1 hover:shadow-xl hover:shadow-stone-200/60
+hover:shadow-lg
 ```
 
-**Info/Content Card**
+**Pricing Card**
 ```css
-bg-white rounded-2xl p-6 border border-stone-200
-transition-all duration-300
-hover:shadow-lg hover:shadow-stone-200/50
+bg-white rounded-3xl p-8 border border-forest/10
+/* Featured: border-forest ring-2 ring-forest/20 */
 ```
 
 **Checkout Summary Card**
 ```css
-bg-stone-100 rounded-2xl p-6
+bg-cream-dark rounded-2xl p-6
 /* Sticky positioning on desktop */
 ```
 
-### 4.3 Inputs
+### 4.3 Inputs (`components/ui/Input.tsx`)
 
-**Text Input**
 ```css
-w-full px-4 py-3 bg-white text-sm text-stone-900
-border border-stone-300 rounded-lg
-placeholder:text-stone-400
-focus:outline-none focus:border-black focus:ring-1 focus:ring-black/20
+w-full px-4 py-3 bg-white text-sm text-forest
+border border-forest/20 rounded-lg
+placeholder:text-gray-400
+focus:outline-none focus:border-forest focus:ring-1 focus:ring-forest/20
 transition-colors duration-200
+/* Mobile: font-size: 16px minimum to prevent Safari auto-zoom */
 ```
 
-**Radio Card (Selection)**
-```css
-/* Default */
-relative flex items-start gap-4 p-4
-border border-stone-200 rounded-xl
-cursor-pointer transition-all duration-200
-hover:border-stone-300
-
-/* Selected */
-border-2 border-black bg-stone-50
-```
-
-### 4.4 Aura Orbs (Decorative)
+### 4.4 Aura Orbs (`components/ui/Aura.tsx`)
 
 ```css
-/* Base */
 absolute rounded-full pointer-events-none
-blur-3xl opacity-50
-
-/* Sizes */
-sm: w-32 h-32
-md: w-48 h-48
-lg: w-72 h-72
-xl: w-96 h-96
-
-/* Gradients */
-bg-gradient-to-br from-purple-500 to-purple-200
-bg-gradient-to-br from-emerald-500 to-emerald-200
-bg-gradient-to-br from-orange-500 to-orange-200
+blur-3xl opacity-40
+/* Sizes: sm w-32 h-32, md w-48 h-48, lg w-72 h-72, xl w-96 h-96 */
+/* Example: bg-gradient-to-br from-aura-purple to-aura-lavender */
 ```
 
 ### 4.5 Badges & Tags
 
-**Category Tag**
+**Status Badge (sage)**
 ```css
-text-xs text-stone-500
+text-xs px-3 py-1 bg-sage text-forest rounded-full font-medium
 ```
 
-**Bestseller Badge**
+**Featured Badge**
 ```css
-text-xs px-3 py-1 bg-black text-white rounded-full
+text-xs px-3 py-1 bg-forest text-cream rounded-full
+```
+
+**Trust Badge**
+```css
+bg-mint text-forest text-xs px-2 py-1 rounded-full
 ```
 
 ---
 
 ## 5. Navigation
 
-### 5.1 Header
+### 5.1 Header (`components/site/Header.tsx`)
 
-**Structure:**
-- Fixed position, `z-50`
-- Height: `h-16` (64px)
-- Background: `bg-white/95 backdrop-blur-md`
+Floating pill navbar that morphs on scroll via `requestAnimationFrame`:
 
-**Layout:**
-- Left: Primary nav links (Products, How It Works, Science)
-- Center: Logo (lowercase, serif)
-- Right: Secondary links + CTA button ("Shop now")
+- **Trigger:** `window.scrollY > 50`
+- **Unscrolled:** Full-width bar, `bg-cream/[0.97]`, `h-[68px]`, `rounded-none`, `backdrop-blur-sm`
+- **Scrolled:** Floating pill, `max-w-[1080px]`, `bg-cream/[0.88]`, `h-[54px]`, `rounded-[60px]`, `backdrop-blur-[20px]`, shadow
 
-**Mobile:**
-- Hamburger menu on right
-- Full-height slide-out panel
+**Left nav links:** Pricing, Core Therapies (`/therapies`), How It Works, Tools (`/tools`)
+**Right nav links:** Members (`/portal/login`), Creators, Community
+**CTA:** "Get Started" → `/quiz`, `bg-forest`, `rounded-full`, `text-cream`
+**Logo:** "CULTR" text (font-display) — "Health" subtitle fades out on scroll
 
-### 5.2 Footer
+**Active state:** `bg-brand-primary/[0.08]` rounded bg on matching nav link
 
-**Structure:**
-- Background: `bg-white`
-- Padding: `py-16`
+**Mobile:** Animated 3-bar hamburger → full drawer, locks body scroll
 
-**Sections:**
-1. Newsletter signup (headline with italic accent)
-2. 4-column link grid (Products, Learn, Contact, Social icons)
+### 5.2 Footer (`components/site/Footer.tsx`)
+
+Two-tier footer:
+1. Trust badges row + LegitScript seal placeholder
+2. Link grid: Treatments, Company, Members, Connect (with social icons)
 3. Legal text + copyright + policy links
 
 ---
@@ -240,16 +235,16 @@ text-xs px-3 py-1 bg-black text-white rounded-full
 ### 6.1 Container
 
 ```css
-max-w-7xl mx-auto px-6
-/* or */
-max-w-4xl mx-auto px-6 /* for narrower content */
+max-w-7xl mx-auto px-6    /* Default wide container */
+max-w-4xl mx-auto px-6    /* Narrower content sections */
+max-w-[1080px] mx-auto    /* Header floating pill max-width */
 ```
 
 ### 6.2 Section Spacing
 
 | Type | Padding | Usage |
 |------|---------|-------|
-| Hero | `min-h-[90vh]` | First fold |
+| Hero | `min-h-[90vh]` or `py-24` | First fold |
 | Standard | `py-20` or `py-24` | Content sections |
 | Compact | `py-12` or `py-16` | Smaller sections |
 
@@ -265,47 +260,45 @@ grid lg:grid-cols-2 gap-12 items-center
 grid md:grid-cols-3 gap-6
 ```
 
-**Checkout (5-Column)**
+**4-Column Features**
 ```css
-grid lg:grid-cols-5 gap-12
-/* Left: col-span-3, Right: col-span-2 */
+grid sm:grid-cols-2 lg:grid-cols-4 gap-6
 ```
 
 ---
 
 ## 7. Animations & Transitions
 
-### 7.1 Scroll Reveal
+### 7.1 Keyframe Animations (defined in `tailwind.config.ts`)
 
-**Fade In + Slide Up**
-```css
-@keyframes fadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
-}
+| Class | Keyframe | Duration | Usage |
+|-------|----------|----------|-------|
+| `animate-fade-in` | fadeIn (0→1 opacity) | 0.6s | Section reveals |
+| `animate-slide-up` | slideUp (0→1 + translateY 20px→0) | 0.6s | Card entrances |
+| `animate-float` | float (translateY 0→-20px) | 6s infinite | Decorative elements |
+| `animate-shimmer` | shimmer (bg-position) | 2s infinite | Loading skeletons |
+| `animate-scale-in` | scaleIn | 0.5s | Modal/popover reveals |
+| `animate-blur-in` | blurIn | 0.6s | Soft reveals |
+| `animate-bounce-subtle` | bounceSubtle | 2s infinite | CTA attention |
+| `animate-glow-pulse` | glowPulse | 3s infinite | Badge highlights |
 
-@keyframes slideUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
-.animate-slide-up { animation: slideUp 0.6s ease-out forwards; }
-```
+**ScrollReveal component** (`components/ui/ScrollReveal.tsx`): Intersection Observer wrapper with configurable `delay`, `direction`, and `duration`.
 
 ### 7.2 Hover Effects
 
 | Element | Effect | Duration |
 |---------|--------|----------|
-| Buttons | `scale-[1.03]` | 200ms |
-| Cards | `translateY(-4px)` + shadow increase | 300ms |
-| Links | Color change | 200ms |
+| Buttons | Color shift (`forest` → `forest-light`) | 200ms |
+| Cards | Shadow increase + subtle translateY | 300ms |
+| Nav links | Background fill `forest/[0.08]` | 200ms |
 
-### 7.3 Micro-interactions
+### 7.3 Background System
 
-- Input focus: Border color transition (200ms)
-- Button click: Subtle scale down (active:scale-[0.98])
-- Aura orbs: Slow pulse animation (4s ease-in-out infinite)
+**MeshGradient** (`components/ui/MeshBackgroundDynamic.tsx`): Used in root layout (`app/layout.tsx`) as full-screen fixed background behind all content. Colors: cream, sage, forest, mint — speed 0.2. Loaded via `next/dynamic` with `ssr: false`.
+
+**Aura blobs** (`components/ui/Aura.tsx`): Decorative blurred gradient circles on section backgrounds.
+
+**CultrBackground** (`components/CultrBackground.tsx`): Alternative background component.
 
 ---
 
@@ -314,139 +307,128 @@ grid lg:grid-cols-5 gap-12
 ### 8.1 Hero Section
 
 **Layout:**
-- Full viewport height (`min-h-[90vh]`)
-- Centered content, max-width constrained
-- Aura orbs in corners (4 orbs: top-left, top-right, bottom-left, bottom-right)
+- Full viewport height (`min-h-[90vh]`) or full-bleed background image
+- Gradient overlay for text legibility
+- Aura orbs in corners for depth
 
-**Content:**
-1. Display headline (serif, with italic accent)
-2. Subheadline (sans, muted color)
-3. Primary CTA button
-4. Social proof / "As Seen In" logos
+**Content order:**
+1. Eyebrow tag (small caps, forest/sage color)
+2. Display headline (font-display, with italic accent on key phrase)
+3. Subheadline (font-body, text-forest/70)
+4. CTA button(s) — primary + ghost pair
+5. Social proof / trust badges below fold
 
-### 8.2 Product Page
+### 8.2 Pricing Cards (`components/site/PricingCard.tsx`)
 
-**Layout:**
-- Two columns on desktop
-- Left: Product image gallery
-- Right: Product info + purchase options
+**Tier hierarchy:** Club → Core → Catalyst+ (featured) → Concierge
 
-**Right Column Structure:**
-1. Rating + reviews link
-2. Product title (serif)
-3. Subtitle
-4. Key features (bullet list with icons)
-5. Plan selection (radio cards)
-6. "Add to Cart" button
-7. Trust signals
+**Featured card:** `ring-2 ring-forest/20 border-forest` + "Most Popular" badge
 
-### 8.3 Checkout/Cart
+### 8.3 Checkout Flow (`app/join/[tier]/page.tsx`)
 
 **Layout:**
-- Two columns (3:2 ratio)
-- Left: Form sections (Contact, Items, Notes)
+- Two columns (3:2 ratio) on desktop
+- Left: Plan details + payment form (ConsentModal required)
 - Right: Sticky order summary
 
-**Form Section Pattern:**
-```html
-<section class="bg-white rounded-2xl p-6 border border-stone-200">
-  <h2 class="text-sm font-medium uppercase tracking-wide mb-4">
-    Section Title
-  </h2>
-  <!-- Content -->
-</section>
-```
+**ConsentModal:** Required for all checkout tiers. Scroll-gated checkbox + IntersectionObserver, FDA badges per tier.
 
-### 8.4 How It Works
+### 8.4 Member Portal (`app/portal/`)
 
-**Layout:**
-- Left: Fixed/sticky title + description
-- Right: Numbered steps (vertical timeline)
-
-**Step Card:**
-```html
-<div class="bg-white rounded-2xl p-6">
-  <span class="text-sm text-stone-500">01</span>
-  <h3 class="text-xl font-display mt-2">Step Title</h3>
-  <p class="text-stone-600 mt-2">Description...</p>
-</div>
-```
+Dark sidebar navigation pattern. Uses `bg-forest` sidebar with `text-cream` links.
 
 ---
 
-## 9. Iconography
+## 9. Compliance UI Components (`components/compliance/`)
 
-### 9.1 Style
+| Component | Description |
+|-----------|-------------|
+| `ConsentModal.tsx` | Informed consent modal — scroll-gated, FDA badges, body scroll lock |
+| `PrescriptionDisclaimer.tsx` | Rx disclaimer with Shield icon |
+| `FDAStatusBadge.tsx` | Color-coded FDA status badge per therapy |
+| `TestimonialDisclaimer.tsx` | "Results may vary" disclaimer |
+| `DispensingPharmacyInfo.tsx` | St. Luke Compounding Pharmacy info block |
 
-- Library: Lucide React (or similar fine-line icons)
-- Stroke: 1.5px
-- Caps: Round
-- Joins: Round
-- Size: 16px (sm), 20px (md), 24px (lg)
+---
 
-### 9.2 Common Icons
+## 10. Iconography
 
+### Icon Style
+- Library: Lucide React (`^0.563.0`)
+- Stroke width: 1.5–2px
+- Caps/joins: Round
+- Sizes: 16px (sm), 20px (md), 24px (lg)
+- Custom SVGs for TikTok and YouTube in Footer
+
+### Common Icons
 | Purpose | Icon |
 |---------|------|
 | Menu | `Menu` / `X` |
 | Dropdown | `ChevronDown` |
-| Back | `ArrowLeft` |
-| Forward | `ArrowRight` |
-| Cart | `ShoppingCart` |
-| Secure | `Shield` |
-| Check | `Check` |
-| Plus/Minus | `Plus` / `Minus` |
-| Social | `Linkedin` / `Instagram` |
+| Navigation | `ArrowLeft` / `ArrowRight` |
+| Security | `Shield` |
+| Check | `Check` / `CheckCircle` |
+| User | `User` / `UserCircle` |
+| Social | `Instagram` (+ custom TikTok/YouTube SVGs) |
 
 ---
 
-## 10. Responsive Breakpoints
+## 11. Responsive Breakpoints (Tailwind defaults)
 
-| Breakpoint | Width | Usage |
-|------------|-------|-------|
-| `sm` | 640px | Small tablets |
-| `md` | 768px | Tablets |
-| `lg` | 1024px | Laptops |
-| `xl` | 1280px | Desktops |
-| `2xl` | 1536px | Large screens |
+| Breakpoint | Width | Key Usage |
+|------------|-------|-----------|
+| `sm` | 640px | Typography scale, input font-size (16px iOS) |
+| `md` | 768px | Grid columns, nav changes |
+| `lg` | 1024px | Two-column layouts, checkout split |
+| `xl` | 1280px | Wide containers |
+| `2xl` | 1536px | Large screen max-widths |
 
-### Mobile-First Patterns
-
-- Navigation: Hamburger menu below `md`
-- Grid: Single column below `md`, multi-column above
+### Mobile-First Rules
+- Navigation: Hamburger drawer below `md`
+- Grid: Single column → multi-column above `md`
 - Typography: Smaller scale below `sm`
-- Checkout: Stacked layout below `lg`
+- **iOS Safari:** Form inputs must be `font-size: 16px` minimum to prevent auto-zoom
 
 ---
 
-## 11. Accessibility
+## 12. Accessibility
 
-- Focus states: Clear `ring` outlines on interactive elements
-- Color contrast: Minimum 4.5:1 for body text
+- Focus states: `ring` outlines on interactive elements
+- Color contrast: Minimum 4.5:1 for body text (`#2B4542` forest on `#FCFBF7` cream = ≥7:1)
 - Touch targets: Minimum 44px for mobile
-- Reduced motion: Respect `prefers-reduced-motion`
-- Semantic HTML: Proper heading hierarchy, ARIA labels
+- Reduced motion: Respect `prefers-reduced-motion` in animations
+- Semantic HTML: Proper heading hierarchy, ARIA labels on modals/dropdowns
+- **LegitScript compliance:** ConsentModal scroll-gate, FDA badges on therapy cards, PrescriptionDisclaimer on relevant pages
 
 ---
 
-## 12. File Structure
+## 13. Design File Structure
 
 ```
 components/
 ├── ui/
-│   ├── Button.tsx        # Primary/Secondary/Ghost buttons
-│   ├── Input.tsx         # Text input with label/error
-│   ├── Aura.tsx          # Decorative gradient orbs
-│   ├── ScrollReveal.tsx  # Intersection observer animations
-│   └── Spinner.tsx       # Loading indicator
+│   ├── Button.tsx          # primary/secondary/ghost, rounded-full, isLoading
+│   ├── Input.tsx           # forest border, cream bg, 16px iOS fix
+│   ├── Aura.tsx            # Blurred gradient orbs
+│   ├── ScrollReveal.tsx    # IntersectionObserver animations
+│   ├── SectionWrapper.tsx  # Consistent section padding
+│   ├── Spinner.tsx         # Loading spinner
+│   └── MeshBackgroundDynamic.tsx  # Full-screen animated mesh gradient
 ├── site/
-│   ├── Header.tsx        # Main navigation
-│   ├── Footer.tsx        # Site footer
-│   ├── ProductCard.tsx   # Feature card with color bg
-│   └── PricingCard.tsx   # Pricing tier card
-└── sections/
-    ├── Hero.tsx          # Hero with auras
-    ├── HowItWorks.tsx    # Steps section
-    ├── FAQ.tsx           # Accordion FAQ
-    └── Testimonials.tsx  # Reviews/quotes
+│   ├── Header.tsx          # Morphing floating pill navbar
+│   ├── Footer.tsx          # Two-tier footer
+│   ├── LayoutShell.tsx     # Conditional header/footer (server)
+│   ├── LayoutShellClient.tsx # Chrome hiding logic (client)
+│   ├── PricingCard.tsx     # Membership tier cards
+│   ├── MarketingHero.tsx   # Reusable hero component
+│   ├── TrustMarquee.tsx    # Scrolling trust badges
+│   ├── TrustStrip.tsx      # Static trust badges bar
+│   ├── TestimonialsSection.tsx # Review cards
+│   ├── ComparisonTable.tsx # CULTR vs standard care
+│   └── ...                 # Other site components
+├── compliance/
+│   ├── ConsentModal.tsx    # Checkout consent gate
+│   ├── FDAStatusBadge.tsx  # Per-therapy FDA badge
+│   └── PrescriptionDisclaimer.tsx
+└── CultrBackground.tsx     # Background component
 ```

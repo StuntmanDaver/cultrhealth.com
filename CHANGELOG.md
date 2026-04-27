@@ -1,3 +1,26 @@
+## [2026-04-22] - Creator ROI/Network accuracy overhaul + club order improvements (staging)
+
+### Fixed
+- **Creator ROI table (`lib/db.ts`, `app/admin/creators/CreatorsClient.tsx`):** Net revenue was `Commission − Discount`, making profitable creators look unprofitable. Replaced with Gross / −Discount / −Commission / Business Net breakdown. `getCreatorROI` now filters all source tables by the `days` param.
+- **Revenue column ignored date filter:** `getAllCreatorsForAdmin` now passes `days` so the admin Revenue column respects the period selector.
+- **Discount rate drift:** `processOrderAttribution` and related helpers now snapshot `discount_rate` at write time on `order_attributions` rows. Historical ROI stable even if coupon rate changes later.
+- **Owner email exclusion consistency:** `getCreatorCommissionStats` status chips now exclude owner emails, matching the Creator Network table.
+- **Club order sales stats filter (`lib/db.ts`):** `getSalesStats` revenue query updated from `invoice_sent` status to `waiting_to_ship` to match the current pipeline status names.
+
+### Added
+- `CreatorROIRow` interface adds `totalNetRevenue`, `grossRevenue`, `netBusinessImpact`.
+- Period badge + explanation caption on Creator ROI table.
+- Migrations 060–062 (Mary Cooper commission correction, `coupon_discount_usd` backfill, `order_attributions.discount_rate` snapshot column).
+
+### Changed
+- **Club order approval emails (`app/api/admin/club-orders/[orderId]/approve/route.ts`):** When a QuickBooks invoice is created on approval, the customer email now includes a "Pay Invoice" button linking to the QB invoice URL. Admin confirmation email shows the QB invoice ID.
+- **Club order shipping email (`app/api/admin/club-orders/[orderId]/status/route.ts`):** Shipped status email now includes carrier + tracking number block when available.
+- **Club order submission (`app/api/club/orders/route.ts`):** INSERT now persists `coupon_discount_usd` column so the dollar discount amount is stored point-in-time alongside the percent.
+- **Coupon config (`lib/config/coupons.ts`):** `CULTR30` owner promo expiry extended to 2026-06-30.
+
+---
+
+
 ## [2026-04-22] - Dosing calculator operational upgrade (staging)
 
 ### Added
