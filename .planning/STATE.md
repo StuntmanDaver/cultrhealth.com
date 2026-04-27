@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
-milestone: null
-milestone_name: null
-status: between_milestones
-last_updated: "2026-04-27T19:15:00.000Z"
-last_activity: 2026-04-27 — v1.0 closed; awaiting /gsd-new-milestone for v2.0 Stripe→CorePay
+milestone: v2.0
+milestone_name: Stripe to CorePay (Authorize.Net) replacement
+status: planning
+last_updated: "2026-04-27T22:43:41.564Z"
+last_activity: 2026-04-27
 progress:
   total_phases: 0
   completed_phases: 0
@@ -20,13 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** HIPAA-compliant telehealth for GLP-1 weight loss medications, wellness peptides, and longevity optimization.
-**Current focus:** Between milestones — v1.0 (cultrclub-web Cloudflare migration) shipped Apr 22 2026; v2.0 (Stripe → CorePay/Authorize.Net replacement) is planned and awaiting milestone scaffolding.
+**Current focus:** v2.0 — Strip Stripe and replace with Authorize.Net (CorePay merchant). Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md`
 
 ## Current Position
 
-Phase: — (no active milestone)
-Status: Awaiting `/gsd-new-milestone`
-Last activity: 2026-04-27 — v1.0 milestone closed
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-04-27 — Milestone v2.0 started
 
 ## Deferred Items
 
@@ -69,7 +70,7 @@ None.
 
 ### Next Steps
 
-1. `/gsd-new-milestone` — scaffold v2.0 Stripe → CorePay replacement
-   - Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md`
-   - 8 phases (0 — Skills through 7 — Hardening)
-2. Optional: `/gsd-cleanup` — archive orphan phase directories under `.planning/phases/` (`01-foundation`, `02-checkout-integration`, `03-kit-registration`) which predate v1.0 and were never folded into a roadmap.
+1. Research v2.0 domain (Authorize.Net ARB / CIM / webhooks specifics) — 4 parallel agents
+2. Define REQUIREMENTS.md cross-checked against the approved plan
+3. Spawn gsd-roadmapper for ROADMAP.md
+4. After roadmap approval: `/gsd-plan-phase 6` to start Phase 6 — Skills (or whichever number the roadmapper assigns)

@@ -25,6 +25,28 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
                   (shared by both apps)
 ```
 
+## Current Milestone: v2.0 Stripe → CorePay (Authorize.Net) replacement
+
+**Goal:** Strip Stripe entirely from CULTR Health and replace it with the existing "CorePay" code path (Authorize.Net ARB + CIM under the CorePay merchant account); ship four Claude Code skills so future sessions don't re-make Stripe assumptions.
+
+**Target features:**
+- Full Authorize.Net ARB lifecycle (create / cancel / suspend-emulation / resume / update / refund / void)
+- Customer Information Manager (CIM) profile + Accept.js card tokenization
+- HMAC-SHA512 webhook handler for `net.authorize.*` events with raw-body signature verification
+- CULTR-internal coupon engine (FOUNDER15 / FIRSTMONTH / creator codes) — replaces Stripe coupon resolution
+- Custom `/portal/billing` self-service UI (cancel / pause / resume / update card) — Authorize.Net has no hosted portal
+- Hard-cutover migration of existing Stripe subscribers via re-onboarding flow (30-day window)
+- Provider-agnostic DB schema (`stripe_*` → `provider_*`, drop `stripe_events`)
+- Sentry observability across CorePay webhooks + checkout
+- Four Claude skills checked into `.claude/skills/` (siphox-api refresh, healthie-api new, corepay-api new, corpay-crossborder reference)
+
+**Source plan:** `/Users/davidk/.claude/plans/async-petting-fern.md` (approved 2026-04-27)
+
+**Key context for this milestone:**
+- The URL the user originally shared (developer.crossborder.corpay.com) is **Corpay Cross-Border** — a B2B payouts/FX product, not consumer subscriptions. Captured as reference skill only; the replacement implementation is Authorize.Net via the existing `lib/payments/corepay-gateway.ts` scaffolding.
+- Hard cutover for existing Stripe subs (~50% churn risk accepted).
+- Phase 0 (skills) is pure documentation — independently shippable.
+
 ## Requirements
 
 ### Validated
@@ -106,6 +128,23 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
 - **PCI scope:** Card data tokenized client-side via Stripe.js (today) / Accept.js (post-v2.0). Server never touches PAN.
 - **Brand typography:** CULTR / CULTR HEALTH always Playfair Display; slogan "rebrand" lowercase italic.
 
+## Evolution
+
+This document evolves at phase transitions and milestone boundaries.
+
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-04-27 after v1.0 milestone close*
+*Last updated: 2026-04-27 — v2.0 Stripe → CorePay milestone started*
 *Previous milestone scope archived in `.planning/milestones/v1.0-ROADMAP.md`*
