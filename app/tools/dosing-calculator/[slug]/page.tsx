@@ -180,11 +180,18 @@ export default function PresetCalculatorPage({ params }: PageProps) {
         </ul>
       </section>
 
-      {/* Calculator pre-loaded with preset */}
+      {/* Calculator pre-loaded with preset.
+       * `key` forces React to remount the client component on client-side
+       * navigation between preset pages — without it, useState initializers
+       * keep the previous slug's values. */}
       <section aria-label={`Interactive ${content.displayName} dosing calculator`}>
         <h2 className="sr-only">Interactive {content.displayName} reconstitution and dose calculator</h2>
         <Suspense fallback={null}>
-          <PublicDosingCalculatorClient backHref="/tools/dosing-calculator" initialPresetId={content.presetId} />
+          <PublicDosingCalculatorClient
+            key={content.presetId}
+            backHref="/tools/dosing-calculator"
+            initialPresetId={content.presetId}
+          />
         </Suspense>
       </section>
 

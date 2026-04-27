@@ -168,7 +168,7 @@ export const PRESET_PAGES: PresetPageContent[] = [
       {
         question: 'Is Retatrutide FDA-approved?',
         answer:
-          'No. As of late 2026, Retatrutide remains in clinical trials and is not FDA-approved for any indication. It is available only through compounding pharmacies under a valid prescription from a licensed provider, with the understanding that long-term safety and efficacy data are still being collected.',
+          'No. Retatrutide remains under active clinical investigation and is not FDA-approved for any indication. It is available only through compounding pharmacies under a valid prescription from a licensed provider, with the understanding that long-term safety and efficacy data are still being collected.',
       },
       {
         question: 'What is the typical Retatrutide titration schedule?',
