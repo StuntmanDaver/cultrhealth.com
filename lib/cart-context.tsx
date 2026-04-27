@@ -1,7 +1,16 @@
 'use client'
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
+import { X, Beaker } from 'lucide-react'
+import { PRODUCT_CATALOG } from './config/product-catalog'
 import type { ShopProduct } from './config/product-catalog'
+
+const BAC_WATER_SKU = 'BACWATER-30ML'
+// Only injectable product categories trigger the auto-add
+const INJECTABLE_CATEGORIES: ShopProduct['category'][] = [
+  'growth_factor', 'repair', 'metabolic', 'bioregulator',
+  'neuropeptide', 'immune', 'hormonal', 'blend', 'sexual_wellness',
+]
 
 // Cart item type
 export type CartItem = {
@@ -39,6 +48,9 @@ type CartContextType = {
   getCartTotal: () => number
   /** Whether every item in the cart has a priceUsd set */
   allItemsPriced: () => boolean
+  /** True for ~5s after bacteriostatic water is auto-added */
+  bacWaterJustAdded: boolean
+  clearBacWaterNotification: () => void
 }
 
 // Local storage key
@@ -127,6 +139,7 @@ const CartContext = createContext<CartContextType | null>(null)
 // Provider component
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, initialState)
+  const [bacWaterJustAdded, setBacWaterJustAdded] = useState(false)
   
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -159,31 +172,51 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [state.items, state.isLoaded])
   
+  // Auto-dismiss the BAC water notification after 5 seconds
+  useEffect(() => {
+    if (!bacWaterJustAdded) return
+    const timer = setTimeout(() => setBacWaterJustAdded(false), 5000)
+    return () => clearTimeout(timer)
+  }, [bacWaterJustAdded])
+
   // Context actions
   const addItem = (product: ShopProduct, quantity = 1) => {
     dispatch({ type: 'ADD_ITEM', payload: { product, quantity } })
+
+    // Auto-add bacteriostatic water for injectable products if not already in cart
+    if (
+      INJECTABLE_CATEGORIES.includes(product.category) &&
+      product.sku !== BAC_WATER_SKU &&
+      !state.items.some(item => item.sku === BAC_WATER_SKU)
+    ) {
+      const bacWater = PRODUCT_CATALOG.find(p => p.sku === BAC_WATER_SKU)
+      if (bacWater) {
+        dispatch({ type: 'ADD_ITEM', payload: { product: bacWater, quantity: 1 } })
+        setBacWaterJustAdded(true)
+      }
+    }
   }
-  
+
   const removeItem = (sku: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { sku } })
   }
-  
+
   const updateQuantity = (sku: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { sku, quantity } })
   }
-  
+
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' })
   }
-  
+
   const getItemCount = () => {
     return state.items.reduce((total, item) => total + item.quantity, 0)
   }
-  
+
   const isInCart = (sku: string) => {
     return state.items.some(item => item.sku === sku)
   }
-  
+
   const getItem = (sku: string) => {
     return state.items.find(item => item.sku === sku)
   }
@@ -198,6 +231,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return state.items.length > 0 && state.items.every(item => typeof item.product.priceUsd === 'number' && item.product.priceUsd > 0)
   }
 
+  const clearBacWaterNotification = () => setBacWaterJustAdded(false)
+
   const value: CartContextType = {
     items: state.items,
     isLoaded: state.isLoaded,
@@ -210,9 +245,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
     getItem,
     getCartTotal,
     allItemsPriced,
+    bacWaterJustAdded,
+    clearBacWaterNotification,
   }
-  
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+
+      {/* Auto-add notification toast */}
+      {bacWaterJustAdded && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-start gap-3 px-4 py-3 bg-[#D8F3DC] border border-[#B7E4C7] rounded-xl shadow-lg max-w-sm w-[calc(100vw-2rem)]"
+        >
+          <Beaker className="w-5 h-5 text-[#2A4542] shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[#2A4542]">Bacteriostatic Water added</p>
+            <p className="text-xs text-[#2A4542]/70 mt-0.5">
+              Required for reconstituting injectable peptides — added automatically.
+            </p>
+          </div>
+          <button
+            onClick={clearBacWaterNotification}
+            aria-label="Dismiss"
+            className="shrink-0 text-[#2A4542]/50 hover:text-[#2A4542] transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+    </CartContext.Provider>
+  )
 }
 
 // Hook to use cart context
