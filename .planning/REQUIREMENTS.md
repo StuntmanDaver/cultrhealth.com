@@ -187,15 +187,109 @@ These block default behaviors. Resolve in CorePay sandbox before backend build s
 
 ## Traceability
 
-| REQ-ID | Phase | Title (short) |
-|---|---|---|
-| SKL-01..05 | 6 | Skills (corepay, healthie, corpay-crossborder, siphox refresh) |
-| PLB-01..13 | 7 | Schema migrations + gateway helpers + webhook + Sentry |
-| LFC-01..07 | 8 | Dispatcher refactor + COALESCE shim + integration matrix |
-| CPN-01..11 | 9 | Coupon engine + creator attribution backfill |
-| PRT-01..14 | 10 | Self-service portal + inline checkout + admin route conversions |
-| RDN-01..11 | 11 | Receipts + dunning ladder + Account Updater |
-| MGR-01..10 | 12 | Migration cutover + re-onboarding flow + sunset cron |
-| HRD-01..14 | 13 | Refunds + reporting + Stripe strip + tests + final sweep |
+### Category Summary
+
+| REQ-ID Range | Phase | Title (short) | Count |
+|---|---|---|---|
+| SKL-01..05 | 6 | Skills (corepay, healthie, corpay-crossborder, siphox refresh) | 5 |
+| PLB-01..13 | 7 | Schema migrations + gateway helpers + webhook + Sentry | 13 |
+| LFC-01..07 | 8 | Dispatcher refactor + COALESCE shim + integration matrix | 7 |
+| CPN-01..11 | 9 | Coupon engine + creator attribution backfill | 11 |
+| PRT-01..14 | 10 | Self-service portal + inline checkout + admin route conversions | 14 |
+| RDN-01..11 | 11 | Receipts + dunning ladder + Account Updater | 11 |
+| MGR-01..10 | 12 | Migration cutover + re-onboarding flow + sunset cron | 10 |
+| HRD-01..14 | 13 | Refunds + reporting + Stripe strip + tests + final sweep | 14 |
 
 **Total v2.0 requirements:** 75 (5 + 13 + 7 + 11 + 14 + 11 + 10 + 14)
+
+### Per-REQ Mapping
+
+| REQ-ID | Phase | Status |
+|---|---|---|
+| SKL-01 | 6 | Pending |
+| SKL-02 | 6 | Pending |
+| SKL-03 | 6 | Pending |
+| SKL-04 | 6 | Pending |
+| SKL-05 | 6 | Pending |
+| PLB-01 | 7 | Pending |
+| PLB-02 | 7 | Pending |
+| PLB-03 | 7 | Pending |
+| PLB-04 | 7 | Pending |
+| PLB-05 | 7 | Pending |
+| PLB-06 | 7 | Pending |
+| PLB-07 | 7 | Pending |
+| PLB-08 | 7 | Pending |
+| PLB-09 | 7 | Pending |
+| PLB-10 | 7 | Pending |
+| PLB-11 | 7 | Pending |
+| PLB-12 | 7 | Pending |
+| PLB-13 | 7 | Pending |
+| LFC-01 | 8 | Pending |
+| LFC-02 | 8 | Pending |
+| LFC-03 | 8 | Pending |
+| LFC-04 | 8 | Pending |
+| LFC-05 | 8 | Pending |
+| LFC-06 | 8 | Pending |
+| LFC-07 | 8 | Pending |
+| CPN-01 | 9 | Pending |
+| CPN-02 | 9 | Pending |
+| CPN-03 | 9 | Pending |
+| CPN-04 | 9 | Pending |
+| CPN-05 | 9 | Pending |
+| CPN-06 | 9 | Pending |
+| CPN-07 | 9 | Pending |
+| CPN-08 | 9 | Pending |
+| CPN-09 | 9 | Pending |
+| CPN-10 | 9 | Pending |
+| CPN-11 | 9 | Pending |
+| PRT-01 | 10 | Pending |
+| PRT-02 | 10 | Pending |
+| PRT-03 | 10 | Pending |
+| PRT-04 | 10 | Pending |
+| PRT-05 | 10 | Pending |
+| PRT-06 | 10 | Pending |
+| PRT-07 | 10 | Pending |
+| PRT-08 | 10 | Pending |
+| PRT-09 | 10 | Pending |
+| PRT-10 | 10 | Pending |
+| PRT-11 | 10 | Pending |
+| PRT-12 | 10 | Pending |
+| PRT-13 | 10 | Pending |
+| PRT-14 | 10 | Pending |
+| RDN-01 | 11 | Pending |
+| RDN-02 | 11 | Pending |
+| RDN-03 | 11 | Pending |
+| RDN-04 | 11 | Pending |
+| RDN-05 | 11 | Pending |
+| RDN-06 | 11 | Pending |
+| RDN-07 | 11 | Pending |
+| RDN-08 | 11 | Pending |
+| RDN-09 | 11 | Pending |
+| RDN-10 | 11 | Pending |
+| RDN-11 | 11 | Pending |
+| MGR-01 | 12 | Pending |
+| MGR-02 | 12 | Pending |
+| MGR-03 | 12 | Pending |
+| MGR-04 | 12 | Pending |
+| MGR-05 | 12 | Pending |
+| MGR-06 | 12 | Pending |
+| MGR-07 | 12 | Pending |
+| MGR-08 | 12 | Pending |
+| MGR-09 | 12 | Pending |
+| MGR-10 | 12 | Pending |
+| HRD-01 | 13 | Pending |
+| HRD-02 | 13 | Pending |
+| HRD-03 | 13 | Pending |
+| HRD-04 | 13 | Pending |
+| HRD-05 | 13 | Pending |
+| HRD-06 | 13 | Pending |
+| HRD-07 | 13 | Pending |
+| HRD-08 | 13 | Pending |
+| HRD-09 | 13 | Pending |
+| HRD-10 | 13 | Pending |
+| HRD-11 | 13 | Pending |
+| HRD-12 | 13 | Pending |
+| HRD-13 | 13 | Pending |
+| HRD-14 | 13 | Pending |
+
+**Coverage:** 75/75 v2.0 requirements mapped to exactly one phase. No orphans. No duplicates.

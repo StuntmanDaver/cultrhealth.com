@@ -6,9 +6,9 @@ status: planning
 last_updated: "2026-04-27T22:43:41.564Z"
 last_activity: 2026-04-27
 progress:
-  total_phases: 0
+  total_phases: 8
   completed_phases: 0
-  total_plans: 0
+  total_plans: 18
   completed_plans: 0
   percent: 0
 ---
@@ -24,10 +24,28 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 6 — Skills (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-04-27 — Milestone v2.0 started
+Status: Roadmap drafted; awaiting plan-phase invocation.
+Last activity: 2026-04-27 — ROADMAP.md drafted, 75 REQs mapped across Phases 6–13
+
+## Roadmap Summary
+
+v2.0 spans **Phases 6–13** (8 phases, ~18 plans estimated):
+
+| Phase | Name | REQ Count | Plans (est.) |
+|---|---|---|---|
+| 6 | Skills | 5 | 1 |
+| 7 | Schema + Gateway Plumbing | 13 | 3 |
+| 8 | Subscription Lifecycle Core | 7 | 2 |
+| 9 | Coupon Engine | 11 | 2 |
+| 10 | Self-Service Portal UI | 14 | 3 |
+| 11 | Receipts + Dunning Ladder | 11 | 2 |
+| 12 | Migration Cutover | 10 | 2 |
+| 13 | Refunds + Reporting + Hardening | 14 | 3 |
+| **Totals** | | **75** | **18** |
+
+**Hard sandbox gate before Phase 7:** Open questions Q1–Q6 from `.planning/research/SUMMARY.md` §6 must be resolved in CorePay sandbox before backend build starts.
 
 ## Deferred Items
 
@@ -64,13 +82,34 @@ Full record archived in `.planning/milestones/v1.0-ROADMAP.md`. Summary:
 | Vercel alias removal via API (not dashboard) | Dashboard removal silently re-attaches on next deploy |
 | `join.cultrhealth.com` retired (NXDOMAIN, not 301) | Cleaner — no stale traffic to maintain |
 
+### v2.0 Locked Architectural Decisions
+
+(From `.planning/research/SUMMARY.md` §4 — these are NOT open questions for planning.)
+
+| Decision | Why |
+|---|---|
+| Do NOT install `authorizenet` npm package | Axios CVE, CJS-only, breaks edge runtime; extend `gatewayFetch()` instead |
+| Both webhook handlers run in parallel during migration | Killing Stripe handler day 1 orphans in-flight events |
+| One CIM customer profile per email lifetime, many payment profiles | ARB references customer + payment profile by ID — clean pause/resume |
+| Card update default: Path B (new payment profile + ARBUpdate) | Path A cascade unverified; default to unambiguous path |
+| Void Stripe invoices BEFORE `subscriptions.cancel()` | Skipping void risks double-charge from in-flight invoice |
+| Vercel Fluid Compute (300s) — no async pattern needed for checkout | Sequential ARB calls fit in 3-8s |
+| Coupon source-of-truth: `coupon_redemptions` at redeem time | Decouple from Stripe coupon model |
+| Webhook side effects extracted to `lib/webhooks/dispatcher.ts` | DRY across providers |
+
 ### Open Blockers
 
-None.
+**Pre-Phase-7 sandbox gate** — Q1–Q6 from `.planning/research/SUMMARY.md` §6:
+1. Q1: CIM payment profile cascade to ARB? (Path A vs Path B default)
+2. Q2: Vercel Fluid Compute on staging?
+3. Q3: Existing Sentry project on cultrhealth.com?
+4. Q4: Account Updater enabled on CorePay merchant?
+5. Q5: CIM payment profile retention policy?
+6. Q6: Authorize.Net first-charge limitation? (ARB day-1 charge?)
 
 ### Next Steps
 
-1. Research v2.0 domain (Authorize.Net ARB / CIM / webhooks specifics) — 4 parallel agents
-2. Define REQUIREMENTS.md cross-checked against the approved plan
-3. Spawn gsd-roadmapper for ROADMAP.md
-4. After roadmap approval: `/gsd-plan-phase 6` to start Phase 6 — Skills (or whichever number the roadmapper assigns)
+1. Resolve Q1–Q6 in CorePay sandbox (block Phase 7)
+2. `/gsd-plan-phase 6` — Skills (independently shippable; doesn't block on sandbox gate)
+3. `/gsd-plan-phase 7` — Schema + Gateway Plumbing (after sandbox)
+4. Continue through Phase 13 in dependency order
