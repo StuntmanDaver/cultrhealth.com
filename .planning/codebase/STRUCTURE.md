@@ -1,17 +1,20 @@
 # Codebase Structure
 
-*Last updated: 2026-04-20*
-*Scope: cultrhealth.com + cultrclub.com*
+*Last updated: 2026-04-27*
+*Scope: cultrhealth.com (this repo) + cultrhealth-web (sibling, CF Pages prod) + cultrclub.com*
 
-## Repo Layout (Two Sibling Apps)
+## Repo Layout (Three Sibling Apps)
 
 ```
 /Users/davidk/Documents/Dev-Projects/App-Ideas/
-├── Cultr Health Website/   # cultrhealth.com — Vercel / Next.js 14
+├── Cultr Health Website/   # cultrhealth.com SOURCE — authored here; deployed two ways
+├── cultrhealth-web/        # cultrhealth.com — Cloudflare Pages production mirror (sibling repo, branch `main`)
 └── cultrclub-web/          # cultrclub.com  — Cloudflare Pages / Next.js 15
 ```
 
-Both repos are independent (separate `package.json`, `.git`, and deploy pipelines). They share one Neon Postgres database (schema owned by the cultrhealth.com repo's `migrations/`).
+**Cultr Health Website/** is the canonical source repo. **cultrhealth-web/** is a sibling repo containing the build artifacts and CF Pages config (`build:cf`, `deploy:prod`, `wrangler.toml`); it is what deploys to `cultrhealth.com` production. Pushes to `staging` branch of *this* repo deploy to `staging.cultrhealth.com` on Vercel. There is no GitHub auto-deploy for production — `npm run build:cf && npm run deploy:prod` is run manually from `cultrhealth-web/` on Node 20.
+
+All three apps share one Neon Postgres database (schema owned by **this repo's** `migrations/`).
 
 ---
 
@@ -21,23 +24,24 @@ Both repos are independent (separate `package.json`, `.git`, and deploy pipeline
 
 ```
 Cultr Health Website/
-├── app/                    # Next.js 14 App Router — pages, APIs, layouts (~45 pages, 118 API routes)
-├── components/             # React components (organized by domain)
+├── app/                    # Next.js 14 App Router — pages, APIs, layouts (~82 page.tsx, 120 API routes)
+├── components/             # React components organized by domain (97 .tsx)
 ├── lib/                    # Business logic, config, integrations, DB helpers
-├── migrations/             # SQL migrations (~60 files — single source of schema truth for both apps)
-├── tests/                  # Vitest + RTL (smoke, integration, components, lib, api)
+├── migrations/             # SQL migrations (76 files including duplicates — single source of schema truth)
+├── tests/                  # Vitest + RTL (smoke, integration, components, lib, api) — 91 test files
 ├── e2e/                    # Playwright E2E specs
-├── scripts/                # One-off maintenance and setup scripts
-├── content/                # Markdown content (library + legacy blog)
-├── public/                 # Static assets (images, logos, PDFs)
+├── scripts/                # One-off maintenance + setup scripts
+├── content/                # Markdown content (library + legacy blog files still on disk)
+├── public/                 # Static assets (images, logos, PDFs, fonts)
 ├── docs/                   # Internal documentation
 ├── hooks/                  # Ralph agent hooks
-├── .claude/                # Claude Code agent config (commands, hooks, skills-lock)
+├── .planning/              # GSD workspace (STATE.md, PROJECT.md, phases/, codebase/)
+├── .claude/                # Claude Code agent config (commands, hooks, skills, worktrees)
 ├── .agent/  .agents/       # Agent/skills manifests (typescript-expert, codex, etc.)
 ├── .ralph/ .ralphrc        # Ralph autonomous dev loop config
-├── middleware.ts           # Session idle timeout + canonical host + legacy-host 404 shim
+├── middleware.ts           # Session idle timeout + canonical host + legacy-/join 404 shim
 ├── next.config.js          # Image optimization, CSP, caching headers, redirects
-├── vercel.json             # Cron schedules + deploy-disabled main branch
+├── vercel.json             # Cron schedules + deploy-disabled main/master branches (staging only)
 ├── tailwind.config.ts      # Design tokens (brand colors, aura-*, cultr-*)
 ├── package.json            # Next.js 14, Stripe, @vercel/postgres, jose, Resend, Zod, AI SDK
 ├── CLAUDE.md               # Canonical AI/contributor guide (self-correcting)
@@ -45,18 +49,20 @@ Cultr Health Website/
 └── CHANGELOG.md            # Human-readable deploy history
 ```
 
+The `cultrhealth-web/` sibling repo contains the same `app/`/`components/`/`lib/`/etc. tree plus a few CF-specific additions: `build:cf` and `deploy:prod` scripts in `package.json`, a `wrangler.toml`, and a `scripts/build-cf-safe.mjs` post-build asset-restoration helper. Edits should generally land in this repo first and then sync.
+
 ### `app/` — Routes & APIs
 
 ```
 app/
-├── page.tsx                        # Homepage (server component; sections built inline; dynamic imports below fold)
+├── page.tsx                        # Homepage (~511 lines, server component, sections inline; dynamic imports below fold)
 ├── layout.tsx                      # Root layout: fonts, GA, MeshBackgroundDynamic, LayoutShell
 ├── globals.css                     # Tailwind base + brand utilities
 ├── error.tsx  not-found.tsx
-├── robots.ts  sitemap.ts           # SEO
+├── robots.ts  sitemap.ts           # SEO — sitemap drives /tools/dosing-calculator/[slug] preset pages
 ├── opengraph-image.png  twitter-image.png
 │
-├── admin/                          # Admin panel (role-gated)
+├── admin/                          # Admin panel (role-gated, no site chrome)
 │   ├── page.tsx + AdminDashboardClient.tsx
 │   ├── club-orders/                # Full pipeline UI (PIPELINE_ORDER from lib/admin-club-orders.ts)
 │   ├── creators/                   # approvals/, coupons/, payouts/
@@ -64,11 +70,11 @@ app/
 │   ├── dosing-rules/               # AI dosing-engine rules admin
 │   ├── intakes/                    # Intake review + manual processing
 │   ├── inventory/                  # 3-tab per-site product inventory editor
-│   ├── marketing/                  # waitlist/, quiz-leads
+│   ├── marketing/                  # MarketingClient.tsx + waitlist/ (Quiz Leads + Marketing dashboards)
 │   ├── members/                    # Member management (edit/delete; force-delete with orders)
-│   └── orders/                     # All-orders mixed list (club rows distinguished from product rows)
+│   └── orders/                     # ClubOrdersTab.tsx, OrdersClient.tsx, PendingApprovalTab.tsx
 │
-├── api/                            # 118 route.ts files (see ARCHITECTURE.md for full category map)
+├── api/                            # 120 route.ts files
 │   ├── admin/                      # analytics, asher-dashboard, club-members, club-orders/[orderId],
 │   │                               #   creators/[id]/{approve,reject,payouts/batch,codes}, customers,
 │   │                               #   cron-status, dosing-rules, intakes, inventory, members, orders,
@@ -77,10 +83,11 @@ app/
 │   ├── checkout/                   # route.ts (subscription), product/, subscription/, corepay/
 │   ├── club/                       # check-member, event, login, orders, signup, validate-coupon
 │   ├── creators/                   # apply, magic-link, verify-login, verify-email, dashboard,
-│   │                               #   profile, links, codes, network, payouts, earnings/{overview,
-│   │                               #   orders,ledger}, leaderboard, labs, dosing, support, results
+│   │                               #   profile, links, codes, network, payouts, earnings, leaderboard,
+│   │                               #   labs, dosing, support, results
 │   ├── cron/                       # approve-commissions, update-tiers, stale-orders,
 │   │                               #   siphox-fulfillment, siphox-results, siphox-status-sync, asher-sync
+│   ├── dosing-calculator/          # instruction-pdf/ (server-rendered PDF for the public calculator)
 │   ├── intake/submit/              # Submit medical intake
 │   ├── lmn/                        # list, generate, [lmnNumber]
 │   ├── meal-plan/  protocol/generate/  # AI endpoints
@@ -89,71 +96,89 @@ app/
 │   ├── onboarding/status/          # Post-checkout onboarding state
 │   ├── portal/                     # send-otp, verify-otp, refresh, logout, labs, results,
 │   │                               #   documents, orders, profile, stacking-content
-│   ├── protocol/generate/
+│   ├── protocol/generate/          # AI protocol generation
 │   ├── quickbooks/{auth,callback}/ # OAuth2 flow
 │   ├── quiz/submit/                # POST submit, PATCH lead-mirror (waitlist table)
 │   ├── quote/                      # Quote generator
 │   ├── stock/                      # Inventory lookup
 │   ├── supplement-order/           # Supplement reorders
-│   ├── track/                      # click, daily, qr-scan
+│   ├── track/                      # click, daily, identify, qr-scan
 │   ├── waitlist/
 │   └── webhook/                    # stripe/, quickbooks/, healthie/, calendly/ (signature-verified)
 │
 ├── creators/                       # Creator-facing pages
-│   ├── page.tsx                    # Program landing
+│   ├── page.tsx  template.tsx      # Program landing
 │   ├── apply/  login/  pending/
 │   ├── [slug]/page.tsx             # Public creator profile
 │   └── portal/                     # Authenticated portal (hidden from site chrome)
+│       ├── layout.tsx  loading.tsx  page.tsx
 │       ├── dashboard/  earnings/  network/  payouts/  share/  campaigns/
 │       ├── resources/  settings/  support/  labs/  dosing-calculator/
 │
-├── members/                        # Member library (was /library; redirects preserved)
-│   ├── page.tsx  [category]/
-│   ├── shop/page.tsx + ShopClient.tsx + [sku]/
+├── members/                        # Member library (replaces /library; 301 redirects preserved)
+│   ├── page.tsx + LibraryContent.tsx + LibraryLogin.tsx + LibrarySidebarShell.tsx
+│   ├── layout.tsx  loading.tsx
+│   ├── [category]/                 # Category landing pages
+│   ├── shop/                       # Members shop (catalog, [sku] detail)
 │   ├── cart/  quote-success/
 │   ├── consultations/              # Telehealth (Calendly embed)
-│   ├── labs/  lab-instructions/
+│   ├── labs/  lab-instructions/    # Siphox lab access
 │   ├── calorie-calculator/  dosing-calculator/  peptide-faq/  stacking-guides/
 │
 ├── portal/                         # Siphox/labs customer portal (separate from /members)
-│   ├── login/  dashboard/  labs/  documents/  profile/  stacking/
+│   ├── layout.tsx
+│   └── login/  dashboard/  labs/  documents/  profile/  stacking/
 │
 ├── intake/                         # Medical intake (multi-step)
-│   ├── page.tsx + IntakeFormClient.tsx
+│   ├── page.tsx                    # Page imports IntakeFormClient from components/intake
 │   └── success/
 │
 ├── onboarding/                     # Post-checkout onboarding flow
+│   ├── page.tsx + OnboardingClient.tsx
 ├── success/                        # Stripe success landing
 ├── login/                          # Member login + choose-area selector
-├── dashboard/                      # Member dashboard
+│   ├── page.tsx
+│   └── choose-area/                # Login destination chooser
 │
-├── quiz/  therapies/  pricing/  how-it-works/  faq/  tools/  community/
-├── legal/                          # privacy, terms, medical-disclaimer, provider-credentials
-├── science/  science/[slug]/       # 301-redirected to / (LegitScript compliance shim)
-├── products/                       # 301-redirected to /pricing
-├── terms/                          # Legacy terms shim
+├── quiz/  therapies/  pricing/  how-it-works/  faq/  community/
+│
+├── tools/                          # **Public SEO-driven calculator family (Apr 25 2026 overhaul)**
+│   ├── page.tsx                    # /tools landing
+│   └── dosing-calculator/
+│       ├── page.tsx                # Server-rendered landing w/ 4 JSON-LD schemas
+│       ├── seo-content.ts          # Single source of truth for FAQ, HowTo, cross-sells
+│       ├── PublicDosingCalculatorClient.tsx
+│       ├── DosingCalculatorClient.tsx
+│       └── [slug]/                 # Per-peptide preset pages (13 slugs)
+│           ├── page.tsx
+│           └── preset-content.ts   # 13 entries: semaglutide, tirzepatide, retatrutide,
+│                                   #   bpc-157, tb-500, ghk-cu, glutathione, nad,
+│                                   #   sermorelin, cjc-1295-ipamorelin, tesamorelin-ipamorelin,
+│                                   #   pt-141, oxytocin
+│
+├── legal/                          # privacy, terms, medical-disclaimer (provider-credentials etc.)
+├── science/                        # **Shim** — 301-redirected to / via next.config.js (LegitScript)
+├── products/                       # **Shim** — 301-redirected to /pricing
+├── terms/                          # **Shim sibling of /legal/terms — to consolidate**
 │
 ├── go/[destination]/route.ts       # QR code redirect w/ device + geo analytics
 ├── r/[slug]/route.ts               # LEGACY creator tracking link; primary now on cultrclub.com/<slug>
 │
-└── join/                           # **LEGACY — see "Deprecated" section below**
-    ├── page.tsx  layout.tsx  JoinLandingClient.tsx
-    └── [tier]/page.tsx
+└── join/                           # **LEGACY** — middleware 404s on public hosts (subdomain retired Apr 22 2026)
 ```
 
-### `components/` — React components (organized by domain)
+### `components/` — React components
 
 ```
 components/
-├── ui/                             # Primitives
-│   ├── Aura.tsx  Button.tsx  Input.tsx  Spinner.tsx
+├── ui/                             # Primitives (18 files)
+│   ├── apple-cards-carousel.tsx  Aura.tsx  Button.tsx  Input.tsx  Spinner.tsx
 │   ├── ScrollReveal.tsx  SectionWrapper.tsx  PageTransition.tsx
 │   ├── WavyBackground.tsx  MeshBackground.tsx  MeshBackgroundDynamic.tsx
 │   ├── Marquee.tsx  TextShimmer.tsx  ParallaxReveal.tsx
-│   ├── CalendlyEmbed.tsx  HoverCard.tsx  NavDock.tsx
-│   └── apple-cards-carousel.tsx    # Shared carousel primitive
+│   ├── CalendlyEmbed.tsx  HoverCard.tsx  NavDock.tsx  UserIdentifier.tsx
 │
-├── site/                           # Marketing site chrome + sections
+├── site/                           # Marketing site chrome + sections (23 files)
 │   ├── Header.tsx  Footer.tsx  LayoutShell.tsx  LayoutShellClient.tsx
 │   ├── MarketingHero.tsx  CTASection.tsx  FAQAccordion.tsx
 │   ├── PricingCard.tsx  ComparisonTable.tsx  TherapiesGrid.tsx
@@ -162,79 +187,97 @@ components/
 │   ├── ProductCard.tsx  CommunityFeed.tsx (Curator.io)
 │   ├── NewsletterSignup.tsx  LeadCapturePrompt.tsx  ClubBanner.tsx
 │   ├── BiomarkerExplainer.tsx  BiomarkerScroll.tsx
+│   #
+│   # FAQAccordion was modified Apr 26 to render answers in static HTML (CSS-collapse +
+│   # aria-hidden) instead of conditional render so Google FAQPage rich snippets work.
 │
-├── admin/                          # Admin layouts + shared admin widgets
+├── admin/                          # Admin layouts + shared admin widgets (6 files)
 │   ├── AdminLayoutClient.tsx  AdminSidebar.tsx
+│   ├── ClubOrderBulkActions.tsx  ClubOrderStageControls.tsx
 │   ├── MetricCard.tsx  PrelaunchCodesSection.tsx
-│   └── ClubOrderBulkActions.tsx  ClubOrderStageControls.tsx
 │
-├── compliance/                     # LegitScript components
+├── compliance/                     # LegitScript components (6 files)
 │   ├── ConsentModal.tsx  FDAStatusBadge.tsx  FloridaStateGate.tsx
 │   ├── PrescriptionDisclaimer.tsx  TestimonialDisclaimer.tsx
 │   └── DispensingPharmacyInfo.tsx
 │
-├── creators/                       # Creator portal UI
+├── creators/                       # Creator portal UI (6 files)
 │   ├── CreatorHeader.tsx  CreatorSidebar.tsx
 │   ├── AnalyticsCharts.tsx (only Recharts consumer)
 │   ├── Leaderboard.tsx  Milestones.tsx  NotificationBell.tsx
 │
-├── dashboard/                      # Member biomarker dashboard
+├── dashboard/                      # Member biomarker dashboard (2 files)
 │   ├── BiologicalAgeCard.tsx  BiomarkerTrends.tsx
 │
-├── intake/                         # Multi-step intake
+├── dosing-ai/                      # AI dosing engine UI (3 files)
+│   ├── AiDosingEnginePanel.tsx  AiDosingQuestionFlow.tsx  RecommendationCard.tsx
+│
+├── dosing-calculator/              # **Shared calculator (NEW since Apr 22)** — used by 3 host pages
+│   ├── DosingCalculator.tsx        # Main interactive component
+│   ├── SyringeMeter.tsx            # U-100 visual meter
+│   ├── SyringeMeter 2.tsx          # ⚠ macOS duplicate — flag for cleanup
+│   ├── CapacityWarningBanner.tsx
+│   ├── InstructionCard.tsx
+│   ├── TherapyPlanCard.tsx
+│   ├── TherapyPresetPicker.tsx
+│   └── WeightBasedDoseCard.tsx
+│
+├── intake/                         # Multi-step intake (2 files)
 │   ├── IntakeFormClient.tsx  TypeformStep.tsx
 │
-├── library/                        # Member library widgets
+├── library/                        # Member library widgets (10 files)
 │   ├── MemberSidebar.tsx  MemberDashboard.tsx
 │   ├── CategoryGrid.tsx  MasterIndex.tsx  ProductCatalog.tsx  TierGate.tsx
 │   ├── MedicalRecords.tsx  MemberFiles.tsx  MyProviders.tsx  TransactionHistory.tsx
 │
-├── payments/                       # Payment provider UI
+├── payments/                       # Payment provider UI (3 files)
 │   ├── CorePayForm.tsx  PaymentMethodSelector.tsx  PaymentProviderLoader.tsx
 │
-├── portal/                         # Siphox labs portal
+├── portal/                         # Siphox labs portal (9 files)
 │   ├── PortalSidebar.tsx
 │   ├── KitEmptyState.tsx  KitDetailCard.tsx  KitRegistrationForm.tsx  KitTimeline.tsx
 │   ├── LabsResultsView.tsx
 │   ├── BiomarkerCategoryCard.tsx  BiomarkerDetailModal.tsx  ReferenceRangeBar.tsx
 │
-├── dosing-ai/                      # AI dosing engine UI
-│   ├── AiDosingEnginePanel.tsx  AiDosingQuestionFlow.tsx  RecommendationCard.tsx
-│
 └── CultrBackground.tsx             # Top-level background wrapper
 ```
+
+The previously-noted root-level legacy components (`Footer.tsx`, `Navigation.tsx`, `WaitlistForm.tsx`) are no longer present — cleaned up. The legacy `components/sections/` directory is also gone. `components/dosing-calculator/` is a new domain folder added during the SEO overhaul.
 
 ### `lib/` — Business logic & integrations
 
 ```
 lib/
+├── admin-club-orders.ts            # PIPELINE_ORDER, PIPELINE_STATUSES, NEXT_ACTIONS (canonical pipeline)
+├── admin-types.ts  admin-utils.ts
+├── analytics.ts                    # GA + Microsoft Clarity event wrapper
+├── asher-med-api.ts                # Historical Asher Med client (removed Apr 4 2026; kept for audits)
 ├── auth.ts                         # JWT sign/verify (jose), cookie helpers
+├── blog-content.ts                 # LEGACY — blog removed Apr 2026
+├── calorie-calculator.ts
+├── cart-context.tsx                # Member shop cart context
+├── contacts.ts  mailchimp.ts       # Mailchimp + contact sync
+├── cron-logger.ts                  # startCronRun() → cron_runs table
+├── data-normalization.ts           # Shared normalizers
 ├── db.ts                           # @vercel/postgres wrapper; NUMERIC coercion helpers
+├── hipaa-logger.ts                 # Safe logger — never logs PHI
+├── intake-utils.ts                 # Intake data normalization
+├── library-content.ts
+├── peptide-calculator.ts           # Syringe-visualization dosage calc
+├── portal-auth.ts  portal-db.ts  portal-orders.ts  # Siphox portal session helpers
+├── protocol-templates.ts
+├── quickbooks.ts                   # QBO OAuth2 + invoicing
+├── rate-limit.ts                   # apiLimiter, formLimiter, strictLimiter (Upstash/memory)
+├── resend.ts                       # Email templates, escapeHtml, brandedEmailHeader/Footer
+├── resilience.ts                   # Retry + circuit breaker
+├── turnstile.ts                    # Cloudflare Turnstile verification
 ├── utils.ts                        # cn() (clsx + tailwind-merge)
 ├── validation.ts                   # Zod schemas
-├── rate-limit.ts                   # apiLimiter, formLimiter, strictLimiter (Upstash/memory)
-├── resilience.ts                   # Retry + circuit breaker
-├── resend.ts                       # Email templates, escapeHtml, brandedEmailHeader/Footer
-├── contacts.ts  mailchimp.ts       # Mailchimp sync
-├── turnstile.ts                    # Cloudflare Turnstile verification
-├── analytics.ts                    # GA event wrapper
-├── hipaa-logger.ts                 # Safe logger — never logs PHI
-├── cron-logger.ts                  # startCronRun() → cron_runs table
-├── intake-utils.ts                 # Intake data normalization
-├── data-normalization.ts  phone.ts # Shared normalizers
-├── admin-club-orders.ts            # PIPELINE_ORDER, PIPELINE_STATUSES (canonical pipeline)
-├── admin-types.ts  admin-utils.ts
-├── library-content.ts  protocol-templates.ts  calorie-calculator.ts
-├── peptide-calculator.ts           # Syringe-visualization dosage calc
-├── cart-context.tsx                # Member shop cart context
-├── quickbooks.ts                   # QBO OAuth2 + invoicing
-├── asher-med-api.ts                # Historical Asher Med client (removed Apr 4 2026; kept for audits)
-├── portal-auth.ts  portal-db.ts  portal-orders.ts  # Siphox portal
-├── blog-content.ts                 # LEGACY — blog removed Apr 2026
 │
-├── config/                         # Static configuration sources of truth
+├── config/                         # Static configuration sources of truth (21 files)
 │   ├── affiliate.ts                # Commission rates, tier config, FTC disclosures
 │   ├── asher-med.ts                # Historical integration config
+│   ├── calculator-presets.ts       # Therapy preset catalog for the dosing calculator
 │   ├── compliance.ts               # JURISDICTION_STATEMENT (Florida-only)
 │   ├── coupons.ts                  # CLUB_COUPONS + validateCouponUnified()
 │   ├── feature-flags.ts
@@ -253,26 +296,26 @@ lib/
 │   ├── therapies.ts  us-states.ts
 │   └── vitamin-catalog.ts
 │
-├── contexts/                       # React Context providers
+├── contexts/                       # React Context providers (2 files)
 │   ├── CreatorContext.tsx
 │   └── JoinCartContext.tsx
 │
-├── creators/                       # Creator affiliate business logic
+├── creators/                       # Creator affiliate business logic (3 files)
 │   ├── attribution.ts              # Click tracking, cookie resolution
 │   ├── commission.ts               # Direct + override commission engine, ledger lifecycle
 │   └── db.ts                       # Creator DB ops (getCreatorById, approveEligibleCommissions, etc.)
 │
-├── healthie/                       # Healthie EHR client
-│   ├── index.ts  client.ts  queries.ts  mutations.ts  schemas.ts  types.ts
-│   ├── patient-sync.ts  lab-sync.ts  portal-mapper.ts  webhooks.ts
-│
-├── siphox/                         # Siphox labs integration
-│   ├── index.ts  client.ts  db.ts  errors.ts  schemas.ts  types.ts
-│   ├── biomarkers.ts  kit-lifecycle.ts  reports.ts  fulfillment.ts
+├── dosing-calculator/              # Calculator helpers (NEW)
+│   ├── instruction-card-pdf.tsx    # @react-pdf rendering for /api/dosing-calculator/instruction-pdf
+│   └── url-state.ts                # Shareable calculator state in URL params
 │
 ├── dosing-engine/                  # AI-powered peptide dosing recommender
 │   ├── engine.ts  types.ts  validation.ts  conversions.ts
 │   └── config/                     # Rule definitions
+│
+├── healthie/                       # Healthie EHR client (10 files)
+│   ├── index.ts  client.ts  queries.ts  mutations.ts  schemas.ts  types.ts
+│   ├── patient-sync.ts  lab-sync.ts  portal-mapper.ts  webhooks.ts
 │
 ├── invoice/                        # PDF invoice generation
 │   ├── index.ts  invoice-generator.tsx  invoice-template.tsx  invoice-types.ts
@@ -283,11 +326,19 @@ lib/
 ├── payments/                       # Payment provider APIs
 │   ├── corepay-gateway.ts  payment-types.ts
 │
+├── siphox/                         # Siphox labs integration (10 files)
+│   ├── index.ts  client.ts  db.ts  errors.ts  schemas.ts  types.ts
+│   ├── biomarkers.ts  kit-lifecycle.ts  reports.ts  fulfillment.ts
+│
 └── utils/                          # Small helpers
     ├── health.ts  phone.ts
 ```
 
-### `migrations/` — SQL files (schema source of truth for both apps)
+The previously-noted `lib/stores/` empty directory is no longer present.
+
+### `migrations/` — SQL files (schema source of truth for all three apps)
+
+76 files including macOS-style ` 2.sql` / ` 4.sql` duplicates. Migration runner: `node scripts/run-migration.mjs`.
 
 | File | Purpose |
 |---|---|
@@ -315,7 +366,7 @@ lib/
 | `021_siphox_fulfillment_columns.sql` | Fulfillment columns |
 | `022_siphox_results_notification.sql` | Result-ready notification state |
 | `023_qr_scans.sql` | QR scan analytics |
-| `024_prelaunch_codes.sql` | Prelaunch program (+ **critical** fix: creator coupons were silently failing before this) |
+| `024_prelaunch_codes.sql` | Prelaunch program (+ critical creator-coupon fix) |
 | `025_jon21_discount_10.sql` | JON21 coupon rate = 10% |
 | `026_stewart1_discount_consolidation.sql` | STEWART1 consolidation |
 | `027_member_creator_age_gender.sql` | Age + gender on club_members / creators |
@@ -347,50 +398,73 @@ lib/
 | `050_invoice_sent_at.sql` | Invoice timestamp |
 | `051_add_restocking_soon_status.sql` | 4th stock status (`restocking_soon`) |
 | `052_club_orders_coupon_discount_usd.sql` | USD coupon discount on club orders |
-| `053_inventory_site_source.sql` | `site_source` column + composite uniqueness — **the key to cultrhealth↔cultrclub inventory separation** |
+| `053_inventory_site_source.sql` | `site_source` column + composite uniqueness — key to cultrhealth↔cultrclub inventory separation |
 | `055_seed_current_shop_inventory.sql` | Inventory seed |
 | `056_quiz_lead_capture.sql` | Lead-capture columns on `quiz_responses` |
+| **`057_signup_coupon_codes.sql`** | **NEW** — `coupon_code` columns on `waitlist` and `club_members` |
+| **`058_add_creator_jonas_machado.sql`** | **NEW** — Seed creator Jonas Machado + JM20 code |
+| **`059_update_jonas_machado_commission.sql`** | **NEW** — Bump Jonas commission to 20% |
+| `060_fix_mary_cooper_commission.sql` | Align Mary Cooper's commission_rate with her 20% codes |
+| `061_backfill_coupon_discount_usd.sql` | Backfill `club_orders.coupon_discount_usd` for missed rows |
+| `062_order_attributions_discount_snapshot.sql` | Snapshot `discount_rate` on attribution rows for stable historical ROI |
 | `backfill_click_conversions.sql` | One-off backfill |
 | `backfill_creator_attributions.sql` | One-off backfill |
 
-Note: some numbers are duplicated (e.g. two `010_*`, two `027_*`, two `029_*`, two `030_*`, two `037_*`, two `038_*`, two `039_*`, two `040_*`). These were split-file migrations run sequentially; `037_generic_ehr_identity 2.sql`, `038_membership_shipping_address 2.sql`, `039_siphox_ehr_linkage 2.sql`, and `040_member_onboarding 2.sql` exist as re-runnable duplicates with a ` 2.sql` suffix. Flag for cleanup but treat live naming as canonical.
+**macOS duplicates flagged for cleanup** (untracked in git status, ` 2.sql` / ` 4.sql` suffix): `037_generic_ehr_identity 2.sql`, `038_membership_shipping_address 2.sql`, `039_siphox_ehr_linkage 2.sql`, `040_member_onboarding 2.sql`, `057_signup_coupon_codes 2.sql`, `058_add_creator_jonas_machado 2.sql`, `058_add_creator_jonas_machado 4.sql`, `059_update_jonas_machado_commission 2.sql`, `059_update_jonas_machado_commission 4.sql`. Treat the unsuffixed file as canonical; delete duplicates after verifying against the DB migration log.
 
-### `tests/` — Vitest + RTL + Playwright hand-off
+### `tests/` — Vitest + RTL + Playwright hand-off (91 test files)
 
 ```
 tests/
 ├── setup.ts  vitest.d.ts
-├── api/                            # API route tests
-├── components/                     # React component tests
-│   ├── AppleCardsCarousel.test.tsx  ClubOrdersTab.test.tsx  ConsentModal.test.tsx
+├── api/                            # API route tests (32 files: admin/, club/, creators/, portal/, etc.)
+├── components/                     # React component tests (24 files)
+│   ├── AppleCardsCarousel.test.tsx  ClubOrdersTab.test.tsx  ClubOrderBulkActions.test.tsx
+│   ├── ClubOrderStageControls.test.tsx  ConsentModal.test.tsx  CouponsClient.test.tsx
 │   ├── BiomarkerCategoryCard.test.tsx  BiomarkerDetailModal.test.tsx
 │   ├── FloridaStateGate.test.tsx  HomePageHero.test.tsx
 │   ├── IntakeFormClient.test.tsx  JoinCartContext.test.tsx  JoinLandingClient.test.tsx
-│   ├── KitRegistrationForm.test.tsx  KitTimeline.test.tsx
+│   ├── KitEmptyState.test.tsx  KitRegistrationForm.test.tsx  KitTimeline.test.tsx
 │   ├── LabsClient.test.tsx  LabsResultsView.test.tsx
-│   ├── OnboardingClient.test.tsx  OrdersClient.test.tsx
-│   ├── PortalLogin.test.tsx  TierGate.test.tsx
+│   ├── MemberLogin.test.tsx  OnboardingClient.test.tsx  OrdersClient.test.tsx
+│   ├── PortalDashboard.test.tsx  PortalLogin.test.tsx  TierGate.test.tsx
 ├── integration/                    # Cross-module + real-DB tests
 │   ├── intake-submission-e2e.test.ts
 │   ├── coupon-attribution-e2e.test.ts
 │   ├── creator-e2e-jon-collins.test.ts
 │   ├── protocol-engine.test.ts
 │   └── healthie-availability-diagnosis.test.ts
-├── lib/                            # Pure-function tests
+├── lib/                            # Pure-function tests + sub-bundles
+│   ├── auth.test.ts  coupons.test.ts  plans.test.ts  links.test.ts
+│   ├── biomarker-mapping.test.ts  library-content.test.ts  mailchimp.test.ts
+│   ├── peptide-calculator.test.ts  protocol-templates.test.ts
+│   ├── portal-auth.test.ts  portal-db.test.ts  portal-orders.test.ts
+│   ├── kit-lifecycle.test.ts  report-processing.test.ts
+│   ├── siphox-biomarkers.test.ts  siphox-client.test.ts  siphox-db.test.ts
+│   ├── siphox-fulfillment.test.ts  siphox-schemas.test.ts
+│   ├── creator-links-sync.test.ts  creator-order-stats-sync.test.ts
+│   ├── creator-payout-lifecycle.test.ts  admin-creator-metrics-sync.test.ts
+│   ├── join-therapies.test.ts
+│   ├── dosing-calculator/          # Sub-bundle
+│   └── dosing-engine/              # Sub-bundle
 ├── smoke/                          # Prod-like smoke tests
 │   ├── critical-pages.test.ts  critical-apis.test.ts
-│   ├── middleware-session-timeout.test.ts
-│   └── join-routing.test.ts
+│   └── middleware-session-timeout.test.ts
 └── healthie-url-diagnosis.test.ts
 ```
 
-E2E specs live in `e2e/` (Playwright; includes `e2e/admin/`, `e2e/join/`, `e2e/visual/`).
+E2E specs live in `e2e/` (Playwright; includes `e2e/admin/`, `e2e/dashboards/`, `e2e/fixtures/`, `e2e/join/`, `e2e/visual/`, plus `healthie-availability-diagnosis.spec.ts` and `hero-alignment.spec.ts`).
 
 ### `content/` — Markdown content
 
 ```
 content/
-├── blog/                           # LEGACY — removed Apr 2026 for LegitScript compliance; directory remains
+├── blog/                           # **LEGACY** — markdown files still on disk but routes were removed
+│                                   # Apr 2026 for LegitScript compliance. /science 301s to /. Files:
+│                                   # biomarker-basics, fasting-metabolic-health, glp1-beyond-weight-loss,
+│                                   # inflammation-markers, mitochondrial-health, nad-and-longevity,
+│                                   # peptide-stacking, sleep-and-recovery, tb500-tissue-repair,
+│                                   # testosterone-optimization, thyroid-deep-dive, understanding-bpc-157
 └── library/                        # Peptide library articles (gray-matter + marked + DOMPurify)
     ├── index.md  bioregulators.md  growth-factors.md  metabolic.md
     ├── products.md  repair-recovery.md  lab-instructions.md  stack-guides.md
@@ -411,7 +485,38 @@ scripts/
 ├── site-health-check.mjs           # Called via `npm run check:health`
 ├── set-creator-slug.mjs  test-consult-email.mjs  test-coupon.ts
 ├── fonts/                          # Raw font assets for PDF generation
-├── _tmp_stewart.mjs  _tmp_stripe.mjs  # Temporary scratch scripts (should not be committed long-term)
+├── _tmp_creator_signups.mjs  _tmp_stewart.mjs  _tmp_stripe.mjs   # Scratch — should not be committed
+```
+
+The sibling `cultrhealth-web/` repo additionally has `scripts/build-cf-safe.mjs` (post-build asset restoration to recover from next-on-pages hardlink truncation) and `scripts/generate-library-content.mjs` (run as `prebuild` so the library MD is bundled into the CF Pages build output).
+
+### `.planning/` — GSD workspace
+
+```
+.planning/
+├── STATE.md                        # Active milestone state (v1.0, executing Phase 03)
+├── PROJECT.md                      # Phase 1: cultrclub-web Cloudflare migration
+├── codebase/                       # ARCHITECTURE.md + STRUCTURE.md (this file)
+└── phases/
+    ├── 01-bootstrap/  02-source-extraction/  03-code-adaptation/
+    ├── 04-deploy-validate/  05-production-cutover/   # cultrclub-web phases (in-flight + done)
+    ├── 01-foundation/  02-checkout-integration/  03-kit-registration/
+    │   # ↑ NEW since Apr 22 — three untracked phase scaffolds for an upcoming milestone.
+    │   #   Each contains the standard PLAN/SUMMARY/CONTEXT/RESEARCH/VALIDATION/VERIFICATION
+    │   #   files plus macOS ` 2.md` duplicates to clean up.
+```
+
+### `.claude/` — Claude Code agent config
+
+```
+.claude/
+├── commands/                       # Slash commands (e.g. /pre-deploy)
+├── hooks/                          # PostToolUse hooks (run-tests, type-check, code-audit)
+├── skills/                         # ~40 marketing/SEO/CRO skills (siphox-api, schema-markup,
+│                                   #   programmatic-seo, copywriting, etc.)
+├── worktrees/                      # Git worktrees for parallel agents
+├── settings.local.json             # Allowed tools / WebFetch domains
+└── (assorted email-flow + implementation summaries — short-lived working docs)
 ```
 
 ---
@@ -423,7 +528,7 @@ scripts/
 ```
 cultrclub-web/
 ├── app/                            # Next.js 15 App Router — all routes edge runtime
-├── components/                     # Minimal shared UI (only Button + apple-cards-carousel today)
+├── components/                     # Minimal shared UI (Button + apple-cards-carousel)
 ├── lib/                            # Edge-safe helpers (DB, auth, utils, integrations)
 ├── hooks/                          # React hooks
 ├── types/                          # Local type declarations (fetch.d.ts)
@@ -441,10 +546,10 @@ cultrclub-web/
 
 ```
 app/
-├── layout.tsx                      # Root layout. metadata.title = '—' (stealth); robots: all false; HubSpot script
+├── layout.tsx                      # metadata.title = '—' (stealth); robots: all false; HubSpot script
 ├── page.tsx                        # SERVER component — reads cultr_club_visitor cookie → verifyClubVisitorToken
 │                                   #   → SELECT from club_members → passes serverMember prop
-├── JoinLandingClient.tsx           # 1,477-line client component — cart, carousel, modals, coupon, checkout
+├── JoinLandingClient.tsx           # ~1,477-line client component — cart, carousel, modals, coupon, checkout
 ├── globals.css
 ├── robots.ts                       # Programmatic robots.txt — preview-bot allowlist + catch-all disallow
 │
@@ -505,71 +610,45 @@ lib/
     └── db.ts                       # Creator DB ops (subset of cultrhealth.com's; only what edge paths need)
 ```
 
-### `hooks/`
-
-```
-hooks/
-└── use-outside-click.ts            # Click-outside detector for modals/dropdowns
-```
-
-### `middleware.ts`
-
-Three concerns (see ARCHITECTURE for details):
-
-1. Canonical `www.cultrclub.com → cultrclub.com` 301 redirect.
-2. Stealth `X-Robots-Tag` + security headers (excluding the preview-bot allowlist).
-3. First-touch UTM capture into `cultr_visitor_ctx` cookie on `.cultrclub.com`.
-
 ### Cloudflare-Specific Files
 
 | File | Role |
 |---|---|
 | `wrangler.toml` | `compatibility_flags = ["nodejs_compat"]`, `pages_build_output_dir = ".vercel/output/static"` |
-| `public/_headers` | Cloudflare Pages headers for **static assets** (Pages drops `next.config.js` `headers()` for static routes — this file fills the gap) |
+| `public/_headers` | Cloudflare Pages headers for **static assets** (Pages drops `next.config.js` `headers()` for static routes) |
 | `.wrangler/` | Wrangler local build cache (gitignored) |
 | `.vercel/output/static/` | `@cloudflare/next-on-pages` build output (gitignored) |
 | `worker-configuration.d.ts` | Auto-generated worker type definitions |
 | `types/fetch.d.ts` | Edge-runtime fetch typing shim |
 
-### `public/`
-
-```
-public/
-├── _headers                        # Cloudflare Pages static-asset headers (X-Robots-Tag, CSP, etc.)
-├── cultr-health-logo.png           # Shared brand logo
-├── og-image.png  twitter-card.png  # Social preview assets (match cultrhealth.com)
-├── images/                         # Product photography
-│   └── products/
-├── pdfs/                           # Downloadable product docs
-│   └── products/
-└── tv/                             # Video/image assets for /tv screens
-```
+The `cultrhealth-web/` sibling repo has the same set of CF-specific files, plus a `workers/cron.ts` that wires up scheduled triggers (cron handlers defined as routes here forward through that worker).
 
 ---
 
 ## Legacy / Deprecated Code
 
-Items still present in the tree that are **superseded or to be removed**. None of these should be treated as current architectural elements.
+Items still in the tree that are superseded or to be removed.
 
-### cultrhealth.com
+### cultrhealth.com (this repo)
 
 | Path | Status | Action |
 |---|---|---|
-| `app/join/` (including `page.tsx`, `layout.tsx`, `JoinLandingClient.tsx`, `[tier]/page.tsx`) | **Legacy** — the customer storefront now lives at cultrclub.com. The bare `/join` route is 301-redirected to `/pricing` by `next.config.js`, and the `middleware.ts` legacy-host shim 404s any `join.*` traffic. | Remove after confirming no internal links reference `/join/*` (in particular confirm the members portal and admin tooling don't). The `lib/contexts/JoinCartContext.tsx` is still exported from this app's `lib/` but the *live* cart context consumer is cultrclub.com — audit before deleting. |
-| `app/r/[slug]/route.ts` | **Legacy** — creator tracking authority moved to `cultrclub.com/<slug>`. This handler still serves residual clicks that hit the cultrhealth domain. | Keep until 100% of distributed creator links resolve via cultrclub.com; then remove. |
-| `components/sections/` | **Unused** — 9 files (Hero, Services, About, HowItWorks, Results, Pricing, Testimonials, FAQ, Waitlist) not imported anywhere. Homepage builds sections inline in `app/page.tsx`. | Safe to delete. |
-| `components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx` (root-level) | **Legacy** — superseded by `components/site/` equivalents. | Safe to delete after import scan. |
-| `lib/stores/` | **Empty directory.** | Safe to delete. |
+| `app/join/` (page.tsx, layout.tsx, JoinLandingClient.tsx, [tier]/page.tsx) | **Legacy** — customer storefront now lives at cultrclub.com. `next.config.js` 301-redirects `/join` → `/pricing`; middleware 404s any `/join*` traffic on production hosts. The `join.cultrhealth.com` subdomain was retired Apr 22 2026. | Remove after confirming no internal links reference `/join/*`. |
+| `app/r/[slug]/route.ts` | **Legacy** — creator tracking authority moved to `cultrclub.com/<slug>`. Still serves residual clicks landing on cultrhealth.com. | Keep until 100% of distributed creator links resolve via cultrclub.com. |
+| `components/dosing-calculator/SyringeMeter 2.tsx` | **macOS duplicate** of `SyringeMeter.tsx` (untracked). | Delete. |
 | `lib/blog-content.ts` | **Legacy** — blog removed Apr 2026 (LegitScript compliance). | Safe to delete once no stragglers import it. |
 | `lib/asher-med-api.ts` | **Historical** — Asher Med integration fully removed Apr 4 2026; kept for audit trace. | Consider moving to `archive/`. |
-| `content/blog/` | **Legacy** — markdown removed / redirected; directory may remain empty. | Safe to delete. |
-| `app/science/`, `app/science/[slug]/` | **Shim** — 301-redirected to `/` in `next.config.js` for LegitScript compliance. Route files still exist. | Keep redirects; can remove route files. |
-| `app/products/`, `app/terms/` | **Shim** — `app/products/` 301-redirects to `/pricing`; `app/terms/` is a sibling of `/legal/terms` (de-duplicate). | Consolidate to `/legal/terms`. |
-| `class-variance-authority` in `package.json` | **Unused** — never imported. | Remove dependency. |
-| Migrations with ` 2.sql` suffix (`037_generic_ehr_identity 2.sql`, `038_membership_shipping_address 2.sql`, `039_siphox_ehr_linkage 2.sql`, `040_member_onboarding 2.sql`) | **Duplicates** — likely macOS copy artifacts. | Verify against DB migration log; delete duplicates that weren't run. |
-| `scripts/_tmp_stewart.mjs`, `scripts/_tmp_stripe.mjs` | **Scratch** — ad-hoc debugging scripts. | Delete. |
-| `.next/`, `.vercel/`, `tsconfig.tsbuildinfo`, `node_modules/` in repo root | Build artifacts | Keep gitignored. |
+| `content/blog/*.md` | **Legacy** — markdown files still on disk but no routes consume them. | Safe to delete after final compliance review. |
+| `app/science/`, `app/science/[slug]/` | **Shim** — 301-redirected to `/` in `next.config.js`. Route files still exist. | Keep redirects; can remove route files. |
+| `app/products/`, `app/terms/` | **Shim** — `app/products/` 301s to `/pricing`; `app/terms/` is a sibling of `/legal/terms`. | Consolidate to `/legal/terms`. |
+| `class-variance-authority` in `package.json` | Currently NOT in dependencies (already removed). | (No action needed.) |
+| Migrations with ` 2.sql` / ` 4.sql` suffix | **Duplicates** — macOS Finder copy artifacts. Listed in git status as untracked. | Verify against DB migration log; delete duplicates that weren't run. |
+| `scripts/_tmp_*.mjs` | **Scratch** — ad-hoc debugging scripts. | Delete. |
+| `.next/`, `.vercel/`, `tsconfig.tsbuildinfo`, `node_modules/` | Build artifacts | Keep gitignored. |
 | `/api/cron/asher-sync` | **Historical** — Asher Med removed. | Remove endpoint + cron entry. |
+| `production` git branch | **Decommissioned** — previously deployed to Vercel production; cultrhealth.com is now CF Pages from `cultrhealth-web/main`. | Keep for archival; do not deploy from. |
+
+The previously-listed legacy artifacts that have **already been removed** since the Apr 22 snapshot: root-level `components/Footer.tsx`, `components/Navigation.tsx`, `components/WaitlistForm.tsx`, the entire `components/sections/` directory, and the empty `lib/stores/` directory.
 
 ### cultrclub.com
 
@@ -586,15 +665,17 @@ Items still present in the tree that are **superseded or to be removed**. None o
 
 | Need | Location |
 |---|---|
-| New admin page | `app/admin/<feature>/page.tsx` + `AdminClient.tsx`; add nav link to `components/admin/AdminSidebar.tsx` |
+| New admin page | `app/admin/<feature>/page.tsx` + `<Feature>Client.tsx`; add nav link to `components/admin/AdminSidebar.tsx` |
 | New admin API | `app/api/admin/<feature>/route.ts`; wrap with `requireAdmin()` |
 | New member-facing page | `app/members/<feature>/` |
 | New creator portal page | `app/creators/portal/<feature>/page.tsx`; add to `CreatorSidebar.tsx` |
+| New SEO landing page | `app/<topic>/page.tsx` (server component) + `app/sitemap.ts` entry. If it has a FAQ schema, the visible JSX and JSON-LD must read from a single content file (see `app/tools/dosing-calculator/seo-content.ts` for the canonical pattern). |
+| New per-peptide calculator preset | Append to `PRESET_PAGES` in `app/tools/dosing-calculator/[slug]/preset-content.ts` and to `PRESETS` in `lib/config/calculator-presets.ts`. Sitemap picks it up automatically. |
 | New compliance copy | `components/compliance/` + `lib/config/compliance.ts` |
 | New config constant | `lib/config/<domain>.ts` (create a new file rather than dumping into `plans.ts` or similar) |
-| New shared helper | `lib/utils.ts` for pure utilities; `lib/utils/<topic>.ts` for bigger modules |
-| New SQL migration | `migrations/NNN_description.sql` (use next available integer; run `node scripts/run-migration.mjs`) |
-| New cron job | `app/api/cron/<name>/route.ts`, authenticate with `CRON_SECRET`, wrap in `startCronRun()`, add to `vercel.json` |
+| New shared helper | `lib/utils.ts` for pure utilities; `lib/utils/<topic>.ts` for bigger modules; topic-specific subdirs (`lib/dosing-calculator/`, `lib/dosing-engine/`, `lib/healthie/`, etc.) |
+| New SQL migration | `migrations/NNN_description.sql` (use next available integer; current head is `062`); run via `node scripts/run-migration.mjs`. |
+| New cron job | `app/api/cron/<name>/route.ts`, authenticate with `CRON_SECRET`, wrap in `startCronRun()`, add to `vercel.json` AND register in the CF Pages dashboard's Cron Triggers (production crons live on the Worker, not Vercel). |
 | New webhook | `app/api/webhook/<provider>/route.ts`; verify signature; dedup via `stripe_idempotency`-style table if applicable |
 | New test (unit) | `tests/lib/<module>.test.ts` or `tests/components/<Component>.test.tsx` |
 | New test (integration) | `tests/integration/<flow>.test.ts` |
@@ -606,10 +687,10 @@ Items still present in the tree that are **superseded or to be removed**. None o
 |---|---|
 | New storefront section | Inline in `app/JoinLandingClient.tsx`; extract to `components/ui/` only when reused across `app/tv/` or similar |
 | New public API | `app/api/<feature>/route.ts` — must `export const runtime = 'edge'` |
-| Schema change | **Add the migration in `Cultr Health Website/migrations/`** (the cultrhealth repo owns the schema). Deploy that migration, then consume the new column here. |
+| Schema change | **Add the migration in `Cultr Health Website/migrations/`** (this repo owns the schema). Deploy that migration, then consume the new column from cultrclub-web. |
 | Config constant | `lib/config/<domain>.ts` |
 | Signage / display screen | `app/tv/<name>/page.tsx` + assets under `public/tv/` |
 
 ---
 
-*Structure analysis: 2026-04-20*
+*Structure analysis: 2026-04-27*

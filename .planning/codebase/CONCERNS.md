@@ -1,345 +1,703 @@
 # Technical Concerns
 
-*Last updated: 2026-04-20*
-*Scope: cultrhealth.com (Vercel / Next.js 14) + cultrclub.com (Cloudflare Pages / Next.js 15 @ edge)*
+*Last updated: 2026-04-27*
+*Scope: cultrhealth.com (this repo, deployed to staging on Vercel + production on Cloudflare Pages via sibling repo `cultrhealth-web`)*
+
+> **Deploy reality check (verified 2026-04-27):**
+> - This repo (`/Cultr Health Website/`) deploys `staging` branch to Vercel only (`staging.cultrhealth.com`).
+> - Production (`cultrhealth.com` + `www`) runs on **Cloudflare Pages** from sibling repo `cultrhealth-web/main` — *not* from this repo.
+> - The legacy `production` branch on Vercel is no longer the live production source. `vercel.json:4-7` disables auto-deploy for `main`/`master`.
+> - `join.cultrhealth.com` was retired Apr 22 2026 — the subdomain no longer resolves.
+> - Cron jobs in `vercel.json` only run on the Vercel staging deployment. **Production crons must be configured separately on Cloudflare** (sibling repo) — risk if missed.
 
 ---
 
-## Section 1 — Known Technical Debt (cultrhealth.com)
+## CRITICAL
 
-**Legacy root-level components (superseded):**
-- `components/Footer.tsx` — superseded by `components/site/Footer.tsx`
-- `components/Navigation.tsx` — superseded by `components/site/Header.tsx`
-- `components/WaitlistForm.tsx` — superseded by `components/site/NewsletterSignup.tsx`
-- Impact: Contributors can accidentally import the legacy variants; duplicated behavior drifts from the real site chrome. Fix: delete these three files after a cross-repo import audit.
+### C1. macOS-duplicate `.env` files leaking secrets into git status
 
-**Legacy `components/sections/` directory — RESOLVED:**
-- `ls components/sections/` returns "No such file or directory." The 9 files referenced by the old debt note (`Hero.tsx`, `Services.tsx`, `About.tsx`, `HowItWorks.tsx`, `Results.tsx`, `Pricing.tsx`, `Testimonials.tsx`, `FAQ.tsx`, `Waitlist.tsx`) no longer exist. `CLAUDE.md` still documents them — CLAUDE.md should be updated to drop the reference.
+**Where:** Repo root.
+- `.env 2.cf-import` (untracked)
+- `.env 2.vercel-all` (untracked)
+- `.env 4.vercel-all` (untracked)
+- `.env.cf-import` (untracked)
+- `.env.vercel-all` (untracked)
 
-**Empty `lib/stores/` directory — RESOLVED:**
-- `ls lib/stores/` returns "No such file or directory." `CLAUDE.md` lists it under "Known Technical Debt" — that entry is stale and should be removed from CLAUDE.md.
+**Why it matters:** `.gitignore` lines 21-23 cover only `.env`, `.env.production`, and `.env*.local`. The Finder-collision filenames (`.env 2.*`, `.env 4.*`) and the unsuffixed exports (`.env.cf-import`, `.env.vercel-all`) match **none** of the existing patterns and will be staged by an unwary `git add -A`. These files were created during the recent CF Pages env-var pull and almost certainly contain `STRIPE_SECRET_KEY`, `JWT_SECRET`, `POSTGRES_URL`, `RESEND_API_KEY`, etc.
 
-**`class-variance-authority` — RESOLVED in production deps:**
-- Not present in current `package.json` `dependencies` block (grep confirms it appears only in `.planning/codebase/*` docs, `CHANGELOG.md`, `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and an orphaned `.claude/worktrees/agent-a3e154df/package.json`). Safe to delete the worktree package.json and scrub stale references from the docs listed above.
+**Mitigation:** Treat as a near-miss. Delete the files immediately and append `.env*.cf-import`, `.env*.vercel-all`, `.env *` (with literal space) to `.gitignore`.
 
-**Loose TypeScript configuration (`tsconfig.json`):**
-- `strict: false`, `allowJs: true`, `skipLibCheck: true`, `moduleResolution: "node"` (not `bundler`), `noEmit: true`, `incremental: true`.
-- Impact: No `noImplicitAny`, no `strictNullChecks`, no `noUncheckedIndexedAccess`. Silent type regressions possible in heavily interdependent modules (intake, commission, checkout).
-- Fix path: staged strictness — enable `strictNullChecks` first on `lib/auth.ts`, `lib/creators/commission.ts`, `lib/db.ts`, then ratchet up.
-
-**Legacy Node module resolution:**
-- `moduleResolution: "node"` instead of modern `bundler`.
-- Impact: ESM/CJS interop quirks with ESM-only libs (e.g., `jose`, newer `ai` SDK). Next.js 14 tolerates it, but upgrading to Next 15 (as cultrclub-web already did) will expose module resolution mismatches.
-
-**Documentation sync duty:**
-- `.cursorrules` (500+ lines of guardrails) and `CLAUDE.md` must stay in lockstep. The self-correcting CLAUDE.md rule at `CLAUDE.md` line ~1023 applies to both files. Cursor IDE auto-loads `.cursorrules` for every AI session; stale rules silently mis-direct the IDE.
-
-**Lingering pharmacy-partner TODOs (post-Asher Med removal, Apr 4 2026):**
-All the following `TODO: Reconnect to new pharmacy partner` sites still return stubs/empty arrays and must be wired when the next pharmacy integration ships:
-- `app/api/member/orders/route.ts:79`
-- `app/api/member/profile/route.ts:119`, `:194`
-- `app/api/portal/profile/route.ts:107`
-- `app/api/portal/documents/route.ts:3`, `:54`, `:147`
-- `app/api/member/files/route.ts:60`
-- `app/api/member/medical-records/route.ts:113`
-- `app/api/protocol/generate/route.ts:26` (patient verification is bypassed)
-- `app/api/intake/submit/route.ts:13` (routing note only — submission itself still writes to `pending_intakes`)
-- `app/api/webhook/stripe/route.ts:831` (cancellation notification to pharmacy not wired)
-
-**Staging-mode legacy fallback in `lib/auth.ts`:**
-- `lib/auth.ts:227-228`: "Legacy fallback: keep working for deployments that haven't set STAGING_MODE yet. TODO: remove this once STAGING_MODE=true is confirmed set on staging in Vercel."
-- Impact: Any production deployment that *accidentally* sets `STAGING_MODE=true` (or any env that looks like staging) can bypass auth. Confirm Vercel env is correct and delete the legacy branch in `lib/auth.ts` and `app/api/auth/verify/route.ts:31`.
-
-**`app/api/admin/club-orders/[orderId]/approve/route.ts:484`:**
-- `TODO (Version 2): Implement Option A — Automated Payment Link`. Currently approvals hand-roll payment collection — a scaling risk as club-order volume grows.
-
-**`app/api/portal/labs/route.ts:138`:**
-- `TODO: v2 — match by kitId instead of updating most-recent order`. Works for single-kit users only; breaks when members hold two or more active SiPhox kits.
+**Outstanding:** Audit `git log -p` for accidental commits of any `.env *` artifact in the past 60 days.
 
 ---
 
-## Section 2 — Deprecated Code to Remove (HIGH PRIORITY)
+### C2. macOS-duplicate source files (`* 2.tsx`, `* 2.sql`) in working tree
 
-> ⚠️ **All items here are legacy artifacts from the retired `join.cultrhealth.com` subdomain alias.** That subdomain is scheduled for 301-redirect to `cultrclub.com` in Phase 05-02 of the active migration. The customer store today is `cultrclub.com` (standalone Cloudflare Pages app at `/Users/davidk/Documents/Dev-Projects/App-Ideas/cultrclub-web/`). All listed artifacts should be deleted once Phase 05-02 ships.
+**Where:**
+- `components/dosing-calculator/SyringeMeter 2.tsx`
+- `migrations/037_generic_ehr_identity 2.sql`
+- `migrations/038_membership_shipping_address 2.sql`
+- `migrations/039_siphox_ehr_linkage 2.sql`
+- `migrations/040_member_onboarding 2.sql`
+- `migrations/057_signup_coupon_codes 2.sql`
+- `migrations/058_add_creator_jonas_machado 2.sql`
+- `migrations/058_add_creator_jonas_machado 4.sql`
+- `migrations/059_update_jonas_machado_commission 2.sql`
+- `.claude/skills/siphox-api/SKILL 2.md`
+- `docs/superpowers/plans/2026-04-20-cultrhealth-cloudflare-migration {2,3,4}.md`
+- `docs/superpowers/specs/2026-04-20-cultrhealth-cloudflare-migration-design 2.md`
 
-### 2.1 — Middleware host detection (`middleware.ts`)
-File: `/Users/davidk/Documents/Dev-Projects/App-Ideas/Cultr Health Website/middleware.ts`
-- Lines 8-12: `isJoinHost` constant detecting the retired hostnames (`join.cultrhealth.com`, `join.staging.cultrhealth.com`, `join.localhost[:port]`).
-- Lines 29-32: `if (isJoinHost) { return NextResponse.rewrite(new URL('/not-found', request.url)) }` — currently serves 404 for requests to those hostnames.
-- Lines 35-37: `if (request.nextUrl.pathname.startsWith('/join') && !isJoinHost && !isLocalDevHost)` — blocks `/join` path on non-join hosts.
-- **Action:** Phase 05-02 Plan (`.planning/phases/05-production-cutover/05-02-PLAN.md`) deletes both blocks once Cloudflare DNS 301 is in place.
+**Why it matters:** Next.js will attempt to compile `SyringeMeter 2.tsx` alongside `SyringeMeter.tsx`. Two files exporting the same default symbol can cause name collisions in the bundle, broken HMR, or silently shipped duplicate components. Duplicated migration files are worse — running `node scripts/run-migration.mjs` against the wrong copy can apply a subtly different schema.
 
-### 2.2 — Entire app route tree for the retired subdomain
-- `app/join-club/` — **ALREADY DELETED**. `ls app/join-club/` returns "No such file or directory." The route tree described in `CLAUDE.md:199` (JoinLandingClient.tsx, page.tsx, layout.tsx) no longer exists in this repo. CLAUDE.md and AGENTS.md still reference it and must be scrubbed.
-- `app/join/` — **STILL PRESENT**. Contents: `[tier]/` (tier checkout), `JoinLandingClient.tsx`, `layout.tsx`, `page.tsx`. This route is gated by middleware (blocked on public non-join hosts, 404 on the retired hostname) and redirected by `next.config.js:175` (`/join → /pricing`). It exists *only* to serve the retired subdomain. Phase 05-02 will remove it along with the middleware detection.
-
-### 2.3 — Product catalog config
-- `lib/config/join-therapies.ts` — **STILL PRESENT**. Drives the retired landing-page carousel; no longer consumed by any public surface on `cultrhealth.com` (the domain redirects `/join` → `/pricing`). Active consumers:
-  - `components/site/TherapiesGrid.tsx:11` imports `BUNDLE_DISCOUNT_RATE` (used on `/therapies` — this coupling should be broken; `/therapies` should have its own discount constant).
-  - `lib/contexts/JoinCartContext.tsx:4` imports cart helpers for `/join` pages (those pages are being retired).
-  - `tests/lib/join-therapies.test.ts:3` locks the legacy catalog order — delete when catalog is deleted.
-  - `app/join/JoinLandingClient.tsx:9` — retires with the `/join` tree.
-- **Action:** After Phase 05-02, delete `lib/config/join-therapies.ts`, `lib/contexts/JoinCartContext.tsx`, `app/join/`, and the related test. Move `BUNDLE_DISCOUNT_RATE` to a dedicated constants file if `/therapies` still needs it.
-
-### 2.4 — Cached artifacts / stock sync aware of the retired subdomain
-- `app/api/admin/inventory/route.ts:92` — calls `revalidatePath('/join-club')` when admin inventory changes. The `/join-club` path no longer exists; this `revalidatePath` call is a no-op. Remove the line.
-- `app/api/stock/route.ts` — excludes `cultrclub` rows so the retired subdomain never reads cultrclub-specific stock (per `CHANGELOG.md:46`). Inverse-filter can be simplified once Phase 05-02 ships.
-- `migrations/010_club_orders.sql`, `migrations/017_club_member_address.sql`, `migrations/034_product_inventory.sql`, `migrations/043_add_bac_water_inventory.sql`, `migrations/045_visitor_tracking.sql`, `migrations/048_add_igf1_lr3_inventory.sql` — schema created for the retired landing page. Migrations cannot be deleted, but inline comments naming the retired subdomain should be updated to name `cultrclub.com` as the live consumer for future readers.
-
-### 2.5 — Test files
-- `tests/api/club-orders-catalog-sync.test.ts` — 7 hits setting `host: 'join.cultrhealth.com'` in request headers. Tests cover behavior that Phase 05-02 will retire.
-- `tests/api/club-session-cookie.test.ts:40` — 1 hit setting `NEXT_PUBLIC_SITE_URL = 'https://join.cultrhealth.com'`.
-- `tests/smoke/join-routing.test.ts` — 4 hits across lines 24, 28, 34, 43-44 asserting routing against the retired hostname.
-- **Action:** Delete after Phase 05-02. If we keep any assertion, rewrite it to assert the 301 redirect to `cultrclub.com`.
-
-### 2.6 — Documentation references (grep inventory)
-`CLAUDE.md` and `AGENTS.md`:
-- `CLAUDE.md:13`, `199`, `776`, `780`, `1059`, `1073`
-- `AGENTS.md:13`, `192`, `778`, `782`, `1009`, `1022`
-- Both files describe the retired subdomain as a "Join Club URL" next to the production URL. Rewrite to name `cultrclub.com` as the customer store and list the retired subdomain only under "Deprecated." `CLAUDE.md:816` / `AGENTS.md:818` also list `/join-club` under `HIDE_CHROME_PREFIXES` — stale; the route tree is already deleted.
-
-`CHANGELOG.md` — 30+ historical entries. Leave history intact; do not rewrite past changelogs.
-
-`.cursorrules:405` — lists `/join-club/*` in a chrome-suppression hint. Delete this line.
-`.cursorrules:525-526` — tells Cursor that the retired subdomain's product cards come from `lib/config/join-therapies.ts`. Delete these lines once Section 2.3 is executed.
-
-`.planning/debug/join-page-returning-members.md` — historical debug log. Leave intact.
-`.planning/debug/creator-revenue-admin-sync.md:34` — passing reference; leave intact.
-`.planning/phases/02-source-extraction/*`, `.planning/phases/05-production-cutover/*` — planning docs that drive the migration itself. Leave intact.
-
-`docs/HIGH-LEVERAGE-IMPROVEMENTS.md:13,95`, `docs/superpowers/specs/2026-04-05-legitscript-full-certification-design.md:309,348`, `docs/superpowers/specs/2026-04-05-playwright-e2e-suite-design.md:113` — scrub the retired subdomain mention once Phase 05-02 ships.
-
-`components/site/LayoutShellClient.tsx:8` — `HIDE_CHROME_HOSTNAMES = ['join.cultrhealth.com', 'join.staging.cultrhealth.com', 'join.localhost']`. Dead array once middleware 404s the hostname. Delete along with middleware Block 1.
-
-### 2.7 — Public assets / env vars / Next config redirects
-- `public/join-club/` — **does not exist**. `ls public/join-club` returns "No such file or directory."
-- `next.config.js` redirects: lines 143-192. The only retired-subdomain-specific redirect is `/join → /pricing` at line 176-180; comment at line 175 explicitly names the retired subdomain. Leave the `/join → /pricing` redirect in place — it protects legacy bookmarks after Phase 05-02 — but remove the comment naming the retired subdomain once the domain DNS is flipped.
-- Env var names: `NEXT_PUBLIC_SITE_URL` is used in both apps; the only concern is accidental retention of the retired subdomain URL as the value in a Vercel staging env. Verify during Phase 05-02 cutover.
+**Mitigation:** Delete every `* 2.*`, `* 3.*`, `* 4.*` artifact before next commit. Add a pre-commit hook: `find . -regex '.*[[:space:]][2-9]\.\(tsx\|ts\|sql\|md\)$' -not -path './node_modules/*'` should return zero.
 
 ---
 
-## Section 3 — Known Technical Debt (cultrclub.com)
+### C3. Florida-only jurisdiction gate is built but **NOT wired** into the funnel
 
-**Every route must declare edge runtime:**
-- Grep confirms `export const runtime = 'edge'` on all 11 current route files (`app/[slug]/route.ts`, `app/page.tsx`, `app/robots.ts`, and 8 `app/api/club/*` + `app/api/stock/route.ts` + `app/api/health/route.ts`).
-- Impact: Any newly added route that omits `export const runtime = 'edge'` silently falls back to Node runtime, which Cloudflare Pages does not execute → 500 on production, works locally. There is no lint rule enforcing this. Fix: add an ESLint rule or a pre-commit grep that asserts `export const runtime = 'edge'` appears in every `app/**/route.ts` and every page that issues a server-side fetch.
+**Where:**
+- Component exists: `components/compliance/FloridaStateGate.tsx`
+- Tests exist: `tests/components/FloridaStateGate.test.tsx`
+- `JURISDICTION_STATEMENT` referenced in: `app/legal/medical-disclaimer/page.tsx:113`, `app/legal/privacy/page.tsx:40`, `app/legal/provider-credentials/page.tsx:142`, `components/site/Footer.tsx:199`
+- **Zero usage in `app/quiz/`, `app/intake/`, `app/join/`, or any checkout API** (verified by grep — no hits for `FloridaStateGate` or `stateCode`/`isFlorida`/`residenceState` in any of those folders).
 
-**`next.config.js` `headers()` is silently dropped on Cloudflare Pages:**
-- `cultrclub-web/next.config.js` declares a CSP plus security headers via `async headers()`. The Cloudflare Pages adapter (`@cloudflare/next-on-pages`) does **not** ship the `headers()` array. All of those headers are delivered instead by:
-  - `public/_headers` for static files (verified present, 6 lines long).
-  - `middleware.ts` for dynamic Worker/SSR responses (sets `X-Robots-Tag`, `Referrer-Policy`, `X-Frame-Options`, `X-Content-Type-Options`).
-- Gap: the `next.config.js` `Content-Security-Policy` is **not** applied on Worker-rendered responses because middleware does not set CSP. Either remove the deceptive `next.config.js headers()` block or port CSP into `middleware.ts`.
+**Why it matters:** Per memory `project_florida_jurisdiction_apr14.md` tasks 10-12 ("gate quiz/intake/checkout") were planned but never shipped. Today a user from any U.S. state can complete the quiz → intake → checkout path. Legal exposure for prescribing outside Florida; LegitScript prerequisite gap.
 
-**Cookie domain must come from request hostname, not env var:**
-- `middleware.ts:55` — `const domain = hostname.includes('cultrclub.com') ? '.cultrclub.com' : undefined`.
-- This is the correct pattern (documented in memory: `feedback_cloudflare_pages_headers_gotcha.md`). Any future edit that reverts to `new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname` will re-break cross-domain cookies under preview deployments where the env var is stale.
-- `lib/resend.ts:43, 2030, 2067`, `lib/creators/attribution.ts:130`, `app/api/club/orders/route.ts:342` all fall back to `process.env.NEXT_PUBLIC_SITE_URL`; in edge runtime the env var can be unset on preview deploys. `lib/utils.ts:37-43` already implements the "prefer request hostname" pattern — the same helper should be used everywhere a site URL is built.
+**Mitigation:** None at the funnel level. Footer disclaimer is the only customer-facing notice.
 
-**`images.unoptimized: true`:**
-- `next.config.js` + wrangler setup means there is no image optimization server. All `<Image>` components fall back to raw URLs. Impact: larger payloads to mobile, no AVIF/WebP generation, no responsive srcset. Fix path: route image optimization through Cloudflare Images or add a lightweight image resizer.
-
-**`ADMIN_BASE_URL` env var is required for cross-domain approval links:**
-- Approval email links from `cultrclub.com` point back to `cultrhealth.com/admin/*`. If `ADMIN_BASE_URL` is missing on Cloudflare Pages, approval emails render broken links. Validate in both staging + production secrets.
-
-**Dependency mismatch vs sibling repo:**
-- cultrclub-web uses `next@15.5.2`, `stripe@^22.0.1`, `@neondatabase/serverless@^0.9.0`; cultrhealth.com uses `next@^14.2.0`, `stripe@^20.2.0`, `@vercel/postgres@^0.10.0`. The two repos share a Neon database and JWT/session secrets but drift on SDK versions. A Stripe API version mismatch between webhooks (cultrhealth webhook on `20.2.0`, cultrclub checkout on `22.0.1`) can silently alter event payloads — pin Stripe API versions explicitly in both clients.
-
-**Tailwind base fonts + brand tokens must be kept in sync:**
-- `cultrclub-web/tailwind.config.ts` is a subset of the cultrhealth tailwind config. Brand color drift is easy and will show up as different shades of forest/cream across the two domains. Manual audit only; no shared config import.
-
-**No test framework, no linter:**
-- `cultrclub-web/package.json` has no `vitest`, no `@testing-library/*`, no `playwright`, no ESLint, no Prettier, no Biome. Phase 04 (`deploy-validate`) is meant to address this, but until it lands every change ships untested and unlinted.
+**Outstanding:** Wire `<FloridaStateGate>` into `QuizClient.tsx` (entry), `IntakeFormClient.tsx` (state question), and as a server-side check on `/api/intake/submit`, `/api/quote`, `/api/checkout/*`.
 
 ---
 
-## Section 4 — Security Concerns (both apps)
+### C4. ConsentModal is mounted only on `/join/[tier]` — a route the middleware blocks
 
-**HIPAA — no PHI logging:**
-- Greps of `app/api/**` in cultrhealth.com for `console.log` near PHI fields (email/phone/dob/ssn) return no matches. Email alone is not classic PHI under HIPAA Safe Harbor. Keep enforcing via the `code-audit.sh` hook that already flags "PHI logging check."
-- Risk: webhook handlers (`app/api/webhook/stripe/route.ts:427`, `:825`, `:945`) log context strings like "Welcome email sent for subscription" — fine, no PHI; but `console.log('[...] for ${orderNumber}')` in `app/api/club/orders/route.ts:390` + `app/api/admin/club-orders/[orderId]/approve/route.ts:361` emits internal identifiers. Internal order numbers are acceptable but should be spot-audited quarterly.
+**Where:**
+- `app/join/[tier]/page.tsx:10` imports `ConsentModal`
+- `app/join/[tier]/page.tsx:599` renders it
+- `middleware.ts:25-27` rewrites every `/join` request on non-local hosts to `/not-found`
+- `next.config.js:177-180` 301-redirects `/join` → `/pricing` and `/join/:path*` → `/pricing`
+- **Zero other consumers** of `ConsentModal` in production routes (verified by grep).
 
-**JWT secret rotation strategy — not documented:**
-- `JWT_SECRET` and `SESSION_SECRET` are static env vars with no rotation plan. Rotating them invalidates every active session and every magic-link token in flight. Plan: add a dual-secret verification helper that accepts `JWT_SECRET` *or* `JWT_SECRET_PREVIOUS` for 24h, then retire the old one. No such helper exists today.
+**Why it matters:** The LegitScript-mandated informed-consent gate is effectively dead code in production. New checkout paths (Stripe direct, BNPL, club orders) do not show consent UI before payment. This was a regression introduced when the `join.cultrhealth.com` subdomain was retired and `/join` redirected to `/pricing`.
 
-**`cultr_club_visitor` signed session token:**
-- CLAUDE.md line 1069: "never store full profile in client-readable cookies." Current codebase complies: the cookie in cultrclub-web middleware (`cultr_visitor_ctx`) holds only UTM attribution and referrer, not PII. Keep this invariant when extending the flow.
+**Mitigation:** None. The compliance components/`PrescriptionDisclaimer.tsx`, `FDAStatusBadge.tsx`, footer disclosures are static page chrome, not pre-payment gates.
 
-**HMAC `timingSafeEqual` buffer-length check:**
-- Documented in CLAUDE.md as a hard rule after a past `TypeError: Input buffers must have the same length` crash. Any new HMAC verification code must wrap `timingSafeEqual` with an explicit length compare. No lint rule enforces it.
-
-**Staging auth bypass — must never leak to production (cultrhealth.com):**
-- `lib/auth.ts` auto-provisions team emails (`stewart@cultrhealth.com`, `erik@threepointshospitality.com`, and 3 others) on the staging host; any email on staging gets its magic-link token returned in the API response body.
-- Guard: `process.env.STAGING_MODE === 'true'` (line 226). Legacy fallback at line 227-228 still treats hostnames containing `staging` as staging. If the production domain ever accidentally resolves via a `staging-*.vercel.app` host during deployment, the bypass could fire. Delete the legacy fallback now that `STAGING_MODE` is set in Vercel (per the in-code TODO).
-- `app/api/auth/verify/route.ts:31` has the same legacy fallback — remove both in one commit.
-
-**Bot protection gaps — incomplete Turnstile coverage:**
-- Grep of `app/api/**` in cultrhealth.com shows Turnstile verification only in `app/api/waitlist/route.ts`. Other public endpoints (quiz lead capture, club signup, creator apply, consult requests) should be audited. Club signup on cultrclub-web *does* use Turnstile (confirmed via `@marsidev/react-turnstile` import in `lib/turnstile.ts`).
-- **Action:** Add Turnstile checks on `app/api/quiz/submit`, `app/api/intake/submit`, `app/api/creators/apply`, `app/api/supplement-order`, and any renewal endpoint.
-
-**DOMPurify on rendered markdown:**
-- Library content is loaded via gray-matter + marked + DOMPurify (`lib/library-content.ts`). DOMPurify runs server-side. Correct, but verify whenever a new markdown-rendering surface is added — bypassing the helper is how XSS gets reintroduced.
-
-**`app/api/protocol/generate/route.ts:26` — patient verification bypassed:**
-- `TODO: Reconnect patient verification to new pharmacy partner`. Until reconnected, the protocol generator trusts the authenticated member's JWT only — acceptable but must be logged as a deliberate trust assumption.
-
-**Cross-domain cookie leakage risk:**
-- `middleware.ts` in cultrhealth.com sets cookies with `domain: '.cultrhealth.com'` — these do **not** propagate to `cultrclub.com`. Good. Ensure no future code tries `domain: '.cultr.com'` or similar parent domain.
-
-**Never use `response.headers.append('Set-Cookie', ...)` in Next `NextResponse`:**
-- Documented as a hard rule in CLAUDE.md after the Safari ghost-session incident. Always use `response.cookies.set()` / `response.cookies.delete()`. No lint rule enforces it — audit any new middleware edits.
+**Outstanding:** Either (a) restore the consent modal on the active `/pricing` checkout flow (every `lib/payments/*` provider), or (b) move the consent step to the intake form before any checkout link is rendered, or (c) document explicitly that the legal team accepts pre-purchase footer disclaimer in lieu of a modal gate.
 
 ---
 
-## Section 5 — Performance Concerns (both apps)
+### C5. Cross-domain link rule violations — `getJoinCheckoutUrl()` and `https://cultrclub.com/*` still wired into cultrhealth.com
 
-**Homepage bundle size on cultrhealth.com:**
-- `app/page.tsx` uses `next/dynamic` for below-fold components (PricingCard, FAQAccordion, ClubBanner, NewsletterSignup). `optimizePackageImports: ['lucide-react', 'recharts', 'zod']` is set in `next.config.js:21`. Effective today; re-run `npm run analyze` after any large UI addition (hero redesign, MeshGradient swap).
-- Risk: `@paper-design/shaders-react` (MeshBackground) pulls in WebGL/Three; `three@^0.183.2` is in deps. Check whether `three` is tree-shaken or if MeshBackground ships it eagerly.
+**Where (verified by grep, 22 hits):**
+- `lib/config/links.ts:29-30` — `DEFAULT_JOIN_SITE_URL = 'https://cultrclub.com'`, `DEFAULT_STAGING_JOIN_SITE_URL = 'https://staging.cultrclub.com'`
+- `lib/config/links.ts:50-61` — `getJoinCheckoutUrl()` builds outbound URLs to `cultrclub.com/join/[tier]`
+- `components/site/PricingCard.tsx:11, 117, 153` — uses `getJoinCheckoutUrl()` on the public pricing page
+- `app/creators/portal/dashboard/page.tsx:371`, `app/creators/portal/share/page.tsx:203, 306, 374, 376`, `app/creators/portal/campaigns/page.tsx:56` — creator-portal generates `cultrclub.com` links
+- `app/creators/[slug]/page.tsx:58` — creator landing pages issue `cultrclub.com` links
+- `app/api/admin/creators/add/route.ts:34`, `app/api/admin/creators/[id]/approve/route.ts:43` — admin creator provisioning embeds `cultrclub.com` tracking links
+- `app/api/club/signup/route.ts:198` — welcome email body links to `cultrclub.com`
+- `app/admin/AdminDashboardClient.tsx:273, 585`, `app/admin/inventory/InventoryClient.tsx:28`, `app/admin/creators/coupons/CouponsClient.tsx:63, 317`, `app/admin/marketing/MarketingClient.tsx:350` — admin UI labels (text-only; not user-facing redirects)
 
-**Edge cold-start on cultrclub.com:**
-- Cloudflare Workers cold-start is typically sub-50ms but can spike on first regional request. Vercel `Fluid Compute` does not apply. Every route is edge-only; no opportunity for Node long-running worker warmth. Monitor p99 latency on `/api/club/orders` and `/api/club/signup` under load.
+**Why it matters:** Memory `feedback_no_cultrclub_links.md` is tagged a HARD RULE: cultrhealth.com customer flows must stay on-domain. Public pricing card sending users to `cultrclub.com` is the largest exposure — every `Get Started` click leaves the cultrhealth domain mid-funnel.
 
-**N+1 risk in admin analytics:**
-- CLAUDE.md rule: "When querying admin analytics for coupon stats or creator commissions, ALWAYS combine data from `club_orders` AND `order_attributions` using `UNION ALL` or similar." No automated verification. Any admin query that forgets the UNION silently undercounts. Spot-check `app/api/admin/analytics/route.ts` on every change.
-- CLAUDE.md rule: "parallel queries over UNION ALL" where appropriate — `Promise.all([...])` with independent queries is faster than a monolithic UNION for unrelated aggregates.
+**Mitigation:** Admin/internal labels (analytics dashboards, CSV exports) are acceptable. Creator-portal share-link generation is acceptable because creators *intend* to share `cultrclub.com` URLs. The violations are:
+1. `components/site/PricingCard.tsx` on the public marketing site — high-priority fix.
+2. Welcome-email CTA in `app/api/club/signup/route.ts:198` — medium priority; fine if the user is already a cultrclub.com signup but wrong if the signup originated on cultrhealth.com.
 
-**Lifetime vs period metrics — conditional-column pattern:**
-- Required pattern: `SUM(CASE WHEN created_at >= ... THEN amount ELSE 0 END)` in a single query, **not** a separate `WHERE created_at >= ...` run. Violating this pattern is why admin dashboards previously reported stale "lifetime" numbers. Any new analytics column must follow the pattern.
-
-**`@vercel/postgres` NUMERIC coercion (cultrhealth.com):**
-- Returns NUMERIC columns as strings. Every arithmetic read must wrap with `Number()` or `parseFloat()`. Casting in SQL (`::float8` or `::integer`) is the preferred idiom. Past commission-crash incident (Mar 27 2026) traced to missing cast. No lint rule; rely on grep audits + targeted tests.
-
-**Tracking/analytics write amplification:**
-- `click_events` table is written on every `/r/[slug]` redirect. High-traffic creators can generate thousands of writes per day. Verify `click_events` has an effective retention policy and that analytics reads use indexes on `(creator_id, created_at)` rather than full scans.
-
-**Image assets:**
-- `public/images/` holds 14+ hero-class JPG/PNGs. `next.config.js` serves AVIF + WebP formats but the source files are JPG/PNG; `<Image>` transcodes on Vercel. On cultrclub-web where `images.unoptimized: true`, the same assets are served raw — that path is slower to mobile.
+**Outstanding:** Audit each of the 9 source-code call sites and decide which must redirect to in-domain `/pricing`, `/intake`, `/success` paths.
 
 ---
 
-## Section 6 — Operational Risks
+### C6. Production deployment requires manual two-step build → deploy with no preview gate
 
-**Production deploy safety — `vercel --prod` incident Mar 23 2026:**
-- The CLI deploys the **local directory**, not the git branch. Running `vercel --prod` from a checkout of `staging` deploys staging code to production. Documented in `feedback_vercel_deploy_safety.md`. **Production deploys must go via `git push origin production` or Vercel Dashboard promotion.** No other path is allowed.
+**Where:**
+- This repo's `package.json` has no `build:cf` or `deploy:prod` scripts (verified — only `dev`, `build`, `start`, `lint`, `analyze`, `setup:stripe`, `check:health`, `test:smoke`, `test:e2e*`).
+- Per memory `reference_cultrhealth_deploy_pipeline.md`: production builds happen in sibling repo `cultrhealth-web/`, command is `npm run build:cf && npm run deploy:prod`, and Node 20 is required (Node 22 may break the build).
+- Per memory `feedback_cfpages_build_uses_workdir.md`: CF Pages reads the **working directory**, not git HEAD. Missing files silently 404 every affected route on production.
+- Per memory `feedback_nop_hardlink_truncation.md`: `@cloudflare/next-on-pages` can truncate `public/` binaries (MP4, large images) to 64 KB via hardlinks shared with `.vercel/output/static/`. After `build:cf`, source files must be re-checked-out and re-copied into the output dir, then file sizes verified.
 
-**Production promotion is cherry-pick, not merge:**
-- `production` diverged from `staging` (same commit titles, different SHAs). Promote via `git checkout -B tmp-prod origin/production && git cherry-pick <sha> && git push origin tmp-prod:production`. Never force-push (`feedback_prod_promotion_cherrypick.md`).
+**Why it matters:** Three failure modes:
+1. Building from a dirty working tree silently ships uncommitted files (or omits committed files that aren't checked out).
+2. Forgetting the post-build asset-restore step ships truncated binaries to production.
+3. No CI/CD gate. A solo deployer running the wrong commands at 1 a.m. can publish anything to production.
 
-**Two-app deploy coordination:**
-- cultrhealth.com → Vercel (branches: `main`, `staging`, `production`).
-- cultrclub.com → Cloudflare Pages (branches: `main` for production, `staging` for preview), deploy via `npm run deploy:prod` or `deploy:staging` calling `wrangler pages deploy`.
-- Env vars live in two different dashboards with different UIs, no shared config. Shared secrets (`POSTGRES_URL`, `JWT_SECRET`, HMAC keys, Stripe webhook secrets) must be kept identical or cross-domain auth breaks silently.
-- A checklist for every env-var rotation: (1) Vercel for cultrhealth, (2) Cloudflare Pages for cultrclub — failing to do both produces asymmetric breakage.
+**Mitigation:** Documented procedure in memory + sibling-repo CLAUDE.md. No automation. No staging→production promotion gate. No preview-URL convention.
 
-**Database migrations run manually:**
-- `node scripts/run-migration.mjs` — no automation, no rollback, no transaction wrapper. Migrations 001-056 have been applied in order. Every new migration must be checked in + run + verified against both Neon staging and production.
-
-**Environment parity between the two apps:**
-- Both apps hit the same Neon DB. Drifting schemas (a column exists on staging but not production, or the inverse) is the primary operational risk. Mitigation: every migration file must be applied to both staging and production before any deploy that depends on it.
-
-**Monitoring / observability:**
-- Grep for `Sentry`/`sentry` in cultrhealth.com: no dependency; only matches are in worktree README and marketing intelligence docs. **There is no centralized error tracking.** Errors land in Vercel deploy logs and Cloudflare Pages Functions logs — each must be checked separately. No alerting on p99 latency, no error-rate threshold alerts.
-- Google Analytics 4 is installed but is only frontend event tracking, not server error telemetry.
-- **Recommendation:** add Sentry (or similar) on both apps before next major launch.
-
-**Middleware as single point of failure (cultrhealth.com):**
-- `middleware.ts` in cultrhealth.com was recently expanded (session idle timeout + retired-subdomain 404). Edits ship immediately and affect every request. Test middleware changes on staging before merging.
+**Outstanding:**
+- Add a build-time check: `git status --porcelain` must be empty before `build:cf` proceeds.
+- Add a post-build size-verification step (`find .vercel/output/static/public -size 64c -name '*.mp4'`).
+- Move CF Pages deploy into GitHub Actions with `pages-action`.
+- Document Node 20 pin in `package.json` `engines` block.
 
 ---
 
-## Section 7 — Compliance Risks
+### C7. Production crons live in `vercel.json` — they DO NOT run on Cloudflare Pages
 
-**HIPAA:**
-- Telehealth consultations (Calendly + video on members' side), PHI in `intake_forms`, `orders`, `medical_records`, presigned S3 URLs for ID + consent uploads.
-- Session idle timeout (30 min) is enforced in `middleware.ts:40-106`. Cookies are HttpOnly, Secure in production, SameSite=Lax.
-- No formal BAA tracking in the repo. Active BAAs should be filed separately (Neon, Vercel, Cloudflare, Resend, Stripe, Calendly, SiPhox — confirmed needed).
+**Where:** `vercel.json:9-34` declares 6 crons:
+- `/api/cron/siphox-fulfillment` (every 15 min)
+- `/api/cron/siphox-results` (hourly)
+- `/api/cron/siphox-status-sync` (every 30 min)
+- `/api/cron/approve-commissions` (2 a.m. daily)
+- `/api/cron/update-tiers` (3 a.m. daily)
+- `/api/cron/stale-orders` (noon daily)
 
-**LegitScript:**
-- ConsentModal on checkout (`components/compliance/ConsentModal.tsx`), FDA badges on therapy cards (`FDAStatusBadge.tsx`), ROSCA disclosure on pricing, Florida-only state availability, PrescriptionDisclaimer on therapies + pricing. `NEXT_PUBLIC_LEGITSCRIPT_SEAL_ID` is a placeholder until LegitScript certifies the site.
-- `/science` and `/blog` were removed Apr 2026 explicitly for LegitScript compliance. Do not restore without re-review.
-- Any future content page must pass a LegitScript content review before shipping.
+**Why it matters:** This `vercel.json` lives in the cultr-website repo, which now only deploys staging to Vercel. Production runs on Cloudflare Pages out of `cultrhealth-web/`. Unless those crons were re-implemented as Cloudflare Cron Triggers in the sibling repo, **production never runs them**. Concrete fallout:
+- `approve-commissions` not running → commissions sit `pending` forever; creators don't get paid.
+- `update-tiers` not running → recruit-count milestones don't trigger tier upgrades.
+- `siphox-*` crons not running → kit fulfillment, result polling, status sync all stall.
+- `stale-orders` not running → stale-order cleanup never fires.
 
-**FDA — compounded medication disclosures:**
-- Every medication card in `components/intake/MedicationSelector.tsx` carries "Compounded in the USA" + "Prescription Only" pill badges. Verify these render on any new medication added to the catalog.
+**Mitigation:** Unknown without inspecting `cultrhealth-web/wrangler.toml` (out of scope for this concern doc, lives in a different repo).
 
-**FTC — affiliate disclosure:**
-- `lib/config/affiliate.ts` ships three disclosure templates (short: `#ad #CULTRpartner`, standard, full). Creators agree to them at application; no runtime verification that creators actually use them. Reputational risk if a creator posts without disclosure. Consider: add a policy acknowledgment checkpoint on every login.
-
-**Florida-only jurisdiction:**
-- `FloridaStateGate` component created Apr 14 2026 but tasks 10-12 (gate quiz/intake/checkout) are **still pending** per memory (`project_florida_jurisdiction_apr14.md`). Until those ship, a user from outside Florida can complete the funnel. Legal risk.
-
----
-
-## Section 8 — In-Progress / Blocked
-
-**Source of truth:** `.planning/STATE.md` (cultrhealth.com repo).
-
-**Milestone:** v1.0, status `executing`, `73%` complete (11 of 15 plans, 6 of 8 phases done). Last update `2026-04-17T22:55:54Z`.
-**Current focus:** Phase 03 — `code-adaptation` (cultrclub.com cutover migration). Plan 1 of 2. Status `Executing Phase 03` / last activity `2026-04-14 -- Phase 03 execution started`.
-
-**Active migration:** `/Users/davidk/.claude/plans/snazzy-humming-treasure.md` — five-phase cultrclub.com migration.
-
-**Remaining phases (per phase folders):**
-- Phase 04 — `deploy-validate` (in `.planning/phases/04-deploy-validate/`).
-- Phase 05 — `production-cutover`:
-  - Plan 05-01 — cultrclub.com go-live.
-  - Plan 05-02 — cultrhealth.com middleware cleanup + retired-subdomain 301 redirect. **Gate:** cultrclub.com must pass 24h monitoring after Plan 05-01.
-
-**Parallel in-flight work:**
-- Phase `01-foundation/`, Phase `02-checkout-integration/`, Phase `03-kit-registration/` — these are SiPhox-integration phases, not the cultrclub migration phases. They live under the same `.planning/phases/` folder with overlapping numbers (both 01/02/03). Status `executing` per STATE.md; new since Apr 14.
-
-**Identified blockers:**
-- "Unknown if SiPhox supports report-completion webhooks" (`.planning/phases/03-kit-registration/03-RESEARCH.md:355`) — blocks the kit-registration lifecycle. Workaround: polling.
-- Florida-only jurisdiction gate tasks 10-12 pending — blocks full LegitScript prerequisite list.
-- Pharmacy partner TODO (Section 1) — every `Reconnect to new pharmacy partner` call returns a stub. Blocks post-intake fulfillment automation.
-
-**Quick tasks recently completed:** edit/delete members from admin dashboard (`260415-kwb` / `260415-uma`).
+**Outstanding:** Verify production crons are configured via Cloudflare Cron Triggers. If not, this is an active production outage being masked by manual ops.
 
 ---
 
-## Section 9 — Dependency Risks
+### C8. Two production sources of truth (Vercel `production` branch + Cloudflare Pages from sibling repo)
 
-### cultrhealth.com (`package.json`)
+**Where:**
+- This repo: `production` branch still exists and historically deployed to Vercel. Per memory it was retired in favor of CF Pages.
+- Sibling repo: `cultrhealth-web/main` is the new authoritative production source.
+- `middleware.ts:6-22` still has Vercel-canonicalization logic (`isProductionDeployment = process.env.VERCEL_ENV === 'production'` rewrites `*.vercel.app` → `cultrhealth.com`) — left over from the Vercel-production era.
 
-**Major/minor deltas vs current upstream (captured 2026-04-20; verify against `npm outdated` before any upgrade):**
+**Why it matters:** Anyone who runs `vercel --prod` from this repo (per memory `feedback_vercel_deploy_safety.md`, the Mar 23 incident) can re-establish Vercel as a production source and create a split-brain. The Vercel CLI still has the production project linked.
 
-| Package | Current | Risk |
-|---|---|---|
-| `next` | `^14.2.0` | Next 15 is available. cultrclub-web is already on 15.5.2. Upgrading cultrhealth.com catches the repos up but requires App Router migration checks. |
-| `stripe` | `^20.2.0` | cultrclub-web is on `^22.0.1`. API version mismatch between webhook verifier and checkout sessions is a silent-break risk. Align both repos. |
-| `@vercel/postgres` | `^0.10.0` | Stable; unlikely to move. The long-term plan is to migrate to `@neondatabase/serverless` (already used in cultrclub-web) for runtime uniformity. |
-| `typescript` | `^5.4.0` | Several TS5 minor releases behind; low risk. |
-| `zod` | `^3.23.0` | Zod 4 is available with breaking changes. Plan explicitly before upgrading. |
-| `eslint` | `^8.57.0` | ESLint 9 is current. eslint-config-next `^14.2.0` constrains the upgrade. |
-| `three` | `^0.183.2` | Rapid release cadence; bundle-size regression risk on any upgrade. Re-run `npm run analyze` after bumping. |
-| `react` / `react-dom` | `^18.2.0` | React 19 is available; Next 15 supports it. Leave alone until Next 15 migration lands. |
-| `@react-pdf/renderer` | `^4.3.2` | Infrequent updates; check for CVE advisories periodically. |
-| `twilio` | `^5.12.2` | Keep current — SMS is a compliance-sensitive path. |
-| `ai` / `@ai-sdk/openai` / `@ai-sdk/react` | `^6.0.59` / `^3.0.21` / `^3.0.61` | AI SDK 6 is rapidly evolving; treat as a watched dependency. |
-| `gsap` | `^3.14.2` | License: free for non-commercial; commercial usage needs a Club GreenSock license. Verify compliance. |
+**Mitigation:**
+- `vercel.json:4-7` disables `git.deploymentEnabled.main` and `master` (verified).
+- Memory hard rule: `NEVER vercel --prod from wrong branch`.
+- No automated guardrail.
 
-**Confirmed unused / removable:**
-- `class-variance-authority` — **not in `package.json` dependencies.** Remove stale references from `.planning/codebase/STACK.md`, `.planning/codebase/CONVENTIONS.md`, `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, and the orphaned `.claude/worktrees/agent-a3e154df/package.json` + `package-lock.json`.
-
-**Worktree cleanup:**
-- `.claude/worktrees/agent-a3e154df/` is an orphaned agent worktree dating from pre-Apr 2026. Delete the directory entirely.
-
-### cultrclub-web (`package.json`)
-
-| Package | Current | Risk |
-|---|---|---|
-| `next` | `15.5.2` | Ahead of sibling repo. Watch for Cloudflare Pages adapter compatibility (`@cloudflare/next-on-pages@^1.13.0`). |
-| `stripe` | `^22.0.1` | Ahead of sibling repo. Pin API version explicitly in both clients to prevent webhook drift. |
-| `@neondatabase/serverless` | `^0.9.0` | Stable; `fullResults: true` is mandatory for `.rows`/`.rowCount` shape parity with `@vercel/postgres`. |
-| `framer-motion` | `^11.0.0` | Sibling uses `^12.36.0` — intentional mismatch (cultrclub-web hasn't bumped). Not a runtime risk; cosmetic only. |
-| Stripe API version | implicit | Pin to a known major (e.g., `2024-09-30.acacia`) in both repos. |
-
-**Missing testing toolchain:**
-- cultrclub-web has **no test framework installed**. No `vitest`, no `@testing-library/*`, no `playwright`. Every change ships untested. Phase 04 (`deploy-validate`) covers this, but the risk is ongoing until Phase 04 lands.
-
-**Missing linting toolchain:**
-- cultrclub-web has **no ESLint, no Prettier, no Biome**. Sibling repo has ESLint. Add at minimum a pre-commit TypeScript check (`tsc --noEmit`) and a basic ESLint config.
+**Outstanding:** Either (a) detach the Vercel production project from this repo entirely, or (b) leave it as a documented disaster-recovery fallback and add a giant warning at the top of `package.json` and CLAUDE.md. Today the rule is in CLAUDE.md but not enforced.
 
 ---
 
-*Document ends. Re-run the retired-subdomain grep inventory after each migration phase to confirm deprecation surface is shrinking.*
+## HIGH
+
+### H1. Edge runtime constraints not enforced by lint or build
+
+**Where applies:** Sibling repo `cultrhealth-web/` (production) — but the same source files live in *this* repo and any omission propagates on next sync.
+
+**Constraints (per memory `feedback_cf_pages_edge_compat_gotchas.md`):**
+- Every `app/**/route.ts` and SSR-fetching page must declare `export const runtime = 'edge'` or fall back to Node runtime, which CF Pages cannot execute → 500 on production, works locally.
+- Neon access requires `fullResults: true` for `.rows`/`.rowCount` shape parity with `@vercel/postgres`.
+- `nodejs_compat` must be set in `wrangler.toml` to satisfy Node `crypto`/`Buffer` imports.
+- `dompurify` is unreliable in CF Workers — see H2.
+- 3 MiB Worker bundle limit (compressed) — large dependencies (gsap, three, recharts) push close to the ceiling.
+- `images.unoptimized: true` is mandatory because there is no image optimizer at the edge.
+- `next.config.js` `headers()` is silently dropped — must use `_headers` (static) + middleware (SSR).
+- Cookie domain must be derived from `request.headers.get('host')`, not `process.env.NEXT_PUBLIC_SITE_URL` (env vars are stale on preview deploys).
+- Node 20 required for build.
+
+**Why it matters:** None of these are enforced by ESLint or any pre-commit hook in this repo. A new route file added on the staging branch and synced to `cultrhealth-web/main` without `export const runtime = 'edge'` will 500 on production with no local indication.
+
+**Mitigation:** Documented in memory, repeated in CLAUDE.md `feedback_cf_pages_edge_compat_gotchas.md`. No automated check.
+
+**Outstanding:** Add an ESLint rule or a pre-deploy grep: `grep -rL "runtime = 'edge'" app/api/**/route.ts` must be empty.
+
+---
+
+### H2. DOMPurify on server-rendered markdown is fragile under CF Workers
+
+**Where:**
+- `lib/library-content.ts:3-9` constructs DOMPurify via `jsdom`-backed window.
+- `app/science/[slug]/page.tsx:13-18` does the same (this route is 301-redirected by `next.config.js:183-189` but the file still ships in the bundle).
+
+**Why it matters:** Per memory `feedback_cf_pages_edge_compat_gotchas.md`, DOMPurify is unreliable in the CF Workers runtime because `jsdom` is a Node-only dependency that the bundler can't ship to the edge. On staging (Vercel/Node) the code works; on production (CF Pages/edge) it can throw at request time. `lib/library-content.ts` is consumed by the members library (`/members/library/*`) which **is** a SSR page on production.
+
+**Mitigation:** None at the runtime boundary. The risk is that a member browsing `/members/library` triggers the DOMPurify path and it crashes server-side.
+
+**Outstanding:** Either (a) replace DOMPurify with an edge-safe sanitizer (e.g., `sanitize-html` configured for Workers), or (b) pre-sanitize at build time and ship plain HTML.
+
+---
+
+### H3. `app/science/[slug]/` and `lib/blog-content.ts` are dead code that still ships
+
+**Where:**
+- `app/science/page.tsx`, `app/science/[slug]/page.tsx`, `app/science/blog-content.css` — all present in the working tree.
+- `lib/blog-content.ts` — present.
+- `content/blog/` — 10 markdown files present (tb500-tissue-repair, fasting-metabolic-health, sleep-and-recovery, mitochondrial-health, peptide-stacking, thyroid-deep-dive, testosterone-optimization, nad-and-longevity, inflammation-markers, biomarker-basics).
+- `next.config.js:182-190` — 301 redirects `/science` and `/science/:slug` to `/`.
+
+**Why it matters:** CLAUDE.md states "Blog content removed Apr 2026" but only the redirects were added. The route handlers, content files, and library are still in the bundle. Two risks:
+1. A future deploy that drops the redirects silently re-publishes potentially non-LegitScript-compliant medical content.
+2. Bundle includes JSDOM + marked + DOMPurify + frontmatter parsing that isn't reachable, eating into the 3 MiB CF Workers limit.
+
+**Mitigation:** Redirects in `next.config.js` are the only guard.
+
+**Outstanding:** Delete `app/science/`, `lib/blog-content.ts`, `content/blog/`, and the `/science` redirects together in one commit.
+
+---
+
+### H4. Staging auth bypass legacy fallback still active
+
+**Where:**
+- `lib/auth.ts:222-231` — `isStaging()` checks `process.env.STAGING_MODE === 'true'` first, then falls back to `process.env.NEXT_PUBLIC_SITE_URL.includes('staging')`.
+- `app/api/auth/verify/route.ts:26-32` — duplicate of the same check.
+- TODOs in both files: "TODO: remove this once STAGING_MODE=true is confirmed set on staging in Vercel."
+
+**Why it matters:** The legacy fallback uses `NEXT_PUBLIC_SITE_URL`, a *build-time-embedded* env var. If a production deployment ever ships with `NEXT_PUBLIC_SITE_URL` accidentally pointing at a `staging-*.vercel.app` host (or any string containing `staging`), the bypass fires:
+- Any email gets its magic-link token returned in the API response body.
+- Team emails (`OWNER_EMAILS` + `legitscript@cultrhealth.com`, see `lib/auth.ts:217-220`) auto-provision as creators with no email-verification step.
+
+**Mitigation:** Production env in Cloudflare Pages must set `STAGING_MODE` unset/empty *and* `NEXT_PUBLIC_SITE_URL=https://cultrhealth.com`. Both must be true.
+
+**Outstanding:** Delete the legacy fallback in both files in one commit (the in-code TODO has been outstanding long enough).
+
+---
+
+### H5. Bot protection (Turnstile) covers only the waitlist endpoint
+
+**Where verified by grep of `app/api/`:**
+- `app/api/waitlist/route.ts:17-31` — only API route invoking `verifyTurnstileToken`.
+
+**Endpoints accepting public input WITHOUT Turnstile:**
+- `app/api/quiz/submit` — quiz lead capture (already a known abuse vector)
+- `app/api/intake/submit` — medical intake submission
+- `app/api/creators/apply` — creator application (PII intake)
+- `app/api/club/signup` — club member signup (mitigated by `formLimiter` rate limiter, see `app/api/club/signup/route.ts:29-31`)
+- `app/api/club/orders` — club order creation
+- `app/api/auth/magic-link` — magic-link issuance (rate-limited but not bot-protected)
+- `app/api/creators/magic-link` — creator magic-link
+
+**Why it matters:** Bots can drain SMS/email budget (Resend, Twilio), poison analytics, fill the DB with fake intakes, and brute-force coupon codes. Rate limiting (`lib/rate-limit.ts`) helps but does not stop distributed bot traffic.
+
+**Mitigation:** `lib/rate-limit.ts` is wired on club signup, club login, club check-member, magic-link routes (verified via grep). No Turnstile.
+
+**Outstanding:** Wire Turnstile on `quiz/submit`, `intake/submit`, `creators/apply`, `club/signup`, and `club/orders`. Sibling repo `cultrclub-web` already uses Turnstile per memory.
+
+---
+
+### H6. JWT/HMAC secrets have no rotation strategy
+
+**Where:** `lib/auth.ts` (JWT_SECRET), `lib/healthie/webhooks.ts` (HEALTHIE_WEBHOOK_SECRET), `app/api/admin/club-orders/[orderId]/status/route.ts:36-37` (JWT_SECRET reused for HMAC), `app/api/admin/club-orders/[orderId]/approve/route.ts` (HMAC tokens), `lib/auth.ts` (SESSION_SECRET).
+
+**Why it matters:**
+- Rotating any of these immediately invalidates every active session and every magic-link/HMAC token in flight.
+- No dual-secret verifier exists (`JWT_SECRET_PREVIOUS` + `JWT_SECRET` accepted side-by-side for 24 h).
+- `JWT_SECRET` is reused as the HMAC key for status-token verification — same secret, two purposes, one rotation event invalidates both.
+
+**Mitigation:** None.
+
+**Outstanding:** Add a `verifyTokenWithRotation()` helper that tries `JWT_SECRET` first then `JWT_SECRET_PREVIOUS`. Same for `SESSION_SECRET`. Document the rotation runbook.
+
+---
+
+### H7. Stale documentation actively misleads contributors
+
+**Where:**
+- `AGENTS.md:13` — "Join Club URL: https://join.cultrhealth.com" (subdomain retired Apr 22 2026).
+- `AGENTS.md:14` — "Hosting: Vercel (automatic deployments per branch)" (production is on CF Pages now).
+- `README.md:3` — references `join.cultrhealth.com`.
+- `CLAUDE.md:13`, `CLAUDE.md:199` (and 4 other places per existing CONCERNS doc) — same.
+- `.cursorrules` — likely contains the same stale references (verified line count: 565 lines).
+
+**Why it matters:** Cursor IDE auto-loads `.cursorrules` for every AI session. New contributors and AI assistants read CLAUDE.md/AGENTS.md as gospel. They will reintroduce `cultrclub.com` redirects, scaffold `/join-club` routes, and assume Vercel is production — every one of which is wrong as of 2026-04-27.
+
+**Mitigation:** None at runtime. Memory `feedback_self_correcting_claudemd.md` codifies the patch-on-mistake rule, but it requires a human to notice.
+
+**Outstanding:** Patch `AGENTS.md`, `README.md`, `CLAUDE.md`, and `.cursorrules` in one PR to reflect:
+1. `join.cultrhealth.com` is RETIRED.
+2. Production = Cloudflare Pages from sibling repo.
+3. Staging = Vercel from this repo.
+
+---
+
+### H8. `next.config.js` `headers()` is the only CSP source — silently dropped on Cloudflare Pages
+
+**Where:** `next.config.js:35-` declares `Content-Security-Policy`, `X-Frame-Options`, `Referrer-Policy`, etc. via `async headers()`.
+
+**Why it matters:** Per memory `feedback_cloudflare_pages_headers_gotcha.md`, `@cloudflare/next-on-pages` does **not** ship the `headers()` array. On production:
+- Static files: `public/_headers` would deliver them — but **`public/_headers` does not exist in this repo** (verified: `ls public/_headers` returns "No such file or directory").
+- SSR responses: only middleware can set headers — `middleware.ts` does not set CSP.
+
+**Result:** Production Worker-rendered responses ship **without CSP, X-Frame-Options, or Referrer-Policy**.
+
+**Mitigation:** Sibling repo `cultrhealth-web/` may have its own `_headers` file. Cannot verify from this repo.
+
+**Outstanding:** Confirm `cultrhealth-web/public/_headers` exists with the same security headers as `next.config.js`. Either way, copy CSP into `middleware.ts` for SSR responses.
+
+---
+
+### H9. Commission ledger lifecycle is correct, but only because cancel/refund handlers are exhaustive — and there is no test
+
+**Where (verified by grep):**
+- Checkout: `app/api/club/orders/route.ts` calls `processOrderAttribution({ skipCommissionLedger: true })` — defers commission writes until ship.
+- Ship transition: `app/api/admin/club-orders/[orderId]/status/route.ts:261-262` calls `recordCommissionsForShippedOrder()`.
+- Rollback from shipped: `app/api/admin/club-orders/[orderId]/status/route.ts:294, 317` calls `reverseCommissionsForAttribution()`.
+- Dismiss: `app/api/admin/club-orders/[orderId]/dismiss/route.ts:43` calls `reverseCommissionsForAttribution()`.
+- Stripe refund: `app/api/webhook/stripe/route.ts:983` calls `handleRefundReversal()` (which delegates to `reverseCommissionsForAttribution`).
+- Cron: `lib/creators/db.ts:1106-1145` — `approveEligibleCommissions()` correctly excludes club_order-linked attributions whose order is not yet `shipped`/`fulfilled`.
+
+**Why it matters:** Every cancel/dismiss/refund path calls the reversal helper — *currently*. Any new admin path that mutates order state (e.g. a future "mark order failed" button) that forgets to call `reverseCommissionsForAttribution()` will silently leave commissions earned on undone work.
+
+**Mitigation:** Code review only. No test covering "every order-state mutation must call the reversal helper."
+
+**Outstanding:** Add an integration test: for every distinct exit transition out of `shipped`/`fulfilled`, assert that `commission_ledger.status` for the linked attribution becomes `reversed`.
+
+---
+
+### H10. Owner email exclusion uses `OWNER_EMAILS_PG_ARRAY` but is not applied uniformly
+
+**Where (verified by grep):**
+- Filter applied in: `app/api/admin/creators/payouts/batch/route.ts:34`, `lib/db.ts:792, 901, 906, 1173, 1245, 1271, 1304, 1324`.
+- Filter NOT applied: any direct `sql\`SELECT ... FROM creators...\`` query that doesn't go through the helpers in `lib/db.ts`. Several admin routes (e.g. `app/api/admin/creators/pending/route.ts`, `app/api/admin/creators/[id]/approve/route.ts`) read creators directly.
+
+**Why it matters:** Owner accounts (`erik@`, `alex@`, `tony@`, `david@`, `erik@threepointshospitality.com`) appear in creator lists, payouts batches, and analytics aggregates whenever a query bypasses `lib/db.ts`. Stewart is intentionally **not** in the exclusion list (per `lib/config/owner-emails.ts:17-19` comment) — that part is correct.
+
+**Mitigation:** None systematically. Per-query enforcement.
+
+**Outstanding:** Wrap raw `creators` reads in admin code paths through helpers that apply the filter, or add a database VIEW `creators_marketplace` with the filter baked in.
+
+---
+
+## MEDIUM
+
+### M1. Loose TypeScript configuration
+
+**Where:** `tsconfig.json` (verified):
+- `strict: false`, `allowJs: true`, `skipLibCheck: true`, `noImplicitAny` not set, `strictNullChecks` not set, `noUncheckedIndexedAccess` not set.
+- `moduleResolution: "node"` — legacy, not modern `bundler`.
+- No `target` declared (defaults to ES5 per Next.js).
+
+**Why it matters:** Silent type regressions. Every NUMERIC-coercion bug (memory `project_checkout_numeric_fix_mar27.md`), every nullable-field crash, every implicit-any drift goes undetected at the type layer. Migration to Next 15 (already on cultrclub-web) will require modern `bundler` resolution.
+
+**Mitigation:** Vitest tests + manual review.
+
+**Outstanding:** Staged strictness. Enable `strictNullChecks` on `lib/auth.ts`, `lib/creators/commission.ts`, `lib/db.ts` first; ratchet up.
+
+---
+
+### M2. `@vercel/postgres` returns NUMERIC as strings — coercion must be manual
+
+**Where:** Documented hard rule in CLAUDE.md, `.cursorrules`, and memory `feedback_vercel_numeric_coercion.md` after a Mar 27 production crash on creator-coupon orders.
+
+**Why it matters:** Writing `row.amount + row.discount` returns string concatenation, not arithmetic. Inserting a `parseFloat`'d string back into a NUMERIC column without `::numeric` cast can break.
+
+**Mitigation:** Convention only. Spot-check via grep:
+```bash
+grep -rn '\.amount\s*[+\-]' --include='*.ts'
+grep -rn '\.rate\s*\*' --include='*.ts'
+```
+
+**Outstanding:** Add a typed wrapper around `sql\`...\`` that auto-coerces NUMERIC columns. No such wrapper exists.
+
+---
+
+### M3. Admin analytics SQL conventions documented but not enforced
+
+**Where:** CLAUDE.md hard rules (verified) — copy-paste here:
+- "ALWAYS combine data from `club_orders` AND `order_attributions` using `UNION ALL` or similar"
+- "When calculating 'lifetime' metrics alongside period metrics in the same query, apply the date interval constraint conditionally per column (e.g., `SUM(CASE WHEN created_at >= ... THEN amount ELSE 0 END)`)"
+- "use `make_interval()`, `IS DISTINCT FROM`, `COUNT(*)::integer`, `::float8`"
+
+**Verification:** `make_interval` confirmed in `app/api/admin/qr-scans/export/route.ts:59`. No comprehensive audit of every admin route was performed.
+
+**Why it matters:** Past incidents — coupon analytics under-counting (memory `project_coupon_analytics_bugfixes_mar17.md`), lifetime-vs-period drift (memory `project_admin_dashboard_features_mar24.md`). Every new analytics column that violates the pattern silently undercounts revenue or commissions.
+
+**Mitigation:** Code review.
+
+**Outstanding:** Per-route SQL audit on `app/api/admin/analytics/`.
+
+---
+
+### M4. No centralized error tracking (Sentry / equivalent)
+
+**Where (verified by grep):** zero hits for `Sentry`/`sentry` in `*.ts`/`*.tsx`/`*.json` of source code.
+
+**Why it matters:** Errors land in two separate places — Vercel deploy logs (staging) and Cloudflare Pages Functions logs (production). No alerting on p99 latency, no error-rate threshold alerts, no breadcrumb context. When production emits a 500, you find out from a customer.
+
+**Mitigation:** Google Analytics is installed but is frontend-only.
+
+**Outstanding:** Add Sentry on both apps. Configure release tracking and alerting on error-rate / p99 latency.
+
+---
+
+### M5. Pharmacy-partner TODOs return stubs in critical paths
+
+**Where (verified by grep):**
+- `app/api/member/orders/route.ts:79` — order list returns empty array
+- `app/api/member/profile/route.ts:119, 194` — profile fields return null
+- `app/api/portal/profile/route.ts:107` — portal profile stubbed
+- `app/api/portal/documents/route.ts:3, 54, 147` — documents return empty
+- `app/api/member/files/route.ts:60` — files return empty
+- `app/api/member/medical-records/route.ts:113` — medical records stubbed
+- `app/api/protocol/generate/route.ts:26` — patient verification BYPASSED
+- `app/api/intake/submit/route.ts:13` — routing note only
+- `app/api/webhook/stripe/route.ts:831` — cancellation notification to pharmacy not wired
+
+**Why it matters:** Member-facing pages render empty states because the integration was severed. `app/api/protocol/generate/route.ts:26` is HIGH severity in its own right — patient verification is the explicit security check, and it's bypassed.
+
+**Mitigation:** None until a new pharmacy partner is wired. Members see empty dashboards.
+
+**Outstanding:** Either wire the new pharmacy partner integration, or replace stubs with explicit "coming soon" UI rather than empty arrays that look like data loss.
+
+---
+
+### M6. `app/api/admin/club-orders/[orderId]/approve/route.ts:484` — V2 TODO for automated payment links
+
+**Where:** Same file. "TODO (Version 2): Implement Option A — Automated Payment Link."
+
+**Why it matters:** Approvals currently hand-roll payment collection. As club-order volume grows, manual intervention is a scaling ceiling.
+
+**Mitigation:** Manual ops.
+
+**Outstanding:** Tracked. Not blocking.
+
+---
+
+### M7. `app/api/portal/labs/route.ts:138` — kit-id matching not implemented
+
+**Where:** Same file. "TODO: v2 — match by kitId instead of updating most-recent order."
+
+**Why it matters:** Works for members holding a single SiPhox kit. Breaks (silently writes to the wrong order) when a member has two or more active kits.
+
+**Mitigation:** None. Today's user base mostly has one kit.
+
+**Outstanding:** Phase 03-kit-registration plan covers this.
+
+---
+
+### M8. Stripe API version drift between cultrhealth.com and cultrclub.com
+
+**Where:**
+- This repo: `package.json` declares `stripe: ^20.2.0`.
+- Sibling repo `cultrclub-web`: `stripe: ^22.0.1`.
+
+**Why it matters:** Different SDK majors imply different default Stripe API versions. Webhook events emitted at one version may not parse cleanly at the other. Per CLAUDE.md and existing CONCERNS doc, Stripe API version should be pinned explicitly in both clients to a known major (e.g. `2024-09-30.acacia`).
+
+**Mitigation:** Both clients use the same Stripe account, so webhook signatures verify either way; payload shape is the risk.
+
+**Outstanding:** Pin `apiVersion: '2024-09-30.acacia'` (or current) explicitly in `lib/stripe.ts` (or wherever the Stripe client is instantiated) in both repos.
+
+---
+
+### M9. `.playwright-mcp/` artifacts written into working tree, not gitignored
+
+**Where:**
+- Directory `.playwright-mcp/` contains 14 files (console-* logs and page-*.yml dumps from 2026-04-25).
+- `.gitignore` does not match `.playwright-mcp` (verified).
+
+**Why it matters:** Playwright traces can include URL paths, query params, request bodies — potentially capturing tokens or session IDs. Any developer running `git add -A` ships them.
+
+**Mitigation:** None. The files are present and untracked.
+
+**Outstanding:** Add `.playwright-mcp/` to `.gitignore` and delete the existing files.
+
+---
+
+### M10. Many uncommitted source files modified (staging branch)
+
+**Where (per `git status`):**
+- `lib/cart-context.tsx` (modified)
+- `lib/config/coupons.ts` (modified)
+- `app/api/admin/club-orders/[orderId]/approve/route.ts` (modified)
+- `app/api/admin/club-orders/[orderId]/status/route.ts` (modified)
+- `app/api/club/orders/route.ts` (modified)
+- `app/tools/dosing-calculator/{,[slug]/}page.tsx` (modified)
+- `app/tools/dosing-calculator/[slug]/preset-content.ts` (modified)
+- `package.json` + `package-lock.json` (modified)
+- `AGENTS.md`, `CHANGELOG.md`, `README.md`, `design.md`, `.planning/STATE.md` (modified)
+
+**Why it matters:** The CF Pages build-from-working-directory rule (memory `feedback_cfpages_build_uses_workdir.md`) means a production build right now would ship these uncommitted changes. If the deployer builds without `git status` clean, the production tree drifts from `cultrhealth-web/main`.
+
+**Mitigation:** Procedure-only. No automation.
+
+**Outstanding:** Commit or stash before any production build. Add the `git status --porcelain` check from C6 above.
+
+---
+
+### M11. `image.unoptimized: true` not set in this repo's `next.config.js`
+
+**Where:** `next.config.js:25-29` (verified) sets `formats: ['image/avif', 'image/webp']`, `deviceSizes`, `imageSizes`, but **does not** set `unoptimized: true`.
+
+**Why it matters:** When this repo's source is synced to `cultrhealth-web/` for the next CF Pages build, the deployer must remember to flip `unoptimized: true` (or sibling repo's `next.config.js` must override). Per memory, image optimization does not run at the edge — `unoptimized: true` is mandatory on production. Otherwise `<Image>` tags resolve to the Next.js image optimizer route, which 500s on CF Pages.
+
+**Mitigation:** Sibling repo carries the correct config. Risk is on next sync.
+
+**Outstanding:** Either (a) split out a CF-specific `next.config.cf.js`, or (b) detect CF at build time, or (c) document the diff explicitly.
+
+---
+
+### M12. Test coverage gaps
+
+**Where:** `tests/` directory contains 91 test files (`find tests -name '*.test.*' | wc -l`). Distribution by area:
+- `tests/api/` — API route coverage (auth, intake, attribution, etc.)
+- `tests/components/` — including `ConsentModal.test.tsx`, `FloridaStateGate.test.tsx` (covering components NOT wired into the funnel — see C3, C4)
+- `tests/integration/` — protocol engine
+- `tests/lib/` — auth, plans, library-content, protocol-templates, siphox, etc.
+- `tests/smoke/` — smoke tests for routes
+- `e2e/` — Playwright (separate runner, `npm run test:e2e`)
+
+**Gaps:**
+- No tests for the CF Pages migration constraints (edge runtime declarations, _headers).
+- No tests for the new SEO routes (`/tools/dosing-calculator`, `/tools/dosing-calculator/[slug]`) added per memory `project_peptide_calculator_seo_apr25.md`.
+- No regression test asserting "every cancel/dismiss/refund path calls `reverseCommissionsForAttribution()`" (see H9).
+
+**Mitigation:** Spot-check via test runs.
+
+**Outstanding:** Add edge-runtime grep test, dosing-calculator page snapshot, commission-reversal integration test.
+
+---
+
+### M13. Untracked SUMMARY.md files in `.planning/phases/` may indicate stale plan state
+
+**Where (per git status):**
+- `.planning/phases/04-deploy-validate/04-01-SUMMARY.md` (untracked)
+- `.planning/phases/04-deploy-validate/04-02-SUMMARY.md` (untracked)
+- `.planning/phases/05-production-cutover/05-01-SUMMARY.md` (untracked)
+- `.planning/phases/05-production-cutover/05-02-SUMMARY.md` (untracked)
+
+**Why it matters:** `STATE.md` says project is at 73% / Phase 03 executing. The presence of untracked Phase 04 and Phase 05 summary files (which document completion of those phases) suggests STATE.md is out of sync.
+
+**Mitigation:** None.
+
+**Outstanding:** Reconcile STATE.md with the actual phase progress and commit the summaries.
+
+---
+
+## LOW
+
+### L1. Documentation sync duty between CLAUDE.md, AGENTS.md, README.md, .cursorrules
+
+**Why it matters:** All four files describe project state. Drift is constant. The "self-correcting CLAUDE.md" rule (memory `feedback_self_correcting_claudemd.md`) prescribes patches but only after a contributor notices.
+
+**Outstanding:** One-time PR to align all four after the CF Pages migration settles, then enforce via PR template checklist.
+
+---
+
+### L2. Loose Node module resolution
+
+**Where:** `tsconfig.json:13` — `moduleResolution: "node"`.
+
+**Why it matters:** ESM/CJS interop friction with newer libs (`jose`, `ai` SDK 6, etc.). Next 15 prefers `bundler` resolution. cultrclub-web is on Next 15 already; this repo will need the bump eventually.
+
+**Mitigation:** None.
+
+**Outstanding:** Migrate to `moduleResolution: "bundler"` as part of the Next 15 upgrade.
+
+---
+
+### L3. `class-variance-authority` not in dependencies but referenced in docs
+
+**Where:** Verified — `class-variance-authority` is **not** in `package.json` `dependencies`. CLAUDE.md, AGENTS.md, `.cursorrules`, `.planning/codebase/STACK.md`, `.planning/codebase/CONVENTIONS.md` all still reference it.
+
+**Why it matters:** Docs claim a dependency that doesn't exist. Future contributors searching for variant patterns will hit dead-end suggestions.
+
+**Outstanding:** Scrub references from all five files.
+
+---
+
+### L4. Empty `lib/stores/` and stale `components/sections/` references in CLAUDE.md
+
+**Where:**
+- `lib/stores/` — does not exist (verified).
+- `components/sections/` — does not exist (verified).
+- CLAUDE.md still lists both under Known Technical Debt.
+
+**Outstanding:** Remove from CLAUDE.md.
+
+---
+
+### L5. Legacy root-level component files no longer present
+
+**Where:**
+- `components/Footer.tsx` — does not exist.
+- `components/Navigation.tsx` — does not exist.
+- `components/WaitlistForm.tsx` — does not exist.
+- The existing CONCERNS doc (now superseded) listed them as legacy debt; they are already cleaned up.
+
+**Outstanding:** None — resolved. Remove the entries from any CLAUDE.md / AGENTS.md descriptions of `components/`.
+
+---
+
+### L6. FTC affiliate disclosure templates exist but no runtime verification
+
+**Where:** `lib/config/affiliate.ts` ships short / standard / full disclosure templates. Creators agree at application; no per-post compliance check.
+
+**Why it matters:** Reputational risk if a creator posts without disclosure; FTC enforcement is per-post, not per-account.
+
+**Mitigation:** Application-time agreement.
+
+**Outstanding:** Optional — add a per-login disclosure-acknowledgment checkpoint or a periodic creator-content audit.
+
+---
+
+### L7. GSAP commercial license
+
+**Where:** `gsap@^3.14.2` in `package.json`.
+
+**Why it matters:** GSAP's standard license is free for non-commercial use. Commercial usage of certain plugins requires Club GreenSock. Verify which GSAP modules are actually imported.
+
+**Outstanding:** Audit GSAP imports; confirm license obligation.
+
+---
+
+### L8. No formal BAA tracking in repo
+
+**Where:** Not in repo.
+
+**Why it matters:** HIPAA Business Associate Agreements should be filed for every third-party that touches PHI: Neon, Vercel, Cloudflare, Resend, Stripe, Calendly, SiPhox, Twilio, OpenAI (if AI SDK touches medical context), AWS S3.
+
+**Mitigation:** Tracked outside the repo.
+
+**Outstanding:** Confirm BAA list is current with legal.
+
+---
+
+### L9. Console-log noise in webhook handlers (no PHI, but high volume)
+
+**Where (verified):** 71 `console.log` calls in `app/api/`. Spot-checked — none log PHI fields. Examples:
+- `app/api/webhook/stripe/route.ts:427, 825, 945` — context strings only.
+- `app/api/club/orders/route.ts:391` and `app/api/admin/club-orders/[orderId]/approve/route.ts:364` — log internal order numbers (acceptable per existing convention).
+
+**Why it matters:** Cloudflare Pages logs every console line; high-volume webhook noise increases log cost and dilutes signal.
+
+**Mitigation:** `next.config.js:11-14` strips `console.log` in production builds (keeps `error`/`warn`). On CF Pages, the Workers runtime applies the same strip via Next bundler.
+
+**Outstanding:** Verify the strip applies on CF Pages build (`@cloudflare/next-on-pages` should respect `compiler.removeConsole`).
+
+---
+
+### L10. `app/join/` route tree still present despite middleware blocking
+
+**Where:**
+- `app/join/[tier]/page.tsx`, `app/join/JoinLandingClient.tsx`, `app/join/layout.tsx`, `app/join/page.tsx` — all present.
+- `middleware.ts:25-27` blocks all `/join` requests on non-local hosts.
+- `next.config.js:177-180` 301-redirects `/join` → `/pricing`.
+- `lib/config/join-therapies.ts` and `lib/contexts/JoinCartContext.tsx` exist as supporting modules.
+
+**Why it matters:** Dead code in the bundle. The route exists only to support a retired subdomain and a now-inactive consent gate (see C4). Bundle bloat for no user benefit.
+
+**Outstanding:** Delete the `app/join/` tree, `lib/config/join-therapies.ts`, `lib/contexts/JoinCartContext.tsx`, the related test file, and the middleware/redirect entries together. (Phase 05-02 plan covers this — see `.planning/phases/05-production-cutover/05-02-PLAN.md`.)
+
+---
+
+### L11. Recent FAQ schema parity work is correct, but not protected by a test
+
+**Where:**
+- `components/site/FAQAccordion.tsx:36-52` always renders the answer in the DOM (verified) — required for Google FAQPage rich-snippet eligibility per memory `feedback_faq_schema_dom_parity.md`.
+- Recent commit `2e92ca8` added schema↔visible parity for `/faq`.
+
+**Why it matters:** Future refactors (e.g. switching to a `{open && ...}` conditional render for performance) will silently break FAQPage rich snippets.
+
+**Mitigation:** Comment in `FAQAccordion.tsx:36-39` documents the constraint.
+
+**Outstanding:** Add a test asserting that `<FAQAccordion items={[{question, answer}]}/>` renders the answer text in `screen.getByText()` even when collapsed.
+
+---
+
+### L12. Healthie scheduling URL fragility
+
+**Where:** Memory `Healthie scheduling URLs` entry in CLAUDE.md.
+
+**Why it matters:** When a Healthie booking link includes `provider_ids`, it must also include `org_level=true` or the calendar can show no availability. Hardcoding `appt_type_ids` can hide newly schedulable types. No lint / runtime check enforces this.
+
+**Mitigation:** CLAUDE.md guardrail.
+
+**Outstanding:** Add a Zod validator on Healthie URL construction that requires `org_level=true` whenever `provider_ids` is present.
+
+---
+
+*End of CONCERNS.md.*
+
+*Re-verify on every CF Pages production deploy, every Phase 05-02 milestone, and every new admin/checkout route.*
