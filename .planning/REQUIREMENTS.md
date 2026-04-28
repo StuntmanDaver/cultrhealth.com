@@ -27,7 +27,7 @@
 - [ ] **PLB-01**: Migration `063_webhook_events.sql` creates a provider-agnostic event log: `(id, provider, event_id, event_type, raw_payload JSONB, processed_at)` with unique constraint on `(provider, event_id)`.
 - [ ] **PLB-02**: Migration `064_provider_payment_profile_id.sql` adds `memberships.provider_payment_profile_id VARCHAR(255)` for CIM payment profile reference.
 - [ ] **PLB-03**: Migration `065_provider_columns_remaining_tables.sql` adds `provider_subscription_id` to `creator_customer_portfolio` and `siphox_kit_orders`, adds `provider_payment_intent_id` to `asher_orders`, adds `provider_checkout_id` to `pending_intakes` (renames the misnamed `stripe_payment_intent_id` which actually stores `cs_*` checkout session IDs).
-- [ ] **PLB-04**: macOS-duplicate migration files (`057_*_2.sql`, `058_*_2.sql`, `058_*_4.sql`, `059_*_2.sql`, `059_*_4.sql`) are removed from the repo before any new migration ships.
+- [ ] **PLB-04**: macOS-duplicate migration files removed from the repo before any new migration ships. Verified-present duplicates as of 2026-04-28: `migrations/037_generic_ehr_identity 2.sql`, `migrations/038_membership_shipping_address 2.sql`, `migrations/039_siphox_ehr_linkage 2.sql`, `migrations/040_member_onboarding 2.sql`. Each must be diffed against its non-suffixed sibling; identical → delete, divergent → manual reconcile + decide which content is canonical. (Earlier untracked dups at 057/058/059 appear to have been cleaned already — confirm via `git status migrations/`.)
 - [ ] **PLB-05**: `lib/payments/authorize-net-cim.ts` exposes `createCustomerProfile`, `addPaymentProfile`, `getCustomerProfile`, `updateCustomerPaymentProfile`, `deleteCustomerProfile` — all using `gatewayFetch()`.
 - [ ] **PLB-06**: `lib/payments/authorize-net-arb.ts` exposes `cancelSubscription`, `getSubscriptionStatus`, `updateSubscription` (with explicit "next-cycle-only" docstring) — all using `gatewayFetch()`.
 - [ ] **PLB-07**: `lib/payments/authorize-net-charges.ts` exposes `chargeOpaqueData`, `chargeCustomerProfile`, `refundTransaction`, `voidTransaction`, `getTransactionDetails` — all using `gatewayFetch()`.
@@ -47,6 +47,7 @@
 - [ ] **LFC-05**: All read sites use `getProviderIds()` or `COALESCE`: `lib/db.ts`, `lib/admin-types.ts`, `lib/creators/db.ts` (5 sites), `lib/siphox/db.ts` (4 sites), 6 admin routes, `app/api/member/profile/route.ts`, `app/api/member/transactions/route.ts`. No code path reads only `stripe_*` after this phase.
 - [ ] **LFC-06**: `INTEGRATION_TRIGGER_MATRIX.md` in `.planning/` — rows = events (subscription.created, payment.success, refund.created, etc.), columns = downstream integrations (Healthie, Resend, QuickBooks, Mailchimp, commission engine, SiPhox). Documents who fires on what event for both Stripe and CorePay.
 - [ ] **LFC-07**: Healthie integration TODO stub in CorePay webhook handler: `if (event.type === 'subscription.created' && process.env.HEALTHIE_API_KEY) { /* TODO */ }`. Even though Healthie API isn't yet enabled, the hook sits there so the strip-Stripe sweep doesn't silently drop EHR creation when Healthie does activate.
+- [ ] **LFC-08**: `lib/auth.ts:285-310` Stripe-fallback subscription lookup is a **behavioral integration**, not just init-removal. When the DB is unavailable, auth flow falls through to `stripe.subscriptions.list({ customer, status: 'active' })` to determine paid-member status. Phase 8 must replace this with a non-Stripe equivalent: (a) Authorize.Net `getSubscriptionStatus` lookup keyed by `provider_subscription_id`, OR (b) accept temporary unavailability and return null (membership endpoints retry). Decision documented in `INTEGRATION_TRIGGER_MATRIX.md` (LFC-06). Tests assert behavior on DB-down + Stripe-removed.
 
 ### Coupon Engine (Phase 9 — Authorize.Net has no native primitive)
 
@@ -127,8 +128,22 @@
 - [ ] **HRD-04**: Migration `070_commission_reserve.sql` creates `commission_reserve` table — holds 5-10% of monthly creator earnings for 90 days post-approval to absorb late chargebacks (180-day Authorize.Net refund window).
 - [ ] **HRD-05**: AVS/CVV friendly-error mapper at `lib/payments/avs-cvv-errors.ts`. Maps all 13 AVS codes + CVV codes to user-facing strings (no "AVS" jargon). CorePay merchant portal config: enable only `N` for default rejection.
 - [ ] **HRD-06**: Admin reporting dashboards: MRR, cohort retention, coupon ROI, dunning effectiveness, refund age distribution. Adds to `app/admin/`.
-- [ ] **HRD-07**: All Stripe code removed: delete `app/api/webhook/stripe/route.ts`, `app/api/checkout/route.ts`, `app/api/checkout/subscription/route.ts`, `app/api/checkout/product/route.ts`, `components/payments/StripeCheckoutForm.tsx`, `scripts/setup-stripe.ts`. Gated on `SELECT COUNT(*) FROM memberships WHERE payment_provider='stripe' AND subscription_status='active' = 0`.
-- [ ] **HRD-08**: Stripe NPM packages removed: `npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js`. `setup:stripe` npm script removed. Stripe init removed from `lib/auth.ts:288` AND `lib/creators/db.ts`.
+- [ ] **HRD-07**: All Stripe code removed. Verified-present Stripe imports (`from 'stripe'`) as of 2026-04-28 — every file in this list must be either deleted or have its Stripe import + Stripe SDK calls swapped to provider-agnostic helpers from Phase 8's dispatcher / Phase 7's CIM/ARB modules:
+  - **Delete entirely:** `app/api/webhook/stripe/route.ts`, `app/api/checkout/route.ts`, `app/api/checkout/subscription/route.ts`, `app/api/checkout/product/route.ts`, `components/payments/StripeCheckoutForm.tsx`, `scripts/setup-stripe.ts`
+  - **Convert (drop Stripe import, use dispatcher / Authorize.Net helpers):** `app/api/admin/creators/[id]/approve/route.ts`, `app/api/admin/creators/add/route.ts`, `app/api/admin/members/[customerId]/cancel/route.ts`, `app/api/admin/members/[customerId]/pause/route.ts`, `app/api/admin/members/[customerId]/upgrade/route.ts`, `app/api/admin/members/add/route.ts`, `app/api/auth/magic-link/route.ts`, `app/api/auth/verify/route.ts`
+  - Gated on `SELECT COUNT(*) FROM memberships WHERE payment_provider='stripe' AND subscription_status='active' = 0`.
+- [ ] **HRD-08**: Stripe NPM packages removed: `npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js`. `setup:stripe` npm script removed. **All 19 `new Stripe(...)` initializations across these files removed:**
+  - `lib/auth.ts:288` (subscription-lookup fallback — behaviorally replaced per LFC-08)
+  - `lib/creators/db.ts:396`
+  - `app/success/page.tsx:46`
+  - `app/api/webhook/stripe/route.ts:7` (file deleted)
+  - `app/api/auth/magic-link/route.ts:8`
+  - `app/api/member/transactions/route.ts:59`
+  - `app/api/auth/verify/route.ts:9`
+  - `app/api/admin/members/[customerId]/upgrade/route.ts:8`
+  - `app/api/admin/members/add/route.ts:10`
+  - `app/api/admin/creators/add/route.ts:64`
+  - …plus the remaining 9 init sites (verify with `grep -rn "new Stripe(" lib/ app/ | wc -l` returns 0 at end of phase).
 - [ ] **HRD-09**: Migration `071_drop_legacy_stripe_columns.sql` (expand-contract step 3 — DROP `stripe_*` columns OR rename to `stripe_*_legacy`). Gated on cross-app deploy checklist (cultrhealth.com staging + production + cultrclub-web all running new code 24+ hours).
 - [ ] **HRD-10**: `STRIPE_*` env vars removed from `.env.example`, `.env.production`, Vercel staging, Vercel production. `BLOOD_TEST_STRIPE_PRICE_ID` and `DOCTOR_CONSULTATION_STRIPE_PRICE_ID` replaced with provider-agnostic equivalents.
 - [ ] **HRD-11**: CLAUDE.md updated — Stripe references replaced with CorePay/Authorize.Net. `.cursorrules` updated. README.md payment-processor mention updated.
@@ -195,14 +210,35 @@ These block default behaviors. Resolve in CorePay sandbox before backend build s
 |---|---|---|---|
 | SKL-01..05 | 6 | Skills (corepay, healthie, corpay-crossborder, siphox refresh) | 5 |
 | PLB-01..13 | 7 | Schema migrations + gateway helpers + webhook + Sentry | 13 |
-| LFC-01..07 | 8 | Dispatcher refactor + COALESCE shim + integration matrix | 7 |
+| LFC-01..08 | 8 | Dispatcher refactor + COALESCE shim + integration matrix + auth-fallback rewrite | 7 |
 | CPN-01..11 | 9 | Coupon engine + creator attribution backfill | 11 |
 | PRT-01..14 | 10 | Self-service portal + inline checkout + admin route conversions | 14 |
 | RDN-01..11 | 11 | Receipts + dunning ladder + Account Updater | 11 |
 | MGR-01..10 | 12 | Migration cutover + re-onboarding flow + sunset cron | 10 |
 | HRD-01..14 | 13 | Refunds + reporting + Stripe strip + tests + final sweep | 14 |
 
-**Total v2.0 requirements:** 75 (5 + 13 + 7 + 11 + 14 + 11 + 10 + 14)
+**Total v2.0 requirements:** 76 (5 + 13 + 8 + 11 + 14 + 11 + 10 + 14)
+
+---
+
+## 2026-04-28 verification corrections
+
+A second meticulous double-check pass found these errata vs the original 2026-04-27 draft:
+
+1. **HRD-07 / HRD-08 expanded.** The original listed 2 Stripe init sites (`lib/auth.ts:288`, `lib/creators/db.ts`); actual count is **19 init sites across 12 files**. Full list now in HRD-07 + HRD-08 above. The auth-flow Stripe usage at `lib/auth.ts:285-310` is a **behavioral fallback** (DB-down → query Stripe for active subscriptions), not a passive import — captured separately as LFC-08.
+2. **PLB-04 file list corrected.** Earlier audit named `057_*_2.sql`, `058_*_2.sql`, `058_*_4.sql`, `059_*_2.sql`, `059_*_4.sql` as macOS dups; those don't exist in repo today. Verified-present dups: `037_generic_ehr_identity 2.sql`, `038_membership_shipping_address 2.sql`, `039_siphox_ehr_linkage 2.sql`, `040_member_onboarding 2.sql`. PLB-04 now lists the actual files.
+3. **LFC-08 added.** New requirement for the `lib/auth.ts` Stripe-fallback subscription lookup. This is a hidden integration the original requirements missed — auth flow currently falls through to Stripe when the DB is unavailable. Phase 8 must replace with Authorize.Net equivalent or accept null.
+4. **REQ count: 75 → 76** (added LFC-08).
+5. **`COREPAY_ENABLED` is `false` everywhere today.** No `.env` file sets `NEXT_PUBLIC_ENABLE_COREPAY=true`. The existing CorePay scaffolding is fully gated off; Phase 7 will be the first time CorePay code runs in real Authorize.Net sandbox. PLB-13 smoke route is therefore the very first proof-of-life. Criticality is higher than implied in the original PLB-13 wording.
+
+Verified-still-correct from the 2026-04-27 draft:
+- Webhook handler 1020 lines, 6 event types
+- 3 hardcoded Stripe Payment Links at `lib/config/plans.ts:191/224/258`
+- FOUNDER15 / FIRSTMONTH coupon IDs at `lib/config/plans.ts:123-124`
+- Migration 004 already added `provider_*` columns
+- `corepay-gateway.ts` line 67 uses correct Authorize.Net `merchantAuthentication` envelope
+- No Stripe-specific cron in `vercel.json`
+- `.gitignore:50` carries `!.claude/skills/siphox-api/`
 
 ### Per-REQ Mapping
 

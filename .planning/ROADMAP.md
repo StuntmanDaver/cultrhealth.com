@@ -69,14 +69,15 @@ Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 
 **Goal**: All subscription side-effects flow through a single provider-agnostic dispatcher; Stripe + CorePay webhooks share the integration map; every read site uses `COALESCE(provider_*, stripe_*)`.
 **Depends on**: Phase 7 (CorePay webhook receiver exists so dispatcher has a second consumer).
-**Requirements**: LFC-01, LFC-02, LFC-03, LFC-04, LFC-05, LFC-06, LFC-07
+**Requirements**: LFC-01, LFC-02, LFC-03, LFC-04, LFC-05, LFC-06, LFC-07, LFC-08
 **Success Criteria** (what must be TRUE):
   1. `lib/webhooks/dispatcher.ts` exposes the five provider-agnostic helpers (`onSubscriptionActivated`, `onSubscriptionCancelled`, `onSubscriptionPastDue`, `onPaymentSucceeded`, `onRefunded`) and is the single integration touchpoint for SiPhox/Healthie/Mailchimp/Resend/commission.
   2. Both webhook routes (Stripe and CorePay) call dispatcher helpers exclusively — no inline side effects in the route file. Stripe's 1020-line route shrinks to a thin verifier+dispatcher harness with identical observable behavior.
   3. `getProviderIds(membership)` is in use across all 18+ identified read sites (`lib/db.ts`, `lib/admin-types.ts`, `lib/creators/db.ts` (5 sites), `lib/siphox/db.ts` (4 sites), 6 admin routes, member profile/transactions). A grep for `stripe_customer_id\|stripe_subscription_id` returns only legacy COALESCE fallbacks.
   4. `INTEGRATION_TRIGGER_MATRIX.md` lives in `.planning/` with rows = events × columns = downstream integrations, accurate for both Stripe and CorePay.
   5. CorePay webhook handler contains the Healthie TODO stub gated on `process.env.HEALTHIE_API_KEY` so the strip-Stripe sweep doesn't silently drop EHR creation when Healthie activates.
-**Plans**: ~2 plans (P1: dispatcher extraction + Stripe route refactor + integration matrix; P2: getProviderIds shim + read-site sweep)
+  6. `lib/auth.ts:285-310` Stripe-fallback subscription lookup (behavioral integration — falls through to Stripe API when DB unavailable) is replaced with an Authorize.Net `getSubscriptionStatus` equivalent OR with safe-null behavior. Tests assert correct behavior under DB-down + Stripe-removed conditions. (LFC-08)
+**Plans**: ~2 plans (P1: dispatcher extraction + Stripe route refactor + integration matrix; P2: getProviderIds shim + read-site sweep + auth-fallback rewrite)
 
 ### Phase 9: Coupon Engine
 
@@ -140,7 +141,7 @@ Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 **Success Criteria** (what must be TRUE):
   1. Unified `app/api/refunds/create/route.ts` chooses void (pre-settlement) vs refund (post-settlement) automatically. Commission reversal in `lib/creators/commission.ts:handleRefundReversal()` is idempotent on `(orderId, eventType, eventId)` and never double-reverses on chargeback-after-refund. Migration 070 (`commission_reserve`) holds 5-10% of monthly creator earnings for 90 days post-approval.
   2. Admin dashboards display MRR, cohort retention, coupon ROI, dunning effectiveness, refund age distribution. AVS/CVV friendly-error mapper translates all 13 codes into user-facing strings.
-  3. `npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js` succeeds; `setup:stripe` script removed; Stripe init removed from `lib/auth.ts:288` and `lib/creators/db.ts`. Migration 071 drops legacy `stripe_*` columns (gated on cross-app deploy checklist: cultrhealth.com staging + production + cultrclub-web running new code 24+ hours).
+  3. `npm uninstall stripe @stripe/stripe-js @stripe/react-stripe-js` succeeds; `setup:stripe` script removed. **All 19 `new Stripe(...)` init sites across 12 files removed** (full list in REQUIREMENTS.md HRD-07/HRD-08; verified by `grep -rn "new Stripe(" lib/ app/ | wc -l` returning 0). Migration 071 drops legacy `stripe_*` columns (gated on cross-app deploy checklist: cultrhealth.com staging + production + cultrclub-web running new code 24+ hours).
   4. `STRIPE_*` env vars deleted from `.env.example`, `.env.production`, Vercel staging, Vercel production. `BLOOD_TEST_STRIPE_PRICE_ID` and `DOCTOR_CONSULTATION_STRIPE_PRICE_ID` replaced with provider-agnostic equivalents. CLAUDE.md, `.cursorrules`, README.md updated.
   5. `grep -ri 'stripe' . --include='*.ts' --include='*.tsx' --include='*.json' --include='*.sql' --include='*.md' --exclude-dir={node_modules,.next,.git,memory,.planning}` returns only historical changelog mentions. Vitest hardening fixtures cover cron timing race (CPN-11), webhook idempotency (PLB-09), migration cutover atomicity (MGR-04), AVS code mapping (HRD-05), boot-time validation (PLB-11), integration trigger matrix (LFC-06), env-var drift detection.
 **Plans**: ~3 plans (P1: refund endpoint + commission reversal idempotency + commission_reserve + AVS/CVV mapper; P2: admin reporting dashboards; P3: Stripe strip + npm uninstall + env-var sweep + docs update + hardening tests)

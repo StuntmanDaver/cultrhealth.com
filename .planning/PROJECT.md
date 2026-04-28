@@ -110,6 +110,10 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
 - Patient identity fragmented across 5 ID spaces (no unified `patients` table).
 - Migration `029_telehealth_consultations.sql` created tables that no current code references (Cal.com / Daily.co code was removed).
 - Three orphan phase directories (`01-foundation`, `02-checkout-integration`, `03-kit-registration`) under `.planning/phases/` predate v1.0 and were never folded into a roadmap. Candidates for `/gsd-cleanup`.
+- **`lib/asher-med-api.ts` still present** (23KB, last modified Apr 8 2026) despite memory entry stating Asher Med integration was "removed Apr 4 2026." Either the removal was incomplete or the memory entry is overstated. Tangential to v2.0; flag for follow-up cleanup.
+- Four macOS-duplicate migration files in `migrations/` (037-040 with " 2.sql" suffix) — must be reconciled and removed before Phase 7 ships (per REQUIREMENTS.md PLB-04).
+- **Stripe footprint is larger than initial v2.0 plan estimated** — 19 `new Stripe(...)` init sites across 12 files, 925 total Stripe references across 84 files. REQUIREMENTS.md HRD-07/HRD-08 expanded 2026-04-28 to list every site.
+- **`lib/auth.ts` Stripe-fallback for subscription lookup** is a behavioral hidden integration (when DB unavailable, falls through to Stripe API). LFC-08 captures this as a Phase 8 requirement.
 
 ## Key Decisions
 

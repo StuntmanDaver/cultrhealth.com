@@ -37,13 +37,15 @@ v2.0 spans **Phases 6–13** (8 phases, ~18 plans estimated):
 |---|---|---|---|
 | 6 | Skills | 5 | 1 |
 | 7 | Schema + Gateway Plumbing | 13 | 3 |
-| 8 | Subscription Lifecycle Core | 7 | 2 |
+| 8 | Subscription Lifecycle Core | 8 | 2 |
 | 9 | Coupon Engine | 11 | 2 |
 | 10 | Self-Service Portal UI | 14 | 3 |
 | 11 | Receipts + Dunning Ladder | 11 | 2 |
 | 12 | Migration Cutover | 10 | 2 |
 | 13 | Refunds + Reporting + Hardening | 14 | 3 |
-| **Totals** | | **75** | **18** |
+| **Totals** | | **76** | **18** |
+
+> **2026-04-28 update:** REQ total raised 75 → 76 after second double-check pass surfaced LFC-08 (`lib/auth.ts` Stripe-fallback for subscription lookup is a behavioral integration). HRD-07/HRD-08 scope corrected to list all 12 Stripe-importing files / 19 init sites. PLB-04 macOS-dup file list corrected (037/038/039/040 not 057/058/059). Phase boundaries unchanged.
 
 **Hard sandbox gate before Phase 7:** Open questions Q1–Q6 from `.planning/research/SUMMARY.md` §6 must be resolved in CorePay sandbox before backend build starts.
 
