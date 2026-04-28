@@ -25,9 +25,14 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
                   (shared by both apps)
 ```
 
-## Current Milestone: v2.0 Stripe → CorePay (Authorize.Net) replacement
+## Current Milestone: v2.0 Stripe → Corepay (Authorize.Net gateway) replacement
 
-**Goal:** Strip Stripe entirely from CULTR Health and replace it with the existing "CorePay" code path (Authorize.Net ARB + CIM under the CorePay merchant account); ship four Claude Code skills so future sessions don't re-make Stripe assumptions.
+> **⚠️ Payment vocabulary — three different things:**
+> - **Corepay** (`corepay.net`) — the merchant ISO that holds CULTR's merchant agreement. Bundles one of four underlying gateways. **Does not operate its own API.**
+> - **Authorize.Net** — the actual payment gateway that CULTR's Corepay merchant uses. All API calls in `lib/payments/corepay-gateway.ts` target Authorize.Net endpoints (`api.authorize.net/...`).
+> - **Corpay** (`corpay.com`, a Fleetcor company) — a completely **separate company** doing B2B cross-border payouts / FX. Reference-only; NOT in v2.0 scope. Captured as `corpay-crossborder` skill so future sessions don't re-confuse the two.
+
+**Goal:** Strip Stripe entirely from CULTR Health and replace it with Authorize.Net (via the existing Corepay merchant account); ship four Claude Code skills so future sessions don't re-make Stripe assumptions or repeat the Corepay/Corpay/Authorize.Net naming confusion.
 
 **Target features:**
 - Full Authorize.Net ARB lifecycle (create / cancel / suspend-emulation / resume / update / refund / void)
@@ -43,9 +48,10 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
 **Source plan:** `/Users/davidk/.claude/plans/async-petting-fern.md` (approved 2026-04-27)
 
 **Key context for this milestone:**
-- The URL the user originally shared (developer.crossborder.corpay.com) is **Corpay Cross-Border** — a B2B payouts/FX product, not consumer subscriptions. Captured as reference skill only; the replacement implementation is Authorize.Net via the existing `lib/payments/corepay-gateway.ts` scaffolding.
+- **Corepay (corepay.net)** is CULTR's merchant ISO. It is a registered ISO of Esquire Bank, N.A. and bundles one of four underlying gateways with its merchant accounts: NetValve, **Authorize.Net**, NMI, or FreedomPay. CULTR's Corepay merchant uses **Authorize.Net** as the gateway — that's where all v2.0 API integration targets.
+- The URL the user originally shared (`developer.crossborder.corpay.com`) was **Corpay** (Fleetcor's B2B cross-border product) — completely unrelated company despite the similar name. Captured as `corpay-crossborder` skill (reference-only); NOT in v2.0 scope.
 - Hard cutover for existing Stripe subs (~50% churn risk accepted).
-- Phase 0 (skills) is pure documentation — independently shippable.
+- Phase 6 (skills) is pure documentation — independently shippable.
 
 ## Requirements
 
@@ -79,7 +85,7 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
 
 - Mobile native app — web is primary
 - Insurance billing — Stripe direct-pay model continues post-CorePay (single-currency, US consumers)
-- Corpay Cross-Border integration — captured as a Claude reference skill only; reserved for future creator international payouts
+- **Corpay Cross-Border** (Fleetcor B2B FX/payouts product, `corpay.com`) — completely separate from Corepay (CULTR's merchant ISO). Captured as `corpay-crossborder` reference skill only; reserved for potential future creator international payouts. NOT in v2.0 scope.
 - BNPL providers (Affirm / Klarna / Authorize.Net Direct) — already removed pre-v1.0
 - Asher Med integration — already removed (Apr 4 2026)
 
@@ -117,7 +123,8 @@ cultrhealth.com (Vercel)              cultrclub.com (Cloudflare Pages)
 | Excluded paid checkout from cultrclub-web | v1.0 | ✓ Good — kept the cutover scope small; paid upgrades link to cultrhealth.com/pricing |
 | `join.cultrhealth.com` retired (NXDOMAIN, not 301) | v1.0 | ✓ Good — eliminated stale-traffic maintenance |
 | Vercel domain alias removal via API (not dashboard) | v1.0 | ⚠️ Lesson — dashboard removal silently re-attaches on next deploy. Always use API. |
-| Replace Stripe with Authorize.Net (CorePay) — full strip-and-replace | v2.0 | — Pending |
+| Replace Stripe with Authorize.Net (via Corepay merchant ISO) — full strip-and-replace | v2.0 | — Pending |
+| Naming convention: `corepay-gateway.ts` keeps file name (documents merchant relationship); API targets are Authorize.Net endpoints | v2.0 | — Pending |
 | Hard cutover for existing Stripe subscribers (re-onboarding flow) | v2.0 | — Pending; ~50% churn risk accepted |
 
 ## Constraints

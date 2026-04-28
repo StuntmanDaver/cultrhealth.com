@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 cultrclub-web Cloudflare Migration** — Phases 1–5 (shipped 2026-04-22)
-- 🚧 **v2.0 Stripe → CorePay (Authorize.Net) replacement** — Phases 6–13 (in progress)
+- 🚧 **v2.0 Stripe → Corepay (Authorize.Net gateway) replacement** — Phases 6–13 (in progress)
 
 ## Phases
 
@@ -20,7 +20,9 @@ Archive: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
-### 🚧 v2.0 Stripe → CorePay replacement (Phases 6-13)
+### 🚧 v2.0 Stripe → Corepay (Authorize.Net gateway) replacement (Phases 6-13)
+
+> **Vocabulary:** **Corepay** (corepay.net) is CULTR's merchant ISO; **Authorize.Net** is the underlying gateway used by Corepay merchants. **Corpay** (corpay.com, Fleetcor) is an unrelated B2B FX product captured as reference-only. All API integration targets Authorize.Net endpoints.
 
 Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md` (approved 2026-04-27)
 Research synthesis: `.planning/research/SUMMARY.md`

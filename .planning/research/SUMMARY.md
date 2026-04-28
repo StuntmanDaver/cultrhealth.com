@@ -1,4 +1,14 @@
-# v2.0 Research Synthesis — Stripe → CorePay (Authorize.Net) Replacement
+# v2.0 Research Synthesis — Stripe → Corepay (Authorize.Net gateway) Replacement
+
+> **⚠️ Vocabulary clarification — read this first:**
+>
+> Three confusingly similar names mean three different things in CULTR's payment stack. Don't conflate them.
+>
+> - **Corepay** (`corepay.net`) — CULTR's merchant ISO (Independent Sales Organization, registered with Esquire Bank, N.A.). **Does not operate its own gateway API.** Bundles one of four underlying gateways: NetValve, **Authorize.Net**, NMI, or FreedomPay. **CULTR's Corepay merchant uses Authorize.Net.**
+> - **Authorize.Net** — the underlying gateway. All API calls in `lib/payments/corepay-gateway.ts` target `api.authorize.net/xml/v1/request.api`. Every "Authorize.Net" reference in this document refers to the actual integration target.
+> - **Corpay** (`corpay.com`, a **Fleetcor** company) — completely separate company despite the similar name. B2B cross-border payouts / FX / international wire transfers. Reference-only `corpay-crossborder` skill captures this so future sessions don't re-confuse it with Corepay. **NOT in v2.0 scope.**
+>
+> All "CorePay" references in this document have been corrected to "Corepay" (the actual merchant ISO) or to "Authorize.Net" (the actual gateway), depending on which is meant.
 
 **Synthesized:** 2026-04-27
 **Source files:**

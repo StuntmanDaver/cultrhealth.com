@@ -1,7 +1,9 @@
-# Requirements: v2.0 Stripe → CorePay (Authorize.Net) replacement
+# Requirements: v2.0 Stripe → Corepay (Authorize.Net gateway) replacement
 
 **Defined:** 2026-04-27
-**Core Value:** Strip Stripe entirely from CULTR Health, replace with Authorize.Net via the existing "CorePay" merchant brand, ship four Claude skills so future sessions don't re-make Stripe assumptions. No Stripe code or `STRIPE_*` env vars in the repo at end of milestone.
+**Core Value:** Strip Stripe entirely from CULTR Health, replace with Authorize.Net via the existing Corepay merchant ISO (corepay.net is CULTR's merchant; Authorize.Net is the underlying gateway). Ship four Claude skills so future sessions don't re-make Stripe assumptions or repeat the Corepay/Corpay/Authorize.Net naming confusion. No Stripe code or `STRIPE_*` env vars in the repo at end of milestone.
+
+> **Vocabulary anchor:** Corepay (corepay.net, merchant ISO) ≠ Corpay (corpay.com, Fleetcor B2B FX) ≠ Authorize.Net (gateway). All API integration in v2.0 targets Authorize.Net endpoints; Corepay is just the merchant relationship that issues the credentials.
 
 **Phase numbering:** continues from v1.0 (Phase 5 was last). v2.0 spans Phases 6–13.
 
@@ -14,9 +16,9 @@
 
 ### Skills (Phase 6 — pure documentation, zero production risk)
 
-- [ ] **SKL-01**: `.claude/skills/corepay-api/SKILL.md` exists with frontmatter, gotchas (no `authorizenet` SDK, `gatewayFetch()` pattern, `merchantAuthentication` envelope, Accept.js single-use 15-min token, HMAC-SHA512 with `request.text()`, ARB next-cycle-only updates), and references for ARB/CIM/transactions/webhooks/integration patterns.
+- [ ] **SKL-01**: `.claude/skills/corepay-api/SKILL.md` exists with frontmatter, an explicit "Vocabulary" section at the top stating Corepay ≠ Corpay ≠ Authorize.Net (Corepay is CULTR's merchant ISO, Authorize.Net is the underlying gateway, Corpay is an unrelated Fleetcor B2B product), gotchas (no `authorizenet` SDK, `gatewayFetch()` pattern, `merchantAuthentication` envelope, Accept.js single-use 15-min token, HMAC-SHA512 with `request.text()`, ARB next-cycle-only updates), and references for ARB/CIM/transactions/webhooks/integration patterns.
 - [ ] **SKL-02**: `.claude/skills/healthie-api/SKILL.md` exists with auth (Basic not Bearer), AuthorizationSource header, raw-body webhook signature verification, ActionCable not graphql-ws, ~120 webhook events catalogued, top mutations + queries, CULTR integration map.
-- [ ] **SKL-03**: `.claude/skills/corpay-crossborder/SKILL.md` exists as reference-only — explicitly notes it is **NOT** the consumer subscription processor and reserved for potential future creator-payout/international vendor work.
+- [ ] **SKL-03**: `.claude/skills/corpay-crossborder/SKILL.md` exists as reference-only — explicitly notes Corpay (corpay.com, a **Fleetcor** company) is a **completely separate company** from Corepay (corepay.net, CULTR's merchant ISO) despite the similar name; Corpay Cross-Border is for B2B international FX/payouts and is **NOT** the consumer subscription processor. Reserved for potential future creator international-payout work; NOT used in v2.0.
 - [ ] **SKL-04**: `.claude/skills/siphox-api/SKILL.md` refreshed — adds "Known repo bug" gotcha pointing at `lib/siphox/client.ts:80` (`Bearer` should be `Token`), drops the gotcha after Phase 13 fixes the bug.
 - [ ] **SKL-05**: `.gitignore` exceptions added for the three new skill directories (matches existing `siphox-api` pattern).
 
@@ -156,7 +158,7 @@
 
 ## Out of Scope (explicit exclusions for v2.0)
 
-- **Corpay Cross-Border integration** — captured as a Claude reference skill only; reserved for future creator international payouts. NOT used in this milestone.
+- **Corpay Cross-Border integration** (Fleetcor B2B FX product at `corpay.com` — distinct from Corepay) — captured as a Claude reference skill only; reserved for future creator international payouts. NOT used in this milestone.
 - **Insurance billing** — Stripe direct-pay model continues post-CorePay (single-currency, US consumers). Not adding insurance.
 - **BNPL providers** (Klarna / Affirm / Authorize.Net Direct Debit) — already removed pre-v1.0. NOT reviving.
 - **Mobile native app payment flows** — web is primary.
