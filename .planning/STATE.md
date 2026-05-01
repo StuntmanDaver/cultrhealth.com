@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Stripe to Corepay (Authorize.Net gateway) replacement
-status: Roadmap drafted; awaiting plan-phase invocation.
-last_updated: "2026-05-01T23:21:11.796Z"
-last_activity: 2026-04-27 — ROADMAP.md drafted, 75 REQs mapped across Phases 6–13
+status: executing
+last_updated: "2026-05-01T23:55:40.386Z"
+last_activity: 2026-05-01 -- Phase 06 planning complete
 progress:
   total_phases: 8
   completed_phases: 0
-  total_plans: 18
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 Phase: 6 — Skills (not started)
 Plan: —
-Status: Roadmap drafted; awaiting plan-phase invocation.
-Last activity: 2026-04-27 — ROADMAP.md drafted, 75 REQs mapped across Phases 6–13
+Status: Ready to execute
+Last activity: 2026-05-01 -- Phase 06 planning complete
 
 ## Roadmap Summary
 

@@ -41,16 +41,19 @@ Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 
 ### Phase 6: Skills
 
-**Goal**: Ship four Claude Code skills so every future session has accurate documentation for the four payment/health-data integrations and never re-makes the Stripe assumption.
+**Goal**: Ship three Claude Code skills (corepay-api, healthie-api, refresh siphox-api) plus .gitignore exceptions so every future session has accurate documentation for CULTR's payment and health-data integrations and never re-makes the Stripe assumption. (SKL-03 corpay-crossborder dropped per CONTEXT D-12 — Corpay/Fleetcor has zero presence in source code.)
 **Depends on**: Nothing — pure documentation phase, zero production risk.
 **Requirements**: SKL-01, SKL-02, SKL-03, SKL-04, SKL-05
 **Success Criteria** (what must be TRUE):
   1. `.claude/skills/corepay-api/SKILL.md` is loadable by Claude Code and contains the seven critical gotchas (no `authorizenet` SDK, `gatewayFetch()` pattern, `merchantAuthentication` envelope, Accept.js single-use 15-min token, HMAC-SHA512 with `request.text()`, ARB next-cycle-only updates).
   2. `.claude/skills/healthie-api/SKILL.md` documents Basic-not-Bearer auth, AuthorizationSource header, raw-body webhook signature verification, and ~120 webhook events catalogued.
-  3. `.claude/skills/corpay-crossborder/SKILL.md` is explicitly marked reference-only and notes it is **NOT** the consumer subscription processor.
+  3. SKL-03 (corpay-crossborder skill) is intentionally deferred per CONTEXT D-12 — disambiguation captured in CLAUDE.md MEMORY index AND in the corepay-api skill's Vocabulary section. NO corpay-crossborder file is created.
   4. `.claude/skills/siphox-api/SKILL.md` carries the "Known repo bug" gotcha pointing at `lib/siphox/client.ts:80`.
-  5. `.gitignore` exceptions allow the four skill directories to be checked in (matches existing siphox-api pattern).
-**Plans**: ~1 plan (single coordinated documentation deliverable; all four skills can be drafted in parallel under one plan)
+  5. `.gitignore` exceptions allow the three project-specific skill directories (siphox-api, corepay-api, healthie-api) to be checked in. NO corpay-crossborder exception (SKL-03 deferred).
+**Plans**: 3 plans (parallel-runnable, all Wave 1)
+- [ ] 06-01-PLAN.md — corepay-api skill (SKL-01)
+- [ ] 06-02-PLAN.md — healthie-api skill + webhook event catalogue research (SKL-02)
+- [ ] 06-03-PLAN.md — siphox-api refresh + .gitignore exceptions + SKL-03 deferral record (SKL-03/SKL-04/SKL-05)
 
 ### Phase 7: Schema + Gateway Plumbing
 
@@ -156,7 +159,7 @@ Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 | 3. Code Adaptation             | v1.0      | 2/2            | Complete    | 2026-04-14 |
 | 4. Deploy & Validate           | v1.0      | 2/2            | Complete    | 2026-04-21 |
 | 5. Production Cutover          | v1.0      | 2/2            | Complete    | 2026-04-22 |
-| 6. Skills                      | v2.0      | 0/1            | Not started | -          |
+| 6. Skills                      | v2.0      | 0/3            | Not started | -          |
 | 7. Schema + Gateway Plumbing   | v2.0      | 0/3            | Not started | -          |
 | 8. Subscription Lifecycle Core | v2.0      | 0/2            | Not started | -          |
 | 9. Coupon Engine               | v2.0      | 0/2            | Not started | -          |
