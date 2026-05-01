@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Stripe to Corepay (Authorize.Net gateway) replacement
-status: planning
-last_updated: "2026-04-27T22:43:41.564Z"
-last_activity: 2026-04-27
+status: Roadmap drafted; awaiting plan-phase invocation.
+last_updated: "2026-05-01T23:21:11.796Z"
+last_activity: 2026-04-27 — ROADMAP.md drafted, 75 REQs mapped across Phases 6–13
 progress:
   total_phases: 8
   completed_phases: 0
@@ -102,6 +102,7 @@ Full record archived in `.planning/milestones/v1.0-ROADMAP.md`. Summary:
 ### Open Blockers
 
 **Pre-Phase-7 sandbox gate** — Q1–Q6 from `.planning/research/SUMMARY.md` §6:
+
 1. Q1: CIM payment profile cascade to ARB? (Path A vs Path B default)
 2. Q2: Vercel Fluid Compute on staging?
 3. Q3: Existing Sentry project on cultrhealth.com?
