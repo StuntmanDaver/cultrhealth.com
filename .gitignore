@@ -48,4 +48,6 @@ next-env.d.ts
 .claude/skills/*
 # Project-specific skills (shared with team)
 !.claude/skills/siphox-api/
+!.claude/skills/corepay-api/
+!.claude/skills/healthie-api/
 skills-lock.json
