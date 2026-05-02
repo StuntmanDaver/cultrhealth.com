@@ -28,7 +28,7 @@ Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md` (approved 2026-
 Research synthesis: `.planning/research/SUMMARY.md`
 Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 
-- [ ] **Phase 6: Skills** — Ship four Claude skills (corepay-api, healthie-api, corpay-crossborder, refresh siphox-api) so future sessions don't re-make Stripe assumptions.
+- [x] **Phase 6: Skills** — Ship four Claude skills (corepay-api, healthie-api, corpay-crossborder, refresh siphox-api) so future sessions don't re-make Stripe assumptions. ✅ COMPLETE 2026-05-02 (SKL-03 corpay-crossborder deferred per CONTEXT D-12; 3/3 plans + SKL-04 out-of-band, all 5 success criteria PASS)
 - [ ] **Phase 7: Schema + Gateway Plumbing** — Provider-agnostic DB columns, Authorize.Net helper modules (CIM/ARB/charges), HMAC-SHA512 webhook receiver, Sentry, smoke route.
 - [ ] **Phase 8: Subscription Lifecycle Core** — Extract webhook side-effects into provider-agnostic dispatcher, COALESCE shim across all read sites, integration trigger matrix.
 - [ ] **Phase 9: Coupon Engine** — `coupon_redemptions` table, FOUNDER15/FIRSTMONTH primitives, creator attribution backfill, drop Stripe coupon sync.
@@ -159,7 +159,7 @@ Requirements: `.planning/REQUIREMENTS.md` (75 REQ-IDs across 8 categories)
 | 3. Code Adaptation             | v1.0      | 2/2            | Complete    | 2026-04-14 |
 | 4. Deploy & Validate           | v1.0      | 2/2            | Complete    | 2026-04-21 |
 | 5. Production Cutover          | v1.0      | 2/2            | Complete    | 2026-04-22 |
-| 6. Skills                      | v2.0      | 0/3            | Not started | -          |
+| 6. Skills                      | v2.0      | 3/3            | Complete    | 2026-05-02 |
 | 7. Schema + Gateway Plumbing   | v2.0      | 0/3            | Not started | -          |
 | 8. Subscription Lifecycle Core | v2.0      | 0/2            | Not started | -          |
 | 9. Coupon Engine               | v2.0      | 0/2            | Not started | -          |
