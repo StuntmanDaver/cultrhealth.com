@@ -1,10 +1,10 @@
 ---
 gsd_state_version: 1.0
 milestone: v2.0
-milestone_name: Stripe to Corepay (Authorize.Net gateway) replacement
+milestone_name: Stripe → Corepay
 status: executing
-last_updated: "2026-05-01T23:55:40.386Z"
-last_activity: 2026-05-01 -- Phase 06 planning complete
+last_updated: "2026-05-02T00:00:51.321Z"
+last_activity: 2026-05-02 -- Phase 06 execution started
 progress:
   total_phases: 8
   completed_phases: 0
@@ -20,14 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** HIPAA-compliant telehealth for GLP-1 weight loss medications, wellness peptides, and longevity optimization.
-**Current focus:** v2.0 — Strip Stripe and replace with Authorize.Net via the existing Corepay merchant ISO. (Corepay = corepay.net merchant ISO; Authorize.Net = underlying gateway. Corpay = unrelated Fleetcor B2B product, NOT in scope.) Source plan: `/Users/davidk/.claude/plans/async-petting-fern.md`
+**Current focus:** Phase 06 — skills
 
 ## Current Position
 
-Phase: 6 — Skills (not started)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-05-01 -- Phase 06 planning complete
+Phase: 06 (skills) — EXECUTING
+Plan: 1 of 3
+Status: Executing Phase 06
+Last activity: 2026-05-02 -- Phase 06 execution started
 
 ## Roadmap Summary
 

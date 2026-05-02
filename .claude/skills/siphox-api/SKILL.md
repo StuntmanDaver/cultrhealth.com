@@ -18,16 +18,17 @@ SiPhox provides white-label at-home blood-test kits and biomarker reporting. The
 
 ## Gotchas — read these first
 
-1. **Auth prefix is `Token`, not `Bearer`.** `Authorization: Token <uuid>`. Anything else returns 401 "Business session is required".
-2. **No `servers` block in the spec.** Always prepend `https://connect.siphoxhealth.com` manually — the spec ships with `servers: []`.
-3. **Kit registration is async.** `POST /api/v1/kits/{kitID}/register` returns 200 immediately; lab processing happens later. Poll `/api/v1/kits` or `/api/v1/customers/{id}` to detect `sampleStatus = resulted`.
-4. **Test orders require `is_test_order: true`** on `/create-order`. Otherwise you burn real credits / charge the attached payment method.
-5. **`purchase_with_attached_payment` wording is ambiguous.** Per the spec, `false` first tries credits, then the attached payment method, then falls back to creating a pending order. Re-check the admin dashboard before sending anything else.
-6. **`sai/upsells` uses stringified JSON.** `productOfferingsJson` is a string containing JSON — `JSON.stringify` the array on write, `JSON.parse` on read.
-7. **503 "NOT_AVAILABLE"** is a legitimate response (e.g. `/kits/{kitID}/register` when the feature is not enabled for a business). Don't retry — surface to admin.
-8. **Three separate status fields** on kits/samples/orders. Don't conflate them. See `references/kit-lifecycle.md`.
-9. **Only four named schemas** — `Address`, `CreateOrderRequest`, `ProductOffering`, `Suggestion`. Everything else is inline. See `references/schemas.md`.
-10. **GitBook docs are thin.** The OpenAPI spec is authoritative. If the spec and GitBook disagree, trust the spec and verify with a test order.
+1. **Known repo bug: `lib/siphox/client.ts:80` sends `Authorization: Bearer` but SiPhox requires `Authorization: Token`.** The existing code is broken for auth and returns 401 "Business session is required" in production. Will be fixed in Phase 13. Until then, do not rely on `lib/siphox/client.ts` for live API calls — use the `siphoxFetch` helper in `references/client-starter.ts` instead.
+2. **Auth prefix is `Token`, not `Bearer`.** `Authorization: Token <uuid>`. Anything else returns 401 "Business session is required".
+3. **No `servers` block in the spec.** Always prepend `https://connect.siphoxhealth.com` manually — the spec ships with `servers: []`.
+4. **Kit registration is async.** `POST /api/v1/kits/{kitID}/register` returns 200 immediately; lab processing happens later. Poll `/api/v1/kits` or `/api/v1/customers/{id}` to detect `sampleStatus = resulted`.
+5. **Test orders require `is_test_order: true`** on `/create-order`. Otherwise you burn real credits / charge the attached payment method.
+6. **`purchase_with_attached_payment` wording is ambiguous.** Per the spec, `false` first tries credits, then the attached payment method, then falls back to creating a pending order. Re-check the admin dashboard before sending anything else.
+7. **`sai/upsells` uses stringified JSON.** `productOfferingsJson` is a string containing JSON — `JSON.stringify` the array on write, `JSON.parse` on read.
+8. **503 "NOT_AVAILABLE"** is a legitimate response (e.g. `/kits/{kitID}/register` when the feature is not enabled for a business). Don't retry — surface to admin.
+9. **Three separate status fields** on kits/samples/orders. Don't conflate them. See `references/kit-lifecycle.md`.
+10. **Only four named schemas** — `Address`, `CreateOrderRequest`, `ProductOffering`, `Suggestion`. Everything else is inline. See `references/schemas.md`.
+11. **GitBook docs are thin.** The OpenAPI spec is authoritative. If the spec and GitBook disagree, trust the spec and verify with a test order.
 
 ## Quick reference — all endpoints
 
