@@ -1,19 +1,35 @@
 ---
 phase_gate: pre-phase-7
-status: ready_for_execution
+status: partially_resolved
 created: 2026-05-03
+last_updated: 2026-05-03
+resolved: [Q2, Q3]
+pending: [Q1, Q4, Q5, Q6]
 prereqs:
-  - CorePay sandbox apiLoginId + transactionKey
-  - Authorize.Net merchant interface login (apitest.authorize.net)
-  - Sentry org access for `cultrhealth`
-  - Vercel CLI authenticated (`vercel whoami`)
+  - CorePay sandbox apiLoginId + transactionKey (for Q1/Q5/Q6)
+  - Authorize.Net merchant interface login (for Q4/Q5)
+  - Vercel CLI authenticated (`vercel whoami`) — for Q2 [done]
 related:
   - .planning/research/SUMMARY.md §6
+  - .planning/research/Q4-EMAIL-DRAFT.md
   - .claude/skills/corepay-api/SKILL.md
   - lib/payments/corepay-gateway.ts (gatewayFetch reference)
 ---
 
 # Pre-Phase-7 Sandbox Gate Runbook
+
+## Status (2026-05-03)
+
+| Q | Status | Answer | Notes |
+|---|--------|--------|-------|
+| Q1 | ⏳ pending | — | Needs sandbox creds |
+| Q2 | ✅ resolved | **Fluid Compute ON** (300s, Node 24.x, iad1, elastic concurrency) | Vercel API confirmed |
+| Q3 | ✅ resolved | **No existing Sentry project** — wizard install required (PLB-12) | Zero refs in code/env/Vercel/package.json |
+| Q4 | ⏳ pending | — | Email drafted at `Q4-EMAIL-DRAFT.md`; user must send |
+| Q5 | ⏳ pending | — | Needs sandbox creds + merchant-interface check |
+| Q6 | ⏳ pending | — | Needs sandbox creds |
+
+
 
 **Goal:** answer Q1–Q6 against the live CorePay/Authorize.Net sandbox so Phase 7 (Schema + Gateway Plumbing) can start without re-research. Each question gates a specific architectural decision; the **Decision rule** at the end of each section names the file or section in `.planning/research/SUMMARY.md` §4 that gets updated based on the answer.
 
@@ -191,11 +207,35 @@ curl -sX POST "$AN_URL" -H 'Content-Type: application/json' -d "{
 
 ---
 
-## Q2 — Vercel staging on Fluid Compute or legacy serverless?
+## Q2 — Vercel staging on Fluid Compute or legacy serverless? ✅ RESOLVED 2026-05-03
 
 **Decision gates:** Phase 10 checkout async pattern (PRT-03 inline Accept.js path).
 **Default if unverified:** Fluid (300s).
 **Why this matters:** Sequential ARB calls fit in 3-8s; if staging is on legacy 60s serverless, edge cases like dunning retries or backfill jobs need an async pattern. If Fluid (300s), no special handling.
+
+### Resolution evidence (2026-05-03)
+
+Verified via Vercel API `GET /v10/projects/cultrhealth?teamId=team_Atq50fUbLoXLPMPtJPeDY7sa`:
+
+```json
+{
+  "name": "cultrhealth",
+  "nodeVersion": "24.x",
+  "framework": "nextjs",
+  "defaultResourceConfig": {
+    "fluid": true,
+    "functionDefaultRegions": ["iad1"],
+    "functionDefaultTimeout": 300,
+    "functionDefaultMemoryType": "standard",
+    "functionZeroConfigFailover": false,
+    "elasticConcurrencyEnabled": true
+  }
+}
+```
+
+**Answer:** **Fluid Compute ON** — 300s timeout, Node 24.x, iad1 region, elastic concurrency enabled. Project owned by `stuntmandavers-projects` (team ID `team_Atq50fUbLoXLPMPtJPeDY7sa`), project ID `prj_wbOquok7XmpqeTYyiu7RNRbhNLCd`.
+
+**Decision applied:** Confirms locked decision in SUMMARY.md §4. **No async pattern needed** for Phase 10 PRT-03 — inline `tokenize → CIM → ARB` fits well inside 300s.
 
 ### Test steps
 
@@ -226,11 +266,26 @@ open "https://vercel.com/cultr-health/cultrhealth-website/settings/functions"
 
 ---
 
-## Q3 — Existing Sentry project on cultrhealth.com?
+## Q3 — Existing Sentry project on cultrhealth.com? ✅ RESOLVED 2026-05-03
 
 **Decision gates:** Phase 7 PLB-12 (Sentry wizard config path).
 **Default if unverified:** Wizard creates new project.
 **Why this matters:** If a project already exists, we reuse the DSN and get historical context. If not, the wizard creates one with default sample-rate settings that we may want to tune.
+
+### Resolution evidence (2026-05-03)
+
+All four checks returned negative:
+
+| Check | Command | Result |
+|-------|---------|--------|
+| Code refs | `grep -rln "SENTRY_DSN\|@sentry/nextjs\|sentry.client.config\|sentry.server.config" app/ lib/ next.config.js package.json instrumentation.ts` | No matches |
+| Local env vars | `grep -hE "^SENTRY\|^NEXT_PUBLIC_SENTRY" .env .env.example` | No matches |
+| Vercel env vars | `vercel env ls \| grep -i sentry` | No matches |
+| Package install | `grep -E "@sentry/nextjs" package.json` | No matches |
+
+**Answer:** **No existing Sentry project on cultrhealth.com.** Zero refs in the codebase, zero env vars, package not installed.
+
+**Decision applied:** Phase 7 PLB-12 runs `npx @sentry/wizard@latest -i nextjs` to install fresh. Configure: `tracesSampleRate: 0.1` (HIPAA — don't sample requests with PHI in URLs/headers), `beforeSend` hook to scrub email/DOB/biomarker fields. Document the new project URL/slug in PLB-12 plan once wizard creates it.
 
 ### Test steps
 

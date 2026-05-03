@@ -206,9 +206,11 @@ These are NOT open questions for the roadmapper. Research has resolved them.
 
 Hard rule for migration code: `stripe.invoices.list({ subscription: legacyId, status: 'open' })` → `stripe.invoices.voidInvoice(id)` → THEN `stripe.subscriptions.cancel(legacyId)`. Skipping the void step risks an in-flight Stripe invoice posting after the new CorePay sub starts — a real double-charge.
 
-### 4.5 Vercel Fluid Compute (300s default timeout) — no async pattern needed for checkout
+### 4.5 Vercel Fluid Compute (300s default timeout) — no async pattern needed for checkout ✅ Q2 verified 2026-05-03
 
 Sequential calls in checkout: `createCustomerProfile` (1-3s) + `ARBCreateSubscription` (2-5s) = 3-8s happy path. Synchronous checkout returns redirect immediately; heavy side-effects (Healthie, SiPhox, Mailchimp) happen via `webhook/corepay` on `subscription.created` — same pattern as today's Stripe flow.
+
+**Q2 verification (2026-05-03):** Vercel API confirms `defaultResourceConfig.fluid: true`, `functionDefaultTimeout: 300`, Node 24.x, region iad1, elastic concurrency enabled. Project `prj_wbOquok7XmpqeTYyiu7RNRbhNLCd` (`stuntmandavers-projects/cultrhealth`). Evidence captured in `.planning/research/SANDBOX-GATE-RUNBOOK.md` Q2 section.
 
 ### 4.6 Coupon source-of-truth: `coupon_redemptions` at redeem time; `order_attributions` for commission
 
