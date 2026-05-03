@@ -63,15 +63,14 @@ export async function POST(request: NextRequest) {
 
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
 
-    // Log the supplement order
+    // Log only non-PHI operational metadata.
     console.log('Supplement order submitted:', {
       orderRef,
-      email,
       tier,
       totalItems,
       uniqueProducts: items.length,
-      items: items.map(i => ({ sku: i.sku, name: i.name, qty: i.quantity })),
-      notes: notes ? notes.substring(0, 200) : null,
+      emailProvided: Boolean(email),
+      notesProvided: Boolean(notes),
       timestamp: timestamp.toISOString(),
     })
 

@@ -32,17 +32,23 @@ export async function POST(request: Request) {
     const signature = request.headers.get('intuit-content-signature') || ''
     const webhookToken = process.env.QUICKBOOKS_WEBHOOK_TOKEN
 
-    // Verify webhook signature (security)
-    if (webhookToken) {
-      const hash = crypto
-        .createHmac('sha256', webhookToken)
-        .update(body)
-        .digest('base64')
+    if (!webhookToken) {
+      console.error('[qb-webhook] QUICKBOOKS_WEBHOOK_TOKEN is not configured — rejecting webhook')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
+    }
 
-      if (hash !== signature) {
-        console.warn('[qb-webhook] Invalid signature — rejecting webhook')
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-      }
+    if (!signature) {
+      console.warn('[qb-webhook] Missing signature — rejecting webhook')
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 })
+    }
+
+    const expectedSig = crypto.createHmac('sha256', webhookToken).update(body).digest('base64')
+    const expectedBuf = Buffer.from(expectedSig)
+    const sigBuf = Buffer.from(signature)
+
+    if (expectedBuf.length !== sigBuf.length || !crypto.timingSafeEqual(expectedBuf, sigBuf)) {
+      console.warn('[qb-webhook] Invalid signature — rejecting webhook')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
 
     const payload = JSON.parse(body) as QBWebhookPayload

@@ -109,7 +109,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)
@@ -175,7 +175,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)
@@ -257,7 +257,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)
@@ -331,7 +331,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)
@@ -419,7 +419,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)
@@ -500,7 +500,7 @@ describe('club orders catalog sync', () => {
       }
 
       if (query.includes('UPDATE product_inventory')) {
-        return { rows: [] }
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
       }
 
       throw new Error(`Unexpected query: ${query}`)

@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -19,6 +20,15 @@ export async function GET(request: NextRequest) {
   const code = url.searchParams.get('code')
   const realmId = url.searchParams.get('realmId')
   const error = url.searchParams.get('error')
+  const providedState = url.searchParams.get('state')
+  const expectedState = request.cookies.get('qb_oauth_state')?.value
+
+  if (!providedState || !expectedState || !safeEqual(providedState, expectedState)) {
+    return clearStateCookie(new NextResponse(
+      errorPage('Invalid OAuth state. Restart the authorization flow.'),
+      { headers: { 'Content-Type': 'text/html' }, status: 401 }
+    ))
+  }
 
   if (error) {
     return new NextResponse(
@@ -77,16 +87,36 @@ export async function GET(request: NextRequest) {
     token_type: string
   }
 
-  console.log('[quickbooks/callback] OAuth2 complete — REALM_ID:', realmId)
-  console.log('[quickbooks/callback] REFRESH_TOKEN (first 20):', tokens.refresh_token?.slice(0, 20))
+  // Store tokens in DB — never expose them in the browser response
+  try {
+    const { sql } = await import('@vercel/postgres')
+    const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString()
+    await sql`
+      INSERT INTO qb_tokens (key, access_token, refresh_token, expires_at, updated_at)
+      VALUES ('main', ${tokens.access_token}, ${tokens.refresh_token}, ${expiresAt}, NOW())
+      ON CONFLICT (key) DO UPDATE SET
+        access_token = EXCLUDED.access_token,
+        refresh_token = EXCLUDED.refresh_token,
+        expires_at = EXCLUDED.expires_at,
+        updated_at = NOW()
+    `
+  } catch (err) {
+    console.error('[quickbooks/callback] Failed to store tokens in DB:', err)
+    return clearStateCookie(new NextResponse(
+      errorPage('Tokens were exchanged but could not be saved to the database. Check server logs.'),
+      { headers: { 'Content-Type': 'text/html' }, status: 500 }
+    ))
+  }
 
-  return new NextResponse(
-    successPage(realmId, tokens.refresh_token, tokens.access_token),
+  console.log('[quickbooks/callback] OAuth2 complete for realm:', realmId)
+
+  return clearStateCookie(new NextResponse(
+    successPage(realmId),
     { headers: { 'Content-Type': 'text/html' } }
-  )
+  ))
 }
 
-function successPage(realmId: string, refreshToken: string, accessToken: string) {
+function successPage(realmId: string) {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -98,37 +128,23 @@ function successPage(realmId: string, refreshToken: string, accessToken: string)
     .badge { display: inline-block; background: #D8F3DC; color: #2A4542; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
     .card { background: white; border: 1px solid #2A454220; border-radius: 12px; padding: 20px; margin: 16px 0; }
     .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #2A454280; margin-bottom: 8px; }
-    .value { font-family: 'Courier New', monospace; font-size: 13px; word-break: break-all; background: #f5f0e8; padding: 10px 12px; border-radius: 8px; user-select: all; }
-    .step { display: flex; gap: 12px; margin: 12px 0; }
-    .num { background: #2A4542; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-    .warning { background: #fff3cd; border: 1px solid #ffc10720; border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-top: 20px; }
+    .value { font-family: 'Courier New', monospace; font-size: 13px; word-break: break-all; background: #f5f0e8; padding: 10px 12px; border-radius: 8px; }
   </style>
 </head>
 <body>
   <h1>QuickBooks Connected!</h1>
   <div class="badge">OAuth2 Complete</div>
-  <p>Copy these two values into your <strong>Vercel environment variables</strong> for both staging and production environments.</p>
+  <p>Tokens have been stored securely in the database. No credentials are displayed here.</p>
 
   <div class="card">
     <div class="label">QUICKBOOKS_REALM_ID (Company ID)</div>
     <div class="value">${realmId}</div>
   </div>
 
-  <div class="card">
-    <div class="label">QUICKBOOKS_REFRESH_TOKEN</div>
-    <div class="value">${refreshToken}</div>
-  </div>
-
-  <h3 style="margin-top: 28px;">Next Steps</h3>
-  <div class="step"><div class="num">1</div><div>Go to <strong>Vercel → Your Project → Settings → Environment Variables</strong></div></div>
-  <div class="step"><div class="num">2</div><div>Add <code>QUICKBOOKS_REALM_ID</code> = the value above</div></div>
-  <div class="step"><div class="num">3</div><div>Add <code>QUICKBOOKS_REFRESH_TOKEN</code> = the value above</div></div>
-  <div class="step"><div class="num">4</div><div>Also confirm <code>QUICKBOOKS_CLIENT_ID</code>, <code>QUICKBOOKS_CLIENT_SECRET</code>, and <code>QUICKBOOKS_SANDBOX</code> are set</div></div>
-  <div class="step"><div class="num">5</div><div>Redeploy to pick up the new env vars</div></div>
-
-  <div class="warning">
-    ⚠️ <strong>Security:</strong> Close this browser tab after copying the tokens. Do not share the refresh token — it grants full QB Accounting access to your company.
-  </div>
+  <p style="font-size: 14px; color: #3A5956;">
+    Set <code>QUICKBOOKS_REALM_ID</code> to the value above in your Vercel environment variables,
+    then redeploy. The access and refresh tokens are already saved in the database.
+  </p>
 </body>
 </html>`
 }
@@ -147,4 +163,21 @@ function errorPage(message: string) {
   <p>Go back and try <a href="/api/quickbooks/auth">restarting the OAuth flow</a>.</p>
 </body>
 </html>`
+}
+
+function safeEqual(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+  return aBuf.length === bBuf.length && crypto.timingSafeEqual(aBuf, bBuf)
+}
+
+function clearStateCookie(response: NextResponse): NextResponse {
+  response.cookies.set('qb_oauth_state', '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 0,
+    path: '/api/quickbooks/callback',
+  })
+  return response
 }

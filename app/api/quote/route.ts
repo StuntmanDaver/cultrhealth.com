@@ -68,15 +68,14 @@ export async function POST(request: NextRequest) {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0)
     const uniqueProducts = items.length
 
-    // Log the quote request
+    // Log only non-PHI operational metadata.
     console.log('Quote request submitted:', {
       quoteId,
-      email,
       tier,
       totalItems,
       uniqueProducts,
-      items: items.map(i => ({ sku: i.sku, qty: i.quantity })),
-      notes: notes ? notes.substring(0, 100) : null,
+      emailProvided: Boolean(email),
+      notesProvided: Boolean(notes),
       timestamp: timestamp.toISOString(),
     })
 

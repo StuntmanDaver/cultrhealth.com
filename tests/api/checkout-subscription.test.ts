@@ -40,6 +40,29 @@ vi.mock('@/lib/config/product-catalog', () => ({
   getProductBySku: mockGetProductBySku,
 }))
 
+vi.mock('@/lib/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/auth')>()
+  return {
+    ...actual,
+    getSession: vi.fn().mockResolvedValue({
+      email: 'user@example.com',
+      customerId: 'cus_test_123',
+      role: 'member',
+    }),
+  }
+})
+
+vi.mock('@/lib/db', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/db')>()
+  return {
+    ...actual,
+    getMembershipByCustomerId: vi.fn().mockResolvedValue({
+      subscription_status: 'active',
+      plan_tier: 'core',
+    }),
+  }
+})
+
 // ============================================================
 // HELPERS
 // ============================================================

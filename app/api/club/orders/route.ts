@@ -88,21 +88,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: couponPolicy.couponError }, { status: 400 })
     }
 
-    // Stock validation from DB — reject out-of-stock or over-limit items
-    if (process.env.POSTGRES_URL) {
-      const stockResult = await sql`SELECT therapy_id, therapy_name, stock_status, stock_quantity FROM product_inventory WHERE COALESCE(site_source, 'join_cultrhealth') = 'join_cultrhealth'`
-      const stockMap = new Map(stockResult.rows.map((r) => [r.therapy_id, r]))
-      for (const item of orderItems) {
-        const inv = stockMap.get(item.therapyId)
-        if (!inv) continue
-        if (inv.stock_status === 'out_of_stock') {
-          return NextResponse.json({ error: `${inv.therapy_name} is currently out of stock.` }, { status: 400 })
-        }
-        if (inv.stock_quantity != null && item.quantity > Number(inv.stock_quantity)) {
-          return NextResponse.json({ error: `${inv.therapy_name} is limited to ${Number(inv.stock_quantity)} units. Please reduce the quantity.` }, { status: 400 })
-        }
-      }
-    }
+    // Stock is checked and decremented atomically inside the DB transaction below.
 
     const normalizedEmail = email.trim().toLowerCase()
 
@@ -227,21 +213,52 @@ export async function POST(request: Request) {
           throw new Error('club_order_insert_missing_id')
         }
 
-        // Decrement inventory for each ordered item (only where stock_quantity is tracked)
+        // Atomically reserve inventory for each tracked item.
         for (const item of orderItems) {
-          await client.query(
+          const decrementResult = await client.query(
             `UPDATE product_inventory
-             SET stock_quantity = GREATEST(stock_quantity - $1, 0),
+             SET stock_quantity = stock_quantity - $1,
                  stock_status = CASE
-                   WHEN GREATEST(stock_quantity - $1, 0) = 0 THEN 'out_of_stock'
-                   WHEN GREATEST(stock_quantity - $1, 0) <= 5 THEN 'low_stock'
+                   WHEN stock_quantity - $1 = 0 THEN 'out_of_stock'
+                   WHEN stock_quantity - $1 <= 5 THEN 'low_stock'
                    ELSE stock_status
                  END,
                  updated_at = NOW(),
                  updated_by = 'system:order'
-             WHERE therapy_id = $2 AND stock_quantity IS NOT NULL AND COALESCE(site_source, 'join_cultrhealth') = 'join_cultrhealth'`,
+             WHERE therapy_id = $2
+               AND stock_quantity IS NOT NULL
+               AND stock_status IS DISTINCT FROM 'out_of_stock'
+               AND stock_quantity >= $1
+               AND COALESCE(site_source, 'join_cultrhealth') = 'join_cultrhealth'
+             RETURNING therapy_name, stock_quantity`,
             [item.quantity, item.therapyId]
           )
+
+          if ((decrementResult.rowCount ?? 0) > 0) {
+            continue
+          }
+
+          const inventoryResult = await client.query(
+            `SELECT therapy_name, stock_status, stock_quantity
+             FROM product_inventory
+             WHERE therapy_id = $1
+               AND COALESCE(site_source, 'join_cultrhealth') = 'join_cultrhealth'
+             LIMIT 1`,
+            [item.therapyId]
+          )
+          const inventory = inventoryResult.rows[0]
+
+          // Missing inventory rows or null stock_quantity mean stock is not tracked for this item.
+          if (!inventory || inventory.stock_quantity == null) {
+            continue
+          }
+
+          const therapyName = inventory.therapy_name || item.name
+          if (inventory.stock_status === 'out_of_stock') {
+            throw new Error(`stock_unavailable:${therapyName} is currently out of stock.`)
+          }
+
+          throw new Error(`stock_unavailable:${therapyName} is limited to ${Number(inventory.stock_quantity)} units. Please reduce the quantity.`)
         }
 
         await client.query('COMMIT')
@@ -252,6 +269,13 @@ export async function POST(request: Request) {
         client.release()
       }
     } catch (dbError) {
+      if (dbError instanceof Error && dbError.message.startsWith('stock_unavailable:')) {
+        return NextResponse.json(
+          { error: dbError.message.replace('stock_unavailable:', '') },
+          { status: 400 }
+        )
+      }
+
       console.error('[club/orders] DB error (fatal):', describeError(dbError))
       return NextResponse.json({ error: 'We could not save your order. Please retry in a moment.' }, { status: 500 })
     }

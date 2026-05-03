@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { apiLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit';
 import { getProductBySku } from '@/lib/config/product-catalog';
+import { getSession } from '@/lib/auth';
+import { getMembershipByCustomerId } from '@/lib/db';
+
+const ACTIVE_MEMBERSHIP_STATUSES = new Set(['active', 'trialing']);
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -32,6 +36,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Please log in.' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { items, email, firstName, lastName } = body;
 
@@ -46,6 +58,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }
+      );
+    }
+
+    if (String(email).trim().toLowerCase() !== session.email.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Email mismatch. Please refresh and try again.' },
+        { status: 403 }
+      );
+    }
+
+    const membership = await getMembershipByCustomerId(session.customerId);
+    if (!membership || !ACTIVE_MEMBERSHIP_STATUSES.has(membership.subscription_status)) {
+      return NextResponse.json(
+        { error: 'An active membership is required to purchase products.' },
+        { status: 403 }
       );
     }
 
@@ -103,7 +130,7 @@ export async function POST(request: NextRequest) {
     const clientReferenceId = attributionCookie ? `attr_${attributionCookie}` : undefined;
 
     // Create Stripe checkout session
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       mode: 'payment',
       customer_email: email,
       line_items: lineItems,
@@ -120,8 +147,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      checkoutUrl: session.url,
-      sessionId: session.id,
+      checkoutUrl: checkoutSession.url,
+      sessionId: checkoutSession.id,
     });
   } catch (error) {
     console.error('Product checkout error:', error);

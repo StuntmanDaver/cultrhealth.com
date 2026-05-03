@@ -10,6 +10,12 @@ import { getCookieDomain } from '@/lib/utils'
 export const PORTAL_ACCESS_COOKIE = 'cultr_portal_access'
 export const PORTAL_REFRESH_COOKIE = 'cultr_portal_refresh'
 
+const portalSessionSecret = process.env.SESSION_SECRET
+
+if (!portalSessionSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('SESSION_SECRET environment variable is required in production')
+}
+
 /**
  * Lazily create the signing secret to avoid jsdom/Node Uint8Array mismatch
  * in test environments. Cached after first call.
@@ -18,7 +24,7 @@ let _portalSecret: Uint8Array | null = null
 function getPortalSecret(): Uint8Array {
   if (!_portalSecret) {
     _portalSecret = new TextEncoder().encode(
-      process.env.SESSION_SECRET || 'cultr-session-secret-change-in-production'
+      portalSessionSecret || 'cultr-portal-session-secret-dev-only'
     )
   }
   return _portalSecret

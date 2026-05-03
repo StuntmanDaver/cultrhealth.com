@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession, isProviderEmail } from '@/lib/auth'
 
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
 
   const isSandbox = process.env.QUICKBOOKS_SANDBOX === 'true'
   const scope = 'com.intuit.quickbooks.accounting'
-  const state = Buffer.from(Date.now().toString()).toString('base64')
+  const state = crypto.randomBytes(32).toString('base64url')
 
   const authUrl = new URL(
     isSandbox
@@ -53,5 +54,14 @@ export async function GET(request: NextRequest) {
   authUrl.searchParams.set('response_type', 'code')
   authUrl.searchParams.set('state', state)
 
-  return NextResponse.redirect(authUrl.toString())
+  const response = NextResponse.redirect(authUrl.toString())
+  response.cookies.set('qb_oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 10 * 60,
+    path: '/api/quickbooks/callback',
+  })
+
+  return response
 }

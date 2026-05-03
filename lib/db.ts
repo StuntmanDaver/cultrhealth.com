@@ -209,44 +209,40 @@ export async function updateMembershipBySubscriptionId(
   input: UpdateMembershipInput
 ): Promise<boolean> {
   try {
-    const updates: string[] = []
-    const values: (string | Date | null)[] = []
+    const hasUpdates =
+      input.subscription_status !== undefined ||
+      input.plan_tier !== undefined ||
+      input.asher_patient_id !== undefined ||
+      input.cancelled_at !== undefined ||
+      input.cancellation_reason !== undefined
 
-    // Build dynamic update query
-    if (input.subscription_status !== undefined) {
-      updates.push('subscription_status')
-      values.push(input.subscription_status)
-    }
-    if (input.plan_tier !== undefined) {
-      updates.push('plan_tier')
-      values.push(input.plan_tier)
-    }
-    if (input.asher_patient_id !== undefined) {
-      updates.push('asher_patient_id')
-      values.push(String(input.asher_patient_id))
-    }
-    if (input.cancelled_at !== undefined) {
-      updates.push('cancelled_at')
-      values.push(input.cancelled_at?.toISOString() || null)
-    }
-    if (input.cancellation_reason !== undefined) {
-      updates.push('cancellation_reason')
-      values.push(input.cancellation_reason)
-    }
-
-    if (updates.length === 0) {
+    if (!hasUpdates) {
       return false
     }
 
-    // Use a simpler approach for the update
     const result = await sql`
       UPDATE memberships
-      SET 
-        subscription_status = COALESCE(${input.subscription_status || null}, subscription_status),
-        plan_tier = COALESCE(${input.plan_tier || null}, plan_tier),
-        asher_patient_id = COALESCE(${input.asher_patient_id || null}, asher_patient_id),
-        cancelled_at = ${input.cancelled_at?.toISOString() || null},
-        cancellation_reason = COALESCE(${input.cancellation_reason || null}, cancellation_reason),
+      SET
+        subscription_status = CASE
+          WHEN ${input.subscription_status !== undefined} THEN ${input.subscription_status ?? null}
+          ELSE subscription_status
+        END,
+        plan_tier = CASE
+          WHEN ${input.plan_tier !== undefined} THEN ${input.plan_tier ?? null}
+          ELSE plan_tier
+        END,
+        asher_patient_id = CASE
+          WHEN ${input.asher_patient_id !== undefined} THEN ${input.asher_patient_id !== undefined ? String(input.asher_patient_id) : null}
+          ELSE asher_patient_id
+        END,
+        cancelled_at = CASE
+          WHEN ${input.cancelled_at !== undefined} THEN ${input.cancelled_at?.toISOString() ?? null}
+          ELSE cancelled_at
+        END,
+        cancellation_reason = CASE
+          WHEN ${input.cancellation_reason !== undefined} THEN ${input.cancellation_reason ?? null}
+          ELSE cancellation_reason
+        END,
         updated_at = NOW()
       WHERE stripe_subscription_id = ${subscriptionId}
     `
