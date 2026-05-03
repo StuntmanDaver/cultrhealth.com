@@ -109,16 +109,24 @@ export async function updateCreatorStatus(
 ): Promise<boolean> {
   try {
     const now = new Date().toISOString()
+    // approved_at / approved_by preserve historical approval state across
+    // pause → re-activate cycles. Only set approved_at the FIRST time the
+    // creator transitions to 'active'; never erase it on pause/reject.
+    // approved_by only changes when an explicit approver is passed.
     const result = await sql`
       UPDATE creators
       SET
         status = ${status},
-        approved_at = ${status === 'active' ? now : null},
+        approved_at = CASE
+          WHEN approved_at IS NOT NULL THEN approved_at
+          WHEN ${status} = 'active' THEN ${now}::timestamptz
+          ELSE NULL
+        END,
         creator_start_date = CASE
           WHEN ${status} = 'active' AND creator_start_date IS NULL THEN ${now}::timestamptz
           ELSE creator_start_date
         END,
-        approved_by = ${approvedBy || null},
+        approved_by = COALESCE(${approvedBy || null}, approved_by),
         updated_at = NOW()
       WHERE id = ${id}
     `
@@ -126,6 +134,29 @@ export async function updateCreatorStatus(
   } catch (error) {
     console.error('Database error updating creator status:', error)
     throw new DatabaseError('Failed to update creator status', error)
+  }
+}
+
+// Backfill recruiter_id for an existing creator who was created without
+// attribution. The WHERE recruiter_id IS NULL guard makes this race-safe:
+// if a concurrent request set recruiter_id between our SELECT and UPDATE,
+// the UPDATE is a no-op and first-touch attribution is preserved.
+// Returns true if the row was updated, false if a recruiter was already set
+// or the creator wasn't found.
+export async function setCreatorRecruiterIfMissing(
+  creatorId: string,
+  recruiterId: string
+): Promise<boolean> {
+  try {
+    const result = await sql`
+      UPDATE creators
+      SET recruiter_id = ${recruiterId}, updated_at = NOW()
+      WHERE id = ${creatorId} AND recruiter_id IS NULL
+    `
+    return (result.rowCount ?? 0) > 0
+  } catch (error) {
+    console.error('Database error backfilling creator recruiter:', error)
+    throw new DatabaseError('Failed to backfill creator recruiter', error)
   }
 }
 

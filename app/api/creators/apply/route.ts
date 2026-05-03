@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { createCreator, getCreatorByEmail, updateCreatorStatus, updateCreatorEmailVerified, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists } from '@/lib/creators/db'
+import { createCreator, getCreatorByEmail, updateCreatorStatus, updateCreatorEmailVerified, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists, setCreatorRecruiterIfMissing } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
 import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
 import { escapeHtml, baseEmailTemplate } from '@/lib/resend'
+import { CREATOR_NOTIFICATION_EMAILS } from '@/lib/config/creator-notification-emails'
 
 const AUTO_APPROVE_EMAILS = [
   'alex@cultrhealth.com',
@@ -27,6 +28,84 @@ async function sendCreatorEmail(to: string, subject: string, html: string) {
     await resend.emails.send({ from: getFromEmail(), to, subject, html })
   } catch (err) {
     console.error('Failed to send creator email:', err)
+  }
+}
+
+async function sendOwnerCreatorApplicationNotification({
+  name, email, phone, social_handle, bio, autoApproved, resubmission,
+}: {
+  name: string
+  email: string
+  phone?: string
+  social_handle?: string
+  bio?: string
+  autoApproved: boolean
+  resubmission: boolean
+}) {
+  if (!process.env.RESEND_API_KEY) return
+  try {
+    const { getFromEmail, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } = await import('@/lib/resend')
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const now = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' })
+    const baseUrl = getBaseUrl()
+    const subject = autoApproved
+      ? `✅ Creator auto-approved — ${escapeHtml(name)}`
+      : resubmission
+      ? `🔁 Creator re-applied — ${escapeHtml(name)}`
+      : `🧑‍🎤 New creator application — ${escapeHtml(name)}`
+
+    await resend.emails.send({
+      from: getFromEmail(),
+      to: [...CREATOR_NOTIFICATION_EMAILS],
+      subject,
+      html: `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">${EMAIL_FONT_IMPORT}</head>
+<body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background-color: #F5F0E8; color: #2A4542; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 560px; margin: 0 auto; background: #FDFBF7; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(42,69,66,0.08);">
+    ${brandedEmailHeader('dark')}
+    <div style="padding: 28px 24px;">
+      <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 20px; margin: 0 0 6px; color: #2A4542;">${autoApproved ? 'Creator Auto-Approved' : 'New Creator Application'}</h2>
+      <p style="margin: 0 0 24px; color: #546E6B; font-size: 14px;">${now} ET</p>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B; width: 40%;">Name</td>
+          <td style="padding: 10px 0; color: #2A4542; font-weight: 600;">${escapeHtml(name)}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B;">Email</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(email)}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B;">Phone</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(phone || '—')}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B;">Social handle</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(social_handle || '—')}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B;">Bio / audience</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(bio || '—')}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E8E3DB;">
+          <td style="padding: 10px 0; color: #546E6B;">Status</td>
+          <td style="padding: 10px 0; color: #2A4542;">${autoApproved ? '✅ Auto-approved' : '⏳ Pending review'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; color: #546E6B;">Review</td>
+          <td style="padding: 10px 0;"><a href="${baseUrl}/admin/creators/approvals" style="color: #2A4542; font-weight: 600;">Admin → Creator Approvals</a></td>
+        </tr>
+      </table>
+    </div>
+    ${brandedEmailFooter()}
+  </div>
+</body>
+</html>`,
+    })
+  } catch (err) {
+    console.error('Failed to send owner creator notification:', err)
   }
 }
 
@@ -108,6 +187,20 @@ export async function POST(request: NextRequest) {
       await updateCreatorStatus(creator.id, 'pending')
     }
 
+    // Backfill recruiter for an existing creator who was previously created
+    // without attribution. createCreator's ON CONFLICT clause never touches
+    // recruiter_id, so an existing-with-NULL row would otherwise miss this
+    // re-submission's recruiter_code. The WHERE recruiter_id IS NULL guard
+    // preserves first-touch attribution.
+    // Non-fatal: a backfill failure must not 500 the user's resubmission.
+    if (existing && !existing.recruiter_id && recruiterId) {
+      try {
+        await setCreatorRecruiterIfMissing(creator.id, recruiterId)
+      } catch (err) {
+        console.error('[creators/apply] recruiter backfill failed (non-fatal):', err)
+      }
+    }
+
     const baseUrl = getBaseUrl()
 
     // Auto-approve whitelisted emails
@@ -178,6 +271,10 @@ export async function POST(request: NextRequest) {
         `)
       )
 
+      sendOwnerCreatorApplicationNotification({ name: full_name, email, phone, social_handle, bio, autoApproved: true, resubmission: shouldResubmitForReview }).catch(
+        (err) => console.error('Failed to send owner auto-approve notification:', err)
+      )
+
       console.log('Creator auto-approved:', creator.id)
 
       return NextResponse.json({
@@ -211,6 +308,10 @@ export async function POST(request: NextRequest) {
         <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 24px; text-align: center;">Once verified, our team will review your application within 48 hours. You'll receive an email when approved with your tracking link and coupon code.</p>
         <p style="color: #5A6B68; font-size: 14px; line-height: 1.6; margin-top: 32px; text-align: center; margin-bottom: 0;">If you didn't apply, you can safely ignore this email.</p>
       `)
+    )
+
+    sendOwnerCreatorApplicationNotification({ name: full_name, email, phone, social_handle, bio, autoApproved: false, resubmission: shouldResubmitForReview }).catch(
+      (err) => console.error('Failed to send owner application notification:', err)
     )
 
     console.log('Creator application submitted:', creator.id)
