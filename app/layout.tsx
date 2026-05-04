@@ -4,6 +4,7 @@ import Script from 'next/script'
 import './globals.css'
 import { LayoutShell } from '@/components/site/LayoutShell'
 import { MeshBackgroundDynamic } from '@/components/ui/MeshBackgroundDynamic'
+import { VisitorTracker } from '@/components/site/VisitorTracker'
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
@@ -116,6 +117,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdn.curator.io" />
         <link rel="dns-prefetch" href="https://js-na2.hs-scripts.com" />
         <link rel="dns-prefetch" href="https://www.clarity.ms" />
+        <link rel="dns-prefetch" href="https://elu.dev" />
         {/* Google Analytics */}
         {GA_MEASUREMENT_ID && (
           <>
@@ -142,6 +144,11 @@ export default function RootLayout({
           src="//js-na2.hs-scripts.com/245823955.js"
           strategy="afterInteractive"
         />
+        {/* elu.dev */}
+        <Script
+          src="https://elu.dev/v1/elu_pk_live_RPBByTMyAcOUv729PqVnAoogZp.js"
+          strategy="afterInteractive"
+        />
         {/* Microsoft Clarity */}
         <Script
           id="ms-clarity"
@@ -153,6 +160,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning className="min-h-screen bg-brand-cream text-brand-primary selection:bg-brand-primary selection:text-brand-cream font-body">
         <MeshBackgroundDynamic />
+        <VisitorTracker />
         <LayoutShell>
           {children}
         </LayoutShell>

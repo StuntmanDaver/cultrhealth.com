@@ -39,6 +39,8 @@ export async function POST(request: Request) {
     const { firstName, lastName, email, phone, socialHandle, address, signupType, age, gender, visitorContext, couponCode } = body
     const name = `${firstName?.trim() || ''} ${lastName?.trim() || ''}`.trim()
     const normalizedCouponCode = typeof couponCode === 'string' && couponCode.trim() ? couponCode.trim().toUpperCase() : null
+    const siteHost = request.headers.get('host') || ''
+    const site = siteHost.includes('cultrclub') ? 'cultrclub.com' : 'cultrhealth.com'
 
     // Extract visitor tracking data
     const vc = visitorContext || {}
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     const deviceType = typeof vc.deviceType === 'string' ? vc.deviceType.slice(0, 20) || null : null
     const browser = typeof vc.browser === 'string' ? vc.browser.slice(0, 50) || null : null
     const os = typeof vc.os === 'string' ? vc.os.slice(0, 50) || null : null
-    // Validate ISO timestamp — reject anything that doesn't parse to a real date
+    // Validate ISO timestamp - reject anything that doesn't parse to a real date
     let firstVisitAt: string | null = null
     if (typeof vc.firstVisitAt === 'string') {
       const d = new Date(vc.firstVisitAt)
@@ -130,7 +132,7 @@ export async function POST(request: Request) {
         memberId = result.rows[0]?.id
       }
     } catch (dbError) {
-      // DB write is non-blocking — continue without it
+      // DB write is non-blocking - continue without it
       console.error('[club/signup] DB error (non-fatal):', describeError(dbError))
     }
 
@@ -182,6 +184,8 @@ export async function POST(request: Request) {
         landingPage: landingPage || null,
         referrerUrl: referrerUrl || null,
         recruiterId,
+        site,
+        couponCode: normalizedCouponCode,
       }).catch((err) =>
         console.error('[club/signup] creator flow error:', describeError(err))
       )
@@ -195,6 +199,8 @@ export async function POST(request: Request) {
         email: normalizedEmail,
         phone: phone?.trim() || null,
         signupType: signupType || 'products',
+        couponCode: normalizedCouponCode,
+        site,
         deviceType: deviceType || null,
         landingPage: landingPage || null,
         referrerUrl: referrerUrl || null,
@@ -238,7 +244,7 @@ async function resolveRecruiterIdForSignup(signupEmail: string): Promise<string 
 }
 
 async function handleCreatorFlow({
-  email, full_name, phone, social_handle, firstName, age, gender, deviceType, landingPage, referrerUrl, recruiterId,
+  email, full_name, phone, social_handle, firstName, age, gender, deviceType, landingPage, referrerUrl, recruiterId, site, couponCode,
 }: {
   email: string
   full_name: string
@@ -251,6 +257,8 @@ async function handleCreatorFlow({
   landingPage: string | null
   referrerUrl: string | null
   recruiterId?: string
+  site: string
+  couponCode: string | null
 }) {
   // Detect prior status BEFORE upsert so we can branch correctly on re-submissions.
   // Note: createCreator's ON CONFLICT clause does NOT touch recruiter_id, so any
@@ -290,7 +298,7 @@ async function handleCreatorFlow({
   const effectiveStatus = wasResubmittedForReview ? 'pending' : creator.status
 
   if (effectiveStatus === 'active') {
-    // Already an approved creator — send a portal login link, not a "pending review" email. No owner notification.
+    // Already an approved creator - send a portal login link, not a "pending review" email. No owner notification.
     const loginLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
     await resend.emails.send({
       from: fromEmail,
@@ -313,7 +321,7 @@ async function handleCreatorFlow({
     return
   }
 
-  // Pending creator who already verified their email — don't ask them to verify again. Skip owner notification (they were already notified at first signup).
+  // Pending creator who already verified their email - don't ask them to verify again. Skip owner notification (they were already notified at first signup).
   if (existing && !wasResubmittedForReview && existing.email_verified && effectiveStatus === 'pending') {
     await resend.emails.send({
       from: fromEmail,
@@ -357,12 +365,12 @@ async function handleCreatorFlow({
   // Skip owners on duplicate pending submissions to avoid inbox spam.
   const isNewToOwners = !existing || wasResubmittedForReview
   if (isNewToOwners) {
-    await sendCreatorOwnerNotification({ name: full_name, email, phone, socialHandle: social_handle, deviceType, landingPage, referrerUrl, resubmission: wasResubmittedForReview })
+    await sendCreatorOwnerNotification({ name: full_name, email, phone, socialHandle: social_handle, deviceType, landingPage, referrerUrl, resubmission: wasResubmittedForReview, site, couponCode })
   }
 }
 
 async function sendCreatorOwnerNotification({
-  name, email, phone, socialHandle, deviceType, landingPage, referrerUrl, resubmission,
+  name, email, phone, socialHandle, deviceType, landingPage, referrerUrl, resubmission, site, couponCode,
 }: {
   name: string
   email: string
@@ -372,7 +380,16 @@ async function sendCreatorOwnerNotification({
   landingPage: string | null
   referrerUrl: string | null
   resubmission: boolean
+  site: string
+  couponCode: string | null
 }) {
+  // ntfy fires regardless of email config
+  const couponLineNtfy = couponCode ? `\nCode: ${couponCode}` : ''
+  sendOwnerNotification(
+    `${resubmission ? 'Re-applied' : 'New creator'} - ${site}`,
+    `${name}\n${email}\n${phone || 'no phone'}${couponLineNtfy}`
+  ).catch(() => {})
+
   if (!process.env.RESEND_API_KEY) return
 
   const { Resend } = await import('resend')
@@ -384,8 +401,8 @@ async function sendCreatorOwnerNotification({
     from: process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>',
     to: [...CREATOR_NOTIFICATION_EMAILS],
     subject: resubmission
-      ? `🔁 Creator re-applied — ${escapeHtml(name)}`
-      : `🧑‍🎤 New creator signup — ${escapeHtml(name)}`,
+      ? `🔁 Creator re-applied - ${escapeHtml(name)}`
+      : `🧑‍🎤 New creator signup - ${escapeHtml(name)}`,
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -407,19 +424,19 @@ async function sendCreatorOwnerNotification({
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Phone</td>
-          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(phone || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(phone || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Social handle</td>
-          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(socialHandle || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(socialHandle || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Device</td>
-          <td style="padding: 10px 0; color: #2A4542; text-transform: capitalize;">${escapeHtml(deviceType || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542; text-transform: capitalize;">${escapeHtml(deviceType || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Landing page</td>
-          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(landingPage || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(landingPage || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Referrer</td>
@@ -436,6 +453,7 @@ async function sendCreatorOwnerNotification({
 </body>
 </html>`,
   })
+
 }
 
 const TEAM_EMAILS = [
@@ -445,11 +463,23 @@ const TEAM_EMAILS = [
   'alex@cultrhealth.com',
 ]
 
+const NTFY_TOPIC = 'cultr-owner-alerts'
+
+async function sendOwnerNotification(title: string, body: string) {
+  await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+    method: 'POST',
+    headers: { 'Title': title, 'Priority': 'high', 'Content-Type': 'text/plain' },
+    body,
+  })
+}
+
 async function sendTeamSignupNotification({
   name,
   email,
   phone,
   signupType,
+  couponCode,
+  site,
   deviceType,
   landingPage,
   referrerUrl,
@@ -458,10 +488,20 @@ async function sendTeamSignupNotification({
   email: string
   phone: string | null
   signupType: string
+  couponCode: string | null
+  site: string
   deviceType: string | null
   landingPage: string | null
   referrerUrl: string | null
 }) {
+  // ntfy fires regardless of email config
+  const typeLabel = signupType === 'membership' ? 'Club membership' : signupType === 'products' ? 'Products' : signupType
+  const couponLineNtfy = couponCode ? `\nCode: ${couponCode}` : ''
+  sendOwnerNotification(
+    `New signup - ${site}`,
+    `${name}\n${email}\n${phone || 'no phone'}\n${typeLabel}${couponLineNtfy}`
+  ).catch(() => {})
+
   if (!process.env.RESEND_API_KEY) return
 
   const { Resend } = await import('resend')
@@ -475,7 +515,7 @@ async function sendTeamSignupNotification({
   await resend.emails.send({
     from: process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>',
     to: TEAM_EMAILS,
-    subject: `🎉 New CULTR Club signup — ${escapeHtml(name)}`,
+    subject: `🎉 New CULTR Club signup - ${escapeHtml(name)}`,
     html: `
 <!DOCTYPE html>
 <html lang="en">
@@ -497,7 +537,7 @@ async function sendTeamSignupNotification({
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Phone</td>
-          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(phone || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(phone || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Signup type</td>
@@ -505,11 +545,11 @@ async function sendTeamSignupNotification({
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Device</td>
-          <td style="padding: 10px 0; color: #2A4542; text-transform: capitalize;">${escapeHtml(deviceType || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542; text-transform: capitalize;">${escapeHtml(deviceType || '-')}</td>
         </tr>
         <tr style="border-bottom: 1px solid #E8E3DB;">
           <td style="padding: 10px 0; color: #546E6B;">Landing page</td>
-          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(landingPage || '—')}</td>
+          <td style="padding: 10px 0; color: #2A4542;">${escapeHtml(landingPage || '-')}</td>
         </tr>
         <tr>
           <td style="padding: 10px 0; color: #546E6B;">Referrer</td>
@@ -522,6 +562,7 @@ async function sendTeamSignupNotification({
 </body>
 </html>`,
   })
+
 }
 
 async function sendClubWelcomeEmail(firstName: string, email: string) {
