@@ -52,8 +52,8 @@ must_haves:
       pattern: "beforeSend"
     - from: "app/api/admin/corepay-smoke/route.ts"
       to: "lib/payments/authorize-net-cim.ts + authorize-net-arb.ts + authorize-net-charges.ts (Plan 02)"
-      via: "Sequential calls: createCustomerProfile → addPaymentProfile → createSubscription → cancelSubscription → (transaction refund or void)"
-      pattern: "createCustomerProfile.*createSubscription.*cancelSubscription"
+      via: "Sequential calls (8 steps): authenticateTestRequest → createCustomerProfile → addPaymentProfile (distinct, uses dataValueSecondary) → createSubscription → cancelSubscription → chargeCustomerProfile (against secondary profile) → voidTransaction → deleteCustomerProfile"
+      pattern: "createCustomerProfile.*addPaymentProfile.*createSubscription.*cancelSubscription"
     - from: "app/api/admin/corepay-smoke/route.ts"
       to: "Sentry trace API"
       via: "Sentry.startSpan() wraps each step — failures surface in Sentry traces"
@@ -592,18 +592,23 @@ env vars needed for PLB-12:
     // Phase 7 PLB-13 — sandbox round-trip smoke route.
     // Admin-auth gated. Runs against the CorePay (Authorize.Net) sandbox:
     //   1. authenticateTestRequest      — credential sanity
-    //   2. createCustomerProfile        — CIM customer + payment profile from sandbox opaqueData
-    //   3. addPaymentProfile            — second card on the same customer (Path B card update prep)
+    //   2. createCustomerProfile        — CIM customer + first payment profile from sandbox opaqueData (dataValue)
+    //   3. addPaymentProfile            — DISTINCT second card on the same customer (Path B card update prep, uses dataValueSecondary)
     //   4. createSubscription (ARB)     — $1.00 sub starting +2 days, links CIM profile
     //   5. cancelSubscription           — clean teardown
-    //   6. chargeCustomerProfile + refundTransaction OR voidTransaction — refund flow exercised
-    //   7. deleteCustomerProfile        — cleanup (per Q5 default — safe to delete in sandbox)
+    //   6. chargeCustomerProfile        — $1.00 charge against the secondary payment profile (proves Step 3 worked end-to-end)
+    //   7. voidTransaction              — refund flow exercised (sandbox transactions stay unsettled — void is the right path)
+    //   8. deleteCustomerProfile        — cleanup (per Q5 default — safe to delete in sandbox; cascades both payment profiles)
     //
     // Each step is wrapped in Sentry.startSpan() for trace observability — Phase 7 success criterion #5
     // requires that "Sentry receives the trace via the wizard-installed @sentry/nextjs".
     //
-    // INPUT (POST body) — caller provides a fresh sandbox opaqueData token (15-min TTL):
-    //   { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: '<token>', email?: 'q-test@cultrhealth.com' }
+    // INPUT (POST body) — caller provides one or two fresh sandbox opaqueData tokens (15-min TTL each, single-use):
+    //   { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: '<token1>', dataValueSecondary?: '<token2>', email?: 'q-test@cultrhealth.com' }
+    //   - dataValue: REQUIRED. Used by createCustomerProfile (Step 2) and createSubscription (Step 4).
+    //   - dataValueSecondary: OPTIONAL but RECOMMENDED. Used by addPaymentProfile (Step 3) to add a distinct second card.
+    //     If absent, Step 3 falls back to dataValue (sandbox accepts via gateway re-tokenization; production
+    //     requires a fresh token because Accept.js opaqueData is single-use per corepay-api SKILL gotcha #3).
     //
     // OUTPUT — JSON with a step-by-step result array. On any failure, returns 500 with the failed-step name.
 
@@ -626,6 +631,7 @@ env vars needed for PLB-12:
     interface SmokeRequestBody {
       dataDescriptor?: string;
       dataValue?: string;
+      dataValueSecondary?: string;
       email?: string;
     }
 
@@ -688,6 +694,10 @@ env vars needed for PLB-12:
       const body = (await request.json().catch(() => ({}))) as SmokeRequestBody;
       const dataDescriptor = body.dataDescriptor || 'COMMON.ACCEPT.INAPP.PAYMENT';
       const dataValue = body.dataValue;
+      // Second token for explicit addPaymentProfile (Step 3). Falls back to dataValue with a warning
+      // recorded in the step's summary so PLB-13 step 3 is always exercised distinctly.
+      const dataValueSecondary = body.dataValueSecondary || dataValue;
+      const usedFallbackTokenForAddProfile = !body.dataValueSecondary;
       const email = body.email || `corepay-smoke-${Date.now()}@cultrhealth.test`;
 
       if (!dataValue) {
@@ -737,7 +747,25 @@ env vars needed for PLB-12:
           throw new Error('createCustomerProfile did not return customer or payment profile id');
         }
 
-        // Step 3 — createSubscription (ARB at $1.00, +2 days out so we don't accidentally trigger a sandbox charge)
+        // Step 3 — addPaymentProfile (PLB-13 distinct step — adds a SECOND card to the existing customer).
+        // Uses dataValueSecondary if supplied, else falls back to dataValue (sandbox-only — production
+        // would refuse the second use because Accept.js opaqueData is single-use per SKILL gotcha #3).
+        const addProfileResult = await runStep(
+          'addPaymentProfile',
+          () => addPaymentProfile({
+            customerProfileId: cimCustomerId!,
+            opaqueData: { dataDescriptor, dataValue: dataValueSecondary },
+          }),
+          (r) => ({
+            customerPaymentProfileId: r.customerPaymentProfileId,
+            resultCode: r.messages.resultCode,
+            usedFallbackToken: usedFallbackTokenForAddProfile,
+          }),
+        );
+        steps.push(addProfileResult.record);
+        const cimPaymentIdSecondary = addProfileResult.result.customerPaymentProfileId;
+
+        // Step 4 — createSubscription (ARB at $1.00, +2 days out so we don't accidentally trigger a sandbox charge)
         const startDate = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString().split('T')[0];
         const arbResult = await runStep(
           'createSubscription',
@@ -762,7 +790,7 @@ env vars needed for PLB-12:
           throw new Error('createSubscription did not return subscriptionId');
         }
 
-        // Step 4 — cancelSubscription
+        // Step 5 — cancelSubscription
         const cancelResult = await runStep(
           'cancelSubscription',
           () => cancelSubscription({ subscriptionId: arbSubscriptionId! }),
@@ -770,25 +798,29 @@ env vars needed for PLB-12:
         );
         steps.push(cancelResult.record);
 
-        // Step 5 — chargeCustomerProfile $1.00 (so we have a transId to refund/void)
+        // Step 6 — chargeCustomerProfile $1.00 (so we have a transId to refund/void).
+        // Uses the secondary payment profile if it was created in Step 3 (proves addPaymentProfile
+        // worked end-to-end); otherwise falls back to the primary profile.
+        const chargeProfileId = cimPaymentIdSecondary || cimPaymentId!;
         const chargeResult = await runStep(
           'chargeCustomerProfile',
           () => chargeCustomerProfile({
             amountCents: 100,
             customerProfileId: cimCustomerId!,
-            customerPaymentProfileId: cimPaymentId!,
+            customerPaymentProfileId: chargeProfileId,
             description: 'PLB-13 smoke charge',
           }),
           (r) => ({
             transId: r.transactionResponse?.transId,
             responseCode: r.transactionResponse?.responseCode,
             resultCode: r.messages.resultCode,
+            chargedProfileId: chargeProfileId,
           }),
         );
         steps.push(chargeResult.record);
         chargeTransId = chargeResult.result.transactionResponse?.transId;
 
-        // Step 6 — voidTransaction (sandbox transactions stay unsettled for hours; void is the right path)
+        // Step 7 — voidTransaction (sandbox transactions stay unsettled for hours; void is the right path)
         if (chargeTransId) {
           const voidResult = await runStep(
             'voidTransaction',
@@ -801,7 +833,8 @@ env vars needed for PLB-12:
           steps.push(voidResult.record);
         }
 
-        // Step 7 — deleteCustomerProfile (cleanup per Q5 default — sandbox cleanup, never on prod)
+        // Step 8 — deleteCustomerProfile (cleanup per Q5 default — sandbox cleanup, never on prod).
+        // Cascades both payment profiles (primary from Step 2 + secondary from Step 3).
         const deleteResult = await runStep(
           'deleteCustomerProfile',
           () => deleteCustomerProfile({ customerProfileId: cimCustomerId! }),
@@ -858,15 +891,21 @@ env vars needed for PLB-12:
       return NextResponse.json({
         route: 'POST /api/admin/corepay-smoke',
         env: process.env.COREPAY_ENVIRONMENT || 'sandbox',
-        body: { dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT', dataValue: '<fresh sandbox opaqueData>', email: 'optional' },
+        body: {
+          dataDescriptor: 'COMMON.ACCEPT.INAPP.PAYMENT',
+          dataValue: '<fresh sandbox opaqueData token #1>',
+          dataValueSecondary: '<fresh sandbox opaqueData token #2 — optional but recommended>',
+          email: 'optional',
+        },
         steps: [
           'authenticateTestRequest',
-          'createCustomerProfile',
+          'createCustomerProfile (uses dataValue, creates customer + 1st payment profile)',
+          'addPaymentProfile (uses dataValueSecondary if supplied else dataValue, adds 2nd payment profile)',
           'createSubscription (ARB at $1, +2 days)',
           'cancelSubscription',
-          'chargeCustomerProfile ($1)',
+          'chargeCustomerProfile ($1, against the 2nd payment profile when present)',
           'voidTransaction',
-          'deleteCustomerProfile',
+          'deleteCustomerProfile (cascades both payment profiles)',
         ],
       });
     }
@@ -877,10 +916,11 @@ env vars needed for PLB-12:
     - The smoke route refuses to run unless `COREPAY_ENVIRONMENT === 'sandbox'`. Defense in depth — even if creds were accidentally prod, the env check stops the route from creating live charges.
     - Each step is wrapped in `Sentry.startSpan({ name, op })` per PLB-13's "Sentry receives the trace" requirement.
     - On failure, the route attempts teardown (cancel sub + delete CIM) so sandbox doesn't accumulate cruft.
-    - The `addPaymentProfile` step from the original PLB-13 list was folded into createCustomerProfile (which already creates a payment profile). Per PLB-06's note about Path B prep, addPaymentProfile is exercised by the existing CIM endpoint with the same opaqueData token. If the executor wants to call addPaymentProfile separately, they MUST first re-tokenize (the original token is burned by createCustomerProfile).
+    - **PLB-13 step 3 (addPaymentProfile) is exercised distinctly.** The route accepts `dataValueSecondary` (optional, recommended) so addPaymentProfile uses a fresh token to add a *second* card to the existing customer. If absent, the route falls back to `dataValue` and records `usedFallbackToken: true` in the step summary so operators can see PLB-13 step 3 ran but with sandbox-only token re-tokenization (production would refuse — Accept.js opaqueData is single-use per corepay-api SKILL gotcha #3). The subsequent `chargeCustomerProfile` charges against the second payment profile when present, end-to-end-proving that addPaymentProfile created a usable card.
+    - Generating two opaqueData tokens for the operator: use the Authorize.Net Accept.js sample at https://developer.authorize.net/api/reference/index.html#payment-transactions twice with different test card numbers (e.g., 4111111111111111 and 5424000000000015), or run two tokenizations in the merchant interface's "API Test Tools."
   </action>
   <verify>
-    <automated>npx tsc --noEmit app/api/admin/corepay-smoke/route.ts && grep -q "export async function POST" app/api/admin/corepay-smoke/route.ts && grep -q "export async function GET" app/api/admin/corepay-smoke/route.ts && grep -q "Sentry.startSpan" app/api/admin/corepay-smoke/route.ts && grep -q "authenticateTestRequest" app/api/admin/corepay-smoke/route.ts && grep -q "createCustomerProfile" app/api/admin/corepay-smoke/route.ts && grep -q "createSubscription" app/api/admin/corepay-smoke/route.ts && grep -q "cancelSubscription" app/api/admin/corepay-smoke/route.ts && grep -qE "voidTransaction|refundTransaction" app/api/admin/corepay-smoke/route.ts && grep -q "deleteCustomerProfile" app/api/admin/corepay-smoke/route.ts && grep -qE "requireAdmin|verifyAdmin|require\(.*admin" app/api/admin/corepay-smoke/route.ts && grep -q "COREPAY_ENVIRONMENT" app/api/admin/corepay-smoke/route.ts</automated>
+    <automated>npx tsc --noEmit app/api/admin/corepay-smoke/route.ts && grep -q "export async function POST" app/api/admin/corepay-smoke/route.ts && grep -q "export async function GET" app/api/admin/corepay-smoke/route.ts && grep -q "Sentry.startSpan" app/api/admin/corepay-smoke/route.ts && grep -q "authenticateTestRequest" app/api/admin/corepay-smoke/route.ts && grep -q "createCustomerProfile" app/api/admin/corepay-smoke/route.ts && grep -q "addPaymentProfile" app/api/admin/corepay-smoke/route.ts && grep -q "createSubscription" app/api/admin/corepay-smoke/route.ts && grep -q "cancelSubscription" app/api/admin/corepay-smoke/route.ts && grep -qE "voidTransaction|refundTransaction" app/api/admin/corepay-smoke/route.ts && grep -q "deleteCustomerProfile" app/api/admin/corepay-smoke/route.ts && grep -qE "requireAdmin|verifyAdmin|require\(.*admin" app/api/admin/corepay-smoke/route.ts && grep -q "COREPAY_ENVIRONMENT" app/api/admin/corepay-smoke/route.ts && grep -q "dataValueSecondary" app/api/admin/corepay-smoke/route.ts</automated>
   </verify>
   <acceptance_criteria>
     - `app/api/admin/corepay-smoke/route.ts` exists
@@ -890,27 +930,31 @@ env vars needed for PLB-12:
     - `grep -q "Sentry.startSpan" app/api/admin/corepay-smoke/route.ts` exits 0 (PLB-13 — Sentry trace per step)
     - `grep -q "authenticateTestRequest" app/api/admin/corepay-smoke/route.ts` exits 0 (step 1)
     - `grep -q "createCustomerProfile" app/api/admin/corepay-smoke/route.ts` exits 0 (step 2)
-    - `grep -q "createSubscription" app/api/admin/corepay-smoke/route.ts` exits 0 (step 3 — ARB at $1)
+    - `grep -q "addPaymentProfile" app/api/admin/corepay-smoke/route.ts` exits 0 (step 3 — distinct call per PLB-13)
+    - `grep -q "dataValueSecondary" app/api/admin/corepay-smoke/route.ts` exits 0 (second token plumbed end-to-end)
+    - `grep -q "createSubscription" app/api/admin/corepay-smoke/route.ts` exits 0 (step 4 — ARB at $1)
     - `grep -q "amountCents: 100" app/api/admin/corepay-smoke/route.ts` exits 0 ($1 sub per PLB-13)
-    - `grep -q "cancelSubscription" app/api/admin/corepay-smoke/route.ts` exits 0 (step 4 — clean teardown)
-    - `grep -qE "voidTransaction|refundTransaction" app/api/admin/corepay-smoke/route.ts` exits 0 (step 6 — refund flow)
-    - `grep -q "deleteCustomerProfile" app/api/admin/corepay-smoke/route.ts` exits 0 (cleanup)
+    - `grep -q "cancelSubscription" app/api/admin/corepay-smoke/route.ts` exits 0 (step 5 — clean teardown)
+    - `grep -q "chargeCustomerProfile" app/api/admin/corepay-smoke/route.ts` exits 0 (step 6 — charges against the secondary profile to prove Step 3)
+    - `grep -qE "voidTransaction|refundTransaction" app/api/admin/corepay-smoke/route.ts` exits 0 (step 7 — refund flow)
+    - `grep -q "deleteCustomerProfile" app/api/admin/corepay-smoke/route.ts` exits 0 (step 8 — cleanup)
     - `grep -q "COREPAY_ENVIRONMENT" app/api/admin/corepay-smoke/route.ts` exits 0 (env check refuses to run on production)
     - `grep -q "Sentry.captureException" app/api/admin/corepay-smoke/route.ts` exits 0 (failures surface in Sentry)
     - `grep -qE "from '@/lib/payments/authorize-net-cim'" app/api/admin/corepay-smoke/route.ts` exits 0 (uses Plan 02 helpers)
     - `grep -qE "from '@/lib/payments/authorize-net-arb'" app/api/admin/corepay-smoke/route.ts` exits 0
     - `grep -qE "from '@/lib/payments/authorize-net-charges'" app/api/admin/corepay-smoke/route.ts` exits 0
     - `npx tsc --noEmit app/api/admin/corepay-smoke/route.ts` exits 0
-    - End-to-end run (manual, dev shell, valid sandbox creds + fresh opaqueData):
+    - End-to-end run (manual, dev shell, valid sandbox creds + two fresh opaqueData tokens):
       ```bash
       curl -X POST http://localhost:3000/api/admin/corepay-smoke \
         -H "Content-Type: application/json" -H "Cookie: <admin session cookie>" \
-        -d '{"dataValue":"<fresh sandbox opaqueData>"}' | jq '.steps[] | {step, ok, duration_ms}'
+        -d '{"dataValue":"<fresh opaqueData #1>","dataValueSecondary":"<fresh opaqueData #2>"}' \
+        | jq '.steps[] | {step, ok, duration_ms}'
       ```
-      Expected output: 7 steps, all `ok: true`. (The end-to-end run is OPTIONAL acceptance — record results in plan summary if executed.)
+      Expected output: 8 steps, all `ok: true`. The `addPaymentProfile` step's summary should show `usedFallbackToken: false` when `dataValueSecondary` is supplied. (The end-to-end run is OPTIONAL acceptance — record results in plan summary if executed.)
   </acceptance_criteria>
   <done>
-    Smoke route created with admin-auth gate, COREPAY_ENVIRONMENT=sandbox-only check, Sentry.startSpan around each step, captures exceptions to Sentry, attempts teardown on failure. Type-clean. End-to-end sandbox run is optional (gated on availability of sandbox creds).
+    Smoke route created with admin-auth gate, COREPAY_ENVIRONMENT=sandbox-only check, Sentry.startSpan around each of 8 steps (auth → createCust → addPaymentProfile → ARB → cancel → charge → void → delete), captures exceptions to Sentry, attempts teardown on failure. PLB-13 step 3 (addPaymentProfile) is exercised distinctly via the optional `dataValueSecondary` request body field. Type-clean. End-to-end sandbox run is optional (gated on availability of sandbox creds + 2 opaqueData tokens).
   </done>
 </task>
 
@@ -977,9 +1021,9 @@ env vars needed for PLB-12:
    grep -q "Refusing to start" instrumentation.ts
    ```
 
-6. Smoke route hits all 7 PLB-13 steps:
+6. Smoke route hits all 8 PLB-13 steps (addPaymentProfile is distinct from createCustomerProfile):
    ```bash
-   for op in authenticateTestRequest createCustomerProfile createSubscription cancelSubscription chargeCustomerProfile voidTransaction deleteCustomerProfile; do
+   for op in authenticateTestRequest createCustomerProfile addPaymentProfile createSubscription cancelSubscription chargeCustomerProfile voidTransaction deleteCustomerProfile; do
      grep -q "$op" app/api/admin/corepay-smoke/route.ts || echo "MISSING: $op"
    done
    ```
@@ -997,13 +1041,14 @@ env vars needed for PLB-12:
    ```
    Should complete (warnings about unset SENTRY_DSN acceptable in dev; production deploy will have it set).
 
-9. (Optional, gated on sandbox creds + fresh opaqueData) End-to-end smoke run:
+9. (Optional, gated on sandbox creds + two fresh opaqueData tokens) End-to-end smoke run:
    ```bash
    curl -X POST http://localhost:3000/api/admin/corepay-smoke \
      -H "Content-Type: application/json" -H "Cookie: <admin session>" \
-     -d '{"dataValue":"<fresh opaqueData>"}' | jq '.ok, .steps[] | .step + ":" + (.ok|tostring)'
+     -d '{"dataValue":"<fresh opaqueData #1>","dataValueSecondary":"<fresh opaqueData #2>"}' \
+     | jq '.ok, .steps[] | .step + ":" + (.ok|tostring)'
    ```
-   All steps `:true`, top-level `ok: true`.
+   All 8 steps `:true`, top-level `ok: true`. Single-token runs (omit `dataValueSecondary`) still execute Step 3 but record `usedFallbackToken: true` in the summary.
 </verification>
 
 <success_criteria>
@@ -1012,7 +1057,7 @@ env vars needed for PLB-12:
 - next.config.js wrapped with withSentryConfig (preserving all existing settings)
 - instrumentation.ts initializes Sentry AND runs authenticateTestRequest at boot
 - instrumentation.ts throws "Refusing to start" on Code 13 (sandbox-creds-in-prod / vice versa)
-- app/api/admin/corepay-smoke/route.ts exists, admin-gated, sandbox-only, runs 7 steps each wrapped in Sentry.startSpan
+- app/api/admin/corepay-smoke/route.ts exists, admin-gated, sandbox-only, runs 8 steps each wrapped in Sentry.startSpan
 - All TypeScript files type-clean
 - All `<acceptance_criteria>` automated checks pass on every task
 - (Optional) End-to-end sandbox round-trip succeeds when sandbox creds + opaqueData are available

@@ -157,18 +157,27 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
 </task>
 
 <task type="auto">
-  <name>Task 2: Create migration 063_webhook_events.sql (PLB-01)</name>
-  <files>migrations/063_webhook_events.sql</files>
+  <name>Task 2: Create migrations 063, 064, 065 (PLB-01, PLB-02, PLB-03)</name>
+  <files>migrations/063_webhook_events.sql, migrations/064_provider_payment_profile_id.sql, migrations/065_provider_columns_remaining_tables.sql</files>
   <read_first>
-    - .planning/REQUIREMENTS.md (PLB-01 — exact column list and UNIQUE constraint)
+    - .planning/REQUIREMENTS.md (PLB-01, PLB-02, PLB-03 verbatim — exact column lists, UNIQUE constraint, rename note)
     - .planning/research/SUMMARY.md §1 item 3 (idempotency rationale: Postgres UNIQUE replaces Redis)
+    - .planning/research/SUMMARY.md §4.2 (one CIM customer profile per email lifetime, many payment profiles per customer profile — Authorize.Net hard limits 10 payment profiles per customer)
     - .planning/research/SUMMARY.md §4.7 (dispatcher pattern — webhook_events feeds the dispatcher in Phase 8)
+    - .planning/research/SUMMARY.md §8 (table list for 065: creator_customer_portfolio, siphox_kit_orders, asher_orders, pending_intakes; pending_intakes.stripe_payment_intent_id is misnamed — it stores `cs_*` checkout session IDs, hence the rename)
+    - .claude/skills/corepay-api/SKILL.md "Database columns" section (the three provider_* columns and their Authorize.Net mapping)
     - .claude/skills/corepay-api/SKILL.md gotcha #4 (HMAC verify uses request.text() before any other body access)
+    - migrations/004_payment_provider.sql (already-applied baseline — DO NOT re-add provider_customer_id or provider_subscription_id on memberships; pattern to mirror for new ALTER TABLEs)
     - migrations/007_stripe_idempotency.sql (existing Stripe-only idempotency table — webhook_events replaces it post-Phase 13)
-    - scripts/run-migration.mjs (statement parsing — split on `;`, strips `--` comments)
+    - migrations/008_asher_med_tables.sql (asher_orders schema — verify column doesn't exist yet)
+    - migrations/009_creator_affiliate_portal.sql (creator_customer_portfolio schema baseline)
+    - migrations/020_siphox_tables.sql (siphox_kit_orders schema baseline)
+    - scripts/run-migration.mjs (statement parsing — naive split on `;` after stripping `--` comments, so DO $$…$$ blocks break it; use dollar-quoted plpgsql function instead)
   </read_first>
   <action>
-    Create `migrations/063_webhook_events.sql` with the following EXACT content:
+    Create three migration files in `migrations/` in a single mechanical pass. All three files use verbatim DDL pre-specified below. No design decisions to make at execution time.
+
+    **File 1 — `migrations/063_webhook_events.sql` (PLB-01):**
 
     ```sql
     -- 063_webhook_events.sql
@@ -195,47 +204,15 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
       ON webhook_events (received_at DESC);
     ```
 
-    Notes that drove specific choices (per D-PLB-01 + SUMMARY.md):
-    - `BIGSERIAL` not `SERIAL`: webhook volume across both providers will exceed 2.1B over project lifetime.
-    - `provider VARCHAR(32)` matches the existing `memberships.payment_provider VARCHAR(20)` pattern with headroom; CHECK constraint mirrors the allowed providers (Phase 7 only needs stripe + authorize_net; future klarna/affirm rows are out of scope per HRD-08 sunset).
-    - `event_id VARCHAR(255)`: Stripe `evt_*` IDs are ≤66 chars; Authorize.Net `webhookId` UUIDs are 36 chars. 255 gives provider-future safety.
-    - `processed_at TIMESTAMPTZ` (nullable): NULL means "received but not yet dispatched"; set when the dispatcher (Phase 8) finishes side effects. Plan 02's PLB-09 will INSERT with `processed_at = NOW()` since dispatcher is a stub there.
-    - `raw_payload JSONB`: required for replay/audit; HIPAA note — Plan 02's webhook handler MUST not log this field at INFO level (PII risk if Authorize.Net ever embeds billing names).
-    - The UNIQUE constraint name `webhook_events_provider_event_id_unique` is what `INSERT … ON CONFLICT (provider, event_id) DO NOTHING` will collide on — Plan 02's route uses this exact constraint name path implicitly via the column tuple.
+    Choices baked into 063:
+    - `BIGSERIAL` (not SERIAL) — webhook volume across both providers will exceed 2.1B over project lifetime.
+    - `provider VARCHAR(32)` — matches `memberships.payment_provider VARCHAR(20)` pattern with headroom; CHECK constraint mirrors allowed providers (stripe + authorize_net only; klarna/affirm out of scope per HRD-08 sunset).
+    - `event_id VARCHAR(255)` — Stripe `evt_*` IDs ≤66 chars, Authorize.Net UUIDs are 36; 255 is provider-future safe.
+    - `processed_at TIMESTAMPTZ` (nullable) — NULL = received but not yet dispatched. Plan 02 PLB-09 INSERTs with `processed_at = NOW()` since the dispatcher is a stub there.
+    - UNIQUE constraint name `webhook_events_provider_event_id_unique` is what `INSERT … ON CONFLICT (provider, event_id) DO NOTHING` collides on (Plan 02 uses the column tuple).
+    - NO foreign-key reference to `memberships` — webhook events arrive before membership is created (subscription.created event fires the membership INSERT).
 
-    Do NOT add a foreign-key reference from this table to `memberships`; webhook events arrive before membership is created (subscription.created event fires the membership INSERT).
-  </action>
-  <verify>
-    <automated>test -f migrations/063_webhook_events.sql && grep -q "CREATE TABLE IF NOT EXISTS webhook_events" migrations/063_webhook_events.sql && grep -q "UNIQUE (provider, event_id)" migrations/063_webhook_events.sql && grep -q "raw_payload JSONB" migrations/063_webhook_events.sql && grep -q "processed_at TIMESTAMPTZ" migrations/063_webhook_events.sql</automated>
-  </verify>
-  <acceptance_criteria>
-    - `test -f migrations/063_webhook_events.sql` exits 0
-    - `grep -q "CREATE TABLE IF NOT EXISTS webhook_events" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "provider VARCHAR" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "event_id VARCHAR" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "event_type VARCHAR" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "raw_payload JSONB" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "processed_at TIMESTAMPTZ" migrations/063_webhook_events.sql` exits 0
-    - `grep -q "UNIQUE (provider, event_id)" migrations/063_webhook_events.sql` exits 0
-    - `grep -qE "CHECK \(provider IN \('stripe', 'authorize_net'\)\)" migrations/063_webhook_events.sql` exits 0
-    - File contains no `STRIPE_*` env-var references and no Stripe-specific logic
-  </acceptance_criteria>
-  <done>
-    File exists at `migrations/063_webhook_events.sql`, contains exactly the DDL specified above (CREATE TABLE + 2 indexes), and has no syntax errors when piped through `node -e "console.log(require('fs').readFileSync('migrations/063_webhook_events.sql','utf8').split(';').filter(s=>s.trim()).length)"` (must print `3` — three statements).
-  </done>
-</task>
-
-<task type="auto">
-  <name>Task 3: Create migration 064_provider_payment_profile_id.sql (PLB-02)</name>
-  <files>migrations/064_provider_payment_profile_id.sql</files>
-  <read_first>
-    - .planning/REQUIREMENTS.md (PLB-02 — exact column name + type)
-    - .planning/research/SUMMARY.md §4.2 (one CIM customer profile per email lifetime, many payment profiles per customer profile — Authorize.Net hard limits 10 payment profiles + 100 shipping per customer)
-    - .claude/skills/corepay-api/SKILL.md "Database columns" section (the three provider_* columns and their Authorize.Net mapping)
-    - migrations/004_payment_provider.sql (already-applied baseline — DO NOT re-add provider_customer_id or provider_subscription_id)
-  </read_first>
-  <action>
-    Create `migrations/064_provider_payment_profile_id.sql` with the following EXACT content:
+    **File 2 — `migrations/064_provider_payment_profile_id.sql` (PLB-02):**
 
     ```sql
     -- 064_provider_payment_profile_id.sql
@@ -255,44 +232,14 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
       'Authorize.Net customerPaymentProfileId (CIM). Links membership to a specific saved card. Phase 7 PLB-02. Up to 10 per customerProfileId.';
     ```
 
-    Notes:
-    - VARCHAR(255) matches the existing pattern from migration 004 for `provider_customer_id` / `provider_subscription_id`.
-    - Partial index (`WHERE provider_payment_profile_id IS NOT NULL`) avoids bloat for the long Stripe-tail of memberships that will never have this populated.
-    - `IF NOT EXISTS` guards re-runs (CLAUDE.md migration safety).
-    - `COMMENT ON COLUMN` is documentation-as-code so future Claude sessions reading `\d memberships` see the Authorize.Net mapping.
-    - Do NOT add a CHECK constraint — Authorize.Net can return profile IDs in numeric or alphanumeric form across versions.
-  </action>
-  <verify>
-    <automated>test -f migrations/064_provider_payment_profile_id.sql && grep -q "ADD COLUMN IF NOT EXISTS provider_payment_profile_id VARCHAR(255)" migrations/064_provider_payment_profile_id.sql && grep -q "CREATE INDEX IF NOT EXISTS idx_memberships_provider_payment_profile_id" migrations/064_provider_payment_profile_id.sql</automated>
-  </verify>
-  <acceptance_criteria>
-    - `test -f migrations/064_provider_payment_profile_id.sql` exits 0
-    - `grep -q "ALTER TABLE memberships" migrations/064_provider_payment_profile_id.sql` exits 0
-    - `grep -q "ADD COLUMN IF NOT EXISTS provider_payment_profile_id VARCHAR(255)" migrations/064_provider_payment_profile_id.sql` exits 0
-    - `grep -q "CREATE INDEX IF NOT EXISTS idx_memberships_provider_payment_profile_id" migrations/064_provider_payment_profile_id.sql` exits 0
-    - `grep -q "WHERE provider_payment_profile_id IS NOT NULL" migrations/064_provider_payment_profile_id.sql` exits 0
-    - File contains the COMMENT ON COLUMN statement
-    - File does NOT add `provider_customer_id` or `provider_subscription_id` (those exist from migration 004)
-  </acceptance_criteria>
-  <done>
-    File exists with exactly one ALTER TABLE, one CREATE INDEX (partial), and one COMMENT statement. No other tables touched. No STRIPE_* references.
-  </done>
-</task>
+    Choices baked into 064:
+    - VARCHAR(255) — matches migration 004's `provider_customer_id` / `provider_subscription_id` pattern.
+    - Partial index `WHERE provider_payment_profile_id IS NOT NULL` — avoids bloat for the long Stripe-tail of memberships that will never have this populated.
+    - NO CHECK constraint — Authorize.Net can return profile IDs in numeric or alphanumeric form across versions.
 
-<task type="auto">
-  <name>Task 4: Create migration 065_provider_columns_remaining_tables.sql (PLB-03)</name>
-  <files>migrations/065_provider_columns_remaining_tables.sql</files>
-  <read_first>
-    - .planning/REQUIREMENTS.md (PLB-03 — full list of four tables + the rename note)
-    - .planning/research/SUMMARY.md §8 "Tables that DO still need provider columns added/touched" (exact list: creator_customer_portfolio, siphox_kit_orders, asher_orders, pending_intakes)
-    - .planning/research/SUMMARY.md §8 "What `stripe_events` is" sidebar (pending_intakes.stripe_payment_intent_id is misnamed — it stores `cs_*` checkout session IDs, hence the rename to provider_checkout_id)
-    - migrations/004_payment_provider.sql (pattern to mirror)
-    - migrations/008_asher_med_tables.sql (asher_orders schema — verify column doesn't exist yet)
-    - migrations/009_creator_affiliate_portal.sql (creator_customer_portfolio schema baseline)
-    - migrations/020_siphox_tables.sql (siphox_kit_orders schema baseline)
-  </read_first>
-  <action>
-    Create `migrations/065_provider_columns_remaining_tables.sql` with the following EXACT content:
+    **File 3 — `migrations/065_provider_columns_remaining_tables.sql` (PLB-03):**
+
+    The pending_intakes rename is wrapped in a `CREATE OR REPLACE FUNCTION … $func$ … $func$` block instead of a bare `DO $$…$$` block, because `scripts/run-migration.mjs` line 28 does naive `split(';')` after stripping comments. A bare `DO` block contains internal `;` characters (after `END IF` and inside SELECT statements) that the naive splitter would chop apart, breaking the migration. The `$func$` dollar-quoting hides the internal `;` from the splitter.
 
     ```sql
     -- 065_provider_columns_remaining_tables.sql
@@ -325,41 +272,8 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
       ON asher_orders (provider_payment_intent_id)
       WHERE provider_payment_intent_id IS NOT NULL;
 
-    -- pending_intakes: rename misnamed stripe_payment_intent_id (actually stores cs_* checkout session IDs) → provider_checkout_id
-    -- DO blocks let us guard against re-runs since RENAME COLUMN doesn't support IF EXISTS in older Postgres.
-    DO $$
-    BEGIN
-      IF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'pending_intakes'
-          AND column_name = 'stripe_payment_intent_id'
-      ) AND NOT EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_name = 'pending_intakes'
-          AND column_name = 'provider_checkout_id'
-      ) THEN
-        ALTER TABLE pending_intakes RENAME COLUMN stripe_payment_intent_id TO provider_checkout_id;
-      END IF;
-    END $$;
-
-    COMMENT ON COLUMN pending_intakes.provider_checkout_id IS
-      'Provider checkout session ID (Stripe cs_*, Authorize.Net subscriptionId). Renamed from stripe_payment_intent_id in migration 065 — column was misnamed; it stores checkout session IDs, not payment intent IDs.';
-    ```
-
-    Notes:
-    - All four ALTER TABLE statements use `IF NOT EXISTS` to guard re-runs.
-    - The pending_intakes rename is wrapped in a DO $$…$$ block because PostgreSQL's `ALTER TABLE … RENAME COLUMN` does not support `IF EXISTS` in supported versions; the conditional check via information_schema makes it idempotent across re-runs.
-    - The DO block is a SINGLE statement to the migration runner (it splits on `;` outside of `$$ ... $$` boundaries — verify by reading scripts/run-migration.mjs which uses naive `split(';')` so the DO block MUST be the only thing between `DO $$` and `END $$;`. The internal `;` after `END IF` and inside SELECT statements would break naive splitting.
-
-    **Migration-runner gotcha:** `scripts/run-migration.mjs` line 28 does `withoutComments.split(';')`. This is naive. The DO $$…$$ block contains internal `;` characters (after `END IF`, after each SELECT). The runner WILL split inside the block and try to execute fragments. To avoid this, the DO block needs each internal statement carefully wrapped, OR we use a simpler conditional-DDL idiom that doesn't require a DO block.
-
-    **Revised pending_intakes rename — use conditional ALTER TABLE via plpgsql function-style guard that fits on one logical statement:**
-
-    Replace the DO $$…$$ block above with this approach that the naive `split(';')` runner can handle:
-
-    ```sql
-    -- pending_intakes rename guarded via two separate idempotent steps using conditional EXEC
-    -- Use temp function to wrap the conditional logic in a SINGLE statement (no internal `;` outside of the function body)
+    -- pending_intakes: rename misnamed stripe_payment_intent_id (actually stores cs_* checkout session IDs) → provider_checkout_id.
+    -- Wrapped in a dollar-quoted plpgsql function (NOT a bare DO $$…$$ block) so scripts/run-migration.mjs's naive split(';') doesn't chop the body.
     CREATE OR REPLACE FUNCTION __phase7_rename_pending_intakes_column() RETURNS void AS $func$
     BEGIN
       IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'pending_intakes' AND column_name = 'stripe_payment_intent_id')
@@ -374,23 +288,44 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
 
     DROP FUNCTION __phase7_rename_pending_intakes_column();
 
-    COMMENT ON COLUMN pending_intakes.provider_checkout_id IS 'Provider checkout session ID (Stripe cs_*, Authorize.Net subscriptionId). Renamed from stripe_payment_intent_id in migration 065 — column was misnamed; it stores checkout session IDs, not payment intent IDs.';
+    COMMENT ON COLUMN pending_intakes.provider_checkout_id IS
+      'Provider checkout session ID (Stripe cs_*, Authorize.Net subscriptionId). Renamed from stripe_payment_intent_id in migration 065 — column was misnamed; it stores checkout session IDs, not payment intent IDs.';
     ```
 
-    The `$func$` dollar-quoting body is opaque to the naive `split(';')` runner, so the body's internal `;` characters are NOT split. Outside of the function body, each `;` cleanly delimits exactly one statement: CREATE FUNCTION, SELECT, DROP FUNCTION, COMMENT ON COLUMN.
+    Total statement count for 065: 10 (3 ALTER TABLE + 3 CREATE INDEX + CREATE FUNCTION + SELECT + DROP FUNCTION + COMMENT). Each `;` outside the `$func$` body cleanly delimits one statement.
 
-    USE THE REVISED VERSION (with temp function). The DO $$…$$ block in the first draft above is a documentation note showing why the function approach is needed — do NOT include both blocks. Final migration file should have:
-    1. ALTER TABLE creator_customer_portfolio + CREATE INDEX
-    2. ALTER TABLE siphox_kit_orders + CREATE INDEX
-    3. ALTER TABLE asher_orders + CREATE INDEX
-    4. CREATE OR REPLACE FUNCTION + SELECT + DROP FUNCTION + COMMENT (4 statements for the rename guard)
-
-    Total: 10 statements (3 ALTER + 3 CREATE INDEX + CREATE FUNCTION + SELECT + DROP FUNCTION + COMMENT).
+    Choices baked into 065:
+    - All four ALTER TABLE statements use `IF NOT EXISTS` for re-run safety.
+    - The pending_intakes rename uses a dollar-quoted plpgsql function (NOT a bare `DO $$…$$`) — the naive split runner would otherwise chop inside the body. The internal `EXECUTE 'ALTER TABLE …'` lets us conditionally rename, since `ALTER TABLE … RENAME COLUMN` doesn't support `IF EXISTS` in supported Postgres versions.
+    - The function is dropped immediately after use so it doesn't pollute the schema.
   </action>
   <verify>
-    <automated>test -f migrations/065_provider_columns_remaining_tables.sql && grep -q "ALTER TABLE creator_customer_portfolio" migrations/065_provider_columns_remaining_tables.sql && grep -q "ALTER TABLE siphox_kit_orders" migrations/065_provider_columns_remaining_tables.sql && grep -q "ALTER TABLE asher_orders" migrations/065_provider_columns_remaining_tables.sql && grep -q "RENAME COLUMN stripe_payment_intent_id TO provider_checkout_id" migrations/065_provider_columns_remaining_tables.sql && grep -q "provider_subscription_id VARCHAR(255)" migrations/065_provider_columns_remaining_tables.sql && grep -q "provider_payment_intent_id VARCHAR(255)" migrations/065_provider_columns_remaining_tables.sql</automated>
+    <automated>test -f migrations/063_webhook_events.sql && test -f migrations/064_provider_payment_profile_id.sql && test -f migrations/065_provider_columns_remaining_tables.sql && grep -q "CREATE TABLE IF NOT EXISTS webhook_events" migrations/063_webhook_events.sql && grep -q "UNIQUE (provider, event_id)" migrations/063_webhook_events.sql && grep -q "raw_payload JSONB" migrations/063_webhook_events.sql && grep -q "ADD COLUMN IF NOT EXISTS provider_payment_profile_id VARCHAR(255)" migrations/064_provider_payment_profile_id.sql && grep -q "CREATE INDEX IF NOT EXISTS idx_memberships_provider_payment_profile_id" migrations/064_provider_payment_profile_id.sql && grep -q "ALTER TABLE creator_customer_portfolio" migrations/065_provider_columns_remaining_tables.sql && grep -q "ALTER TABLE siphox_kit_orders" migrations/065_provider_columns_remaining_tables.sql && grep -q "ALTER TABLE asher_orders" migrations/065_provider_columns_remaining_tables.sql && grep -q "RENAME COLUMN stripe_payment_intent_id TO provider_checkout_id" migrations/065_provider_columns_remaining_tables.sql && grep -q "CREATE OR REPLACE FUNCTION __phase7_rename_pending_intakes_column" migrations/065_provider_columns_remaining_tables.sql && ! grep -qE "^DO \\\$\\\$" migrations/065_provider_columns_remaining_tables.sql</automated>
   </verify>
   <acceptance_criteria>
+    **063_webhook_events.sql (PLB-01):**
+    - `test -f migrations/063_webhook_events.sql` exits 0
+    - `grep -q "CREATE TABLE IF NOT EXISTS webhook_events" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "provider VARCHAR" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "event_id VARCHAR" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "event_type VARCHAR" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "raw_payload JSONB" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "processed_at TIMESTAMPTZ" migrations/063_webhook_events.sql` exits 0
+    - `grep -q "UNIQUE (provider, event_id)" migrations/063_webhook_events.sql` exits 0
+    - `grep -qE "CHECK \(provider IN \('stripe', 'authorize_net'\)\)" migrations/063_webhook_events.sql` exits 0
+    - File contains no `STRIPE_*` env-var references and no Stripe-specific logic
+    - Statement count: `node -e "console.log(require('fs').readFileSync('migrations/063_webhook_events.sql','utf8').split(';').filter(s=>s.trim().length).length)"` prints `3`
+
+    **064_provider_payment_profile_id.sql (PLB-02):**
+    - `test -f migrations/064_provider_payment_profile_id.sql` exits 0
+    - `grep -q "ALTER TABLE memberships" migrations/064_provider_payment_profile_id.sql` exits 0
+    - `grep -q "ADD COLUMN IF NOT EXISTS provider_payment_profile_id VARCHAR(255)" migrations/064_provider_payment_profile_id.sql` exits 0
+    - `grep -q "CREATE INDEX IF NOT EXISTS idx_memberships_provider_payment_profile_id" migrations/064_provider_payment_profile_id.sql` exits 0
+    - `grep -q "WHERE provider_payment_profile_id IS NOT NULL" migrations/064_provider_payment_profile_id.sql` exits 0
+    - File contains the `COMMENT ON COLUMN` statement
+    - File does NOT add `provider_customer_id` or `provider_subscription_id` (those exist from migration 004)
+
+    **065_provider_columns_remaining_tables.sql (PLB-03):**
     - `test -f migrations/065_provider_columns_remaining_tables.sql` exits 0
     - `grep -q "ALTER TABLE creator_customer_portfolio" migrations/065_provider_columns_remaining_tables.sql` exits 0
     - `grep -q "ALTER TABLE siphox_kit_orders" migrations/065_provider_columns_remaining_tables.sql` exits 0
@@ -398,24 +333,24 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
     - `grep -q "RENAME COLUMN stripe_payment_intent_id TO provider_checkout_id" migrations/065_provider_columns_remaining_tables.sql` exits 0
     - `grep -q "provider_subscription_id VARCHAR(255)" migrations/065_provider_columns_remaining_tables.sql` exits 0
     - `grep -q "provider_payment_intent_id VARCHAR(255)" migrations/065_provider_columns_remaining_tables.sql` exits 0
-    - `grep -cE "CREATE INDEX IF NOT EXISTS idx_(creator_customer_portfolio|siphox_kit_orders|asher_orders)_provider_" migrations/065_provider_columns_remaining_tables.sql` returns 3 (one partial index per added column)
-    - `grep -q "CREATE OR REPLACE FUNCTION __phase7_rename_pending_intakes_column" migrations/065_provider_columns_remaining_tables.sql` exits 0 (the dollar-quoted function guard for the naive split runner)
-    - `grep -q "DROP FUNCTION __phase7_rename_pending_intakes_column" migrations/065_provider_columns_remaining_tables.sql` exits 0 (cleanup of temp function)
-    - The file does NOT contain a bare `DO $$` block (which would break the naive statement splitter in scripts/run-migration.mjs)
+    - `grep -cE "CREATE INDEX IF NOT EXISTS idx_(creator_customer_portfolio|siphox_kit_orders|asher_orders)_provider_" migrations/065_provider_columns_remaining_tables.sql` returns `3` (one partial index per added column)
+    - `grep -q "CREATE OR REPLACE FUNCTION __phase7_rename_pending_intakes_column" migrations/065_provider_columns_remaining_tables.sql` exits 0 (dollar-quoted function guard)
+    - `grep -q "DROP FUNCTION __phase7_rename_pending_intakes_column" migrations/065_provider_columns_remaining_tables.sql` exits 0 (cleanup)
+    - `grep -qE "^DO \$\$" migrations/065_provider_columns_remaining_tables.sql` exits 1 (no bare DO block — would break the naive splitter)
   </acceptance_criteria>
   <done>
-    File exists with the 10-statement structure described, the pending_intakes rename is wrapped in a `CREATE OR REPLACE FUNCTION … $func$ … $func$ LANGUAGE plpgsql; SELECT fn(); DROP FUNCTION fn();` pattern (compatible with the naive split runner), and all four target tables receive their provider_* columns with partial indexes.
+    Three SQL files exist with the verbatim content specified above. 063 has CREATE TABLE + 2 indexes (3 statements). 064 has ALTER TABLE + CREATE INDEX (partial) + COMMENT (3 statements). 065 has 3 ALTER TABLE + 3 CREATE INDEX + CREATE FUNCTION + SELECT + DROP FUNCTION + COMMENT (10 statements), with the pending_intakes rename guarded via a dollar-quoted plpgsql function instead of a bare DO block.
   </done>
 </task>
 
 <task type="auto">
-  <name>Task 5: Apply migrations 063, 064, 065 against Neon and verify schema</name>
+  <name>Task 3: Apply migrations 063, 064, 065 against Neon and verify schema</name>
   <files>(no file modifications — DB-only)</files>
   <read_first>
     - scripts/run-migration.mjs (usage: node scripts/run-migration.mjs migrations/<file>.sql)
     - migrations/063_webhook_events.sql (created in Task 2)
-    - migrations/064_provider_payment_profile_id.sql (created in Task 3)
-    - migrations/065_provider_columns_remaining_tables.sql (created in Task 4)
+    - migrations/064_provider_payment_profile_id.sql (created in Task 2)
+    - migrations/065_provider_columns_remaining_tables.sql (created in Task 2)
     - .env (or .env.local) for `POSTGRES_URL` — must be the staging Neon DB URL, NOT production
   </read_first>
   <action>
@@ -530,12 +465,12 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
 | T-07-03 | Information Disclosure | webhook_events.raw_payload JSONB containing PII (Authorize.Net billing names, last-4) | accept | Plan 02 webhook handler MUST NOT log this column at INFO level. HIPAA-compliant since billing name + last-4 are NOT PHI. Future Sentry beforeSend (Plan 03 PLB-12) provides backstop scrubbing. The DDL itself is safe; the threat is in downstream logging. |
 | T-07-04 | Spoofing | Webhook events with forged provider+event_id pairs | mitigate | UNIQUE (provider, event_id) prevents idempotency bypass. Combined with HMAC verification (Plan 02 PLB-08), forged events cannot collide with real ones. |
 | T-07-05 | Tampering | Naive split(';') in scripts/run-migration.mjs splits inside DO $$…$$ blocks | mitigate | Migration 065 uses `CREATE OR REPLACE FUNCTION … $func$ … $func$` instead of a bare DO block. The dollar-quoted body is opaque to the naive splitter. |
-| T-07-06 | Elevation of Privilege | Production Neon DB accidentally targeted from a developer shell with prod creds | mitigate | Task 5 step 1 surfaces the host of `POSTGRES_URL` and refuses to proceed if it points at production. Defense in depth: production application of migrations is OUT OF SCOPE for Phase 7. |
+| T-07-06 | Elevation of Privilege | Production Neon DB accidentally targeted from a developer shell with prod creds | mitigate | Task 3 step 1 surfaces the host of `POSTGRES_URL` and refuses to proceed if it points at production. Defense in depth: production application of migrations is OUT OF SCOPE for Phase 7. |
 | T-07-07 | Information Disclosure | pending_intakes.provider_checkout_id COMMENT reveals "actually stores cs_*" | accept | Comment is documentation-as-code, visible only to DBAs with `\d pending_intakes` access. Not a leak vector. |
 </threat_model>
 
 <verification>
-**Plan-level verification (run after all 5 tasks complete):**
+**Plan-level verification (run after all 3 tasks complete):**
 
 1. macOS-dup cleanup:
    ```bash
@@ -549,9 +484,9 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
    ```
    All three files present, none empty.
 
-3. DB schema verification (Task 5's verify script):
+3. DB schema verification (Task 3's verify script):
    ```bash
-   node -e "const { sql } = require('@vercel/postgres'); (async () => { /* see Task 5 verify */ })()"
+   node -e "const { sql } = require('@vercel/postgres'); (async () => { /* see Task 3 verify */ })()"
    ```
    Prints `PASS` and exits 0.
 
@@ -576,7 +511,7 @@ From .planning/research/SUMMARY.md §8 — verified-present macOS dups as of 202
 After completion, create `.planning/phases/07-schema-gateway-plumbing/07-01-SUMMARY.md` documenting:
 - Files deleted (with confirmed byte-identical diff results)
 - Files created (with the row count of statements per migration)
-- Schema verification output from Task 5
+- Schema verification output from Task 3
 - Idempotency re-run timestamps
 - Any deviations from plan
 </output>
