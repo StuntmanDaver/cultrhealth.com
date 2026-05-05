@@ -32,10 +32,6 @@ export interface JoinTherapy {
   secondaryImage?: string
   /** ID of a product this bundles with for a discount */
   bundleWith?: string
-  /** Stock status. Defaults to 'in_stock' when omitted. */
-  stockStatus?: JoinStockStatus
-  /** Remaining units available. Used for max-quantity enforcement when set. */
-  stockQuantity?: number
 }
 
 export interface JoinTherapySection {
@@ -334,13 +330,8 @@ export function getJoinCouponPolicy(
   }
 }
 
-/** Get effective stock status (defaults to 'in_stock' when not set) */
-export function getStockStatus(therapy: JoinTherapy): JoinStockStatus {
-  return therapy.stockStatus || 'in_stock'
-}
-
-/** Get max orderable quantity for a therapy. Returns Infinity when unlimited. */
-export function getMaxOrderQuantity(therapy: JoinTherapy): number {
-  if (therapy.stockStatus === 'out_of_stock' || therapy.stockStatus === 'restocking_soon') return 0
-  return therapy.stockQuantity ?? Infinity
-}
+// Stock status/quantity for join therapies is sourced exclusively from the
+// product_inventory DB table via /api/stock. The previous helpers that read
+// hardcoded therapy.stockStatus / therapy.stockQuantity from this config were
+// dead code (never imported anywhere) and have been removed to prevent any
+// future caller from accidentally bypassing the live DB-backed source.
