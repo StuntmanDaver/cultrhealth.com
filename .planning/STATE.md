@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Stripe → Corepay
-status: phase_complete
-last_updated: "2026-05-02T01:15:00.000Z"
-last_activity: 2026-05-02 -- Phase 06 complete (3/3 plans, all 5 success criteria PASS)
+status: executing
+last_updated: "2026-05-05T01:27:17.867Z"
+last_activity: 2026-05-05 -- Phase 7 planning complete
 progress:
   total_phases: 8
   completed_phases: 1
-  total_plans: 18
+  total_plans: 6
   completed_plans: 3
-  percent: 17
+  percent: 50
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 
 Phase: 06 (skills) — COMPLETE (verified 2026-05-02, all 5 success criteria PASS)
 Plan: 3 of 3 (06-01 corepay-api, 06-02 healthie-api, 06-03 siphox-api refresh + .gitignore + SKL-03 deferral)
-Status: Phase 06 done. Next: resolve Pre-Phase-7 sandbox gate (Q1–Q6) before `/gsd-plan-phase 7`.
-Last activity: 2026-05-02 -- Phase 06 complete (3/3 plans, all 5 success criteria PASS)
+Status: Ready to execute
+Last activity: 2026-05-05 -- Phase 7 planning complete
 
 ## Roadmap Summary
 
@@ -70,6 +70,12 @@ Items acknowledged and deferred at v1.0 close on 2026-04-27. These are **not** p
 | quick_task | 7-create-a-methodical-system-to-check-the- | missing |
 
 ## Accumulated Context
+
+### Session notes (2026-05-03)
+
+Exhaustive capture of Cursor + Claude Code terminal context, uncommitted diffs (`VisitorTracker`, `POST /api/visitor/new`, `club/signup` ntfy/site/coupon, `layout` elu.dev), `.planning/STATE.md` YAML review notes, and admin Customers-vs-Members investigation summary: **[SESSION-NOTES-2026-05-03.md](./SESSION-NOTES-2026-05-03.md)**.
+
+YAML frontmatter in this file may mix **phase-06-complete** counters with milestone-wide totals — reconcile before relying on `percent`/`total_plans` for reporting.
 
 ### Recent Milestone Decisions (v1.0)
 
