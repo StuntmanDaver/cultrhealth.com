@@ -20,7 +20,7 @@ must_haves:
     - "instrumentation.ts initializes Sentry AND calls authenticateTestRequest at boot, refusing to start the app on Authorize.Net Code 13"
     - "PHI redaction beforeSend hook is installed in sentry.server.config.ts + sentry.client.config.ts (HIPAA — strip emails/phones/medical data from breadcrumbs, scope, user context)"
     - "next.config.js is wrapped with withSentryConfig()"
-    - "app/api/admin/corepay-smoke/route.ts is admin-auth-gated and runs the full sandbox round-trip: authenticateTestRequest → createCustomerProfile → addPaymentProfile → ARBCreateSubscription at $1 → cancelSubscription → refundTransaction"
+    - "app/api/admin/corepay-smoke/route.ts is admin-auth-gated and runs the full sandbox round-trip in 8 steps: authenticateTestRequest → createCustomerProfile → addPaymentProfile → createSubscription at $1 → cancelSubscription → chargeCustomerProfile → voidTransaction → deleteCustomerProfile"
     - "Smoke route logs each step with a Sentry trace span; any step failure surfaces in Sentry"
   artifacts:
     - path: "instrumentation.ts"
