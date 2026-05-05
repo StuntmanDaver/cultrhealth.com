@@ -676,7 +676,11 @@ function TherapyCarouselSection({ section, Icon, stockData, cartOpen, onAddToCar
     const cartItem = cart.items.find((i) => i.therapyId === therapy.id)
     const sd = stockData[therapy.id]
     const stockStatus = sd?.status || 'in_stock'
-    const maxQty = stockStatus === 'out_of_stock' || stockStatus === 'restocking_soon' ? 0 : (sd?.quantity ?? Infinity)
+    // Treat explicit 0 as unlimited — admin has dedicated 'out_of_stock'/'restocking_soon' statuses for blocking sales.
+    // Without this, an admin who sets In Stock + quantity 0 would silently disable purchases with no badge shown.
+    const maxQty = stockStatus === 'out_of_stock' || stockStatus === 'restocking_soon'
+      ? 0
+      : (sd?.quantity != null && sd.quantity > 0 ? sd.quantity : Infinity)
     const currentQty = cartItem?.quantity || 0
     const isOutOfStock = stockStatus === 'out_of_stock'
     const isRestocking = stockStatus === 'restocking_soon'
@@ -1145,7 +1149,9 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
   const isBacWaterOnly = cart.items.length > 0 && cart.items.every(i => i.therapyId === 'bacteriostatic-water')
   const bacWaterQty = cart.items.find(i => i.therapyId === 'bacteriostatic-water')?.quantity ?? 0
   const bacWaterStock = stockData?.['bacteriostatic-water']
-  const bacWaterMaxQty = bacWaterStock?.status === 'out_of_stock' ? 0 : (bacWaterStock?.quantity ?? Infinity)
+  const bacWaterMaxQty = bacWaterStock?.status === 'out_of_stock' || bacWaterStock?.status === 'restocking_soon'
+    ? 0
+    : (bacWaterStock?.quantity != null && bacWaterStock.quantity > 0 ? bacWaterStock.quantity : Infinity)
   const bacWaterUpgradeQty = Math.min(4, bacWaterMaxQty)
   const showShippingWarning = isBacWaterOnly && bacWaterQty < 4 && bacWaterQty < bacWaterMaxQty
   const joinCouponPolicy = getJoinCouponPolicy(cart.items)

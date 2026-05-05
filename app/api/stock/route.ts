@@ -19,10 +19,14 @@ export async function GET() {
       return NextResponse.json({ stock: {} }, { headers: NO_CACHE_HEADERS })
     }
 
+    // Restrict strictly to join_cultrhealth rows (the source of truth for /join)
+    // and ORDER deterministically so a future duplicate row never causes a
+    // non-deterministic last-writer-wins in the JS loop below.
     const result = await sql`
       SELECT therapy_id, stock_status, stock_quantity
       FROM product_inventory
-      WHERE COALESCE(site_source, 'join_cultrhealth') != 'cultrclub'
+      WHERE COALESCE(site_source, 'join_cultrhealth') = 'join_cultrhealth'
+      ORDER BY therapy_id
     `
 
     const stock: Record<string, { status: string; quantity: number | null }> = {}

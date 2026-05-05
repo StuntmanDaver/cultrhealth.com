@@ -68,9 +68,17 @@ export default function InventoryClient() {
   const handleQuantityChange = (row: InventoryRow, value: string) => {
     const current = getEditedValue(row)
     const qty = value === '' ? null : parseInt(value, 10)
+    const parsedQty = isNaN(qty as number) ? null : qty
+
+    // Smart: if entering a positive quantity while status blocks purchases, auto-fix to in_stock
+    let nextStatus = current.stockStatus
+    if (parsedQty != null && parsedQty > 0 && (current.stockStatus === 'restocking_soon' || current.stockStatus === 'out_of_stock')) {
+      nextStatus = 'in_stock'
+    }
+
     setEdits((prev) => ({
       ...prev,
-      [rowKey(row)]: { ...current, stockQuantity: isNaN(qty as number) ? null : qty },
+      [rowKey(row)]: { stockStatus: nextStatus, stockQuantity: parsedQty },
     }))
     setSaved(null)
   }
@@ -239,6 +247,11 @@ export default function InventoryClient() {
                         placeholder="Unlimited"
                         className="w-28 px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-sm text-brand-primary placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-brand-primary/20 focus:border-brand-primary"
                       />
+                      {edited.stockStatus === 'in_stock' && edited.stockQuantity === 0 && (
+                        <p className="text-[10px] text-amber-600 mt-1 max-w-[160px] leading-tight">
+                          Quantity 0 with In Stock — leave blank for unlimited.
+                        </p>
+                      )}
                     </td>
 
                     <td className="px-5 py-4 text-xs text-brand-secondary/50">
