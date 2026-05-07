@@ -1,0 +1,17 @@
+name = "cultrhealth-bot-protection"
+main = "src/index.ts"
+compatibility_date = "2024-04-05"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for per-IP rate limiting
+# Run: wrangler kv namespace create RATE_LIMIT_KV
+# Then fill in the id and preview_id below
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "d602498e97f94661aafc9f6407d41bfb"
+preview_id = "91c70132b4584e219af510f3ccdd4831"
+
+# Intercept all traffic to cultrhealth.com before it reaches Cloudflare Pages
+[[routes]]
+pattern = "cultrhealth.com/*"
+zone_name = "cultrhealth.com"
