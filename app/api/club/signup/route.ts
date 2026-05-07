@@ -440,9 +440,6 @@ async function sendCreatorOwnerNotification({
 
 const TEAM_EMAILS = [
   'david@cultrhealth.com',
-  'tony@cultrhealth.com',
-  'erik@cultrhealth.com',
-  'alex@cultrhealth.com',
 ]
 
 async function sendTeamSignupNotification({
