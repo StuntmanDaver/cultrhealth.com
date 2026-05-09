@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { sql } from '@vercel/postgres'
 import { verifyClubVisitorToken } from '@/lib/auth'
+import { isFirstPurchaseDiscountEligible } from '@/lib/club-discounts'
 import { JoinLandingClient } from './JoinLandingClient'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,7 @@ async function getServerMember(): Promise<{
   age?: number
   gender?: string
   address?: { street: string; city: string; state: string; zip: string }
+  firstPurchaseDiscountEligible?: boolean
 } | null> {
   try {
     const cookieStore = cookies()
@@ -56,6 +58,7 @@ async function getServerMember(): Promise<{
 
     const row = result.rows[0]
     const nameParts = (row.name || '').split(' ')
+    const firstPurchaseDiscountEligible = await isFirstPurchaseDiscountEligible(row.email)
 
     return {
       firstName: nameParts[0] || '',
@@ -72,6 +75,7 @@ async function getServerMember(): Promise<{
         state: row.address_state || '',
         zip: row.address_zip || '',
       } : undefined,
+      firstPurchaseDiscountEligible,
     }
   } catch (error) {
     // Non-blocking — if DB check fails, fall through to client-side recognition

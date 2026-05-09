@@ -7,6 +7,12 @@ import {
 } from 'lucide-react'
 import { JoinCartProvider, useJoinCart } from '@/lib/contexts/JoinCartContext'
 import { JOIN_THERAPY_SECTIONS, getAllJoinTherapies, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, type JoinTherapy, type JoinTherapySection } from '@/lib/config/join-therapies'
+import {
+  FIRST_PURCHASE_DISCOUNT_CODE,
+  FIRST_PURCHASE_DISCOUNT_LABEL,
+  FIRST_PURCHASE_DISCOUNT_NOTICE,
+  FIRST_PURCHASE_DISCOUNT_PERCENT,
+} from '@/lib/config/first-purchase-discount'
 import { parseCookieJson } from '@/lib/utils'
 
 type StockData = Record<string, { status: string; quantity: number | null }>
@@ -175,6 +181,7 @@ interface ServerMember {
   age?: number
   gender?: string
   address?: { street: string; city: string; state: string; zip: string }
+  firstPurchaseDiscountEligible?: boolean
 }
 
 export function JoinLandingClient({ serverMember }: { serverMember?: ServerMember | null }) {
@@ -204,6 +211,7 @@ interface ClubMember {
     state: string
     zip: string
   }
+  firstPurchaseDiscountEligible?: boolean
 }
 
 interface ClubMemberSession {
@@ -308,6 +316,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
         gender: serverMember.gender as ClubMember['gender'] || undefined,
         age: serverMember.age || undefined,
         address: serverMember.address,
+        firstPurchaseDiscountEligible: serverMember.firstPurchaseDiscountEligible === true,
       }
       setMember(memberData)
       setShowSignup(false)
@@ -320,7 +329,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
     try {
       // --- Priority 2: Localhost dev bypass ---
       if (window.location.hostname === 'localhost') {
-        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products', gender: 'male', age: 30 })
+        setMember({ firstName: 'Dev', lastName: 'User', email: 'dev@test.com', phone: '555-0000', socialHandle: '', signupType: 'products', gender: 'male', age: 30, firstPurchaseDiscountEligible: true })
         setShowSignup(false)
         setMemberCheckDone(true)
         return
@@ -354,6 +363,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
               gender: data.member.gender || undefined,
               age: data.member.age || undefined,
               address: data.member.address,
+              firstPurchaseDiscountEligible: data.member.firstPurchaseDiscountEligible === true,
             }
             setMember(m)
             setShowSignup(false)
@@ -418,6 +428,7 @@ function JoinLandingInner({ serverMember }: { serverMember: ServerMember | null 
   const handleOrderSubmitted = useCallback(() => {
     setOrderSubmitted(true)
     setShowMobileCart(false)
+    setMember((current) => current ? { ...current, firstPurchaseDiscountEligible: false } : current)
     // Keep member data — don't force re-auth on next visit
     localStorage.setItem('cultr_club_has_ordered', '1')
   }, [])
@@ -917,6 +928,7 @@ function SignupModal({ onComplete, onExistingMemberDetected, onSignInInstead, vi
         gender,
         signupType,
         address,
+        firstPurchaseDiscountEligible: data.firstPurchaseDiscountEligible !== false,
       })
     } catch { setError('Network error.'); setLoading(false) }
   }
@@ -1136,13 +1148,24 @@ function LoginModal({ initialEmail = '', onComplete, onSignUpInstead }: { initia
 // CART SUMMARY PANEL
 // =============================================
 
+type AppliedCoupon = {
+  code: string
+  discount: number
+  label: string
+  isCreatorCode?: boolean
+  noBundleStack?: boolean
+  creatorName?: string
+  creatorId?: string
+  applicableTherapyIds?: string[]
+}
+
 function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }: { member: ClubMember | null; onOrderSubmitted: () => void; onTrackEvent?: (eventType: string, eventData?: Record<string, unknown>) => void; stockData?: StockData }) {
   const cart = useJoinCart()
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [couponInput, setCouponInput] = useState('')
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string; isCreatorCode?: boolean; noBundleStack?: boolean; creatorName?: string; creatorId?: string; applicableTherapyIds?: string[] } | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null)
   const [couponError, setCouponError] = useState('')
   const [couponApplying, setCouponApplying] = useState(false)
 
@@ -1155,6 +1178,20 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
   const bacWaterUpgradeQty = Math.min(4, bacWaterMaxQty)
   const showShippingWarning = isBacWaterOnly && bacWaterQty < 4 && bacWaterQty < bacWaterMaxQty
   const joinCouponPolicy = getJoinCouponPolicy(cart.items)
+  const autoFirstPurchaseDiscount =
+    !appliedCoupon &&
+    member?.firstPurchaseDiscountEligible === true &&
+    joinCouponPolicy.couponAllowed &&
+    cart.getCartTotal() > 0
+  const checkoutDiscount: AppliedCoupon | null = appliedCoupon || (
+    autoFirstPurchaseDiscount
+      ? {
+          code: FIRST_PURCHASE_DISCOUNT_CODE,
+          discount: FIRST_PURCHASE_DISCOUNT_PERCENT,
+          label: FIRST_PURCHASE_DISCOUNT_LABEL,
+        }
+      : null
+  )
 
   useEffect(() => {
     if (appliedCoupon && !joinCouponPolicy.couponAllowed) {
@@ -1229,7 +1266,7 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
     }
     const cartItems = cart.items.map((item) => ({ therapyId: item.therapyId, name: item.name, price: item.price, pricingNote: item.pricingNote, note: item.note, quantity: item.quantity }))
     // Track begin_checkout
-    onTrackEvent?.('begin_checkout', { itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null })
+    onTrackEvent?.('begin_checkout', { itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null, automaticDiscountCode: autoFirstPurchaseDiscount ? FIRST_PURCHASE_DISCOUNT_CODE : null })
     try {
       const res = await fetch('/api/club/orders', {
         method: 'POST',
@@ -1245,7 +1282,7 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Failed to submit order.'); setSubmitting(false); return }
       // Track order_submitted
-      onTrackEvent?.('order_submitted', { orderNumber: data.orderNumber, itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null })
+      onTrackEvent?.('order_submitted', { orderNumber: data.orderNumber, itemCount: cartItems.length, items: cartItems.map((i) => i.name), couponCode: appliedCoupon?.code || null, automaticDiscountCode: autoFirstPurchaseDiscount ? FIRST_PURCHASE_DISCOUNT_CODE : null })
       cart.clearCart()
       onOrderSubmitted()
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -1314,22 +1351,35 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
                 )}
               </div>
             ) : (
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={couponInput}
-                  onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError('') }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
-                  placeholder="Coupon code"
-                  className="flex-1 min-w-0 px-3 py-2 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40 uppercase"
-                />
-                <button
-                  onClick={handleApplyCoupon}
-                  disabled={!couponInput.trim() || couponApplying}
-                  className="px-4 py-2 bg-brand-primary text-brand-cream text-sm font-medium rounded-xl hover:bg-brand-primaryHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
-                >
-                  {couponApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
-                </button>
+              <div className="space-y-2.5">
+                {autoFirstPurchaseDiscount && (
+                  <div className="rounded-xl border border-green-200 bg-green-50 px-3 py-2.5">
+                    <div className="flex items-start gap-2 text-green-700">
+                      <Tag className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium">{FIRST_PURCHASE_DISCOUNT_NOTICE}</p>
+                        <p className="mt-0.5 text-xs text-green-600">It will not stack with another coupon code.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => { setCouponInput(e.target.value.toUpperCase()); setCouponError('') }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                    placeholder="Coupon code"
+                    className="flex-1 min-w-0 px-3 py-2 bg-brand-cream border border-brand-secondary/12 rounded-xl focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 text-sm text-brand-primary placeholder:text-brand-secondary/40 uppercase"
+                  />
+                  <button
+                    onClick={handleApplyCoupon}
+                    disabled={!couponInput.trim() || couponApplying}
+                    className="px-4 py-2 bg-brand-primary text-brand-cream text-sm font-medium rounded-xl hover:bg-brand-primaryHover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {couponApplying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
+                  </button>
+                </div>
               </div>
             )}
             {couponError && <p className="text-xs text-red-500 mt-1.5 pl-1">{couponError}</p>}
@@ -1339,19 +1389,19 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
           <div className="pt-2 pb-4">
             {(() => {
               const rawSubtotal = cart.getCartTotal()
-              const bundleDisc = (appliedCoupon?.code === 'OWNER' || appliedCoupon?.noBundleStack || joinCouponPolicy.forceNoBundleStack) ? 0 : cart.getBundleDiscount()
+              const bundleDisc = (checkoutDiscount?.code === 'OWNER' || checkoutDiscount?.noBundleStack || joinCouponPolicy.forceNoBundleStack) ? 0 : cart.getBundleDiscount()
               const subtotalAfterBundle = rawSubtotal - bundleDisc
-              // Product-specific coupons (e.g. RETA) only discount matching line items.
+              // Product-specific coupons only discount matching line items.
               let couponAmt = 0
-              if (appliedCoupon && subtotalAfterBundle > 0) {
-                if (appliedCoupon.applicableTherapyIds?.length) {
-                  const eligibleIds = new Set(appliedCoupon.applicableTherapyIds)
+              if (checkoutDiscount && subtotalAfterBundle > 0) {
+                if (checkoutDiscount.applicableTherapyIds?.length) {
+                  const eligibleIds = new Set(checkoutDiscount.applicableTherapyIds)
                   const eligibleSubtotal = cart.items.reduce((sum, item) => {
                     return item.price && eligibleIds.has(item.therapyId) ? sum + item.price * item.quantity : sum
                   }, 0)
-                  couponAmt = Math.round(eligibleSubtotal * appliedCoupon.discount) / 100
+                  couponAmt = Math.round(eligibleSubtotal * checkoutDiscount.discount) / 100
                 } else {
-                  couponAmt = Math.round(subtotalAfterBundle * appliedCoupon.discount) / 100
+                  couponAmt = Math.round(subtotalAfterBundle * checkoutDiscount.discount) / 100
                 }
               }
               const afterCoupon = subtotalAfterBundle - couponAmt
@@ -1370,9 +1420,9 @@ function CartSummaryPanel({ member, onOrderSubmitted, onTrackEvent, stockData }:
                       <span>&minus;${bundleDisc.toFixed(2)}</span>
                     </div>
                   )}
-                  {appliedCoupon && couponAmt > 0 && (
+                  {checkoutDiscount && couponAmt > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
-                      <span>{appliedCoupon.code} ({appliedCoupon.discount}% off)</span>
+                      <span>{checkoutDiscount.code === FIRST_PURCHASE_DISCOUNT_CODE ? FIRST_PURCHASE_DISCOUNT_LABEL : checkoutDiscount.code} ({checkoutDiscount.discount}% off)</span>
                       <span>&minus;${couponAmt.toFixed(2)}</span>
                     </div>
                   )}

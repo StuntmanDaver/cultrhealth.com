@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import { getSession, isProviderEmail } from '@/lib/auth'
 import { TAX_RATE_LABEL } from '@/lib/config/tax'
+import { FIRST_PURCHASE_DISCOUNT_CODE, FIRST_PURCHASE_DISCOUNT_LABEL } from '@/lib/config/first-purchase-discount'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { getAccessToken, findOrCreateCustomer, createInvoice, sendInvoice, getInvoiceLink } from '@/lib/quickbooks'
 
@@ -98,6 +99,11 @@ export async function POST(
     const subtotal = order.subtotal_usd ? Number(order.subtotal_usd) : 0
     const discountPercent = order.discount_percent ? Number(order.discount_percent) : 0
     const couponCode = order.coupon_code || undefined
+    const discountLabel = couponCode === FIRST_PURCHASE_DISCOUNT_CODE
+      ? FIRST_PURCHASE_DISCOUNT_LABEL
+      : couponCode
+        ? `Coupon ${couponCode}`
+        : undefined
 
     // Back-calculate pre-discount subtotal so confirmation email shows the discount breakdown
     let subtotalBeforeDiscount = subtotal
@@ -121,6 +127,7 @@ export async function POST(
       subtotalBeforeDiscount,
       couponDiscountAmount,
       couponCode,
+      discountLabel,
       discountPercent,
       taxAmount: taxAmountUsd,
       total: subtotal + taxAmountUsd,
@@ -143,7 +150,7 @@ export async function POST(
             order.items as OrderItem[],
             order.order_number,
             discountPercent,
-            couponCode,
+            discountLabel,
           )
           if (invoiceResult) {
             qbInvoiceId = invoiceResult.invoiceId
@@ -401,6 +408,7 @@ async function sendApprovalConfirmationToAdmin(data: {
   subtotalBeforeDiscount: number
   couponDiscountAmount: number
   couponCode?: string
+  discountLabel?: string
   discountPercent: number
   taxAmount: number
   total: number
@@ -464,7 +472,7 @@ async function sendApprovalConfirmationToAdmin(data: {
     <div style="margin-bottom: 24px; border-top: 2px solid #eee; padding-top: 12px;">
       ${data.couponDiscountAmount > 0 ? `
       <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotalBeforeDiscount.toFixed(2)}</p>
-      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.couponDiscountAmount.toFixed(2)}</p>
+      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">${escapeHtml(data.discountLabel || 'Discount')} (${data.discountPercent}% off): &minus;$${data.couponDiscountAmount.toFixed(2)}</p>
       ` : ''}
       ${data.taxAmount > 0 ? `
       ${data.couponDiscountAmount === 0 ? `<p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">Subtotal: $${data.subtotal.toFixed(2)}</p>` : ''}
@@ -498,6 +506,7 @@ async function sendApprovalEmailToCustomer(data: {
   subtotalBeforeDiscount: number
   couponDiscountAmount: number
   couponCode?: string
+  discountLabel?: string
   discountPercent: number
   taxAmount: number
   total: number
@@ -563,7 +572,7 @@ async function sendApprovalEmailToCustomer(data: {
             <span>Subtotal</span><span>$${data.subtotalBeforeDiscount.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A4542; margin-bottom: 4px;">
-            <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span style="color: #16a34a;">&minus;$${data.couponDiscountAmount.toFixed(2)}</span>
+            <span>${escapeHtml(data.discountLabel || 'Discount')} (${data.discountPercent}% off)</span><span style="color: #16a34a;">&minus;$${data.couponDiscountAmount.toFixed(2)}</span>
           </div>
           ` : ''}
           ${data.taxAmount > 0 ? `

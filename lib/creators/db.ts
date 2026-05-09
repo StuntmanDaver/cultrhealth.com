@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres'
 import { DatabaseError } from '@/lib/db'
+import { FIRST_PURCHASE_DISCOUNT_CODE } from '@/lib/config/first-purchase-discount'
 import type {
   Creator,
   CreatorStatus,
@@ -285,8 +286,8 @@ export async function getAllActiveCreators(limit = 200): Promise<Creator[]> {
 // AFFILIATE CODE CRUD
 // ===========================================
 
-// Reserved code names that cannot be used as affiliate codes (hardcoded in CLUB_COUPONS)
-const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'LOYALTY15', 'CULTR30'])
+// Reserved code names that cannot be used as affiliate codes (hardcoded/system coupons)
+const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'LOYALTY15', 'CULTR30', FIRST_PURCHASE_DISCOUNT_CODE])
 
 export async function createAffiliateCode(
   creatorId: string,

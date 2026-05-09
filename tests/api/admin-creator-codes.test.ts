@@ -45,6 +45,7 @@ vi.mock('@/lib/config/coupons', () => ({
     OWNER: { discount: 60, label: 'Owner Discount' },
     CULTR10: { discount: 10, label: 'Promo Code' },
   },
+  RESERVED_COUPON_CODES: new Set(['OWNER', 'CULTR10', 'NEWCUSTOMER10']),
 }))
 
 function createPostRequest(body: Record<string, unknown>) {

@@ -149,16 +149,9 @@ describe('club orders catalog sync', () => {
     expect(mockConnect).not.toHaveBeenCalled()
   })
 
-  it('rebuilds order items from the current join catalog before saving totals', async () => {
+  it('rebuilds order items from the current join catalog and applies the first-purchase discount', async () => {
     mockSql.mockResolvedValue({
-      rows: [
-        {
-          therapy_id: 'semaglutide',
-          therapy_name: 'Semaglutide — GLP1',
-          stock_status: 'in_stock',
-          stock_quantity: null,
-        },
-      ],
+      rows: [{ count: 0 }],
     })
 
     const mockQuery = vi.fn(async (query: string, params?: unknown[]) => {
@@ -228,7 +221,75 @@ describe('club orders catalog sync', () => {
         quantity: 1,
       },
     ])
+    expect(insertedParams[6]).toBe(202.5)
+    expect(insertedParams[10]).toBe('NEWCUSTOMER10')
+    expect(insertedParams[11]).toBe(10)
+    expect(insertedParams[16]).toBe(22.5)
+  })
+
+  it('does not apply the first-purchase discount when the customer already has an active order', async () => {
+    mockSql.mockResolvedValue({
+      rows: [{ count: 1 }],
+    })
+
+    const mockQuery = vi.fn(async (query: string) => {
+      if (query === 'BEGIN' || query === 'COMMIT') {
+        return { rows: [] }
+      }
+
+      if (query.includes('INSERT INTO club_members')) {
+        return { rows: [{ id: 'member_1' }] }
+      }
+
+      if (query.includes('INSERT INTO club_orders')) {
+        return { rows: [{ id: 'order_1' }] }
+      }
+
+      if (query.includes('UPDATE product_inventory')) {
+        return { rows: [{ therapy_name: 'Test', stock_quantity: 10 }], rowCount: 1 }
+      }
+
+      throw new Error(`Unexpected query: ${query}`)
+    })
+
+    mockConnect.mockResolvedValue({
+      query: mockQuery,
+      release: vi.fn(),
+    })
+
+    const { POST } = await import('@/app/api/club/orders/route')
+
+    const request = new Request('http://localhost:3000/api/club/orders', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', host: 'cultrhealth.com' },
+      body: JSON.stringify({
+        email: 'member@example.com',
+        name: 'Member Example',
+        items: [
+          {
+            therapyId: 'semaglutide',
+            name: 'Semaglutide — GLP1',
+            price: 225,
+            note: '5 MG | 3 ML · 2-3 month supply',
+            quantity: 1,
+          },
+        ],
+      }),
+    })
+
+    const response = await POST(request)
+
+    expect(response.status).toBe(200)
+
+    const orderInsertCall = mockQuery.mock.calls.find(
+      ([query]) => typeof query === 'string' && query.includes('INSERT INTO club_orders')
+    )
+    const insertedParams = orderInsertCall?.[1] as unknown[]
+
     expect(insertedParams[6]).toBe(225)
+    expect(insertedParams[10]).toBeNull()
+    expect(insertedParams[11]).toBeNull()
+    expect(insertedParams[16]).toBeNull()
   })
 
   it('rejects duplicate therapies in a club order payload', async () => {
@@ -552,6 +613,7 @@ describe('club orders catalog sync', () => {
     const insertedParams = orderInsertCall?.[1] as unknown[]
 
     expect(Number(insertedParams[6])).toBe(243)
+    expect(insertedParams[10]).toBe('CULTR10')
     expect(insertedParams[11]).toBe(10)
   })
 })

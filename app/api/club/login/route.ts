@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres'
 import { strictLimiter, rateLimitResponse } from '@/lib/rate-limit'
 import { createClubVisitorToken } from '@/lib/auth'
 import { getCookieDomain } from '@/lib/utils'
+import { isFirstPurchaseDiscountEligible } from '@/lib/club-discounts'
 
 function getClientIp(request: Request): string {
   return (
@@ -77,6 +78,7 @@ export async function POST(request: Request) {
       const nameParts = (member.name || '').split(' ')
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
+      const firstPurchaseDiscountEligible = await isFirstPurchaseDiscountEligible(normalizedEmail)
 
       const memberData = {
         firstName,
@@ -93,6 +95,7 @@ export async function POST(request: Request) {
           state: member.address_state || '',
           zip: member.address_zip || '',
         } : undefined,
+        firstPurchaseDiscountEligible,
       }
 
       const response = NextResponse.json(memberData, { status: 200 })

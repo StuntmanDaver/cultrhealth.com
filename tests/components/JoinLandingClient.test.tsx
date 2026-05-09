@@ -5,7 +5,11 @@ import { JoinLandingClient } from '@/app/join/JoinLandingClient'
 
 vi.mock('@/components/ui/apple-cards-carousel', () => ({
   Carousel: () => null,
-  Card: () => null,
+  Card: ({ card, onAdd }: { card: { title: string }; onAdd?: () => void }) => (
+    <button type="button" onClick={onAdd}>
+      Add {card.title}
+    </button>
+  ),
 }))
 
 type JsonResponse = {
@@ -252,5 +256,27 @@ describe('JoinLandingClient', () => {
     })
     expect(storedSession).not.toHaveProperty('phone')
     expect(storedSession).not.toHaveProperty('address')
+  })
+
+  it('notifies first-time customers that the checkout discount is automatic', async () => {
+    render(
+      <JoinLandingClient
+        serverMember={{
+          firstName: 'Taylor',
+          lastName: 'Member',
+          email: 'taylor@example.com',
+          phone: '555-222-3333',
+          socialHandle: '',
+          signupType: 'products',
+          firstPurchaseDiscountEligible: true,
+        }}
+      />
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Add Semaglutide/ }))
+
+    expect(screen.getByText("You're getting 10% off your first purchase for being a new customer.")).toBeInTheDocument()
+    expect(screen.getByText('It will not stack with another coupon code.')).toBeInTheDocument()
+    expect(screen.getByText('New customer discount (10% off)')).toBeInTheDocument()
   })
 })

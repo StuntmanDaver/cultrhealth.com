@@ -172,12 +172,13 @@ const nextConfig = {
         destination: '/members/:path*',
         permanent: true,
       },
-      // /join bare → /pricing (legacy route)
-      {
+      // /join bare → /pricing (legacy route). Keep local dev reachable for
+      // checkout QA while preserving the public production redirect.
+      ...(process.env.NODE_ENV === 'production' ? [{
         source: '/join',
         destination: '/pricing',
         permanent: true,
-      },
+      }] : []),
       // Blog/science removed for LegitScript compliance
       {
         source: '/science',

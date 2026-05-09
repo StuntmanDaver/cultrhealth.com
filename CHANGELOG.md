@@ -1,3 +1,25 @@
+## [2026-05-09] - New-customer first-purchase discount for club checkout
+
+### Added
+- **Automatic first-purchase discount** — New club checkout customers now receive an automatic 10% first-purchase discount when they have no active prior `club_orders` and no manual coupon code. The discount is applied server-side in `/api/club/orders`, persisted as `NEWCUSTOMER10`, and shown in checkout as "New customer discount".
+- **Customer-facing notice** — The join checkout cart now tells eligible customers: "You're getting 10% off your first purchase for being a new customer." It also states that the offer will not stack with another coupon code.
+- **Session/member eligibility hydration** — Signup, login, cookie recovery, and server member hydration now include `firstPurchaseDiscountEligible`, so returning customers only see the automatic discount when they are still eligible.
+
+### Changed
+- **Coupon precedence** — Any manually-entered coupon code suppresses the automatic first-purchase discount, even when the customer would otherwise qualify.
+- **Reserved system code** — `NEWCUSTOMER10` is reserved for internal automatic handling; it cannot be manually redeemed or created as a company/creator coupon.
+- **Email and invoice labeling** — Order confirmations, admin approval emails, approval confirmation emails, and QuickBooks invoice lines now label the offer as "New customer discount" instead of exposing the internal system code.
+- **Local QA** — The `/join` -> `/pricing` redirect now applies only in production builds so the club checkout page remains reachable at `http://localhost:3000/join` during local testing.
+
+### Verification
+- `npx vitest run tests/api/club-orders-catalog-sync.test.ts tests/components/JoinLandingClient.test.tsx tests/api/admin-creator-codes.test.ts tests/lib/coupons.test.ts tests/lib/quickbooks.test.ts tests/api/admin-club-order-approve-attribution.test.ts`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- Local Playwright smoke: opened `http://localhost:3000/join`, added the first therapy, and confirmed the first-purchase notice plus "New customer discount (10% off)" total line render.
+
+---
+
 ## [2026-05-02] - First-visit visitor tracking + creator signup hardening (staging)
 
 ### Added

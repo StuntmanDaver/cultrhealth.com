@@ -42,4 +42,14 @@ describe('validateCouponUnified', () => {
     })
     expect(mockGetCreatorById).not.toHaveBeenCalled()
   })
+
+  it('does not allow the automatic first-purchase discount code as a manual coupon', async () => {
+    const { validateCouponUnified } = await import('@/lib/config/coupons')
+
+    const result = await validateCouponUnified('NEWCUSTOMER10')
+
+    expect(result).toBeNull()
+    expect(mockGetAffiliateCodeByCode).not.toHaveBeenCalled()
+    expect(mockGetCreatorById).not.toHaveBeenCalled()
+  })
 })

@@ -10,6 +10,8 @@ import { parseAttributionCookie } from '@/lib/creators/attribution'
 import { CREATOR_NOTIFICATION_EMAILS } from '@/lib/config/creator-notification-emails'
 import { getCookieDomain } from '@/lib/utils'
 import { syncContactToMailchimp } from '@/lib/contacts'
+import { isFirstPurchaseDiscountEligible } from '@/lib/club-discounts'
+import { FIRST_PURCHASE_DISCOUNT_PERCENT } from '@/lib/config/first-purchase-discount'
 
 function hashIp(ip: string): string {
   return crypto.createHash('sha256').update(ip).digest('hex').slice(0, 16)
@@ -67,6 +69,7 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = email.trim().toLowerCase()
+    let firstPurchaseDiscountEligible = true
     const validSignupType = ['creator', 'membership', 'products'].includes(signupType) ? signupType : 'products'
     const memberAge = age && Number(age) >= 18 && Number(age) <= 120 ? Number(age) : null
     const memberGender = gender === 'male' || gender === 'female' ? gender : null
@@ -128,6 +131,7 @@ export async function POST(request: Request) {
           RETURNING id
         `
         memberId = result.rows[0]?.id
+        firstPurchaseDiscountEligible = await isFirstPurchaseDiscountEligible(normalizedEmail)
       }
     } catch (dbError) {
       // DB write is non-blocking — continue without it
@@ -151,6 +155,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       success: true,
       memberId,
+      firstPurchaseDiscountEligible,
     })
 
     const domain = getCookieDomain()
@@ -187,7 +192,7 @@ export async function POST(request: Request) {
       )
     } else {
       // Non-creator path: standard welcome email + team notification
-      sendClubWelcomeEmail(firstName.trim(), normalizedEmail).catch((err) =>
+      sendClubWelcomeEmail(firstName.trim(), normalizedEmail, firstPurchaseDiscountEligible).catch((err) =>
         console.error('[club/signup] welcome send failed:', describeError(err))
       )
       sendTeamSignupNotification({
@@ -521,7 +526,7 @@ async function sendTeamSignupNotification({
   })
 }
 
-async function sendClubWelcomeEmail(firstName: string, email: string) {
+async function sendClubWelcomeEmail(firstName: string, email: string, firstPurchaseDiscountEligible: boolean) {
   if (!process.env.RESEND_API_KEY) return
 
   const { Resend } = await import('resend')
@@ -543,6 +548,12 @@ async function sendClubWelcomeEmail(firstName: string, email: string) {
       <p style="text-align: center; color: #546E6B; margin: 0 0 28px; font-size: 14px; line-height: 1.6;">
         You now have access to browse our physician-supervised therapies and build your personalized wellness order.
       </p>
+      ${firstPurchaseDiscountEligible ? `
+      <div style="background: #F5F0E8; border: 1px solid #B7E4C7; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;">
+        <p style="margin: 0; color: #2A4542; font-weight: 700; font-size: 15px;">${FIRST_PURCHASE_DISCOUNT_PERCENT}% off your first purchase</p>
+        <p style="margin: 6px 0 0; color: #3A5956; font-size: 13px; line-height: 1.5;">Your new customer discount is applied automatically at checkout. It will not stack with another coupon code.</p>
+      </div>
+      ` : ''}
       <div style="background: #D8F3DC; border-radius: 12px; padding: 28px 20px; text-align: center; margin-bottom: 8px;">
         <p style="margin: 0 0 16px; font-weight: 600; color: #2A4542;">Browse &amp; Order Therapies</p>
         <a href="https://cultrhealth.com/pricing" style="display: inline-block; background-color: #2A4542; color: #FFFFFF; padding: 14px 32px; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 16px;">Browse Therapies</a>

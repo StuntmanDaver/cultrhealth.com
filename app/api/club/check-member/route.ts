@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres'
 import { cookies } from 'next/headers'
 import { strictLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
 import { verifyClubVisitorToken } from '@/lib/auth'
+import { isFirstPurchaseDiscountEligible } from '@/lib/club-discounts'
 
 /**
  * GET /api/club/check-member
@@ -93,6 +94,8 @@ export async function GET(request: Request) {
       })
     }
 
+    const firstPurchaseDiscountEligible = await isFirstPurchaseDiscountEligible(row.email)
+
     // Signed cookie lookups return full data after the token is verified.
     return NextResponse.json({
       member: {
@@ -110,6 +113,7 @@ export async function GET(request: Request) {
           state: row.address_state || '',
           zip: row.address_zip || '',
         } : undefined,
+        firstPurchaseDiscountEligible,
       },
       source: 'database',
     })

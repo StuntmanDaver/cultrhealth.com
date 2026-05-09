@@ -1,14 +1,20 @@
 import { NextResponse } from 'next/server'
-import { sql, db } from '@vercel/postgres'
+import { db } from '@vercel/postgres'
 import crypto from 'crypto'
 import { cookies } from 'next/headers'
 import { validateCouponUnified, type UnifiedCouponResult } from '@/lib/config/coupons'
 import { FL_TAX_RATE, calculateTaxDollars, TAX_RATE_LABEL } from '@/lib/config/tax'
 import { calculateBundleDiscount, BUNDLE_DISCOUNT_RATE, getJoinCouponPolicy, normalizeJoinCartItems } from '@/lib/config/join-therapies'
+import {
+  FIRST_PURCHASE_DISCOUNT_CODE,
+  FIRST_PURCHASE_DISCOUNT_LABEL,
+  FIRST_PURCHASE_DISCOUNT_PERCENT,
+} from '@/lib/config/first-purchase-discount'
 import { escapeHtml, brandedEmailHeader, brandedEmailFooter, EMAIL_FONT_IMPORT } from '@/lib/resend'
 import { resolveAttribution } from '@/lib/creators/attribution'
 import { syncContactToMailchimp } from '@/lib/contacts'
 import { formLimiter, rateLimitResponse } from '@/lib/rate-limit'
+import { getActiveClubOrderCount } from '@/lib/club-discounts'
 
 interface OrderItem {
   therapyId: string
@@ -51,9 +57,12 @@ export async function POST(request: Request) {
     }
     const requestHost = request.headers.get('host') || ''
 
+    const manualCouponCode = typeof couponCode === 'string' && couponCode.trim()
+      ? couponCode.trim().toUpperCase()
+      : null
+
     // Validate coupon server-side (checks both staff coupons and creator affiliate codes)
-    const couponResult: UnifiedCouponResult | null = couponCode ? await validateCouponUnified(couponCode) : null
-    const discountPercent = couponResult ? Math.floor(Number(couponResult.discount)) : 0
+    const couponResult: UnifiedCouponResult | null = manualCouponCode ? await validateCouponUnified(manualCouponCode) : null
 
     // Validation
     if (!email?.trim() || !name?.trim()) {
@@ -84,13 +93,29 @@ export async function POST(request: Request) {
     }
 
     const couponPolicy = getJoinCouponPolicy(orderItems)
-    if (couponCode && !couponPolicy.couponAllowed) {
+    if (manualCouponCode && !couponPolicy.couponAllowed) {
       return NextResponse.json({ error: couponPolicy.couponError }, { status: 400 })
     }
 
     // Stock is checked and decremented atomically inside the DB transaction below.
 
     const normalizedEmail = email.trim().toLowerCase()
+    const activeOrderCount = await getActiveClubOrderCount(normalizedEmail)
+    const firstPurchaseDiscountEligible =
+      !manualCouponCode &&
+      !couponResult &&
+      couponPolicy.couponAllowed &&
+      activeOrderCount === 0
+    const discountPercent = couponResult
+      ? Math.floor(Number(couponResult.discount))
+      : firstPurchaseDiscountEligible
+        ? FIRST_PURCHASE_DISCOUNT_PERCENT
+        : 0
+    const discountLabel = firstPurchaseDiscountEligible
+      ? FIRST_PURCHASE_DISCOUNT_LABEL
+      : manualCouponCode
+        ? `Coupon ${manualCouponCode}`
+        : null
 
     // Calculate subtotal (only items with prices)
     const rawSubtotal = orderItems.reduce((sum, item) => {
@@ -99,7 +124,7 @@ export async function POST(request: Request) {
     // Bundle discount: 10% off items whose bundleWith partner is in the cart
     // OWNER and noBundleStack coupons override bundle discount (they don't stack)
     const skipBundle =
-      couponCode?.trim().toUpperCase() === 'OWNER' ||
+      manualCouponCode === 'OWNER' ||
       couponResult?.noBundleStack ||
       couponPolicy.forceNoBundleStack
     const bundleDiscountAmount = skipBundle ? 0 : calculateBundleDiscount(orderItems)
@@ -133,7 +158,11 @@ export async function POST(request: Request) {
     }
 
     // Resolve attribution before the transaction (non-DB, non-fatal)
-    const appliedCouponCode = couponResult ? couponCode!.trim().toUpperCase() : null
+    const appliedCouponCode = couponResult
+      ? manualCouponCode
+      : firstPurchaseDiscountEligible
+        ? FIRST_PURCHASE_DISCOUNT_CODE
+        : null
     let attributedCreatorId: string | null = couponResult?.isCreatorCode ? couponResult.creatorId! : null
     let attributionMethod: string | null = couponResult?.isCreatorCode ? 'coupon_code' : null
     let cookieLinkId: string | undefined
@@ -148,7 +177,7 @@ export async function POST(request: Request) {
       const attrCookieValue = cookieStore.get('cultr_attribution')?.value
       const resolvedAttribution = await resolveAttribution({
         customerEmail: normalizedEmail,
-        couponCode: couponCode?.trim(),
+        couponCode: manualCouponCode,
         attributionCookie: attrCookieValue,
       })
       if (resolvedAttribution) {
@@ -375,7 +404,8 @@ export async function POST(request: Request) {
         subtotal,
         taxAmount,
         total,
-        couponCode: couponResult ? couponCode!.trim().toUpperCase() : undefined,
+        couponCode: appliedCouponCode || undefined,
+        discountLabel,
         discountPercent,
       })
       customerEmailSent = true
@@ -398,7 +428,8 @@ export async function POST(request: Request) {
         subtotal,
         taxAmount,
         total,
-        couponCode: couponResult ? couponCode!.trim().toUpperCase() : undefined,
+        couponCode: appliedCouponCode || undefined,
+        discountLabel,
         discountPercent,
         notes: notes || '',
         approvalToken,
@@ -469,6 +500,7 @@ async function sendOrderConfirmationToCustomer(data: {
   taxAmount: number
   total: number
   couponCode?: string
+  discountLabel?: string | null
   discountPercent: number
 }) {
   if (!process.env.RESEND_API_KEY) {
@@ -538,7 +570,7 @@ async function sendOrderConfirmationToCustomer(data: {
           ` : ''}
           ${data.discountAmount > 0 ? `
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #2A4542; margin-bottom: 4px;">
-            <span>Coupon (${escapeHtml(data.couponCode)} ${data.discountPercent}% off)</span><span style="color: #16a34a;">−$${data.discountAmount.toFixed(2)}</span>
+            <span>${escapeHtml(data.discountLabel || 'Discount')} (${data.discountPercent}% off)</span><span style="color: #16a34a;">−$${data.discountAmount.toFixed(2)}</span>
           </div>
           ` : ''}
           <div style="display: flex; justify-content: space-between; font-size: 14px; color: #7E8D8A; margin-bottom: 4px;">
@@ -583,6 +615,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
   taxAmount: number
   total: number
   couponCode?: string
+  discountLabel?: string | null
   discountPercent: number
   notes: string
   approvalToken: string
@@ -656,7 +689,7 @@ async function sendOrderApprovalRequestToAdmin(data: {
       <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Bundle Discount (${Math.round(BUNDLE_DISCOUNT_RATE * 100)}%): &minus;$${data.bundleDiscountAmount.toFixed(2)}</p>
       ` : ''}
       ${data.discountAmount > 0 ? `
-      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">Coupon ${escapeHtml(data.couponCode)} (${data.discountPercent}% off): &minus;$${data.discountAmount.toFixed(2)}</p>
+      <p style="text-align: right; color: #16a34a; font-size: 14px; margin: 0 0 4px;">${escapeHtml(data.discountLabel || 'Discount')} (${data.discountPercent}% off): &minus;$${data.discountAmount.toFixed(2)}</p>
       ` : ''}
       <p style="text-align: right; color: #3A5956; font-size: 14px; margin: 0 0 4px;">${TAX_RATE_LABEL}: $${data.taxAmount.toFixed(2)}</p>
       <p style="text-align: right; font-weight: 700; font-size: 16px; margin: 0;">Total: $${data.total.toFixed(2)}</p>

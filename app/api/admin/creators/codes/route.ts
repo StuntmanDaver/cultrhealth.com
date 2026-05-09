@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminAuth } from '@/lib/auth'
-import { CLUB_COUPONS } from '@/lib/config/coupons'
+import { RESERVED_COUPON_CODES } from '@/lib/config/coupons'
 import {
   createAffiliateCode,
   deactivateAffiliateCode,
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const normalizedCode = code.trim().toUpperCase()
 
-    if (Object.prototype.hasOwnProperty.call(CLUB_COUPONS, normalizedCode)) {
+    if (RESERVED_COUPON_CODES.has(normalizedCode)) {
       return NextResponse.json(
         { error: 'Code is reserved for built-in coupon handling and cannot be created in admin.' },
         { status: 409 }
