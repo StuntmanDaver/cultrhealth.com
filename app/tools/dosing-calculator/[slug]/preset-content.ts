@@ -94,7 +94,7 @@ export const PRESET_PAGES: PresetPageContent[] = [
           'Yes. The math is identical for brand-name and compounded Semaglutide — concentration is mass divided by volume regardless of source. Confirm your vial strength on the pharmacy label and use the calculator above. Compounded Semaglutide must be dispensed by a licensed 503A or 503B pharmacy under a valid prescription.',
       },
     ],
-    related: ['tirzepatide', 'retatrutide'],
+    related: ['tirzepatide'],
   },
   {
     slug: 'tirzepatide',
@@ -140,53 +140,7 @@ export const PRESET_PAGES: PresetPageContent[] = [
           'The calculator handles dose math for either compound, but switching protocols is a clinical decision your provider needs to make. Tirzepatide and Semaglutide are not interchangeable on a milligram basis — dosing equivalents depend on individual response. Talk to your prescriber before switching.',
       },
     ],
-    related: ['semaglutide', 'retatrutide'],
-  },
-  {
-    slug: 'retatrutide',
-    presetId: 'glp1-r3ta',
-    displayName: 'Retatrutide',
-    compound: 'GLP-1 / GIP / glucagon triple agonist',
-    categoryLabel: 'GLP-1',
-    title: 'Retatrutide Calculator | Reconstitution & Dose Tool',
-    metaDescription:
-      'Free Retatrutide dose calculator with U-100 syringe meter. Compute exact mL and units for the investigational triple-agonist from 1 mg through 12 mg weekly. Provider supervision required.',
-    subtitle: 'Conservative titration math for the investigational triple-agonist',
-    intro:
-      'Retatrutide is an investigational triple-agonist (GLP-1 / GIP / glucagon) under active clinical development. It is not yet FDA-approved and is only available through compounding pharmacies under a valid prescription. Dosing requires close provider supervision — start conservatively and titrate slowly. This calculator computes the exact draw volume and U-100 unit count for any vial size and bacteriostatic water combination.',
-    workedExample: {
-      vialMg: 20,
-      waterMl: 3,
-      doseLabel: '1 mg starting dose',
-      concentrationMgPerMl: 6.667,
-      doseMl: 0.15,
-      units: 15,
-      explanation:
-        'A 20 mg Retatrutide vial reconstituted with 3 mL of bacteriostatic water yields 6.67 mg/mL. A conservative 1 mg starting dose is 0.15 mL — 15 units on a U-100 insulin syringe. Subsequent steps to 2 mg, 4 mg, 8 mg, and 12 mg scale linearly: 30, 60, 120, and 180 units (split across multiple syringes above 100 units).',
-    },
-    faqs: [
-      {
-        question: 'Is Retatrutide FDA-approved?',
-        answer:
-          'No. Retatrutide remains under active clinical investigation and is not FDA-approved for any indication. It is available only through compounding pharmacies under a valid prescription from a licensed provider, with the understanding that long-term safety and efficacy data are still being collected.',
-      },
-      {
-        question: 'What is the typical Retatrutide titration schedule?',
-        answer:
-          'Most clinical-trial protocols start at 1 mg or 2 mg weekly and titrate up monthly to 4, 8, and 12 mg as tolerated. Real-world prescriber protocols are often more conservative, with longer intervals between titration steps. Always follow your provider\'s specific schedule.',
-      },
-      {
-        question: 'How long is reconstituted Retatrutide stable?',
-        answer:
-          'Reconstituted Retatrutide stability data from compounding pharmacies typically supports 28 days refrigerated at 36–46°F (2–8°C). Follow the beyond-use date on your pharmacy label and inspect for clarity before each injection.',
-      },
-      {
-        question: 'Should I take Retatrutide without provider supervision?',
-        answer:
-          'No. Retatrutide is investigational, requires a prescription, and has a side-effect profile that includes the same nausea, GI distress, and gallbladder risks as approved GLP-1s — plus added uncertainty from the glucagon component. CULTR Health connects you with licensed providers who can determine whether Retatrutide is appropriate for you.',
-      },
-    ],
-    related: ['semaglutide', 'tirzepatide'],
+    related: ['semaglutide'],
   },
 
   // ─── Repair ────────────────────────────────────────────────────────

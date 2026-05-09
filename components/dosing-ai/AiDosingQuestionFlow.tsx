@@ -143,7 +143,7 @@ export function AiDosingQuestionFlow({
         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <label className="block text-sm font-semibold text-cultr-text">Prior GLP-1 History</label>
           <div className="flex flex-col gap-3">
-            {['never_used', 'semaglutide', 'tirzepatide', 'retatrutide', 'unknown'].map((option) => (
+            {['never_used', 'semaglutide', 'tirzepatide', 'unknown'].map((option) => (
               <Button
                 key={option}
                 variant={data.priorGlp1Details === option ? 'primary' : 'secondary'}

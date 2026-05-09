@@ -123,7 +123,6 @@ export const CALCULATOR_FAQS: CalculatorFaqItem[] = [
 export const CROSS_SELL_PEPTIDES: CrossSellPeptide[] = [
   { id: 'glp1-sema',         slug: 'semaglutide',            name: 'Semaglutide',              compound: 'GLP-1 agonist',                 typicalDose: '0.25–2.4 mg weekly',  category: 'GLP-1' },
   { id: 'glp1-tirz',         slug: 'tirzepatide',            name: 'Tirzepatide',              compound: 'GLP-1 / GIP agonist',           typicalDose: '2.5–15 mg weekly',    category: 'GLP-1' },
-  { id: 'glp1-r3ta',         slug: 'retatrutide',            name: 'Retatrutide',              compound: 'Triple agonist',                typicalDose: '1–12 mg weekly',      category: 'GLP-1' },
   { id: 'repair-bpc157',     slug: 'bpc-157',                name: 'BPC-157',                  compound: 'Body Protection Compound',      typicalDose: '250 mcg 1–2× daily',  category: 'Repair' },
   { id: 'repair-tb500',      slug: 'tb-500',                 name: 'TB-500',                   compound: 'Thymosin Beta-4 fragment',      typicalDose: '2.5 mg twice weekly', category: 'Repair' },
   { id: 'repair-ghkcu',      slug: 'ghk-cu',                 name: 'GHK-Cu',                   compound: 'Copper tripeptide',             typicalDose: '1 mg daily',          category: 'Repair' },

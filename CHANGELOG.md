@@ -1,3 +1,24 @@
+## [2026-05-09] - Remove blocked therapy from site
+
+### Removed
+- Removed the blocked weight-loss therapy from the join catalog, coupon handling, Asher/checkout mappings, dosing calculator presets, dosing calculator SEO/static pages, AI dosing options, protocol engine config, member-library markdown, protocol template recommendations, media kit generation, inventory seed migration, and public assets.
+- Deleted public product images, therapy image, COA PDF, and generated invoice PDF artifacts that exposed the removed therapy.
+
+### Changed
+- Replaced existing metabolic recommendation anchors with Tirzepatide/TIRZ-B3 where a replacement was needed.
+- Sanitized historical docs, changelog entries, generated invoice HTML files, and planning notes so the removed therapy is not identifiable by its prior names, shorthand aliases, coupon code, preset id, or receptor shorthand.
+- Added persistent project-memory guidance in `AGENTS.md` and `CLAUDE.md` to prevent reintroducing the blocked removed therapy or aliases.
+
+### Verification
+- Exact-name and legacy-alias `rg` sweep across the repo, excluding generated dependency and build folders.
+- Indirect receptor-shorthand and descriptor `rg` sweep across the repo, excluding generated dependency and build folders.
+- Filename sweep for former product names and aliases, excluding dependency and build folders.
+- PDF text sweep with `pdftotext` across repo PDFs for the blocked removed therapy names and aliases.
+- `npx vitest run tests/lib/join-therapies.test.ts tests/lib/dosing-engine/engine.test.ts tests/lib/protocol-templates.test.ts`
+- `npx tsc --noEmit --pretty false`
+
+---
+
 ## [2026-05-09] - New-customer first-purchase discount for club checkout
 
 ### Added
@@ -73,7 +94,7 @@
 
 ### Added
 - **Shared `<DosingCalculator />` component** at `components/dosing-calculator/` — single implementation now backs `/tools/dosing-calculator` (public), `/members/dosing-calculator`, and `/creators/portal/dosing-calculator`. Eliminates drift between the three ~600-line duplicates.
-- **Two-tier CULTR therapy presets** (`lib/config/calculator-presets.ts`, `TherapyPresetPicker.tsx`): categories GLP-1, Longevity, Growth, Repair, Blends, Sexual Wellness, Custom → specific therapies (TIRZ/B3, SEMA/B6, R3TA, NAD+, Sermorelin, TESA/IPA, CJC/IPA, BPC-157, TB-500, GHK-Cu, Glutathione, PT-141, Oxytocin). Picking a therapy prefills vial, water, dose, unit, frequency, and cycle length.
+- **Two-tier CULTR therapy presets** (`lib/config/calculator-presets.ts`, `TherapyPresetPicker.tsx`): categories GLP-1, Longevity, Growth, Repair, Blends, Sexual Wellness, Custom → specific therapies (TIRZ/B3, SEMA/B6, removed therapy, NAD+, Sermorelin, TESA/IPA, CJC/IPA, BPC-157, TB-500, GHK-Cu, Glutathione, PT-141, Oxytocin). Picking a therapy prefills vial, water, dose, unit, frequency, and cycle length.
 - **Explicit capacity error banner** (`CapacityWarningBanner.tsx`): full-width red alert above the syringe meter whenever draw volume exceeds syringe capacity, with exact mL required, exact mL available, and the next-larger syringe suggestion. Amber near-limit notice at 70–90 % of capacity.
 - **Enhanced `SyringeMeter`** with three-zone coloring (sage ≤70 %, amber 70–90 %, red >90 %), centered percentage overlay, fill-vs-capacity caption, `prefers-reduced-motion` support, and a defensive tick cap (~120) so custom syringe sizes can never render thousands of SVG elements.
 - **Weight-based dose mode** (`WeightBasedDoseCard.tsx`): collapsible Advanced accordion with lb/kg + mcg/kg / mg/kg toggles and live preview; Apply writes the computed dose into the main dose field.
@@ -603,7 +624,7 @@
 
 ### Legacy join catalog restored
 - Restored `lib/config/join-therapies.ts` to the exact legacy lineup that matched the previously restored `join.cultrhealth.com` site.
-- Replaced the Apr 2026 curated join catalog entries (`sermorelin`, `lipo-c`, `pt-141`, `oxytocin`) with the legacy therapies (`retatrutide`, `ghk-cu`, `tesa-ipa`, `cjc1295-ipa`, `semax-selank`, `bpc157-tb500`, `melanotan-2`, `igf1-lr3`) and restored legacy pricing, notes, ordering, and bundle pairing.
+- Replaced the Apr 2026 curated join catalog entries (`sermorelin`, `lipo-c`, `pt-141`, `oxytocin`) with the legacy therapies (`removed-therapy`, `ghk-cu`, `tesa-ipa`, `cjc1295-ipa`, `semax-selank`, `bpc157-tb500`, `melanotan-2`, `igf1-lr3`) and restored legacy pricing, notes, ordering, and bundle pairing.
 - Kept the existing restored join host routing, persistence, attribution, and admin sync fixes unchanged.
 
 ### Regression coverage
@@ -677,7 +698,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - All 11 therapy descriptions qualified with "not FDA-approved" and clinical trial citations
 - Semaglutide: STEP 1 trial citation, "14.9% body weight reduction"
 - Tirzepatide: SURMOUNT-1 trial citation, "up to 22.5% body weight reduction"
-- Retatrutide: flagged as "investigational", Phase 2 trial citation
+- removed therapy: flagged as "investigational", Phase 2 trial citation
 - Melanotan 2: flagged with "FDA has issued consumer warnings"
 - Removed superlatives: "most potent", "powerhouse", "clinically proven", "maximum results"
 - Fixed "FDA-studied" language on Tesamorelin to accurate regulatory disclosure
@@ -874,7 +895,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - Product detail section uses mint/sage (`grad-mint`) color palette with description, benefits, and disclaimer per therapy
 - "Best For" section removed from checkout page
 - Blood test kit + doctor visit grouped under "Onboarding Fee" subheading in order summary
-- Each Core therapy page (Semaglutide, Tirzepatide, Retatrutide) shows individualized content
+- Each Core therapy page (Semaglutide, Tirzepatide, removed therapy) shows individualized content
 
 ### Payment Methods
 - Klarna and Affirm removed from payment selector and all checkout handler code
@@ -1148,7 +1169,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - **CULTR Core** — Price changed from $199 to $149* (starting price, varies by therapy)
 - **CULTR Concierge** — Renamed from "CULTR Curated", price changed from $1,099 to $1,049
 - **All paid plans** — Now begin with an initial 2-month clinical protocol (minimum commitment)
-- **Core therapy options** — Semaglutide ($149/mo), Tirzepatide ($199/mo), Retatrutide ($239/mo)
+- **Core therapy options** — Semaglutide ($149/mo), Tirzepatide ($199/mo), removed therapy ($239/mo)
 - **Concierge** — Blood test + doctor visit now included (not add-on)
 
 ### Expandable Core Pricing Card
@@ -1190,7 +1211,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - `app/creators/portal/resources/_data/` — 4 files: cancel language, pricing
 - `app/science/page.tsx`, `scripts/generate-media-kit.tsx` — Name + price updates
 - `app/admin/members/MembersClient.tsx`, `components/portal/KitEmptyState.tsx` — Price updates
-- `public/images/therapies/` — 3 vial images added (semaglutide, tirzepatide, retatrutide)
+- `public/images/therapies/` — 3 vial images added (semaglutide, tirzepatide, removed-therapy)
 
 ---
 
@@ -2116,7 +2137,7 @@ Replaced the CSS aurora animation background with an animated MeshGradient WebGL
 Enhanced the intake form medication selector with inline descriptions for all 10 medications and image preview on hover (desktop) / tap (mobile) for better product visibility.
 
 ### Medication Descriptions
-- Added concise, patient-facing descriptions to all 10 medications (Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2)
+- Added concise, patient-facing descriptions to all 10 medications (Semaglutide, Tirzepatide, removed therapy, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2)
 - Descriptions rendered inline below dosage text (`text-xs text-forest-muted/80`)
 
 ### Image Hover Expansion
@@ -2182,9 +2203,9 @@ Replaced 8 product vial images with new branded CULTR photos across join page, i
 ### Intake Form Medication Mapping (Critical Bug Fix)
 - **Root cause:** MedicationSelector used IDs like `semaglutide` but `PRODUCT_TO_ASHER_MED_MAP` only had catalog IDs like `glp1-semaglutide` — only `ghk-cu` and `nad-plus` actually mapped
 - Added all 10 MedicationSelector IDs to `lib/config/product-to-asher-mapping.ts`
-- Added 4 new MEDICATION_OPTIONS (R3TA, TESA/IPA, CJC1295/IPA, Melanotan 2) using Asher Med `'Other'` type in `lib/config/asher-med.ts`
+- Added 4 new MEDICATION_OPTIONS (removed therapy, TESA/IPA, CJC1295/IPA, Melanotan 2) using Asher Med `'Other'` type in `lib/config/asher-med.ts`
 - Fixed `ReviewSummary.tsx` to use `selectedMedications` (plural array) instead of `selectedMedication` (singular)
-- Fixed GLP-1 detection in `IntakeFormClient.tsx` to include R3TA
+- Fixed GLP-1 detection in `IntakeFormClient.tsx` to include removed therapy
 
 ### Modified (7 files)
 - `lib/config/product-to-asher-mapping.ts`, `lib/config/asher-med.ts`
@@ -2304,8 +2325,8 @@ Synced 29 missing environment variables (including POSTGRES_URL) to the active `
 The active Vercel project (`cultrhealth-com`) only had 7 of 36 required env vars. Code guards DB writes with `if (process.env.POSTGRES_URL)` which silently skipped all inserts.
 
 ### Data Recovered
-- **Allison Cooper** (marycooper2004@gmail.com) — 2 orders: R3TA+GHK-CU ($388), R3TA ($272)
-- **Madison** (maddiegacree@gmail.com) — 1 signup + 1 order: R3TA ($272)
+- **Allison Cooper** (marycooper2004@gmail.com) — 2 orders: removed therapy+GHK-CU ($388), removed therapy ($272)
+- **Madison** (maddiegacree@gmail.com) — 1 signup + 1 order: removed therapy ($272)
 - All orders status `pending_approval` with CULTRFAM 20% coupon
 
 ### Dead Code Removed (143 files)
@@ -2428,7 +2449,7 @@ Simplified intake form gender options and replaced dynamic medication selector w
 
 ### Modified (2 files)
 - `components/intake/PersonalInfoForm.tsx` — Removed "Other/Prefer not to say" gender option (Male/Female only)
-- `components/intake/MedicationSelector.tsx` — Replaced dynamic product catalog with flat list of 10 specific medications: Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2
+- `components/intake/MedicationSelector.tsx` — Replaced dynamic product catalog with flat list of 10 specific medications: Semaglutide, Tirzepatide, removed therapy, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2
 
 ---
 
@@ -2550,7 +2571,7 @@ Completed comprehensive environment variable audit for the CULTR Club email flow
 ## [2026-03-05] - Join Page Mobile Responsive Design Fixes
 
 ### Summary
-Fixed three critical mobile layout issues on the join landing page (`join.cultrhealth.com`): hero image now shows full CULTR watermark without cropping, hero text moved from image overlay to dedicated section, and featured R3TA product card image now displays centered and enlarged on mobile for parity with other product cards.
+Fixed three critical mobile layout issues on the join landing page (`join.cultrhealth.com`): hero image now shows full CULTR watermark without cropping, hero text moved from image overlay to dedicated section, and featured removed therapy product card image now displays centered and enlarged on mobile for parity with other product cards.
 
 ### Changed
 
@@ -2567,13 +2588,13 @@ Fixed three critical mobile layout issues on the join landing page (`join.cultrh
   - Preserved scroll reveal animations for visual consistency
 - **Result** — Clean typographic hierarchy; text no longer competes visually with hero image
 
-#### Featured Card (R3TA) Image Display
+#### Featured Card (removed therapy) Image Display
 - **Image container responsiveness** — Changed from fixed small dimensions (`w-32 h-32 md:w-40 md:h-40`) to:
   - Mobile: `w-full flex items-center justify-center py-10` (centered, full-width)
   - Desktop: `md:w-40 md:h-40 md:flex-shrink-0` (reverts to side-by-side layout)
 - **Image render size** — Increased from 160px to 220px on mobile
 - **Image optimization** — Added `unoptimized` flag for compatibility
-- **Result** — R3TA product image displays at visual parity with non-featured cards on mobile
+- **Result** — removed therapy product image displays at visual parity with non-featured cards on mobile
 
 ### Technical Details
 - **File modified** — `app/join/JoinLandingClient.tsx`

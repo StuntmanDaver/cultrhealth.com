@@ -87,20 +87,6 @@ export const THERAPY_PRESETS: TherapyPreset[] = [
     therapyLengthWeeks: 12,
     syringeMl: 0.3,
   },
-  {
-    id: 'glp1-r3ta',
-    category: 'glp1',
-    label: 'R3TA',
-    compound: 'Retatrutide',
-    summary: 'Investigational triple-agonist. Conservative titration from 1 mg weekly; provider supervision required.',
-    vialMg: 20,
-    waterMl: 3,
-    dose: 1,
-    doseUnit: 'mg',
-    frequency: 'weekly',
-    therapyLengthWeeks: 12,
-    syringeMl: 0.3,
-  },
 
   // ── Longevity ─────────────────────────────────────────────────────
   {

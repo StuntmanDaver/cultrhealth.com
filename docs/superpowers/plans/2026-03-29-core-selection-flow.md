@@ -18,7 +18,7 @@
 |---|---|---|
 | `public/images/therapies/semaglutide.png` | Create | Semaglutide vial photo |
 | `public/images/therapies/tirzepatide.png` | Create | Tirzepatide vial photo |
-| `public/images/therapies/retatrutide.png` | Create | Retatrutide vial photo |
+| `public/images/therapies/removed-therapy.png` | Create | removed therapy vial photo |
 | `lib/config/plans.ts` | Modify | CORE_THERAPIES, plan prices/names/features/disclaimers |
 | `components/site/PricingCard.tsx` | Modify | Expand/collapse Core card, therapy selection cards, disclaimer |
 | `app/join/[tier]/page.tsx` | Modify | Order summary redesign, consent checkbox, dynamic Core totals |
@@ -40,7 +40,7 @@
 **Files:**
 - Create: `public/images/therapies/semaglutide.png`
 - Create: `public/images/therapies/tirzepatide.png`
-- Create: `public/images/therapies/retatrutide.png`
+- Create: `public/images/therapies/removed-therapy.png`
 
 - [ ] **Step 1: Create the therapies directory and copy images**
 
@@ -48,7 +48,7 @@
 mkdir -p public/images/therapies
 cp ~/Downloads/Semaglutide\ —\ GLP1.png public/images/therapies/semaglutide.png
 cp ~/Downloads/Tirzepatide\ —\ GLP1\:GIP.png public/images/therapies/tirzepatide.png
-cp ~/Downloads/R3TA\ —\ GLP1\:GIP\:GCG.png public/images/therapies/retatrutide.png
+cp ~/Downloads/removed therapy\ —\ GLP1\:GIP\:GCG.png public/images/therapies/removed-therapy.png
 ```
 
 - [ ] **Step 2: Verify images exist**
@@ -88,7 +88,7 @@ export type CoreTherapy = {
 export const CORE_THERAPIES: CoreTherapy[] = [
   { slug: 'semaglutide', name: 'Semaglutide', price: 149, image: '/images/therapies/semaglutide.png' },
   { slug: 'tirzepatide', name: 'Tirzepatide', price: 199, image: '/images/therapies/tirzepatide.png' },
-  { slug: 'retatrutide', name: 'Retatrutide', price: 239, image: '/images/therapies/retatrutide.png' },
+  { slug: 'removed-therapy', name: 'removed therapy', price: 239, image: '/images/therapies/removed-therapy.png' },
 ];
 ```
 
@@ -645,7 +645,7 @@ Open `http://localhost:3000/join/core?therapy=semaglutide` and verify:
 
 Also verify:
 - `/join/core?therapy=tirzepatide` → $608
-- `/join/core?therapy=retatrutide` → $688
+- `/join/core?therapy=removed-therapy` → $688
 - `/join/catalyst` → $1,208
 - `/join/concierge` → $2,098 (blood test + doctor "included")
 - `/join/core` (no therapy param) → redirects to `/pricing`
@@ -997,7 +997,7 @@ Open in browser and check:
 - [ ] `/pricing` — FAQ: 6 new entries, no bare "cancel anytime"
 - [ ] `/join/core?therapy=semaglutide` — Total $508
 - [ ] `/join/core?therapy=tirzepatide` — Total $608
-- [ ] `/join/core?therapy=retatrutide` — Total $688
+- [ ] `/join/core?therapy=removed-therapy` — Total $688
 - [ ] `/join/catalyst` — Total $1,208
 - [ ] `/join/concierge` — Total $2,098, labs+doctor "included"
 - [ ] `/join/core` (no therapy) — Redirects to /pricing

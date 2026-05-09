@@ -5,7 +5,6 @@ export const PRODUCT_TO_ASHER_MED_MAP: Record<string, string | null> = {
   // Intake form MedicationSelector IDs (curated 10-item list)
   'semaglutide': 'semaglutide',
   'tirzepatide': 'tirzepatide',
-  'r3ta': 'r3ta',
   'tesa-ipa': 'tesa-ipa',
   'cjc1295-ipa': 'cjc1295-ipa',
   'semax-selank': 'semax-selank',
@@ -16,7 +15,6 @@ export const PRODUCT_TO_ASHER_MED_MAP: Record<string, string | null> = {
   // GLP-1 Medications (product catalog IDs)
   'glp1-tirzepatide': 'tirzepatide',
   'glp1-semaglutide': 'semaglutide',
-  'glp1-retatrutide': null, // Not supported by Asher Med yet
   'glp1-cagrilintide': null, // Not supported
   'glp1-mz': null, // Not supported
   'glp1-sv': null, // Not supported

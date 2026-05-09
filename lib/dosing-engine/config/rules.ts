@@ -23,17 +23,6 @@ export const TITRATION_SCHEDULES: Record<string, TitrationSchedule> = {
     ],
     maintenanceDoseMg: 15.0,
   },
-  'retatrutide-example': {
-    id: 'retatrutide-example',
-    notes: 'Example phased algorithm for Retatrutide.',
-    steps: [
-      { month: 1, doseMg: 1.0, durationWeeks: 2 },
-      { month: 2, doseMg: 2.0, durationWeeks: 4 },
-      { month: 3, doseMg: 2.0, durationWeeks: 4 },
-      { month: 4, doseMg: 2.0, durationWeeks: 4 },
-    ],
-    maintenanceDoseMg: 2.0,
-  }
 };
 
 export const ELIGIBILITY_RULES: Record<string, EligibilityRule> = {
@@ -43,27 +32,5 @@ export const ELIGIBILITY_RULES: Record<string, EligibilityRule> = {
   },
   'tirzepatide': {
     productId: 'tirzepatide',
-  },
-  'retatrutide': {
-    productId: 'retatrutide',
-    weightBands: [
-      {
-        minWeightLb: 100,
-        maxWeightLb: 120,
-        escalateToProvider: true,
-      },
-      {
-        minWeightLb: 121,
-        maxWeightLb: 135,
-        escalateToProvider: false,
-        recommendedScheduleId: 'retatrutide-example',
-      },
-      {
-        minWeightLb: 136,
-        maxWeightLb: 999,
-        escalateToProvider: false,
-        recommendedScheduleId: 'retatrutide-example',
-      }
-    ]
   }
 };

@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS product_inventory (
 
 -- Seed all current join therapies as in_stock
 INSERT INTO product_inventory (therapy_id, therapy_name, stock_status) VALUES
-  ('retatrutide',   'R3TA — GLP1/GIP/GCG',  'in_stock'),
   ('semaglutide',   'Semaglutide — GLP1',    'in_stock'),
   ('tirzepatide',   'Tirzepatide — GLP1/GIP','in_stock'),
   ('ghk-cu',        'GHK-CU',                'in_stock'),

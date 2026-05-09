@@ -4,7 +4,7 @@ export type Sex = 'Male' | 'Female';
 
 export type Goal = 'weight_loss' | 'maintenance' | 'transition' | 'informational';
 
-export type PriorGlp1History = 'never_used' | 'semaglutide' | 'tirzepatide' | 'retatrutide' | 'unknown';
+export type PriorGlp1History = 'never_used' | 'semaglutide' | 'tirzepatide' | 'unknown';
 
 export interface UserIntakeResponse {
   sex: Sex;

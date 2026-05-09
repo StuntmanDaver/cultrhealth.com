@@ -3,7 +3,6 @@
 ## Quick Lookup by Purpose
 
 ### Fat Loss & Metabolism
-- **RTA** — Triple GLP-1/GIP/Glucagon agonist; most potent metabolic compound
 - **SEMA/B6** — GLP-1 receptor agonist (GLP1R; Gs-coupled GPCR); satiety + glucose control
 - **TIRZ/B3** — Dual GLP1R + GIPR agonist; enhanced metabolic flexibility
 - **Mazdutide** — Dual GLP1R + Glucagon receptor agonist; energy expenditure
@@ -115,7 +114,7 @@
 | Elamipretide (SS-31) | Morning (fasted) | Mitochondrial energy |
 | NAD+ | Morning | Cellular energy metabolism |
 | MOTS-c | Morning or pre-workout | Metabolic/exercise support |
-| RTA / SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
+| SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 *Best for growth hormone, repair, immune modulation, CNS calming*
@@ -286,17 +285,17 @@
 
 | Symptom | Foundation Supplements | Peptide |
 |---------|----------------------|---------|
-| Sugar cravings | Chromium, Inositol, Magnesium | RTA |
-| High appetite | Protein, Chromium, Inositol | RTA |
-| Binge eating | Magnesium, Chromium, Omega-3 | RTA |
-| Night cravings | Magnesium, Glycine, Chromium | RTA |
-| Weight gain | Vitamin D, Magnesium, Chromium | RTA |
-| Weight loss resistance | Zinc, Selenium, Iodine | RTA |
+| Sugar cravings | Chromium, Inositol, Magnesium | TIRZ/B3 |
+| High appetite | Protein, Chromium, Inositol | TIRZ/B3 |
+| Binge eating | Magnesium, Chromium, Omega-3 | TIRZ/B3 |
+| Night cravings | Magnesium, Glycine, Chromium | TIRZ/B3 |
+| Weight gain | Vitamin D, Magnesium, Chromium | TIRZ/B3 |
+| Weight loss resistance | Zinc, Selenium, Iodine | TIRZ/B3 |
 | Belly fat | Chromium, Omega-3, Magnesium | AOD-9604 |
 | Water retention | Potassium, Vitamin B6, Magnesium | CJC-1295 (No DAC) |
 | Slow metabolism | Iodine, Selenium, Zinc | MOTS-c |
-| Insulin resistance | Chromium, Magnesium, Alpha lipoic acid | RTA |
-| High triglycerides | Omega-3, Niacin B3, Magnesium | RTA |
+| Insulin resistance | Chromium, Magnesium, Alpha lipoic acid | TIRZ/B3 |
+| High triglycerides | Omega-3, Niacin B3, Magnesium | TIRZ/B3 |
 
 ### CARDIOVASCULAR & CIRCULATION
 

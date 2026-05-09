@@ -3,11 +3,10 @@ import { describe, expect, it } from 'vitest'
 import { getAllJoinTherapies, getJoinCouponPolicy, normalizeJoinCartItems } from '@/lib/config/join-therapies'
 
 describe('Join therapies configuration', () => {
-  it('matches the restored legacy join catalog', () => {
+  it('matches the current join catalog', () => {
     const therapyIds = getAllJoinTherapies().map((therapy) => therapy.id)
 
     expect(therapyIds).toEqual([
-      'retatrutide',
       'semaglutide',
       'tirzepatide',
       'ghk-cu',
@@ -24,18 +23,18 @@ describe('Join therapies configuration', () => {
     ])
   })
 
-  it('rebuilds representative cart items from the current legacy catalog data', () => {
+  it('rebuilds representative cart items from the current catalog data', () => {
     expect(
       normalizeJoinCartItems([
-        { therapyId: 'retatrutide', quantity: 1 },
+        { therapyId: 'semaglutide', quantity: 1 },
         { therapyId: 'bacteriostatic-water', quantity: 4 },
       ])
     ).toEqual([
       {
-        therapyId: 'retatrutide',
-        name: 'R3TA — GLP1/GIP/GCG',
-        price: 340,
-        note: '20 MG | 3 ML · 2-3 month supply',
+        therapyId: 'semaglutide',
+        name: 'Semaglutide — GLP1',
+        price: 225,
+        note: '5 MG | 3 ML · 2-3 month supply',
         quantity: 1,
       },
       {

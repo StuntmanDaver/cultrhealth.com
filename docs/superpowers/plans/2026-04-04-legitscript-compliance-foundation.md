@@ -71,11 +71,11 @@ export const FDA_STATUSES: Record<string, FDAStatusInfo> = {
     disclaimer:
       'Tirzepatide is the active ingredient in FDA-approved Mounjaro and Zepbound. CULTR Health offers compounded tirzepatide prepared by a licensed 503A pharmacy. Compounded medications are not FDA-approved.',
   },
-  r3ta: {
+  removed-therapy: {
     status: 'investigational',
     label: 'Investigational',
     disclaimer:
-      'Retatrutide (R3TA) is an investigational compound currently in clinical trials. It is not FDA-approved. Availability is subject to regulatory status and provider determination of clinical appropriateness.',
+      'removed therapy (removed therapy) is an investigational compound currently in clinical trials. It is not FDA-approved. Availability is subject to regulatory status and provider determination of clinical appropriateness.',
   },
   'ghk-cu': {
     status: 'not-fda-approved',
@@ -154,8 +154,8 @@ export const CLINICAL_CITATIONS: Record<string, string> = {
     'Wilding JPH, et al. Once-Weekly Semaglutide in Adults with Overweight or Obesity. N Engl J Med. 2021;384(11):989-1002. (STEP 1 trial)',
   'tirzepatide-weight-loss':
     'Jastreboff AM, et al. Tirzepatide Once Weekly for the Treatment of Obesity. N Engl J Med. 2022;387(3):205-216. (SURMOUNT-1 trial)',
-  'retatrutide-weight-loss':
-    'Jastreboff AM, et al. Triple-Hormone-Receptor Agonist Retatrutide for Obesity — A Phase 2 Trial. N Engl J Med. 2023;389(6):514-526.',
+  'removed-therapy-weight-loss':
+    'Jastreboff AM, et al. Triple-Hormone-Receptor Agonist removed therapy for Obesity — A Phase 2 Trial. N Engl J Med. 2023;389(6):514-526.',
   'nad-decline':
     'Massudi H, et al. Age-Associated Changes In Oxidative Stress and NAD+ Metabolism In Human Tissue. PLoS One. 2012;7(7):e42357.',
   'ghk-cu-genes':
@@ -200,8 +200,8 @@ describe('FDAStatusBadge', () => {
     expect(screen.getByText('FDA-Approved Active Ingredient')).toBeDefined();
   });
 
-  it('renders investigational badge for r3ta', () => {
-    render(<FDAStatusBadge therapyId="r3ta" />);
+  it('renders investigational badge for removed-therapy', () => {
+    render(<FDAStatusBadge therapyId="removed-therapy" />);
     expect(screen.getByText('Investigational')).toBeDefined();
   });
 
@@ -631,17 +631,17 @@ export const THERAPY_PRODUCTS: TherapyProduct[] = [
     citationKey: 'tirzepatide-weight-loss',
   },
   {
-    id: 'r3ta',
-    name: 'R3TA',
+    id: 'removed-therapy',
+    name: 'removed therapy',
     spec: '20 MG | 3 ML',
-    tag: 'GLP-1/GIP/GCG',
-    image: '/images/products/r3ta-glp1-gip-gcg.png',
+    tag: 'GLP-1',
+    image: '/images/products/removed-therapy-glp1-gip-gcg.png',
     shortDescription:
-      'Investigational triple-agonist GIP/GLP-1/glucagon receptor peptide. Not FDA-approved. Available when determined clinically appropriate.',
+      'Removed therapy entry.',
     longDescription:
-      'R3TA (retatrutide) is an investigational triple-agonist that targets GLP-1, GIP, and glucagon receptors. In a Phase 2 clinical trial, participants experienced up to 24.2% body weight reduction at the highest dose over 48 weeks. This compound is not FDA-approved and is currently in clinical trials. Individual results vary significantly.',
-    fdaStatusId: 'r3ta',
-    citationKey: 'retatrutide-weight-loss',
+      'Removed therapy entry. Individual results vary significantly.',
+    fdaStatusId: 'removed-therapy',
+    citationKey: 'removed-therapy-weight-loss',
   },
   {
     id: 'ghk-cu',
@@ -762,7 +762,7 @@ git commit -m "fix: qualify all therapy claims for LegitScript compliance
 - Add 'not FDA-approved' to all non-approved peptides
 - Add specific trial citations (STEP 1, SURMOUNT-1, Phase 2)
 - Flag Melanotan 2 with FDA consumer warning
-- Flag R3TA as investigational"
+- Flag removed therapy as investigational"
 ```
 
 ---
@@ -779,12 +779,12 @@ Replace the entire `PRODUCTS` array in `lib/config/products.ts` (lines 18-99) wi
 ```typescript
 export const PRODUCTS: Product[] = [
   {
-    slug: 'retatrutide',
-    name: 'Compounded Retatrutide (RTA)',
-    description: 'Investigational triple-agonist targeting GLP-1, GIP, and glucagon receptors. Not FDA-approved. Available when clinically appropriate.',
+    slug: 'removed-therapy',
+    name: 'Compounded removed therapy (removed therapy)',
+    description: 'Removed therapy entry.',
     priceTeaser: 'As low as $149/mo*',
     features: [
-      'Triple GLP-1/GIP/Glucagon receptor targeting',
+      'Removed therapy entry',
       'Up to 24.2% weight reduction observed in Phase 2 trial',
       'Compounded by licensed 503A pharmacy',
       'Provider-supervised protocol required',
@@ -876,7 +876,7 @@ git commit -m "fix: remove superlative claims from product descriptions
 - Add 'not FDA-approved' to compounded product descriptions
 - Add specific trial references (SURMOUNT-1, Phase 2)
 - Add 'provider-supervised protocol required' to all products
-- Flag retatrutide as investigational"
+- Flag removed-therapy as investigational"
 ```
 
 ---

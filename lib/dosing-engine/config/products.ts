@@ -27,19 +27,6 @@ export const DOSING_PRODUCTS: Record<string, DosingProduct> = {
       mcgPerUnitU100: 66.7,
     },
   },
-  retatrutide: {
-    id: 'retatrutide',
-    name: 'Retatrutide',
-    category: 'investigational',
-    isFdaApprovedForMaintenance: false,
-    requiresProviderEscalation: true,
-    concentration: {
-      vialSizeMg: 20,
-      diluentVolumeMl: 3,
-      mgPerMl: 6.67,
-      mcgPerUnitU100: 66.7,
-    },
-  },
   'tesa-ipa': {
     id: 'tesa-ipa',
     name: 'Tesamorelin / Ipamorelin',

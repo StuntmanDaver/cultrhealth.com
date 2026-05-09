@@ -176,18 +176,7 @@ export const MEDICATION_OPTIONS: MedicationOption[] = [
     durations: [30, 60, 90],
     packageId: 'semax-selank',
   },
-
   // Medications available in intake form but not natively in Asher Med — sent as 'Other'
-  {
-    id: 'r3ta',
-    name: 'Other',
-    displayName: 'R3TA (Retatrutide)',
-    description: 'Triple-agonist GLP-1/GIP/GCG receptor peptide',
-    types: ['Injection'],
-    category: 'GLP1',
-    isGLP1: true,
-    durations: [30, 60, 90],
-  },
   {
     id: 'tesa-ipa',
     name: 'Other',

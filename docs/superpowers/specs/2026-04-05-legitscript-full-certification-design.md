@@ -197,7 +197,7 @@ No other nav changes.
 Wire `FDAStatusBadge` component onto each therapy card. The component already exists and works — it just needs to be imported and rendered on each card, passing the therapy's ID to look up its FDA status.
 
 ### Clinical Citations
-For therapies that have entries in `CLINICAL_CITATIONS` (semaglutide, tirzepatide, retatrutide, NAD+, GHK-Cu), render the citation text below the therapy description as a small linked reference. Format: superscript number → footnote at bottom of section.
+For therapies that have entries in `CLINICAL_CITATIONS` (semaglutide, tirzepatide, removed-therapy, NAD+, GHK-Cu), render the citation text below the therapy description as a small linked reference. Format: superscript number → footnote at bottom of section.
 
 ### Prescription Disclaimer
 Add `PrescriptionDisclaimer` component below the therapy grid, above the page's existing medical disclaimer.

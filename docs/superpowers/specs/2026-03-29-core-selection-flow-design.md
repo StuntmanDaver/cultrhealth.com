@@ -26,7 +26,7 @@ The current pricing page shows CULTR Core at a flat $199/month with no therapy s
 export const CORE_THERAPIES = [
   { slug: 'semaglutide', name: 'Semaglutide', price: 149, image: '/images/therapies/semaglutide.png' },
   { slug: 'tirzepatide', name: 'Tirzepatide', price: 199, image: '/images/therapies/tirzepatide.png' },
-  { slug: 'retatrutide', name: 'Retatrutide', price: 239, image: '/images/therapies/retatrutide.png' },
+  { slug: 'removed-therapy', name: 'removed therapy', price: 239, image: '/images/therapies/removed-therapy.png' },
 ];
 ```
 
@@ -109,7 +109,7 @@ First doctor visit                      $75
 Today's total                           $[computed]
 ```
 
-Computed totals: Semaglutide $508, Tirzepatide $608, Retatrutide $688
+Computed totals: Semaglutide $508, Tirzepatide $608, removed therapy $688
 
 **Catalyst+:**
 ```
@@ -189,7 +189,7 @@ Text: `Start my protocol -- $[total] today` (dynamic per plan/therapy)
 
 - `semaglutide.png` (from `Semaglutide -- GLP1.png`)
 - `tirzepatide.png` (from `Tirzepatide -- GLP1:GIP.png`)
-- `retatrutide.png` (from `R3TA -- GLP1:GIP:GCG.png`)
+- `removed-therapy.png` (from `removed therapy -- removed therapy.png`)
 
 ---
 
@@ -216,7 +216,7 @@ Text: `Start my protocol -- $[total] today` (dynamic per plan/therapy)
 |---|---|
 | `public/images/therapies/semaglutide.png` | Semaglutide vial photo |
 | `public/images/therapies/tirzepatide.png` | Tirzepatide vial photo |
-| `public/images/therapies/retatrutide.png` | Retatrutide vial photo |
+| `public/images/therapies/removed-therapy.png` | removed therapy vial photo |
 
 **No new routes. No API changes. No DB migrations.**
 

@@ -34,25 +34,15 @@ describe('Dosing Engine Evaluation', () => {
     expect(result.requiresProviderEscalation).toBe(true);
   });
 
-  it('should apply investigational disclaimer and weight-band rules for retatrutide', () => {
+  it('should apply investigational disclaimer and require provider escalation without a schedule', () => {
     const result = evaluateRecommendation({
       ...baseIntake,
-      requestedProduct: 'retatrutide',
-      weightLb: 110, // 100-120 band requires escalation
+      requestedProduct: 'tesa-ipa',
     });
     expect(result.disclaimers.some(d => d.id === 'investigational')).toBe(true);
     expect(result.eligible).toBe(false);
     expect(result.requiresProviderEscalation).toBe(true);
-    expect(result.redFlags[0]).toContain('100-120 lb requires direct provider escalation');
-
-    const resultEligible = evaluateRecommendation({
-      ...baseIntake,
-      requestedProduct: 'retatrutide',
-      weightLb: 150, // 136-999 band
-    });
-    expect(resultEligible.eligible).toBe(true);
-    expect(resultEligible.requiresProviderEscalation).toBe(true);
-    expect(resultEligible.schedule?.maintenanceDoseMg).toBe(2.0);
+    expect(result.redFlags[0]).toContain('No valid titration schedule found');
   });
 
   it('should provide math-only for conversion_only products', () => {

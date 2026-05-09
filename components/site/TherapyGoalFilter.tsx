@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export const GOAL_CATEGORIES = [
   { id: 'all', label: 'All Therapies' },
-  { id: 'weight-management', label: 'Weight Management', tags: ['GLP-1', 'GLP-1/GIP/GCG'] },
+  { id: 'weight-management', label: 'Weight Management', tags: ['GLP-1'] },
   { id: 'recovery', label: 'Recovery & Repair', tags: ['Repair', 'Copper Peptide', 'Antioxidant'] },
   { id: 'performance', label: 'Performance & Growth', tags: ['Growth Hormone'] },
   { id: 'cognitive', label: 'Cognitive & Focus', tags: ['Neuropeptide'] },
