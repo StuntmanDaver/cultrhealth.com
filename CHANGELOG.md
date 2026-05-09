@@ -1,3 +1,220 @@
+## [2026-05-09] - Remove blocked therapy from site
+
+### Removed
+- Removed the blocked weight-loss therapy from the join catalog, coupon handling, Asher/checkout mappings, dosing calculator presets, dosing calculator SEO/static pages, AI dosing options, protocol engine config, member-library markdown, protocol template recommendations, media kit generation, inventory seed migration, and public assets.
+- Deleted public product images, therapy image, COA PDF, and generated invoice PDF artifacts that exposed the removed therapy.
+
+### Changed
+- Replaced existing metabolic recommendation anchors with Tirzepatide/TIRZ-B3 where a replacement was needed.
+- Sanitized historical docs, changelog entries, generated invoice HTML files, and planning notes so the removed therapy is not identifiable by its prior names, shorthand aliases, coupon code, preset id, or receptor shorthand.
+- Added persistent project-memory guidance in `AGENTS.md` and `CLAUDE.md` to prevent reintroducing the blocked removed therapy or aliases.
+
+### Verification
+- Exact-name and legacy-alias `rg` sweep across the repo, excluding generated dependency and build folders.
+- Indirect receptor-shorthand and descriptor `rg` sweep across the repo, excluding generated dependency and build folders.
+- Filename sweep for former product names and aliases, excluding dependency and build folders.
+- PDF text sweep with `pdftotext` across repo PDFs for the blocked removed therapy names and aliases.
+- `npx vitest run tests/lib/join-therapies.test.ts tests/lib/dosing-engine/engine.test.ts tests/lib/protocol-templates.test.ts`
+- `npx tsc --noEmit --pretty false`
+
+---
+
+## [2026-05-09] - New-customer first-purchase discount for club checkout
+
+### Added
+- **Automatic first-purchase discount** — New club checkout customers now receive an automatic 10% first-purchase discount when they have no active prior `club_orders` and no manual coupon code. The discount is applied server-side in `/api/club/orders`, persisted as `NEWCUSTOMER10`, and shown in checkout as "New customer discount".
+- **Customer-facing notice** — The join checkout cart now tells eligible customers: "You're getting 10% off your first purchase for being a new customer." It also states that the offer will not stack with another coupon code.
+- **Session/member eligibility hydration** — Signup, login, cookie recovery, and server member hydration now include `firstPurchaseDiscountEligible`, so returning customers only see the automatic discount when they are still eligible.
+
+### Changed
+- **Coupon precedence** — Any manually-entered coupon code suppresses the automatic first-purchase discount, even when the customer would otherwise qualify.
+- **Reserved system code** — `NEWCUSTOMER10` is reserved for internal automatic handling; it cannot be manually redeemed or created as a company/creator coupon.
+- **Email and invoice labeling** — Order confirmations, admin approval emails, approval confirmation emails, and QuickBooks invoice lines now label the offer as "New customer discount" instead of exposing the internal system code.
+- **Local QA** — The `/join` → `/pricing` redirect now applies only in production builds so the club checkout page remains reachable at `http://localhost:3000/join` during local testing.
+
+### Verification
+- `npx vitest run tests/api/club-orders-catalog-sync.test.ts tests/components/JoinLandingClient.test.tsx tests/api/admin-creator-codes.test.ts tests/lib/coupons.test.ts tests/lib/quickbooks.test.ts tests/api/admin-club-order-approve-attribution.test.ts`
+- `npx tsc --noEmit`
+- `npm run lint`
+- `npm run build`
+- Local Playwright smoke: opened `http://localhost:3000/join`, added the first therapy, and confirmed the first-purchase notice plus "New customer discount (10% off)" total line render.
+
+---
+
+## [2026-05-05] - Drop reserved-test-domain bot submissions from club signup
+
+### Bug fix
+- **`app/api/club/signup/route.ts`** — Added `isReservedTestEmail()` helper that matches RFC 2606 / RFC 6761 reserved domains (`example.com`, `example.org`, `example.net`, `test.com`, `*.test`, `*.example`, `*.invalid`, `*.localhost`). Submissions from these domains are now silently dropped (returns `{ success: true }`) before any DB write, Mailchimp sync, owner email, or ntfy.sh push notification fires. Eliminates recurring `test@example.com / Test User / 555-111-2222` push alerts caused by bots/scanners probing the public join form on production.
+- **`tests/api/club-session-cookie.test.ts`** — Updated "signup sets a signed cultr_club_visitor cookie" fixture email from `test@example.com` to `signup-cookie-test@cultrhealth-qa.com` so the cookie-signing path continues to be exercised under the new filter.
+
+---
+
+## [2026-05-05] - HubSpot MCP wired + customer data audit (no code changes)
+
+### Infrastructure
+- **HubSpot MCP server connected** in `.cursor/mcp.json` via `@hubspot/mcp-server` with a HubSpot Private App access token. Sits alongside existing Cloudflare, Mailchimp, Stripe, and Vercel MCPs. No code changes — agent capability only.
+- **OAuth credentials are wrong type** for MCP wiring. HubSpot's MCP requires a Private App token (`pat-`), not the OAuth Client ID/Secret used for building HubSpot integrations. Documented for future operators.
+
+### Customer data audit (`cultr-customers-2026-05-05.csv`, 220 records)
+Top-tier HubSpot architecture audit produced. Findings codified to prevent re-deriving them in future sessions:
+
+**HIPAA boundary (critical)** — HubSpot is NOT a HIPAA-covered entity by default. Even with a BAA on Marketing Hub Enterprise, the following must NEVER be synced to HubSpot from this codebase:
+- Medications, dosages, prescription history
+- Diagnoses, conditions, BMI, lab results, weight, BP
+- Intake form medical content
+- Provider notes / consultation transcripts
+- Pharmacy-specific Rx data
+Safe-to-sync: subscription tier, self-reported wellness goal, order totals, AOV/LTV, engagement behavior, demographics already collected (age/gender/state).
+
+**Data quality issues in current customer table** (must be fixed at the integration layer before any HubSpot import):
+- State inconsistency (`FL` / `Fl` / `Florida` / `FLORIDA`) — normalize to 2-letter ISO
+- Phone format chaos (international, dashes, parentheses, one record has email in phone field)
+- Test/QA records polluting prod (`Test User`, `Stage Verify`, `Buyer Verify`, `Claude Smoke Test`, `David CFTest`, `StageTest Verify`)
+- Internal team mixed with customers (`*@cultrhealth.com`, `*@threepointshospitality.com`, `*@cultr.com`, `*@101investmentgroup.com`, `tom@patriots.com`, `*@example.com`, `*@test.com`)
+- Duplicate humans across multiple emails (Erik Zika ×3, Mia Montero ×2, Alexander Thomas ×3, David Ketchel ×2, Hannah Goldy ×2, Jon Collins ×2)
+- Invalid emails (`b20610389@gmail` no TLD, `jodestevens57@agmail.com` typo)
+- 4+ international records with no country field
+
+**Missing custom properties (Tier 1 priority)** — Lifecycle Stage, Original Source, UTM (5 fields), First/Last Touch URL, Referring Creator Code/Name, Quiz Completion Status + Recommended Tier, Stripe Customer ID, Subscription Tier (Club/Core/Catalyst+/Concierge as discrete property — not the current coarse `products`/`membership`/`creator`), Subscription Status, MRR, First Order Date, LTV, Failed Payment Flag, Stated Wellness Goal, Therapy Interest, LMN Eligible Flag, Resident State Allowed (against 30-state list).
+
+**Missing integrations (in priority order):**
+1. Stripe ↔ HubSpot native sync — single biggest gap. Use HubSpot's native Stripe app, not a custom build.
+2. Resend ↔ HubSpot — email engagement webhook
+3. Postgres (Neon) ↔ HubSpot — quiz results + intake form metadata (no PHI) + creator attribution
+4. Cal.com ↔ HubSpot — consultation booked event
+5. Daily.co ↔ HubSpot — consultation completed (status only, NEVER recording content)
+6. **Decision required:** HubSpot vs Mailchimp for marketing email — running both creates deliverability and segmentation chaos.
+
+**Highest-leverage Active Lists to build day 1:** Quiz Hot Leads, Pricing Page Hesitators, Cart Abandoners 24/72h, Florida VIPs (~47% of list is FL), Repeat Buyers without Subscription, Creator-Attributed Customers, At-Risk Subscribers, Lapsed Customers 60+ Days, High-LTV Whales (David Ketchel `ketchel.david@gmail.com` $7,821 LTV, Joshua Hopkins $1,557, Christal Linsebigler $1,152), Out-of-Service-State Leads, Internal/Test Exclusion List.
+
+**The 5 highest-impact moves (in order):**
+1. Native Stripe ↔ HubSpot sync (60% of value comes from this alone)
+2. Quiz results piped as a Contact property + Active List (highest-intent signal collected)
+3. Subscription Tier as a discrete property — current `Type=membership` flattens four tiers worth of MRR
+4. Test record + internal team exclusion (every conversion metric is currently wrong by ~10%)
+5. Creator code attribution as a HubSpot property so creator ROI is visible in HubSpot dashboards, not only in the custom admin
+
+### Files changed
+- `.cursor/mcp.json` (HubSpot MCP server entry added)
+
+---
+
+## [2026-05-05] - Member referral program — Phase 2A backend wiring (staging)
+
+### Added
+- **Migration `064_member_referral_attribution.sql`**: adds `attribution_token` (unique partial index) + `stripe_session_id` + `stripe_subscription_id` to `member_referrals`; adds `stripe_session_id` to `member_credits`. These are the linkage columns the Stripe webhook uses to resolve the right referral row at first-paid time and at refund-reversal time.
+- **`lib/referral/attribution.ts`**:
+  - `recordReferralClick({ code, sessionId, ipHash })` — writes a `'clicked'` row, mints a 32-char crypto-random `attribution_token`, increments code-level `click_count`, and dedupes within a 24h session window so refresh/bot loops don't multiply rows.
+  - `attachRefereeEmailFromToken({ attributionToken, refereeEmail })` — race-safe upgrade of `'clicked'` → `'signed_up'` with the verified email. Self-referral guard at the SQL level (`lower(referrer_email) <> ${email}`). Idempotent: only updates rows where `referee_email IS NULL` so login-after-signup is a no-op.
+  - `findReferralForCheckout({ attributionToken, refereeEmail })` — used by checkout & webhook to resolve the active referral; precedence is token → email → null.
+  - `hashIp()` — SHA-256 with namespaced salt; stores 32 hex chars max so the column doesn't grow unbounded.
+- **`lib/referral/rewards.ts`**:
+  - `issueReferralReward({ attributionToken, refereeEmail, stripeSessionId, stripeSubscriptionId, orderId })` — idempotent first-paid reward issuance. Reads referrer's current tier from `member_referral_codes`, computes credit using `TIER_REWARDS[referrerTier ?? 'club']`, writes `member_credits` row + flips referral to `'rewarded'` + bumps code `conversion_count`. Idempotency check: bails if a `'referral_earned'` row already exists for the referral_id (Stripe webhook retries are safe).
+  - `reverseReferralReward({ stripeSessionId, stripeSubscriptionId, orderId })` — refund clawback. Locates the rewarded referral via session/subscription/order match, enforces the `REFERRAL_CONFIG.refundClawbackDays` (30d) window from `rewarded_at`, writes negative `member_credits` row, flips status to `'reversed'`. Idempotent on `'referral_reversed'`.
+  - `getMemberCreditBalance(email)` — `SUM(amount_usd)::float8` on `member_credits` (signed amounts).
+- **`/refer/[code]` click recording**: server component now calls `recordReferralClick()` and sets a second `cultr_member_referral_token` cookie (httpOnly, sameSite=lax, 30d, scoped to `.cultrhealth.com` via `getCookieDomain()`). Wrapped in try/catch — DB write failure never blocks the marketing render.
+- **`/api/auth/verify` signup attribution**: added `attachReferralIfPresent()` helper that reads the token cookie post-magic-link-verify and calls `attachRefereeEmailFromToken()`. Runs on every successful verify, but the SQL-level guards make it a no-op for repeat logins. Fire-and-await — login can't be blocked by a referral DB error.
+- **`/api/checkout` metadata pass-through**: `buildMemberReferralMetadata(request)` reads both referral cookies and attaches `member_referral_code` + `member_referral_token` to the Stripe checkout session metadata so the webhook can resolve the referral on first paid month.
+- **Stripe webhook `handleCheckoutCompleted` reward issuance**: reads `session.metadata.member_referral_token/_code` and `session.customer_details.email`, calls `issueReferralReward()` with `orderId = MREF-${session.id.slice(-12)}` and the Stripe `subscription.id` for refund-time reversal lookup. Wrapped in try/catch so a referral failure can't 500 the webhook (preventing Stripe retry storms that would re-create membership records).
+- **Stripe webhook `handleChargeRefunded` reward reversal**: looks up the originating checkout session via `paymentIntent → sessions.list({ payment_intent })`, then calls `reverseReferralReward()`. Uses the same try/catch pattern.
+
+### How the closed loop now works (with `NEXT_PUBLIC_REFERRAL_ENABLED=true`)
+```
+1. Member shares /refer/CULTR-7HX9
+2. Friend visits → recordReferralClick writes 'clicked' row + sets cookies
+3. Friend signs up via magic link → attachRefereeEmailFromToken bumps to 'signed_up'
+4. Friend completes checkout → cookies flow to Stripe metadata
+5. Stripe webhook → issueReferralReward writes credit + flips to 'rewarded'
+6. Refund within 30d → reverseReferralReward writes negative credit + flips to 'reversed'
+```
+
+### Phase 2B (still pending)
+1. **Friend's discount actually applies at checkout** — needs Stripe Promotion Code sync per tier (4 codes: club/core/catalyst/concierge) and `discounts: [{ promotion_code: ... }]` on `checkout.sessions.create` when a member-referral cookie is present. Without this, the landing promises a discount that doesn't apply at Stripe.
+2. **Auto-redeem `member_credits` balance** on next subscription invoice via Stripe `customer_balance` adjustment (or invoice `discount` line item).
+3. **Wire club checkout** (`/api/club/orders`) — same metadata pass-through + reward issuance hooks. Currently only the Stripe subscription path is wired.
+4. **Email triggers**: post-first-shipment "share it" prompt, day-30 milestone prompt, transactional "your friend signed up" / "credit unlocked" / "credit reversed" emails.
+5. **Admin `/admin` analytics tab**: top referrers, conversion rate, credit liability outstanding, clawback exposure.
+
+### Production port (sibling repo `cultrhealth-web`, CF Pages)
+This repo deploys to **Vercel staging only**. Production lives in the sibling `cultrhealth-web` repo on Cloudflare Pages with `runtime='edge'`. Porting Phase 2A requires:
+- Replace `randomBytes`/`createHash` from `crypto` with Web Crypto API (`crypto.subtle`, `crypto.getRandomValues`) — Node `crypto` is unavailable in CF edge runtime.
+- Wrap any post-response work with `getRequestContext().ctx.waitUntil(...)` — CF Workers terminate pending Promises on `return response` (see `feedback_cf_edge_fire_and_forget.md`). The `attachRefereeEmailFromToken` call in `/api/auth/verify` and the referral helpers in the Stripe webhook need this treatment.
+- Use Neon `fullResults: true` if the port introduces any read-then-write logic that depends on `result.rowsAffected` or `result.fields`.
+
+### Files
+- `migrations/064_member_referral_attribution.sql`
+- `lib/referral/attribution.ts`, `lib/referral/rewards.ts`
+- `app/refer/[code]/page.tsx` (click recording)
+- `app/api/auth/verify/route.ts` (signup attribution)
+- `app/api/checkout/route.ts` (metadata pass-through)
+- `app/api/webhook/stripe/route.ts` (reward issuance + reversal)
+
+---
+
+## [2026-05-04] - "Bring a Friend" member referral program — UI/UX layer (staging)
+
+### Added
+- **Migration `063_member_referral_program.sql`**: new tables `member_referral_codes` (one auto-minted code per member), `member_referrals` (referee lifecycle: clicked → signed_up → first_paid → rewarded → reversed/expired), `member_credits` (signed-amount account-credit ledger). Schema is intentionally separate from creator `affiliate_codes` because member referrals issue account credit, not cash commissions, and must remain HIPAA-clean from creator analytics. Includes a CHECK constraint blocking self-referrals at the data layer.
+- **`lib/referral/config.ts`**: `TIER_REWARDS` table — Club $25/$25, Core $50/$50, Catalyst+ $100/$100 + free-month bonus, Concierge $250/$250. Reward windows, attribution cookie name (`cultr_member_referral`, 30d), copy strings, fineprint.
+- **`lib/referral/db.ts`**: `getOrCreateReferralCode()` (idempotent, retries up to 5 times on collision, refreshes tier/firstName snapshot on read), `getReferralStats()` (pending/signed-up/rewarded counts + earned/pending credit totals), `getPublicRefererInfo()` (HIPAA-sanitized landing-page lookup — first name only, never last name or email).
+- **`/api/referral/me`** (auth-gated): returns the member's code, share URL, credit balance + pending, lifecycle counts, tier-specific reward sizes, and copy strings.
+- **`/api/referral/redeem-info?code=`** (public, rate-limited via `strictLimiter`): anti-enumeration response shape — invalid codes return `{ valid: false }` with 200, never 404. Returns only the referrer's first name and friend-discount amount.
+- **`/refer/[code]` landing page** (`app/refer/[code]/page.tsx` + `RefereeLandingClient.tsx`): server component sets the attribution cookie (30d, sameSite lax, secure in prod) and renders an opinionated marketing landing — "{Name} sent you ${X} off". Includes the existing `<FloridaStateGate>`, two CTAs preserving `?ref=` to `/quiz` and `/pricing`, three trust pillars, "How the credit works" section. Pages are `noindex,nofollow`. Invalid codes render a graceful fallback with quiz/pricing CTAs (no enumeration leak).
+- **`<ReferralCard>`** (`components/referral/ReferralCard.tsx`): hero widget rendered at the top of `/members` dashboard. Gradient brand header, headline "Give $X, get $Y", inline copy-link affordance with mono URL display, 4-stat dashboard (credit earned, credit pending, friends signed up, successful referrals), tier-aware bonus copy ("Refer 3 friends — earn a free month").
+- **`<ShareReferralModal>`** (`components/referral/ShareReferralModal.tsx`): bottom-sheet on mobile, centered modal on desktop. Four channels (Link / Email / Text / Social) with pre-written compliance-aware share text — referrer first-name only, no medical claims, FTC `#ad`/`#partner` reminder on Social tab. `mailto:` and `sms:` deep links plus copy fallbacks. Escape key + backdrop close.
+- **Dashboard integration**: `<ReferralCard>` mounted in `components/library/MemberDashboard.tsx` directly above the Orders section so it's the first thing every logged-in member sees.
+
+### Reward economics (against 30% gross margin)
+- Core $100 reward cost vs. ~$430 referred-customer GP (6mo × $59.70 × 1.2 LTV bump) = **23% effective CAC**
+- Catalyst+ $200 vs. ~$1,078 GP = **19% CAC**
+- Concierge $500 vs. ~$2,374 GP = **21% CAC**
+- All under a typical 30% CAC target. Real cash cost is lower than face value (credits convert at margin + breakage).
+
+### Phase 2 (not in this changeset — backend wiring)
+1. Mint Stripe coupons / promo codes for `member_referral_codes` so the referee discount actually applies at checkout (and on `cultrclub.com` for members signing up there).
+2. Wire `recordReferral()` → fired on `/refer/[code]` view + on signup attribution from cookie/URL `?ref=`.
+3. `recordFirstPaidReward()` invoked from Stripe `invoice.payment_succeeded` webhook (first paid invoice only) and from club-order `shipped` transition; idempotent via referral_id; writes `member_credits` and updates `member_referrals.status='rewarded'`.
+4. `reverseReferralReward()` invoked from refund/chargeback webhooks within `refundClawbackDays` (30); writes a negative `member_credits` row and flips status to `reversed`.
+5. Apply `SUM(member_credits.amount_usd)` against the next Stripe invoice (Stripe `customer_balance` adjustment) so credit redeems automatically.
+6. Email triggers: post-first-shipment "share it" prompt, day-30 "you've completed your first month" prompt, transactional "your friend signed up — credit pending" / "credit unlocked".
+7. Admin `/admin` tab: referral analytics — top referrers, conversion rate, credit liability, refund clawback exposure.
+
+### HIPAA + abuse posture
+- Public landing only ever shows the referrer's first name (never last name, email, tier, or anything that could identify them as a patient).
+- Self-referral blocked at SQL CHECK constraint level.
+- Anti-enumeration: invalid-code endpoint returns 200 with `{ valid: false }`.
+- Florida-only gate (existing `<FloridaStateGate>`) on every referral landing.
+- 30-day clawback window on first-paid reward mirrors the existing creator commission approval window.
+- Account credit only — no cash payouts — keeps the program out of creator-payout / Stripe Connect / 1099 territory.
+
+### Files
+- `migrations/063_member_referral_program.sql`
+- `lib/referral/config.ts`, `lib/referral/db.ts`
+- `app/api/referral/me/route.ts`, `app/api/referral/redeem-info/route.ts`
+- `app/refer/[code]/page.tsx`, `app/refer/[code]/RefereeLandingClient.tsx`
+- `components/referral/ReferralCard.tsx`, `components/referral/ShareReferralModal.tsx`
+- `components/library/MemberDashboard.tsx` (mount `<ReferralCard>`)
+
+---
+
+## [2026-05-04] - ntfy push notifications live on cultrhealth.com + cultrclub.com (production)
+
+### Added
+- **cultrhealth-web**: `VisitorTracker` component + `/api/visitor/new` edge route — first-time visitor ntfy push + team email. Mounted in root layout.
+- **cultrhealth-web**: `sendTeamSignupNotification` + `sendOwnerNotification` in `app/api/club/signup/route.ts` — ntfy push on every club signup.
+- **cultrclub-web**: ntfy added to `/api/visitor/new` (was missing entirely). Variables moved before RESEND guard so ntfy fires independently of email config.
+- **cultrclub-web**: ntfy + `sendOwnerNotification` added to `sendTeamSignupNotification` in `app/api/club/signup/route.ts`.
+
+### Fixed
+- All three notification functions across both repos had ntfy buried after `if (!process.env.RESEND_API_KEY) return` — ntfy never fired if email was unconfigured. Fixed by moving ntfy calls before the guard in all functions.
+
+### Deployed
+- `cultrhealth-web` → pushed to `main` (commit `02f0ca9`) → Cloudflare Pages auto-build
+- `cultrclub-web` → pushed to `main` (commit `946480c`) → auto-build
+- ntfy topic: `cultr-owner-alerts`
+
+---
+
 ## [2026-05-02] - First-visit visitor tracking + creator signup hardening (staging)
 
 ### Added
@@ -51,7 +268,7 @@
 
 ### Added
 - **Shared `<DosingCalculator />` component** at `components/dosing-calculator/` — single implementation now backs `/tools/dosing-calculator` (public), `/members/dosing-calculator`, and `/creators/portal/dosing-calculator`. Eliminates drift between the three ~600-line duplicates.
-- **Two-tier CULTR therapy presets** (`lib/config/calculator-presets.ts`, `TherapyPresetPicker.tsx`): categories GLP-1, Longevity, Growth, Repair, Blends, Sexual Wellness, Custom → specific therapies (TIRZ/B3, SEMA/B6, R3TA, NAD+, Sermorelin, TESA/IPA, CJC/IPA, BPC-157, TB-500, GHK-Cu, Glutathione, PT-141, Oxytocin). Picking a therapy prefills vial, water, dose, unit, frequency, and cycle length.
+- **Two-tier CULTR therapy presets** (`lib/config/calculator-presets.ts`, `TherapyPresetPicker.tsx`): categories GLP-1, Longevity, Growth, Repair, Blends, Sexual Wellness, Custom → specific therapies (TIRZ/B3, SEMA/B6, removed therapy, NAD+, Sermorelin, TESA/IPA, CJC/IPA, BPC-157, TB-500, GHK-Cu, Glutathione, PT-141, Oxytocin). Picking a therapy prefills vial, water, dose, unit, frequency, and cycle length.
 - **Explicit capacity error banner** (`CapacityWarningBanner.tsx`): full-width red alert above the syringe meter whenever draw volume exceeds syringe capacity, with exact mL required, exact mL available, and the next-larger syringe suggestion. Amber near-limit notice at 70–90 % of capacity.
 - **Enhanced `SyringeMeter`** with three-zone coloring (sage ≤70 %, amber 70–90 %, red >90 %), centered percentage overlay, fill-vs-capacity caption, `prefers-reduced-motion` support, and a defensive tick cap (~120) so custom syringe sizes can never render thousands of SVG elements.
 - **Weight-based dose mode** (`WeightBasedDoseCard.tsx`): collapsible Advanced accordion with lb/kg + mcg/kg / mg/kg toggles and live preview; Apply writes the computed dose into the main dose field.
@@ -581,7 +798,7 @@
 
 ### Legacy join catalog restored
 - Restored `lib/config/join-therapies.ts` to the exact legacy lineup that matched the previously restored `join.cultrhealth.com` site.
-- Replaced the Apr 2026 curated join catalog entries (`sermorelin`, `lipo-c`, `pt-141`, `oxytocin`) with the legacy therapies (`retatrutide`, `ghk-cu`, `tesa-ipa`, `cjc1295-ipa`, `semax-selank`, `bpc157-tb500`, `melanotan-2`, `igf1-lr3`) and restored legacy pricing, notes, ordering, and bundle pairing.
+- Replaced the Apr 2026 curated join catalog entries (`sermorelin`, `lipo-c`, `pt-141`, `oxytocin`) with the legacy therapies (`removed-therapy`, `ghk-cu`, `tesa-ipa`, `cjc1295-ipa`, `semax-selank`, `bpc157-tb500`, `melanotan-2`, `igf1-lr3`) and restored legacy pricing, notes, ordering, and bundle pairing.
 - Kept the existing restored join host routing, persistence, attribution, and admin sync fixes unchanged.
 
 ### Regression coverage
@@ -655,7 +872,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - All 11 therapy descriptions qualified with "not FDA-approved" and clinical trial citations
 - Semaglutide: STEP 1 trial citation, "14.9% body weight reduction"
 - Tirzepatide: SURMOUNT-1 trial citation, "up to 22.5% body weight reduction"
-- Retatrutide: flagged as "investigational", Phase 2 trial citation
+- removed therapy: flagged as "investigational", Phase 2 trial citation
 - Melanotan 2: flagged with "FDA has issued consumer warnings"
 - Removed superlatives: "most potent", "powerhouse", "clinically proven", "maximum results"
 - Fixed "FDA-studied" language on Tesamorelin to accurate regulatory disclosure
@@ -852,7 +1069,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - Product detail section uses mint/sage (`grad-mint`) color palette with description, benefits, and disclaimer per therapy
 - "Best For" section removed from checkout page
 - Blood test kit + doctor visit grouped under "Onboarding Fee" subheading in order summary
-- Each Core therapy page (Semaglutide, Tirzepatide, Retatrutide) shows individualized content
+- Each Core therapy page (Semaglutide, Tirzepatide, removed therapy) shows individualized content
 
 ### Payment Methods
 - Klarna and Affirm removed from payment selector and all checkout handler code
@@ -1126,7 +1343,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - **CULTR Core** — Price changed from $199 to $149* (starting price, varies by therapy)
 - **CULTR Concierge** — Renamed from "CULTR Curated", price changed from $1,099 to $1,049
 - **All paid plans** — Now begin with an initial 2-month clinical protocol (minimum commitment)
-- **Core therapy options** — Semaglutide ($149/mo), Tirzepatide ($199/mo), Retatrutide ($239/mo)
+- **Core therapy options** — Semaglutide ($149/mo), Tirzepatide ($199/mo), removed therapy ($239/mo)
 - **Concierge** — Blood test + doctor visit now included (not add-on)
 
 ### Expandable Core Pricing Card
@@ -1168,7 +1385,7 @@ Returning members on join.cultrhealth.com were shown the signup modal every visi
 - `app/creators/portal/resources/_data/` — 4 files: cancel language, pricing
 - `app/science/page.tsx`, `scripts/generate-media-kit.tsx` — Name + price updates
 - `app/admin/members/MembersClient.tsx`, `components/portal/KitEmptyState.tsx` — Price updates
-- `public/images/therapies/` — 3 vial images added (semaglutide, tirzepatide, retatrutide)
+- `public/images/therapies/` — 3 vial images added (semaglutide, tirzepatide, removed-therapy)
 
 ---
 
@@ -2094,7 +2311,7 @@ Replaced the CSS aurora animation background with an animated MeshGradient WebGL
 Enhanced the intake form medication selector with inline descriptions for all 10 medications and image preview on hover (desktop) / tap (mobile) for better product visibility.
 
 ### Medication Descriptions
-- Added concise, patient-facing descriptions to all 10 medications (Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2)
+- Added concise, patient-facing descriptions to all 10 medications (Semaglutide, Tirzepatide, removed therapy, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2)
 - Descriptions rendered inline below dosage text (`text-xs text-forest-muted/80`)
 
 ### Image Hover Expansion
@@ -2160,9 +2377,9 @@ Replaced 8 product vial images with new branded CULTR photos across join page, i
 ### Intake Form Medication Mapping (Critical Bug Fix)
 - **Root cause:** MedicationSelector used IDs like `semaglutide` but `PRODUCT_TO_ASHER_MED_MAP` only had catalog IDs like `glp1-semaglutide` — only `ghk-cu` and `nad-plus` actually mapped
 - Added all 10 MedicationSelector IDs to `lib/config/product-to-asher-mapping.ts`
-- Added 4 new MEDICATION_OPTIONS (R3TA, TESA/IPA, CJC1295/IPA, Melanotan 2) using Asher Med `'Other'` type in `lib/config/asher-med.ts`
+- Added 4 new MEDICATION_OPTIONS (removed therapy, TESA/IPA, CJC1295/IPA, Melanotan 2) using Asher Med `'Other'` type in `lib/config/asher-med.ts`
 - Fixed `ReviewSummary.tsx` to use `selectedMedications` (plural array) instead of `selectedMedication` (singular)
-- Fixed GLP-1 detection in `IntakeFormClient.tsx` to include R3TA
+- Fixed GLP-1 detection in `IntakeFormClient.tsx` to include removed therapy
 
 ### Modified (7 files)
 - `lib/config/product-to-asher-mapping.ts`, `lib/config/asher-med.ts`
@@ -2282,8 +2499,8 @@ Synced 29 missing environment variables (including POSTGRES_URL) to the active `
 The active Vercel project (`cultrhealth-com`) only had 7 of 36 required env vars. Code guards DB writes with `if (process.env.POSTGRES_URL)` which silently skipped all inserts.
 
 ### Data Recovered
-- **Allison Cooper** (marycooper2004@gmail.com) — 2 orders: R3TA+GHK-CU ($388), R3TA ($272)
-- **Madison** (maddiegacree@gmail.com) — 1 signup + 1 order: R3TA ($272)
+- **Allison Cooper** (marycooper2004@gmail.com) — 2 orders: removed therapy+GHK-CU ($388), removed therapy ($272)
+- **Madison** (maddiegacree@gmail.com) — 1 signup + 1 order: removed therapy ($272)
 - All orders status `pending_approval` with CULTRFAM 20% coupon
 
 ### Dead Code Removed (143 files)
@@ -2406,7 +2623,7 @@ Simplified intake form gender options and replaced dynamic medication selector w
 
 ### Modified (2 files)
 - `components/intake/PersonalInfoForm.tsx` — Removed "Other/Prefer not to say" gender option (Male/Female only)
-- `components/intake/MedicationSelector.tsx` — Replaced dynamic product catalog with flat list of 10 specific medications: Semaglutide, Tirzepatide, R3TA, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2
+- `components/intake/MedicationSelector.tsx` — Replaced dynamic product catalog with flat list of 10 specific medications: Semaglutide, Tirzepatide, removed therapy, GHK-CU, TESA/IPA, CJC1295/IPA, NAD+, Semax/Selank, BPC157/TB500, Melanotan 2
 
 ---
 
@@ -2528,7 +2745,7 @@ Completed comprehensive environment variable audit for the CULTR Club email flow
 ## [2026-03-05] - Join Page Mobile Responsive Design Fixes
 
 ### Summary
-Fixed three critical mobile layout issues on the join landing page (`join.cultrhealth.com`): hero image now shows full CULTR watermark without cropping, hero text moved from image overlay to dedicated section, and featured R3TA product card image now displays centered and enlarged on mobile for parity with other product cards.
+Fixed three critical mobile layout issues on the join landing page (`join.cultrhealth.com`): hero image now shows full CULTR watermark without cropping, hero text moved from image overlay to dedicated section, and featured removed therapy product card image now displays centered and enlarged on mobile for parity with other product cards.
 
 ### Changed
 
@@ -2545,13 +2762,13 @@ Fixed three critical mobile layout issues on the join landing page (`join.cultrh
   - Preserved scroll reveal animations for visual consistency
 - **Result** — Clean typographic hierarchy; text no longer competes visually with hero image
 
-#### Featured Card (R3TA) Image Display
+#### Featured Card (removed therapy) Image Display
 - **Image container responsiveness** — Changed from fixed small dimensions (`w-32 h-32 md:w-40 md:h-40`) to:
   - Mobile: `w-full flex items-center justify-center py-10` (centered, full-width)
   - Desktop: `md:w-40 md:h-40 md:flex-shrink-0` (reverts to side-by-side layout)
 - **Image render size** — Increased from 160px to 220px on mobile
 - **Image optimization** — Added `unoptimized` flag for compatibility
-- **Result** — R3TA product image displays at visual parity with non-featured cards on mobile
+- **Result** — removed therapy product image displays at visual parity with non-featured cards on mobile
 
 ### Technical Details
 - **File modified** — `app/join/JoinLandingClient.tsx`

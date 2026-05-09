@@ -7,7 +7,7 @@
 
 The current quiz (5 questions, client-side only) has several problems:
 - Budget ranges ($500-800, $800-1000, $1000+) don't match actual pricing (Core $149-239, Catalyst+ $499, Concierge $1,049)
-- No distinction between Core GLP-1 therapies (Semaglutide $149, Tirzepatide $199, Retatrutide $239)
+- No distinction between Core GLP-1 therapies (Semaglutide $149, Tirzepatide $199, removed therapy $239)
 - Zero data persistence — no way to analyze quiz responses, drop-off, or conversion
 - "Experience level" question doesn't meaningfully differentiate tiers
 
@@ -54,7 +54,7 @@ The current quiz (5 questions, client-side only) has several problems:
 |---|---|---|
 | `never-glp1` | No, I'm brand new | semaglutide: 5 |
 | `tried-sema` | Yes, I've tried one before | tirzepatide: 5 |
-| `tried-multiple` | Yes, I've tried multiple | retatrutide: 5 |
+| `tried-multiple` | Yes, I've tried multiple | removed-therapy: 5 |
 | `not-sure` | Not sure | semaglutide: 3 |
 
 ### Q5: "How much provider access do you want?" (single-select, auto-advance)
@@ -80,7 +80,7 @@ The current quiz (5 questions, client-side only) has several problems:
 | ID | Label | Tier Scores | GLP-1 Scores |
 |---|---|---|---|
 | `affordability` | Keeping costs low | core: 3, club: 2 | semaglutide: 2 |
-| `results` | Getting the best results | catalyst: 3 | retatrutide: 2 |
+| `results` | Getting the best results | catalyst: 3 | removed-therapy: 2 |
 | `convenience` | Having everything handled for me | concierge: 4 | *(none)* |
 | `education` | Understanding what I'm putting in my body | club: 3 | *(none)* |
 
@@ -93,7 +93,7 @@ The current quiz (5 questions, client-side only) has several problems:
 
 ### GLP-1 Therapy Recommendation (new)
 1. Only runs when `recommendedTier === 'core'`
-2. Accumulate GLP-1 sub-scores (semaglutide, tirzepatide, retatrutide) from Q4 + Q7
+2. Accumulate GLP-1 sub-scores (semaglutide, tirzepatide, removed-therapy) from Q4 + Q7
 3. Highest score wins → `coreTherapy` (uses `CORE_THERAPIES` from `plans.ts`)
 4. Default fallback: semaglutide (lowest cost, safest entry point)
 5. If Q4 was skipped (non-weight-loss Core user), default to `undefined` — results show "Starting at $149" with all 3 options

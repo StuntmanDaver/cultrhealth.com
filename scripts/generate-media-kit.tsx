@@ -218,9 +218,8 @@ function MediaKitDocument() {
               Cut — Weight Loss (GLP-1 &amp; Dual-Agonist)
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              <TherapyPill name="R3TA — GLP1/GIP/GCG" price="$340" featured />
               <TherapyPill name="Semaglutide — GLP1" price="$225" />
-              <TherapyPill name="Tirzepatide — GLP1/GIP" price="$290" />
+              <TherapyPill name="Tirzepatide — GLP1/GIP" price="$290" featured />
             </View>
 
             {/* Enhancement */}

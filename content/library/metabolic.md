@@ -8,7 +8,6 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 
 | Product | Size | Risk | Best For |
 |---------|------|------|----------|
-| RTA | 5mg | Moderate | Triple GLP-1/GIP/Glucagon metabolic optimization |
 | SEMA/B6 | 5mg | Moderate | GLP-1 receptor agonist; fat loss + glucose control |
 | TIRZ/B3 | 5mg | Moderate | Dual GLP-1/GIP incretin signaling |
 | Mazdutide | 5mg | Moderate | Dual GLP-1/Glucagon agonist |
@@ -18,18 +17,6 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 | 5-Amino-1MQ | — | Low-Moderate | NNMT inhibition; metabolic enhancement |
 
 ## Key Compounds
-
-### Retatrutide (RTA)
-- **Primary Targets**: GLP1R + GIPR + Glucagon receptor (GCGR)
-- **Pathways**:
-  - ↑ Energy expenditure (via GCGR)
-  - ↑ Lipolysis
-  - ↑ Insulinotropic signaling
-  - ↑ Hepatic fat oxidation
-- **Typical Use**: 1–12mg weekly (slow titration)
-- **Route**: Subcutaneous
-- **Duration**: Ongoing (titrate based on tolerance and goals)
-- **Notes**: Most potent metabolic compound available; up to 24% body weight reduction in clinical trials. CULTR's primary GLP recommendation.
 
 ### SEMA/B6
 - **Primary Target**: GLP-1 receptor (GLP1R; Gs-coupled GPCR)
@@ -88,7 +75,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 - **Route**: Subcutaneous
 - **Duration**: Ongoing
 - **Best For**: Significant weight loss goals
-- **Note**: RTA is the preferred primary GLP compound; this combination is an alternative approach
+- **Note**: This combination is an alternative GLP-1 plus amylin approach
 
 ### AOD-9604
 - **Primary Target**: Fragment of GH (176–191 region)
@@ -117,7 +104,6 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 
 | Product | Optimal Timing | Notes |
 |---------|---------------|-------|
-| RTA | Morning or consistent daytime | Metabolic consistency |
 | SEMA/B6 | Same day each week | Weekly injection; consistency critical |
 | TIRZ/B3 | Same day each week | Weekly injection; consistent timing |
 | Mazdutide | Same day each week | Weekly injection; consistent timing |
@@ -126,7 +112,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 | 5-Amino-1MQ | Morning | Metabolic activation; fasted preferred |
 
 **Key Rules**:
-- **GLP-1 weekly injections (RTA, SEMA/B6, TIRZ/B3, Mazdutide)**: Same day and time every week; set a recurring reminder
+- **GLP-1 weekly injections (SEMA/B6, TIRZ/B3, Mazdutide)**: Same day and time every week; set a recurring reminder
 - **Fat-loss peptides (AOD-9604, 5-Amino-1MQ)**: Fasted morning or 2–3 hours after last meal
 - **Hydration**: GI side effects from GLP-1 agonists require adequate hydration throughout day
 
@@ -139,7 +125,7 @@ Metabolic peptides support fat loss, glucose control, and appetite regulation th
 - Duration: 8–12 weeks
 
 ### Aggressive Fat Loss (Deficit-Based)
-- RTA: 1–12mg weekly (titrate as tolerated) — primary GLP compound
+- TIRZ/B3: 2.5–15mg weekly (slow titration)
 - Cagrilintide: 0.25–0.5mg weekly (optional add-on)
 - Caloric deficit: 300–500 kcal/day
 - Protein: 1g per lb body weight

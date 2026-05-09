@@ -64,19 +64,6 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
       'Physician-supervised weight management protocols using the latest incretin-based therapies for sustainable fat loss.',
     therapies: [
       {
-        id: 'retatrutide',
-        name: 'R3TA — GLP1/GIP/GCG',
-        badge: '',
-        note: '20 MG | 3 ML · 2-3 month supply',
-        description:
-          'Triple-agonist peptide targeting GLP-1, GIP, and glucagon receptors for next-generation metabolic optimization.',
-        price: 340,
-        category: 'glp1',
-        featured: true,
-        image: '/images/products/r3ta-glp1-gip-gcg.png',
-        secondaryImage: '/images/products/r3ta-glp1-gip-gcg-coa.png',
-      },
-      {
         id: 'semaglutide',
         name: 'Semaglutide — GLP1',
         badge: '',
@@ -98,6 +85,7 @@ export const JOIN_THERAPY_SECTIONS: JoinTherapySection[] = [
           'Dual GIP/GLP-1 agonist offering enhanced glycemic control and significant body composition changes.',
         price: 290,
         category: 'glp1',
+        featured: true,
         image: '/images/products/tirzepatide-glp1-gip.png',
         secondaryImage: '/images/products/tirzepatide-glp1-gip-coa.png',
       },

@@ -97,7 +97,7 @@
 - [ ] **2.1** Verify FDA approval status of every medication offered:
   - [ ] Semaglutide — FDA-approved (Wegovy/Ozempic); compounded status?
   - [ ] Tirzepatide — FDA-approved (Mounjaro/Zepbound); compounded status?
-  - [ ] Retatrutide (R3TA) — NOT FDA-approved (investigational)
+  - [ ] removed therapy (removed therapy) — NOT FDA-approved (investigational)
   - [ ] BPC-157 — NOT FDA-approved
   - [ ] TB-500 — NOT FDA-approved
   - [ ] GHK-Cu — NOT FDA-approved as drug
@@ -143,7 +143,7 @@
 ### HIGH-RISK PRODUCTS (Likely LegitScript Blockers)
 | Product | Issue | Action Required |
 |---------|-------|-----------------|
-| **Retatrutide (R3TA)** | Not FDA-approved, investigational only | May need to remove from public marketing |
+| **removed therapy (removed therapy)** | Not FDA-approved, investigational only | May need to remove from public marketing |
 | **Melanotan 2 (MT2)** | FDA has issued consumer warnings | HIGH RISK — may need to remove entirely |
 | **Semax/Selank** | Not FDA-approved in US | Review marketing claims |
 | **BPC-157/TB-500** | Not FDA-approved | Cannot claim to "treat" conditions |
@@ -724,7 +724,7 @@
 |------------|-----------|-------------------|----------------------|
 | **Semaglutide** | FDA-approved (Wegovy, Ozempic) | Compounding restricted post-April 2025 | Can reference FDA approval; compounded versions need clinical justification |
 | **Tirzepatide** | FDA-approved (Mounjaro, Zepbound) | Compounding restricted post-March 2025 | Same as above |
-| **Retatrutide** | NOT approved — Phase 3 trials | N/A | Cannot market as available treatment; "investigational" only |
+| **removed therapy** | NOT approved — Phase 3 trials | N/A | Cannot market as available treatment; "investigational" only |
 | **BPC-157** | NOT approved | Research compound | Cannot claim to treat/cure; "research" or "wellness" framing only |
 | **TB-500** | NOT approved | Research compound | Same as BPC-157 |
 | **GHK-Cu** | NOT approved as drug | Cosmetic ingredient | Cannot make drug-like claims |
@@ -736,7 +736,7 @@
 
 ### Required Actions
 
-1. **Immediately review**: Melanotan 2 and Retatrutide marketing — these are the highest-risk products
+1. **Immediately review**: Melanotan 2 and removed therapy marketing — these are the highest-risk products
 2. **Add FDA status badges**: Every product/therapy page must clearly show FDA approval status
 3. **Qualify all claims**: "Used in clinical research" vs. "FDA-approved treatment"
 4. **Update compounding disclosures**: Post-shortage compliance language
@@ -842,7 +842,7 @@
 | R2 | **Compounded GLP-1 post-shortage compliance** | Certification denial; legal action | Verify Asher Med sourcing is post-shortage compliant |
 | R3 | **Non-FDA-approved products marketed as treatments** | Certification denial | Add FDA status disclosures; remove treatment claims for unapproved products |
 | R4 | **Melanotan 2 marketing** | Certification denial; FDA warning | Consider removing MT2 or adding strong disclaimers |
-| R5 | **Retatrutide (R3TA) marketed as available therapy** | Certification denial | Clearly label as investigational |
+| R5 | **removed therapy (removed therapy) marketed as available therapy** | Certification denial | Clearly label as investigational |
 | R6 | **Unsupported health claims in testimonials** | Application flagged | Add disclaimers; remove specific weight loss claims |
 | R7 | **Partner pharmacy not LegitScript certified** | Blocks CULTR certification | Verify Asher Med pharmacy certification status |
 | R8 | **Domain WHOIS using privacy service** | Application rejection | Update to transparent registration |
@@ -878,7 +878,7 @@
 2. Add dispensing pharmacy contact information to website (name, address, phone, fax)
 3. Verify WHOIS domain registration (remove privacy services if present)
 4. Audit compounded GLP-1 sourcing compliance (post-shortage)
-5. Review Melanotan 2 and Retatrutide marketing — make go/no-go decision
+5. Review Melanotan 2 and removed therapy marketing — make go/no-go decision
 6. Add FDA status disclosures to all product/therapy pages
 
 ### Week 2: High Priority Website Changes

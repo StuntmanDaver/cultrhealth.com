@@ -1,5 +1,5 @@
 -- Migration 052: Store actual coupon discount dollars on club_orders
--- Motivation: product-specific coupons (e.g. RETA — R3TA only) discount a
+-- Motivation: product-specific coupons can discount a
 -- subset of line items, so the historical SQL estimate of
 --   discount = revenue * pct / (100 - pct)
 -- over-reports the discount for mixed carts. Persisting the actual amount at

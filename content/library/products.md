@@ -64,20 +64,6 @@ Complete reference guide for all compounds in the CULTR library, organized by th
 - **Best For**: Dual-pathway metabolic optimization
 - **Cycle**: Ongoing
 
-### Retatrutide (RTA)
-- **Primary Targets**: GLP1R + GIPR + Glucagon receptor (GCGR)
-- **Pathways**:
-  - ↑ Energy expenditure (via GCGR)
-  - ↑ Lipolysis
-  - ↑ Insulinotropic signaling
-  - ↑ Hepatic fat oxidation
-- **Standard Dose**: 1–12mg weekly (slow titration)
-- **Half-life**: Days
-- **Routes**: Subcutaneous
-- **Common Uses**: Weight loss, metabolic optimization, appetite control
-- **Best For**: Maximum metabolic enhancement; CULTR's primary GLP recommendation
-- **Cycle**: Ongoing
-
 ### Mazdutide
 - **Primary Targets**: GLP1R + Glucagon receptor
 - **Pathways**:
@@ -500,7 +486,7 @@ Complete reference guide for all compounds in the CULTR library, organized by th
 | Elamipretide (SS-31) | Morning (fasted) | Mitochondrial energy |
 | MOTS-c | Morning | Metabolic regulation |
 | NAD+ | Morning | Cellular energy support |
-| RTA / SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
+| SEMA/B6 / TIRZ/B3 / Mazdutide / Cagrilintide | Same day weekly | Consistent timing |
 
 ### EVENING / PRE-SLEEP
 

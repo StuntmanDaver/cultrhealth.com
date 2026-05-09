@@ -54,7 +54,6 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 - **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
 - **DSIP** (100mcg before bed) -- deep sleep support for irregular schedules
-- **RTA** (1-12mg weekly, titrated) -- appetite regulation and body composition if needed
 - **Thymosin Alpha-1** (1.5mg 2x/week) -- immune support during high-stress social periods
 
 ### What to Track
@@ -114,13 +113,13 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 | Compound | Dose Range | Timing | Purpose |
 |----------|-----------|--------|---------|
 | Tesamorelin | 1-2mg daily | Before bed | Visceral fat reduction, GH-mediated metabolic optimization |
-| RTA | 1-12mg weekly | Same day each week | Triple-agonist appetite regulation + metabolic optimization |
+| TIRZ/B3 | 2.5-15mg weekly | Same day each week | Dual incretin appetite regulation + metabolic optimization |
 | BPC-157 | 250mcg/day | AM | GI support during GLP-1 adjustment |
 
 ### Add-ons
 
 - **CJC-1295 / Ipamorelin** (100-200mcg nightly) -- alternative GH secretagogue pairing if Tesamorelin unavailable
-- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (RTA, SEMA/B6)
+- **Cagrilintide** (0.25-2.4mg weekly) -- amylin pathway for enhanced satiety when combined with GLP-1 agonists (TIRZ/B3, SEMA/B6)
 - **AOD-9604** (300mcg AM fasted) -- targeted fat mobilization
 - **MOTS-C** (5-10mg 3-5x weekly) -- metabolic activation and exercise capacity
 
@@ -134,7 +133,7 @@ Goal-based protocol stacks organized by persona. Each guide includes a baseline 
 
 ### Avoid for This Persona
 
-- Stacking RTA or other GLP-1 agonists with cagrilintide without slow independent titration of each
+- Stacking GLP-1 agonists with cagrilintide without slow independent titration of each
 - Excessive caloric restriction -- GLP-1s reduce appetite naturally, severe deficits cause muscle loss
 - Skipping protein tracking -- muscle preservation requires adequate protein even with reduced appetite
 - Running fat-loss peptides (AOD-9604) with a fed-state dose -- fasting required for efficacy
@@ -376,7 +375,7 @@ PT-141 acts centrally in the brain (melanocortin pathway), making it unique amon
 
 **Core Peptides**
 
-- **Incretin / GLP-1 Family** -- SEMA/B6, TIRZ/B3 (GIP/GLP-1), Retatrutide (GIP/GLP-1/GCGR triple agonist), Cagrilintide (amylin analog)
+- **Incretin / GLP-1 Family** -- SEMA/B6, TIRZ/B3 (GIP/GLP-1), Cagrilintide (amylin analog)
 - **GH-Mediated Metabolic Agents** -- AOD-9604 (GH fragment 176-191), Tesamorelin (GHRH for visceral fat), CJC-1295 / Ipamorelin (indirect metabolic via GH)
 - **Mitochondrial Metabolic Peptides** -- MOTS-c (exercise mimetic, AMPK activation), 5-Amino-1MQ (NNMT inhibitor, NAD+ salvage)
 

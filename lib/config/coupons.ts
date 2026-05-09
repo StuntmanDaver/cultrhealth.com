@@ -2,6 +2,7 @@
 // Used in /api/club/validate-coupon and /api/club/orders
 
 import { getAffiliateCodeByCode, getCreatorById } from '@/lib/creators/db'
+import { FIRST_PURCHASE_DISCOUNT_CODE } from '@/lib/config/first-purchase-discount'
 
 export type ClubCoupon = {
   discount: number  // percentage (e.g. 20 = 20%)
@@ -38,7 +39,6 @@ export const CLUB_COUPONS: Record<string, ClubCoupon> = {
   'CULTR30':    { discount: 30, label: 'Owner Promo', expiresAt: new Date('2026-06-30T23:59:59Z'), noBundleStack: true },
   'BUTCH10':    { discount: 10, label: 'Promo Code' },
   'OWNERLR3':   { discount: 70, label: 'Owner Discount' },
-  'RETA':       { discount: 50, label: 'R3TA 50% Off', applicableTherapyIds: ['retatrutide'], noBundleStack: true },
   'GHFC15':     { discount: 15, label: 'GHFC15 Promo' },
 }
 
@@ -81,9 +81,18 @@ export const NO_BUNDLE_CODES = new Set(
     .map(([key]) => key)
 )
 
+export const RESERVED_COUPON_CODES = new Set([
+  ...Object.keys(CLUB_COUPONS),
+  FIRST_PURCHASE_DISCOUNT_CODE,
+])
+
 export async function validateCouponUnified(code: string): Promise<UnifiedCouponResult | null> {
   if (!code) return null
   const normalized = code.trim().toUpperCase()
+
+  if (normalized === FIRST_PURCHASE_DISCOUNT_CODE) {
+    return null
+  }
 
   // Priority 1: Check hardcoded staff coupons (no DB call)
   const internal = CLUB_COUPONS[normalized]

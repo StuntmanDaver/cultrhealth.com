@@ -6,7 +6,7 @@ export const UserIntakeResponseSchema = z.object({
   weightLb: z.number().min(80).max(600),
   heightInches: z.number().min(40).max(96),
   priorGlp1History: z.boolean(),
-  priorGlp1Details: z.enum(['never_used', 'semaglutide', 'tirzepatide', 'retatrutide', 'unknown']),
+  priorGlp1Details: z.enum(['never_used', 'semaglutide', 'tirzepatide', 'unknown']),
   priorToleranceOrSideEffects: z.string().optional().default(''),
   goal: z.enum(['weight_loss', 'maintenance', 'transition', 'informational']),
   requestedProduct: z.string(),
