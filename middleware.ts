@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+const CULTRCLUB_RESERVED_ROOT_PATHS = new Set([
+  'api',
+  '_next',
+  'admin',
+  'creators',
+  'dashboard',
+  'favicon.ico',
+  'join',
+  'legal',
+  'login',
+  'members',
+  'not-found',
+  'portal',
+  'pricing',
+  'robots.txt',
+  'sitemap.xml',
+  'success',
+])
+
+function isCultrClubHost(hostname: string): boolean {
+  const host = hostname.split(':')[0]?.toLowerCase() || ''
+  return host === 'cultrclub.com' || host === 'www.cultrclub.com' || host === 'staging.cultrclub.com'
+}
+
+function getCultrClubCreatorSlug(pathname: string): string | null {
+  const segments = pathname.split('/').filter(Boolean)
+  if (segments.length !== 1) return null
+
+  const slug = segments[0]
+  const lower = slug.toLowerCase()
+  if (CULTRCLUB_RESERVED_ROOT_PATHS.has(lower)) return null
+  if (slug.includes('.')) return null
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_-]{2,80}$/.test(slug)) return null
+
+  return slug
+}
+
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   const isProductionDeployment = process.env.VERCEL_ENV === 'production'
@@ -12,6 +49,18 @@ export function middleware(request: NextRequest) {
     hostname.startsWith('127.0.0.1:') ||
     hostname === '[::1]' ||
     hostname.startsWith('[::1]:')
+
+  if (
+    isCultrClubHost(hostname) &&
+    (request.method === 'GET' || request.method === 'HEAD')
+  ) {
+    const creatorSlug = getCultrClubCreatorSlug(request.nextUrl.pathname)
+    if (creatorSlug) {
+      const trackingUrl = request.nextUrl.clone()
+      trackingUrl.pathname = `/r/${creatorSlug}`
+      return NextResponse.rewrite(trackingUrl)
+    }
+  }
 
   // Canonicalize production deployment hosts to the primary public domain.
   if (isProductionDeployment && isVercelHost && (request.method === 'GET' || request.method === 'HEAD')) {

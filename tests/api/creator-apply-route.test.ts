@@ -83,6 +83,43 @@ describe('creator apply route', () => {
     mockResendSend.mockResolvedValue({ data: { id: 'email_123' }, error: null })
   })
 
+  it('creates a new pending creator application and sends verification email', async () => {
+    mockGetCreatorByEmail.mockResolvedValue(null)
+
+    const { POST } = await import('@/app/api/creators/apply/route')
+    const request = new NextRequest('https://www.cultrhealth.com/api/creators/apply', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: 'creator@example.com',
+        full_name: 'Creator Example',
+        phone: '555-123-4567',
+        social_handle: '@creator',
+      }),
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toMatchObject({
+      success: true,
+      creatorId: 'creator_1',
+    })
+    expect(mockCreateCreator).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'creator@example.com',
+      full_name: 'Creator Example',
+      phone: '555-123-4567',
+      social_handle: '@creator',
+    }))
+    expect(mockUpdateCreatorStatus).not.toHaveBeenCalled()
+
+    const emailPayload = mockResendSend.mock.calls[0][0]
+    expect(emailPayload.to).toBe('creator@example.com')
+    expect(emailPayload.subject).toBe('Verify Your CULTR Creator Application')
+    expect(emailPayload.html).toContain('/api/creators/verify-email?token=verify-token')
+  })
+
   it.each(['rejected', 'paused'] as const)(
     'resets %s creators back to pending when they reapply',
     async (status) => {

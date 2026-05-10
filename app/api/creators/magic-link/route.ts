@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createMagicLinkToken, checkRateLimit, normalizeAuthEmailInput } from '@/lib/auth'
 
+const GENERIC_SUCCESS_MESSAGE = 'If you have an active creator account, you will receive an email shortly.'
+const GENERIC_RETRY_MESSAGE = 'We could not send a login link right now. Please try again in a few minutes or contact support.'
+
 const TEAM_EMAILS = [
   'alex@cultrhealth.com',
   'tony@cultrhealth.com',
@@ -33,6 +36,10 @@ function getBaseUrl(request: NextRequest): string {
   )
 }
 
+function infrastructureError(message = GENERIC_RETRY_MESSAGE) {
+  return NextResponse.json({ error: message }, { status: 503 })
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, redirect: redirectPath } = await request.json()
@@ -54,7 +61,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please wait before requesting another link' }, { status: 429 })
     }
 
-    // Check if creator exists in DB OR is a staging bypass email
+    // Check if creator exists in DB OR is a staging bypass email.
+    // Unknown/inactive accounts still receive the generic success response,
+    // but infrastructure failures must not silently look successful.
     let creatorExists = isStagingAccess
 
     if (!creatorExists) {
@@ -64,8 +73,12 @@ export async function POST(request: NextRequest) {
         if (creator && (creator.status === 'active' || creator.status === 'pending')) {
           creatorExists = true
         }
-      } catch {
-        // DB lookup failed
+      } catch (dbError) {
+        console.error('[creators/magic-link] Creator lookup failed', {
+          emailDomain: normalizedEmail.split('@')[1] || 'unknown',
+          error: dbError instanceof Error ? dbError.message : 'unknown',
+        })
+        return infrastructureError()
       }
     }
 
@@ -73,7 +86,7 @@ export async function POST(request: NextRequest) {
     if (!creatorExists) {
       return NextResponse.json({
         success: true,
-        message: 'If you have an active creator account, you will receive an email shortly.',
+        message: GENERIC_SUCCESS_MESSAGE,
       })
     }
 
@@ -93,9 +106,14 @@ export async function POST(request: NextRequest) {
       console.log('Creator magic link (direct):', magicLink)
       return NextResponse.json({
         success: true,
-        message: 'If you have an active creator account, you will receive an email shortly.',
+        message: GENERIC_SUCCESS_MESSAGE,
         redirectUrl: magicLink,
       })
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[creators/magic-link] RESEND_API_KEY is not configured')
+      return infrastructureError()
     }
 
     // Send email via Resend
@@ -132,16 +150,16 @@ export async function POST(request: NextRequest) {
 
       if (emailError) {
         console.error('Failed to send creator magic link email:', emailError)
-        return NextResponse.json({ error: 'Failed to send email. Please try again.' }, { status: 500 })
+        return infrastructureError()
       }
     } catch (emailError) {
       console.error('Failed to send creator magic link email:', emailError)
-      return NextResponse.json({ error: 'Failed to send email. Please try again.' }, { status: 500 })
+      return infrastructureError()
     }
 
     return NextResponse.json({
       success: true,
-      message: 'If you have an active creator account, you will receive an email shortly.',
+      message: GENERIC_SUCCESS_MESSAGE,
     })
   } catch (error) {
     console.error('Creator magic link error:', error)

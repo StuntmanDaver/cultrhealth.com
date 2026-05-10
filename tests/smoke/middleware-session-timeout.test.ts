@@ -34,4 +34,34 @@ describe('Middleware session timeout', () => {
     expect(lastActivityClears).toHaveLength(1)
     expect(setCookie).toContain('Domain=.cultrhealth.com')
   })
+
+  it('rewrites bare cultrclub creator slugs to click tracking', () => {
+    const request = new NextRequest('https://cultrclub.com/joncollins441', {
+      headers: { host: 'cultrclub.com' },
+    })
+
+    const response = middleware(request)
+
+    expect(response.headers.get('x-middleware-rewrite')).toBe('https://cultrclub.com/r/joncollins441')
+  })
+
+  it('does not hijack reserved cultrclub paths', () => {
+    const request = new NextRequest('https://cultrclub.com/join', {
+      headers: { host: 'cultrclub.com' },
+    })
+
+    const response = middleware(request)
+
+    expect(response.headers.get('x-middleware-rewrite')).toBe('https://cultrclub.com/not-found')
+  })
+
+  it('does not rewrite nested cultrclub paths as creator slugs', () => {
+    const request = new NextRequest('https://cultrclub.com/creators/login', {
+      headers: { host: 'cultrclub.com' },
+    })
+
+    const response = middleware(request)
+
+    expect(response.headers.get('x-middleware-rewrite')).toBeNull()
+  })
 })

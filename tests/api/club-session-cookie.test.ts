@@ -9,6 +9,12 @@ const mockFormLimiterCheck = vi.fn()
 const mockStrictLimiterCheck = vi.fn()
 const mockGetClientIp = vi.fn()
 const mockRateLimitResponse = vi.fn()
+const mockGetCreatorByEmail = vi.fn()
+const mockCreateCreator = vi.fn()
+const mockUpdateCreatorStatus = vi.fn()
+const mockUpdateCreatorEmailVerified = vi.fn()
+const mockSetCreatorRecruiterIfMissing = vi.fn()
+const mockResendSend = vi.fn()
 
 vi.mock('@vercel/postgres', () => ({
   sql: mockSql,
@@ -19,7 +25,30 @@ vi.mock('next/headers', () => ({
 }))
 
 vi.mock('@/lib/mailchimp', () => ({
+  syncContactToMailchimp: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/lib/contacts', () => ({
   syncContactToMailchimp: mockSyncContactToMailchimp,
+}))
+
+vi.mock('@/lib/creators/db', () => ({
+  getCreatorByEmail: mockGetCreatorByEmail,
+  createCreator: mockCreateCreator,
+  updateCreatorStatus: mockUpdateCreatorStatus,
+  updateCreatorEmailVerified: mockUpdateCreatorEmailVerified,
+  setCreatorRecruiterIfMissing: mockSetCreatorRecruiterIfMissing,
+  getCreatorById: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('resend', () => ({
+  Resend: vi.fn(function MockResend() {
+    return {
+      emails: {
+        send: mockResendSend,
+      },
+    }
+  }),
 }))
 
 vi.mock('@/lib/rate-limit', () => ({
@@ -42,6 +71,18 @@ describe('club session cookies', () => {
     mockFormLimiterCheck.mockResolvedValue({ success: true, limit: 5, remaining: 4, reset: 0 })
     mockStrictLimiterCheck.mockResolvedValue({ success: true, limit: 3, remaining: 2, reset: 0 })
     mockGetClientIp.mockResolvedValue('127.0.0.1')
+    mockGetCreatorByEmail.mockResolvedValue(null)
+    mockCreateCreator.mockResolvedValue({
+      id: 'creator_1',
+      email: 'creator-signup@cultrhealth-qa.com',
+      full_name: 'Creator Signup',
+      status: 'pending',
+      email_verified: false,
+    })
+    mockUpdateCreatorStatus.mockResolvedValue(true)
+    mockUpdateCreatorEmailVerified.mockResolvedValue(true)
+    mockSetCreatorRecruiterIfMissing.mockResolvedValue(false)
+    mockResendSend.mockResolvedValue({ data: { id: 'email_123' }, error: null })
     mockRateLimitResponse.mockReturnValue(
       new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429 })
     )
@@ -59,7 +100,11 @@ describe('club session cookies', () => {
       body: JSON.stringify({
         firstName: 'Test',
         lastName: 'User',
-        email: 'test@example.com',
+        // Avoid RFC 2606 reserved domains (example.com/.test/.invalid/...)
+        // because POST /api/club/signup now drops those silently to filter
+        // bot traffic. Use a non-reserved synthetic address so this test
+        // still exercises the real cookie-signing path.
+        email: 'signup-cookie-test@cultrhealth-qa.com',
         phone: '555-111-2222',
         signupType: 'products',
       }),
@@ -73,7 +118,7 @@ describe('club session cookies', () => {
     expect(cookieValue).toBeTruthy()
     expect(cookieValue).not.toContain('%7B')
     await expect(verifyClubVisitorToken(cookieValue || '')).resolves.toEqual({
-      email: 'test@example.com',
+      email: 'signup-cookie-test@cultrhealth-qa.com',
     })
   })
 
@@ -155,5 +200,45 @@ describe('club session cookies', () => {
 
     expect(response.status).toBe(429)
     expect(mockSql).not.toHaveBeenCalled()
+  })
+
+  it('club creator signup creates a pending creator and sends verification email', async () => {
+    process.env.POSTGRES_URL = 'postgres://test'
+    process.env.RESEND_API_KEY = 're_test_123'
+    mockSql
+      .mockResolvedValueOnce({ rows: [{ id: 'member_1' }] })
+      .mockResolvedValueOnce({ rows: [{ count: 0 }] })
+
+    const { POST } = await import('@/app/api/club/signup/route')
+    const response = await POST(new Request('http://localhost:3000/api/club/signup', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', host: 'cultrclub.com' },
+      body: JSON.stringify({
+        firstName: 'Creator',
+        lastName: 'Signup',
+        email: 'creator-signup@cultrhealth-qa.com',
+        phone: '555-111-3333',
+        socialHandle: '@creator',
+        signupType: 'creator',
+      }),
+    }))
+    const body = await response.json()
+
+    await new Promise((resolve) => setImmediate(resolve))
+    await new Promise((resolve) => setImmediate(resolve))
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(mockCreateCreator).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'creator-signup@cultrhealth-qa.com',
+      full_name: 'Creator Signup',
+      phone: '555-111-3333',
+      social_handle: '@creator',
+    }))
+    expect(mockResendSend).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'creator-signup@cultrhealth-qa.com',
+      subject: 'Verify Your CULTR Creator Application',
+      html: expect.stringContaining('/api/creators/verify-email?token='),
+    }))
   })
 })
