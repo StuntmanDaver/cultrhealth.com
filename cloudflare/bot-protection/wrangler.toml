@@ -15,3 +15,7 @@ preview_id = "91c70132b4584e219af510f3ccdd4831"
 [[routes]]
 pattern = "cultrhealth.com/*"
 zone_name = "cultrhealth.com"
+
+[[routes]]
+pattern = "www.cultrhealth.com/*"
+zone_name = "cultrhealth.com"

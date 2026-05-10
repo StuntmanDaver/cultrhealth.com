@@ -133,6 +133,19 @@ const TRUSTED_CRAWLER_UA = /googlebot|bingbot|duckduckbot|yandexbot|baiduspider|
 // ─── Rate Limiting Config ─────────────────────────────────────────────────────
 const RATE_LIMIT_MAX = 120       // max requests per window
 const RATE_LIMIT_WINDOW_SEC = 60 // 1-minute rolling window
+const SECURITY_CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://cdn.curator.io https://js.stripe.com https://jstest.authorize.net https://js.authorize.net https://assets.calendly.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.curator.io https://assets.calendly.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https: http:",
+  "connect-src 'self' https://api.stripe.com https://r.stripe.com https://challenges.cloudflare.com https://www.google-analytics.com https://region1.google-analytics.com https://*.curator.io",
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com https://challenges.cloudflare.com https://calendly.com",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self' https://checkout.stripe.com",
+  "frame-ancestors 'none'",
+].join('; ')
 
 interface Env {
   RATE_LIMIT_KV: KVNamespace
@@ -143,6 +156,8 @@ interface Env {
 function getClientIP(request: Request): string {
   return (
     request.headers.get('CF-Connecting-IP') ||
+    request.headers.get('True-Client-IP') ||
+    request.headers.get('X-Real-IP') ||
     request.headers.get('X-Forwarded-For')?.split(',')[0].trim() ||
     'unknown'
   )
@@ -203,9 +218,15 @@ async function checkRateLimit(ip: string, kv: KVNamespace): Promise<{ limited: b
 function addSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers)
   headers.set('X-Content-Type-Options', 'nosniff')
-  headers.set('X-Frame-Options', 'SAMEORIGIN')
+  headers.set('X-Frame-Options', 'DENY')
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+  headers.set('X-DNS-Prefetch-Control', 'on')
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  headers.set('X-Permitted-Cross-Domain-Policies', 'none')
+  if (!headers.has('Content-Security-Policy')) {
+    headers.set('Content-Security-Policy', SECURITY_CSP)
+  }
   // Remove headers that reveal server tech
   headers.delete('X-Powered-By')
   headers.delete('Server')
@@ -214,6 +235,10 @@ function addSecurityHeaders(response: Response): Response {
     statusText: response.statusText,
     headers,
   })
+}
+
+function securityResponse(body: string, init: ResponseInit): Response {
+  return addSecurityHeaders(new Response(body, init))
 }
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
@@ -228,17 +253,23 @@ export default {
     // ── Layer 1: Honeypot paths ──────────────────────────────────────────────
     // Return 404 — reveals nothing, confuses scanners
     if (isHoneypotPath(pathname)) {
-      return new Response('Not Found', {
+      return securityResponse('Not Found', {
         status: 404,
-        headers: { 'Content-Type': 'text/plain' },
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-store',
+        },
       })
     }
 
     // ── Layer 2: Bad bot UA check ────────────────────────────────────────────
     if (isBadBot(userAgent)) {
-      return new Response('Forbidden', {
+      return securityResponse('Forbidden', {
         status: 403,
-        headers: { 'Content-Type': 'text/plain' },
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-store',
+        },
       })
     }
 
@@ -246,10 +277,11 @@ export default {
     if (!TRUSTED_CRAWLER_UA.test(userAgent) && !shouldSkipRateLimit(pathname)) {
       const { limited } = await checkRateLimit(ip, env.RATE_LIMIT_KV)
       if (limited) {
-        return new Response('Too Many Requests', {
+        return securityResponse('Too Many Requests', {
           status: 429,
           headers: {
             'Content-Type': 'text/plain',
+            'Cache-Control': 'no-store',
             'Retry-After': String(RATE_LIMIT_WINDOW_SEC),
           },
         })
