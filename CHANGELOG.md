@@ -1,3 +1,69 @@
+## [2026-05-16] - Creator portal: dual tracking URLs per link (cultrhealth + cultrclub)
+
+### Changed
+- **`app/creators/portal/share/page.tsx`** — tracking links section now shows two copyable URLs per link:
+  - `cultrhealth.com/r/{slug}` (via the `/r/` redirect handler)
+  - `cultrclub.com/{slug}` (direct club link)
+- **Default badge** shown on the auto-generated link created at approval time.
+- Each URL has its own independent copy button with visual confirmation state.
+- Renamed internal `baseUrl` → `clubBaseUrl` for clarity; social post templates still use the Club URL as the default outreach link.
+- **Commit:** `63db6ff`
+
+---
+
+## [2026-05-16] - Erik Ellis creator account configured (DB only)
+
+> All changes were direct database operations — no code deploys required.
+
+### Changed
+- **Erik Ellis (`ellis.erick1@gmail.com`)** — confirmed active creator account (approved 2026-04-16).
+- **Tracking link fixed** — `erikellis16` destination updated from `/` → `/pricing` for cultrhealth.com.
+- **cultrclub.com tracking link added** — new slug `erikellis-club` → `/` (club homepage); URL: `cultrclub.com/erikellis-club`.
+- **Codes renamed** — `ELLIS10` (primary/membership) and `ELLIS1010` (product); both give customers **10% off**.
+- **Commission rate** — 20% (unchanged from prior setup).
+- **Customer discount** — 10% off via `ELLIS10` / `ELLIS1010`.
+
+---
+
+## [2026-05-15] - Open signups nationwide + correct false jurisdiction claims
+
+> Telehealth treatment remains Florida-only (CULTR's providers are FL-licensed). Account signup, browsing, and the quiz are now open to all U.S. states.
+
+### Removed
+- **30-state signup gate** — deleted `components/compliance/FloridaStateGate.tsx` and its test; `app/refer/[code]/RefereeLandingClient.tsx` no longer gates visitors by state. Anyone can sign up and explore from any state.
+- **Dead Asher Med routes** — deleted orphaned `app/api/admin/asher-dashboard/route.ts` and `app/api/cron/asher-sync/route.ts`, which imported the removed `lib/asher-med-api` and broke the type-check.
+
+### Fixed
+- **False "30 U.S. states" licensure claims corrected to Florida-only** — the codebase published a fabricated 30-state telehealth footprint, including a 30-state medical-director license list. Corrected across `lib/config/compliance.ts` (`SERVED_STATES`, `JURISDICTION_STATEMENT`, `PROVIDER_CREDENTIALS`), the homepage / FAQ / how-it-works FAQ answers, the dosing-calculator pages and `seo-content.ts`, `lib/referral/config.ts`, `ShareReferralModal`, and `app/legal/terms`.
+- **Unsubstantiated review rating softened** — removed the numeric "4.9 / 5 from 50 reviews" claim from `TRUST_METRICS`; `SocialProofBadge` and `TestimonialsSection` now use non-numeric language (LegitScript Standard 8).
+
+### Changed
+- **Privacy policy** — added the missing HIPAA Notice-of-Privacy-Practices elements to `app/legal/privacy/page.tsx`: the right to file a complaint with HHS Office for Civil Rights without retaliation, and a statement of CULTR's legal duties.
+
+### Notes
+- This is the legacy Vercel-era workbench repo — these changes must be ported to `cultrhealth-web` to reach production.
+- Still open: a cookie-consent banner (LegitScript / CCPA) and gating GA4 off PHI routes; verify the medical-director NPI is genuine before any LegitScript application.
+
+---
+
+## [2026-05-10] - Document Cloudflare as active home for CULTR Health + Club
+
+> Supersedes older deployment notes below. Pre-2026-05-10 entries may describe the Vercel-era or migration-in-progress state; current active ownership is `cultrhealth-web` + `cultrclub-web` on Cloudflare Pages.
+
+### Changed
+- **Project source-of-truth docs updated** — `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, and `README.md` now state that `cultrhealth.com` and `cultrclub.com` are the active Cloudflare projects.
+- **Vercel marked legacy/archive** — deployment guidance now says Vercel projects are old projects and should not receive active staging or production edits.
+- **Repo ownership clarified** — active edits belong in sibling repos: `cultrhealth-web` for `cultrhealth.com` / `staging.cultrhealth.com`, and `cultrclub-web` for `cultrclub.com`.
+- **Legacy join host clarified** — active Club references now point to `cultrclub.com`; `join.cultrhealth.com` references are treated as historical or legacy.
+
+### Added
+- `docs/PROJECT-RELATIONSHIP-MAP.md` — concise map of apps, websites, repos, hosting targets, deployment rules, Cloudflare commands, and cleanup checklist.
+
+### Supporting docs
+- Updated `docs/README.md`, `docs/env-vars-go-live.md`, and `CHECKOUT-FLOW-TEST.md` so deployment/setup language points at Cloudflare rather than Vercel.
+
+---
+
 ## [2026-05-09] - Remove blocked therapy from site
 
 ### Removed
@@ -136,7 +202,7 @@ Safe-to-sync: subscription tier, self-reported wellness goal, order totals, AOV/
 5. **Admin `/admin` analytics tab**: top referrers, conversion rate, credit liability outstanding, clawback exposure.
 
 ### Production port (sibling repo `cultrhealth-web`, CF Pages)
-This repo deploys to **Vercel staging only**. Production lives in the sibling `cultrhealth-web` repo on Cloudflare Pages with `runtime='edge'`. Porting Phase 2A requires:
+Historical note from the Vercel-to-Cloudflare migration window: this repo was being used as a Vercel staging/workbench source, while production lived in the sibling `cultrhealth-web` repo on Cloudflare Pages with `runtime='edge'`. Current active edits should now go directly to the Cloudflare repos named in the 2026-05-10 relationship map. Porting Phase 2A required:
 - Replace `randomBytes`/`createHash` from `crypto` with Web Crypto API (`crypto.subtle`, `crypto.getRandomValues`) — Node `crypto` is unavailable in CF edge runtime.
 - Wrap any post-response work with `getRequestContext().ctx.waitUntil(...)` — CF Workers terminate pending Promises on `return response` (see `feedback_cf_edge_fire_and_forget.md`). The `attachRefereeEmailFromToken` call in `/api/auth/verify` and the referral helpers in the Stripe webhook need this treatment.
 - Use Neon `fullResults: true` if the port introduces any read-then-write logic that depends on `result.rowsAffected` or `result.fields`.
