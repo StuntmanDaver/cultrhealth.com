@@ -51,6 +51,87 @@ function CopyableLink({ label, value, stats }: { label: string; value: string; s
   )
 }
 
+function TrackingLinkCard({
+  label,
+  slug,
+  isDefault,
+  stats,
+}: {
+  label: string
+  slug: string
+  isDefault: boolean
+  stats?: string
+}) {
+  const [copiedHealth, setCopiedHealth] = useState(false)
+  const [copiedClub, setCopiedClub] = useState(false)
+
+  const healthUrl = `https://cultrhealth.com/r/${slug}`
+  const clubUrl = `https://cultrclub.com/${slug}`
+
+  const copy = async (url: string, which: 'health' | 'club') => {
+    await navigator.clipboard.writeText(url)
+    if (which === 'health') {
+      setCopiedHealth(true)
+      setTimeout(() => setCopiedHealth(false), 2000)
+    } else {
+      setCopiedClub(true)
+      setTimeout(() => setCopiedClub(false), 2000)
+    }
+  }
+
+  return (
+    <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium text-cultr-forest">{label}</p>
+          {isDefault && (
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-cultr-sage/30 text-cultr-forest px-2 py-0.5 rounded-full">
+              Default
+            </span>
+          )}
+        </div>
+        {stats && <span className="text-xs text-cultr-textMuted">{stats}</span>}
+      </div>
+
+      {/* CULTR Health link */}
+      <div>
+        <p className="text-[11px] uppercase tracking-wider text-cultr-textMuted font-medium mb-1.5">
+          CULTR Health
+        </p>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 text-sm text-cultr-forest bg-stone-50 px-3 py-2 rounded-lg truncate font-mono">
+            {healthUrl}
+          </code>
+          <button
+            onClick={() => copy(healthUrl, 'health')}
+            className="flex-shrink-0 p-2 rounded-lg grad-dark text-white hover:bg-cultr-forestDark transition-colors"
+          >
+            {copiedHealth ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* CULTR Club link */}
+      <div>
+        <p className="text-[11px] uppercase tracking-wider text-cultr-textMuted font-medium mb-1.5">
+          CULTR Club
+        </p>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 text-sm text-cultr-forest bg-stone-50 px-3 py-2 rounded-lg truncate font-mono">
+            {clubUrl}
+          </code>
+          <button
+            onClick={() => copy(clubUrl, 'club')}
+            className="flex-shrink-0 p-2 rounded-lg grad-dark text-white hover:bg-cultr-forestDark transition-colors"
+          >
+            {copiedClub ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Pre-built social post templates ─── */
 const SOCIAL_POSTS = [
   {
@@ -200,7 +281,7 @@ export default function ShareEarnPage() {
   const [customUrl, setCustomUrl] = useState('')
   const [creating, setCreating] = useState(false)
 
-  const baseUrl = 'https://cultrclub.com'
+  const clubBaseUrl = 'https://cultrclub.com'
 
   const effectiveDest = useCustomUrl ? customUrl : newDest
 
@@ -268,7 +349,7 @@ export default function ShareEarnPage() {
             <div>
               <label className="block text-xs font-medium text-cultr-forest mb-1">Slug</label>
               <div className="flex items-center gap-1">
-                <span className="text-sm text-cultr-textMuted">{baseUrl}/</span>
+                <span className="text-sm text-cultr-textMuted">{clubBaseUrl}/</span>
                 <input
                   type="text"
                   value={newSlug}
@@ -293,7 +374,7 @@ export default function ShareEarnPage() {
               {useCustomUrl ? (
                 <div>
                   <div className="flex items-center gap-1">
-                    <span className="text-sm text-cultr-textMuted">{baseUrl}</span>
+                    <span className="text-sm text-cultr-textMuted">{clubBaseUrl}</span>
                     <input
                       type="text"
                       value={customUrl}
@@ -339,10 +420,11 @@ export default function ShareEarnPage() {
         <div className="space-y-3">
           {links.length > 0 ? (
             links.map((link) => (
-              <CopyableLink
+              <TrackingLinkCard
                 key={link.id}
                 label={link.is_default ? 'Default Link' : link.slug}
-                value={`${baseUrl}/${link.slug}`}
+                slug={link.slug}
+                isDefault={link.is_default}
                 stats={`${link.click_count} clicks | ${link.conversion_count} conversions`}
               />
             ))
@@ -411,7 +493,7 @@ export default function ShareEarnPage() {
             <SocialShareCard
               key={platform.platform}
               {...platform}
-              defaultLink={`${baseUrl}/${(links.find(l => l.is_default) || links[0])?.slug || 'your-link'}`}
+              defaultLink={`${clubBaseUrl}/${(links.find(l => l.is_default) || links[0])?.slug || 'your-link'}`}
               defaultCode={(codes.find(c => c.is_primary && c.active) || codes[0])?.code || 'YOURCODE'}
             />
           ))}
