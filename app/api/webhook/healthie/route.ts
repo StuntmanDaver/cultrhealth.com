@@ -47,6 +47,14 @@ export async function POST(request: NextRequest) {
         await safeHandler('document', () => handleDocumentCreated(event.resource_id))
         break
 
+      case 'payment.failed':
+        await safeHandler('payment_failed', () => handlePaymentFailed(event.resource_id))
+        break
+
+      case 'appointment.completed':
+        await safeHandler('appointment_completed', () => handleAppointmentCompleted(event.resource_id))
+        break
+
       default:
         // Healthie sends many event types — only warn in dev
         if (process.env.NODE_ENV === 'development') {
@@ -110,6 +118,10 @@ async function handleFormCompleted(resourceId: string) {
         updated_at = NOW()
     WHERE LOWER(email) = ${addr}
   `
+  // NOTE: no provider alert here. This handler fires for EVERY Healthie
+  // form_answer_group (consent, follow-up, check-in forms — not just intake),
+  // so alerting here would spam the ops team. The intake-review alert is
+  // sent from /api/intake/submit, which fires once per actual intake.
 }
 
 /**
@@ -134,7 +146,11 @@ async function handleAppointmentEvent(eventType: string, resourceId: string) {
   }
 
   if (eventType === 'appointment.created') {
-    await sql`
+    // Guard on the FALSE→TRUE transition: the Healthie webhook has no event
+    // idempotency, so a retried delivery would otherwise re-send the booking
+    // confirmation. A cancellation resets the flag, so a genuine re-book still
+    // produces a fresh confirmation.
+    const onboardingUpdate = await sql`
       UPDATE member_onboarding
       SET appointment_scheduled = TRUE,
           healthie_patient_id = ${healthieUserId},
@@ -148,7 +164,45 @@ async function handleAppointmentEvent(eventType: string, resourceId: string) {
           END,
           updated_at = NOW()
       WHERE LOWER(email) = ${addr}
+        AND appointment_scheduled IS DISTINCT FROM TRUE
     `
+
+    // Send the booking confirmation + education-drip tags only on the first
+    // transition. Non-fatal.
+    if (onboardingUpdate.rowCount && onboardingUpdate.rowCount > 0) {
+      try {
+        const patientName = [user.first_name, user.last_name].filter(Boolean).join(' ') || 'Member'
+        const providerName = appointment.provider
+          ? [appointment.provider.first_name, appointment.provider.last_name].filter(Boolean).join(' ')
+          : ''
+        const contactType = (appointment.contact_type || '').toLowerCase()
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://cultrhealth.com'
+        // Guard against a malformed Healthie date string so the confirmation
+        // email never renders "Invalid Date".
+        const parsedDate = appointment.date ? new Date(appointment.date) : new Date()
+        const appointmentDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate
+        const { sendBookingConfirmation } = await import('@/lib/resend')
+        await sendBookingConfirmation({
+          name: patientName,
+          email: addr,
+          appointmentType: appointment.appointment_type?.name || 'Consultation',
+          appointmentDate,
+          providerName: providerName || undefined,
+          dashboardUrl: `${siteUrl}/members`,
+          // Healthie's confirmation template is binary (video vs in-person);
+          // treat anything not explicitly in-person as a video visit, since
+          // CULTR is a telehealth practice.
+          isVideo: contactType ? !contactType.includes('person') : true,
+        })
+        const { addTagsToContact } = await import('@/lib/contacts')
+        await addTagsToContact(addr, ['appointment-booked', 'onboarding-complete'])
+      } catch (notifyError) {
+        console.error(
+          'Healthie appointment notify error (non-fatal):',
+          notifyError instanceof Error ? notifyError.message : 'unknown'
+        )
+      }
+    }
   }
 
   if (eventType === 'appointment.updated') {
@@ -179,4 +233,47 @@ async function handleDocumentCreated(resourceId: string) {
   }
 
   // No further action needed — SiPhox cron processes lab results independently
+}
+
+/**
+ * Handle payment.failed event.
+ * Flags member_onboarding payment status and fires a non-PHI signal to Zapier.
+ * HIPAA: no patient details are forwarded to Zapier.
+ */
+async function handlePaymentFailed(resourceId: string) {
+  const user = await getClient(resourceId)
+  const addr = user?.email?.toLowerCase()
+  if (!addr) return
+
+  await sql`
+    UPDATE member_onboarding
+    SET payment_failed = TRUE, updated_at = NOW()
+    WHERE LOWER(email) = ${addr}
+  `
+
+  const zapierUrl = process.env.ZAPIER_HEALTHIE_EVENT_URL
+  if (zapierUrl) {
+    const { fireZapierWebhook } = await import('@/lib/zapier')
+    await fireZapierWebhook(zapierUrl, 'healthie_payment_failed', { source: 'healthie' })
+  }
+}
+
+/**
+ * Handle appointment.completed event.
+ * Logs a billing/documentation note; does not write PHI outside Healthie.
+ */
+async function handleAppointmentCompleted(resourceId: string) {
+  const appointment = await getAppointment(resourceId)
+  const healthieUserId = appointment.user?.id
+  if (!healthieUserId) return
+
+  const user = await getClient(healthieUserId)
+  const addr = user?.email?.toLowerCase()
+  if (!addr) return
+
+  await sql`
+    UPDATE member_onboarding
+    SET appointment_completed = TRUE, updated_at = NOW()
+    WHERE LOWER(email) = ${addr}
+  `
 }

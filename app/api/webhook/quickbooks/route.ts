@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@vercel/postgres'
 import crypto from 'crypto'
 import { escapeHtml } from '@/lib/resend'
+import { USE_QUICKBOOKS } from '@/lib/config/feature-flags'
 
 /**
  * QuickBooks Webhook Handler
@@ -27,6 +28,10 @@ interface QBWebhookPayload {
 }
 
 export async function POST(request: Request) {
+  if (!USE_QUICKBOOKS) {
+    return NextResponse.json({ received: true, ignored: true })
+  }
+
   try {
     const body = await request.text()
     const signature = request.headers.get('intuit-content-signature') || ''

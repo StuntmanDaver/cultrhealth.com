@@ -275,6 +275,13 @@ export async function POST(request: NextRequest) {
         (err) => console.error('Failed to send owner auto-approve notification:', err)
       )
 
+      // Non-PHI signal → Zapier → Notion creator record
+      const zapierUrl = process.env.ZAPIER_CREATOR_WEBHOOK_URL
+      if (zapierUrl) {
+        const { fireZapierWebhook } = await import('@/lib/zapier')
+        fireZapierWebhook(zapierUrl, 'creator_applied', { status: 'approved', source: 'cultrhealth.com' }).catch(() => null)
+      }
+
       console.log('Creator auto-approved:', creator.id)
 
       return NextResponse.json({
@@ -313,6 +320,13 @@ export async function POST(request: NextRequest) {
     sendOwnerCreatorApplicationNotification({ name: full_name, email, phone, social_handle, bio, autoApproved: false, resubmission: shouldResubmitForReview }).catch(
       (err) => console.error('Failed to send owner application notification:', err)
     )
+
+    // Non-PHI signal → Zapier → Notion creator record
+    const zapierUrl = process.env.ZAPIER_CREATOR_WEBHOOK_URL
+    if (zapierUrl) {
+      const { fireZapierWebhook } = await import('@/lib/zapier')
+      fireZapierWebhook(zapierUrl, 'creator_applied', { status: 'pending', source: 'cultrhealth.com' }).catch(() => null)
+    }
 
     console.log('Creator application submitted:', creator.id)
 
