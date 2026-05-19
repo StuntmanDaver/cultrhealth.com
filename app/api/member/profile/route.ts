@@ -5,7 +5,7 @@ import { verifySessionToken } from '@/lib/auth';
  * GET /api/member/profile
  *
  * Fetches the authenticated member's profile information.
- * First checks local database, then optionally fetches from Asher Med.
+ * First checks membership and completed intake records in the local database.
  */
 export async function GET(request: NextRequest) {
   try {
@@ -53,12 +53,20 @@ export async function GET(request: NextRequest) {
       SELECT
         id,
         asher_patient_id,
+        cultr_patient_number,
+        ehr_patient_id,
+        ehr_provider,
+        lab_preference,
+        siphox_status,
+        siphox_order_id,
+        calendly_review_url,
         stripe_customer_id,
         plan_tier,
         subscription_status,
         created_at
       FROM memberships
       WHERE stripe_customer_id = ${customerId}
+         OR lower(email) = ${email}
       ORDER BY created_at DESC
       LIMIT 1
     `;
@@ -103,20 +111,23 @@ export async function GET(request: NextRequest) {
 
       renewalEligible = parseInt(orderResult.rows[0]?.count || '0', 10) > 0;
 
-      // Build patient object from intake data
-      // intake_data stores firstName/lastName directly (set during intake/submit)
-      const asherPatientId = intakeData?.asher_patient_id as number | null;
+      const localPatientId = (intakeData?.clinical_patient_id || intakeData?.asher_patient_id) as number | null;
+      const raw = intakeData?.shippingAddress as Record<string, string> | null;
 
       patient = {
-        id: asherPatientId || intake.id,
+        id: localPatientId || intake.id,
         firstName: (intakeData?.firstName as string) || '',
         lastName: (intakeData?.lastName as string) || '',
         email: intake.customer_email,
         phone: (intakeData?.phone as string) || '',
-        shippingAddress: intakeData?.shippingAddress || null,
+        shippingAddress: raw ? {
+          address1: raw.address1 || raw.street || '',
+          address2: raw.address2 || '',
+          city: raw.city || '',
+          state: raw.state || '',
+          zipCode: raw.zipCode || raw.zip || '',
+        } : null,
       };
-
-      // TODO: Reconnect to new pharmacy partner for real-time patient data
     } else if (clubResult.rows.length > 0) {
       const clubMember = clubResult.rows[0];
       const nameParts = (clubMember.name || '').split(' ');
@@ -130,10 +141,11 @@ export async function GET(request: NextRequest) {
         email: clubMember.email,
         phone: clubMember.phone || '',
         shippingAddress: clubMember.address_street ? {
-          street: clubMember.address_street,
+          address1: clubMember.address_street,
+          address2: '',
           city: clubMember.address_city || '',
           state: clubMember.address_state || '',
-          zip: clubMember.address_zip || '',
+          zipCode: clubMember.address_zip || '',
         } : null,
       };
     }
@@ -189,14 +201,37 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { phone, shippingAddress } = body;
+    const { shippingAddress } = body as {
+      shippingAddress?: { address1: string; address2?: string; city: string; state: string; zipCode: string }
+    };
 
-    // TODO: Reconnect profile updates to new pharmacy partner
+    if (!shippingAddress) {
+      return NextResponse.json({ success: false, error: 'No address provided' }, { status: 400 });
+    }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Profile updated successfully',
-    });
+    const { sql } = await import('@vercel/postgres');
+
+    // Update pending_intakes (intake-flow users)
+    await sql`
+      UPDATE pending_intakes
+      SET intake_data = intake_data || ${JSON.stringify({ shippingAddress })}::jsonb,
+          updated_at = NOW()
+      WHERE lower(customer_email) = ${email}
+        AND intake_status = 'completed'
+    `;
+
+    // Update club_members (club-only users)
+    await sql`
+      UPDATE club_members
+      SET address_street = ${shippingAddress.address1},
+          address_city   = ${shippingAddress.city},
+          address_state  = ${shippingAddress.state},
+          address_zip    = ${shippingAddress.zipCode},
+          updated_at     = NOW()
+      WHERE lower(email) = ${email}
+    `;
+
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to update member profile:', error instanceof Error ? error.message : 'Unknown error');
 
