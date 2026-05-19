@@ -1594,21 +1594,31 @@ export async function getAllTrackingLinksForAdmin() {
         tl.*,
         c.full_name as creator_name,
         c.status as creator_status,
+        COALESCE(ce_stats.real_clicks, 0)::int as real_click_count,
         COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
       FROM tracking_links tl
       LEFT JOIN creators c ON tl.creator_id = c.id
       LEFT JOIN (
-        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        SELECT
+          link_id,
+          COUNT(*) as real_clicks,
+          COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
         FROM click_events
         WHERE link_id IS NOT NULL
         GROUP BY link_id
       ) ce_stats ON ce_stats.link_id = tl.id
       WHERE c.id IS NULL OR LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
-      ORDER BY tl.click_count DESC, tl.created_at DESC
+      ORDER BY COALESCE(ce_stats.real_clicks, tl.click_count) DESC, tl.created_at DESC
     `
-    // Use the live count from click_events if it's higher than the stale counter
+    // Use live click_events counts — stale counters on tracking_links can drift
+    // on CF edge (fire-and-forget kills the increment). Both click_count and
+    // conversion_count are overridden so the conversion rate stays consistent.
     return result.rows.map(r => ({
       ...r,
+      click_count: Math.max(
+        Number(r.click_count) || 0,
+        Number(r.real_click_count) || 0
+      ),
       conversion_count: Math.max(
         Number(r.conversion_count) || 0,
         Number(r.real_conversion_count) || 0
@@ -2623,7 +2633,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT created_at::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IN ('invoice_sent', 'paid')
+        WHERE status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY created_at::date
       `
@@ -2638,7 +2648,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT date_trunc('week', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IN ('invoice_sent', 'paid')
+        WHERE status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY date_trunc('week', created_at)::date
       `
@@ -2653,7 +2663,7 @@ export async function getRevenueTimeSeries(days = 30): Promise<RevenueTimeSeries
       clubQuery = sql`
         SELECT date_trunc('month', created_at)::date as date, COALESCE(SUM(subtotal_usd), 0) as revenue, COUNT(*)::int as orders
         FROM club_orders
-        WHERE status IN ('invoice_sent', 'paid')
+        WHERE status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
           AND created_at >= NOW() - make_interval(days => ${days})
         GROUP BY date_trunc('month', created_at)::date
       `
