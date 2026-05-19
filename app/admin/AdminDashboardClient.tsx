@@ -13,7 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { MetricCard } from '@/components/admin/MetricCard'
-import { PIPELINE_LABELS } from '@/lib/admin-club-orders'
+import { PIPELINE_LABELS, PIPELINE_STATUSES } from '@/lib/admin-club-orders'
 import type { AnalyticsData } from '@/lib/admin-types'
 
 interface CronStatus {
@@ -121,6 +121,13 @@ export default function AdminDashboardClient() {
       hour: '2-digit',
       minute: '2-digit',
     })
+  }
+
+  const auditSince = new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  const auditTone = (issues: number) => {
+    if (issues === 0) return 'border-green-200 bg-green-50/60 text-green-700'
+    if (issues <= 3) return 'border-amber-200 bg-amber-50/70 text-amber-700'
+    return 'border-red-200 bg-red-50/70 text-red-700'
   }
 
   if (loading && !data) {
@@ -289,31 +296,145 @@ export default function AdminDashboardClient() {
             </div>
           )}
 
+          {/* Operational Audit */}
+          {(data.creatorCommissionAudit || data.pipelineAudit) && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {data.creatorCommissionAudit && (() => {
+                const audit = data.creatorCommissionAudit
+                const criticalIssues = audit.checks.missingAttribution + audit.checks.attributionWithoutLedger
+                return (
+                  <div className={`rounded-xl border p-6 ${auditTone(audit.totalIssues)}`}>
+                    <div className="flex items-start justify-between gap-4 mb-5">
+                      <div>
+                        <h2 className="font-display text-xl text-brand-primary">Creator Credit Audit</h2>
+                        <p className="text-sm text-brand-primary/60 mt-1">
+                          {audit.creditedOrders.toLocaleString()} credited orders · {formatCurrency(audit.ledgerTotal)} ledgered commission
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold">
+                        {audit.totalIssues === 0 ? 'Clean' : `${audit.totalIssues} issue${audit.totalIssues === 1 ? '' : 's'}`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Attributed</p>
+                        <p className="mt-1 text-2xl font-semibold text-brand-primary">{audit.attributedClubOrders}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Missing Credit</p>
+                        <p className={`mt-1 text-2xl font-semibold ${criticalIssues > 0 ? 'text-red-700' : 'text-green-700'}`}>{criticalIssues}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Rate Issues</p>
+                        <p className={`mt-1 text-2xl font-semibold ${audit.checks.directRateMismatches > 0 ? 'text-amber-700' : 'text-green-700'}`}>{audit.checks.directRateMismatches}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Refund Gaps</p>
+                        <p className={`mt-1 text-2xl font-semibold ${audit.checks.missingRefundReversals > 0 ? 'text-red-700' : 'text-green-700'}`}>{audit.checks.missingRefundReversals}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-brand-primary/65">
+                      <span>Duplicate ledger rows: {audit.checks.duplicateLedgerRows}</span>
+                      <span>Self-ref ledger rows: {audit.checks.selfReferralLedgerRows}</span>
+                      <span>Cap violations: {audit.checks.overrideCapViolations}</span>
+                      <a
+                        href={`/api/admin/creators/commission-audit?since=${auditSince}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto text-brand-primary underline"
+                      >
+                        Open detailed audit →
+                      </a>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {data.pipelineAudit && (() => {
+                const audit = data.pipelineAudit
+                return (
+                  <div className={`rounded-xl border p-6 ${auditTone(audit.totalIssues)}`}>
+                    <div className="flex items-start justify-between gap-4 mb-5">
+                      <div>
+                        <h2 className="font-display text-xl text-brand-primary">Pipeline Cleanup</h2>
+                        <p className="text-sm text-brand-primary/60 mt-1">
+                          {audit.totalActive.toLocaleString()} active orders · {audit.terminalOrders.toLocaleString()} complete or closed
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-white/80 px-3 py-1 text-xs font-semibold">
+                        {audit.totalIssues === 0 ? 'Clean' : `${audit.totalIssues} issue${audit.totalIssues === 1 ? '' : 's'}`}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Awaiting</p>
+                        <p className="mt-1 text-2xl font-semibold text-brand-primary">{audit.awaitingApproval}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Payment</p>
+                        <p className="mt-1 text-2xl font-semibold text-brand-primary">{audit.needsPayment}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Ready Ship</p>
+                        <p className="mt-1 text-2xl font-semibold text-brand-primary">{audit.readyToShip}</p>
+                      </div>
+                      <div className="rounded-lg bg-white/70 p-3">
+                        <p className="text-brand-primary/55">Shipped</p>
+                        <p className="mt-1 text-2xl font-semibold text-brand-primary">{audit.shippedNotFulfilled}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-brand-primary/65">
+                      <span>Stale: {audit.checks.staleActiveOrders}</span>
+                      <span>Timestamp gaps: {audit.checks.missingRequiredTimestamps}</span>
+                      <span>Tracking gaps: {audit.checks.shippedMissingTracking}</span>
+                      <span>Invalid status: {audit.checks.invalidStatuses}</span>
+                      <Link href="/admin/orders?type=club" className="ml-auto text-brand-primary underline">
+                        Clean orders →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+
           {/* Fulfillment Pipeline Summary */}
           {data.clubOrderFulfillment && Object.values(data.clubOrderFulfillment).some(c => c > 0) && (() => {
-            const OVERVIEW_PIPELINE = [
-              { key: 'pending_approval', label: PIPELINE_LABELS.pending_approval || 'Pending Approval', color: 'yellow' },
-              { key: 'approved', label: PIPELINE_LABELS.approved || 'Approved', color: 'blue' },
-              { key: 'invoice_sent', label: PIPELINE_LABELS.invoice_sent || 'Invoiced', color: 'indigo' },
-              { key: 'paid', label: PIPELINE_LABELS.paid || 'Paid', color: 'green' },
-              { key: 'shipped', label: PIPELINE_LABELS.shipped || 'Shipped', color: 'blue' },
-              { key: 'fulfilled', label: PIPELINE_LABELS.fulfilled || 'Fulfilled', color: 'emerald' },
-            ]
+            const colorByStage: Record<string, string> = {
+              pending_approval: 'yellow',
+              approved: 'blue',
+              invoice_sent: 'indigo',
+              needs_payment: 'orange',
+              paid: 'green',
+              waiting_to_ship: 'purple',
+              shipped: 'blue',
+              fulfilled: 'emerald',
+            }
+            const OVERVIEW_PIPELINE = PIPELINE_STATUSES.map((key) => ({
+              key,
+              label: PIPELINE_LABELS[key] || key,
+              color: colorByStage[key] || 'blue',
+            }))
             const colorMap: Record<string, { bg: string; text: string; activeBg: string }> = {
               yellow:  { bg: 'bg-yellow-50',  text: 'text-yellow-700',  activeBg: 'bg-yellow-100' },
               blue:    { bg: 'bg-blue-50',    text: 'text-blue-700',    activeBg: 'bg-blue-100' },
               indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-700',  activeBg: 'bg-indigo-100' },
+              orange:  { bg: 'bg-orange-50',  text: 'text-orange-700',  activeBg: 'bg-orange-100' },
               green:   { bg: 'bg-green-50',   text: 'text-green-700',   activeBg: 'bg-green-100' },
+              purple:  { bg: 'bg-purple-50',  text: 'text-purple-700',  activeBg: 'bg-purple-100' },
               emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', activeBg: 'bg-emerald-100' },
             }
-            const totalActive = OVERVIEW_PIPELINE.reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
+            const totalInPipeline = OVERVIEW_PIPELINE.reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
+            const totalActive = OVERVIEW_PIPELINE
+              .filter((stage) => stage.key !== 'fulfilled')
+              .reduce((s, stage) => s + (data.clubOrderFulfillment[stage.key] || 0), 0)
 
             return (
               <div className="bg-white rounded-xl border border-brand-primary/10 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="font-display text-xl text-brand-primary">Fulfillment Pipeline</h2>
-                    <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders across all stages</p>
+                    <p className="text-sm text-brand-primary/60 mt-1">{totalActive} active orders · {totalInPipeline} total in pipeline history</p>
                   </div>
                   <Link href="/admin/orders?type=club" className="text-sm text-brand-primary/60 hover:text-brand-primary underline">
                     View details →
@@ -526,6 +647,7 @@ export default function AdminDashboardClient() {
                         <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Clicks</th>
                         <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Converted</th>
                         <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Non-Converted</th>
+                        <th className="text-right py-2 pr-4 font-medium text-brand-primary/60">Latest Click</th>
                         <th className="text-right py-2 font-medium text-brand-primary/60">Conv. Rate</th>
                       </tr>
                     </thead>
@@ -536,6 +658,9 @@ export default function AdminDashboardClient() {
                           <td className="py-2 pr-4 text-right text-brand-primary">{row.total_clicks}</td>
                           <td className="py-2 pr-4 text-right text-green-600">{row.converted_clicks}</td>
                           <td className="py-2 pr-4 text-right text-brand-primary/70">{row.non_converted_clicks}</td>
+                          <td className="py-2 pr-4 text-right text-brand-primary/50 text-xs">
+                            {row.latest_click ? formatDate(row.latest_click) : 'Never'}
+                          </td>
                           <td className={`py-2 text-right font-medium ${Number(row.conversion_rate) >= 15 ? 'text-green-600' : Number(row.conversion_rate) >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
                             {row.conversion_rate}%
                           </td>
@@ -548,6 +673,7 @@ export default function AdminDashboardClient() {
                           <td className="py-2 pr-4 text-right font-bold text-brand-primary">{totalClicks}</td>
                           <td className="py-2 pr-4 text-right font-bold text-green-600">{totalConverted}</td>
                           <td className="py-2 pr-4 text-right font-bold text-brand-primary/70">{totalNonConverted}</td>
+                          <td className="py-2 pr-4" />
                           <td className={`py-2 text-right font-bold ${overallRate >= 15 ? 'text-green-600' : overallRate >= 10 ? 'text-yellow-600' : 'text-red-600'}`}>
                             {overallRate}%
                           </td>

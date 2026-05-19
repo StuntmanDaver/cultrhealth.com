@@ -96,6 +96,24 @@ export interface CreatorStats {
   creatorsByStatus: Record<string, number>
 }
 
+export interface CreatorCommissionAuditSummary {
+  totalIssues: number
+  creditedOrders: number
+  creditedRevenue: number
+  attributedClubOrders: number
+  ledgerRows: number
+  ledgerTotal: number
+  checks: {
+    missingAttribution: number
+    attributionWithoutLedger: number
+    directRateMismatches: number
+    duplicateLedgerRows: number
+    selfReferralLedgerRows: number
+    overrideCapViolations: number
+    missingRefundReversals: number
+  }
+}
+
 export interface QrScanStats {
   totalScans: number
   uniqueVisitors: number
@@ -159,6 +177,7 @@ export interface CreatorLinkPerformanceRow {
   converted_clicks: number
   non_converted_clicks: number
   conversion_rate: number
+  latest_click: string | null
 }
 
 export interface AffiliateCodeAdminRow {
@@ -392,12 +411,30 @@ export interface ClubSiteFunnel {
   topPages: { page: string; views: number }[]
 }
 
+export interface ClubOrderPipelineAuditSummary {
+  totalIssues: number
+  totalActive: number
+  terminalOrders: number
+  awaitingApproval: number
+  needsPayment: number
+  readyToShip: number
+  shippedNotFulfilled: number
+  checks: {
+    staleActiveOrders: number
+    missingRequiredTimestamps: number
+    shippedMissingTracking: number
+    timestampOrderIssues: number
+    invalidStatuses: number
+  }
+}
+
 export interface AnalyticsData {
   sales: SalesStats
   waitlist: WaitlistStats
   memberships: MembershipStats
   coupons: CouponStats
   creators: CreatorStats
+  creatorCommissionAudit: CreatorCommissionAuditSummary
   qrScans: QrScanStats
   prelaunch: PrelaunchStats
   allCreators: CreatorAdminRow[]
@@ -415,6 +452,7 @@ export interface AnalyticsData {
   revenueTimeSeries: RevenueTimeSeriesPoint[]
   creatorLinkPerformance: CreatorLinkPerformanceRow[]
   clubOrderFulfillment: Record<string, number>
+  pipelineAudit: ClubOrderPipelineAuditSummary
   inventoryAlerts: InventoryAlertRow[]
   quizLeads: QuizLeadRow[]
   clubMembers: ClubMemberAdminRow[]

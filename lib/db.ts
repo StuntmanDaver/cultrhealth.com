@@ -1293,7 +1293,8 @@ export async function getCreatorLinkPerformance(days: number) {
         ROUND(
           COUNT(CASE WHEN ce.converted = true THEN 1 END)::numeric
           / NULLIF(COUNT(ce.id), 0) * 100, 1
-        )::float8 AS conversion_rate
+        )::float8 AS conversion_rate,
+        MAX(ce.clicked_at) AS latest_click
       FROM click_events ce
       JOIN creators c ON ce.creator_id = c.id
       WHERE ce.clicked_at >= NOW() - make_interval(days => ${days})
