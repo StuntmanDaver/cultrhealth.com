@@ -287,7 +287,19 @@ export async function getAllActiveCreators(limit = 200): Promise<Creator[]> {
 // ===========================================
 
 // Reserved code names that cannot be used as affiliate codes (hardcoded/system coupons)
-const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'LOYALTY15', 'CULTR30', FIRST_PURCHASE_DISCOUNT_CODE])
+const RESERVED_CODES = new Set([
+  'OWNER',
+  'CULTRSTAFF',
+  'CULTRFAM',
+  'CULTR10',
+  'SUMMER20',
+  'LOYALTY15',
+  'CULTR30',
+  'BUTCH10',
+  'OWNERLR3',
+  'GHFC15',
+  FIRST_PURCHASE_DISCOUNT_CODE,
+])
 
 export async function createAffiliateCode(
   creatorId: string,

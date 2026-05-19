@@ -8,7 +8,7 @@ import {
   updateAffiliateCodeStripeIds,
 } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
-import { baseEmailTemplate, escapeHtml } from '@/lib/resend'
+import { baseEmailTemplate, escapeHtml, getFromEmail } from '@/lib/resend'
 
 function getBaseUrl(request: NextRequest): string {
   return (
@@ -24,8 +24,7 @@ async function sendCreatorWelcomeEmail(
   assets: { defaultSlug: string; membershipCode: string; productCode: string }
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.error('Creator welcome notification skipped: RESEND_API_KEY not configured')
-    return
+    throw new Error('RESEND_API_KEY is not configured')
   }
 
   const baseUrl = getBaseUrl(request)
@@ -33,7 +32,7 @@ async function sendCreatorWelcomeEmail(
   const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
   const trackingLink = `https://cultrclub.com/${assets.defaultSlug}`
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const fromEmail = process.env.FROM_EMAIL || 'CULTR <noreply@cultrhealth.com>'
+  const fromEmail = getFromEmail()
   const safeName = escapeHtml(creator.full_name)
 
   const content = `
@@ -236,7 +235,11 @@ export async function POST(request: NextRequest) {
     client.release()
 
     // Stripe sync (non-blocking)
-    if (process.env.STRIPE_SECRET_KEY) {
+    let stripeSynced = false
+    let stripeWarning: string | undefined
+    if (!process.env.STRIPE_SECRET_KEY) {
+      stripeWarning = 'STRIPE_SECRET_KEY is not configured, so Stripe promotion codes were not created.'
+    } else {
       const stripe = getStripe()
 
       const [membershipStripe, productStripe] = await Promise.all([
@@ -244,12 +247,15 @@ export async function POST(request: NextRequest) {
         createStripePromotionCode(stripe, productCode, discountPct),
       ])
 
+      const failedCodes: string[] = []
       if (membershipStripe) {
         await updateAffiliateCodeStripeIds(
           membershipCodeId!,
           membershipStripe.couponId,
           membershipStripe.promotionCodeId
         ).catch((err) => console.error('Failed to store membership Stripe IDs:', err))
+      } else {
+        failedCodes.push(membershipCode)
       }
 
       if (productStripe) {
@@ -258,6 +264,13 @@ export async function POST(request: NextRequest) {
           productStripe.couponId,
           productStripe.promotionCodeId
         ).catch((err) => console.error('Failed to store product Stripe IDs:', err))
+      } else {
+        failedCodes.push(productCode)
+      }
+
+      stripeSynced = failedCodes.length === 0
+      if (!stripeSynced) {
+        stripeWarning = `Stripe promotion code sync failed for ${failedCodes.join(', ')}. These codes will validate in CULTR Club, but may not work in Stripe Checkout until synced.`
       }
     }
 
@@ -278,20 +291,33 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Welcome email (non-blocking — creator is already created)
+    let emailSent = false
+    let emailWarning: string | undefined
     try {
       await sendCreatorWelcomeEmail(
         request,
         { email: email.trim().toLowerCase(), full_name: full_name.trim() },
         { defaultSlug, membershipCode, productCode }
       )
+      emailSent = true
     } catch (emailError) {
       console.error('Creator welcome email failed:', emailError)
+      emailWarning = emailError instanceof Error ? emailError.message : 'Unknown email error'
     }
+
+    const warnings = [
+      stripeWarning,
+      emailWarning
+        ? `Creator added, but the welcome email was not sent: ${emailWarning}. Ask the creator to request a login link from /creators/login.`
+        : undefined,
+    ].filter((warning): warning is string => Boolean(warning))
 
     return NextResponse.json({
       success: true,
       message: `Creator ${full_name} added and activated`,
+      emailSent,
+      stripeSynced,
+      ...(warnings.length ? { warning: warnings.join(' ') } : {}),
       creatorId: creatorId!,
       membershipCode,
       productCode,

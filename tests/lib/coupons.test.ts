@@ -43,6 +43,35 @@ describe('validateCouponUnified', () => {
     expect(mockGetCreatorById).not.toHaveBeenCalled()
   })
 
+  it('prefers an active creator-owned DB code over a hardcoded promo collision', async () => {
+    mockGetAffiliateCodeByCode.mockResolvedValue({
+      id: 'code_butch_123',
+      creator_id: 'creator_butch',
+      discount_value: '10',
+      code_type: 'general',
+    })
+    mockGetCreatorById.mockResolvedValue({
+      id: 'creator_butch',
+      full_name: 'Ry Butchey',
+      status: 'active',
+    })
+
+    const { validateCouponUnified } = await import('@/lib/config/coupons')
+
+    const result = await validateCouponUnified('BUTCH10')
+
+    expect(result).toEqual({
+      discount: 10,
+      label: "Ry Butchey's Code",
+      isCreatorCode: true,
+      noBundleStack: true,
+      creatorId: 'creator_butch',
+      creatorName: 'Ry Butchey',
+      codeId: 'code_butch_123',
+      codeType: 'general',
+    })
+  })
+
   it('does not allow the automatic first-purchase discount code as a manual coupon', async () => {
     const { validateCouponUnified } = await import('@/lib/config/coupons')
 

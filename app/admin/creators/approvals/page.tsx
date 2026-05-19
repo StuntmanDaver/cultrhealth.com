@@ -21,6 +21,7 @@ export default function AdminApprovalsPage() {
   const [modalCreator, setModalCreator] = useState<Creator | null>(null)
   const [reason, setReason] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     fetchPending()
@@ -43,6 +44,7 @@ export default function AdminApprovalsPage() {
   async function handleApprove(creator: Creator) {
     setProcessingId(creator.id)
     setError(null)
+    setNotice(null)
     try {
       const res = await fetch(`/api/admin/creators/${creator.id}/approve`, {
         method: 'POST',
@@ -51,9 +53,11 @@ export default function AdminApprovalsPage() {
       })
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({}))
         setPending((prev) => prev.filter((c) => c.id !== creator.id))
         setModalCreator(null)
         setReason('')
+        if (data.warning) setNotice(data.warning)
       } else {
         const data = await res.json().catch(() => ({}))
         setError(data.error || `Approval failed (${res.status})`)
@@ -69,6 +73,7 @@ export default function AdminApprovalsPage() {
   async function handleReject(creator: Creator) {
     setProcessingId(creator.id)
     setError(null)
+    setNotice(null)
     try {
       const res = await fetch(`/api/admin/creators/${creator.id}/reject`, {
         method: 'POST',
@@ -128,6 +133,13 @@ export default function AdminApprovalsPage() {
             </p>
           </div>
         </div>
+
+        {notice && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <p className="text-sm text-amber-800">{notice}</p>
+          </div>
+        )}
 
         {pending.length === 0 ? (
           <div className="bg-white border border-stone-200 rounded-2xl p-12 text-center">

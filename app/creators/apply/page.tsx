@@ -19,6 +19,7 @@ function ApplyForm() {
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [autoApproved, setAutoApproved] = useState(false)
+  const [emailWarning, setEmailWarning] = useState('')
 
   const searchParams = useSearchParams()
   useEffect(() => {
@@ -29,6 +30,7 @@ function ApplyForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setEmailWarning('')
 
     if (!fullName.trim() || !email.trim()) {
       setError('Name and email are required.')
@@ -61,6 +63,9 @@ function ApplyForm() {
 
       if (data.autoApproved) {
         setAutoApproved(true)
+      }
+      if (data.emailSent === false) {
+        setEmailWarning(data.warning || 'We could not send the email. Please request a login link from the creator login page.')
       }
       setSubmitted(true)
     } catch {
@@ -97,10 +102,10 @@ function ApplyForm() {
             className="text-cultr-textMuted mb-2"
           >
             {autoApproved
-              ? 'Your creator account is active. Log in to access your dashboard, tracking links, and coupon codes.'
-              : 'Check your email to verify your address. Once verified, our team will review your application within 48 hours.'}
+              ? emailWarning || 'Your creator account is active. Log in to access your dashboard, tracking links, and coupon codes.'
+              : emailWarning || 'Check your email to verify your address. Once verified, our team will review your application within 48 hours.'}
           </motion.p>
-          {!autoApproved && (
+          {!autoApproved && !emailWarning && (
             <motion.p 
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -116,10 +121,10 @@ function ApplyForm() {
             transition={{ delay: 0.4 }}
           >
             <Link
-              href={autoApproved ? '/creators/login' : '/creators'}
+              href={autoApproved || emailWarning ? '/creators/login' : '/creators'}
               className="inline-flex items-center gap-2 px-6 py-3 grad-dark text-white rounded-full text-sm font-medium hover:opacity-90 transition-all hover:scale-105 active:scale-95"
             >
-              {autoApproved ? 'Log In to Dashboard' : 'Back to Creator Program'}
+              {autoApproved || emailWarning ? 'Go to Creator Login' : 'Back to Creator Program'}
             </Link>
           </motion.div>
         </div>

@@ -128,10 +128,13 @@ describe('admin creator approve route', () => {
     expect(response.status).toBe(200)
     expect(body).toMatchObject({
       success: true,
+      emailSent: true,
+      stripeSynced: false,
       trackingSlug: expect.any(String),
       membershipCode: 'SMITH',
       productCode: 'SMITH10',
     })
+    expect(body.warning).toContain('Stripe promotion codes were not created')
     expect(mockCreateMagicLinkToken).toHaveBeenCalledWith('jane@example.com')
     expect(mockResendSend).toHaveBeenCalledTimes(1)
 
@@ -167,5 +170,36 @@ describe('admin creator approve route', () => {
     expect(body).toEqual({ error: 'Only pending creators can be approved' })
     expect(mockConnect).not.toHaveBeenCalled()
     expect(mockResendSend).not.toHaveBeenCalled()
+  })
+
+  it('surfaces approval email failures without pretending delivery succeeded', async () => {
+    mockGetCreatorById.mockResolvedValue({
+      id: 'creator_1',
+      full_name: 'Jane Smith',
+      email: 'jane@example.com',
+      status: 'pending',
+      recruiter_id: null,
+    })
+    mockResendSend.mockResolvedValue({
+      data: null,
+      error: { message: 'Resend unavailable' },
+    })
+
+    const { POST } = await import('@/app/api/admin/creators/[id]/approve/route')
+    const request = new NextRequest('https://www.cultrhealth.com/api/admin/creators/creator_1/approve', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ reason: 'Approved from admin queue' }),
+    })
+
+    const response = await POST(request, { params: Promise.resolve({ id: 'creator_1' }) })
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toMatchObject({
+      success: true,
+      emailSent: false,
+    })
+    expect(body.warning).toContain('approval email was not sent')
   })
 })

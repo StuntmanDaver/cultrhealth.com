@@ -8,6 +8,7 @@ const mockGetClientIp = vi.fn()
 const mockCreateCreator = vi.fn()
 const mockGetCreatorByEmail = vi.fn()
 const mockUpdateCreatorStatus = vi.fn()
+const mockUpdateAffiliateCodeStripeIds = vi.fn()
 const mockCreateMagicLinkToken = vi.fn()
 const mockResendSend = vi.fn()
 
@@ -26,6 +27,7 @@ vi.mock('@/lib/creators/db', () => ({
   createTrackingLink: vi.fn(),
   createAffiliateCode: vi.fn(),
   checkAffiliateCodeExists: vi.fn().mockResolvedValue(false),
+  updateAffiliateCodeStripeIds: mockUpdateAffiliateCodeStripeIds,
 }))
 
 vi.mock('@/lib/config/affiliate', () => ({
@@ -65,6 +67,7 @@ describe('creator apply route', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://www.cultrhealth.com'
     process.env.RESEND_API_KEY = 're_test_123'
     process.env.FROM_EMAIL = 'CULTR <noreply@cultrhealth.com>'
+    delete process.env.STRIPE_SECRET_KEY
 
     mockGetClientIp.mockResolvedValue('127.0.0.1')
     mockFormLimiterCheck.mockResolvedValue({
@@ -108,6 +111,7 @@ describe('creator apply route', () => {
 
       expect(response.status).toBe(200)
       expect(body.success).toBe(true)
+      expect(body.emailSent).toBe(true)
       expect(mockUpdateCreatorStatus).toHaveBeenCalledWith('creator_1', 'pending')
       expect(mockResendSend).toHaveBeenCalledTimes(1)
 
@@ -116,4 +120,32 @@ describe('creator apply route', () => {
       expect(emailPayload.html).toContain('/api/creators/verify-email?token=verify-token')
     }
   )
+
+  it('surfaces verification email delivery failures', async () => {
+    mockGetCreatorByEmail.mockResolvedValue(null)
+    mockResendSend.mockResolvedValue({
+      data: null,
+      error: { message: 'Resend unavailable' },
+    })
+
+    const { POST } = await import('@/app/api/creators/apply/route')
+    const request = new NextRequest('https://www.cultrhealth.com/api/creators/apply', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        email: 'creator@example.com',
+        full_name: 'Creator Example',
+      }),
+    })
+
+    const response = await POST(request)
+    const body = await response.json()
+
+    expect(response.status).toBe(202)
+    expect(body).toMatchObject({
+      success: true,
+      emailSent: false,
+    })
+    expect(body.warning).toContain('verification email')
+  })
 })

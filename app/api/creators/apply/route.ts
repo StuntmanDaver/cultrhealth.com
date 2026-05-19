@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { formLimiter, getClientIp, rateLimitResponse } from '@/lib/rate-limit'
-import { createCreator, getCreatorByEmail, updateCreatorStatus, updateCreatorEmailVerified, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists, setCreatorRecruiterIfMissing } from '@/lib/creators/db'
+import { createCreator, getCreatorByEmail, updateCreatorStatus, updateCreatorEmailVerified, createTrackingLink, createAffiliateCode, checkAffiliateCodeExists, setCreatorRecruiterIfMissing, updateAffiliateCodeStripeIds } from '@/lib/creators/db'
 import { generateCreatorCodes } from '@/lib/config/affiliate'
 import { createMagicLinkToken } from '@/lib/auth'
 import { Resend } from 'resend'
+import Stripe from 'stripe'
 import { escapeHtml, baseEmailTemplate } from '@/lib/resend'
 import { CREATOR_NOTIFICATION_EMAILS } from '@/lib/config/creator-notification-emails'
 
@@ -16,18 +17,60 @@ const AUTO_APPROVE_EMAILS = [
   'legitscript@cultrhealth.com',
 ]
 
-function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL ||
+function getBaseUrl(request?: NextRequest) {
+  return request?.nextUrl.origin ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 }
 
-async function sendCreatorEmail(to: string, subject: string, html: string) {
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+    apiVersion: '2026-02-25.clover',
+  })
+}
+
+async function createStripePromotionCode(
+  stripe: Stripe,
+  code: string,
+  percentOff: number
+): Promise<{ couponId: string; promotionCodeId: string } | null> {
+  try {
+    const coupon = await stripe.coupons.create({
+      percent_off: percentOff,
+      duration: 'once',
+      name: code,
+      metadata: { source: 'cultr_affiliate', code },
+    })
+
+    const promotionCode = await stripe.promotionCodes.create({
+      promotion: { type: 'coupon', coupon: coupon.id },
+      code,
+      metadata: { source: 'cultr_affiliate', code },
+    })
+
+    return { couponId: coupon.id, promotionCodeId: promotionCode.id }
+  } catch (error) {
+    console.error(`Failed to create Stripe promotion code for ${code}:`, error)
+    return null
+  }
+}
+
+async function sendCreatorEmail(to: string, subject: string, html: string): Promise<{ sent: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    return { sent: false, error: 'RESEND_API_KEY is not configured' }
+  }
+
   try {
     const { getFromEmail } = await import('@/lib/resend')
     const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({ from: getFromEmail(), to, subject, html })
+    const result = await resend.emails.send({ from: getFromEmail(), to, subject, html })
+    if (result.error) {
+      return { sent: false, error: result.error.message || 'Unknown Resend error' }
+    }
+    return { sent: true }
   } catch (err) {
     console.error('Failed to send creator email:', err)
+    return { sent: false, error: err instanceof Error ? err.message : 'Unknown email error' }
   }
 }
 
@@ -201,7 +244,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const baseUrl = getBaseUrl()
+    const baseUrl = getBaseUrl(request)
 
     // Auto-approve whitelisted emails
     if (AUTO_APPROVE_EMAILS.includes(email.toLowerCase())) {
@@ -246,14 +289,52 @@ export async function POST(request: NextRequest) {
         suffix++
       }
 
-      await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
-      await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
+      const membershipAffiliateCode = await createAffiliateCode(creator.id, membershipCode, true, 'percentage', 10.00, 'membership')
+      const productAffiliateCode = await createAffiliateCode(creator.id, productCode, false, 'percentage', 10.00, 'product')
+
+      let stripeSynced = false
+      let stripeWarning: string | undefined
+      if (!process.env.STRIPE_SECRET_KEY) {
+        stripeWarning = 'STRIPE_SECRET_KEY is not configured, so Stripe promotion codes were not created.'
+      } else {
+        const stripe = getStripe()
+        const [membershipStripe, productStripe] = await Promise.all([
+          createStripePromotionCode(stripe, membershipCode, 10),
+          createStripePromotionCode(stripe, productCode, 10),
+        ])
+
+        const failedCodes: string[] = []
+        if (membershipStripe) {
+          await updateAffiliateCodeStripeIds(
+            membershipAffiliateCode.id,
+            membershipStripe.couponId,
+            membershipStripe.promotionCodeId
+          ).catch((err) => console.error('Failed to store membership Stripe IDs:', err))
+        } else {
+          failedCodes.push(membershipCode)
+        }
+
+        if (productStripe) {
+          await updateAffiliateCodeStripeIds(
+            productAffiliateCode.id,
+            productStripe.couponId,
+            productStripe.promotionCodeId
+          ).catch((err) => console.error('Failed to store product Stripe IDs:', err))
+        } else {
+          failedCodes.push(productCode)
+        }
+
+        stripeSynced = failedCodes.length === 0
+        if (!stripeSynced) {
+          stripeWarning = `Stripe promotion code sync failed for ${failedCodes.join(', ')}. These codes will validate in CULTR Club, but may not work in Stripe Checkout until synced.`
+        }
+      }
 
       // Send login magic link email
       const token = await createMagicLinkToken(email)
       const magicLink = `${baseUrl}/api/creators/verify-login?token=${encodeURIComponent(token)}`
 
-      await sendCreatorEmail(
+      const creatorEmailResult = await sendCreatorEmail(
         email,
         'Welcome to CULTR Creator Program — You\'re Approved!',
         baseEmailTemplate(`
@@ -271,6 +352,25 @@ export async function POST(request: NextRequest) {
         `)
       )
 
+      if (!creatorEmailResult.sent) {
+        const warnings = [
+          stripeWarning,
+          `Your creator account is active, but we could not send the login email: ${creatorEmailResult.error || 'unknown error'}. Request a fresh login link from the creator login page.`,
+        ].filter((warning): warning is string => Boolean(warning))
+
+        return NextResponse.json({
+          success: true,
+          autoApproved: true,
+          emailSent: false,
+          stripeSynced,
+          warning: warnings.join(' '),
+          message: 'Your account was approved, but the login email could not be sent.',
+          creatorId: creator.id,
+          trackingSlug: defaultSlug,
+          couponCode: membershipCode,
+        }, { status: 202 })
+      }
+
       sendOwnerCreatorApplicationNotification({ name: full_name, email, phone, social_handle, bio, autoApproved: true, resubmission: shouldResubmitForReview }).catch(
         (err) => console.error('Failed to send owner auto-approve notification:', err)
       )
@@ -280,6 +380,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         autoApproved: true,
+        emailSent: true,
+        stripeSynced,
+        ...(stripeWarning ? { warning: stripeWarning } : {}),
         message: 'You have been approved! Check your email to log in.',
         creatorId: creator.id,
         trackingSlug: defaultSlug,
@@ -291,7 +394,7 @@ export async function POST(request: NextRequest) {
     const token = await createMagicLinkToken(email)
     const verifyLink = `${baseUrl}/api/creators/verify-email?token=${encodeURIComponent(token)}`
 
-    await sendCreatorEmail(
+    const verificationEmailResult = await sendCreatorEmail(
       email,
       'Verify Your CULTR Creator Application',
       baseEmailTemplate(`
@@ -310,6 +413,16 @@ export async function POST(request: NextRequest) {
       `)
     )
 
+    if (!verificationEmailResult.sent) {
+      return NextResponse.json({
+        success: true,
+        emailSent: false,
+        warning: `Application saved, but we could not send the verification email: ${verificationEmailResult.error || 'unknown error'}. Please contact support or request a creator login link.`,
+        message: 'Application saved, but verification email could not be sent.',
+        creatorId: creator.id,
+      }, { status: 202 })
+    }
+
     sendOwnerCreatorApplicationNotification({ name: full_name, email, phone, social_handle, bio, autoApproved: false, resubmission: shouldResubmitForReview }).catch(
       (err) => console.error('Failed to send owner application notification:', err)
     )
@@ -318,6 +431,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      emailSent: true,
       message: 'Application submitted. Please check your email to verify your address.',
       creatorId: creator.id,
     })

@@ -94,7 +94,50 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
     return null
   }
 
-  // Priority 1: Check hardcoded staff coupons (no DB call)
+  // Priority 1: Check creator-owned affiliate codes in DB.
+  // This lets legacy creator codes that collide with an older hardcoded promo
+  // still validate as creator codes for attribution/admin reporting.
+  let companyOwnedAffiliateCode: Awaited<ReturnType<typeof getAffiliateCodeByCode>> | null = null
+  try {
+    const affiliateCode = await getAffiliateCodeByCode(normalized)
+    if (affiliateCode) {
+      if (!affiliateCode.creator_id) {
+        companyOwnedAffiliateCode = affiliateCode
+      } else {
+        // Creator-owned code — validate creator status
+        // Creator coupons disable bundle discount (no stacking)
+        const creator = await getCreatorById(affiliateCode.creator_id)
+        if (creator && creator.status === 'active') {
+          return {
+            discount: Math.floor(Number(affiliateCode.discount_value)),
+            label: `${creator.full_name}'s Code`,
+            isCreatorCode: true,
+            noBundleStack: true,
+            creatorId: creator.id,
+            creatorName: creator.full_name,
+            codeId: affiliateCode.id,
+            codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
+          }
+        }
+
+        // Creator paused/rejected — still honor the discount but skip commission
+        if (creator && creator.status !== 'active') {
+          return {
+            discount: Math.floor(Number(affiliateCode.discount_value)),
+            label: `${creator.full_name}'s Code`,
+            isCreatorCode: false,
+            noBundleStack: true,
+            codeId: affiliateCode.id,
+            codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[validateCouponUnified] DB lookup failed (non-fatal):', err)
+  }
+
+  // Priority 2: Check hardcoded staff/promotional coupons.
   const internal = CLUB_COUPONS[normalized]
   if (internal) {
     if (internal.expiresAt && new Date() > internal.expiresAt) return null
@@ -107,51 +150,16 @@ export async function validateCouponUnified(code: string): Promise<UnifiedCoupon
     }
   }
 
-  // Priority 2: Check creator affiliate codes in DB (includes prelaunch codes)
-  try {
-    const affiliateCode = await getAffiliateCodeByCode(normalized)
-    if (affiliateCode) {
-      // Company-owned code (no creator) — valid prelaunch code with no commission
-      if (!affiliateCode.creator_id) {
-        return {
-          discount: Math.floor(Number(affiliateCode.discount_value)),
-          label: 'Promo Code',
-          isCreatorCode: false,
-          codeId: affiliateCode.id,
-          codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
-        }
-      }
-
-      // Creator-owned code — validate creator status
-      // Creator coupons disable bundle discount (no stacking)
-      const creator = await getCreatorById(affiliateCode.creator_id)
-      if (creator && creator.status === 'active') {
-        return {
-          discount: Math.floor(Number(affiliateCode.discount_value)),
-          label: `${creator.full_name}'s Code`,
-          isCreatorCode: true,
-          noBundleStack: true,
-          creatorId: creator.id,
-          creatorName: creator.full_name,
-          codeId: affiliateCode.id,
-          codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
-        }
-      }
-
-      // Creator paused/rejected — still honor the discount but skip commission
-      if (creator && creator.status !== 'active') {
-        return {
-          discount: Math.floor(Number(affiliateCode.discount_value)),
-          label: `${creator.full_name}'s Code`,
-          isCreatorCode: false,
-          noBundleStack: true,
-          codeId: affiliateCode.id,
-          codeType: affiliateCode.code_type as 'membership' | 'product' | 'general',
-        }
-      }
+  // Priority 3: Company-owned DB code (no creator) — valid prelaunch/admin code
+  // with no commission.
+  if (companyOwnedAffiliateCode) {
+    return {
+      discount: Math.floor(Number(companyOwnedAffiliateCode.discount_value)),
+      label: 'Promo Code',
+      isCreatorCode: false,
+      codeId: companyOwnedAffiliateCode.id,
+      codeType: companyOwnedAffiliateCode.code_type as 'membership' | 'product' | 'general',
     }
-  } catch (err) {
-    console.error('[validateCouponUnified] DB lookup failed (non-fatal):', err)
   }
 
   return null

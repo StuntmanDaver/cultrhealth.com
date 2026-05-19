@@ -128,7 +128,11 @@ export default function CreatorsClient() {
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Failed to add creator')
-      setAddCreatorSuccess(`Added ${result.message}. Codes: ${result.membershipCode}, ${result.productCode}`)
+      setAddCreatorSuccess(
+        result.warning
+          ? `Added ${result.message}. Codes: ${result.membershipCode}, ${result.productCode}. ${result.warning}`
+          : `Added ${result.message}. Codes: ${result.membershipCode}, ${result.productCode}`
+      )
       setAddCreatorForm({ full_name: '', email: '', phone: '', social_handle: '', commission_rate: '10', custom_code: '', discount_percent: '10' })
       fetchAnalytics()
     } catch (err) {

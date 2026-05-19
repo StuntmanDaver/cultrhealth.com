@@ -1,3 +1,20 @@
+## [2026-05-20] - Creator coupon, link, Stripe sync, and login email audit
+
+### Fixed
+- **`lib/config/coupons.ts`** — Creator-owned DB coupon codes now take precedence over hardcoded promo collisions so legacy creator codes such as `BUTCH10` validate as creator codes for attribution/admin reporting.
+- **`lib/creators/db.ts`** — Reserved hardcoded promo codes are blocked from future affiliate-code creation to prevent new admin/creator collisions.
+- **`app/api/creators/apply/route.ts`** — Auto-approved creators now attempt Stripe promotion-code creation/backfill and return explicit `emailSent` / `stripeSynced` status instead of silently implying success.
+- **`app/api/admin/creators/[id]/approve/route.ts`** + **`app/api/admin/creators/add/route.ts`** — Admin approval/add flows now surface Resend and Stripe sync failures in the API response and admin UI warnings.
+- **`scripts/sync-stripe-promo-codes.mjs`** — Stripe promo-code sync is now idempotent: it reuses existing Stripe promotion codes, creates only missing ones, and supports a safe `DRY_RUN=true`.
+- **`lib/db.ts`** — Resolved the existing unmerged index state while preserving the richer admin analytics/audit helpers.
+
+### Verified
+- Live creator tracking slugs redirect successfully with attribution parameters.
+- Active creators have valid email syntax and can request dashboard login magic links.
+- Production/preview Vercel env currently lacks `STRIPE_SECRET_KEY`; existing creator codes cannot be backfilled to Stripe until that secret is added.
+
+---
+
 ## [2026-05-19] - Address editing for members, creators, and customers
 
 ### Added

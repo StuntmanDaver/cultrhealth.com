@@ -32,12 +32,15 @@ vi.mock('@vercel/postgres', () => ({
 
 // Mock other dependencies
 const mockVerifyAdminAuth = vi.fn()
+const mockCreateMagicLinkToken = vi.fn()
 const mockCreateAdminAction = vi.fn()
 const mockUpdateAffiliateCodeStripeIds = vi.fn()
 const mockGenerateCreatorCodes = vi.fn()
+const mockResendSend = vi.fn()
 
 vi.mock('@/lib/auth', () => ({
   verifyAdminAuth: mockVerifyAdminAuth,
+  createMagicLinkToken: mockCreateMagicLinkToken,
 }))
 
 vi.mock('@/lib/creators/db', () => ({
@@ -49,18 +52,32 @@ vi.mock('@/lib/config/affiliate', () => ({
   generateCreatorCodes: mockGenerateCreatorCodes,
 }))
 
+vi.mock('resend', () => ({
+  Resend: vi.fn(function MockResend() {
+    return {
+      emails: {
+        send: mockResendSend,
+      },
+    }
+  }),
+}))
+
 describe('POST /api/admin/creators/add', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.resetModules()
 
     process.env.STRIPE_SECRET_KEY = 'sk_test_123'
+    process.env.RESEND_API_KEY = 're_test_123'
+    process.env.FROM_EMAIL = 'CULTR <noreply@cultrhealth.com>'
 
     mockVerifyAdminAuth.mockResolvedValue({
       authenticated: true,
       email: 'admin@cultrhealth.com',
       role: 'admin',
     })
+    mockCreateMagicLinkToken.mockResolvedValue('welcome-token')
+    mockResendSend.mockResolvedValue({ data: { id: 'email_123' }, error: null })
 
     // Setup default successful transaction queries
     mockQuery.mockImplementation((queryText: string, params?: any[]) => {
@@ -209,6 +226,8 @@ describe('POST /api/admin/creators/add', () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
+    expect(body.emailSent).toBe(true)
+    expect(body.stripeSynced).toBe(true)
     expect(body.creatorId).toBe('creator_123')
     expect(body.membershipCode).toBe('JOHNDOE20')
     expect(body.productCode).toBe('JOHNDOE2010')
@@ -234,6 +253,11 @@ describe('POST /api/admin/creators/add', () => {
     }))
     
     expect(mockUpdateAffiliateCodeStripeIds).toHaveBeenCalledTimes(2)
+    expect(mockResendSend).toHaveBeenCalledWith(expect.objectContaining({
+      to: 'john@example.com',
+      subject: 'Welcome to the CULTR Creator Program',
+      html: expect.stringContaining('/api/creators/verify-login?token=welcome-token'),
+    }))
     
     // Verify audit log
     expect(mockCreateAdminAction).toHaveBeenCalledWith(expect.objectContaining({
@@ -297,6 +321,8 @@ describe('POST /api/admin/creators/add', () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
+    expect(body.emailSent).toBe(true)
+    expect(body.stripeSynced).toBe(true)
     
     // Verify rollback was called for the first attempt and commit for the second
     const queryCalls = mockQuery.mock.calls.map(c => c[0].trim().toLowerCase())
