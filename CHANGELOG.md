@@ -1,3 +1,114 @@
+## [2026-05-18] - Creator login E2E verified
+
+### Verified
+- **Creator login flow confirmed working end-to-end on staging.cultrhealth.com** via live curl-based test:
+  1. `POST /api/creators/magic-link` returns `redirectUrl` for staging/team emails (staging bypass)
+  2. `GET /api/creators/verify-login` sets `cultr_session_v2` + `cultr_last_activity_v2` cookies on `.cultrhealth.com` domain, redirects to `/creators/portal/dashboard`
+  3. `GET /api/creators/profile` with session cookie returns full creator record (200 OK)
+- All 15 unit tests in `tests/api/creator-magic-link-route.test.ts` pass
+- Prior fix in commit `2734715d` (May 9): DB failures, missing `RESEND_API_KEY`, and email delivery failures now return 503 instead of silently succeeding with no email sent
+
+### Notes
+- Creators with `status = rejected` or `paused` receive a fake-success response but NO email (anti-enumeration). Check `/admin/creators` if a creator reports not receiving their login email.
+- Dev server requires Node 20 (`nvm use 20`); Node 25 crashes with `ECANCELED` on Next.js 14.
+
+---
+
+## [2026-05-17] - Xero + Zapier webhook automation (blueprint Section 14)
+
+### Added
+- **`lib/xero.ts`** — Xero Accounting API v2 client: OAuth2 token management (DB-persisted via `xero_tokens`), `getInvoice`, `createContact`. Replaces QuickBooks for new billing.
+- **`lib/zapier.ts`** — Fire-and-forget outbound Zapier webhook utility. Non-PHI only: event type + status + timestamp. Never forwards patient name/email/phone.
+- **`app/api/webhook/xero/route.ts`** — Xero webhook handler. HMAC-SHA256 verified (`x-xero-signature` / `XERO_WEBHOOK_KEY`). Handles PAID (updates `club_orders`, fires admin email + Zapier outbound), VOIDED (cancels order), and overdue signals (fires Zapier task).
+- **`app/api/webhook/zapier/creator-applied/route.ts`** — Inbound from Zapier. Creates creator + tracking link + affiliate codes when a creator applies via external form tool (Typeform/Tally). Bearer token auth (`ZAPIER_WEBHOOK_SECRET`).
+- **`app/api/webhook/zapier/notify/route.ts`** — Generic Zapier inbound dispatcher. Supported actions: `content_published`, `creator_deliverable_late`.
+- **`migrations/068_xero_integration.sql`** — `xero_tokens` table, `xero_invoice_id` on `club_orders`, `payment_failed` + `appointment_completed` on `member_onboarding`.
+
+### Changed
+- **`app/api/webhook/healthie/route.ts`** — Added `payment.failed` handler (flags `member_onboarding.payment_failed`, fires non-PHI Zapier signal) and `appointment.completed` handler (sets `appointment_completed` flag).
+- **`app/api/webhook/quickbooks/route.ts`** — Gated behind `USE_QUICKBOOKS` feature flag (returns 200 ignored when disabled). QuickBooks is being replaced by Xero.
+- **`app/api/creators/apply/route.ts`** — Fires `ZAPIER_CREATOR_WEBHOOK_URL` outbound on every application (status: `pending` or `approved`). Non-PHI payload only.
+- **`lib/config/feature-flags.ts`** — Added `USE_XERO` and `USE_QUICKBOOKS` flags.
+- **`.env.example`** — Added all Xero (`XERO_CLIENT_ID`, `XERO_CLIENT_SECRET`, `XERO_REFRESH_TOKEN`, `XERO_TENANT_ID`, `XERO_WEBHOOK_KEY`, `USE_XERO`, `USE_QUICKBOOKS`) and Zapier (`ZAPIER_WEBHOOK_SECRET`, `ZAPIER_CREATOR_WEBHOOK_URL`, `ZAPIER_HEALTHIE_EVENT_URL`, `ZAPIER_XERO_EVENT_URL`) env vars.
+
+### Go-live checklist
+- [ ] Run `migrations/068_xero_integration.sql`
+- [ ] Create Zapier catch-hook Zaps; paste URLs into env vars
+- [ ] Complete Xero OAuth2 flow; set all `XERO_*` env vars
+- [ ] Set `USE_XERO=true`, `USE_QUICKBOOKS=false`
+- [ ] Register `https://cultrhealth.com/api/webhook/xero` in Xero developer portal → Webhooks
+
+- **Commit:** `53aaf39`
+
+---
+
+## [2026-05-16] - Creator portal: dual tracking URLs per link (cultrhealth + cultrclub)
+
+### Changed
+- **`app/creators/portal/share/page.tsx`** — tracking links section now shows two copyable URLs per link:
+  - `cultrhealth.com/r/{slug}` (via the `/r/` redirect handler)
+  - `cultrclub.com/{slug}` (direct club link)
+- **Default badge** shown on the auto-generated link created at approval time.
+- Each URL has its own independent copy button with visual confirmation state.
+- Renamed internal `baseUrl` → `clubBaseUrl` for clarity; social post templates still use the Club URL as the default outreach link.
+- **Commit:** `63db6ff`
+
+---
+
+## [2026-05-16] - Erik Ellis creator account configured (DB only)
+
+> All changes were direct database operations — no code deploys required.
+
+### Changed
+- **Erik Ellis (`ellis.erick1@gmail.com`)** — confirmed active creator account (approved 2026-04-16).
+- **Tracking link fixed** — `erikellis16` destination updated from `/` → `/pricing` for cultrhealth.com.
+- **cultrclub.com tracking link added** — new slug `erikellis-club` → `/` (club homepage); URL: `cultrclub.com/erikellis-club`.
+- **Codes renamed** — `ELLIS10` (primary/membership) and `ELLIS1010` (product); both give customers **10% off**.
+- **Commission rate** — 20% (unchanged from prior setup).
+- **Customer discount** — 10% off via `ELLIS10` / `ELLIS1010`.
+
+---
+
+## [2026-05-15] - Open signups nationwide + correct false jurisdiction claims
+
+> Telehealth treatment remains Florida-only (CULTR's providers are FL-licensed). Account signup, browsing, and the quiz are now open to all U.S. states.
+
+### Removed
+- **30-state signup gate** — deleted `components/compliance/FloridaStateGate.tsx` and its test; `app/refer/[code]/RefereeLandingClient.tsx` no longer gates visitors by state. Anyone can sign up and explore from any state.
+- **Dead Asher Med routes** — deleted orphaned `app/api/admin/asher-dashboard/route.ts` and `app/api/cron/asher-sync/route.ts`, which imported the removed `lib/asher-med-api` and broke the type-check.
+
+### Fixed
+- **False "30 U.S. states" licensure claims corrected to Florida-only** — the codebase published a fabricated 30-state telehealth footprint, including a 30-state medical-director license list. Corrected across `lib/config/compliance.ts` (`SERVED_STATES`, `JURISDICTION_STATEMENT`, `PROVIDER_CREDENTIALS`), the homepage / FAQ / how-it-works FAQ answers, the dosing-calculator pages and `seo-content.ts`, `lib/referral/config.ts`, `ShareReferralModal`, and `app/legal/terms`.
+- **Unsubstantiated review rating softened** — removed the numeric "4.9 / 5 from 50 reviews" claim from `TRUST_METRICS`; `SocialProofBadge` and `TestimonialsSection` now use non-numeric language (LegitScript Standard 8).
+
+### Changed
+- **Privacy policy** — added the missing HIPAA Notice-of-Privacy-Practices elements to `app/legal/privacy/page.tsx`: the right to file a complaint with HHS Office for Civil Rights without retaliation, and a statement of CULTR's legal duties.
+
+### Notes
+- This is the legacy Vercel-era workbench repo — these changes must be ported to `cultrhealth-web` to reach production.
+- Still open: a cookie-consent banner (LegitScript / CCPA) and gating GA4 off PHI routes; verify the medical-director NPI is genuine before any LegitScript application.
+
+---
+
+## [2026-05-10] - Document Cloudflare as active home for CULTR Health + Club
+
+> Supersedes older deployment notes below. Pre-2026-05-10 entries may describe the Vercel-era or migration-in-progress state; current active ownership is `cultrhealth-web` + `cultrclub-web` on Cloudflare Pages.
+
+### Changed
+- **Project source-of-truth docs updated** — `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, and `README.md` now state that `cultrhealth.com` and `cultrclub.com` are the active Cloudflare projects.
+- **Vercel marked legacy/archive** — deployment guidance now says Vercel projects are old projects and should not receive active staging or production edits.
+- **Repo ownership clarified** — active edits belong in sibling repos: `cultrhealth-web` for `cultrhealth.com` / `staging.cultrhealth.com`, and `cultrclub-web` for `cultrclub.com`.
+- **Legacy join host clarified** — active Club references now point to `cultrclub.com`; `join.cultrhealth.com` references are treated as historical or legacy.
+
+### Added
+- `docs/PROJECT-RELATIONSHIP-MAP.md` — concise map of apps, websites, repos, hosting targets, deployment rules, Cloudflare commands, and cleanup checklist.
+
+### Supporting docs
+- Updated `docs/README.md`, `docs/env-vars-go-live.md`, and `CHECKOUT-FLOW-TEST.md` so deployment/setup language points at Cloudflare rather than Vercel.
+
+---
+
+>>>>>>> b9c05bb5 (docs: creator login E2E verified on staging — all steps confirmed working)
 ## [2026-05-09] - Remove blocked therapy from site
 
 ### Removed
