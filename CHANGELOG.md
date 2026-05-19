@@ -1,3 +1,47 @@
+## [2026-05-18] - Creator login E2E verified
+
+### Verified
+- **Creator login flow confirmed working end-to-end on staging.cultrhealth.com** via live curl-based test:
+  1. `POST /api/creators/magic-link` returns `redirectUrl` for staging/team emails (staging bypass)
+  2. `GET /api/creators/verify-login` sets `cultr_session_v2` + `cultr_last_activity_v2` cookies on `.cultrhealth.com` domain, redirects to `/creators/portal/dashboard`
+  3. `GET /api/creators/profile` with session cookie returns full creator record (200 OK)
+- All 15 unit tests in `tests/api/creator-magic-link-route.test.ts` pass
+- Prior fix in commit `2734715d` (May 9): DB failures, missing `RESEND_API_KEY`, and email delivery failures now return 503 instead of silently succeeding with no email sent
+
+### Notes
+- Creators with `status = rejected` or `paused` receive a fake-success response but NO email (anti-enumeration). Check `/admin/creators` if a creator reports not receiving their login email.
+- Dev server requires Node 20 (`nvm use 20`); Node 25 crashes with `ECANCELED` on Next.js 14.
+
+---
+
+## [2026-05-17] - Xero + Zapier webhook automation (blueprint Section 14)
+
+### Added
+- **`lib/xero.ts`** — Xero Accounting API v2 client: OAuth2 token management (DB-persisted via `xero_tokens`), `getInvoice`, `createContact`. Replaces QuickBooks for new billing.
+- **`lib/zapier.ts`** — Fire-and-forget outbound Zapier webhook utility. Non-PHI only: event type + status + timestamp. Never forwards patient name/email/phone.
+- **`app/api/webhook/xero/route.ts`** — Xero webhook handler. HMAC-SHA256 verified (`x-xero-signature` / `XERO_WEBHOOK_KEY`). Handles PAID (updates `club_orders`, fires admin email + Zapier outbound), VOIDED (cancels order), and overdue signals (fires Zapier task).
+- **`app/api/webhook/zapier/creator-applied/route.ts`** — Inbound from Zapier. Creates creator + tracking link + affiliate codes when a creator applies via external form tool (Typeform/Tally). Bearer token auth (`ZAPIER_WEBHOOK_SECRET`).
+- **`app/api/webhook/zapier/notify/route.ts`** — Generic Zapier inbound dispatcher. Supported actions: `content_published`, `creator_deliverable_late`.
+- **`migrations/068_xero_integration.sql`** — `xero_tokens` table, `xero_invoice_id` on `club_orders`, `payment_failed` + `appointment_completed` on `member_onboarding`.
+
+### Changed
+- **`app/api/webhook/healthie/route.ts`** — Added `payment.failed` handler (flags `member_onboarding.payment_failed`, fires non-PHI Zapier signal) and `appointment.completed` handler (sets `appointment_completed` flag).
+- **`app/api/webhook/quickbooks/route.ts`** — Gated behind `USE_QUICKBOOKS` feature flag (returns 200 ignored when disabled). QuickBooks is being replaced by Xero.
+- **`app/api/creators/apply/route.ts`** — Fires `ZAPIER_CREATOR_WEBHOOK_URL` outbound on every application (status: `pending` or `approved`). Non-PHI payload only.
+- **`lib/config/feature-flags.ts`** — Added `USE_XERO` and `USE_QUICKBOOKS` flags.
+- **`.env.example`** — Added all Xero (`XERO_CLIENT_ID`, `XERO_CLIENT_SECRET`, `XERO_REFRESH_TOKEN`, `XERO_TENANT_ID`, `XERO_WEBHOOK_KEY`, `USE_XERO`, `USE_QUICKBOOKS`) and Zapier (`ZAPIER_WEBHOOK_SECRET`, `ZAPIER_CREATOR_WEBHOOK_URL`, `ZAPIER_HEALTHIE_EVENT_URL`, `ZAPIER_XERO_EVENT_URL`) env vars.
+
+### Go-live checklist
+- [ ] Run `migrations/068_xero_integration.sql`
+- [ ] Create Zapier catch-hook Zaps; paste URLs into env vars
+- [ ] Complete Xero OAuth2 flow; set all `XERO_*` env vars
+- [ ] Set `USE_XERO=true`, `USE_QUICKBOOKS=false`
+- [ ] Register `https://cultrhealth.com/api/webhook/xero` in Xero developer portal → Webhooks
+
+- **Commit:** `53aaf39`
+
+---
+
 ## [2026-05-16] - Creator portal: dual tracking URLs per link (cultrhealth + cultrclub)
 
 ### Changed
