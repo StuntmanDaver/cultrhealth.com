@@ -5,6 +5,43 @@ import PrelaunchCodesSection from '@/components/admin/PrelaunchCodesSection'
 import { downloadCSV, formatCurrency, formatDate, filterByDateRange, INTERNAL_COUPON_LABELS } from '@/lib/admin-utils'
 import type { AnalyticsData } from '@/lib/admin-types'
 
+type SortDir = 'asc' | 'desc'
+interface SortState { col: string; dir: SortDir }
+
+function toggleSort(cur: SortState, col: string): SortState {
+  return cur.col === col ? { col, dir: cur.dir === 'asc' ? 'desc' : 'asc' } : { col, dir: 'asc' }
+}
+
+function sortByCol<T>(rows: T[], sort: SortState, val: (r: T, col: string) => number | string): T[] {
+  return [...rows].sort((a, b) => {
+    const av = val(a, sort.col)
+    const bv = val(b, sort.col)
+    const cmp = typeof av === 'number' && typeof bv === 'number'
+      ? av - bv
+      : String(av).localeCompare(String(bv), undefined, { numeric: true })
+    return sort.dir === 'asc' ? cmp : -cmp
+  })
+}
+
+function SortTh({ label, col, sort, onSort, right }: {
+  label: string; col: string; sort: SortState; onSort: (c: string) => void; right?: boolean
+}) {
+  const active = sort.col === col
+  return (
+    <th
+      onClick={() => onSort(col)}
+      className={`${right ? 'text-right' : 'text-left'} py-3 px-4 text-brand-primary/60 font-medium text-sm cursor-pointer select-none hover:text-brand-primary transition-colors`}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <span className={`text-[10px] ${active ? 'text-brand-primary' : 'opacity-30'}`}>
+          {active ? (sort.dir === 'asc' ? '▲' : '▼') : '⇅'}
+        </span>
+      </span>
+    </th>
+  )
+}
+
 export default function CouponsClient() {
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +62,10 @@ export default function CouponsClient() {
   const [creatingCoupon, setCreatingCoupon] = useState(false)
   const [couponError, setCouponError] = useState<string | null>(null)
   const [removingCouponId, setRemovingCouponId] = useState<string | null>(null)
+  // Sort states
+  const [linkSort, setLinkSort] = useState<SortState>({ col: 'clicks', dir: 'desc' })
+  const [couponSort, setCouponSort] = useState<SortState>({ col: 'uses', dir: 'desc' })
+  const [perfSort, setPerfSort] = useState<SortState>({ col: 'uses', dir: 'desc' })
 
   // Sync date range when periodDays changes
   useEffect(() => {
@@ -191,17 +232,28 @@ export default function CouponsClient() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Code</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium">Type</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Discount</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Uses</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Revenue</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Discount Given</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium">Avg Order</th>
+                  <SortTh label="Code" col="code" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} />
+                  <SortTh label="Type" col="type" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} />
+                  <SortTh label="Discount" col="discount" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Uses" col="uses" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Revenue" col="revenue" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Discount Given" col="discount_given" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Avg Order" col="avg_order" sort={perfSort} onSort={(c) => setPerfSort(s => toggleSort(s, c))} right />
                 </tr>
               </thead>
               <tbody>
-                {data.coupons.coupons.map((coupon, index) => {
+                {sortByCol(data.coupons.coupons, perfSort, (r, c) => {
+                  switch (c) {
+                    case 'code': return r.coupon_code
+                    case 'type': return r.program_type ?? ''
+                    case 'discount': return r.discount_percent
+                    case 'uses': return r.usage_count
+                    case 'revenue': return r.total_revenue
+                    case 'discount_given': return r.total_discount
+                    case 'avg_order': return r.avg_order_value
+                    default: return ''
+                  }
+                }).map((coupon, index) => {
                   const internalLabel = INTERNAL_COUPON_LABELS[coupon.coupon_code]
                   const isCreator = !!coupon.attributed_creator_id
                   const isPrelaunch = coupon.program_type === 'prelaunch'
@@ -300,19 +352,33 @@ export default function CouponsClient() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Slug</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Destination</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Clicks</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Conversions</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Conv. Rate</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Active</th>
+                  <SortTh label="Slug" col="slug" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} />
+                  <SortTh label="Creator" col="creator" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} />
+                  <SortTh label="Destination" col="destination" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} />
+                  <SortTh label="Clicks" col="clicks" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Conversions" col="conversions" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Conv. Rate" col="conv_rate" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Active" col="active" sort={linkSort} onSort={(c) => setLinkSort(s => toggleSort(s, c))} />
                 </tr>
               </thead>
               <tbody>
-                {filterByDateRange(data.allTrackingLinks, tableStartDate, tableEndDate)
-                  .filter(l => !linkSearch || l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || (l.creator_name || '').toLowerCase().includes(linkSearch.toLowerCase()))
-                  .map((l, i) => (
+                {sortByCol(
+                  filterByDateRange(data.allTrackingLinks, tableStartDate, tableEndDate)
+                    .filter(l => !linkSearch || l.slug.toLowerCase().includes(linkSearch.toLowerCase()) || (l.creator_name || '').toLowerCase().includes(linkSearch.toLowerCase())),
+                  linkSort,
+                  (r, c) => {
+                    switch (c) {
+                      case 'slug': return r.slug
+                      case 'creator': return r.creator_name ?? ''
+                      case 'destination': return r.destination_path
+                      case 'clicks': return r.click_count
+                      case 'conversions': return r.conversion_count
+                      case 'conv_rate': return r.click_count > 0 ? r.conversion_count / r.click_count : 0
+                      case 'active': return r.active ? 1 : 0
+                      default: return ''
+                    }
+                  }
+                ).map((l, i) => (
                   <tr key={l.id} className={i % 2 === 0 ? 'bg-brand-cream/30' : ''}>
                     <td className="py-3 px-4 text-sm font-mono text-brand-primary">cultrclub.com/{l.slug}</td>
                     <td className="py-3 px-4 text-sm text-brand-primary">{l.creator_name || '\u2014'}</td>
@@ -425,22 +491,38 @@ export default function CouponsClient() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brand-primary/10">
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Code</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Creator</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Type</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Discount</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Uses</th>
-                  <th className="text-right py-3 px-4 text-brand-primary/60 font-medium text-sm">Revenue</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Stripe</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Active</th>
+                  <SortTh label="Code" col="code" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
+                  <SortTh label="Creator" col="creator" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
+                  <SortTh label="Type" col="type" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
+                  <SortTh label="Discount" col="discount" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Uses" col="uses" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Revenue" col="revenue" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} right />
+                  <SortTh label="Stripe" col="stripe" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
+                  <SortTh label="Active" col="active" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
                   <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Actions</th>
-                  <th className="text-left py-3 px-4 text-brand-primary/60 font-medium text-sm">Expires</th>
+                  <SortTh label="Expires" col="expires" sort={couponSort} onSort={(c) => setCouponSort(s => toggleSort(s, c))} />
                 </tr>
               </thead>
               <tbody>
-                {filterByDateRange(data.allCouponCodes, tableStartDate, tableEndDate)
-                  .filter(c => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.creator_name || '').toLowerCase().includes(couponSearch.toLowerCase()))
-                  .map((c, i) => {
+                {sortByCol(
+                  filterByDateRange(data.allCouponCodes, tableStartDate, tableEndDate)
+                    .filter(c => !couponSearch || c.code.toLowerCase().includes(couponSearch.toLowerCase()) || (c.creator_name || '').toLowerCase().includes(couponSearch.toLowerCase())),
+                  couponSort,
+                  (r, c) => {
+                    switch (c) {
+                      case 'code': return r.code
+                      case 'creator': return r.creator_name ?? ''
+                      case 'type': return r.code_type
+                      case 'discount': return Number(r.discount_value)
+                      case 'uses': return r.use_count
+                      case 'revenue': return Number(r.total_revenue)
+                      case 'stripe': return r.stripe_promotion_code_id ? 1 : 0
+                      case 'active': return r.active ? 1 : 0
+                      case 'expires': return r.expires_at ?? ''
+                      default: return ''
+                    }
+                  }
+                ).map((c, i) => {
                   const typeBadge = c.program_type === 'prelaunch'
                     ? 'bg-blue-100 text-blue-800'
                     : c.code_type === 'membership' ? 'bg-purple-100 text-purple-800'

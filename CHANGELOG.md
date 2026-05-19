@@ -1,3 +1,14 @@
+## [2026-05-19] - Admin creator metrics tables sortable
+
+### Changed
+- **`app/admin/creators/coupons/CouponsClient.tsx`** — All three tables now sortable by clicking any column header (▲/▼ active, ⇅ inactive):
+  - **Coupon Performance**: Code, Type, Discount, Uses (default), Revenue, Discount Given, Avg Order
+  - **All Tracking Links**: Slug, Creator, Destination, Clicks (default), Conversions, Conv. Rate, Active
+  - **All Coupon Codes**: Code, Creator, Type, Discount, Uses (default), Revenue, Stripe, Active, Expires
+- Added module-level `SortTh` component and `sortByCol` helper — reusable pattern for other admin tables
+
+---
+
 ## [2026-05-18] - Creator login E2E verified
 
 ### Verified
