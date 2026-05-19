@@ -1,3 +1,17 @@
+## [2026-05-19] - Creator/member login + metric accuracy overhaul
+
+### Fixed
+- **`app/api/auth/verify/route.ts`** — Member login crash when `stripe_customer_id` is null in DB; `customerId` was left undefined. Now falls back to `db_member_${id}`.
+- **`app/api/creators/earnings/overview/route.ts`** — `pendingEarnings` incorrectly merged `pending + approved` commission states into one number. Split into separate `pendingEarnings` and `approvedEarnings` fields matching the admin breakdown.
+- **`lib/config/affiliate.ts`** — Added `approvedEarnings: number` to `EarningsOverview` interface to match new API field.
+- **`app/creators/portal/earnings/page.tsx`** — Added "Approved (ready to pay)" stat card; relabelled "Pending" → "Pending (30-day hold)". Summary grid now shows 5 cards.
+- **`lib/db.ts`** (`getCreatorROI`) — Admin ROI club-order revenue and discount subqueries changed from `status NOT IN (cancelled/refunded)` → `status IN ('shipped', 'fulfilled')`. Matches the deferred-to-shipment commission model so ROI only counts orders that actually earned commission.
+- **`lib/creators/db.ts`** (`getCreatorLinkStats`, `getTrackingLinksByCreator`) — Replaced stale `tracking_links.click_count` denormalized counter with live `click_events` aggregates. CF Pages edge runtime kills fire-and-forget increments so the counters drift; reading from the source table is authoritative.
+- **`lib/creators/db.ts`** (`getCreatorDashboardStats`) — Added `convertedClicks` and `thisMonthConvertedClicks` (from `click_events WHERE converted = TRUE`) to the stats return object.
+- **`app/api/creators/dashboard/route.ts`** — Conversion rate formula corrected from `totalOrders / totalClicks` (wrong: coupon-code orders have no click event) → `convertedClicks / totalClicks`.
+
+---
+
 ## [2026-05-19] - Admin creator metrics tables sortable
 
 ### Changed

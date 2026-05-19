@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { verifyMagicLinkToken, createSessionToken, normalizeAuthEmailInput, isAdminEmail } from '@/lib/auth'
 import { getCookieDomain } from '@/lib/utils'
+import { isReferralProgramEnabled } from '@/lib/referral/config'
+import { attachRefereeEmailFromToken } from '@/lib/referral/attribution'
+
+const REFERRAL_TOKEN_COOKIE = 'cultr_member_referral_token'
+
+async function attachReferralIfPresent(request: NextRequest, email: string): Promise<void> {
+  if (!isReferralProgramEnabled()) return
+  const token = request.cookies.get(REFERRAL_TOKEN_COOKIE)?.value
+  if (!token) return
+  try {
+    await attachRefereeEmailFromToken({ attributionToken: token, refereeEmail: email })
+  } catch (err) {
+    // Never block login on a referral attribution failure.
+    console.error('[auth/verify] referral attribution failed:', err)
+  }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +127,12 @@ export async function GET(request: NextRequest) {
 
     const email = normalizeAuthEmailInput(verified.email)
 
+    // Phase 2A: attach referral attribution on successful verify. The helper
+    // is idempotent (only updates 'clicked' rows with NULL referee_email), so
+    // calling on every login is safe — only the first login after a /refer
+    // click attaches.
+    await attachReferralIfPresent(request, email)
+
     const OWNERS = [
       'alex@cultrhealth.com',
       'erik@cultrhealth.com',
@@ -162,35 +184,47 @@ export async function GET(request: NextRequest) {
       console.log('Admin access granted:', { timestamp: new Date().toISOString() })
       return response
     } else {
-      // Double-check customer still has active subscription
-      const stripe = getStripe()
-      const customers = await stripe.customers.list({
-        email: email,
-        limit: 1,
-      })
-
       let isAllowed = false;
       let stripeCustomerId: string | null = null;
 
-      if (customers.data.length > 0) {
-        const customer = customers.data[0]
+      if (process.env.POSTGRES_URL) {
+        const { getMembershipByEmail } = await import('@/lib/db')
+        const membership = await getMembershipByEmail(email)
+        if (membership && ['active', 'trialing'].includes(String(membership.subscription_status))) {
+          isAllowed = true
+          // Guarantee a non-null customerId even for members whose Stripe ID
+          // hasn't been backfilled yet — avoids undefined session tokens.
+          stripeCustomerId = membership.stripe_customer_id ?? `db_member_${membership.id}`
+        }
+      }
 
-        // Check for active or trialing subscription
-        const activeSubscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          status: 'active',
+      if (!isAllowed && process.env.STRIPE_SECRET_KEY) {
+        // Legacy Stripe fallback for historical memberships.
+        const stripe = getStripe()
+        const customers = await stripe.customers.list({
+          email: email,
           limit: 1,
         })
 
-        const trialingSubscriptions = await stripe.subscriptions.list({
-          customer: customer.id,
-          status: 'trialing',
-          limit: 1,
-        })
+        if (customers.data.length > 0) {
+          const customer = customers.data[0]
 
-        if (activeSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0) {
-          isAllowed = true;
-          stripeCustomerId = customer.id;
+          const activeSubscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'active',
+            limit: 1,
+          })
+
+          const trialingSubscriptions = await stripe.subscriptions.list({
+            customer: customer.id,
+            status: 'trialing',
+            limit: 1,
+          })
+
+          if (activeSubscriptions.data.length > 0 || trialingSubscriptions.data.length > 0) {
+            isAllowed = true;
+            stripeCustomerId = customer.id;
+          }
         }
       }
 

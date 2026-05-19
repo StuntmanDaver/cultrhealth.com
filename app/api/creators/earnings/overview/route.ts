@@ -31,7 +31,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       earnings: {
         lifetimeEarnings: commissionSummary.total,
-        pendingEarnings: commissionSummary.pending + commissionSummary.approved,
+        // Split pending (awaiting 30-day window) from approved (ready to pay)
+        // so the creator view matches the breakdown visible in the admin dashboard.
+        pendingEarnings: commissionSummary.pending,
+        approvedEarnings: commissionSummary.approved,
         paidEarnings: commissionSummary.paid,
         thisMonthEarnings,
         lastMonthEarnings,

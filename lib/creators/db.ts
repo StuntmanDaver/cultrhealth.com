@@ -1,5 +1,6 @@
 import { sql } from '@vercel/postgres'
 import { DatabaseError } from '@/lib/db'
+import { FIRST_PURCHASE_DISCOUNT_CODE } from '@/lib/config/first-purchase-discount'
 import type {
   Creator,
   CreatorStatus,
@@ -181,6 +182,11 @@ export async function updateCreatorProfile(
     bio?: string
     payout_method?: PayoutMethod
     payout_destination_id?: string
+    address_line1?: string
+    address_line2?: string
+    address_city?: string
+    address_state?: string
+    address_zip?: string
   }
 ): Promise<boolean> {
   try {
@@ -193,6 +199,11 @@ export async function updateCreatorProfile(
         bio = COALESCE(${updates.bio || null}, bio),
         payout_method = COALESCE(${updates.payout_method || null}, payout_method),
         payout_destination_id = COALESCE(${updates.payout_destination_id || null}, payout_destination_id),
+        address_line1 = CASE WHEN ${updates.address_line1 !== undefined} THEN ${updates.address_line1 ?? null} ELSE address_line1 END,
+        address_line2 = CASE WHEN ${updates.address_line2 !== undefined} THEN ${updates.address_line2 ?? null} ELSE address_line2 END,
+        address_city  = CASE WHEN ${updates.address_city  !== undefined} THEN ${updates.address_city  ?? null} ELSE address_city  END,
+        address_state = CASE WHEN ${updates.address_state !== undefined} THEN ${updates.address_state ?? null} ELSE address_state END,
+        address_zip   = CASE WHEN ${updates.address_zip   !== undefined} THEN ${updates.address_zip   ?? null} ELSE address_zip   END,
         updated_at = NOW()
       WHERE id = ${id}
     `
@@ -285,8 +296,8 @@ export async function getAllActiveCreators(limit = 200): Promise<Creator[]> {
 // AFFILIATE CODE CRUD
 // ===========================================
 
-// Reserved code names that cannot be used as affiliate codes (hardcoded in CLUB_COUPONS)
-const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'LOYALTY15', 'CULTR30'])
+// Reserved code names that cannot be used as affiliate codes (hardcoded/system coupons)
+const RESERVED_CODES = new Set(['OWNER', 'CULTRSTAFF', 'CULTRFAM', 'CULTR10', 'SUMMER20', 'LOYALTY15', 'CULTR30', FIRST_PURCHASE_DISCOUNT_CODE])
 
 export async function createAffiliateCode(
   creatorId: string,
@@ -316,7 +327,21 @@ export async function createAffiliateCode(
 export async function getAffiliateCodesByCreator(creatorId: string): Promise<AffiliateCode[]> {
   try {
     const result = await sql`
-      SELECT * FROM affiliate_codes WHERE creator_id = ${creatorId} ORDER BY is_primary DESC, created_at ASC
+      SELECT
+        ac.*,
+        COALESCE(stats.usage_count, 0)::int AS use_count,
+        COALESCE(stats.total_revenue, 0) AS total_revenue
+      FROM affiliate_codes ac
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*)::int AS usage_count,
+          COALESCE(SUM(oa.net_revenue), 0) AS total_revenue
+        FROM order_attributions oa
+        WHERE oa.code_id = ac.id
+          AND oa.status != 'refunded'
+      ) stats ON TRUE
+      WHERE ac.creator_id = ${creatorId}
+      ORDER BY ac.is_primary DESC, ac.created_at ASC
     `
     return result.rows as AffiliateCode[]
   } catch (error) {
@@ -521,6 +546,7 @@ export async function getPrelaunchCodes(): Promise<PrelaunchCodeWithStats[]> {
           COALESCE(AVG(co.subtotal_usd), 0) as avg_order_value
         FROM club_orders co
         WHERE UPPER(co.coupon_code) = UPPER(ac.code)
+          AND co.status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
       ) stats ON TRUE
       WHERE ac.program_type = 'prelaunch'
       ORDER BY ac.created_at DESC
@@ -615,10 +641,14 @@ export async function getTrackingLinksByCreator(creatorId: string): Promise<Trac
     const result = await sql`
       SELECT
         tl.*,
+        COALESCE(ce_stats.real_clicks, 0)::int as real_click_count,
         COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
       FROM tracking_links tl
       LEFT JOIN (
-        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        SELECT
+          link_id,
+          COUNT(*) as real_clicks,
+          COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
         FROM click_events
         WHERE link_id IS NOT NULL AND creator_id = ${creatorId}
         GROUP BY link_id
@@ -628,10 +658,9 @@ export async function getTrackingLinksByCreator(creatorId: string): Promise<Trac
     `
     return result.rows.map(r => ({
       ...r,
-      conversion_count: Math.max(
-        Number(r.conversion_count) || 0,
-        Number(r.real_conversion_count) || 0
-      ),
+      // Use live click_events counts to stay consistent with the dashboard total.
+      click_count: Math.max(Number(r.click_count) || 0, Number(r.real_click_count) || 0),
+      conversion_count: Math.max(Number(r.conversion_count) || 0, Number(r.real_conversion_count) || 0),
     })) as TrackingLink[]
   } catch (error) {
     console.error('Database error fetching tracking links:', error)
@@ -1509,21 +1538,27 @@ export async function updateAffiliateCodeStripeIds(
 export async function getCreatorLinkStats(creatorId: string) {
   try {
     const result = await sql`
-      SELECT tl.id, tl.slug, tl.destination_path, tl.click_count, tl.conversion_count,
+      SELECT tl.id, tl.slug, tl.destination_path,
+        COALESCE(ce_stats.real_clicks, 0)::int as real_click_count,
         COALESCE(ce_stats.real_conversions, 0)::int as real_conversion_count
       FROM tracking_links tl
       LEFT JOIN (
-        SELECT link_id, COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
+        SELECT
+          link_id,
+          COUNT(*) as real_clicks,
+          COUNT(*) FILTER (WHERE converted = TRUE) as real_conversions
         FROM click_events
         WHERE link_id IS NOT NULL AND creator_id = ${creatorId}
         GROUP BY link_id
       ) ce_stats ON ce_stats.link_id = tl.id
       WHERE tl.creator_id = ${creatorId} AND tl.active = TRUE
-      ORDER BY tl.click_count DESC
+      ORDER BY real_click_count DESC
     `
     return result.rows.map(r => {
-      const conversions = Math.max(Number(r.conversion_count) || 0, Number(r.real_conversion_count) || 0)
-      const clicks = parseInt(r.click_count || '0', 10)
+      // Use live click_events counts exclusively — the counter columns on
+      // tracking_links drift when requests are fire-and-forget on CF Pages edge.
+      const clicks = parseInt(r.real_click_count || '0', 10)
+      const conversions = parseInt(r.real_conversion_count || '0', 10)
       return {
         id: r.id,
         slug: r.slug,
@@ -1564,22 +1599,28 @@ export async function getCreatorEarningsTrend(creatorId: string) {
 
 export async function getCreatorDashboardStats(creatorId: string): Promise<{
   totalClicks: number
+  convertedClicks: number
   totalOrders: number
   totalRevenue: number
   totalCommission: number
   pendingCommission: number
   thisMonthClicks: number
+  thisMonthConvertedClicks: number
   thisMonthOrders: number
   thisMonthRevenue: number
   thisMonthCommission: number
 }> {
   try {
     // Use SQL date_trunc for month boundary — matches getCreatorEarningsTrend()
-    // and avoids JS/SQL timezone mismatches on Vercel edge
+    // and avoids JS/SQL timezone mismatches on Vercel edge.
+    // converted_clicks comes from click_events.converted so the conversion rate
+    // only counts link-click-originated orders (not coupon-code-only attributions).
     const result = await sql`
       SELECT
         (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId}) as total_clicks,
+        (SELECT COUNT(*) FILTER (WHERE converted = TRUE) FROM click_events WHERE creator_id = ${creatorId}) as converted_clicks,
         (SELECT COUNT(*) FROM click_events WHERE creator_id = ${creatorId} AND clicked_at >= date_trunc('month', NOW())) as month_clicks,
+        (SELECT COUNT(*) FILTER (WHERE converted = TRUE) FROM click_events WHERE creator_id = ${creatorId} AND clicked_at >= date_trunc('month', NOW())) as month_converted_clicks,
         (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_orders,
         (SELECT COUNT(*) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded' AND created_at >= date_trunc('month', NOW())) as month_orders,
         (SELECT COALESCE(SUM(net_revenue), 0) FROM order_attributions WHERE creator_id = ${creatorId} AND status != 'refunded') as total_revenue,
@@ -1592,11 +1633,13 @@ export async function getCreatorDashboardStats(creatorId: string): Promise<{
     const row = result.rows[0]
     return {
       totalClicks: parseInt(row?.total_clicks || '0', 10),
+      convertedClicks: parseInt(row?.converted_clicks || '0', 10),
       totalOrders: parseInt(row?.total_orders || '0', 10),
       totalRevenue: parseFloat(row?.total_revenue || '0'),
       totalCommission: parseFloat(row?.total_commission || '0'),
       pendingCommission: parseFloat(row?.pending_commission || '0'),
       thisMonthClicks: parseInt(row?.month_clicks || '0', 10),
+      thisMonthConvertedClicks: parseInt(row?.month_converted_clicks || '0', 10),
       thisMonthOrders: parseInt(row?.month_orders || '0', 10),
       thisMonthRevenue: parseFloat(row?.month_revenue || '0'),
       thisMonthCommission: parseFloat(row?.month_commission || '0'),

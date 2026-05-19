@@ -97,10 +97,16 @@ export default function EarningsPage() {
           color="bg-cultr-mint text-cultr-forest"
         />
         <EarningsStat
-          label="Pending"
+          label="Pending (30-day hold)"
           value={fmt(earnings?.pendingEarnings ?? 0)}
           icon={Clock}
           color="bg-amber-100 text-amber-600"
+        />
+        <EarningsStat
+          label="Approved (ready to pay)"
+          value={fmt(earnings?.approvedEarnings ?? 0)}
+          icon={CheckCircle}
+          color="bg-green-100 text-green-700"
         />
         <EarningsStat
           label="Paid Out"

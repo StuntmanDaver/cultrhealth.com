@@ -199,6 +199,7 @@ export interface CreatorDashboardMetrics {
 export interface EarningsOverview {
   lifetimeEarnings: number
   pendingEarnings: number
+  approvedEarnings: number
   paidEarnings: number
   thisMonthEarnings: number
   lastMonthEarnings: number

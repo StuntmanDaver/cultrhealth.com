@@ -22,9 +22,11 @@ export async function GET(request: NextRequest) {
       getCreatorEarningsTrend(auth.creatorId).catch(() => ({ thisMonth: 0, lastMonth: 0 })),
     ])
 
+    // Use converted_clicks / total_clicks so coupon-code-only orders (which
+    // have no corresponding click event) don't inflate the conversion rate.
     const conversionRate =
       stats.totalClicks > 0
-        ? Math.round((stats.totalOrders / stats.totalClicks) * 10000) / 100
+        ? Math.round((stats.convertedClicks / stats.totalClicks) * 10000) / 100
         : 0
 
     return NextResponse.json({

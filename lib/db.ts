@@ -1,6 +1,7 @@
 import { sql } from '@vercel/postgres'
 import type { PaymentProvider } from '@/lib/payments/payment-types'
 import { OWNER_EMAILS_PG_ARRAY } from '@/lib/config/owner-emails'
+import { COMMISSION_CONFIG } from '@/lib/config/affiliate'
 
 // ===========================================
 // TYPE DEFINITIONS
@@ -37,6 +38,22 @@ export interface MembershipEntry {
   plan_tier: string
   subscription_status: string
   asher_patient_id?: number | string
+  cultr_patient_number?: string | null
+  email?: string | null
+  ehr_patient_id?: string | null
+  ehr_provider?: string | null
+  ehr_sync_status?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  phone?: string | null
+  payment_provider?: PaymentProvider | string | null
+  provider_customer_id?: string | null
+  provider_subscription_id?: string | null
+  lab_preference?: string | null
+  lab_fee_cents?: number | null
+  siphox_status?: string | null
+  siphox_customer_id?: string | null
+  siphox_order_id?: string | null
   created_at: Date
   updated_at: Date
   cancelled_at?: Date
@@ -51,7 +68,26 @@ export interface CreateMembershipInput {
   asher_patient_id?: number | string
   ehr_patient_id?: string
   ehr_provider?: string
+  ehr_sync_status?: string
   email?: string
+  first_name?: string
+  last_name?: string
+  phone?: string
+  payment_provider?: PaymentProvider
+  provider_customer_id?: string
+  provider_subscription_id?: string
+  cultr_patient_number?: string
+  lab_preference?: string
+  lab_fee_cents?: number
+  siphox_status?: string
+  siphox_customer_id?: string
+  siphox_order_id?: string
+  siphox_kit_type?: string
+  siphox_opted_out_at?: Date
+  shipping_address?: unknown
+  signup_order_id?: string
+  initial_charge_transaction_id?: string
+  calendly_review_url?: string | null
 }
 
 export interface UpdateMembershipInput {
@@ -158,31 +194,97 @@ export async function getWaitlistEntryByEmail(email: string): Promise<WaitlistEn
 // ===========================================
 
 export async function createMembership(input: CreateMembershipInput): Promise<{ id: string }> {
-  const { stripe_customer_id, stripe_subscription_id, plan_tier, subscription_status, asher_patient_id, ehr_patient_id, ehr_provider, email } = input
+  const {
+    stripe_customer_id,
+    stripe_subscription_id,
+    plan_tier,
+    subscription_status,
+    asher_patient_id,
+    ehr_patient_id,
+    ehr_provider,
+    ehr_sync_status,
+    email,
+    first_name,
+    last_name,
+    phone,
+    payment_provider = 'stripe',
+    provider_customer_id,
+    provider_subscription_id,
+    cultr_patient_number,
+    lab_preference,
+    lab_fee_cents,
+    siphox_status,
+    siphox_customer_id,
+    siphox_order_id,
+    siphox_kit_type,
+    siphox_opted_out_at,
+    shipping_address,
+    signup_order_id,
+    initial_charge_transaction_id,
+    calendly_review_url,
+  } = input
 
   try {
     const result = await sql`
       INSERT INTO memberships (
         stripe_customer_id,
         stripe_subscription_id,
+        payment_provider,
+        provider_customer_id,
+        provider_subscription_id,
         plan_tier,
         subscription_status,
         asher_patient_id,
         ehr_patient_id,
         ehr_provider,
+        ehr_sync_status,
         email,
+        first_name,
+        last_name,
+        phone,
+        cultr_patient_number,
+        lab_preference,
+        lab_fee_cents,
+        siphox_status,
+        siphox_customer_id,
+        siphox_order_id,
+        siphox_kit_type,
+        siphox_opted_out_at,
+        shipping_address,
+        signup_order_id,
+        initial_charge_transaction_id,
+        calendly_review_url,
         created_at,
         updated_at
       )
       VALUES (
         ${stripe_customer_id},
         ${stripe_subscription_id},
+        ${payment_provider},
+        ${provider_customer_id || null},
+        ${provider_subscription_id || null},
         ${plan_tier},
         ${subscription_status},
         ${asher_patient_id || null},
         ${ehr_patient_id || null},
         ${ehr_provider || null},
+        ${ehr_sync_status || 'pending'},
         ${email || null},
+        ${first_name || null},
+        ${last_name || null},
+        ${phone || null},
+        ${cultr_patient_number || null},
+        ${lab_preference || 'siphox'},
+        ${lab_fee_cents ?? 0},
+        ${siphox_status || 'not_started'},
+        ${siphox_customer_id || null},
+        ${siphox_order_id || null},
+        ${siphox_kit_type || null},
+        ${siphox_opted_out_at ? siphox_opted_out_at.toISOString() : null},
+        ${shipping_address ? JSON.stringify(shipping_address) : null}::jsonb,
+        ${signup_order_id || null},
+        ${initial_charge_transaction_id || null},
+        ${calendly_review_url || null},
         NOW(),
         NOW()
       )
@@ -190,9 +292,28 @@ export async function createMembership(input: CreateMembershipInput): Promise<{ 
       DO UPDATE SET
         subscription_status = EXCLUDED.subscription_status,
         plan_tier = EXCLUDED.plan_tier,
+        payment_provider = EXCLUDED.payment_provider,
+        provider_customer_id = COALESCE(EXCLUDED.provider_customer_id, memberships.provider_customer_id),
+        provider_subscription_id = COALESCE(EXCLUDED.provider_subscription_id, memberships.provider_subscription_id),
         email = COALESCE(EXCLUDED.email, memberships.email),
         ehr_patient_id = COALESCE(EXCLUDED.ehr_patient_id, memberships.ehr_patient_id),
         ehr_provider = COALESCE(EXCLUDED.ehr_provider, memberships.ehr_provider),
+        ehr_sync_status = COALESCE(EXCLUDED.ehr_sync_status, memberships.ehr_sync_status),
+        first_name = COALESCE(EXCLUDED.first_name, memberships.first_name),
+        last_name = COALESCE(EXCLUDED.last_name, memberships.last_name),
+        phone = COALESCE(EXCLUDED.phone, memberships.phone),
+        cultr_patient_number = COALESCE(EXCLUDED.cultr_patient_number, memberships.cultr_patient_number),
+        lab_preference = COALESCE(EXCLUDED.lab_preference, memberships.lab_preference),
+        lab_fee_cents = EXCLUDED.lab_fee_cents,
+        siphox_status = COALESCE(EXCLUDED.siphox_status, memberships.siphox_status),
+        siphox_customer_id = COALESCE(EXCLUDED.siphox_customer_id, memberships.siphox_customer_id),
+        siphox_order_id = COALESCE(EXCLUDED.siphox_order_id, memberships.siphox_order_id),
+        siphox_kit_type = COALESCE(EXCLUDED.siphox_kit_type, memberships.siphox_kit_type),
+        siphox_opted_out_at = COALESCE(EXCLUDED.siphox_opted_out_at, memberships.siphox_opted_out_at),
+        shipping_address = COALESCE(EXCLUDED.shipping_address, memberships.shipping_address),
+        signup_order_id = COALESCE(EXCLUDED.signup_order_id, memberships.signup_order_id),
+        initial_charge_transaction_id = COALESCE(EXCLUDED.initial_charge_transaction_id, memberships.initial_charge_transaction_id),
+        calendly_review_url = COALESCE(EXCLUDED.calendly_review_url, memberships.calendly_review_url),
         updated_at = NOW()
       RETURNING id
     `
@@ -278,6 +399,27 @@ export async function getMembershipByCustomerId(customerId: string): Promise<Mem
     return result.rows[0] as MembershipEntry | null
   } catch (error) {
     console.error('Database error fetching membership by customer:', error)
+    throw new DatabaseError('Failed to fetch membership', error)
+  }
+}
+
+export async function getMembershipByEmail(email: string): Promise<MembershipEntry | null> {
+  try {
+    const result = await sql`
+      SELECT * FROM memberships
+      WHERE LOWER(email) = LOWER(${email})
+      ORDER BY
+        CASE
+          WHEN subscription_status IN ('active', 'trialing') THEN 0
+          ELSE 1
+        END,
+        created_at DESC
+      LIMIT 1
+    `
+
+    return result.rows[0] as MembershipEntry | null
+  } catch (error) {
+    console.error('Database error fetching membership by email:', error)
     throw new DatabaseError('Failed to fetch membership', error)
   }
 }
@@ -741,6 +883,7 @@ export async function getCouponStats(days = 30): Promise<CouponStats> {
           created_at
         FROM club_orders
         WHERE coupon_code IS NOT NULL AND coupon_code != ''
+          AND status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
 
         UNION ALL
 
@@ -850,6 +993,7 @@ export async function getPrelaunchStats(): Promise<PrelaunchStats> {
       WHERE UPPER(co.coupon_code) IN (
         SELECT UPPER(code) FROM affiliate_codes WHERE program_type = 'prelaunch'
       )
+        AND co.status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
     `
 
     const codeRow = codeResult.rows[0] || {}
@@ -880,6 +1024,24 @@ export interface CreatorCommissionStats {
   totalPaid: number
   totalLifetime: number
   creatorsByStatus: Record<string, number>
+}
+
+export interface CreatorCommissionAuditSummary {
+  totalIssues: number
+  creditedOrders: number
+  creditedRevenue: number
+  attributedClubOrders: number
+  ledgerRows: number
+  ledgerTotal: number
+  checks: {
+    missingAttribution: number
+    attributionWithoutLedger: number
+    directRateMismatches: number
+    duplicateLedgerRows: number
+    selfReferralLedgerRows: number
+    overrideCapViolations: number
+    missingRefundReversals: number
+  }
 }
 
 export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommissionStats> {
@@ -920,6 +1082,180 @@ export async function getCreatorCommissionStats(days = 30): Promise<CreatorCommi
   } catch (error) {
     console.error('Database error fetching creator commission stats:', error)
     throw new DatabaseError('Failed to fetch creator commission stats', error)
+  }
+}
+
+export async function getCreatorCommissionAuditSummary(days = 30): Promise<CreatorCommissionAuditSummary> {
+  const dateFilterDays = typeof days === 'number' && days > 0 ? days : null
+
+  try {
+    const [
+      creditedResult,
+      attributedClubOrderResult,
+      missingAttributionResult,
+      attributionWithoutLedgerResult,
+      directRateMismatchResult,
+      duplicateLedgerResult,
+      selfReferralLedgerResult,
+      overrideCapViolationResult,
+      missingRefundReversalResult,
+    ] = await Promise.all([
+      sql`
+        WITH eligible_attributions AS (
+          SELECT oa.id, oa.net_revenue
+          FROM order_attributions oa
+          JOIN creators c ON c.id = oa.creator_id
+          WHERE oa.is_self_referral = FALSE
+            AND oa.status != 'refunded'
+            AND oa.net_revenue > 0
+            AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+            AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+        ),
+        ledger_totals AS (
+          SELECT
+            order_attribution_id,
+            COUNT(*)::int AS ledger_rows,
+            COALESCE(SUM(commission_amount), 0)::float8 AS ledger_total
+          FROM commission_ledger
+          WHERE status != 'reversed'
+          GROUP BY order_attribution_id
+        )
+        SELECT
+          COUNT(ea.id)::int AS credited_orders,
+          COALESCE(SUM(ea.net_revenue), 0)::float8 AS credited_revenue,
+          COALESCE(SUM(lt.ledger_rows), 0)::int AS ledger_rows,
+          COALESCE(SUM(lt.ledger_total), 0)::float8 AS ledger_total
+        FROM eligible_attributions ea
+        LEFT JOIN ledger_totals lt ON lt.order_attribution_id = ea.id
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM club_orders co
+        JOIN creators c ON c.id = co.attributed_creator_id
+        WHERE co.attributed_creator_id IS NOT NULL
+          AND co.status NOT IN ('cancelled', 'dismissed', 'rejected')
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM club_orders co
+        JOIN creators c ON c.id = co.attributed_creator_id
+        LEFT JOIN order_attributions oa ON oa.order_id = co.id::text
+        WHERE co.attributed_creator_id IS NOT NULL
+          AND COALESCE(co.subtotal_usd, 0) > 0
+          AND co.status NOT IN ('cancelled', 'dismissed', 'rejected')
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND oa.id IS NULL
+          AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+      `,
+      sql`
+        SELECT COUNT(DISTINCT oa.id)::int AS count
+        FROM order_attributions oa
+        JOIN creators c ON c.id = oa.creator_id
+        LEFT JOIN club_orders co ON co.id::text = oa.order_id
+        LEFT JOIN commission_ledger cl
+          ON cl.order_attribution_id = oa.id
+         AND cl.status != 'reversed'
+        WHERE oa.is_self_referral = FALSE
+          AND oa.status != 'refunded'
+          AND cl.id IS NULL
+          AND (
+            (co.id IS NULL AND oa.net_revenue > 0)
+            OR (
+              co.id IS NOT NULL
+              AND co.status IN ('shipped', 'fulfilled')
+              AND COALESCE(co.subtotal_usd, oa.net_revenue, 0) > 0
+            )
+          )
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND (${dateFilterDays}::int IS NULL OR COALESCE(co.created_at, oa.created_at) >= NOW() - make_interval(days => ${dateFilterDays}::int))
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM order_attributions oa
+        JOIN creators c ON c.id = oa.creator_id
+        WHERE oa.is_self_referral = FALSE
+          AND oa.status != 'refunded'
+          AND oa.net_revenue > 0
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+          AND (
+            ROUND(oa.direct_commission_rate::numeric, 2) != ROUND(COALESCE(c.commission_rate, ${COMMISSION_CONFIG.directRate})::numeric, 2)
+            OR ROUND(oa.direct_commission_amount::numeric, 2) != ROUND((oa.net_revenue * COALESCE(c.commission_rate, ${COMMISSION_CONFIG.directRate}) / 100)::numeric, 2)
+          )
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM (
+          SELECT order_attribution_id, beneficiary_creator_id, commission_type
+          FROM commission_ledger
+          WHERE status != 'reversed'
+            AND (${dateFilterDays}::int IS NULL OR created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+          GROUP BY order_attribution_id, beneficiary_creator_id, commission_type
+          HAVING COUNT(*) > 1
+        ) duplicates
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM order_attributions oa
+        JOIN creators c ON c.id = oa.creator_id
+        JOIN commission_ledger cl ON cl.order_attribution_id = oa.id
+        WHERE oa.is_self_referral = TRUE
+          AND cl.status != 'reversed'
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+      `,
+      sql`
+        SELECT COUNT(*)::int AS count
+        FROM (
+          SELECT oa.id
+          FROM order_attributions oa
+          JOIN creators c ON c.id = oa.creator_id
+          JOIN commission_ledger cl ON cl.order_attribution_id = oa.id
+          WHERE cl.status != 'reversed'
+            AND oa.is_self_referral = FALSE
+            AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+            AND (${dateFilterDays}::int IS NULL OR oa.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+          GROUP BY oa.id, oa.net_revenue
+          HAVING SUM(cl.commission_amount) > ROUND((oa.net_revenue * ${COMMISSION_CONFIG.totalCapRate} / 100)::numeric, 2)
+        ) cap_violations
+      `,
+      sql`
+        SELECT COUNT(DISTINCT oa.id)::int AS count
+        FROM order_attributions oa
+        JOIN creators c ON c.id = oa.creator_id
+        JOIN commission_ledger cl ON cl.order_attribution_id = oa.id
+        WHERE oa.status = 'refunded'
+          AND cl.status != 'reversed'
+          AND LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
+          AND (${dateFilterDays}::int IS NULL OR oa.updated_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
+      `,
+    ])
+
+    const creditedRow = creditedResult.rows[0] || {}
+    const checks = {
+      missingAttribution: parseInt(missingAttributionResult.rows[0]?.count || '0', 10),
+      attributionWithoutLedger: parseInt(attributionWithoutLedgerResult.rows[0]?.count || '0', 10),
+      directRateMismatches: parseInt(directRateMismatchResult.rows[0]?.count || '0', 10),
+      duplicateLedgerRows: parseInt(duplicateLedgerResult.rows[0]?.count || '0', 10),
+      selfReferralLedgerRows: parseInt(selfReferralLedgerResult.rows[0]?.count || '0', 10),
+      overrideCapViolations: parseInt(overrideCapViolationResult.rows[0]?.count || '0', 10),
+      missingRefundReversals: parseInt(missingRefundReversalResult.rows[0]?.count || '0', 10),
+    }
+
+    return {
+      totalIssues: Object.values(checks).reduce((sum, count) => sum + count, 0),
+      creditedOrders: parseInt(creditedRow.credited_orders || '0', 10),
+      creditedRevenue: parseFloat(creditedRow.credited_revenue || '0'),
+      attributedClubOrders: parseInt(attributedClubOrderResult.rows[0]?.count || '0', 10),
+      ledgerRows: parseInt(creditedRow.ledger_rows || '0', 10),
+      ledgerTotal: parseFloat(creditedRow.ledger_total || '0'),
+      checks,
+    }
+  } catch (error) {
+    console.error('Database error fetching creator commission audit summary:', error)
+    throw new DatabaseError('Failed to fetch creator commission audit summary', error)
   }
 }
 
@@ -1121,7 +1457,8 @@ export async function getCreatorROI(days?: number) {
             WHERE co.attributed_creator_id = c.id
               AND co.discount_percent > 0 AND co.discount_percent < 100
               AND co.subtotal_usd > 0
-              AND co.status NOT IN ('refunded', 'cancelled', 'dismissed', 'rejected')
+              -- Match the revenue filter: only shipped/fulfilled orders count.
+              AND co.status IN ('shipped', 'fulfilled')
               AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
             UNION ALL
             SELECT
@@ -1144,7 +1481,9 @@ export async function getCreatorROI(days?: number) {
           FROM club_orders co
           WHERE co.attributed_creator_id = c.id
             AND co.subtotal_usd > 0
-            AND co.status NOT IN ('refunded', 'cancelled', 'dismissed', 'rejected')
+            -- Only count shipped/fulfilled orders: commission is deferred to
+            -- shipment, so unshipped orders inflate revenue vs the creator view.
+            AND co.status IN ('shipped', 'fulfilled')
             AND (${dateFilterDays}::int IS NULL OR co.created_at >= NOW() - make_interval(days => ${dateFilterDays}::int))
         ), 0)
         +
@@ -1313,12 +1652,36 @@ export async function getAllAffiliateCodesForAdmin() {
     const result = await sql`
       SELECT
         ac.*,
+        CASE
+          WHEN ac.creator_id IS NULL THEN COALESCE(company_stats.usage_count, 0)
+          ELSE COALESCE(creator_stats.usage_count, 0)
+        END AS use_count,
+        CASE
+          WHEN ac.creator_id IS NULL THEN COALESCE(company_stats.total_revenue, 0)
+          ELSE COALESCE(creator_stats.total_revenue, 0)
+        END AS total_revenue,
         c.full_name as creator_name,
         c.status as creator_status
       FROM affiliate_codes ac
       LEFT JOIN creators c ON ac.creator_id = c.id
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*)::int AS usage_count,
+          COALESCE(SUM(co.subtotal_usd), 0) AS total_revenue
+        FROM club_orders co
+        WHERE UPPER(co.coupon_code) = UPPER(ac.code)
+          AND co.status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
+      ) company_stats ON TRUE
+      LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*)::int AS usage_count,
+          COALESCE(SUM(oa.net_revenue), 0) AS total_revenue
+        FROM order_attributions oa
+        WHERE oa.code_id = ac.id
+          AND oa.status != 'refunded'
+      ) creator_stats ON TRUE
       WHERE c.id IS NULL OR LOWER(c.email) != ALL(${OWNER_EMAILS_PG_ARRAY}::text[])
-      ORDER BY ac.use_count DESC, ac.created_at DESC
+      ORDER BY use_count DESC, ac.created_at DESC
     `
     return result.rows
   } catch (error) {
@@ -2888,6 +3251,23 @@ export async function logAdminAction(
 
 // ─── Club Order Fulfillment ─────────────────────────────
 
+export interface ClubOrderPipelineAuditSummary {
+  totalIssues: number
+  totalActive: number
+  terminalOrders: number
+  awaitingApproval: number
+  needsPayment: number
+  readyToShip: number
+  shippedNotFulfilled: number
+  checks: {
+    staleActiveOrders: number
+    missingRequiredTimestamps: number
+    shippedMissingTracking: number
+    timestampOrderIssues: number
+    invalidStatuses: number
+  }
+}
+
 /**
  * Get club order fulfillment counts by status for pipeline visualization.
  */
@@ -2906,6 +3286,106 @@ export async function getClubOrderFulfillmentCounts(): Promise<Record<string, nu
   } catch (error) {
     console.error('Database error fetching fulfillment counts:', error)
     throw new DatabaseError('Failed to fetch fulfillment counts', error)
+  }
+}
+
+/**
+ * Count club-order pipeline cleanup risks without returning customer details.
+ */
+export async function getClubOrderPipelineAuditSummary(): Promise<ClubOrderPipelineAuditSummary> {
+  try {
+    const result = await sql`
+      SELECT
+        COUNT(*) FILTER (
+          WHERE status NOT IN ('fulfilled', 'cancelled', 'rejected', 'dismissed')
+        )::int AS total_active,
+        COUNT(*) FILTER (
+          WHERE status IN ('fulfilled', 'cancelled', 'rejected', 'dismissed')
+        )::int AS terminal_orders,
+        COUNT(*) FILTER (WHERE status = 'pending_approval')::int AS awaiting_approval,
+        COUNT(*) FILTER (WHERE status IN ('invoice_sent', 'needs_payment'))::int AS needs_payment,
+        COUNT(*) FILTER (WHERE status IN ('paid', 'waiting_to_ship'))::int AS ready_to_ship,
+        COUNT(*) FILTER (WHERE status = 'shipped')::int AS shipped_not_fulfilled,
+        COUNT(*) FILTER (
+          WHERE status NOT IN ('fulfilled', 'cancelled', 'rejected', 'dismissed')
+            AND COALESCE(updated_at, created_at) < NOW() - INTERVAL '48 hours'
+        )::int AS stale_active_orders,
+        COUNT(*) FILTER (
+          WHERE (
+            status IN ('approved', 'invoice_sent', 'needs_payment', 'paid', 'waiting_to_ship', 'shipped', 'fulfilled')
+            AND approved_at IS NULL
+          ) OR (
+            status IN ('invoice_sent', 'needs_payment', 'paid', 'waiting_to_ship', 'shipped', 'fulfilled')
+            AND invoice_sent_at IS NULL
+          ) OR (
+            status IN ('paid', 'waiting_to_ship', 'shipped', 'fulfilled')
+            AND paid_at IS NULL
+          ) OR (
+            status IN ('shipped', 'fulfilled')
+            AND shipped_at IS NULL
+          ) OR (
+            status = 'fulfilled'
+            AND fulfilled_at IS NULL
+          )
+        )::int AS missing_required_timestamps,
+        COUNT(*) FILTER (
+          WHERE status = 'shipped'
+            AND (
+              tracking_carrier IS NULL OR tracking_carrier = ''
+              OR tracking_number IS NULL OR tracking_number = ''
+            )
+        )::int AS shipped_missing_tracking,
+        COUNT(*) FILTER (
+          WHERE (
+            approved_at IS NOT NULL
+            AND invoice_sent_at IS NOT NULL
+            AND invoice_sent_at < approved_at
+          ) OR (
+            paid_at IS NOT NULL
+            AND COALESCE(invoice_sent_at, approved_at) IS NOT NULL
+            AND paid_at < COALESCE(invoice_sent_at, approved_at)
+          ) OR (
+            shipped_at IS NOT NULL
+            AND paid_at IS NOT NULL
+            AND shipped_at < paid_at
+          ) OR (
+            fulfilled_at IS NOT NULL
+            AND shipped_at IS NOT NULL
+            AND fulfilled_at < shipped_at
+          )
+        )::int AS timestamp_order_issues,
+        COUNT(*) FILTER (
+          WHERE status NOT IN (
+            'pending_approval', 'approved', 'invoice_sent', 'needs_payment',
+            'paid', 'waiting_to_ship', 'shipped', 'fulfilled',
+            'cancelled', 'rejected', 'dismissed'
+          )
+        )::int AS invalid_statuses
+      FROM club_orders
+    `
+
+    const row = result.rows[0] || {}
+    const checks = {
+      staleActiveOrders: parseInt(row.stale_active_orders || '0', 10),
+      missingRequiredTimestamps: parseInt(row.missing_required_timestamps || '0', 10),
+      shippedMissingTracking: parseInt(row.shipped_missing_tracking || '0', 10),
+      timestampOrderIssues: parseInt(row.timestamp_order_issues || '0', 10),
+      invalidStatuses: parseInt(row.invalid_statuses || '0', 10),
+    }
+
+    return {
+      totalIssues: Object.values(checks).reduce((sum, count) => sum + count, 0),
+      totalActive: parseInt(row.total_active || '0', 10),
+      terminalOrders: parseInt(row.terminal_orders || '0', 10),
+      awaitingApproval: parseInt(row.awaiting_approval || '0', 10),
+      needsPayment: parseInt(row.needs_payment || '0', 10),
+      readyToShip: parseInt(row.ready_to_ship || '0', 10),
+      shippedNotFulfilled: parseInt(row.shipped_not_fulfilled || '0', 10),
+      checks,
+    }
+  } catch (error) {
+    console.error('Database error fetching club order pipeline audit summary:', error)
+    throw new DatabaseError('Failed to fetch club order pipeline audit summary', error)
   }
 }
 
