@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useCreator } from '@/lib/contexts/CreatorContext'
-import { Settings, Save, User, AtSign, Phone, FileText } from 'lucide-react'
+import { Settings, Save, User, AtSign, Phone, FileText, MapPin } from 'lucide-react'
+import { US_STATES } from '@/lib/config/us-states'
 
 export default function SettingsPage() {
   const { creator, refreshAll, loading } = useCreator()
@@ -10,6 +11,11 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState('')
   const [socialHandle, setSocialHandle] = useState('')
   const [bio, setBio] = useState('')
+  const [addressLine1, setAddressLine1] = useState('')
+  const [addressLine2, setAddressLine2] = useState('')
+  const [addressCity, setAddressCity] = useState('')
+  const [addressState, setAddressState] = useState('')
+  const [addressZip, setAddressZip] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -22,6 +28,11 @@ export default function SettingsPage() {
       setPhone(creator.phone || '')
       setSocialHandle(creator.social_handle || '')
       setBio(creator.bio || '')
+      setAddressLine1((creator as any).address_line1 || '')
+      setAddressLine2((creator as any).address_line2 || '')
+      setAddressCity((creator as any).address_city || '')
+      setAddressState((creator as any).address_state || '')
+      setAddressZip((creator as any).address_zip || '')
       setInitialized(true)
     }
   }, [creator, initialized])
@@ -41,6 +52,11 @@ export default function SettingsPage() {
           phone,
           social_handle: socialHandle,
           bio,
+          address_line1: addressLine1,
+          address_line2: addressLine2,
+          address_city: addressCity,
+          address_state: addressState,
+          address_zip: addressZip,
         }),
       })
 
@@ -130,6 +146,55 @@ export default function SettingsPage() {
             rows={4}
             className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10 resize-none"
           />
+        </div>
+
+        {/* Shipping Address */}
+        <div className="border-t border-stone-100 pt-5">
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold text-cultr-forest/80 mb-3">
+            <MapPin className="w-3.5 h-3.5" /> Shipping Address
+          </h3>
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={addressLine1}
+              onChange={e => setAddressLine1(e.target.value)}
+              placeholder="Street address"
+              className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+            />
+            <input
+              type="text"
+              value={addressLine2}
+              onChange={e => setAddressLine2(e.target.value)}
+              placeholder="Apt / Suite (optional)"
+              className="w-full bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+            />
+            <div className="grid grid-cols-3 gap-3">
+              <input
+                type="text"
+                value={addressCity}
+                onChange={e => setAddressCity(e.target.value)}
+                placeholder="City"
+                className="col-span-1 bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+              />
+              <select
+                value={addressState}
+                onChange={e => setAddressState(e.target.value)}
+                className="col-span-1 bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+              >
+                <option value="">State</option>
+                {US_STATES.map(s => <option key={s.code} value={s.code}>{s.code}</option>)}
+              </select>
+              <input
+                type="text"
+                value={addressZip}
+                onChange={e => setAddressZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
+                placeholder="ZIP"
+                maxLength={5}
+                inputMode="numeric"
+                className="col-span-1 bg-white border border-brand-primary/20 rounded-lg px-4 py-3 text-sm text-cultr-forest placeholder:text-brand-primary/40 focus:outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/10"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 pt-2">

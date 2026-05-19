@@ -1,3 +1,17 @@
+## [2026-05-19] - Address editing for members, creators, and customers
+
+### Added
+- **`app/members/profile/page.tsx`** — New member profile page with read-only account info and editable shipping address (street, apt, city, state dropdown, ZIP). Accessible via sidebar.
+- **`components/library/MemberSidebar.tsx`** — "Profile & Address" link added to ACCOUNT nav group → `/members/profile`.
+- **`migrations/069_creator_address.sql`** — Adds 5 address columns to `creators` table. ✅ Executed against production Neon DB 2026-05-19.
+
+### Changed
+- **`app/api/member/profile/route.ts`** — GET normalizes address to `{ address1, address2, city, state, zipCode }` regardless of source. PUT now actually saves to `pending_intakes.intake_data` and `club_members` address columns (was a no-op stub).
+- **`app/creators/portal/settings/page.tsx`** — Address section added to profile form, saved alongside name/phone/bio.
+- **`app/api/creators/profile/route.ts`** + **`lib/creators/db.ts`** — Address fields wired through PUT handler and `updateCreatorProfile()`.
+
+---
+
 ## [2026-05-19] - Creator/member login + metric accuracy overhaul
 
 ### Fixed

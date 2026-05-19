@@ -36,7 +36,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { full_name, phone, social_handle, bio, payout_method, payout_destination_id } = body
+    const {
+      full_name, phone, social_handle, bio, payout_method, payout_destination_id,
+      address_line1, address_line2, address_city, address_state, address_zip,
+    } = body
 
     // Resolve real creatorId if using staging placeholder
     let realCreatorId = auth.creatorId
@@ -52,6 +55,11 @@ export async function PUT(request: NextRequest) {
       bio,
       payout_method,
       payout_destination_id,
+      address_line1,
+      address_line2,
+      address_city,
+      address_state,
+      address_zip,
     })
 
     const updated = auth.creatorId === 'staging_creator' && auth.email

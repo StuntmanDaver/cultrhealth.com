@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   CreditCard,
+  User,
   X,
   LogOut,
 } from 'lucide-react'
@@ -49,6 +50,7 @@ const NAV_GROUPS = [
   {
     label: 'ACCOUNT',
     items: [
+      { label: 'Profile & Address', href: '/members/profile', icon: User },
       { label: 'Manage Billing', href: 'https://billing.stripe.com/p/login/4gM00igPh021086fle6J200', icon: CreditCard },
     ],
   },
