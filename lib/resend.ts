@@ -31,7 +31,8 @@ export function escapeHtml(text: string | null | undefined): string {
     .replace(/'/g, '&#39;')
 }
 
-// Get configured from email
+// Get configured from email. Falls back to Resend sandbox if FROM_EMAIL is not set.
+// Production deployments must set FROM_EMAIL=noreply@cultrhealth.com (verified domain).
 export function getFromEmail(): string {
   const email = process.env.FROM_EMAIL || 'onboarding@resend.dev'
   if (email.includes('<')) return email
@@ -166,7 +167,7 @@ export async function sendFounderNotification(
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
 
   if (!founderEmail) {
-    console.error('FOUNDER_EMAIL environment variable is not set')
+    console.error('Founder sender address not configured')
     return { success: false, error: 'Founder email not configured' }
   }
 
@@ -334,7 +335,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<EmailRes
     })
 
     if (error) {
-      console.error('Welcome email error:', error)
+      console.error('send email error (welcome):', error)
       return { success: false, error: error.message }
     }
 
@@ -755,7 +756,7 @@ export async function sendQuoteRequestNotification(data: QuoteRequestNotificatio
   const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
 
   if (!founderEmail) {
-    console.error('FOUNDER_EMAIL environment variable is not set')
+    console.error('Founder sender address not configured')
     return { success: false, error: 'Founder email not configured' }
   }
 
@@ -1002,7 +1003,7 @@ export async function sendOrderConfirmationWithLMN(data: OrderConfirmationWithLM
     })
 
     if (error) {
-      console.error('Order confirmation email error:', error)
+      console.error('send email error (order confirmation):', error)
       return { success: false, error: error.message }
     }
 
@@ -1145,7 +1146,7 @@ export async function sendOrderConfirmationEmail(data: OrderConfirmationEmailDat
     const { error } = await client.emails.send(emailOptions)
 
     if (error) {
-      console.error('Order confirmation email error:', error)
+      console.error('send email error (order confirmation):', error)
       return { success: false, error: error.message }
     }
 
@@ -1281,7 +1282,7 @@ export async function sendShippingNotificationEmail(data: ShippingNotificationDa
     })
 
     if (error) {
-      console.error('Shipping notification email error:', error)
+      console.error('send email error (shipping notification):', error)
       return { success: false, error: error.message }
     }
 
@@ -1350,7 +1351,7 @@ export async function sendCancellationEmail(data: CancellationEmailData): Promis
     })
 
     if (error) {
-      console.error('Cancellation email error:', error)
+      console.error('send email error (cancellation):', error)
       return { success: false, error: error.message }
     }
 
@@ -1421,7 +1422,7 @@ export async function sendPaymentFailedEmail(data: PaymentFailedEmailData): Prom
     })
 
     if (error) {
-      console.error('Payment failed email error:', error)
+      console.error('send email error (payment failed):', error)
       return { success: false, error: error.message }
     }
 
@@ -1445,7 +1446,7 @@ interface FraudHeldNotificationData {
 export async function sendFraudHeldAdminNotification(data: FraudHeldNotificationData): Promise<EmailResult> {
   const adminEmail = process.env.FOUNDER_EMAIL
   if (!adminEmail) {
-    console.error('FOUNDER_EMAIL not configured - cannot send fraud alert')
+    console.error('Fraud alert sender not configured')
     return { success: false, error: 'Admin email not configured' }
   }
 
@@ -1495,7 +1496,7 @@ export async function sendFraudHeldAdminNotification(data: FraudHeldNotification
     })
 
     if (error) {
-      console.error('Fraud notification email error:', error)
+      console.error('send email error (fraud notification):', error)
       return { success: false, error: error.message }
     }
 
@@ -1550,7 +1551,7 @@ export async function sendSubscriptionExpiringEmail(data: SubscriptionExpiringEm
     })
 
     if (error) {
-      console.error('Subscription expiring email error:', error)
+      console.error('send email error (subscription expiring):', error)
       return { success: false, error: error.message }
     }
 
@@ -1662,7 +1663,7 @@ export async function sendConsultationConfirmationToPatient(
     })
 
     if (error) {
-      console.error('Consultation confirmation email error:', error)
+      console.error('send email error (consultation confirmation):', error)
       return { success: false, error: error.message }
     }
 
@@ -1777,7 +1778,7 @@ export async function sendConsultationNotificationToProvider(
     })
 
     if (error) {
-      console.error('Consultation provider notification email error:', error)
+      console.error('send email error (consultation provider notification):', error)
       return { success: false, error: error.message }
     }
 
@@ -1848,7 +1849,7 @@ export async function sendConsultationReminder(
     })
 
     if (error) {
-      console.error('Consultation reminder email error:', error)
+      console.error('send email error (consultation reminder):', error)
       return { success: false, error: error.message }
     }
 
@@ -1915,7 +1916,7 @@ export async function sendConsultationCompleted(
     })
 
     if (error) {
-      console.error('Consultation completed email error:', error)
+      console.error('send email error (consultation completed):', error)
       return { success: false, error: error.message }
     }
 
@@ -1986,7 +1987,7 @@ export async function sendRecordingReadyNotification(
     })
 
     if (error) {
-      console.error('Recording ready notification email error:', error)
+      console.error('send email error (recording ready notification):', error)
       return { success: false, error: error.message }
     }
 
