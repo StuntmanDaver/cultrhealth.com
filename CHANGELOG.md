@@ -1,3 +1,17 @@
+## [2026-05-25] - Correct state service and shipping language site-wide
+
+### Changed
+- **`app/faq/page.tsx`** — "What states do you operate in?" updated: telehealth consultations now correctly stated as Florida-only (prescribers licensed in FL); shipping available to 30 states + D.C. with full state list.
+- **`app/page.tsx`** — Homepage FAQ "Is CULTR available in my state?" updated to match: Florida-only consults, ships to 30 states + D.C.
+- **`app/legal/terms/page.tsx`** — Eligibility section updated: removed "30 eligible states or D.C." service area and California carve-out; now correctly states Florida-only telemedicine with explicit shipping state list.
+- **`app/how-it-works/page.tsx`** — Hero proof line updated from "30 states + D.C." to "Florida"; FAQ answer updated to Florida-only consults with shipping state list.
+- **`app/creators/portal/resources/_data/product-education.tsx`** — Creator script "What states are you available in?" answer updated from "operates in most US states" to Florida-only with shipping caveat.
+
+### Why
+Previous language incorrectly claimed telehealth service in 30 states. Prescribers are licensed in Florida only; telemedicine law requires prescribers to be licensed in the state where the patient is physically located at time of consultation. Shipping to 30 states + D.C. via partner pharmacy is accurate and retained.
+
+---
+
 ## [2026-05-20] - Creator coupon, link, Stripe sync, and login email audit
 
 ### Fixed

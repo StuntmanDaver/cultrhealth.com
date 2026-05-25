@@ -75,7 +75,7 @@ const faqSections: { title: string; items: FaqItem[] }[] = [
       },
       {
         question: 'What states do you operate in?',
-        answer: 'CULTR Health currently serves patients in 30 U.S. states and Washington D.C.: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C. Services are available only to patients physically located in one of these states at the time of consultation. Medications can be shipped to all U.S. states except California.',
+        answer: 'CULTR Health telehealth services are currently available to patients physically located in Florida at the time of consultation. Our prescribers are licensed in Florida, and consultations are only available to patients in the state at the time of their appointment. Compounded medications from our partner pharmacy can be shipped to 30 U.S. states and Washington D.C.: Arizona, Colorado, Connecticut, Delaware, Florida, Georgia, Idaho, Iowa, Louisiana, Maine, Maryland, Minnesota, Missouri, Montana, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Dakota, Pennsylvania, Rhode Island, South Dakota, Texas, Utah, Vermont, Washington, Wisconsin, Wyoming, and Washington D.C.',
       },
     ],
   },

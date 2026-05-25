@@ -245,7 +245,7 @@ The quiz at cultrhealth.com/quiz matches people to their ideal tier automaticall
         <CopyBlock>{`Peptides prescribed through CULTR are provider-supervised and sourced from licensed pharmacies. Your provider evaluates your labs and health history before prescribing any protocol. Like any medication, there can be side effects \u2014 which is why provider oversight is important.`}</CopyBlock>
 
         <SubHeading>&quot;What states are you available in?&quot;</SubHeading>
-        <CopyBlock>{`CULTR operates in most US states. Availability is verified during signup based on your location. Telehealth regulations vary by state, and CULTR ensures full compliance. If your state isn't covered yet, you can join the waitlist.`}</CopyBlock>
+        <CopyBlock>{`CULTR Health telehealth consultations are currently available to patients physically located in Florida. Our prescribers are licensed in Florida, and consultations are only available to patients in the state at the time of their appointment. Compounded medications can be shipped to 30 U.S. states and Washington D.C.`}</CopyBlock>
 
         <SectionHeading>Your Affiliate Questions</SectionHeading>
 
