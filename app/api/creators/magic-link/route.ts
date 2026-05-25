@@ -101,7 +101,9 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     try {
       const { Resend } = await import('resend')
-      const resend = new Resend(process.env.RESEND_API_KEY)
+      const resendApiKey = process.env.RESEND_API_KEY
+      if (!resendApiKey) throw new Error('RESEND_API_KEY is not configured')
+      const resend = new Resend(resendApiKey)
       const { baseEmailTemplate, getFromEmail } = await import('@/lib/resend')
       const fromEmail = getFromEmail()
 

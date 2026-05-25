@@ -164,7 +164,7 @@ export async function sendFounderNotification(
   options?: { to?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const founderEmail = options?.to || process.env.FOUNDER_EMAIL
-  const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
+  const fromEmail = getFromEmail()
 
   if (!founderEmail) {
     console.error('Founder sender address not configured')
@@ -753,7 +753,7 @@ interface QuoteRequestNotificationData {
 
 export async function sendQuoteRequestNotification(data: QuoteRequestNotificationData): Promise<EmailResult> {
   const founderEmail = process.env.FOUNDER_EMAIL
-  const fromEmail = process.env.FROM_EMAIL || 'CULTR <onboarding@resend.dev>'
+  const fromEmail = getFromEmail()
 
   if (!founderEmail) {
     console.error('Founder sender address not configured')
