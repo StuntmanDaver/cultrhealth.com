@@ -1,3 +1,22 @@
+## [2026-05-29] - HubSpot contact backfill script fixes
+
+### Added
+- **`scripts/backfill-hubspot-contacts.mjs`** — Added/updated end-to-end backfill command to sync all database contact sources (club members, waitlist, quiz, creators, memberships) into HubSpot contacts.
+
+### Fixed
+- Corrected source query handling for quiz rows and merged contact timestamps to use actual available columns (`lead_captured_at`, `completed_at`).
+- Removed unsupported HubSpot contact property assignment (`cultr_order_total`) so backfilled contacts can be created without API rejections.
+- Backfill now supports optional notes on contacts by resolving HubSpot notes-association type dynamically via `/crm/v4/associations/notes/contacts/labels`, with fallback.
+- Added a resilient contact upsert fallback path to avoid failures when `setup` properties are rejected.
+
+### Added Scripts
+- `package.json` now exposes `backfill:hubspot-contacts` for controlled dry-run/apply execution.
+
+### Why
+The corrected backfill flow ensures all known records are surfaced and merged consistently before write, with safer HubSpot payloads and fewer API-level failures.
+
+---
+
 ## [2026-05-25] - Correct state service and shipping language site-wide
 
 ### Changed
